@@ -304,7 +304,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
     pane.x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(x_label_views));
     pane.x_label("Hour").y_label("Mean rentals");
     for (const auto weekday : kWeekdayLabels) {
-      if (!frame.has_feature(weekday)) {
+      if (!frame.get(weekday).has_value()) {
         continue;
       }
       auto& trace = flash::lineplot(pane, x, thread_as_numeric(frame.features(weekday)));
@@ -340,7 +340,7 @@ void draw_grouped_bar_panel(pl::Pane& pane, const DataFrame& pivoted, std::strin
   constexpr std::size_t group_count = 4;
   for (std::size_t g = 0; g < group_count; ++g) {
     const auto season = kSeasonLabels[g];
-    if (!pivoted.has_feature(season)) {
+    if (!pivoted.get(season).has_value()) {
       continue;
     }
     std::vector<double> centers(x.size(), 0.0);

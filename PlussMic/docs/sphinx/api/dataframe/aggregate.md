@@ -147,9 +147,9 @@ summary | 8.333333333      1.040833
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="add_suffix.html">
+  <a class="prev-link" href="add.html">
     <span class="label">Previous</span>
-    <span class="title">add_suffix</span>
+    <span class="title">add</span>
   </a>
   <a class="next-link" href="align.html">
     <span class="label">Next</span>

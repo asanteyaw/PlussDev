@@ -124,7 +124,7 @@ void test_comma_fixture_load_and_cases() {
 
   expect(df.ncases() == 64, "comma fixture: nrows mismatch");
   expect(df.nfeatures() == 6, "comma fixture: ncols mismatch");
-  expect(df.has_feature("Business Case ID"), "comma fixture: missing Business Case ID");
+  expect(df.get("Business Case ID").has_value(), "comma fixture: missing Business Case ID");
   expect(df.features("Business Case ID").kind() == ThreadKind::Series, "comma fixture: expected numeric Series column");
   expect(df.features("Agency Name").kind() == ThreadKind::Note, "comma fixture: expected text Note column");
   expect(df.features("Updated Date").kind() == ThreadKind::Timeline,
@@ -162,7 +162,7 @@ void test_utf8_bom_is_removed_from_first_header() {
     options.engine = engine;
 
     const auto df = DataFrame::load_csv(path.string(), options);
-    expect(df.has_feature("OrgDefinedId"),
+    expect(df.get("OrgDefinedId").has_value(),
            "UTF-8 BOM must not become part of the first CSV header");
     expect(df.features("OrgDefinedId").as_series().item<std::int64_t>() == 30277231,
            "BOM-normalized first column should retain its value");
@@ -176,7 +176,7 @@ void test_auto_initializer_list_assignment_and_row_sum() {
   });
   auto names = {"a", "b"};
 
-  df.set(names) = df.features(names).fillna(0.0);
+  df.set(names) = df.features(names).fillnull(0.0);
   const auto totals = df.features(names).sum(Axis::Feature).as_series().to_vec<double>();
 
   expect(totals == std::vector<double>({11.0, 22.0}),
@@ -256,11 +256,11 @@ void test_dataframe_axis_reductions() {
   const auto sum_strict_columns = df.sum(Axis::Case, false);
   expect(pluss::table::detail::validity_mask(sum_strict_columns)->to_vec<bool>()
              == std::vector<bool>({false, true, true}),
-         "DataFrame::sum(axis=0, skipna=false) should invalidate nullable reductions");
+         "DataFrame::sum(axis=0, skipnull=false) should invalidate nullable reductions");
   const auto sum_strict_rows = df.sum(Axis::Feature, false);
   expect(pluss::table::detail::validity_mask(sum_strict_rows)->to_vec<bool>()
              == std::vector<bool>({true, true, false, true}),
-         "DataFrame::sum(axis=1, skipna=false) should invalidate rows containing numeric nulls");
+         "DataFrame::sum(axis=1, skipnull=false) should invalidate rows containing numeric nulls");
 
   const auto idxmin_columns = df.csmin();
   const auto idxmax_columns = df.csmax();
@@ -284,7 +284,7 @@ void test_dataframe_axis_reductions() {
              && std::string(idxmax_rows.as_note().at(2)) == "b"
              && std::string(idxmax_rows.as_note().at(3)) == "b",
          "DataFrame::csmax(axis=1) should return feature names");
-  expect(idxmin_columns.has_caselbl() && idxmin_rows.has_caselbl(),
+  expect(idxmin_columns.label().has() && idxmin_rows.label().has(),
          "DataFrame index reductions should preserve the unreduced axis as case labels");
 
   const auto all_missing = DataFrame(
@@ -317,10 +317,10 @@ void test_dataframe_axis_reductions() {
          "DataFrame::all(axis=1) values mismatch");
   expect(pluss::table::detail::validity_mask(bools.any(Axis::Case, {}, false))->to_vec<bool>()
              == std::vector<bool>({true, false}),
-         "DataFrame::any(axis=0, skipna=false) should propagate missing validity");
+         "DataFrame::any(axis=0, skipnull=false) should propagate missing validity");
   expect(pluss::table::detail::validity_mask(bools.all(Axis::Feature, {}, false))->to_vec<bool>()
              == std::vector<bool>({true, false, true}),
-         "DataFrame::all(axis=1, skipna=false) should propagate missing validity");
+         "DataFrame::all(axis=1, skipnull=false) should propagate missing validity");
 
   expect_throw([&]() { (void)df.mean(static_cast<Axis>(2)); },
                "DataFrame numeric reductions should reject unsupported axes");
@@ -371,7 +371,7 @@ void test_axis_feature_assignment_alignment_and_shape() {
          "row-wise assignment total should align to original cases");
 
   auto scholarships = Thread(pluss::make_series(std::vector<double>{1500.0, 2500.0, 1000.0}))
-                          .caselbl(Thread(pluss::make_series(
+                          .label().set(Thread(pluss::make_series(
                               std::vector<std::int64_t>{1003, 1001, 1004})));
   bool scholarship_default_threw = false;
   try {
@@ -828,7 +828,7 @@ void test_simple_load_config_api_and_auto_sep() {
 
   expect(df.ncases() == 12, "config load: nrows mismatch");
   expect(df.nfeatures() > 5, "config load: auto separator should parse full semicolon file");
-  expect(df.has_feature("age"), "config load: missing expected column");
+  expect(df.get("age").has_value(), "config load: missing expected column");
 }
 
 void test_first_class_loader_entrypoints() {
@@ -850,7 +850,7 @@ void test_first_class_loader_entrypoints() {
       "none",
       static_cast<std::size_t>(6));
   expect(df_positional_short.ncases() == 6, "DataFrame::load_csv short positional ncases mismatch");
-  expect(df_positional_short.has_feature("feat_0"), "DataFrame::load_csv short positional should auto-generate feat names");
+  expect(df_positional_short.get("feat_0").has_value(), "DataFrame::load_csv short positional should auto-generate feat names");
 
   const auto df_list_config = DataFrame::load_csv(
       fixture_path("bank-full.csv").string(),
@@ -884,8 +884,8 @@ void test_col_names_none_and_save_as_csv() {
 
   expect(df.ncases() == 3, "col names none: nrows mismatch");
   expect(df.nfeatures() == 2, "col names none: ncols mismatch");
-  expect(df.has_feature("feat_0"), "col names none: expected generated feat_0");
-  expect(df.has_feature("feat_1"), "col names none: expected generated feat_1");
+  expect(df.get("feat_0").has_value(), "col names none: expected generated feat_0");
+  expect(df.get("feat_1").has_value(), "col names none: expected generated feat_1");
 
   const auto out_path = write_temp_csv("saved_out", "");
   df.save_csv(
@@ -1092,7 +1092,7 @@ void test_transpose_shape_and_axes() {
   expect(std::string(tcases.at(0)) == "a", "transpose cases[0] should equal first source feature name");
   expect(std::string(tcases.at(2)) == "c", "transpose cases[last] should equal last source feature name");
 
-  expect(t.has_feature("0"), "transpose should expose source-case labels as output feature names");
+  expect(t.get("0").has_value(), "transpose should expose source-case labels as output feature names");
   const auto feature0 = t.features("0").as_note();
   expect(std::fabs(std::stod(std::string(feature0.at(0))) - 1.0) < 1e-9,
          "transpose cell mismatch at [feature=0, case=a]");
@@ -1215,7 +1215,7 @@ void test_dataframe_sql_accessor() {
   const auto filtered = df.sql().execute(
       "SELECT age, job FROM df WHERE age >= 45 ORDER BY age DESC LIMIT 5");
   expect(filtered.nfeatures() == 2, "sql().execute: projected feature count mismatch");
-  expect(filtered.has_feature("age") && filtered.has_feature("job"),
+  expect(filtered.get("age").has_value() && filtered.get("job").has_value(),
          "sql().execute: projection should keep requested features");
   expect(filtered.ncases() <= 5, "sql().execute: LIMIT should cap row count");
   const auto ages = filtered.features("age").as_series().to_vec<std::int64_t>();
@@ -1226,13 +1226,13 @@ void test_dataframe_sql_accessor() {
   const auto aliased = df.sql().execute(
       "SELECT age AS age_years FROM df LIMIT 3");
   expect(aliased.ncases() == 3, "sql().execute: LIMIT should apply to aliased projections");
-  expect(aliased.nfeatures() == 1 && aliased.has_feature("age_years"),
+  expect(aliased.nfeatures() == 1 && aliased.get("age_years").has_value(),
          "sql().execute: SELECT alias should rename output feature");
 
   const auto with_case = df.sql().execute(
       "SELECT case, age FROM df ORDER BY age ASC LIMIT 4 OFFSET 2");
   expect(with_case.ncases() == 4, "sql().execute: LIMIT/OFFSET row count mismatch");
-  expect(with_case.nfeatures() == 2 && with_case.has_feature("case") && with_case.has_feature("age"),
+  expect(with_case.nfeatures() == 2 && with_case.get("case").has_value() && with_case.get("age").has_value(),
          "sql().execute: case projection should materialize as output feature");
   const auto sorted = df.sort_values({DataFrame::ArrangeSpec{"age", true, true}});
   const auto expected = sorted.slice(2, 6).features("age").as_series().to_vec<std::int64_t>();
@@ -1249,7 +1249,7 @@ void test_dataframe_sql_accessor() {
          "sql().execute: SELECT * should project all dataframe features");
 
   const auto aliased_primary = df.sql().execute("SELECT prices.age FROM df AS prices LIMIT 1");
-  expect(aliased_primary.ncases() == 1 && aliased_primary.has_feature("prices.age"),
+  expect(aliased_primary.ncases() == 1 && aliased_primary.get("prices.age").has_value(),
          "sql().execute: FROM alias should rename the calling dataframe source");
 
   expect_throw([&]() { (void)df.sql().execute("SELECT idx, age FROM df LIMIT 1"); },
@@ -1258,7 +1258,7 @@ void test_dataframe_sql_accessor() {
   const auto with_case_alias = df.sql(DataFrame::SqlOptions{
       .case_axis_aliases = {"case", "idx"},
   }).execute("SELECT idx, age FROM df ORDER BY age DESC LIMIT 3");
-  expect(with_case_alias.nfeatures() == 2 && with_case_alias.has_feature("idx") && with_case_alias.has_feature("age"),
+  expect(with_case_alias.nfeatures() == 2 && with_case_alias.get("idx").has_value() && with_case_alias.get("age").has_value(),
          "sql(options).execute: case_axis_aliases should expose case axis via configured alias");
   expect(with_case_alias.ncases() == 3,
          "sql(options).execute: SQL LIMIT should still apply with case alias projections");
@@ -1266,7 +1266,7 @@ void test_dataframe_sql_accessor() {
   const auto with_named_case_alias = df.sql(DataFrame::SqlOptions{
       .case_axis_aliases = {"row_id"},
   }).execute("SELECT row_id FROM df LIMIT 1");
-  expect(with_named_case_alias.nfeatures() == 1 && with_named_case_alias.has_feature("row_id"),
+  expect(with_named_case_alias.nfeatures() == 1 && with_named_case_alias.get("row_id").has_value(),
          "sql(options).execute: case_axis_aliases should support custom case-axis name");
 
   DataFrame::SqlOptions param_options;
@@ -1275,7 +1275,7 @@ void test_dataframe_sql_accessor() {
   param_options.params["blocked_job"] = std::string{"unknown"};
   const auto parametrized = df.sql(std::move(param_options)).execute(
       "SELECT age, job FROM df WHERE age >= {min_age} and job != {blocked_job} ORDER BY age DESC LIMIT {limit_n}");
-  expect(parametrized.ncases() <= 4 && parametrized.has_feature("age") && parametrized.has_feature("job"),
+  expect(parametrized.ncases() <= 4 && parametrized.get("age").has_value() && parametrized.get("job").has_value(),
          "sql(options).execute: params should interpolate scalar placeholders");
 
   DataFrame::SqlOptions identifier_options;
@@ -1283,7 +1283,7 @@ void test_dataframe_sql_accessor() {
   identifier_options.params["limit_n"] = std::int64_t{2};
   const auto identifier_selected = df.sql(std::move(identifier_options))
                                        .execute("SELECT {@col} FROM df LIMIT {limit_n}");
-  expect(identifier_selected.ncases() == 2 && identifier_selected.has_feature("age"),
+  expect(identifier_selected.ncases() == 2 && identifier_selected.get("age").has_value(),
          "sql(options).execute: identifier params should bind projected feature names");
 
   const auto duplicate_projection = "SELECT age as v, balance as v FROM df LIMIT 3";
@@ -1294,13 +1294,13 @@ void test_dataframe_sql_accessor() {
   const auto suffix_dups = df.sql(DataFrame::SqlOptions{
       .collision_policy = DataFrame::SqlOptions::CollisionPolicy::Suffix,
   }).execute(duplicate_projection);
-  expect(suffix_dups.has_feature("v") && suffix_dups.has_feature("v_2"),
+  expect(suffix_dups.get("v").has_value() && suffix_dups.get("v_2").has_value(),
          "sql(options).execute: CollisionPolicy::Suffix should disambiguate duplicate aliases");
 
   const auto overwrite_dups = df.sql(DataFrame::SqlOptions{
       .collision_policy = DataFrame::SqlOptions::CollisionPolicy::Overwrite,
   }).execute(duplicate_projection);
-  expect(overwrite_dups.nfeatures() == 1 && overwrite_dups.has_feature("v"),
+  expect(overwrite_dups.nfeatures() == 1 && overwrite_dups.get("v").has_value(),
          "sql(options).execute: CollisionPolicy::Overwrite should keep one alias");
 
   const auto metrics = DataFrame({
@@ -1310,7 +1310,7 @@ void test_dataframe_sql_accessor() {
   const auto joined = df.sql(DataFrame::SqlOptions{
       .sources = {{"m", &metrics}},
   }).execute("SELECT df.age, m.score FROM df JOIN m ON df.age = m.age LIMIT 6");
-  expect(joined.nfeatures() == 2 && joined.has_feature("df.age") && joined.has_feature("m.score"),
+  expect(joined.nfeatures() == 2 && joined.get("df.age").has_value() && joined.get("m.score").has_value(),
          "sql(options).execute: JOIN should project columns from bound sources");
   expect(joined.ncases() > 0 && joined.ncases() <= 6,
          "sql(options).execute: JOIN result row count should respect LIMIT");
@@ -1339,7 +1339,7 @@ void test_dataframe_sql_accessor() {
       "SELECT age FROM df WHERE age >= {min_age} ORDER BY age DESC LIMIT {limit_n}");
   const auto prepared_out = prepared.execute(
       {{"min_age", std::int64_t{40}}, {"limit_n", std::int64_t{3}}});
-  expect(prepared_out.ncases() <= 3 && prepared_out.has_feature("age"),
+  expect(prepared_out.ncases() <= 3 && prepared_out.get("age").has_value(),
          "prepare_sql().execute(params): prepared query should execute with late-bound params");
 
   expect_throw([&]() {
@@ -1531,9 +1531,9 @@ void test_versatile_dataframe_families() {
   const auto bot_vals = bot_age.features("age").as_series().to_vec<std::int64_t>();
   expect(top_vals.front() >= top_vals.back(), "top should sort descending by feature");
   expect(bot_vals.front() <= bot_vals.back(), "bottom should sort ascending by feature");
-  const auto dup_mask = df.label().repeated({"job"});
-  expect(dup_mask.numel() == df.ncases(), "label().repeated should emit bool mask over cases");
-  const auto unique_job = df.unique_cases({"job"});
+  const auto dup_mask = df.repeated({"job"});
+  expect(dup_mask.ncases() == df.ncases(), "repeated(feature) should emit bool mask over cases");
+  const auto unique_job = df.drop_duplicates({"job"});
   expect(unique_job.ncases() > 0 && unique_job.ncases() <= df.ncases(),
          "unique_cases should retain only first case per key");
 
@@ -1547,7 +1547,7 @@ void test_versatile_dataframe_families() {
       },
       true,
       false);
-  expect(grouped_alias.nfeatures() == 2 && grouped_alias.has_feature("cases"),
+  expect(grouped_alias.nfeatures() == 2 && grouped_alias.get("cases").has_value(),
          "group_by should perform grouped aggregations");
   const auto pivot_path = write_temp_csv(
       "pivot_base",
@@ -1612,27 +1612,27 @@ void test_versatile_dataframe_families() {
   expect(case_df.nfeatures() == 1 && case_df.features()[0] == "age",
          "label().set(drop_feature=true) should move feature to case axis");
   const auto case_reset = case_df.label().reset("job_case");
-  expect(case_reset.has_feature("job_case"), "label().reset should restore previous case axis as feature");
+  expect(case_reset.get("job_case").has_value(), "label().reset should restore previous case axis as feature");
   const auto re_aligned = case_reset.label().align(case_reset.label().values());
   expect(re_aligned.ncases() == case_reset.ncases(), "label().align should conform to provided case labels");
   const auto jleft = df.features({"age", "job"}).head(6, false);
   const auto jright = df.features({"age", "balance"}).head(6, false);
   const auto joined = jleft.join(jright, "_r");
-  expect(joined.has_feature("age_r") && joined.has_feature("balance"),
+  expect(joined.get("age_r").has_value() && joined.get("balance").has_value(),
          "join should append right features and resolve collisions");
   const auto patched = jleft.update(jright, true);
-  expect(patched.has_feature("age") && patched.has_feature("job"),
+  expect(patched.get("age").has_value() && patched.get("job").has_value(),
          "update should preserve left schema and update overlapping features");
 
   const auto renamed_bulk = jleft.rename({{"age", "age_years"}, {"job", "role"}});
-  expect(renamed_bulk.has_feature("age_years") && renamed_bulk.has_feature("role"),
+  expect(renamed_bulk.get("age_years").has_value() && renamed_bulk.get("role").has_value(),
          "rename_features should apply batch feature renames");
   const auto relabeled = jleft.rename({"feat_age", "feat_job"});
   expect(relabeled.features()[0] == "feat_age" && relabeled.features()[1] == "feat_job",
          "relabel_features should set full feature axis names");
-  const auto set_axis_alias = jleft.set_axis({"a0", "a1"});
-  expect(set_axis_alias.features()[0] == "a0" && set_axis_alias.features()[1] == "a1",
-         "set_axis should alias relabel_features");
+  const auto renamed_all = jleft.rename({"a0", "a1"});
+  expect(renamed_all.features()[0] == "a0" && renamed_all.features()[1] == "a1",
+         "rename({...}) should replace the full feature axis positionally");
 
   const auto reordered = jleft.reorder({"job", "age"});
   const auto conformed = jleft.conform(reordered);
@@ -1672,12 +1672,12 @@ void test_versatile_dataframe_families() {
   const auto sleft = df.features({"job", "age"}).head(12, false);
   const auto sright = df.features({"job", "duration"}).head(12, false);
   const auto stitched = sleft.unify("job", sright, "job", "common", "_rhs");
-  expect(stitched.ncases() > 0 && stitched.has_feature("duration"),
+  expect(stitched.ncases() > 0 && stitched.get("duration").has_value(),
          "stitch_on should inner-match on key and append right payload features");
   const auto sleft_multi = df.features({"job", "age", "duration"}).head(20, false);
   const auto sright_multi = df.features({"job", "age", "balance"}).head(20, false);
   const auto stitched_multi = sleft_multi.unify({"job", "age"}, sright_multi, {"job", "age"}, "common", "_rhs");
-  expect(stitched_multi.ncases() > 0 && stitched_multi.has_feature("balance"),
+  expect(stitched_multi.ncases() > 0 && stitched_multi.get("balance").has_value(),
          "stitch_on multi-key should inner-match on all key features");
   const DataFrame unify_left({
       {"OrgDefinedId", pluss::table::Thread(pluss::make_note({"10", "20", "30"}))},
@@ -1693,8 +1693,8 @@ void test_versatile_dataframe_families() {
       "Username",
       "inner");
   expect(unified_inner.ncases() == 2
-             && unified_inner.has_feature("Username")
-             && unified_inner.has_feature("Final Points Grade"),
+             && unified_inner.get("Username").has_value()
+             && unified_inner.get("Final Points Grade").has_value(),
          "unify(inner) should key-match rows and keep differently named right keys");
 
   const auto unified_left = unify_left.unify(
@@ -1780,6 +1780,21 @@ void test_versatile_dataframe_families() {
   depth_ptr[1] = 1;
   const auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(depth_series));
   expect(atlas.depth() == 2 && atlas.ncases() == 5, "Atlas should track depth and frame shape");
+  expect(atlas.label().has(), "Atlas::label().has should report explicit depth labels");
+  expect(atlas.label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "Atlas::label().values should expose typed depth labels");
+  expect(atlas.label().find(pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 9})))
+             .as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, -1}),
+         "Atlas::label().find should delegate to Thread label indexing");
+  expect(atlas.label().unite(pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 2})))
+             .as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Atlas::label().unite should preserve typed numeric depth labels");
+  expect(atlas.label().pos(static_cast<double>(1)).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1}),
+         "Atlas::label().pos should return depth positions through Thread label indexing");
   const auto atlas_head = atlas.head(1);
   const auto atlas_tail = atlas.tail(1);
   expect(atlas_head.depth() == 1 && atlas_tail.depth() == 1, "Atlas head/tail should clip depth");
@@ -1794,12 +1809,25 @@ void test_versatile_dataframe_families() {
   const auto atlas_relabeled = atlas.relabel_depth(pluss::table::Thread(relabel_series));
   expect(atlas_relabeled.loc(static_cast<std::int64_t>(10)).ncases() == f0.ncases(),
          "Atlas relabel_depth should replace depth labels");
+  const auto atlas_label_relabeled = atlas.label().set(pluss::table::Thread(relabel_series));
+  expect(atlas_label_relabeled.loc(static_cast<std::int64_t>(11)).ncases() == f1.ncases(),
+         "Atlas::label().set should replace depth labels");
   auto align_series = pluss::Series::empty({2}, pluss::codem::ScalarType::Int64);
   auto* align_ptr = reinterpret_cast<std::int64_t*>(align_series.raw_data());
   align_ptr[0] = 1;
   align_ptr[1] = 0;
   const auto atlas_aligned = atlas.align_depth(pluss::table::Thread(align_series));
   expect(atlas_aligned.dloc(0).ncases() == f1.ncases(), "Atlas align_depth should reorder by requested labels");
+  const auto atlas_label_aligned = atlas.label().align(pluss::table::Thread(align_series));
+  expect(atlas_label_aligned.dloc(0).ncases() == f1.ncases() &&
+             atlas_label_aligned.label().values().as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({1, 0}),
+         "Atlas::label().align should reorder frames and carry requested depth labels");
+  expect(atlas.label().range().label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "Atlas::label().range should materialize typed range depth labels");
+  expect(!atlas.label().reset().label().has(),
+         "Atlas::label().reset should clear explicit depth labels");
   expect(!atlas.empty() && atlas.frames().size() == static_cast<std::size_t>(atlas.depth()),
          "Atlas should expose empty()/frames() with consistent depth");
   const auto atlas_empty = pluss::table::Atlas();
@@ -1851,7 +1879,7 @@ void test_versatile_dataframe_families() {
          "query(string): backtick identifiers should support spaced feature names");
   const auto with_copy = df.assign({{"age_copy", df.features("age")}});
   expect(with_copy.nfeatures() == df.nfeatures() + 1, "assign(assignments) should append a new feature");
-  expect(with_copy.has_feature("age_copy"), "assign(assignments) missing assigned feature");
+  expect(with_copy.get("age_copy").has_value(), "assign(assignments) missing assigned feature");
 
   const auto with_flag = df.assign({{
       "is_senior",
@@ -1865,11 +1893,11 @@ void test_versatile_dataframe_families() {
         return pluss::table::Thread(flag);
       },
   }});
-  expect(with_flag.has_feature("is_senior"), "assign(specs) missing computed feature");
+  expect(with_flag.get("is_senior").has_value(), "assign(specs) missing computed feature");
   expect(with_flag.features("is_senior").kind() == ThreadKind::Series, "assign(specs) should produce Series-backed flag");
 
   const auto with_alias = df.assign({{"age_alias", df.features("age")}});
-  expect(with_alias.has_feature("age_alias"), "assign should accept direct Thread assignments");
+  expect(with_alias.get("age_alias").has_value(), "assign should accept direct Thread assignments");
   const auto transformed_all = df.transform([](const pluss::table::Thread& feature) {
     if (feature.kind() == ThreadKind::Series) {
       return feature + 1.0;
@@ -1907,46 +1935,46 @@ void test_versatile_dataframe_families() {
   const auto transformed_frame = df.transform("age_plus_duration", [](const pluss::table::DataFrame& whole) {
     return whole.features("age") + whole.features("duration");
   });
-  expect(transformed_frame.has_feature("age_plus_duration"),
+  expect(transformed_frame.get("age_plus_duration").has_value(),
          "transform(feature, dataframe-fn) should allow deriving a new feature");
   expect(transformed_frame.features("age_plus_duration").as_series().to_vec<std::int64_t>()[0] ==
              age[0] + duration[0],
          "transform(feature, dataframe-fn) should evaluate against the full DataFrame");
 
   const auto selected_vec = df.features({"age", "job"});
-  expect(selected_vec.nfeatures() == 2 && selected_vec.has_feature("age") && selected_vec.has_feature("job"),
+  expect(selected_vec.nfeatures() == 2 && selected_vec.get("age").has_value() && selected_vec.get("job").has_value(),
          "features({...}) should project requested features");
   const std::vector<std::string> selected_names = {"age", "job"};
   const auto selected_lvalue = df.features(selected_names);
-  expect(selected_lvalue.nfeatures() == 2 && selected_lvalue.has_feature("age") && selected_lvalue.has_feature("job"),
+  expect(selected_lvalue.nfeatures() == 2 && selected_lvalue.get("age").has_value() && selected_lvalue.get("job").has_value(),
          "features(vector<string>) should project requested features");
   const std::vector<std::string> selected_one_name = {"age"};
   const auto selected_one_lvalue = df.features(selected_one_name);
-  expect(selected_one_lvalue.nfeatures() == 1 && selected_one_lvalue.has_feature("age"),
+  expect(selected_one_lvalue.nfeatures() == 1 && selected_one_lvalue.get("age").has_value(),
          "features(single-item vector<string>) should return one-column DataFrame");
-  const auto selected_public = df.select({"age", "job"});
-  expect(selected_public.nfeatures() == 2 && selected_public.has_feature("age") && selected_public.has_feature("job"),
+  const auto selected_public = df.features({"age", "job"});
+  expect(selected_public.nfeatures() == 2 && selected_public.get("age").has_value() && selected_public.get("job").has_value(),
          "select({...}) should project requested features");
-  const auto selected_like = df.select_like("dur");
-  expect(selected_like.has_feature("duration") && selected_like.nfeatures() >= 1,
+  const auto selected_like = df.feataxis().like("dur");
+  expect(selected_like.get("duration").has_value() && selected_like.nfeatures() >= 1,
          "select_like(\"dur\") should match substring in feature names");
-  const auto selected_like_ci = df.select_like("JOB", false);
-  expect(selected_like_ci.has_feature("job"),
+  const auto selected_like_ci = df.feataxis().like("JOB", false);
+  expect(selected_like_ci.get("job").has_value(),
          "select_like(..., case_sensitive=false) should support case-insensitive matching");
-  const auto selected_regex = df.select_regex("^ba");
-  expect(selected_regex.has_feature("balance"),
-         "select_regex(\"^ba\") should match regex on feature names");
-  const auto selected_none = df.select_like("__definitely_not_a_feature__");
+  const auto selected_regex = df.feataxis().match("^ba");
+  expect(selected_regex.get("balance").has_value(),
+         "feataxis().match(\"^ba\") should match regex on feature names");
+  const auto selected_none = df.feataxis().like("__definitely_not_a_feature__");
   expect(selected_none.nfeatures() == 0 && selected_none.ncases() == df.ncases(),
          "select_like(no match) should return empty feature projection with preserved cases");
-  expect_throw([&]() { (void)df.select_regex("[unclosed"); },
-               "select_regex(invalid pattern) should throw");
+  expect_throw([&]() { (void)df.feataxis().match("[unclosed"); },
+               "feataxis().match(invalid pattern) should throw");
   const auto dropped_vec = df.drop({"balance"});
-  expect(!dropped_vec.has_feature("balance") && dropped_vec.nfeatures() == df.nfeatures() - 1,
+  expect(!dropped_vec.get("balance").has_value() && dropped_vec.nfeatures() == df.nfeatures() - 1,
          "drop({...}) should remove requested features");
 
   const auto renamed_map = selected_vec.rename({{"age", "age_new"}, {"job", "job_new"}});
-  expect(renamed_map.has_feature("age_new") && renamed_map.has_feature("job_new"),
+  expect(renamed_map.get("age_new").has_value() && renamed_map.get("job_new").has_value(),
          "rename_features(...) should rename mapped features");
 
   const auto sorted_single = df.sort_values({"age"}, false);
@@ -1969,7 +1997,7 @@ void test_versatile_dataframe_families() {
       {DataFrame::GroupSpec{"cases", "", DataFrame::GroupOp::Count}},
       true,
       false);
-  expect(grouped_frame.has_feature("job") && grouped_frame.has_feature("cases"),
+  expect(grouped_frame.get("job").has_value() && grouped_frame.get("cases").has_value(),
          "group_by(keys,specs) should return grouped aggregate DataFrame");
 
   const auto applied = df.transform("age", [](const pluss::table::Thread& feature) { return feature + 5.0; });
@@ -1981,7 +2009,7 @@ void test_versatile_dataframe_families() {
          "transform(feature, fn) should support assignment-back update");
 
   const auto merged = jleft.unify("age", jright, "age", "common", "_m");
-  expect(merged.ncases() > 0 && merged.has_feature("balance"),
+  expect(merged.ncases() > 0 && merged.get("balance").has_value(),
          "stitch_on should join on key and include right payload features");
 
   const auto text_path = write_temp_csv(
@@ -1998,7 +2026,7 @@ void test_versatile_dataframe_families() {
   const DataFrame trim_df({
       {"raw", pluss::table::Thread(pluss::make_note({"  alpha  ", "\tbeta", "gamma \n"}))},
   });
-  const auto trimmed = trim_df.set_features("raw", trim_df.features("raw").strip());
+  const auto trimmed = trim_df.set("raw", trim_df.features("raw").strip());
   expect(std::string(trimmed.features("raw").as_note().at(0)) == "alpha"
              && std::string(trimmed.features("raw").as_note().at(1)) == "beta"
              && std::string(trimmed.features("raw").as_note().at(2)) == "gamma",
@@ -2007,31 +2035,31 @@ void test_versatile_dataframe_families() {
   const DataFrame id_df({
       {"student_id", pluss::table::Thread(pluss::make_note({"#203930", "##7788", "4455##"}))},
   });
-  const auto left_trimmed = id_df.set_features("student_id", id_df.features("student_id").lstrip("#"));
+  const auto left_trimmed = id_df.set("student_id", id_df.features("student_id").lstrip("#"));
   expect(std::string(left_trimmed.features("student_id").as_note().at(0)) == "203930"
              && std::string(left_trimmed.features("student_id").as_note().at(1)) == "7788"
              && std::string(left_trimmed.features("student_id").as_note().at(2)) == "4455##",
          "Thread::lstrip(chars) should remove only leading matching characters");
-  const auto right_trimmed = id_df.set_features("student_id", id_df.features("student_id").rstrip("#"));
+  const auto right_trimmed = id_df.set("student_id", id_df.features("student_id").rstrip("#"));
   expect(std::string(right_trimmed.features("student_id").as_note().at(0)) == "#203930"
              && std::string(right_trimmed.features("student_id").as_note().at(1)) == "##7788"
              && std::string(right_trimmed.features("student_id").as_note().at(2)) == "4455",
          "Thread::rstrip(chars) should remove only trailing matching characters");
   const auto keywords = text_catalog.extract_keywords("txt", 3).tabelize();
-  expect(keywords.has_feature("keyword") && keywords.has_feature("count"),
+  expect(keywords.get("keyword").has_value() && keywords.get("count").has_value(),
          "extract_keywords should return keyword/count features");
   const auto sim_df = text_catalog.compute_similarity("txt", "txt2").tabelize();
   expect(sim_df.ncases() == text_df.ncases(), "compute_similarity should emit one score per case");
   const auto filtered_text = text_catalog.filter_by_text("txt", "rain").tabelize();
   expect(filtered_text.ncases() == 1, "filter_by_text should keep matching text rows");
   const auto enriched_text = text_catalog.add_text_features("txt").tabelize();
-  expect(enriched_text.has_feature("txt_char_len") && enriched_text.has_feature("txt_word_count"),
+  expect(enriched_text.get("txt_char_len").has_value() && enriched_text.get("txt_word_count").has_value(),
          "add_text_features should append generated text features");
   const auto text_stats = text_catalog.aggregate_text_stats("txt", "count").tabelize();
-  expect(text_stats.ncases() == 1 && text_stats.has_feature("value"),
+  expect(text_stats.ncases() == 1 && text_stats.get("value").has_value(),
          "aggregate_text_stats should emit one-row stat table");
   const auto text_tfidf = text_catalog.tfidf("txt").tabelize();
-  expect(text_tfidf.has_feature("txt_tfidf_norm"), "tfidf should append tfidf norm feature");
+  expect(text_tfidf.get("txt_tfidf_norm").has_value(), "tfidf should append tfidf norm feature");
   const auto from_catalog = pluss::kindle::Catalog::kindelize(df.head(5, false)).tabelize();
   expect(from_catalog.ncases() == 5, "Catalog::kindelize(df).tabelize() should reconstruct frame rows");
 
@@ -2049,13 +2077,13 @@ void test_versatile_dataframe_families() {
   expect(summary.features("jobs").as_series().to_vec<std::int64_t>(0) > 0,
          "summarize nunique should be positive for job feature");
 
-  const auto text_only = df.note_features();
-  expect(text_only.nfeatures() == 1 && text_only.has_feature("job"),
+  const auto text_only = df.feataxis().note();
+  expect(text_only.nfeatures() == 1 && text_only.get("job").has_value(),
          "note_features() should retain only Note-backed features");
 
-  const auto numeric_only = df.series_features();
-  expect(numeric_only.nfeatures() == 3 && numeric_only.has_feature("age")
-             && numeric_only.has_feature("balance") && numeric_only.has_feature("duration"),
+  const auto numeric_only = df.feataxis().series();
+  expect(numeric_only.nfeatures() == 3 && numeric_only.get("age").has_value()
+             && numeric_only.get("balance").has_value() && numeric_only.get("duration").has_value(),
          "series_features() should retain Series-backed features");
 
   const auto matrix_vals = df.matrix();
@@ -2122,13 +2150,13 @@ void test_versatile_dataframe_families() {
 
   auto df_assign = df;
   const auto age_before = df_assign.features("age").as_series().to_vec<std::int64_t>();
-  df_assign.set_features_("age", df_assign.features("age") + 7.0);
+  df_assign.set_("age", df_assign.features("age") + 7.0);
   const auto age_after = df_assign.features("age").as_series().to_vec<std::int64_t>();
   expect(age_after.size() == age_before.size(), "feature assignment should preserve case count");
   expect(age_after[0] == age_before[0] + 7, "set_features_(\"age\", feature(\"age\") + 7) should update in place");
 
-  df_assign.set_features_("age_plus_1", df_assign.features("age") + 1.0);
-  expect(df_assign.has_feature("age_plus_1"),
+  df_assign.set_("age_plus_1", df_assign.features("age") + 1.0);
+  expect(df_assign.get("age_plus_1").has_value(),
          "set_features_(\"new\", feature(\"curr\") + 1) should create a new feature");
   const auto age_plus = df_assign.features("age_plus_1").as_series().to_vec<std::int64_t>();
   expect(age_plus[0] == age_after[0] + 1, "new feature assignment should store RHS values");
@@ -2136,16 +2164,16 @@ void test_versatile_dataframe_families() {
   auto df_bulk = df;
   const auto age_before_bulk = df_bulk.features("age").as_series().to_vec<std::int64_t>();
   const auto dur_before_bulk = df_bulk.features("duration").as_series().to_vec<std::int64_t>();
-  df_bulk.set_features_("age", df_bulk.features("age") + 2.0);
-  df_bulk.set_features_("duration", df_bulk.features("duration") + 3.0);
+  df_bulk.set_("age", df_bulk.features("age") + 2.0);
+  df_bulk.set_("duration", df_bulk.features("duration") + 3.0);
   const auto age_after_bulk = df_bulk.features("age").as_series().to_vec<std::int64_t>();
   const auto dur_after_bulk = df_bulk.features("duration").as_series().to_vec<std::int64_t>();
   expect(age_after_bulk[0] == age_before_bulk[0] + 2 && dur_after_bulk[0] == dur_before_bulk[0] + 3,
          "set_features_ should update multiple existing features in place");
 
-  df_bulk.set_features_("age_copy2", df_bulk.features("age"));
-  df_bulk.set_features_("dur_copy2", df_bulk.features("duration"));
-  expect(df_bulk.has_feature("age_copy2") && df_bulk.has_feature("dur_copy2"),
+  df_bulk.set_("age_copy2", df_bulk.features("age"));
+  df_bulk.set_("dur_copy2", df_bulk.features("duration"));
+  expect(df_bulk.get("age_copy2").has_value() && df_bulk.get("dur_copy2").has_value(),
          "set_features_ should create missing features");
 
   bool threw_note_add = false;
@@ -2162,12 +2190,12 @@ void test_versatile_dataframe_families() {
          "Thread Note comparison should delegate to Note and return bool Series-backed Thread");
 
   const auto copied = df_bulk.features({"age", "duration"});
-  df_bulk.set_features_("age_copy3", copied.features("age"));
-  df_bulk.set_features_("dur_copy3", copied.features("duration"));
-  expect(df_bulk.has_feature("age_copy3") && df_bulk.has_feature("dur_copy3"),
+  df_bulk.set_("age_copy3", copied.features("age"));
+  df_bulk.set_("dur_copy3", copied.features("duration"));
+  expect(df_bulk.get("age_copy3").has_value() && df_bulk.get("dur_copy3").has_value(),
          "feature({..}) should return DataFrame for multi-feature copy workflows");
 
-  const auto temporal_only = df.timeline_features();
+  const auto temporal_only = df.feataxis().timeline();
   expect(temporal_only.nfeatures() == 0, "timeline_features() should be empty when no temporal features exist");
 
   expect(df.features("age").as_series().numel() == df.ncases(), "as_series should expose Series payload");
@@ -2243,7 +2271,7 @@ void test_versatile_dataframe_families() {
                             }},
                        });
 
-  expect(tdf.timeline_features().nfeatures() == 2,
+  expect(tdf.feataxis().timeline().nfeatures() == 2,
          "timeline_features() should retain Timeline features after cast(Timeline)");
   expect(tdf.features("start").as_timeline().numel() == 2, "as_timeline should expose Timeline payload");
   const auto tdf_timeindex = tdf.cast({{
@@ -2251,11 +2279,11 @@ void test_versatile_dataframe_families() {
       pluss::table::ThreadCastTarget::TimeIndex,
       pluss::table::ThreadCastOptions{},
   }});
-  expect(tdf_timeindex.timeline_features().nfeatures() == 2 && tdf_timeindex.has_feature("start")
-             && tdf_timeindex.has_feature("end"),
+  expect(tdf_timeindex.feataxis().timeline().nfeatures() == 2 && tdf_timeindex.get("start").has_value()
+             && tdf_timeindex.get("end").has_value(),
          "timeline_features() should retain Timeline/TimeIndex-backed features");
-  const auto shifted_tdf = tdf.shift({"start"}, 1, "D");
-  expect(shifted_tdf.ncases() == tdf.ncases() && shifted_tdf.has_feature("start"),
+  const auto shifted_tdf = tdf.tl("start").shift(1, "D");
+  expect(shifted_tdf.ncases() == tdf.ncases() && shifted_tdf.get("start").has_value(),
          "shift_time should preserve shape and update selected temporal feature");
 
   const auto shifted_age = df.shift({"age"}, 1);
@@ -2284,12 +2312,12 @@ void test_versatile_dataframe_families() {
 
   const auto floored_tdf = tdf.tl("start").floor("D");
   expect(floored_tdf.ncases() == tdf.ncases(), "tl().floor should preserve shape");
-  const auto localized_tdf = tdf.tz_localize({"start"}, "UTC");
-  const auto utc_tdf = localized_tdf.to_utc({"start"});
+  const auto localized_tdf = tdf.tl("start").localize({.tz = "UTC"});
+  const auto utc_tdf = localized_tdf.tl("start").utc();
   expect(utc_tdf.ncases() == tdf.ncases(), "tz_localize/to_utc should preserve shape");
   const auto daily_mean = tdf.ts("Duration_min").resample(
       "start", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
-  expect(daily_mean.ncases() == 2 && daily_mean.has_feature("Duration_min"),
+  expect(daily_mean.ncases() == 2 && daily_mean.get("Duration_min").has_value(),
          "resample should aggregate values onto time bins");
 
   const auto years = tdf.features("Start_Year").as_series().to_vec<std::int64_t>();
@@ -2319,7 +2347,7 @@ void test_versatile_dataframe_families() {
   expect(job_age_mean.ncases() <= 5, "mean_by(top_n) should cap row count");
 
   const auto name_counts_keep_na = df_nulls.count_by("name", 0, false, false);
-  expect(name_counts_keep_na.ncases() == 3, "count_by(dropna=false) should include NA bucket");
+  expect(name_counts_keep_na.ncases() == 3, "count_by(dropnull=false) should include NA bucket");
 
   const auto grouped_job = df.group_by(
       {"job"},
@@ -2331,8 +2359,8 @@ void test_versatile_dataframe_families() {
       true,
       false);
   expect(grouped_job.nfeatures() == 4, "group(single key) should emit key + requested aggregates");
-  expect(grouped_job.has_feature("job") && grouped_job.has_feature("cases")
-             && grouped_job.has_feature("age_mean") && grouped_job.has_feature("job_nunique"),
+  expect(grouped_job.get("job").has_value() && grouped_job.get("cases").has_value()
+             && grouped_job.get("age_mean").has_value() && grouped_job.get("job_nunique").has_value(),
          "group(single key) missing expected output features");
 
   const auto grouped_multi = df.group_by(
@@ -2352,12 +2380,12 @@ void test_versatile_dataframe_families() {
       {DataFrame::CombineOp::Features, "_r", true});
   expect(combined_features.nfeatures() == 4,
          "combine(features) should append right-hand features and resolve collisions");
-  expect(combined_features.has_feature("age") && combined_features.has_feature("job")
-             && combined_features.has_feature("age_r") && combined_features.has_feature("duration"),
+  expect(combined_features.get("age").has_value() && combined_features.get("job").has_value()
+             && combined_features.get("age_r").has_value() && combined_features.get("duration").has_value(),
          "combine(features) expected feature names missing");
 
   const auto bump_age = left_small.features("age").as_series().add(100.0);
-  const auto right_update = left_small.set_features("age", pluss::table::Thread(bump_age));
+  const auto right_update = left_small.set("age", pluss::table::Thread(bump_age));
   const auto combined_update = left_small.combine(
       right_update,
       {DataFrame::CombineOp::Update, "_r", true});
@@ -2378,12 +2406,12 @@ void test_versatile_dataframe_families() {
 
   auto let_df = df.features({"age", "duration", "balance"});
   let_df.set("age_copy") = let_df.features("age");
-  expect(let_df.has_feature("age_copy"), "set(single)=Thread should create/update feature");
+  expect(let_df.get("age_copy").has_value(), "set(single)=Thread should create/update feature");
   expect(let_df.features("age_copy").as_series().to_vec<std::int64_t>() == let_df.features("age").as_series().to_vec<std::int64_t>(),
          "set(single)=Thread should preserve assigned values");
 
   let_df.set("age_plus_duration") = let_df.features("age") + let_df.features("duration");
-  expect(let_df.has_feature("age_plus_duration"), "set(single)=expression should assign computed Thread");
+  expect(let_df.get("age_plus_duration").has_value(), "set(single)=expression should assign computed Thread");
 
   let_df.set("age") = let_df.features("duration");
   expect(let_df.features("age").as_series().to_vec<std::int64_t>() ==
@@ -2391,11 +2419,11 @@ void test_versatile_dataframe_families() {
          "set(single) should allow assigning into an existing feature");
 
   let_df.set({"age_rhs", "dur_rhs"}) = let_df.features({"age", "duration"});
-  expect(let_df.has_feature("age_rhs") && let_df.has_feature("dur_rhs"),
+  expect(let_df.get("age_rhs").has_value() && let_df.get("dur_rhs").has_value(),
          "set(multi)=DataFrame should assign multiple features");
 
   let_df.set({"age_rhs2", "dur_rhs2"}) = {let_df.features("age"), let_df.features("duration")};
-  expect(let_df.has_feature("age_rhs2") && let_df.has_feature("dur_rhs2"),
+  expect(let_df.get("age_rhs2").has_value() && let_df.get("dur_rhs2").has_value(),
          "set(multi)=initializer_list<Thread> should assign multiple features");
 
   const auto short_age = let_df.head(3, false).features("age");
@@ -2408,7 +2436,7 @@ void test_versatile_dataframe_families() {
   expect(partial_age_default_threw,
          "set(single) default should reject partial rhs length mismatch");
   let_df.set("partial_age", {.align = pluss::table::AlignBy::Caselbl}) = short_age;
-  expect(let_df.has_feature("partial_age"), "set(single) should accept labeled partial assignment");
+  expect(let_df.get("partial_age").has_value(), "set(single) should accept labeled partial assignment");
   expect(pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[0]
              && pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[1]
              && pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[2]
@@ -2445,7 +2473,7 @@ void test_versatile_dataframe_families() {
       let_df.features("age"),
       pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 2, 3})),
   };
-  expect(let_df.has_feature("default_a") && let_df.has_feature("default_b") &&
+  expect(let_df.get("default_a").has_value() && let_df.get("default_b").has_value() &&
              !pluss::table::detail::validity_mask(let_df.features("default_b"))->to_vec<bool>()[3],
          "set(multi) should align each rhs by cases and null-fill unmatched cases");
 
@@ -2627,8 +2655,8 @@ void test_versatile_dataframe_families() {
   const auto miss_any_axis0 = miss_isnull.any(Axis::Case);
   expect(miss_any_axis0.as_series().to_vec<bool>() == std::vector<bool>({false, true, true}),
          "DataFrame::any(axis=0) should reduce over cases and return one value per feature");
-  expect(miss_any_axis0.has_caselbl(), "DataFrame::any(axis=0) should carry feature labels");
-  const auto miss_any_axis0_labels = miss_any_axis0.caselbl().as_note();
+  expect(miss_any_axis0.label().has(), "DataFrame::any(axis=0) should carry feature labels");
+  const auto miss_any_axis0_labels = miss_any_axis0.label().values().as_note();
   expect(std::string(miss_any_axis0_labels.at(0)) == "id"
              && std::string(miss_any_axis0_labels.at(1)) == "score"
              && std::string(miss_any_axis0_labels.at(2)) == "label",
@@ -2656,22 +2684,22 @@ void test_versatile_dataframe_families() {
   expect(!miss_notna.features("score").as_series().to_vec<bool>(1),
          "notnull should invert isnull mask");
 
-  const auto miss_filled = miss.fillna(0.0, {"score"});
+  const auto miss_filled = miss.fillnull(0.0, {"score"});
   expect(miss_filled.features("score").as_series().to_vec<std::int64_t>(1) == 0,
-         "fillna(value, features) should replace selected numeric nulls");
+         "fillnull(value, features) should replace selected numeric nulls");
   expect(miss_filled.features("score").as_series().to_vec<std::int64_t>()
              == std::vector<std::int64_t>({10, 0, 30, 0}),
-         "fillna(value, features) should preserve selected numeric non-null values");
+         "fillnull(value, features) should preserve selected numeric non-null values");
   expect(!pluss::table::detail::has_validity_mask(miss_filled.features("score")),
-         "fillna(value, features) should clear numeric validity mask when all nulls are filled");
+         "fillnull(value, features) should clear numeric validity mask when all nulls are filled");
   expect(std::string(miss_filled.features("label").as_note().at(1)) == std::string(miss.features("label").as_note().at(1)),
          "missing(fill) on selected features should not mutate unselected features");
 
-  const auto miss_note_filled = miss.fillna("missing", {"label"});
+  const auto miss_note_filled = miss.fillnull("missing", {"label"});
   expect(std::string(miss_note_filled.features("label").as_note().at(1)) == "missing",
-         "fillna(string, features) should replace null Note values");
+         "fillnull(string, features) should replace null Note values");
   expect(!pluss::table::detail::has_validity_mask(miss_note_filled.features("label")),
-         "fillna(string, features) should clear Note validity mask when all nulls are filled");
+         "fillnull(string, features) should clear Note validity mask when all nulls are filled");
 
   auto validity = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
   auto* valid_ptr = reinterpret_cast<bool*>(validity.raw_data());
@@ -2702,24 +2730,24 @@ void test_versatile_dataframe_families() {
   });
 
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
-  const auto mixed_ts_filled = mixed_missing.fillna(ts_fill, {"ts"});
+  const auto mixed_ts_filled = mixed_missing.fillnull(ts_fill, {"ts"});
   const auto ts_ticks = mixed_ts_filled.features("ts").as_timeline().to_epoch_nanos_vector();
   const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
-         "fillna(Timeline, features) should replace null Timeline values");
+         "fillnull(Timeline, features) should replace null Timeline values");
   expect(!pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ts")),
-         "fillna(Timeline, features) should clear Timeline validity mask when all nulls are filled");
+         "fillnull(Timeline, features) should clear Timeline validity mask when all nulls are filled");
   expect(pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ti")),
-         "fillna(Timeline, features) should not mutate unselected TimeIndex features");
+         "fillnull(Timeline, features) should not mutate unselected TimeIndex features");
 
   const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
-  const auto mixed_ti_filled = mixed_missing.fillna(ti_fill, {"ti"});
+  const auto mixed_ti_filled = mixed_missing.fillnull(ti_fill, {"ti"});
   const auto ti_ticks = mixed_ti_filled.features("ti").as_timeindex().timeline().to_epoch_nanos_vector();
   const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
-         "fillna(TimeIndex, features) should replace null TimeIndex values");
+         "fillnull(TimeIndex, features) should replace null TimeIndex values");
   expect(!pluss::table::detail::has_validity_mask(mixed_ti_filled.features("ti")),
-         "fillna(TimeIndex, features) should clear TimeIndex validity mask when all nulls are filled");
+         "fillnull(TimeIndex, features) should clear TimeIndex validity mask when all nulls are filled");
 
   const auto miss_ffill = miss.ffill();
   expect(miss_ffill.features("score").as_series().to_vec<std::int64_t>(1) == 10,
@@ -2767,16 +2795,16 @@ void test_versatile_dataframe_families() {
   expect(std::abs(limited_interp.features("score").as_series().to_vec<double>(1) - 2.0) < 1e-12,
          "interp(limit) should linearly interpolate interior numeric gaps");
 
-  const auto mapped_fill = limited.fillna({
+  const auto mapped_fill = limited.fillnull({
       DataFrame::FillSpec{"score", pluss::table::Thread(pluss::make_series(std::vector<double>{99.0}))},
       DataFrame::FillSpec{"label", pluss::table::Thread(pluss::make_note(std::vector<std::string>{"missing"}))},
   });
   expect(mapped_fill.features("score").as_series().to_vec<double>(1) == 99.0
              && mapped_fill.features("score").as_series().to_vec<double>(2) == 99.0,
-         "fillna(FillSpec...) should fill numeric features with per-feature scalar Threads");
+         "fillnull(FillSpec...) should fill numeric features with per-feature scalar Threads");
   expect(std::string(mapped_fill.features("label").as_note().at(1)) == "missing"
              && std::string(mapped_fill.features("label").as_note().at(2)) == "missing",
-         "fillna(FillSpec...) should fill Note features with per-feature scalar Threads");
+         "fillnull(FillSpec...) should fill Note features with per-feature scalar Threads");
 
   auto null_mask = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
   auto* null_mask_ptr = reinterpret_cast<bool*>(null_mask.raw_data());
@@ -2811,9 +2839,9 @@ void test_versatile_dataframe_families() {
       .threshold = 3,
   });
   expect(miss_drop_features.nfeatures() == 2
-             && miss_drop_features.has_feature("id")
-             && miss_drop_features.has_feature("label")
-             && !miss_drop_features.has_feature("score"),
+             && miss_drop_features.get("id").has_value()
+             && miss_drop_features.get("label").has_value()
+             && !miss_drop_features.get("score").has_value(),
          "dropnull(DropOptions threshold, Axis::Feature) should drop selected features below threshold");
 
   const auto arranged_age = df.sort_values({"age"});
@@ -2884,7 +2912,7 @@ void test_versatile_dataframe_families() {
   expect(timeline_cast.features("Updated Date").kind() == ThreadKind::Note,
          "cast(spec): Timeline -> Note should delegate to underlying timeline string formatting");
 
-  const auto rolling_mean = numeric.rolling({{
+  const auto rolling_mean = numeric.ts().rolling({{
       "age_roll_mean",
       "age",
       pluss::table::ThreadWindowOp::RollingMean,
@@ -2894,7 +2922,7 @@ void test_versatile_dataframe_families() {
                                           false);
   expect(rolling_mean.ncases() == numeric.ncases(), "window(keep_input=false) should preserve case count");
   expect(rolling_mean.nfeatures() == 1, "window(keep_input=false) should emit only computed features");
-  expect(rolling_mean.has_feature("age_roll_mean"), "window should create requested output feature name");
+  expect(rolling_mean.get("age_roll_mean").has_value(), "window should create requested output feature name");
   expect(rolling_mean.features("age_roll_mean").kind() == ThreadKind::Series,
          "window output should be Series-backed");
   expect(rolling_mean.features("age_roll_mean").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
@@ -2911,7 +2939,7 @@ void test_versatile_dataframe_families() {
   expect(std::fabs(mean_v[2] - (static_cast<double>(age_i64[0] + age_i64[1] + age_i64[2]) / 3.0)) < 1e-9,
          "window rolling mean row2 mismatch");
 
-  const auto rolling_sum_keep_input = numeric.rolling({{
+  const auto rolling_sum_keep_input = numeric.ts().rolling({{
       "",
       "age",
       pluss::table::ThreadWindowOp::RollingSum,
@@ -2921,10 +2949,10 @@ void test_versatile_dataframe_families() {
                                                        true);
   expect(rolling_sum_keep_input.nfeatures() == numeric.nfeatures() + 1,
          "rolling(keep_input=true) should append computed feature");
-  expect(rolling_sum_keep_input.has_feature("age_rollsum_3"),
+  expect(rolling_sum_keep_input.get("age_rollsum_3").has_value(),
          "rolling default output name should use feature/op/window policy");
 
-  const auto score_roll_max = miss.rolling({{
+  const auto score_roll_max = miss.features({"score"}).ts().rolling({{
       "score_rollmax",
       "score",
       pluss::table::ThreadWindowOp::RollingMax,
@@ -2938,7 +2966,7 @@ void test_versatile_dataframe_families() {
   expect(std::fabs(score_roll_max_vals[1] - 10.0) < 1e-9,
          "rolling max should ignore null in two-row window");
 
-  const auto score_roll_min_minp2 = miss.rolling({{
+  const auto score_roll_min_minp2 = miss.features({"score"}).ts().rolling({{
       "score_rollmin",
       "score",
       pluss::table::ThreadWindowOp::RollingMin,
@@ -3305,11 +3333,11 @@ void test_series_nan_participates_in_table_missing_semantics() {
   expect(thread.notnull().as_series().to_vec<bool>() == std::vector<bool>({true, false, true}),
          "Thread::notnull should mark floating NaN as missing for Series payloads");
 
-  const auto filled = thread.fillna(9.0);
+  const auto filled = thread.fillnull(9.0);
   expect(filled.as_series().to_vec<double>() == std::vector<double>({1.0, 9.0, 3.0}),
-         "Thread::fillna should fill floating NaN values even without an explicit validity mask");
+         "Thread::fillnull should fill floating NaN values even without an explicit validity mask");
   expect(!pluss::table::detail::has_validity_mask(filled),
-         "Thread::fillna should clear missingness after filling floating NaN values");
+         "Thread::fillnull should clear missingness after filling floating NaN values");
 
   const auto df = DataFrame({{"score", thread}});
   const auto null_mask = df.isnull({"score"}).features("score").as_series().to_vec<bool>();
@@ -3322,7 +3350,7 @@ void test_series_nan_participates_in_table_missing_semantics() {
 
   const auto summed = df.sum(Axis::Case).as_series().to_vec<double>();
   expect(summed == std::vector<double>({4.0}),
-         "DataFrame::sum(skipna=true) should skip floating NaN values in numeric reductions");
+         "DataFrame::sum(skipnull=true) should skip floating NaN values in numeric reductions");
 
   const auto csv_path = write_temp_csv("nan_missing_export", "");
   df.save_csv(csv_path.string());
@@ -3432,6 +3460,701 @@ void test_timeline_sort_nat_ordering() {
          "Timeline::sort should keep NaT values at the end");
 }
 
+void test_atlas_label_accessor() {
+  const auto f0 = pluss::table::DataFrame({
+      {"sales", pluss::table::Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+  });
+  const auto f1 = pluss::table::DataFrame({
+      {"sales", pluss::table::Thread(pluss::make_series(std::vector<double>{30.0, 40.0}))},
+  });
+  const auto labels = pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{0, 1}));
+  const auto atlas = pluss::table::Atlas({f0, f1}, labels);
+
+  expect(atlas.label().has(), "Atlas::label().has should report explicit depth labels");
+  expect(atlas.label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "Atlas::label().values should expose typed depth labels");
+  expect(atlas.label().find(pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 9})))
+             .as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, -1}),
+         "Atlas::label().find should delegate to Thread label indexing");
+  expect(atlas.label().unite(pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 2})))
+             .as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Atlas::label().unite should preserve typed numeric depth labels");
+  expect(atlas.label().pos(static_cast<double>(1)).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1}),
+         "Atlas::label().pos should return depth positions through Thread label indexing");
+
+  const auto relabeled = atlas.label().set(
+      pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{10, 11})));
+  expect(relabeled.loc(static_cast<std::int64_t>(11)).features("sales").as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 40.0}),
+         "Atlas::label().set should replace depth labels");
+
+  const auto aligned = atlas.label().align(
+      pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 0})));
+  expect(aligned.dloc(0).features("sales").as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 40.0}) &&
+             aligned.label().values().as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({1, 0}),
+         "Atlas::label().align should reorder frames and carry requested depth labels");
+  expect(atlas.label().range().label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "Atlas::label().range should materialize typed range depth labels");
+  expect(!atlas.label().reset().label().has(),
+         "Atlas::label().reset should clear explicit depth labels");
+}
+
+void test_nexus_basic_workspace_ops() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11, 12})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 1, 2})},
+  });
+  const auto disp = DataFrame({
+      {"disp_id", pluss::make_series(std::vector<std::int64_t>{100, 101, 102})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11, 12})},
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
+  });
+
+  const auto nx = pluss::table::Nexus({
+      {"loan", loan},
+      {"account", account},
+      {"disp", disp},
+  });
+
+  expect(nx.defined(), "Nexus should be defined after named construction");
+  expect(nx.ntables() == 3, "Nexus should track table count");
+  expect(nx.keys() == std::vector<std::string>({"loan", "account", "disp"}),
+         "Nexus should preserve named insertion order");
+  expect(nx.names() == nx.keys(), "Nexus::names should alias keys");
+  expect(nx.frame("loan").nfeatures() == 2, "Nexus::frame(key) should fetch named tables");
+  expect(nx.frame(1).ncases() == 3, "Nexus::frame(index) should fetch ordered tables");
+  expect(!nx.get("client").has_value(), "Nexus::get should return nullopt for missing names");
+
+  const auto with_named = nx.inject("client", DataFrame({
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+  }));
+  expect(with_named.keys().back() == "client", "Nexus::inject(name, frame) should append named tables");
+  expect(!nx.has("client") && nx.ntables() == 3,
+         "Nexus non-mutating inject should not mutate the source workspace");
+
+  const auto with_auto = with_named.inject(DataFrame({
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2, 3})},
+      {"name", pluss::make_note({"A", "B", "C"})},
+  }));
+  expect(with_auto.keys().back() == "table_0", "Nexus unnamed inject should use deterministic auto names");
+
+  const auto with_many = with_auto.inject({
+      DataFrame({{"x", pluss::make_series(std::vector<std::int64_t>{1})}}),
+      DataFrame({{"y", pluss::make_series(std::vector<std::int64_t>{2})}}),
+  });
+  expect(with_many.keys()[5] == "table_1" && with_many.keys()[6] == "table_2",
+         "Nexus multi-inject should continue the auto-name sequence");
+
+  const auto renamed = with_many.rename("disp", "assignment");
+  expect(renamed.has("assignment") && !renamed.has("disp"), "Nexus::rename should replace the key");
+  expect(with_many.has("disp") && !with_many.has("assignment"),
+         "Nexus non-mutating rename should leave the source workspace unchanged");
+
+  const auto selected = renamed.select({"loan", "assignment"});
+  expect(selected.keys() == std::vector<std::string>({"loan", "assignment"}),
+         "Nexus::select should preserve requested order");
+
+  const auto dropped = renamed.drop({"table_1", "table_2"});
+  expect(dropped.ntables() == renamed.ntables() - 2 && !dropped.has("table_1"),
+         "Nexus::drop should remove named tables");
+
+  const auto summary = nx.summary();
+  expect(summary.ncases() == 3 && summary.nfeatures() == 3,
+         "Nexus::summary should expose one row per table with core size columns");
+  expect(summary.features("table").as_note().at(0) == "loan",
+         "Nexus::summary should include table names in order");
+}
+
+void test_nexus_delegation_and_atlas_interop() {
+  const auto weekday = DataFrame({
+      {"city", pluss::make_note({"Edmonton", "Calgary"})},
+      {"temp", pluss::make_series(std::vector<double>{12.0, 15.0})},
+  });
+  const auto weekend = DataFrame({
+      {"city", pluss::make_note({"Banff", "Jasper"})},
+      {"temp", pluss::make_series(std::vector<double>{8.0, 6.0})},
+  });
+
+  const auto nx = pluss::table::Nexus({
+      {"weekday", weekday},
+      {"weekend", weekend},
+  });
+
+  const auto narrowed = nx.apply("weekday", [](const DataFrame& frame) {
+    return frame.features({"city"});
+  });
+  expect(narrowed.frame("weekday").nfeatures() == 1 && narrowed.frame("weekend").nfeatures() == 2,
+         "Nexus::apply should delegate to a single DataFrame");
+
+  const auto mapped = nx.map_frames([](const DataFrame& frame) {
+    return frame.features({"city"});
+  });
+  expect(mapped.frame("weekday").nfeatures() == 1 && mapped.frame("weekend").nfeatures() == 1,
+         "Nexus::map_frames should delegate across all tables");
+
+  const auto atlas = nx.to_atlas({"weekday", "weekend"});
+  expect(atlas.depth() == 2, "Nexus::to_atlas should materialize a same-schema workspace subset");
+  expect(atlas.label().values().as_note().at(0) == "weekday",
+         "Nexus::to_atlas should default depth labels from table names");
+
+  const auto roundtrip = pluss::table::Nexus::from_atlas(atlas);
+  expect(roundtrip.keys() == std::vector<std::string>({"weekday", "weekend"}),
+         "Nexus::from_atlas should recover named tables from depth labels");
+  expect(roundtrip.frame("weekday").equals(weekday) && roundtrip.frame("weekend").equals(weekend),
+         "Nexus Atlas roundtrip should preserve frame contents");
+
+  const auto flowed = nx.flow([](const pluss::table::Nexus& value) {
+    return value.head(1);
+  });
+  expect(flowed.ntables() == 1 && flowed.keys().front() == "weekday",
+         "Nexus::flow should support chainable workspace callbacks");
+}
+
+void test_nexus_metadata_and_relationship_graph() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+  });
+  const auto disp = DataFrame({
+      {"disp_id", pluss::make_series(std::vector<std::int64_t>{100, 101})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502})},
+  });
+
+  const auto base = pluss::table::Nexus({
+      {"loan", loan},
+      {"account", account},
+      {"disp", disp},
+  });
+
+  pluss::table::TableMeta loan_meta;
+  loan_meta.grain = "one row per loan";
+  loan_meta.primary_key = {"loan_id"};
+  loan_meta.candidate_keys = {{"loan_id"}, {"account_id", "loan_id"}};
+  loan_meta.time_field = "issued_at";
+  loan_meta.case_labels = pluss::table::CaseLabelPolicy::ImplicitRange;
+  loan_meta.source = "bank.csv";
+  loan_meta.provenance = "loader";
+  loan_meta.note = "core lending table";
+
+  const auto with_meta = base.set_table_meta("loan", loan_meta);
+  expect(!base.has_table_meta("loan"), "Nexus non-mutating metadata set should not mutate source");
+  expect(with_meta.has_table_meta("loan"), "Nexus should retain stored metadata by table key");
+  expect(with_meta.table_meta("loan")->primary_key == std::vector<std::string>({"loan_id"}),
+         "Nexus::table_meta should expose stored primary key metadata");
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.confidence = 0.95;
+  loan_account.status = pluss::table::RelationshipValidationStatus::Declared;
+
+  pluss::table::Relationship account_disp;
+  account_disp.name = "account_disp";
+  account_disp.left_table = "account";
+  account_disp.right_table = "disp";
+  account_disp.keys = {{"account_id", "account_id"}};
+  account_disp.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+  account_disp.left_optional = false;
+  account_disp.right_optional = true;
+  account_disp.confidence = 1.0;
+  account_disp.status = pluss::table::RelationshipValidationStatus::Validated;
+
+  const auto graph = with_meta.add_relationships({loan_account, account_disp});
+  expect(graph.nrelationships() == 2, "Nexus should track relationship count");
+  expect(graph.has_relationship("loan_account"), "Nexus should index relationships by name");
+  expect(graph.relationship("account_disp")->right_table == "disp",
+         "Nexus::relationship should expose stored relationship payloads");
+
+  const auto renamed = graph.rename("disp", "assignment");
+  expect(renamed.relationship("account_disp")->right_table == "assignment",
+         "Nexus::rename should rewrite relationship table references");
+  expect(renamed.table_meta("loan")->note == std::optional<std::string>{"core lending table"},
+         "Nexus::rename should preserve unrelated table metadata");
+
+  const auto relabeled_meta = renamed.rename("loan", "credit");
+  expect(relabeled_meta.has_table_meta("credit") && !relabeled_meta.has_table_meta("loan"),
+         "Nexus::rename should move metadata to the renamed table key");
+  expect(relabeled_meta.relationship("loan_account")->left_table == "credit",
+         "Nexus::rename should rewrite left_table relationship references");
+
+  const auto subset = graph.select({"loan", "account"});
+  expect(subset.nrelationships() == 1 && subset.has_relationship("loan_account") &&
+             !subset.has_relationship("account_disp"),
+         "Nexus::select should retain only relationships whose endpoints survive");
+  expect(subset.has_table_meta("loan") && !subset.has_table_meta("disp"),
+         "Nexus::select should carry metadata only for retained tables");
+
+  const auto dropped = graph.drop({"disp"});
+  expect(dropped.nrelationships() == 1 && dropped.has_relationship("loan_account"),
+         "Nexus::drop should remove relationships touching dropped tables");
+}
+
+void test_nexus_validation_and_audit_layer() {
+  const auto loan_account_validity = pluss::make_series(std::vector<bool>{true, true, true, false});
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4})},
+      {"account_id",
+       pluss::table::Thread(
+           pluss::make_series(std::vector<std::int64_t>{10, 11, 999, 0}),
+           loan_account_validity)},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11, 11, 12})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 1, 2, 3})},
+  });
+  const auto disp = DataFrame({
+      {"disp_id", pluss::make_series(std::vector<std::int64_t>{100, 101, 102})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11, 12})},
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
+  });
+
+  pluss::table::TableMeta loan_meta;
+  loan_meta.primary_key = {"loan_id"};
+  loan_meta.candidate_keys = {{"account_id"}};
+
+  pluss::table::TableMeta account_meta;
+  account_meta.primary_key = {"account_id"};
+  account_meta.candidate_keys = {{"account_id", "district_id"}};
+
+  pluss::table::TableMeta disp_meta;
+  disp_meta.primary_key = {"disp_id"};
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.left_optional = true;
+  loan_account.right_optional = false;
+  loan_account.status = pluss::table::RelationshipValidationStatus::Declared;
+
+  const auto nx = pluss::table::Nexus({
+                        {"loan", loan},
+                        {"account", account},
+                        {"disp", disp},
+                    })
+                      .set_table_meta("loan", loan_meta)
+                      .set_table_meta("account", account_meta)
+                      .set_table_meta("disp", disp_meta)
+                      .add_relationship(loan_account);
+
+  expect(nx.validate_keys("loan"), "Nexus::validate_keys should accept a clean declared primary key");
+  expect(!nx.validate_keys("account"),
+         "Nexus::validate_keys should reject duplicate declared primary keys");
+  expect(nx.validate_keys("account", {"account_id", "district_id"}),
+         "Nexus::validate_keys(keys) should allow explicit alternate key audits");
+
+  const auto account_dups = nx.detect_duplicates("account");
+  expect(account_dups.ncases() == 2,
+         "Nexus::detect_duplicates should materialize repeated declared-key rows");
+  expect(account_dups.features("account_id").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({11, 11}),
+         "Nexus::detect_duplicates should retain duplicate key values");
+
+  const auto grain = nx.grain_audit("account");
+  expect(grain.ncases() == 2 && grain.nfeatures() == 9,
+         "Nexus::grain_audit should emit one audit row per declared key set");
+  expect(grain.features("duplicate_rows").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 0}),
+         "Nexus::grain_audit should quantify duplicate pressure per declared key set");
+  expect(grain.features("valid").as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true}),
+         "Nexus::grain_audit should mark invalid and valid key declarations explicitly");
+
+  const auto left_orphans =
+      nx.detect_orphans("loan_account", pluss::table::RelationshipSide::Left);
+  expect(left_orphans.ncases() == 1 &&
+             left_orphans.features("loan_id").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({3}),
+         "Nexus::detect_orphans(left) should expose unmatched complete-key left rows and exclude missing keys");
+
+  const auto right_orphans =
+      nx.detect_orphans("loan_account", pluss::table::RelationshipSide::Right);
+  expect(right_orphans.ncases() == 1 &&
+             right_orphans.features("account_id").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({12}),
+         "Nexus::detect_orphans(right) should expose unmatched right-side rows");
+
+  expect(!nx.validate_relationship("loan_account"),
+         "Nexus::validate_relationship should fail when coverage and uniqueness guarantees are broken");
+
+  const auto audit = nx.relationship_audit("loan_account");
+  expect(audit.ncases() == 1, "Nexus::relationship_audit should return a one-row audit summary");
+  expect(audit.features("left_missing_keys").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({1}) &&
+             audit.features("left_orphans").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({1}) &&
+             audit.features("right_duplicate_rows").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({2}),
+         "Nexus::relationship_audit should expose missing-key, orphan, and duplicate pressure together");
+  expect(audit.features("computed_status").as_note().at(0) == "invalid" &&
+             !audit.features("valid").as_series().to_vec<bool>().front(),
+         "Nexus::relationship_audit should surface the computed invalid state");
+}
+
+void test_nexus_relational_execution_helpers() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"status", pluss::make_note({"open", "closed"})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"status", pluss::make_note({"gold", "silver"})},
+  });
+  const auto disp = DataFrame({
+      {"disp_id", pluss::make_series(std::vector<std::int64_t>{100, 101, 102})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 10, 11})},
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
+      {"status", pluss::make_note({"owner", "disponent", "owner"})},
+  });
+  const auto client = DataFrame({
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
+      {"name", pluss::make_note({"Ama", "Kojo", "Esi"})},
+  });
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  pluss::table::Relationship account_disp;
+  account_disp.name = "account_disp";
+  account_disp.left_table = "account";
+  account_disp.right_table = "disp";
+  account_disp.keys = {{"account_id", "account_id"}};
+  account_disp.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+
+  pluss::table::Relationship disp_client;
+  disp_client.name = "disp_client";
+  disp_client.left_table = "disp";
+  disp_client.right_table = "client";
+  disp_client.keys = {{"client_id", "client_id"}};
+  disp_client.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  const auto nx = pluss::table::Nexus({
+                        {"loan", loan},
+                        {"account", account},
+                        {"disp", disp},
+                        {"client", client},
+                    })
+                      .add_relationships({loan_account, account_disp, disp_client});
+
+  pluss::table::JoinSpec direct;
+  direct.relationship_name = "loan_account";
+  direct.how = pluss::table::JoinHow::Left;
+
+  const auto joined = nx.join("loan", "account", direct);
+  expect(joined.ncases() == 2, "Nexus::join should delegate a direct relationship-driven left join");
+  expect(joined.title() == "loan_account",
+         "Nexus::join should assign a stable default result title");
+  expect(joined.get("status_account").has_value(),
+         "Nexus::join should use deterministic right-table suffixing for feature collisions");
+  expect(joined.features("district_id").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 2}),
+         "Nexus::join should pull right-table payload columns through DataFrame::unify");
+
+  const auto path = nx.path("loan", "client");
+  expect(path.steps.size() == 3,
+         "Nexus::path should discover a multi-hop relationship path through the workspace graph");
+  expect(path.steps[0].relationship_name == "loan_account" &&
+             path.steps[1].relationship_name == "account_disp" &&
+             path.steps[2].relationship_name == "disp_client",
+         "Nexus::path should preserve traversal order across relationships");
+  expect(!path.steps[0].reversed && !path.steps[1].reversed && !path.steps[2].reversed,
+         "Nexus::path should mark forward traversals as non-reversed");
+
+  const auto reverse_path = nx.path("client", "loan");
+  expect(reverse_path.steps.size() == 3 && reverse_path.steps[0].reversed &&
+             reverse_path.steps[1].reversed && reverse_path.steps[2].reversed,
+         "Nexus::path should mark reverse traversal against relationship direction");
+
+  const auto plan = nx.plan(path, pluss::table::JoinHow::Left);
+  expect(plan.root_table == "loan" && plan.steps.size() == 3,
+         "Nexus::plan should convert a graph path into an executable join plan");
+  expect(plan.result_name == "loan_client",
+         "Nexus::plan should generate a stable multi-table result name");
+  expect(plan.steps[1].spec.right_suffix == "_disp" &&
+             plan.steps[2].spec.relationship_name == std::optional<std::string>{"disp_client"},
+         "Nexus::plan should carry deterministic per-step suffixing and relationship provenance");
+
+  const auto materialized = nx.materialize(plan);
+  expect(materialized.title() == "loan_client",
+         "Nexus::materialize should apply the plan result name as the final frame title");
+  expect(materialized.ncases() == 3,
+         "Nexus::materialize should execute left-preserving multi-hop joins across the plan");
+  expect(materialized.get("status_account").has_value() &&
+             materialized.get("status_disp").has_value(),
+         "Nexus::materialize should preserve deterministic right-table suffixing across multiple joins");
+  expect(materialized.features("name").as_note().at(0) == "Ama" &&
+             materialized.features("name").as_note().at(1) == "Kojo" &&
+             materialized.features("name").as_note().at(2) == "Esi",
+         "Nexus::materialize should carry payload columns from the terminal table through the join chain");
+}
+
+void test_nexus_query_surface() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"amount", pluss::make_series(std::vector<double>{5000.0, 7000.0})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"status", pluss::make_note({"gold", "silver"})},
+  });
+  const auto disp = DataFrame({
+      {"disp_id", pluss::make_series(std::vector<std::int64_t>{100, 101, 102})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 10, 11})},
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
+  });
+  const auto client = DataFrame({
+      {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
+      {"name", pluss::make_note({"Ama", "Kojo", "Esi"})},
+      {"tier", pluss::make_note({"A", "B", "A"})},
+  });
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  pluss::table::Relationship account_disp;
+  account_disp.name = "account_disp";
+  account_disp.left_table = "account";
+  account_disp.right_table = "disp";
+  account_disp.keys = {{"account_id", "account_id"}};
+  account_disp.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+
+  pluss::table::Relationship disp_client;
+  disp_client.name = "disp_client";
+  disp_client.left_table = "disp";
+  disp_client.right_table = "client";
+  disp_client.keys = {{"client_id", "client_id"}};
+  disp_client.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  const auto nx = pluss::table::Nexus({
+                        {"loan", loan},
+                        {"account", account},
+                        {"disp", disp},
+                        {"client", client},
+                    })
+                      .add_relationships({loan_account, account_disp, disp_client});
+
+  const auto chained = nx.from("loan")
+                           .join("account")
+                           .join("disp")
+                           .join("client")
+                           .pick({"loan_id", "amount", "status", "name"})
+                           .name("sheet")
+                           .collect();
+  expect(chained.title() == "sheet",
+         "Nexus query chains should allow short final naming through name().collect()");
+  expect(chained.ncases() == 3 && chained.nfeatures() == 4,
+         "Nexus query chains should materialize multi-hop joins then project selected features");
+  expect(chained.features("name").as_note().at(0) == "Ama" &&
+             chained.features("name").as_note().at(1) == "Kojo" &&
+             chained.features("name").as_note().at(2) == "Esi",
+         "Nexus query join chaining should preserve terminal-table payload columns");
+
+  const auto hopped = nx.from("loan")
+                          .via("client")
+                          .pick({"loan_id", "name", "tier"})
+                          .collect();
+  expect(hopped.title() == "loan_client",
+         "NexusQuery::via should inherit the compact root-to-terminal default name");
+  expect(hopped.ncases() == 3 &&
+             hopped.features("tier").as_note().at(0) == "A" &&
+             hopped.features("tier").as_note().at(1) == "B" &&
+             hopped.features("tier").as_note().at(2) == "A",
+         "NexusQuery::via should expand a graph path into a materialized multi-hop result");
+
+  const auto trimmed = nx.from("loan")
+                           .join("account")
+                           .drop({"district_id"})
+                           .collect();
+  expect(!trimmed.get("district_id").has_value() && trimmed.get("status").has_value(),
+         "Nexus query chains should support post-join column dropping with a one-word verb");
+}
+
+void test_nexus_persistence_and_alias_surface() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"amount", pluss::make_series(std::vector<double>{5000.0, 7000.0})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"segment", pluss::make_note({"retail", "vip"})},
+  });
+
+  pluss::table::TableMeta loan_meta;
+  loan_meta.grain = "one row per loan";
+  loan_meta.primary_key = {"loan_id"};
+  loan_meta.candidate_keys = {{"loan_id"}, {"account_id", "loan_id"}};
+  loan_meta.source = "loan.csv";
+  loan_meta.provenance = "fixture";
+  loan_meta.note = "lending";
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.status = pluss::table::RelationshipValidationStatus::Validated;
+  loan_account.note = "primary join";
+
+  const auto nx = pluss::table::Nexus({
+                        {"loan", loan},
+                        {"account", account},
+                    })
+                      .meta("loan", loan_meta)
+                      .links({loan_account});
+
+  expect(nx.meta("loan")->primary_key == std::vector<std::string>({"loan_id"}),
+         "Nexus::meta should alias table metadata access cleanly");
+  expect(nx.links().size() == 1 && nx.links().front().name == "loan_account",
+         "Nexus::links should expose stored relationship payloads");
+  expect(nx.duplicates("loan").ncases() == 0,
+         "Nexus::duplicates should alias duplicate detection");
+  expect(nx.check("loan_account"),
+         "Nexus::check should alias relationship validation");
+  expect(nx.orphans("loan_account").ncases() == 0,
+         "Nexus::orphans should alias orphan detection");
+  expect(nx.audit("loan_account").features("computed_status").as_note().at(0) == "validated",
+         "Nexus::audit should alias the relationship audit summary");
+
+  const auto schema = nx.schema();
+  expect(schema.ncases() == 2 && schema.get("pkey").has_value(),
+         "Nexus::schema should expose a compact schema snapshot");
+  expect(schema.features("table").as_note().at(0) == "loan" &&
+             schema.features("source").as_note().at(0) == "loan.csv",
+         "Nexus::schema should carry table identity and provenance fields");
+
+  const auto graph = nx.graph();
+  expect(graph.ncases() == 1 && graph.features("name").as_note().at(0) == "loan_account",
+         "Nexus::graph should expose the relationship snapshot");
+
+  const auto before_fp = nx.fingerprint();
+  expect(!before_fp.empty(), "Nexus::fingerprint should produce a stable workspace hash");
+
+  const auto dir = std::filesystem::temp_directory_path() / "plussmic_nexus_store_debug";
+  std::filesystem::create_directories(dir);
+
+  nx.save(dir.string());
+  expect(std::filesystem::exists(dir / "manifest.csv") &&
+             std::filesystem::exists(dir / "schema.csv") &&
+             std::filesystem::exists(dir / "graph.csv") &&
+             std::filesystem::exists(dir / "tables" / "0_loan.parquet") &&
+             std::filesystem::exists(dir / "tables" / "1_account.parquet"),
+         "Nexus::save should persist a manifest, snapshots, and table payload files");
+
+  const auto loaded = pluss::table::Nexus::load(dir.string());
+  expect(loaded.keys() == std::vector<std::string>({"loan", "account"}),
+         "Nexus::load should restore workspace ordering and table keys");
+  expect(loaded.frame("loan").equals(loan) && loaded.frame("account").equals(account),
+         "Nexus::load should roundtrip saved DataFrame payloads");
+  expect(loaded.meta("loan")->primary_key == std::vector<std::string>({"loan_id"}) &&
+             loaded.meta("loan")->candidate_keys == std::vector<std::vector<std::string>>({{"loan_id"}, {"account_id", "loan_id"}}) &&
+             loaded.meta("loan")->source == std::optional<std::string>{"loan.csv"} &&
+             loaded.meta("loan")->provenance == std::optional<std::string>{"fixture"} &&
+             loaded.meta("loan")->note == std::optional<std::string>{"lending"},
+         "Nexus::load should restore per-table metadata");
+  expect(loaded.links().size() == 1 &&
+             loaded.links().front().keys == std::vector<std::pair<std::string, std::string>>({{"account_id", "account_id"}}) &&
+             loaded.links().front().cardinality == pluss::table::RelationshipCardinality::ManyToOne &&
+             loaded.links().front().status == pluss::table::RelationshipValidationStatus::Validated &&
+             loaded.links().front().confidence == 1.0 &&
+             loaded.links().front().note == std::optional<std::string>{"primary join"},
+         "Nexus::load should restore relationship graph metadata");
+  expect(loaded.check("loan_account"),
+         "Nexus::load should preserve relationship join keys for validation");
+  expect(loaded.schema().drop({"fingerprint"}).equals(nx.schema().drop({"fingerprint"})),
+         "Nexus::load should preserve the canonical schema snapshot");
+  expect(loaded.graph().equals(nx.graph()),
+         "Nexus::load should preserve the canonical relationship graph snapshot");
+  expect(loaded.fingerprint() == before_fp,
+         "Nexus save/load roundtrips should preserve the workspace fingerprint");
+}
+
+void test_nexus_cache_invalidation_on_mutation() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+  });
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  auto nx = pluss::table::Nexus({
+                                     {"loan", loan},
+                                     {"account", account},
+                                 })
+                .links({loan_account});
+
+  expect(nx.check("loan_account"),
+         "Baseline relationship validation should succeed before the phase-7 caches are warmed");
+  expect(nx.path("loan", "account").steps.size() == 1,
+         "Baseline direct path discovery should succeed before mutation");
+
+  nx.apply_("account", [](const DataFrame&) {
+    return DataFrame({
+        {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 10})},
+        {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+    });
+  });
+  expect(!nx.check("loan_account"),
+         "Relationship audit caches should invalidate after in-place frame mutation");
+
+  auto renamed = pluss::table::Nexus({
+                                           {"loan", loan},
+                                           {"account", account},
+                                       })
+                     .links({loan_account});
+  (void)renamed.path("loan", "account");
+  renamed.rename_("account", "acct");
+  expect(renamed.path("loan", "acct").steps.size() == 1,
+         "Path caches should invalidate after in-place table renaming");
+  expect_throw([&]() { (void)renamed.path("loan", "account"); },
+               "Old path cache entries should not survive an in-place rename");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -3474,6 +4197,15 @@ int main(int argc, char** argv) {
       {"thread_sort_values_and_corr_stability", test_thread_sort_values_and_corr_stability},
       {"corr_feature_projection_and_sort_chain", test_corr_feature_projection_and_sort_chain},
       {"timeline_sort_nat_ordering", test_timeline_sort_nat_ordering},
+      {"atlas_label_accessor", test_atlas_label_accessor},
+      {"nexus_basic_workspace_ops", test_nexus_basic_workspace_ops},
+      {"nexus_delegation_and_atlas_interop", test_nexus_delegation_and_atlas_interop},
+      {"nexus_metadata_and_relationship_graph", test_nexus_metadata_and_relationship_graph},
+      {"nexus_validation_and_audit_layer", test_nexus_validation_and_audit_layer},
+      {"nexus_relational_execution_helpers", test_nexus_relational_execution_helpers},
+      {"nexus_query_surface", test_nexus_query_surface},
+      {"nexus_persistence_and_alias_surface", test_nexus_persistence_and_alias_surface},
+      {"nexus_cache_invalidation_on_mutation", test_nexus_cache_invalidation_on_mutation},
   };
 
   std::size_t passed = 0;

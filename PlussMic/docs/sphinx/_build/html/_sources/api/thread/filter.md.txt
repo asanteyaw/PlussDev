@@ -41,9 +41,9 @@ auto out = thread.filter(mask);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fillna_.html">
+  <a class="prev-link" href="fillnull_.html">
     <span class="label">Previous</span>
-    <span class="title">fillna_</span>
+    <span class="title">fillnull_</span>
   </a>
   <a class="next-link" href="floordiv.html">
     <span class="label">Next</span>

@@ -178,13 +178,13 @@ public:
   Catalog sort_by(const std::vector<std::string>& fields,
                   const std::vector<bool>& ascending = {}) const;
   std::unordered_map<std::string, Catalog> group_by(std::string_view key_field) const;
-  Catalog fillna(double value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog fillna(std::string_view value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog fillna(const char* value, std::initializer_list<std::string_view> keys = {}) const {
-    return fillna(std::string_view{value != nullptr ? value : ""}, keys);
+  Catalog fillnull(double value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillnull(std::string_view value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillnull(const char* value, std::initializer_list<std::string_view> keys = {}) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""}, keys);
   }
-  Catalog fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const;
   Catalog dropna(std::initializer_list<std::string_view> keys = {}) const;
   Catalog ffill(std::initializer_list<std::string_view> keys = {}) const;
   Catalog bfill(std::initializer_list<std::string_view> keys = {}) const;

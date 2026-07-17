@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=9df275fa"></script>
+    <script src="_static/api_nav.js?v=7d8bedc3"></script>
     <script src="_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -45,7 +45,7 @@ Use it when you want column operations without carrying the full <code class="do
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">).</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">).</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">avg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">mean</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">city_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">);</span>
 </pre></div>

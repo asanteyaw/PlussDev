@@ -10,20 +10,20 @@ reference; it tells you where to look.
 | Load | `load`, `load_csv`, `load_txt`, `load_excel`, `load_json`, `load_parquet` |
 | Save | `save_csv`, `save_txt`, `save_excel`, `save_json`, `save_parquet`, `save_as` |
 | Inspect | `defined`, `ncases`, `nfeatures`, `features`, `info`, `describe`, `to_string` |
-| Select features | `features`, `select`, `select_like`, `select_regex`, `series_features`, `note_features`, `timeline_features` |
-| Manage features | `insert`, `drop`, `reorder`, `rename`, `set_axis`, `add_prefix`, `add_suffix` |
+| Select features | `features`, `feataxis().like`, `feataxis().match`, `feataxis().series`, `feataxis().note`, `feataxis().timeline` |
+| Manage features | `insert`, `drop`, `reorder`, `rename`, `feataxis().prefix`, `feataxis().suffix` |
 | Manage case labels | `label().values`, `label().set`, `label().reset`, `label().align` |
 | Row selection | `head`, `tail`, `view`, `cloc`, `slice`, `take`, `sample` |
 | Filter | `where`, `filter`, `query` |
-| Derive | `assign`, `set_features`, `set` |
+| Derive | `assign`, `set`, `set` |
 | Transform | `transform`, `cast`, `astype` |
 | Sort/rank | `sort_values`, `label().sort`, `top`, `bottom` |
-| Missing data | `isnull`, `notnull`, `fillna`, `dropnull`, `ffill`, `bfill` |
+| Missing data | `isnull`, `notnull`, `fillnull`, `dropnull`, `ffill`, `bfill` |
 | Arithmetic | `add`, `sub`, `mul`, `div`, `truediv`, `floordiv`, `mod`, `pow`, reverse variants |
 | Comparison | `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare` |
 | Reductions | `sum`, `mean`, `median`, `min`, `max`, `std`, `var`, `count`, `corr`, `ndistinct` |
 | Grouping | `aggregate`, `group_by`, `count_by`, `mean_by`, `pivot`, `pivot_table` |
-| Time | `tl`, `ts`, `resample`, `rolling`, `window`, `tz_convert`, `tz_localize`, `to_utc`, `floor_time`, `ceil_time`, `round`, `shift` |
+| Time | `tl`, `ts`, `tl().localize`, `tl().tz`, `tl().utc`, `tl().floor`, `tl().ceil`, `tl().round`, `tl().shift`, `ts().resample`, `ts().rolling`, `ts().window`, `ts().weigh`, `ts().bounded` |
 | Combine | `join`, `update`, `combine`, `unify`, `conform` |
 | Plot | `plot`, `plot3d` |
 | SQL | `sql`, `prepare_sql` |
@@ -36,7 +36,7 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | Task | Methods |
 | --- | --- |
 | Inspect | `defined`, `size`, `kind`, `dtype`, `info`, `to_string` |
-| Missing | `isnull`, `notnull`, `isnan`, `isfinite`, `fillna`, `dropnull`, `ffill`, `bfill` |
+| Missing | `isnull`, `notnull`, `isnan`, `isfinite`, `fillnull`, `dropnull`, `ffill`, `bfill` |
 | Row operations | `head`, `tail`, `view`, `shift`, `slice`, `take`, `filter`, `sort_values`, `distinct` |
 | Numeric | `abs`, `clip`, `log`, `exp`, reductions |
 | Text | `lower`, `replace`, `contains` |

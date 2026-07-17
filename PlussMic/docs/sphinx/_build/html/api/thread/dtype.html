@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,9 +44,9 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">dtype</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
 </pre></div>
 </div>
-<p>Return the scalar dtype name used by the underlying numeric series payload.</p>
-<p>This is the scalar-level type readout, not the higher-level payload-family summary used by <code class="docutils literal notranslate"><span class="pre">DataFrame::dtypes()</span></code>.</p>
-<p>Use it when you care about the concrete numeric storage type rather than only the broad payload family.</p>
+<p>Return the concrete dtype name used by the underlying thread payload.</p>
+<p>This is the concrete readout, not the higher-level payload-family summary used by <code class="docutils literal notranslate"><span class="pre">Thread::ptype()</span></code> and <code class="docutils literal notranslate"><span class="pre">DataFrame::ptypes()</span></code>.</p>
+<p>Use it when you care about concrete storage/readout detail rather than only the broad payload family.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -55,13 +55,13 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Scalar dtype name such as <code class="docutils literal notranslate"><span class="pre">float64</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, or <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p>
+Concrete dtype name such as <code class="docutils literal notranslate"><span class="pre">float64</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">utf8</span></code>, or <code class="docutils literal notranslate"><span class="pre">datetime64[ns,</span> <span class="pre">UTC]</span></code>.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a href="kind.html"><code>Thread::kind</code></a>: inspect the broader payload family.</p></li>
-<li><p><a href="../dataframe/dtypes.html"><code>DataFrame::dtypes</code></a>: inspect feature families across an entire frame.</p></li>
+<li><p><a href="ptype.html"><code>Thread::ptype</code></a>: inspect the broader payload family.</p></li>
+<li><p><a href="../dataframe/dtypes.html"><code>DataFrame::dtypes</code></a>: inspect concrete feature dtypes across an entire frame.</p></li>
 </ul>
 </section>
 <section id="notes">

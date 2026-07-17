@@ -1,0 +1,32 @@
+summary = """
+Return the broad Pluss payload family stored by this thread.
+
+This is the 1D equivalent of `DataFrame::ptypes()`.
+"""
+
+returns = """
+`std::string`
+    Payload family name: `Series`, `Note`, `Timeline`, or `TimeIndex`.
+"""
+
+see_also = [
+  "<a href=\"#dtype\"><code>Thread::dtype</code></a>: inspect the concrete payload dtype.",
+  "<a href=\"../../dataframe_api_reference.md#ptypes\"><code>DataFrame::ptypes</code></a>: inspect payload families across a frame."
+]
+
+notes = [
+  """
+`ptype()` is for dispatching by payload family. Use `dtype()` when storage detail matters.
+"""
+]
+
+[[examples]]
+title = "Inspect a numeric thread's payload family."
+code = """
+using namespace pluss::table;
+
+auto out = Thread(pluss::make_series({10.0, 20.0, 30.0})).ptype();
+"""
+output = """
+Series
+"""

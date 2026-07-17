@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::freq(pluss::RangeView<std::string_view> features = {}, std::int64_t top_n = 0, bool dropna = true) -> Thread
+DataFrame::freq(pluss::RangeView<std::string_view> features = {}, std::int64_t top_n = 0, bool dropnull = true) -> Thread
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ Counts the most frequent values or value-combinations across the selected featur
 **top_n**
     Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
-**dropna**
+**dropnull**
     When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 ## Returns

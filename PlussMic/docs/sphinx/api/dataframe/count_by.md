@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::count_by(std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = false) -> DataFrameView
+DataFrame::count_by(std::string_view feature, std::int64_t top_n = 0, bool dropnull = true, bool render = false) -> DataFrameView
 ```
 
 Group rows by one feature and return the count for each distinct key.
@@ -25,7 +25,7 @@ Optional cap on the number of groups returned.
 - `0`: keep every group.
 - positive integer: keep only the top `N` groups after sorting.
 
-**dropna**
+**dropnull**
 
 Missing-key policy.
 

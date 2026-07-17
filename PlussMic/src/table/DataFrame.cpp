@@ -1461,7 +1461,7 @@ Thread fill_numeric_missing_for_alignment_(const Thread& value, const AlignOptio
   if (!options.fill.has_value() || !value.defined() || value.kind() != ThreadKind::Series) {
     return value;
   }
-  return value.fillna(*options.fill);
+  return value.fillnull(*options.fill);
 }
 
 DataFrame fill_numeric_missing_for_alignment_(const DataFrame& frame, const AlignOptions& options) {
@@ -1628,7 +1628,7 @@ Thread align_thread_to_feature_axis_(
     return null_thread_like_(value, 0, where);
   }
 
-  const auto labels = value.caselbl();
+  const auto labels = value.label().values();
   std::unordered_map<std::string, std::vector<std::int64_t>> positions;
   positions.reserve(static_cast<std::size_t>(value.size()));
   for (std::int64_t i = 0; i < value.size(); ++i) {
@@ -1677,7 +1677,7 @@ Thread align_thread_to_case_axis_(
     return null_thread_like_(value, 0, where);
   }
 
-  const auto labels = value.caselbl();
+  const auto labels = value.label().values();
   std::unordered_map<std::string, std::vector<std::int64_t>> positions;
   positions.reserve(static_cast<std::size_t>(value.size()));
   for (std::int64_t i = 0; i < value.size(); ++i) {
@@ -2009,7 +2009,7 @@ DataFrame arrange_impl_frame(
   seen.reserve(input_specs.size());
   for (const auto& spec : input_specs) {
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::arrange: feature name cannot be empty");
-    PLUSS_CHECK(frame.has_feature(spec.feature),
+    PLUSS_CHECK(frame.get(spec.feature).has_value(),
                 "DataFrame::arrange: unknown feature '" + spec.feature + "'");
     if (seen.insert(spec.feature).second) {
       normalized.push_back(spec);
@@ -2445,7 +2445,7 @@ Thread align_assignment_thread_(
     return null_thread_like_(value, src.nrows_, where);
   }
 
-  const auto labels = value.caselbl();
+  const auto labels = value.label().values();
   std::unordered_map<std::string, std::int64_t> positions;
   positions.reserve(static_cast<std::size_t>(value.size()));
   for (std::int64_t i = 0; i < value.size(); ++i) {
@@ -2486,7 +2486,7 @@ bool assignment_cases_match_(
   if (!value.defined() || value.size() != src.nrows_) {
     return false;
   }
-  const auto labels = value.caselbl();
+  const auto labels = value.label().values();
   for (std::int64_t row = 0; row < src.nrows_; ++row) {
     if (thread_scalar_string_at(labels, row) != thread_scalar_string_at(src.cases_, row)) {
       return false;

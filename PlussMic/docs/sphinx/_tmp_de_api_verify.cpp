@@ -135,11 +135,11 @@ int main() {
       {"z", make_series({300.0, 400.0})},
   }, make_note({"C", "D"}));
 
-  block("DF_EXTEND_1", left_extend.extend_cases(right_extend).to_string());
+  block("DF_EXTEND_1", left_extend.extend(right_extend).to_string());
   block("DF_EXTEND_2",
-        left_extend.extend_cases(right_extend, FrameMatchRule::Common).to_string());
+        left_extend.extend(right_extend, FrameMatchRule::Common).to_string());
   block("DF_EXTEND_3",
-        left_extend.extend_cases(right_extend, FrameMatchRule::Unite, true).to_string());
+        left_extend.extend(right_extend, FrameMatchRule::Unite, true).to_string());
 
   auto thread_nums = Thread(make_series({10.0, 20.0, 30.0}));
   block("THREAD_DIV_1", thread_nums.div(10.0).to_string());

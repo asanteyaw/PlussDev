@@ -80,7 +80,7 @@ looks surprising, do not assume the manual should normalize it. Check the
 source path, add a focused regression test, and fix source-level defects before
 teaching the behavior as correct.
 
-For missing values, the expected `fillna` contract is:
+For missing values, the expected `fillnull` contract is:
 
 - existing non-null values remain unchanged;
 - null values in selected features are replaced;
@@ -96,7 +96,7 @@ Audit, then fill or drop:
 
 ```cpp
 df.isna().head(20);
-auto clean = df.fillna(0.0, {"amount"});
+auto clean = df.fillnull(0.0, {"amount"});
 auto complete = clean.dropnull();
 ```
 
@@ -123,7 +123,7 @@ for (const auto& name : df.features()) {
 Check:
 
 - grouping features have the expected type;
-- null group keys are handled by `dropna_keys`;
+- null group keys are handled by `dropnull_keys`;
 - the selected value feature is numeric for numeric operations;
 - `GroupOp::Count` vs `GroupOp::Nunique` semantics match your intent.
 

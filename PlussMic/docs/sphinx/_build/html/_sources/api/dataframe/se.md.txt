@@ -54,8 +54,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">scan</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="set.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">set</span>
   </a>
 </div>

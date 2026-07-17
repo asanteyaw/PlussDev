@@ -65,7 +65,7 @@ see `dataframe_display.md`.
 auto accidents = pluss::table::DataFrame::load_csv(
     "path/to/data.csv",
     {{"nrows", 64}})
-    .fillna(0.0, {"Lifecycle Cost", "Cost Variance (%)"})
+    .fillnull(0.0, {"Lifecycle Cost", "Cost Variance (%)"})
     .query("isnotnull(Agency Name)")
     .sort_values({"Lifecycle Cost"}, false)
     .head(10, false);

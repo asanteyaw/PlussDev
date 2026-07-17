@@ -97,8 +97,8 @@ int main() {
   txt.info();
 
   auto txt_aug = txt
-                     .set_features("city_lower", txt.features("city").as_note().lower())
-                     .set_features("comment_tagged", txt.features("comment").as_note().replace(" ", "_"));
+                     .set("city_lower", txt.features("city").as_note().lower())
+                     .set("comment_tagged", txt.features("comment").as_note().replace(" ", "_"));
 
   std::cout << "features(\"...\").as_note() chain derived features:\n";
   txt_aug.features({"city", "city_lower", "comment", "comment_tagged", "score"}).head(8);

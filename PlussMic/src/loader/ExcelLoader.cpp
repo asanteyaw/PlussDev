@@ -161,9 +161,9 @@ std::string scalar_for_excel(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-std::string thread_value_for_excel(const pluss::table::Thread& t, std::int64_t row, std::string_view na_rep) {
+std::string thread_value_for_excel(const pluss::table::Thread& t, std::int64_t row, std::string_view null_rep) {
   if (thread_value_is_missing_for_io(t, row)) {
-    return std::string(na_rep);
+    return std::string(null_rep);
   }
 
   switch (t.kind()) {
@@ -1098,10 +1098,10 @@ void save_excel(const pluss::table::DataFrame& frame,
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {
-      row.push_back(thread_value_for_excel(frame.label().values(), r, options.na_rep));
+      row.push_back(thread_value_for_excel(frame.label().values(), r, options.null_rep));
     }
     for (const auto& c : cols) {
-      row.push_back(thread_value_for_excel(c, r, options.na_rep));
+      row.push_back(thread_value_for_excel(c, r, options.null_rep));
     }
     emit_row(row);
   }

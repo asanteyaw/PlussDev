@@ -34,12 +34,8 @@ api/thread/bounded
 api/thread/btw
 api/thread/bucketize
 api/thread/casefold
-api/thread/caselbl
-api/thread/caselbl_
 api/thread/cast
 api/thread/chars
-api/thread/clear_caselbl
-api/thread/clear_caselbl_
 api/thread/clear_display_name
 api/thread/clip
 api/thread/compare
@@ -69,8 +65,8 @@ api/thread/eq
 api/thread/exp
 api/thread/extract
 api/thread/ffill
-api/thread/fillna
-api/thread/fillna_
+api/thread/fillnull
+api/thread/fillnull_
 api/thread/filter
 api/thread/floordiv
 api/thread/flow
@@ -80,7 +76,6 @@ api/thread/fullmatch
 api/thread/ge
 api/thread/gt
 api/thread/has
-api/thread/has_caselbl
 api/thread/has_display_name
 api/thread/head
 api/thread/hour
@@ -95,6 +90,7 @@ api/thread/isnan
 api/thread/isnull
 api/thread/kind
 api/thread/kurtosis
+api/thread/label
 api/thread/land
 api/thread/le
 api/thread/length
@@ -127,13 +123,13 @@ api/thread/partition
 api/thread/percentiles
 api/thread/pow
 api/thread/prod
+api/thread/ptype
 api/thread/put
 api/thread/radd
 api/thread/rand
-api/thread/rangelbl
-api/thread/rangelbl_
 api/thread/rank
 api/thread/rdiv
+api/thread/repeated
 api/thread/replace
 api/thread/rfloordiv
 api/thread/rmod
@@ -175,7 +171,6 @@ api/thread/top
 api/thread/transform
 api/thread/truediv
 api/thread/ts
-api/thread/unique
 api/thread/upper
 api/thread/value
 api/thread/var

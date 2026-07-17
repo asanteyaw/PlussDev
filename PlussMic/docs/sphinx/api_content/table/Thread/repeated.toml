@@ -1,0 +1,37 @@
+summary = """
+Build a boolean mask that marks every entry whose value appears more than once.
+
+`repeated()` differs from `duplicated()`: `duplicated()` marks duplicate occurrences according to a keep policy, while `repeated()` marks the whole repeated group.
+"""
+
+returns = """
+`Thread`
+    Boolean-like thread with one value per entry indicating whether that value belongs to a repeated group.
+"""
+
+notes = [
+  """
+For values `[A, B, A, C, B]`, `repeated()` returns `[true, true, true, false, true]`.
+""",
+  """
+Use `duplicated(...)` when you want pandas-style duplicate follower semantics such as `[false, false, true, false, true]`.
+"""
+]
+
+[[examples]]
+title = "Mark every member of repeated value groups."
+code = """
+using namespace pluss::table;
+
+auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}))
+               .repeated();
+"""
+output = """
+0  true
+1  true
+2  true
+3  false
+4  true
+dtype: Series
+"""
+

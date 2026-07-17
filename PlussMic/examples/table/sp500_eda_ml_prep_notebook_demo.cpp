@@ -36,7 +36,7 @@ int main() {
   scat_opts.corner = true;
   scat_opts.pair.kind = pluss::pl::flash::PairPlotKind::Reg;
   scat_opts.pair.diag_kind = pluss::pl::flash::PairPlotDiagKind::Density;
-  scat_opts.pair.dropna = true;
+  scat_opts.pair.dropnull = true;
   scat_opts.pair.max_points = 1400;
   scat_opts.pair.show_grid = true;
   df.plot()
@@ -94,7 +94,7 @@ int main() {
       .save_pdf("sp500_range_vs_logvolume_scatter.pdf");
 
 
-  let numeric = df.series_features();
+  let numeric = df.feataxis().series();
   let corr_table = numeric.corr(DataFrame::CorrMethod::Spearman, false);
   corr_table.save_csv("sp500_corr_matrix_spearman.csv");
   corr_table.head(12);

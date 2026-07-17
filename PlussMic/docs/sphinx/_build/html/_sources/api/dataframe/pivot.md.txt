@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::pivot(std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, bool dropna_keys = true, bool render = false) -> DataFrameView
+DataFrame::pivot(std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, bool dropnull_keys = true, bool render = false) -> DataFrameView
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ Reshapes long-form rows into a wider table indexed by one feature and expanded b
 **value_feature**
     Feature whose values populate pivot cells or grouped summaries.
 
-**dropna_keys**
+**dropnull_keys**
     When `true`, rows with null pivot/group keys are excluded before reshaping.
 
 **render**

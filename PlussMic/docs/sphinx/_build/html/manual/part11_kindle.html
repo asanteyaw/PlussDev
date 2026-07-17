@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=5a216172"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -54,8 +54,8 @@ instead of strict DataFrame ergonomics.</p>
 
 <span class="n">stream</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">dropna</span><span class="p">();</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">ffill</span><span class="p">();</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">bfill</span><span class="p">();</span>
 
@@ -100,7 +100,7 @@ instead of strict DataFrame ergonomics.</p>
 <p>Catalog operations include stream selection, mutation, merge, transform, text
 preprocessing, and export.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">apply</span><span class="p">(</span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">to_table</span><span class="p">();</span>
@@ -136,7 +136,7 @@ preprocessing, and export.</p>
 <p>Map catalogs:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">map_catalogs</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">catalog</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">apply_all</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">dropna</span><span class="p">();</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 <span class="w">  </span><span class="p">});</span>
 <span class="p">});</span>
 </pre></div>

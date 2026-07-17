@@ -49,7 +49,7 @@ Alignment policy.
 ## See Also
 
 - <a href="../dataframe/align.html"><code>DataFrame::align</code></a>: frame-level alignment for several features at once.
-- <a href="caselbl.html"><code>Thread::caselbl</code></a>: attach explicit labels before aligning by label.
+- <a href="label.html"><code>Thread::label</code></a>: use <code>label().set(...)</code> to attach explicit labels before aligning by label.
 
 ## Notes
 
@@ -67,7 +67,7 @@ Example 1. Align by case labels and let unmatched labels stay missing.
 using namespace pluss::table;
 
 auto labeled = Thread(pluss::make_series({10.0, 20.0, 30.0}))
-                   .caselbl(pluss::make_note({"b", "a", "c"}));
+                   .label().set(pluss::make_note({"b", "a", "c"}));
 
 auto out = labeled.align(
     pluss::make_note({"a", "b", "d"}),
@@ -90,7 +90,7 @@ Example 2. Fill newly introduced numeric slots during case-label alignment.
 using namespace pluss::table;
 
 auto labeled = Thread(pluss::make_series({10.0, 20.0, 30.0}))
-                   .caselbl(pluss::make_note({"b", "a", "c"}));
+                   .label().set(pluss::make_note({"b", "a", "c"}));
 
 auto out = labeled.align(
     pluss::make_note({"a", "b", "d"}),
@@ -113,7 +113,7 @@ Example 3. Align a one-value-per-feature thread by feature label.
 using namespace pluss::table;
 
 auto feature_thread = Thread(pluss::make_series({1.5, 2.5}))
-                          .caselbl(pluss::make_note({"A2", "A1"}));
+                          .label().set(pluss::make_note({"A2", "A1"}));
 
 auto out = feature_thread.align(
     pluss::make_note({"A1", "A2"}),
@@ -135,7 +135,7 @@ Example 4. Use strict positional alignment when you want no label-based remappin
 using namespace pluss::table;
 
 auto labeled = Thread(pluss::make_series({10.0, 20.0, 30.0}))
-                   .caselbl(pluss::make_note({"b", "a", "c"}));
+                   .label().set(pluss::make_note({"b", "a", "c"}));
 
 auto out = labeled.align(
     pluss::make_note({"x", "y", "z"}),

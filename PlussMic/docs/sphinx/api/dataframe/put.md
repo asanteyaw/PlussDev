@@ -389,9 +389,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="prod.html">
+  <a class="prev-link" href="ptypes.html">
     <span class="label">Previous</span>
-    <span class="title">prod</span>
+    <span class="title">ptypes</span>
   </a>
   <a class="next-link" href="put_.html">
     <span class="label">Next</span>

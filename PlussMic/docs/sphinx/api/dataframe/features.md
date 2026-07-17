@@ -287,9 +287,9 @@ Thread([100.0, 120.0, 90.0])
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="feature_ref.html">
+  <a class="prev-link" href="feataxis.html">
     <span class="label">Previous</span>
-    <span class="title">feature_ref</span>
+    <span class="title">feataxis</span>
   </a>
   <a class="next-link" href="ffill.html">
     <span class="label">Next</span>

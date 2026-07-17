@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::put" href="put.html" />
+    <link rel="next" title="DataFrame::ptypes" href="ptypes.html" />
     <link rel="prev" title="DataFrame::prep_sql" href="prep_sql.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">prod</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">prod</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
@@ -53,7 +53,7 @@
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>axis</strong>
 Reduction axis. <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> computes one product per numeric feature, while <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> computes one product per row across numeric features.</p>
-<p><strong>skipna</strong>
+<p><strong>skipnull</strong>
 When <code class="docutils literal notranslate"><span class="pre">true</span></code>, missing values are skipped during the reduction. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, missing state can affect the result.</p>
 </section>
 <section id="returns">
@@ -91,9 +91,9 @@ Value produced by this call.</p>
     <span class="label">Previous</span>
     <span class="title">prep_sql</span>
   </a>
-  <a class="next-link" href="put.html">
+  <a class="next-link" href="ptypes.html">
     <span class="label">Next</span>
-    <span class="title">put</span>
+    <span class="title">ptypes</span>
   </a>
 </div>
 </section>
@@ -147,7 +147,7 @@ Value produced by this call.</p>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
       <li>Previous: <a href="prep_sql.html" title="previous chapter">DataFrame::prep_sql</a></li>
-      <li>Next: <a href="put.html" title="next chapter">DataFrame::put</a></li>
+      <li>Next: <a href="ptypes.html" title="next chapter">DataFrame::ptypes</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

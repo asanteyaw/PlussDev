@@ -5,7 +5,7 @@
 ## Signatures
 
 ```cpp
-DataFrame::var(Axis axis = Axis::Case, bool skipna = true) -> Thread
+DataFrame::var(Axis axis = Axis::Case, bool skipnull = true) -> Thread
 
 DataFrame::var(Axis axis, const StatisticOptions& options) -> Thread
 ```
@@ -19,7 +19,7 @@ Computes per-feature variances for the selected numeric features.
 **axis**
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
-**skipna**
+**skipnull**
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
 **options**

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::max(Axis axis = Axis::Case, bool skipna = true) -> Thread
+DataFrame::max(Axis axis = Axis::Case, bool skipnull = true) -> Thread
 ```
 
 ## What It Does
@@ -17,7 +17,7 @@ Computes per-feature maxima for the selected numeric features.
 **axis**
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
-**skipna**
+**skipnull**
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
 ## Returns

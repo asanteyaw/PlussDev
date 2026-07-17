@@ -45,7 +45,7 @@ Use this overload when you want the frame to compute the derived features inside
 ## See Also
 
 - <a href="transform.html"><code>DataFrame::transform</code></a>: compute one derived thread from a callback when you are working row-wise or feature-wise.
-- <a href="set_features.html"><code>DataFrame::set_features</code></a>: write one feature directly when you already have the final thread.
+- <a href="set.html"><code>DataFrame::set</code></a>: write one feature directly when you already have the final thread.
 - <a href="put.html"><code>DataFrame::put</code></a>: update selected cells rather than constructing whole derived features.
 
 ## Notes

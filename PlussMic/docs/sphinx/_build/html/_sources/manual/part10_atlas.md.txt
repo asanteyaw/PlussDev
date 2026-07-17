@@ -112,7 +112,7 @@ Apply a DataFrame transform to every frame:
 
 ```cpp
 auto cleaned = atlas.map_frames([](const pluss::table::DataFrame& frame) {
-  return frame.fillna(0.0);
+  return frame.fillnull(0.0);
 });
 ```
 

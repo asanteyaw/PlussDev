@@ -91,7 +91,7 @@ void example_01_construct_and_inspect() {
 void example_02_select_and_reduce() {
   section("02 select and reduce");
   auto sales = sales_frame();
-  auto numeric = sales.series_features();
+  auto numeric = sales.feataxis().series();
 
   std::cout << numeric.to_string() << '\n';
   std::cout << "units mean=" << sales.features("units").mean().item<double>() << '\n';
@@ -155,7 +155,7 @@ void example_05_missing_data() {
   std::cout << df.to_string() << '\n';
   std::cout << "null rows=" << df.count_null_rows() << '\n';
   std::cout << df.isna().to_string() << '\n';
-  std::cout << df.fillna(0.0, {"units", "price"}).fillna("unknown", {"city"}).to_string() << '\n';
+  std::cout << df.fillnull(0.0, {"units", "price"}).fillnull("unknown", {"city"}).to_string() << '\n';
 }
 
 void example_06_csv_options(const std::filesystem::path& dir) {
@@ -290,7 +290,7 @@ void example_12_thread_missing_and_rows() {
 
   std::cout << "score:\n" << score.to_string() << '\n';
   std::cout << "isnull:\n" << score.isnull().to_string() << '\n';
-  std::cout << "fillna:\n" << score.fillna(99.0).to_string() << '\n';
+  std::cout << "fillnull:\n" << score.fillnull(99.0).to_string() << '\n';
   std::cout << "dropnull:\n" << score.dropnull().to_string() << '\n';
   std::cout << "shift(2):\n" << score.shift(2).to_string() << '\n';
   std::cout << "sort asc nulls first:\n" << score.sort_values(true, false).to_string() << '\n';
@@ -337,7 +337,7 @@ void example_14_csv_roundtrip(const std::filesystem::path& dir) {
   write_options.sep = ';';
   write_options.add_cases = true;
   write_options.case_label = "id";
-  write_options.na_rep = "";
+  write_options.null_rep = "";
 
   const auto path = dir / "plussmic_manual_roundtrip.csv";
   df.save_csv(path.string(), write_options);

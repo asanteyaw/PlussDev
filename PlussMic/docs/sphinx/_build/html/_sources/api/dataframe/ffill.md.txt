@@ -76,8 +76,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">features</span>
   </a>
-  <a class="next-link" href="fillna.html">
+  <a class="next-link" href="fillnull.html">
     <span class="label">Next</span>
-    <span class="title">fillna</span>
+    <span class="title">fillnull</span>
   </a>
 </div>

@@ -50,12 +50,12 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="extend_cases.html">
+  <a class="prev-link" href="extend.html">
     <span class="label">Previous</span>
-    <span class="title">extend_cases</span>
+    <span class="title">extend</span>
   </a>
-  <a class="next-link" href="feature_ref.html">
+  <a class="next-link" href="feataxis.html">
     <span class="label">Next</span>
-    <span class="title">feature_ref</span>
+    <span class="title">feataxis</span>
   </a>
 </div>

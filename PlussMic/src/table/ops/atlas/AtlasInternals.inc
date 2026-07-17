@@ -36,6 +36,13 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
   return {s, e};
 }
 
+Thread default_depth_labels_(std::int64_t depth) {
+  PLUSS_CHECK(depth >= 0, "Atlas: default depth labels size must be non-negative");
+  std::vector<std::int64_t> values(static_cast<std::size_t>(depth));
+  std::iota(values.begin(), values.end(), std::int64_t{0});
+  return Thread(pluss::make_series(values));
+}
+
 void validate_axis0_labels(const std::optional<Thread>& labels, std::int64_t depth) {
   if (!labels.has_value()) {
     return;

@@ -13,7 +13,7 @@ DataFrame::save_excel(std::string_view filepath, const pluss::loader::WriteExcel
 
 DataFrame::save_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> void
 
-DataFrame::save_excel(std::string_view filepath, std::string sheet_name, bool add_cases = false, bool header = true, std::string na_rep = "", std::optional<std::string> case_label = std::nullopt) -> void
+DataFrame::save_excel(std::string_view filepath, std::string sheet_name, bool add_cases = false, bool header = true, std::string null_rep = "", std::optional<std::string> case_label = std::nullopt) -> void
 ```
 
 ## What It Does
@@ -43,7 +43,7 @@ Writes the frame to an Excel sheet. Set `add_cases=true` when you want the curre
 **header**
     Controls whether feature names are written to, or expected from, the file header row.
 
-**na_rep**
+**null_rep**
     String written anywhere a null or missing value must be serialized.
 
 **case_label**

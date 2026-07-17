@@ -21,7 +21,7 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 **values**
     Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
@@ -120,8 +120,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">gt</span>
   </a>
-  <a class="next-link" href="has_feature.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">has_feature</span>
+    <span class="title">head</span>
   </a>
 </div>

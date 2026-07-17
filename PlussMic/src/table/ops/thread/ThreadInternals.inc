@@ -6,7 +6,7 @@ class ThreadImpl final : public pluss::msharp::RefCounted {
 public:
   ThreadImpl(Payload payload,
              std::optional<pluss::Series> validity_mask,
-             std::optional<pluss::Note> display_labels,
+             std::optional<Thread> display_labels,
              std::optional<std::string> display_name,
              LabelKind label_kind);
 
@@ -15,7 +15,7 @@ public:
   std::int64_t size_{0};
   std::string dtype_;
   std::optional<pluss::Series> validity_mask_;
-  std::optional<pluss::Note> display_labels_;
+  std::optional<Thread> display_labels_;
   std::optional<std::string> display_name_;
   LabelKind label_kind_{LabelKind::Default};
 };
@@ -95,14 +95,13 @@ void validate_validity_mask(const std::optional<pluss::Series>& mask, std::int64
   PLUSS_CHECK(m.numel() == size, "Thread: validity mask length mismatch");
 }
 
-void validate_display_labels(const std::optional<pluss::Note>& labels, std::int64_t size) {
+void validate_display_labels(const std::optional<Thread>& labels, std::int64_t size) {
   if (!labels.has_value()) {
     return;
   }
-  const auto& note = *labels;
-  PLUSS_CHECK(note.defined(), "Thread: display labels are undefined");
-  PLUSS_CHECK(note.dim() == 1, "Thread: display labels must be 1D");
-  PLUSS_CHECK(note.numel() == size, "Thread: display labels length mismatch");
+  const auto& thread = *labels;
+  PLUSS_CHECK(thread.defined(), "Thread: display labels are undefined");
+  PLUSS_CHECK(thread.size() == size, "Thread: display labels length mismatch");
 }
 
 std::int64_t infer_size(const pluss::Series& s) {
@@ -311,7 +310,7 @@ std::string infer_dtype(const Payload& payload) {
     } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
       return std::string("datetime64[ns, ") + std::string(v.tz()) + "]";
     } else {
-      return "timeindex";
+      return std::string("datetime64[ns, ") + std::string(v.timeline().tz()) + "]";
     }
   }, payload);
 }
@@ -319,7 +318,7 @@ std::string infer_dtype(const Payload& payload) {
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask,
-    std::optional<pluss::Note> display_labels = std::nullopt,
+    std::optional<Thread> display_labels = std::nullopt,
     std::optional<std::string> display_name = std::nullopt,
     LabelKind label_kind = LabelKind::Default);
 
@@ -365,7 +364,7 @@ pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int
 
 detail::ThreadImpl::ThreadImpl(Payload payload,
                                std::optional<pluss::Series> validity_mask,
-                               std::optional<pluss::Note> display_labels,
+                               std::optional<Thread> display_labels,
                                std::optional<std::string> display_name,
                                LabelKind label_kind)
     : payload_(std::move(payload)),
@@ -387,7 +386,7 @@ namespace {
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask,
-    std::optional<pluss::Note> display_labels,
+    std::optional<Thread> display_labels,
     std::optional<std::string> display_name,
     LabelKind label_kind) {
   return pluss::msharp::make_intrusive<detail::ThreadImpl>(

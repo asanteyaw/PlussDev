@@ -59,7 +59,7 @@ int main() {
   auto score_freq = df.features("score").freq(0, true);
   auto score_distinct = df.features("score").distinct();
   auto score_ndistinct = df.features("score").ndistinct();
-  auto score_duplicates = df.features("score").duplicated();
+  auto score_duplicates = df.features("score").repeated();
   auto score_scan = df.features("score").scan(ScanStatistic::Sum);
   auto score_skew = df.features("score").skew();
   auto score_kurt = df.features("score").kurtosis();
@@ -96,8 +96,8 @@ int main() {
   auto numeric = df.features({"score", "cost"});
   auto df_moving = numeric.ts().rolling(3, WindowStatistic::Mean);
   auto df_moving_var = numeric.ts().rolling(3, WindowStatistic::Var, WindowOptions{.min_count = 2, .ddof = 1});
-  auto df_weighted = numeric.weigh({1.0, 2.0, 3.0}, WindowStatistic::Mean);
-  auto df_bounded = numeric.bounded(
+  auto df_weighted = numeric.ts().weigh({1.0, 2.0, 3.0}, WindowStatistic::Mean);
+  auto df_bounded = numeric.ts().bounded(
       [](std::int64_t size, const WindowOptions&) {
         std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);
         std::vector<std::int64_t> ends;
@@ -136,7 +136,7 @@ int main() {
       Axis::Case);
   auto expanded_cases = df.transform(
       [](const DataFrame& row) {
-        return row.extend_cases(row, pluss::table::FrameMatchRule::Unite, true, false);
+        return row.extend(row, pluss::table::FrameMatchRule::Unite, true, false);
       },
       Axis::Case,
       pluss::table::ResultShape::Expand);

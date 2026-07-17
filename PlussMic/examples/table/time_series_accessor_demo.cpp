@@ -76,6 +76,6 @@ int main() {
   std::cout << "calendar columns=" << cal.nfeatures() << ", rows=" << cal.ncases() << "\n";
   std::cout << "daily rows=" << daily.ncases() << ", dense rows=" << dense.ncases() << "\n";
   std::cout << "aligned rows=" << aligned.ncases() << ", reindexed rows=" << reindexed.ncases() << "\n";
-  std::cout << "df has log_returns=" << (df.has_feature("log_returns") ? "true" : "false") << "\n";
+  std::cout << "df has log_returns=" << (df.get("log_returns").has_value() ? "true" : "false") << "\n";
   return 0;
 }

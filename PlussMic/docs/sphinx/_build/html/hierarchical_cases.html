@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=5a216172"></script>
+    <script src="_static/api_nav.js?v=7d8bedc3"></script>
     <script src="_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -54,7 +54,7 @@ look like joined strings, but operations use the structured case-label payloads.
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(position:</span> <span class="pre">int64)</span> <span class="pre">-&gt;</span> <span class="pre">Thread</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::case_study(pick:</span> <span class="pre">CasePick)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().sort(options:</span> <span class="pre">SortLabelOptions)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by(keys:</span> <span class="pre">LabelGroup,</span> <span class="pre">specs:</span> <span class="pre">RangeView&lt;GroupSpec&gt;,</span> <span class="pre">dropna_keys:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">true,</span> <span class="pre">render:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">false)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameView</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by(keys:</span> <span class="pre">LabelGroup,</span> <span class="pre">specs:</span> <span class="pre">RangeView&lt;GroupSpec&gt;,</span> <span class="pre">dropnull_keys:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">true,</span> <span class="pre">render:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">false)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameView</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().rename(renames:</span> <span class="pre">RangeView&lt;LabelRename&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().order(names:</span> <span class="pre">RangeView&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().drop(names:</span> <span class="pre">RangeView&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>

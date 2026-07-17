@@ -98,9 +98,9 @@ int main(int argc, char** argv) {
       });
 
   std::cout << "\nSplit by dtype groups:\n";
-  work.note_features().head(3);
-  work.series_features().head(3);
-  work.timeline_features().head(3);
+  work.feataxis().note().head(3);
+  work.feataxis().series().head(3);
+  work.feataxis().timeline().head(3);
 
   std::cout << "\n// =========== Question One==========\n";
   std::cout << "// What are the top 5 states with the most accidents?\n";

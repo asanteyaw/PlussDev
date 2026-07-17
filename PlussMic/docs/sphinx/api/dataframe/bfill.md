@@ -46,7 +46,7 @@ This overload is the better choice when you want to target only one or two colum
 ## See Also
 
 - <a href="ffill.html"><code>DataFrame::ffill</code></a>: propagate the last observed value forward instead of using the next one below.
-- <a href="fillna.html"><code>DataFrame::fillna</code></a>: write an explicit replacement value instead of borrowing a neighboring observation.
+- <a href="fillnull.html"><code>DataFrame::fillnull</code></a>: write an explicit replacement value instead of borrowing a neighboring observation.
 - <a href="../thread/bfill.html"><code>Thread::bfill</code></a>: backward-fill one column directly outside a frame.
 
 ## Notes

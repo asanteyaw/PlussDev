@@ -53,9 +53,9 @@ true
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="note_features.html">
+  <a class="prev-link" href="note.html">
     <span class="label">Previous</span>
-    <span class="title">note_features</span>
+    <span class="title">note</span>
   </a>
   <a class="next-link" href="observe.html">
     <span class="label">Next</span>

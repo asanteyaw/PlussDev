@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::all(Axis axis, pluss::RangeView<std::string_view> features = {}, bool skipna = true) -> Thread
+DataFrame::all(Axis axis, pluss::RangeView<std::string_view> features = {}, bool skipnull = true) -> Thread
 
-DataFrame::all(pluss::RangeView<std::string_view> features = {}, bool skipna = true) -> Thread
+DataFrame::all(pluss::RangeView<std::string_view> features = {}, bool skipnull = true) -> Thread
 ```
 
 Return whether every participating value is truthy along the requested axis.
@@ -24,7 +24,7 @@ Optional feature subset to reduce.
 - Pass a subset when only specific policy columns should participate in the truth test.
 - Output order follows the exact left-to-right order of the selected features.
 
-**skipna**
+**skipnull**
 
 Missing-value policy for the reduction.
 

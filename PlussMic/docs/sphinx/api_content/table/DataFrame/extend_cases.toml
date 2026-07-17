@@ -1,7 +1,7 @@
 summary = """
 Append the cases of another frame under the current frame while reconciling the feature set.
 
-`extend_cases(...)` is the vertical extension surface for table-shaped data. Use it when you want more rows from another frame and you need a policy for how the two feature sets should be combined.
+`extend(...)` is the vertical extension surface for table-shaped data. Use it when you want more rows from another frame and you need a policy for how the two feature sets should be combined.
 """
 
 returns = """
@@ -79,7 +79,7 @@ auto right = DataFrame({
     {"z", pluss::make_series({300.0, 400.0})},
 }, pluss::make_note({"C", "D"}));
 
-auto out = left.extend_cases(right);
+auto out = left.extend(right);
 """
 output = """
 =======================
@@ -108,7 +108,7 @@ auto right = DataFrame({
     {"z", pluss::make_series({300.0, 400.0})},
 }, pluss::make_note({"C", "D"}));
 
-auto out = left.extend_cases(right, FrameMatchRule::Common);
+auto out = left.extend(right, FrameMatchRule::Common);
 """
 output = """
 ===========
@@ -137,7 +137,7 @@ auto right = DataFrame({
     {"z", pluss::make_series({300.0, 400.0})},
 }, pluss::make_note({"C", "D"}));
 
-auto out = left.extend_cases(right, FrameMatchRule::Unite, true);
+auto out = left.extend(right, FrameMatchRule::Unite, true);
 """
 output = """
 =======================

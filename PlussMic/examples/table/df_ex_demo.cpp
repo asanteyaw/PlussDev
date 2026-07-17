@@ -93,7 +93,7 @@ int main() {
    grades_df.save_excel(data_file("grades_copy.xlsx").string(), "Grades");
    
    // full positional form:
-   // grades_df.save_excel("grades_copy.xlsx", "Grades", /*add_cases=*/false, /*header=*/true, /*na_rep=*/"NA");
+   // grades_df.save_excel("grades_copy.xlsx", "Grades", /*add_cases=*/false, /*header=*/true, /*null_rep=*/"NA");
 
    // load entire workbook with all sheets (note: may consume more memory if many/large sheets)
    auto loaded_full = pluss::table::DataFrame::load_excel(data_file("test_grades.xlsx").string(), nullptr, true);

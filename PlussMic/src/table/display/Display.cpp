@@ -205,7 +205,7 @@ Thread display_thread(const Thread& t) {
 
 std::string thread_value_at(const Thread& t, std::int64_t row) {
   if (!t.is_valid(row)) {
-    return "NA";
+    return "NULL";
   }
 
   switch (t.kind()) {
@@ -643,7 +643,7 @@ TableMatrix build_dataframe_matrix(
     auto render_data_cell = [&](std::int64_t cidx) {
       std::string value = thread_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
       if (sign_pad_by_column.contains(cidx) && sign_pad_by_column.at(cidx)) {
-        if (!value.empty() && value != "NA" && value.front() != '-') {
+        if (!value.empty() && value != "NULL" && value.front() != '-') {
           value.insert(value.begin(), ' ');
         }
       }
@@ -1342,7 +1342,7 @@ std::string render_html_table_body_(const DataFrame& frame,
       const auto case_numeric = is_numeric_thread(frame.label().values());
       body += fmt::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
-                          case_value == "NA" ? " missing" : "",
+                          case_value == "NULL" ? " missing" : "",
                           escape_html_(case_value),
                           escape_html_(case_value));
     }
@@ -1351,7 +1351,7 @@ std::string render_html_table_body_(const DataFrame& frame,
       const auto numeric = is_numeric_thread(cols[col]);
       body += fmt::format("<td class=\"{}{}\" data-sort-value=\"{}\">{}</td>",
                           numeric ? "num" : "",
-                          value == "NA" ? " missing" : "",
+                          value == "NULL" ? " missing" : "",
                           escape_html_(value),
                           escape_html_(value));
     }
@@ -1429,7 +1429,7 @@ class DataFrameVirtualTableModel final
     const auto& source = columns_[static_cast<std::size_t>(column)];
     const bool missing = !source.is_valid(row);
     return pluss::view::VirtualTableCell{
-        .text = missing ? std::string("NA") : thread_value_at(source, row),
+        .text = missing ? std::string("NULL") : thread_value_at(source, row),
         .missing = missing,
     };
   }
@@ -1571,8 +1571,8 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.ncases() > 0 ? thread_value_at(display_cases, 0) : std::string("NA");
-  const auto last_case = frame.ncases() > 0 ? thread_value_at(display_cases, frame.ncases() - 1) : std::string("NA");
+  const auto first_case = frame.ncases() > 0 ? thread_value_at(display_cases, 0) : std::string("NULL");
+  const auto last_case = frame.ncases() > 0 ? thread_value_at(display_cases, frame.ncases() - 1) : std::string("NULL");
 
   std::string body;
   body += "<div class=\"summary-grid\">";
@@ -1787,8 +1787,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.ncases() > 0 ? thread_value_at(display_cases, 0) : std::string("NA");
-  const auto last_case = frame.ncases() > 0 ? thread_value_at(display_cases, frame.ncases() - 1) : std::string("NA");
+  const auto first_case = frame.ncases() > 0 ? thread_value_at(display_cases, 0) : std::string("NULL");
+  const auto last_case = frame.ncases() > 0 ? thread_value_at(display_cases, frame.ncases() - 1) : std::string("NULL");
 
   TableMatrix summary;
   summary.headers = {"Field", "Value"};

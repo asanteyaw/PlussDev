@@ -51,6 +51,7 @@ class Atlas;
 class ThreadView;
 class ThreadNoteAccessor;
 class ThreadTimelineAccessor;
+class ThreadLabelAccessor;
 class TimeSeriesAccessor;
 
 enum class ThreadKind : std::uint8_t {
@@ -307,12 +308,12 @@ public:
   ~Thread();
 
   bool defined() const noexcept;
-  bool unique() const noexcept;
   bool shares_payload_with(const Thread& other) const noexcept;
   std::int64_t size() const;
   std::int64_t ncases() const;
   std::pair<std::int64_t, std::int64_t> shape() const;
   ThreadKind kind() const;
+  std::string ptype() const;
   std::string dtype() const;
   ThreadValue value() const;
   bool is_valid(std::int64_t row) const;
@@ -324,13 +325,13 @@ public:
   Thread invalid() const;
 
   // Functional-by-default transforms.
-  Thread fillna(double value) const;
-  Thread fillna(std::string_view value) const;
-  Thread fillna(const char* value) const {
-    return fillna(std::string_view{value != nullptr ? value : ""});
+  Thread fillnull(double value) const;
+  Thread fillnull(std::string_view value) const;
+  Thread fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
   }
-  Thread fillna(const pluss::Timeline& value) const;
-  Thread fillna(const pluss::TimeIndex& value) const;
+  Thread fillnull(const pluss::Timeline& value) const;
+  Thread fillnull(const pluss::TimeIndex& value) const;
   Thread abs() const;
   Thread clip(double min_value, double max_value) const;
   Thread round(std::int64_t decimals = 0) const;
@@ -338,13 +339,13 @@ public:
   Thread exp() const;
 
   // Explicit mutating transforms (copy-on-write when shared).
-  Thread& fillna_(double value);
-  Thread& fillna_(std::string_view value);
-  Thread& fillna_(const char* value) {
-    return fillna_(std::string_view{value != nullptr ? value : ""});
+  Thread& fillnull_(double value);
+  Thread& fillnull_(std::string_view value);
+  Thread& fillnull_(const char* value) {
+    return fillnull_(std::string_view{value != nullptr ? value : ""});
   }
-  Thread& fillna_(const pluss::Timeline& value);
-  Thread& fillna_(const pluss::TimeIndex& value);
+  Thread& fillnull_(const pluss::Timeline& value);
+  Thread& fillnull_(const pluss::TimeIndex& value);
 
   // 1D row-space transforms.
   ThreadView head(std::int64_t n = 5, bool render = false) const;
@@ -390,8 +391,8 @@ public:
   ThreadValue sum() const;
   ThreadValue prod() const;
   ThreadValue count(bool count_true = true) const;
-  ThreadValue any(bool skipna = true) const;
-  ThreadValue all(bool skipna = true) const;
+  ThreadValue any(bool skipnull = true) const;
+  ThreadValue all(bool skipnull = true) const;
   ThreadValue mean() const;
   ThreadValue median() const;
   ThreadValue min() const;
@@ -427,6 +428,7 @@ public:
   ThreadValue ndistinct(bool dropnull = true) const;
   Thread freq(std::int64_t top_n = 0, bool dropnull = true) const;
   Thread duplicated(bool keep_first = true, bool keep_last = false) const;
+  Thread repeated() const;
 
   Thread weigh(pluss::msharp::RangeView::Double weights,
                WindowStatistic statistic = WindowStatistic::Mean,
@@ -723,14 +725,7 @@ public:
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
   void info() const;
   void info(std::ostream& os) const;
-  bool has_caselbl() const;
-  Thread caselbl() const;
-  Thread caselbl(const Thread& labels) const;
-  Thread& caselbl_(const Thread& labels);
-  Thread rangelbl() const;
-  Thread& rangelbl_();
-  Thread clear_caselbl() const;
-  Thread& clear_caselbl_();
+  ThreadLabelAccessor label() const;
   Thread align(const Thread& target_labels, const AlignOptions& options = {}) const;
   bool has_display_name() const;
   std::string display_name() const;
@@ -750,6 +745,7 @@ private:
   friend class DataFrameView;
   friend class ThreadNoteAccessor;
   friend class ThreadTimelineAccessor;
+  friend class ThreadLabelAccessor;
   friend class ThreadValue;
   friend class ThreadView;
   friend class TimeSeriesAccessor;
@@ -771,6 +767,7 @@ private:
 
   explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
 
+  bool unique() const noexcept;
   bool has_validity_mask() const;
   const std::optional<pluss::Series>& validity_mask() const;
   Thread with_validity_mask(const pluss::Series& validity_mask) const;
@@ -783,6 +780,14 @@ private:
   Thread& with_display_labels_(const Thread& labels);
   Thread clear_display_labels() const;
   Thread& clear_display_labels_();
+  bool has_caselbl() const;
+  Thread caselbl() const;
+  Thread caselbl(const Thread& labels) const;
+  Thread& caselbl_(const Thread& labels);
+  Thread rangelbl() const;
+  Thread& rangelbl_();
+  Thread clear_caselbl() const;
+  Thread& clear_caselbl_();
   Thread sample_fraction_(double frac,
                           std::optional<std::uint64_t> random_state,
                           bool replace) const;
@@ -982,6 +987,41 @@ class TimeSeriesAccessor {
 
  private:
   const pluss::Series& series_payload_(const char* op) const;
+  Thread base_{};
+};
+
+class ThreadLabelAccessor {
+public:
+  explicit ThreadLabelAccessor(Thread base);
+
+  Thread values() const;
+  bool has() const;
+  Thread set(const Thread& labels) const;
+  Thread range() const;
+  Thread reset() const;
+  Thread align(const Thread& target_labels, const AlignOptions& options = {}) const;
+  Thread unite(const Thread& other) const;
+  Thread intersect(const Thread& other) const;
+  Thread diff(const Thread& other) const;
+  Thread symdiff(const Thread& other) const;
+  Thread find(const Thread& targets) const;
+  Thread pos(double value) const;
+  Thread pos(std::string_view value) const;
+  Thread pos(const char* value) const {
+    return pos(std::string_view{value != nullptr ? value : ""});
+  }
+  Thread slice(std::string_view start, std::string_view stop) const;
+  Thread fillnull(double value) const;
+  Thread fillnull(std::string_view value) const;
+  Thread fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
+  }
+  Thread fillnull(const pluss::Timeline& value) const;
+  Thread fillnull(const pluss::TimeIndex& value) const;
+  Thread isnull() const;
+  Thread notnull() const;
+
+private:
   Thread base_{};
 };
 

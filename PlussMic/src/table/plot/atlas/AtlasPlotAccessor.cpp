@@ -344,7 +344,7 @@ DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels,
 
 std::vector<std::string> default_triplet_features(const std::vector<DataFrame>& frames) {
   PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
-  const auto numeric = frames.front().series_features();
+  const auto numeric = frames.front().feataxis().series();
   auto names = numeric.features();
   PLUSS_CHECK(
       static_cast<std::int64_t>(names.size()) >= 3,
@@ -358,7 +358,7 @@ std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<s
     return default_triplet_features(frames);
   }
   PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
-  const auto numeric_names = frames.front().series_features().features();
+  const auto numeric_names = frames.front().feataxis().series().features();
   std::unordered_set<std::string> available_set;
   available_set.reserve(numeric_names.size());
   for (const auto& name : numeric_names) {
@@ -388,7 +388,7 @@ std::vector<std::string> resolve_depth_features(pluss::msharp::RangeView::Of<std
                                                 std::int64_t max_features,
                                                 std::string_view where) {
   PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
-  const auto numeric = frames.front().series_features();
+  const auto numeric = frames.front().feataxis().series();
   const auto numeric_names = numeric.features();
   std::unordered_set<std::string> available_set;
   available_set.reserve(numeric_names.size());
@@ -437,7 +437,7 @@ std::vector<double> depth_statistic_values(const std::vector<DataFrame>& frames,
     const auto& frame = frames[static_cast<std::size_t>(p)];
     require_size(frame.ncases(), ncases, where, "case axis");
     PLUSS_CHECK(
-        frame.has_feature(feature),
+        frame.get(feature).has_value(),
         std::string(where) + ": missing feature '" + std::string(feature) + "'");
     const auto frame_values = thread_to_numeric_values(frame.features(feature), where, feature);
     values.push_back(reduce_statistic(frame_values, statistic));
@@ -462,7 +462,7 @@ std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>&
     require_size(frame.ncases(), ncases, where, "case axis");
     for (const auto i : std::views::iota(std::size_t{0}, features.size())) {
       const auto& feature = features[i];
-      PLUSS_CHECK(frame.has_feature(feature), std::string(where) + ": missing feature '" + feature + "'");
+      PLUSS_CHECK(frame.get(feature).has_value(), std::string(where) + ": missing feature '" + feature + "'");
       const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
       require_size(static_cast<std::int64_t>(values.size()), ncases, where, feature);
       auto& dest = flattened[i];
@@ -492,7 +492,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
   for (const auto p : positions) {
     const auto& frame = frames[static_cast<std::size_t>(p)];
     require_size(frame.ncases(), ncases, where, "case axis");
-    PLUSS_CHECK(frame.has_feature(feature),
+    PLUSS_CHECK(frame.get(feature).has_value(),
                 std::string(where) + ": missing feature '" + std::string(feature) + "' in one or more frames");
   }
 
@@ -609,7 +609,7 @@ pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_
 
   for (const auto p : selected) {
     const auto& frame = frames_[static_cast<std::size_t>(p)];
-    PLUSS_CHECK(frame.has_feature(y_feature),
+    PLUSS_CHECK(frame.get(y_feature).has_value(),
                 "Atlas::plot().frames: missing y feature '" + std::string(y_feature) + "' in one or more frames");
     auto axis = resolve_frame_axis(frame, x_feature, "Atlas::plot().frames");
     auto values = thread_to_numeric_values(frame.features(y_feature), "Atlas::plot().frames", y_feature);
@@ -749,7 +749,7 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
     const auto& frame = frames_[static_cast<std::size_t>(selected_depth[i])];
     require_size(frame.ncases(), ncases, "Atlas::plot().cloud3", "case axis");
     PLUSS_CHECK(
-        frame.has_feature(x_feature) && frame.has_feature(y_feature) && frame.has_feature(z_feature),
+        frame.get(x_feature).has_value() && frame.get(y_feature).has_value() && frame.get(z_feature).has_value(),
         "Atlas::plot().cloud3: one or more requested features are missing in one or more frames");
 
     const auto x = thread_to_numeric_values(frame.features(x_feature), "Atlas::plot().cloud3", x_feature);
@@ -805,7 +805,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
     const auto& frame = frames_[static_cast<std::size_t>(p)];
     require_size(frame.ncases(), ncases, "Atlas::plot().depth", "case axis");
     PLUSS_CHECK(
-        frame.has_feature(feature),
+        frame.get(feature).has_value(),
         std::string("Atlas::plot().depth: missing feature '") + std::string(feature) + "'");
     const auto values = thread_to_numeric_values(frame.features(feature), "Atlas::plot().depth", feature);
     center_values.push_back(reduce_statistic(values, options.center));

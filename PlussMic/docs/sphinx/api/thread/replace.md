@@ -286,9 +286,9 @@ auto out = thread.replace("Tema", "Tamale");
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rdiv.html">
+  <a class="prev-link" href="repeated.html">
     <span class="label">Previous</span>
-    <span class="title">rdiv</span>
+    <span class="title">repeated</span>
   </a>
   <a class="next-link" href="rfloordiv.html">
     <span class="label">Next</span>

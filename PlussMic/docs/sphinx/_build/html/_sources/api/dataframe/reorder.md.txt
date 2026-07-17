@@ -162,8 +162,8 @@ col_25  col_10  col_1  col_2  col_3  col_4  col_20  col_5  col_6  col_7  col_8  
     <span class="label">Previous</span>
     <span class="title">rename_</span>
   </a>
-  <a class="next-link" href="replace.html">
+  <a class="next-link" href="repeated.html">
     <span class="label">Next</span>
-    <span class="title">replace</span>
+    <span class="title">repeated</span>
   </a>
 </div>

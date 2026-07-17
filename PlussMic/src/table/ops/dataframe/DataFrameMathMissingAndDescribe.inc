@@ -626,7 +626,7 @@ DataFrame DataFrame::replace(double from, pluss::null_t to, pluss::msharp::Range
 }
 
 DataFrame DataFrame::replace(pluss::null_t from, double to, pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return fillna(to, features);
+  return fillnull(to, features);
 }
 
 DataFrame DataFrame::replace(
@@ -672,7 +672,7 @@ DataFrame DataFrame::replace(
     pluss::null_t from,
     std::string_view to,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return fillna(to, features);
+  return fillnull(to, features);
 }
 
 DataFrame DataFrame::replace(
@@ -827,7 +827,7 @@ DataFrame DataFrame::replace(
     pluss::null_t from,
     const pluss::Timeline& to,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return fillna(to, features);
+  return fillnull(to, features);
 }
 
 DataFrame DataFrame::replace(
@@ -870,7 +870,7 @@ DataFrame DataFrame::replace(
     pluss::null_t from,
     const pluss::TimeIndex& to,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return fillna(to, features);
+  return fillnull(to, features);
 }
 
 namespace {
@@ -1013,18 +1013,18 @@ Thread with_reduce_labels_(
   const std::vector<std::string>& names,
   std::int64_t axis) {
   if (axis == 0) {
-    return detail::with_label_kind(out.caselbl(make_note_thread(names)), LabelKind::Feature);
+    return detail::with_label_kind(out.label().set(make_note_thread(names)), LabelKind::Feature);
   }
-  return detail::with_label_kind(out.caselbl(src.cases_), LabelKind::Case);
+  return detail::with_label_kind(out.label().set(src.cases_), LabelKind::Case);
 }
 
 pluss::Series reduced_validity_(
     const ReduceMatrix_& matrix,
     std::int64_t axis,
-    bool skipna,
+    bool skipnull,
     bool identity_defined_for_empty) {
   const auto counts = matrix.valid.to(pluss::codem::ScalarType::Int64).sum(axis);
-  if (!skipna) {
+  if (!skipnull) {
     const auto reduced_size =
         axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
     return counts.eq(static_cast<double>(reduced_size));
@@ -1049,7 +1049,7 @@ enum class NumericAxisOp_ : std::uint8_t {
 Thread reduce_numeric_(
     const detail::DataFrameImpl& src,
     std::int64_t axis,
-    bool skipna,
+    bool skipnull,
     NumericAxisOp_ op,
     std::string_view where) {
   const auto matrix = numeric_reduce_matrix_(src, where);
@@ -1121,7 +1121,7 @@ Thread reduce_numeric_(
     }
   }
 
-  const auto valid = reduced_validity_(matrix, axis, skipna, identity_defined);
+  const auto valid = reduced_validity_(matrix, axis, skipnull, identity_defined);
   return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
 }
 
@@ -1130,7 +1130,7 @@ Thread reduce_bool_(
     std::int64_t axis,
     pluss::msharp::RangeView::Of<std::string_view> features,
     bool use_all,
-    bool skipna,
+    bool skipnull,
     std::string_view where) {
   const auto matrix = bool_reduce_matrix_(src, features, where);
   const auto prepared =
@@ -1138,52 +1138,52 @@ Thread reduce_bool_(
               : matrix.values.logical_and(matrix.valid);
   const auto values = use_all ? prepared.all(axis) : prepared.any(axis);
   const auto valid =
-      skipna ? pluss::Series::ones(values.sizes(), pluss::codem::ScalarType::Bool)
+      skipnull ? pluss::Series::ones(values.sizes(), pluss::codem::ScalarType::Bool)
              : matrix.valid.all(axis);
   return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
 }
 
 } // namespace
 
-Thread DataFrame::sum(Axis axis, bool skipna) const {
+Thread DataFrame::sum(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::sum");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Sum, "DataFrame::sum");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Sum, "DataFrame::sum");
 }
 
-Thread DataFrame::mean(Axis axis, bool skipna) const {
+Thread DataFrame::mean(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::mean");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Mean, "DataFrame::mean");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Mean, "DataFrame::mean");
 }
 
-Thread DataFrame::median(Axis axis, bool skipna) const {
+Thread DataFrame::median(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::median");
   return reduce_numeric_(
-      impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Median, "DataFrame::median");
+      impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Median, "DataFrame::median");
 }
 
-Thread DataFrame::min(Axis axis, bool skipna) const {
+Thread DataFrame::min(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::min");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Min, "DataFrame::min");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Min, "DataFrame::min");
 }
 
-Thread DataFrame::max(Axis axis, bool skipna) const {
+Thread DataFrame::max(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::max");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Max, "DataFrame::max");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Max, "DataFrame::max");
 }
 
-Thread DataFrame::std(Axis axis, bool skipna) const {
+Thread DataFrame::std(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::std");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Std, "DataFrame::std");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Std, "DataFrame::std");
 }
 
-Thread DataFrame::var(Axis axis, bool skipna) const {
+Thread DataFrame::var(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::var");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Var, "DataFrame::var");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Var, "DataFrame::var");
 }
 
-Thread DataFrame::prod(Axis axis, bool skipna) const {
+Thread DataFrame::prod(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::prod");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Prod, "DataFrame::prod");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Prod, "DataFrame::prod");
 }
 
 Thread DataFrame::count(Axis axis) const {
@@ -1198,31 +1198,31 @@ Thread DataFrame::count(Axis axis) const {
   return with_reduce_labels_(std::move(out), src, names, normalized_axis);
 }
 
-Thread DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipna) const {
-  return any(Axis::Case, features, skipna);
+Thread DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
+  return any(Axis::Case, features, skipnull);
 }
 
 Thread DataFrame::any(Axis axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
-                      bool skipna) const {
+                      bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::any");
   return reduce_bool_(
-      impl_ref_(), normalized_axis, features, false, skipna, "DataFrame::any");
+      impl_ref_(), normalized_axis, features, false, skipnull, "DataFrame::any");
 }
 
-Thread DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipna) const {
-  return all(Axis::Case, features, skipna);
+Thread DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
+  return all(Axis::Case, features, skipnull);
 }
 
 Thread DataFrame::all(Axis axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
-                      bool skipna) const {
+                      bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::all");
   return reduce_bool_(
-      impl_ref_(), normalized_axis, features, true, skipna, "DataFrame::all");
+      impl_ref_(), normalized_axis, features, true, skipnull, "DataFrame::all");
 }
 
-Thread DataFrame::csmin(Axis axis, bool skipna) const {
+Thread DataFrame::csmin(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::csmin");
   const auto& src = impl_ref_();
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::csmin");
@@ -1238,11 +1238,11 @@ Thread DataFrame::csmin(Axis axis, bool skipna) const {
                  ? src.cases_.take(indices)
                  : make_note_thread(matrix.names).take(indices);
   out = out.with_validity_mask(
-      reduced_validity_(matrix, normalized_axis, skipna, false));
+      reduced_validity_(matrix, normalized_axis, skipnull, false));
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
-Thread DataFrame::csmax(Axis axis, bool skipna) const {
+Thread DataFrame::csmax(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::csmax");
   const auto& src = impl_ref_();
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::csmax");
@@ -1258,12 +1258,12 @@ Thread DataFrame::csmax(Axis axis, bool skipna) const {
                  ? src.cases_.take(indices)
                  : make_note_thread(matrix.names).take(indices);
   out = out.with_validity_mask(
-      reduced_validity_(matrix, normalized_axis, skipna, false));
+      reduced_validity_(matrix, normalized_axis, skipnull, false));
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
 Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> features,
-                            bool dropna) const {
+                            bool dropnull) const {
   const auto& src = impl_ref_();
 
   std::vector<std::string> names;
@@ -1292,20 +1292,20 @@ Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> featu
   for (const auto& name : names) {
     const auto it = src.name_to_idx_.find(name);
     PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + name + "'");
-    values.push_back(src.columns_[it->second].ndistinct(dropna).as_series().item<std::int64_t>());
+    values.push_back(src.columns_[it->second].ndistinct(dropnull).as_series().item<std::int64_t>());
   }
 
   return make_i64_thread(values)
-      .caselbl(make_note_thread(names))
+      .label().set(make_note_thread(names))
       .with_display_name("ndistinct");
 }
 
 Thread DataFrame::freq(pluss::msharp::RangeView::Of<std::string_view> features,
                        std::int64_t top_n,
-                       bool dropna) const {
+                       bool dropnull) const {
   const auto scoped = features.empty() ? *this : this->features(features);
   if (scoped.nfeatures() == 1) {
-    return scoped.features(scoped.features().front()).freq(top_n, dropna);
+    return scoped.features(scoped.features().front()).freq(top_n, dropnull);
   }
 
   std::unordered_map<std::string, std::int64_t> counts;
@@ -1317,12 +1317,12 @@ Thread DataFrame::freq(pluss::msharp::RangeView::Of<std::string_view> features,
       const auto column = scoped.features(name);
       if (!column.is_valid(row)) {
         observed = false;
-        if (dropna) break;
+        if (dropnull) break;
       }
       if (!key.empty()) key += "|";
       key += observed ? thread_scalar_string_at(column, row) : "NA";
     }
-    if (!observed && dropna) continue;
+    if (!observed && dropnull) continue;
     if (!counts.contains(key)) order.push_back(key);
     counts[key] += 1;
   }
@@ -1342,7 +1342,7 @@ Thread DataFrame::freq(pluss::msharp::RangeView::Of<std::string_view> features,
     values.push_back(counts[key]);
   }
   return make_i64_thread(values)
-      .caselbl(Thread(pluss::make_note(keys)))
+      .label().set(Thread(pluss::make_note(keys)))
       .with_display_name("freq");
 }
 
@@ -1356,7 +1356,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     const auto name = scoped.features().front();
     return scoped.features(name)
         .duplicated(keep_first, keep_last)
-        .caselbl(scoped.label().values())
+        .label().set(scoped.label().values())
         .with_display_name("duplicated");
   }
 
@@ -1381,8 +1381,12 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     }
   }
   return Thread(bool_series_from_keep(mask))
-      .caselbl(scoped.label().values())
+      .label().set(scoped.label().values())
       .with_display_name("duplicated");
+}
+
+Thread DataFrame::repeated(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return duplicated(features, false, false).with_display_name("repeated");
 }
 
 DataFrame DataFrame::drop_duplicates(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1573,7 +1577,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
     switch (spec.op) {
       case MissingOp::Fill:
         if (col.kind() == ThreadKind::Series) {
-          out_cols.push_back(col.fillna(*spec.value));
+          out_cols.push_back(col.fillnull(*spec.value));
         } else {
           out_cols.push_back(col);
         }
@@ -1767,14 +1771,14 @@ DataFrame DataFrame::rolling(pluss::msharp::RangeView::Of<WindowSpec> specs, boo
   return window(specs, keep_input);
 }
 
-DataFrame DataFrame::fillna(double value) const {
+DataFrame DataFrame::fillnull(double value) const {
   MissingSpec spec;
   spec.op = MissingOp::Fill;
   spec.value = value;
   return missing(spec);
 }
 
-DataFrame DataFrame::fillna(double value, pluss::msharp::RangeView::Of<std::string_view> features) const {
+DataFrame DataFrame::fillnull(double value, pluss::msharp::RangeView::Of<std::string_view> features) const {
   MissingSpec spec;
   spec.op = MissingOp::Fill;
   spec.value = value;
@@ -1782,11 +1786,11 @@ DataFrame DataFrame::fillna(double value, pluss::msharp::RangeView::Of<std::stri
   return missing(spec);
 }
 
-DataFrame DataFrame::fillna(std::string_view value) const {
-  return fillna(value, {});
+DataFrame DataFrame::fillnull(std::string_view value) const {
+  return fillnull(value, {});
 }
 
-DataFrame DataFrame::fillna(std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const {
+DataFrame DataFrame::fillnull(std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
   std::unordered_set<std::size_t> target_indices;
 
@@ -1799,7 +1803,7 @@ DataFrame DataFrame::fillna(std::string_view value, pluss::msharp::RangeView::Of
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna(string): unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(string): unknown feature '" + name + "'");
       target_indices.insert(it->second);
     }
   }
@@ -1813,7 +1817,7 @@ DataFrame DataFrame::fillna(std::string_view value, pluss::msharp::RangeView::Of
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
     if (col.kind() == ThreadKind::Note && col.has_validity_mask()) {
-      col = col.fillna(value);
+      col = col.fillnull(value);
       changed = true;
     }
   }
@@ -1825,11 +1829,11 @@ DataFrame DataFrame::fillna(std::string_view value, pluss::msharp::RangeView::Of
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
-DataFrame DataFrame::fillna(const pluss::Timeline& value) const {
-  return fillna(value, {});
+DataFrame DataFrame::fillnull(const pluss::Timeline& value) const {
+  return fillnull(value, {});
 }
 
-DataFrame DataFrame::fillna(
+DataFrame DataFrame::fillnull(
     const pluss::Timeline& value,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
@@ -1845,7 +1849,7 @@ DataFrame DataFrame::fillna(
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna(Timeline): unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(Timeline): unknown feature '" + name + "'");
       target_indices.insert(it->second);
     }
   }
@@ -1860,7 +1864,7 @@ DataFrame DataFrame::fillna(
     auto& col = out_cols[idx];
     const auto kind = col.kind();
     if ((kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) && col.has_validity_mask()) {
-      col = col.fillna(value);
+      col = col.fillnull(value);
       changed = true;
     }
   }
@@ -1872,11 +1876,11 @@ DataFrame DataFrame::fillna(
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
-DataFrame DataFrame::fillna(const pluss::TimeIndex& value) const {
-  return fillna(value, {});
+DataFrame DataFrame::fillnull(const pluss::TimeIndex& value) const {
+  return fillnull(value, {});
 }
 
-DataFrame DataFrame::fillna(
+DataFrame DataFrame::fillnull(
     const pluss::TimeIndex& value,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
@@ -1891,7 +1895,7 @@ DataFrame DataFrame::fillna(
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna(TimeIndex): unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(TimeIndex): unknown feature '" + name + "'");
       target_indices.insert(it->second);
     }
   }
@@ -1905,7 +1909,7 @@ DataFrame DataFrame::fillna(
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
     if (col.kind() == ThreadKind::TimeIndex && col.has_validity_mask()) {
-      col = col.fillna(value);
+      col = col.fillnull(value);
       changed = true;
     }
   }
@@ -1917,7 +1921,7 @@ DataFrame DataFrame::fillna(
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
-DataFrame DataFrame::fillna(pluss::msharp::RangeView::Of<FillSpec> specs) const {
+DataFrame DataFrame::fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) const {
   if (specs.size() == 0) {
     return *this;
   }
@@ -1928,10 +1932,10 @@ DataFrame DataFrame::fillna(pluss::msharp::RangeView::Of<FillSpec> specs) const 
   seen.reserve(specs.size());
 
   for (const auto& spec : specs) {
-    PLUSS_CHECK(!spec.feature.empty(), "DataFrame::fillna: FillSpec.feature cannot be empty");
+    PLUSS_CHECK(!spec.feature.empty(), "DataFrame::fillnull: FillSpec.feature cannot be empty");
     const auto it = src.name_to_idx_.find(spec.feature);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna: unknown feature '" + spec.feature + "'");
-    PLUSS_CHECK(spec.value.defined(), "DataFrame::fillna: FillSpec.value is undefined for feature '" + spec.feature + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull: unknown feature '" + spec.feature + "'");
+    PLUSS_CHECK(spec.value.defined(), "DataFrame::fillnull: FillSpec.value is undefined for feature '" + spec.feature + "'");
     if (!seen.insert(spec.feature).second) {
       continue;
     }
@@ -1943,42 +1947,42 @@ DataFrame DataFrame::fillna(pluss::msharp::RangeView::Of<FillSpec> specs) const 
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
-DataFrame& DataFrame::fillna_(double value) {
+DataFrame& DataFrame::fillnull_(double value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     if (c.kind() == ThreadKind::Series && c.has_validity_mask()) {
-      c.fillna_(value);
+      c.fillnull_(value);
     }
   }
   return *this;
 }
 
-DataFrame& DataFrame::fillna_(std::string_view value) {
+DataFrame& DataFrame::fillnull_(std::string_view value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     if (c.kind() == ThreadKind::Note && c.has_validity_mask()) {
-      c.fillna_(value);
+      c.fillnull_(value);
     }
   }
   return *this;
 }
 
-DataFrame& DataFrame::fillna_(const pluss::Timeline& value) {
+DataFrame& DataFrame::fillnull_(const pluss::Timeline& value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     const auto kind = c.kind();
     if ((kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) && c.has_validity_mask()) {
-      c.fillna_(value);
+      c.fillnull_(value);
     }
   }
   return *this;
 }
 
-DataFrame& DataFrame::fillna_(const pluss::TimeIndex& value) {
+DataFrame& DataFrame::fillnull_(const pluss::TimeIndex& value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     if (c.kind() == ThreadKind::TimeIndex && c.has_validity_mask()) {
-      c.fillna_(value);
+      c.fillnull_(value);
     }
   }
   return *this;
@@ -2269,27 +2273,27 @@ DataFrameView DataFrame::describe(bool render) const {
   return DataFrameView(std::move(out), render, "describe", title());
 }
 
-DataFrameView DataFrame::tally(std::int64_t top_n, bool dropna, bool render) const {
-  return tally_impl(impl_ref_().names_, top_n, dropna, render);
+DataFrameView DataFrame::tally(std::int64_t top_n, bool dropnull, bool render) const {
+  return tally_impl(impl_ref_().names_, top_n, dropnull, render);
 }
 
 DataFrameView DataFrame::tally(pluss::msharp::RangeView::Of<std::string_view> feature_names,
                                std::int64_t top_n,
-                               bool dropna,
+                               bool dropnull,
                                bool render) const {
-  return tally_impl(normalize_name_list(feature_names), top_n, dropna, render);
+  return tally_impl(normalize_name_list(feature_names), top_n, dropnull, render);
 }
 
 DataFrameView DataFrame::tally(std::string_view feature_name,
                                std::int64_t top_n,
-                               bool dropna,
+                               bool dropnull,
                                bool render) const {
-  return tally_impl({owned_name(feature_name)}, top_n, dropna, render);
+  return tally_impl({owned_name(feature_name)}, top_n, dropnull, render);
 }
 
 DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_names,
                                     std::int64_t top_n,
-                                    bool dropna,
+                                    bool dropnull,
                                     bool render) const {
   PLUSS_CHECK(!feature_names.empty(), "DataFrame::tally: at least one feature is required");
   PLUSS_CHECK(top_n >= 0, "DataFrame::tally: top_n must be >= 0");
@@ -2341,7 +2345,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
     for (const auto& key_info : key_infos) {
       const bool valid =
           !key_info.valid.has_value() || (*key_info.valid)[static_cast<std::size_t>(r)];
-      if (!valid && dropna) {
+      if (!valid && dropnull) {
         skip = true;
         break;
       }

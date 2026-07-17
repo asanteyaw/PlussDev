@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -47,7 +47,7 @@
 </pre></div>
 </div>
 <p>Drop rows according to a missing-data rule.</p>
-<p>This is the row-removal counterpart to <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">mask(...)</span></code>.</p>
+<p>This is the row-removal counterpart to <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">mask(...)</span></code>.</p>
 <p>Use it when rows with incomplete measurements, grades, or join keys should be excluded from later computation.</p>
 </section>
 <section id="parameters">
@@ -80,7 +80,7 @@ Frame containing only the rows that survive the requested null policy.</p>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a href="fillna.html"><code>DataFrame::fillna</code></a>: replace missing values instead of dropping rows.</p></li>
+<li><p><a href="fillnull.html"><code>DataFrame::fillnull</code></a>: replace missing values instead of dropping rows.</p></li>
 <li><p><a href="isnull.html"><code>DataFrame::isnull</code></a>, <a href="notnull.html"><code>DataFrame::notnull</code></a>: inspect missingness first.</p></li>
 </ul>
 </section>

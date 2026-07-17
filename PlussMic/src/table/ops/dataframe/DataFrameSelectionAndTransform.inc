@@ -558,7 +558,7 @@ DataFrame DataFrame::transform(
           "DataFrame::transform: Preserve requires the input feature schema");
     }
     output = output.defined()
-                 ? output.extend_cases(
+                 ? output.extend(
                        mapped, FrameMatchRule::Unite, true, false)
                  : std::move(mapped);
   }
@@ -1054,7 +1054,7 @@ DataFrame DataFrameTimelineAccessor::span(
     }
     PLUSS_CHECK(is_time_like_thread_(source.kind()),
                 "DataFrame::tl().span: feature '" + name + "' is not Timeline/TimeIndex");
-    PLUSS_CHECK(other.has_feature(name),
+    PLUSS_CHECK(other.get(name).has_value(),
                 "DataFrame::tl().span: other DataFrame is missing feature '" + name + "'");
     columns.emplace_back(name, source.tl().span(other.features(name), options));
   }
@@ -1334,49 +1334,6 @@ DataFrame& DataFrame::put_(std::string_view feature,
   return *this;
 }
 
-DataFrame DataFrame::tz_convert(pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name) const {
-  const auto tz = owned_name(tz_name);
-  PLUSS_CHECK(!tz.empty(), "DataFrame::tz_convert: tz_name cannot be empty");
-  const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::tz_convert");
-  auto out_cols = src.columns_;
-  for (const auto idx : indices) {
-    const auto& col = src.columns_[idx];
-    if (col.kind() == ThreadKind::Timeline) {
-      out_cols[idx] = Thread(col.as_timeline().tz_convert(tz), col.validity_mask());
-    } else {
-      out_cols[idx] = Thread(col.as_timeindex().tz_convert(tz), col.validity_mask());
-    }
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::tz_localize(pluss::msharp::RangeView::Of<std::string_view> features,
-                                 std::string_view tz_name,
-                                 int fold,
-                                 std::string_view nonexistent) const {
-  const auto tz = owned_name(tz_name);
-  const auto nonexistent_mode = owned_name(nonexistent);
-  PLUSS_CHECK(!tz.empty(), "DataFrame::tz_localize: tz_name cannot be empty");
-  PLUSS_CHECK(!nonexistent_mode.empty(), "DataFrame::tz_localize: nonexistent mode cannot be empty");
-  const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::tz_localize");
-  auto out_cols = src.columns_;
-  for (const auto idx : indices) {
-    const auto& col = src.columns_[idx];
-    if (col.kind() == ThreadKind::Timeline) {
-      out_cols[idx] = Thread(col.as_timeline().tz_localize(tz, fold, nonexistent_mode), col.validity_mask());
-    } else {
-      out_cols[idx] = Thread(col.as_timeindex().tz_localize(tz, fold, nonexistent_mode), col.validity_mask());
-    }
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::to_utc(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return tz_convert(features, "UTC");
-}
-
 DataFrame DataFrame::has(double value) const {
   const auto& src = impl_ref_();
   std::vector<Thread> out_cols;
@@ -1408,42 +1365,4 @@ DataFrame DataFrame::has(const Thread& values) const {
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
-}
-
-DataFrame DataFrame::shift(pluss::msharp::RangeView::Of<std::string_view> features,
-                           int periods,
-                           std::string_view freq) const {
-  const auto freq_owned = owned_name(freq);
-  PLUSS_CHECK(!freq_owned.empty(), "DataFrame::shift: freq cannot be empty");
-  const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::shift");
-  auto out_cols = src.columns_;
-  for (const auto idx : indices) {
-    const auto& col = src.columns_[idx];
-    if (col.kind() == ThreadKind::Timeline) {
-      out_cols[idx] = Thread(col.as_timeline().shift(periods, freq_owned), col.validity_mask());
-      continue;
-    }
-    const auto shifted_timeline = col.as_timeindex().timeline().shift(periods, freq_owned);
-    out_cols[idx] = Thread(shifted_timeline.to_timeindex(false), col.validity_mask());
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::round(pluss::msharp::RangeView::Of<std::string_view> features,
-                           std::string_view unit) const {
-  const auto unit_owned = owned_name(unit);
-  PLUSS_CHECK(!unit_owned.empty(), "DataFrame::round: unit cannot be empty");
-  const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::round");
-  auto out_cols = src.columns_;
-  for (const auto idx : indices) {
-    const auto& col = src.columns_[idx];
-    if (col.kind() == ThreadKind::Timeline) {
-      out_cols[idx] = Thread(col.as_timeline().round(unit_owned), col.validity_mask());
-    } else {
-      out_cols[idx] = Thread(col.as_timeindex().round(unit_owned), col.validity_mask());
-    }
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }

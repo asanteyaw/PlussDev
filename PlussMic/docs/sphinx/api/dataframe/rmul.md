@@ -50,8 +50,8 @@ a    b
     <span class="label">Previous</span>
     <span class="title">rmod</span>
   </a>
-  <a class="next-link" href="rolling.html">
+  <a class="next-link" href="ror.html">
     <span class="label">Next</span>
-    <span class="title">rolling</span>
+    <span class="title">ror</span>
   </a>
 </div>

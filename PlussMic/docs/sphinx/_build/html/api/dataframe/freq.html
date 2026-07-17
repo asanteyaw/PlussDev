@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">freq</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">freq</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
@@ -55,7 +55,7 @@
 Feature name(s) that select the target DataFrame columns for the operation.</p>
 <p><strong>top_n</strong>
 Optional cap on how many grouped rows to keep after sorting. Use <code class="docutils literal notranslate"><span class="pre">0</span></code> to keep every group.</p>
-<p><strong>dropna</strong>
+<p><strong>dropnull</strong>
 When <code class="docutils literal notranslate"><span class="pre">true</span></code>, null grouping keys or null values are excluded where the method supports that policy. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, null participates instead of being removed.</p>
 </section>
 <section id="returns">

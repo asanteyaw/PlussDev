@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
@@ -55,7 +55,7 @@
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>axis</strong>
 Axis selector. On <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code> usually means rows/cases and <code class="docutils literal notranslate"><span class="pre">1</span></code> means features/columns.</p>
-<p><strong>skipna</strong>
+<p><strong>skipnull</strong>
 When <code class="docutils literal notranslate"><span class="pre">true</span></code>, missing values are skipped during the reduction. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, missing state can affect the result.</p>
 <p><strong>options</strong>
 Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>

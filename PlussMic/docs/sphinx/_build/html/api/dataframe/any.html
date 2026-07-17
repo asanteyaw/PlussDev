@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -41,9 +41,9 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 <p>Return whether at least one value is truthy along the requested axis.</p>
@@ -58,7 +58,7 @@
 <li><p>Pass a feature subset when you want the truth test to ignore identifier, label, or unrelated measure columns.</p></li>
 <li><p>The output order follows the exact left-to-right order of the selected features.</p></li>
 </ul>
-<p><strong>skipna</strong></p>
+<p><strong>skipnull</strong></p>
 <p>Missing-value policy for the reduction.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: ignore missing values while evaluating truthiness.</p></li>
@@ -93,7 +93,7 @@ Boolean reduction result.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <p>Only compatible boolean-like or numeric features participate in the reduction. Text and temporal features are not coerced into truth values for this method.</p>
 <p>When you omit <code class="docutils literal notranslate"><span class="pre">axis</span></code>, PlussMic uses the feature-wise reduction. That is the common shape when you are checking whether each column has at least one truthy observation.</p>
-<p><code class="docutils literal notranslate"><span class="pre">skipna=true</span></code> ignores missing values during the truth reduction. Use <code class="docutils literal notranslate"><span class="pre">skipna=false</span></code> when null propagation matters to the policy you are implementing.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skipnull=true</span></code> ignores missing values during the truth reduction. Use <code class="docutils literal notranslate"><span class="pre">skipnull=false</span></code> when null propagation matters to the policy you are implementing.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>

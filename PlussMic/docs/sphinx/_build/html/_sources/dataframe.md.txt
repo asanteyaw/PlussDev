@@ -7,7 +7,7 @@ Use it when you want:
 
 - named features with mixed typed columns
 - a case axis that can be numeric, note-based, timeline-based, or time-index based
-- table verbs such as `query`, `assign`, `group_by`, `pivot_table`, `join`, `fillna`, and `describe`
+- table verbs such as `query`, `assign`, `group_by`, `pivot_table`, `join`, `fillnull`, and `describe`
 - import/export across CSV, TXT, JSON, Excel, and Parquet
 
 ## Construction And Loading
@@ -99,14 +99,14 @@ full replacement of the feature axis.
 ```cpp
 df.set("profit") = df.features("sales") - 60.0;
 
-auto out = df.set_features(
+auto out = df.set(
     "profit",
     df.features("sales") - 60.0
 );
 ```
 
 Use `set(...) = ...` when you want assignment-style syntax. Use
-`set_features(...)` when you prefer expression-style chaining.
+`set(...)` when you prefer expression-style chaining.
 
 ### Clean a text column
 
@@ -217,7 +217,7 @@ case labels should fail instead.
 Append cases vertically with feature-name matching:
 
 ```cpp
-auto history = january.extend_cases(february);
+auto history = january.extend(february);
 ```
 
 The default feature rule is a stable union with nulls for one-sided features.
@@ -225,7 +225,7 @@ Pass `FrameMatchRule::Common` to retain shared features only, or set
 `fresh_cases=true` for contiguous integer cases:
 
 ```cpp
-auto compact = january.extend_cases(
+auto compact = january.extend(
     february,
     pluss::table::FrameMatchRule::Common,
     true);
@@ -358,11 +358,11 @@ auto stats = df.aggregate({
 ## Missing Data And Rolling Windows
 
 ```cpp
-auto cleaned = df.fillna(0.0, {"sales"});
+auto cleaned = df.fillnull(0.0, {"sales"});
 auto dropped = df.dropnull();
 auto carried = df.ffill();
 
-auto rolling = df.window({
+auto rolling = df.ts().window({
     {"sales_roll3", "sales", pluss::table::ThreadWindowOp::RollingMean, 3, 1},
 });
 ```
@@ -452,7 +452,7 @@ auto schedule = pluss::table::DataFrame({
 
 auto hourly = schedule.resample("ts", {"value"}, "1H", "mean", 1, false);
 auto floored = schedule.floor_time({"ts"}, "hour");
-auto utc = schedule.to_utc({"ts"});
+auto utc = schedule.tl("ts").utc();
 ```
 
 ## SQL And IO

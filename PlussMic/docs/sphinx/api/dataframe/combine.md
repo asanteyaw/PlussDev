@@ -60,7 +60,7 @@ auto sales = DataFrame({
     {"region", pluss::make_note({"south", "south", "middle", "north"})},
     {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
     {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
-}).caselbl(pluss::make_note({"A100", "B200", "B200", "D400"}));
+}).label().set(pluss::make_note({"A100", "B200", "B200", "D400"}));
 
 auto extra = DataFrame({
     {"region", pluss::make_note({"south", "south", "middle", "north"})},
@@ -94,7 +94,7 @@ auto sales = DataFrame({
     {"region", pluss::make_note({"south", "south", "middle", "north"})},
     {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
     {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
-}).caselbl(pluss::make_note({"A100", "B200", "B200", "D400"}));
+}).label().set(pluss::make_note({"A100", "B200", "B200", "D400"}));
 
 auto patch = DataFrame({
     {"units", pluss::make_series({70.0, 50.0})},

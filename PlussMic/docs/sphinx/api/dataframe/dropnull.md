@@ -12,7 +12,7 @@ DataFrame::dropnull(pluss::RangeView<std::string_view> features = {}, bool all =
 
 Drop rows according to a missing-data rule.
 
-This is the row-removal counterpart to `fillna(...)` and `mask(...)`.
+This is the row-removal counterpart to `fillnull(...)` and `mask(...)`.
 
 Use it when rows with incomplete measurements, grades, or join keys should be excluded from later computation.
 
@@ -51,7 +51,7 @@ Reach for this overload when the short overload is no longer expressive enough a
 
 ## See Also
 
-- <a href="fillna.html"><code>DataFrame::fillna</code></a>: replace missing values instead of dropping rows.
+- <a href="fillnull.html"><code>DataFrame::fillnull</code></a>: replace missing values instead of dropping rows.
 - <a href="isnull.html"><code>DataFrame::isnull</code></a>, <a href="notnull.html"><code>DataFrame::notnull</code></a>: inspect missingness first.
 
 ## Notes

@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=9df275fa"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -226,7 +226,7 @@ display as <code class="docutils literal notranslate"><span class="pre">NA</span
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;score:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;isnull:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">isnull</span><span class="p">().</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;fillna:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">99.0</span><span class="p">).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;fillnull:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">99.0</span><span class="p">).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dropnull:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">dropnull</span><span class="p">().</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;shift(2):</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;sort asc nulls first:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">sort_values</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
@@ -248,7 +248,7 @@ isnull:
 3  false
 4  false
 dtype: Series
-fillna:
+fillnull:
 0  4
 1  1
 2  99
@@ -284,7 +284,7 @@ dtype: Series
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">score</span></code> payload has five numeric values, but row 2 is masked as missing,
 so it displays as <code class="docutils literal notranslate"><span class="pre">NA</span></code>. <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> is the logical inverse of the validity mask.</p>
-<p><code class="docutils literal notranslate"><span class="pre">fillna(99.0)</span></code> keeps the valid values <code class="docutils literal notranslate"><span class="pre">4</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code>, and <code class="docutils literal notranslate"><span class="pre">2</span></code>, and replaces only
+<p><code class="docutils literal notranslate"><span class="pre">fillnull(99.0)</span></code> keeps the valid values <code class="docutils literal notranslate"><span class="pre">4</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code>, and <code class="docutils literal notranslate"><span class="pre">2</span></code>, and replaces only
 the masked row with <code class="docutils literal notranslate"><span class="pre">99</span></code>. <code class="docutils literal notranslate"><span class="pre">dropnull()</span></code> removes the masked row. <code class="docutils literal notranslate"><span class="pre">shift(2)</span></code> moves
 values down by two rows, marks rows 0 and 1 missing because there are no source
 values for them, and also carries the original missing row forward so row 4 is
@@ -530,7 +530,7 @@ contains check is performed on the lowercased values, so it matches both
 </pre></div>
 </div>
 <p>These return Threads so they can be inserted back into a DataFrame:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">enriched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_features</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;timestamp&quot;</span><span class="p">).</span><span class="n">year</span><span class="p">());</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">enriched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;timestamp&quot;</span><span class="p">).</span><span class="n">year</span><span class="p">());</span>
 </pre></div>
 </div>
 <p>If you need to parse string dates, cast a Note-backed Thread to Timeline first:</p>
@@ -556,14 +556,14 @@ presentation metadata.</p>
 <section id="functional-and-mutating-methods">
 <h2>Functional and mutating methods<a class="headerlink" href="#functional-and-mutating-methods" title="Link to this heading">¶</a></h2>
 <p>Thread transforms are functional by default:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">clipped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">shifted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>The original Thread is unchanged unless you use a mutating method with a
 trailing underscore:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kr">thread</span><span class="p">.</span><span class="n">fillna_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kr">thread</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Use mutating methods when mutation is intentional and local. Use functional

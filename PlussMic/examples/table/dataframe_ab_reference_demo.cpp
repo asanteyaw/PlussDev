@@ -72,8 +72,8 @@ int main() {
 
   std::cout << "ADD_SCALAR\n" << sales.add(1.0).to_string() << "\n\n";
   std::cout << "ADD_FRAME\n" << left.add(curve).to_string() << "\n\n";
-  std::cout << "ADD_PREFIX\n" << sales.features({"units", "price"}).add_prefix("exam_").to_string() << "\n\n";
-  std::cout << "ADD_SUFFIX\n" << sales.features({"units", "price"}).add_suffix("_winter").to_string() << "\n\n";
+  std::cout << "ADD_PREFIX\n" << sales.features({"units", "price"}).feataxis().prefix("exam_").to_string() << "\n\n";
+  std::cout << "ADD_SUFFIX\n" << sales.features({"units", "price"}).feataxis().suffix("_winter").to_string() << "\n\n";
 
   std::cout << "AGGREGATE_ONE\n";
   std::cout << grades.aggregate({

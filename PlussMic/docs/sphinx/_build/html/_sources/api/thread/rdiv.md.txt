@@ -60,8 +60,8 @@ auto out = thread.rdiv(10.0);
     <span class="label">Previous</span>
     <span class="title">rank</span>
   </a>
-  <a class="next-link" href="replace.html">
+  <a class="next-link" href="repeated.html">
     <span class="label">Next</span>
-    <span class="title">replace</span>
+    <span class="title">repeated</span>
   </a>
 </div>

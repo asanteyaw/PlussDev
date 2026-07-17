@@ -45,7 +45,7 @@ auto sales = DataFrame({
     {"price", pluss::make_series({3.0, 4.0, 2.5})},
 }).title("sales");
 
-auto out = sales.add_prefix("exam_");
+auto out = sales.feataxis().prefix("exam_");
 """
 output = """
 =============================

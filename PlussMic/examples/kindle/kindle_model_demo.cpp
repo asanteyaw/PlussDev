@@ -80,21 +80,21 @@ void demo_stream_methods(const pluss::kindle::Catalog& catalog) {
   std::cout << "metric: " << metric << "\n";
   std::cout << "kind: " << static_cast<int>(metric.kind())
             << ", dtype: " << metric.dtype()
-            << ", has_cases: " << metric.has_caselbl() << "\n";
+            << ", has_cases: " << metric.has_cases() << "\n";
 
   metric = metric.with_meta("source", "demo").with_meta("unit", "km");
   std::cout << "meta(source): " << metric.meta("source").value_or("none") << "\n";
 
-  const auto cleaned = metric.fillna(0.0).clip(0.0, 42.0);
+  const auto cleaned = metric.fillnull(0.0).clip(0.0, 42.0);
   const auto transformed = (cleaned + 2.0).log().exp();
   const auto mask = (cleaned > 15.0).as_series();
   const auto filtered = transformed.filter(mask);
-  const auto dropped = metric.dropna();
+  const auto dropped = metric.dropnull();
   const auto taken = metric.take(std::vector<std::int64_t>{0, 2, 4});
 
   std::cout << "cleaned: " << cleaned << "\n";
   std::cout << "filtered (> 15): " << filtered << "\n";
-  std::cout << "dropna: " << dropped << "\n";
+  std::cout << "dropnull: " << dropped << "\n";
   std::cout << "take([0,2,4]): " << taken << "\n";
   std::cout << "sum: " << scalar_stream_value(cleaned.sum())
             << ", mean: " << scalar_stream_value(cleaned.mean()) << "\n";
@@ -165,15 +165,15 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
             << ", slice rows: " << sliced.count()
             << ", iloc rows: " << iloced.count() << "\n";
 
-  const auto metric_filled = catalog.fillna(0.0, {"metric"});
-  const auto metric_dropna = catalog.dropna({"metric"});
+  const auto metric_filled = catalog.fillnull(0.0, {"metric"});
+  const auto metric_dropnull = catalog.dropnull({"metric"});
   std::cout << "sum(id): " << scalar_stream_value(catalog.sum("id"))
             << ", mean(id): " << scalar_stream_value(catalog.mean("id"))
             << ", min(id): " << scalar_stream_value(catalog.min("id"))
             << ", max(id): " << scalar_stream_value(catalog.max("id"))
             << ", count: " << catalog.count() << "\n";
-  std::cout << "metric fillna rows: " << metric_filled.count()
-            << ", metric dropna rows: " << metric_dropna.count() << "\n";
+  std::cout << "metric fillnull rows: " << metric_filled.count()
+            << ", metric dropnull rows: " << metric_dropnull.count() << "\n";
 
   const auto right = pluss::kindle::Catalog(std::vector<std::pair<std::string, pluss::kindle::Stream>>{
       {"id", ids},

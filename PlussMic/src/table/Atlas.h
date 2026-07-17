@@ -27,6 +27,7 @@ struct AtlasPlotOptions;
 class AtlasTimelineAccessor;
 class AtlasTsAccessor;
 class AtlasTsResampler;
+class AtlasLabelAccessor;
 
 class Atlas {
 public:
@@ -52,6 +53,7 @@ public:
 
   DataFrame frame(std::int64_t index) const;
   DataFrame dloc(std::int64_t index) const;
+  AtlasLabelAccessor label() const;
   AtlasPlotAccessor plot() const;
   AtlasPlotAccessor plot(const AtlasPlotOptions& options) const;
   AtlasTsAccessor ts(std::string_view feature) const;
@@ -89,6 +91,8 @@ public:
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
 
 private:
+  friend class AtlasLabelAccessor;
+
   explicit Atlas(pluss::msharp::intrusive_ptr<detail::AtlasImpl> impl);
 
   const detail::AtlasImpl& impl_ref_() const;
@@ -97,6 +101,35 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Atlas& atlas);
 void output_render(std::ostream& os, const Atlas& atlas);
+
+class AtlasLabelAccessor {
+public:
+  explicit AtlasLabelAccessor(Atlas atlas);
+
+  Thread values() const;
+  bool has() const;
+  Atlas set(const Thread& labels) const;
+  Atlas range() const;
+  Atlas reset() const;
+  Atlas sort(bool ascending = true, bool nulls_last = true) const;
+  Atlas align(const Thread& labels) const;
+  Thread unite(const Thread& other) const;
+  Thread intersect(const Thread& other) const;
+  Thread diff(const Thread& other) const;
+  Thread symdiff(const Thread& other) const;
+  Thread find(const Thread& targets) const;
+  Thread pos(double value) const;
+  Thread pos(std::string_view value) const;
+  Thread pos(const char* value) const {
+    return pos(std::string_view{value != nullptr ? value : ""});
+  }
+  Thread slice(std::string_view start, std::string_view stop) const;
+
+private:
+  Thread label_index_() const;
+
+  Atlas atlas_{};
+};
 
 class AtlasTimelineAccessor {
 public:

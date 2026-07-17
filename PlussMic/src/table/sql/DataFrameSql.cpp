@@ -975,9 +975,9 @@ std::pair<std::string, std::string> resolve_join_keys(const DataFrame& left_fram
     left_feature = resolve_feature_reference(on_left, source_prefixes);
   }
 
-  PLUSS_CHECK(left_frame.has_feature(left_feature),
+  PLUSS_CHECK(left_frame.get(left_feature).has_value(),
               "DataFrame::sql().execute: JOIN left key not found '" + left_feature + "'");
-  PLUSS_CHECK(right_frame.has_feature(right_feature),
+  PLUSS_CHECK(right_frame.get(right_feature).has_value(),
               "DataFrame::sql().execute: JOIN right key not found '" + right_feature + "'");
   return {left_feature, right_feature};
 }
@@ -998,7 +998,7 @@ DataFrame project_frame(const DataFrame& frame,
     PLUSS_CHECK(!proj.star, "DataFrame::sql().execute: invalid '*' projection state");
     const auto resolved_source = resolve_feature_reference(proj.source, source_prefixes);
     Thread col;
-    if (is_case_projection(proj.source, options) && !frame.has_feature(resolved_source)) {
+    if (is_case_projection(proj.source, options) && !frame.get(resolved_source).has_value()) {
       col = frame.label().values();
     } else {
       col = frame.features(resolved_source);
@@ -1098,7 +1098,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
   enforce_timeout(options_, t0, "before_order");
   if (spec.order.has_value()) {
     auto order_feature = resolve_feature_reference(spec.order->feature, source_prefixes);
-    if (iequals(order_feature, "case") && !out.has_feature("case")) {
+    if (iequals(order_feature, "case") && !out.get("case").has_value()) {
       out = out.label().sort(spec.order->ascending, spec.order->nulls_last);
     } else {
       out = out.sort_values({

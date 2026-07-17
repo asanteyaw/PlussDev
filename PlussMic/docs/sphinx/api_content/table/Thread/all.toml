@@ -19,12 +19,12 @@ notes = [
 This method expects a boolean `Series` payload. It is not a general numeric reduction.
 """,
   """
-Nullable boolean input requires `skipna=true`.
+Nullable boolean input requires `skipnull=true`.
 """
 ]
 
 [[parameters]]
-name = "skipna"
+name = "skipnull"
 body = """
 Missing-value policy for the reduction.
 

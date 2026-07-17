@@ -25,7 +25,7 @@ Only compatible boolean-like or numeric features participate in the reduction. T
 When you omit `axis`, PlussMic uses the feature-wise reduction. That is the common shape when you are checking whether each column has at least one truthy observation.
 """,
   """
-`skipna=true` ignores missing values during the truth reduction. Use `skipna=false` when null propagation matters to the policy you are implementing.
+`skipnull=true` ignores missing values during the truth reduction. Use `skipnull=false` when null propagation matters to the policy you are implementing.
 """
 ]
 
@@ -40,7 +40,7 @@ Optional feature subset to reduce.
 """
 
 [[parameters]]
-name = "skipna"
+name = "skipnull"
 body = """
 Missing-value policy for the reduction.
 

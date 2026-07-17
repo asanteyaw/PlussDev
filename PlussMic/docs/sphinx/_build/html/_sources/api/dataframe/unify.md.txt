@@ -161,12 +161,12 @@ OrgDefinedId  midterm  Final Points Grade
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tz_localize.html">
+  <a class="prev-link" href="ts.html">
     <span class="label">Previous</span>
-    <span class="title">tz_localize</span>
+    <span class="title">ts</span>
   </a>
-  <a class="next-link" href="unique.html">
+  <a class="next-link" href="unsqueeze.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">unsqueeze</span>
   </a>
 </div>

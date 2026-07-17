@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Thread::all(bool skipna = true) -> ThreadValue
+Thread::all(bool skipnull = true) -> ThreadValue
 ```
 
 Return whether every value in a boolean thread is true.
@@ -14,7 +14,7 @@ Return whether every value in a boolean thread is true.
 
 ## Parameters
 
-**skipna**
+**skipnull**
 
 Missing-value policy for the reduction.
 
@@ -35,7 +35,7 @@ Missing-value policy for the reduction.
 
 This method expects a boolean `Series` payload. It is not a general numeric reduction.
 
-Nullable boolean input requires `skipna=true`.
+Nullable boolean input requires `skipnull=true`.
 
 ## Examples
 

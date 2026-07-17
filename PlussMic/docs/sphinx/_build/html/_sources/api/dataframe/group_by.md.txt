@@ -5,11 +5,11 @@
 ## Signatures
 
 ```cpp
-DataFrame::group_by(const LabelGroup& keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = false) -> DataFrameView
+DataFrame::group_by(const LabelGroup& keys, pluss::RangeView<GroupSpec> specs, bool dropnull_keys = true, bool render = false) -> DataFrameView
 
-DataFrame::group_by(pluss::RangeView<std::string_view> keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = false) -> DataFrameView
+DataFrame::group_by(pluss::RangeView<std::string_view> keys, pluss::RangeView<GroupSpec> specs, bool dropnull_keys = true, bool render = false) -> DataFrameView
 
-DataFrame::group_by(std::initializer_list<std::string_view> keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = false) -> DataFrameView
+DataFrame::group_by(std::initializer_list<std::string_view> keys, pluss::RangeView<GroupSpec> specs, bool dropnull_keys = true, bool render = false) -> DataFrameView
 ```
 
 ## What It Does
@@ -34,7 +34,7 @@ Groups rows by one or more key features and computes the requested aggregations 
     - `Std`: Compute the sample standard deviation inside each group.
     - `Var`: Compute the sample variance inside each group.
 
-**dropna_keys**
+**dropnull_keys**
     When `true`, rows with null pivot/group keys are excluded before reshaping.
 
 **render**

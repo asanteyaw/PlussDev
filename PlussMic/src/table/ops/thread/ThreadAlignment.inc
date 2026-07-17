@@ -440,7 +440,7 @@ Thread align_thread_to_label_values_(const Thread& source,
       thread_case_labels_from_strings_(target_label_strings),
       label_kind_for_align_by_(options.align));
 
-  const auto source_label_strings = thread_payload_label_strings_(source.caselbl(), where);
+  const auto source_label_strings = thread_payload_label_strings_(source.label().values(), where);
   if (source_label_strings == target_label_strings) {
     return fill_missing_for_alignment_(
         with_alignment_labels_(source, labels, label_kind_for_align_by_(options.align)),

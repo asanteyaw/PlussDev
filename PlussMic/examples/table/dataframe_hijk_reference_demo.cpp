@@ -42,8 +42,8 @@ int main() {
   std::cout << "SALES_MISSING\n" << sales_missing.to_string() << "\n\n";
 
   std::cout << "HAS_FEATURE\n";
-  std::cout << "units: " << (sales.has_feature("units") ? "true" : "false") << "\n";
-  std::cout << "inventory: " << (sales.has_feature("inventory") ? "true" : "false") << "\n\n";
+  std::cout << "units: " << (sales.get("units").has_value() ? "true" : "false") << "\n";
+  std::cout << "inventory: " << (sales.get("inventory").has_value() ? "true" : "false") << "\n\n";
 
   std::cout << "HEAD\n" << sales.head(2, false).to_string() << "\n\n";
   std::cout << "HEIGHT\n" << sales.height() << "\n\n";

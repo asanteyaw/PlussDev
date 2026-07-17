@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::ndistinct(pluss::RangeView<std::string_view> features = {}, bool dropna = true) -> Thread
+DataFrame::ndistinct(pluss::RangeView<std::string_view> features = {}, bool dropnull = true) -> Thread
 ```
 
 ## What It Does
@@ -17,7 +17,7 @@ Counts distinct observed values or distinct value-combinations across the select
 **features**
     Feature name(s) that select the target DataFrame columns for the operation.
 
-**dropna**
+**dropnull**
     When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 ## Returns

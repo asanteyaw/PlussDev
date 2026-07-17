@@ -46,7 +46,7 @@ Important fields include:
 
 ## See Also
 
-- <a href="../dataframe/bounded.html"><code>DataFrame::bounded</code></a>: apply the same custom-bounds idea across several numeric features.
+- <a href="../dataframe/ts.html"><code>DataFrame::ts()</code></a>: open the DataFrame time-series surface, then call <code>.bounded(...)</code> across selected numeric features.
 - <a href="#rolling"><code>Thread::rolling</code></a>: use fixed-width rolling windows instead of custom row bounds.
 
 ## Notes

@@ -101,12 +101,8 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="weigh.html">
+  <a class="prev-link" href="view.html">
     <span class="label">Previous</span>
-    <span class="title">weigh</span>
-  </a>
-  <a class="next-link" href="window.html">
-    <span class="label">Next</span>
-    <span class="title">window</span>
+    <span class="title">view</span>
   </a>
 </div>

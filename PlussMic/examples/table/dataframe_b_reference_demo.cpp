@@ -50,7 +50,7 @@ int main() {
   std::cout << "BOTTOM\n"
             << grades.bottom("final", 2).to_string() << "\n\n";
 
-  auto expanding_mean = numeric.bounded(
+  auto expanding_mean = numeric.ts().bounded(
       [](std::int64_t size, const WindowOptions&) {
         std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);
         std::vector<std::int64_t> ends;
@@ -64,7 +64,7 @@ int main() {
   std::cout << "BOUNDED_EXPANDING_MEAN\n"
             << expanding_mean.to_string() << "\n\n";
 
-  auto trailing_two_mean = numeric.bounded(
+  auto trailing_two_mean = numeric.ts().bounded(
       [](std::int64_t size, const WindowOptions&) {
         std::vector<std::int64_t> starts;
         std::vector<std::int64_t> ends;

@@ -28,7 +28,7 @@ Direction in which to search for the maximum coordinate.
 """
 
 [[parameters]]
-name = "skipna"
+name = "skipnull"
 body = """
 Missing-value policy.
 

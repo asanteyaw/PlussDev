@@ -3870,7 +3870,7 @@ private:
     const char* where) {
   if (feature_names_pinned) {
     for (const auto& name : pinned_feature_names) {
-      if (!frame.has_feature(name)) {
+      if (!frame.get(name).has_value()) {
         ::pluss::throw_error(std::string(where) + ": missing feature '" + name + "' in input DataFrame.");
       }
     }
@@ -4729,7 +4729,7 @@ inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::D
   encoders_.clear();
   encoders_.reserve(feature_names_.size());
   for (const auto& name : feature_names_) {
-    if (!frame.has_feature(name)) {
+    if (!frame.get(name).has_value()) {
       ::pluss::throw_error("prep::CategoryIndexer.learn(DataFrame): missing feature '" + name + "'.");
     }
     OneHotEncoder encoder(to_one_hot_options_(options_));
@@ -4765,7 +4765,7 @@ inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::Da
   columns.reserve(feature_names_.size());
   for (std::size_t i = 0; i < feature_names_.size(); ++i) {
     const auto& name = feature_names_[i];
-    if (!frame.has_feature(name)) {
+    if (!frame.get(name).has_value()) {
       ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): missing feature '" + name + "'.");
     }
     const auto& encoder = encoders_[i];

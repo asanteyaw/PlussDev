@@ -870,7 +870,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'case_label': 'Optional column label to use for the exported case axis when `add_cases=true`.',
         'case_col': 'Optional source column that should become the DataFrame case axis while loading.',
         'case_feature': 'Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.',
-        'na_rep': 'String written anywhere a null or missing value must be serialized.',
+        'null_rep': 'String written anywhere a null or missing value must be serialized.',
         'float_format': 'Optional numeric formatting string used when floating-point values are written to text output.',
         'sep': 'Column separator used for delimited text files such as CSV.',
         'ncases': 'Optional row limit applied while loading. Leave unset to read the whole source.',
@@ -930,7 +930,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'right': 'When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.',
         'include_lowest': 'When `true`, the first bucket also includes its left edge.',
         'bool_mask': 'Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.',
-        'value': 'Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.',
+        'value': 'Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.',
         'spec': 'Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.',
         'specs': 'Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.',
         'anchor': 'Anchor feature used by partial reordering when placement is `Before` or `After`.',
@@ -964,14 +964,14 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'other': 'Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.',
         'n': 'Number of rows, entries, or depth items to keep in the preview.',
         'axis': 'Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.',
-        'skipna': 'When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.',
+        'skipnull': 'When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.',
         'random_state': 'Optional seed used to make sampling or shuffling reproducible.',
         'freq': 'Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.',
         'op': 'Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.',
         'step': 'Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.',
         'render': 'When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.',
-        'dropna_keys': 'When `true`, rows with null pivot/group keys are excluded before reshaping.',
-        'dropna': 'When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.',
+        'dropnull_keys': 'When `true`, rows with null pivot/group keys are excluded before reshaping.',
+        'dropnull': 'When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.',
         'top_n': 'Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.',
         'min_count': 'Minimum non-null observations required before a grouped or rolling summary is considered valid.',
         'ddof': 'Degrees of freedom subtracted from the observation count in variance-based denominators. Use `1` for sample statistics and `0` for population statistics.',
@@ -1104,13 +1104,13 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Frame whose case labels and feature names should be matched with this frame.',
         ('DataFrame', 'match', 'options'):
             'Matching policy for cases, features, and repeated case labels. Defaults to a stable union on both axes and occurrence-order pairing for repeats.',
-        ('DataFrame', 'extend_cases', 'other'):
+        ('DataFrame', 'extend', 'other'):
             'Frame whose cases should be appended beneath this frame.',
-        ('DataFrame', 'extend_cases', 'features'):
+        ('DataFrame', 'extend', 'features'):
             'Feature matching rule for the non-extension axis. `Unite` keeps the stable union; `Common` keeps shared features.',
-        ('DataFrame', 'extend_cases', 'fresh_cases'):
+        ('DataFrame', 'extend', 'fresh_cases'):
             'When `true`, replace the appended case labels with contiguous integer cases starting at zero.',
-        ('DataFrame', 'extend_cases', 'reject_repeated_cases'):
+        ('DataFrame', 'extend', 'reject_repeated_cases'):
             'When `true`, fail if preserving the two case axes would produce repeated case labels.',
         ('DataFrame', 'lengthen', 'id_features'):
             'Features repeated unchanged for each selected value feature.',
@@ -1222,8 +1222,6 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Substring token used to match feature names.',
         ('DataFrame', 'select_like', 'case_sensitive'):
             'When `true`, substring matching respects letter case. When `false`, feature names are matched case-insensitively.',
-        ('DataFrame', 'select_regex', 'pattern'):
-            'ECMAScript regular expression used to match feature names.',
         ('DataFrame', 'sort_values', 'ascending'):
             'When you use the simple feature-list overload, this one switch applies to every sort key. `true` sorts ascending and `false` sorts descending.',
         ('DataFrame', 'sort_values', 'nulls_last'):
@@ -1246,8 +1244,6 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Human-readable title stamp to attach to the returned frame.',
         ('DataFrame', 'title_', 'title'):
             'Human-readable title stamp written back onto the current frame.',
-        ('DataFrame', 'to_utc', 'features'):
-            'Temporal feature names to convert into UTC timezone representation.',
         ('DataFrame', 'shift', 'periods'):
             'Number of rows to shift selected feature values. Positive values move values downward and introduce missing entries at the top; negative values move upward.',
         ('DataFrame', 'transform', 'fn'):
@@ -1260,14 +1256,6 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Feature name to bind into the returned time-series accessor.',
         ('DataFrame', 'ts', 'features'):
             'Feature names to bind into the returned time-series accessor.',
-        ('DataFrame', 'tz_convert', 'tz_name'):
-            'Destination timezone name such as `"UTC"` or `"America/Edmonton"`.',
-        ('DataFrame', 'tz_localize', 'tz_name'):
-            'Timezone name to attach to naive temporal values.',
-        ('DataFrame', 'tz_localize', 'fold'):
-            'Fold flag used when localizing ambiguous wall-clock times around a DST fall-back transition.',
-        ('DataFrame', 'tz_localize', 'nonexistent'):
-            'Policy for nonexistent local times, such as `"raise"` or `"shift_forward"`.',
         ('DataFrame', 'round', 'unit'):
             'Temporal rounding unit such as `"hour"`, `"day"`, or `"month"`.',
         ('DataFrame', 'unstack', 'caselbl'):
@@ -1578,7 +1566,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'count_by': 'Groups by one feature and returns per-group row counts.',
             'describe': 'Returns descriptive summary statistics for the selected numeric features.',
             'drop': 'Removes one or more features and returns the remaining frame.',
-            'extend_cases': 'Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.',
+            'extend': 'Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.',
             'equals': 'Checks whether two frames have the same structure, labels, and values.',
             'feature_ref': 'Returns a lightweight reference object for one feature so you can inspect metadata or switch into column-oriented operations without materializing a new frame.',
             'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
@@ -1643,7 +1631,6 @@ def generic_note(class_name: str, method: Method) -> str:
             'save_txt': 'Writes the frame to a plain-text table preview suitable for inspection or lightweight logging.',
             'save_as': 'Writes the frame using the explicitly supplied output format selector rather than a dedicated saver overload.',
             'select_like': 'Selects only the features whose names contain the requested substring.',
-            'select_regex': 'Selects only the features whose names match the requested regular expression.',
             'select': 'Projects a selected feature subset into a new frame while preserving row order and case alignment.',
             'series_features': 'Returns only the numeric series-backed features.',
             'assign': 'Adds or replaces derived features computed from the current frame. Use this when the new column depends on one or more existing columns.',
@@ -1663,11 +1650,9 @@ def generic_note(class_name: str, method: Method) -> str:
             'take': 'Returns the rows at the requested integer positions.',
             'tally': 'Counts how many rows fall into each distinct value of the grouping feature.',
             'tabelize': 'Converts a Kindle `Catalog` into a tabular `DataFrame`, preserving stream alignment as rows.',
-            'timeline_features': 'Returns only the timeline-backed features.',
             'title': 'Gets the current frame title or returns a titled copy, depending on the overload.',
             'title_': 'Overwrites the current frame title in place.',
             'top': 'Returns the rows with the largest values in the selected feature.',
-            'to_utc': 'Converts selected temporal features into UTC timezone representation.',
             'transform': 'Rewrites one feature, several features, or all features by applying a user function to each targeted thread.',
             'transpose': 'Swaps rows and features so former feature names become row labels.',
             'truediv': 'Applies elementwise true division to compatible numeric features.',
@@ -2036,7 +2021,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Updates object-level structure such as metadata, case labels, or validity state while preserving the underlying values and alignment model. Underscore forms mutate in place.'
     if name in {'head', 'tail', 'slice', 'slice_depth', 'slice_frames', 'take', 'sample', 'iloc', 'loc', 'view'}:
         return 'Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.'
-    if name in {'fillna', 'fillna_', 'dropna', 'ffill', 'bfill', 'isnull', 'notnull', 'isnan', 'isfinite'}:
+    if name in {'fillnull', 'fillnull_', 'dropnull', 'ffill', 'bfill', 'isnull', 'notnull', 'isnan', 'isfinite'}:
         return 'This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.'
     if name in {'add', 'sub', 'subtract', 'mul', 'multiply', 'div', 'divide', 'truediv', 'floordiv', 'mod', 'pow', 'radd', 'rsub', 'rmul', 'rdiv', 'rtruediv', 'rfloordiv', 'rmod', 'rpow', 'numeric_binary'}:
         return 'This applies arithmetic across the compatible numeric payloads in the current object.'
@@ -2068,7 +2053,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.'
     if name in {'text_preprocess', 'extract_keywords', 'compute_similarity', 'filter_by_text', 'add_text_features', 'aggregate_text_stats', 'tfidf', 'lower', 'replace', 'contains'}:
         return 'This is part of the text-processing surface for note-backed or text-oriented data.'
-    if name in {'tl', 'ts', 'year', 'month', 'day', 'hour', 'to_note_weekday', 'tz_convert', 'tz_localize', 'to_utc', 'shift', 'floor', 'ceil', 'round', 'resample'}:
+    if name in {'tl', 'ts', 'year', 'month', 'day', 'hour', 'to_note_weekday', 'shift', 'floor', 'ceil', 'round', 'resample'}:
         return 'This is part of the time-aware surface and expects timeline or time-index semantics.'
     return ''
 
@@ -2398,7 +2383,7 @@ def example_caption(class_name: str, method: Method) -> str:
             return 'Materialize every feature thread in left-to-right order.'
         if n == 'select':
             return 'Project only the named columns into a new frame.'
-        if n in {'fillna', 'fillna_'}:
+        if n in {'fillnull', 'fillnull_'}:
             mutate = 'Fill missing values in place' if n.endswith('_') else 'Fill missing values in a returned copy'
             if 'RangeView::Of<std::string_view> features' in sig:
                 return f'{mutate} only within a selected feature subset.'
@@ -3436,7 +3421,7 @@ def render_dataframe_a_page(name: str, overloads: list[Method], class_name: str)
             [
                 (
                     'Prefix a projected subset before a downstream merge or export.',
-                    df_a_sales_base() + '\n\nauto out = sales.features({"units", "price"}).add_prefix("exam_");',
+                    df_a_sales_base() + '\n\nauto out = sales.features({"units", "price"}).feataxis().prefix("exam_");',
                     """=============================
      | exam_units  exam_price
 -----------------------------
@@ -3470,7 +3455,7 @@ def render_dataframe_a_page(name: str, overloads: list[Method], class_name: str)
             [
                 (
                     'Suffix a feature block to preserve source provenance.',
-                    df_a_sales_base() + '\n\nauto out = sales.features({"units", "price"}).add_suffix("_winter");',
+                    df_a_sales_base() + '\n\nauto out = sales.features({"units", "price"}).feataxis().suffix("_winter");',
                     """=================================
      | units_winter  price_winter
 ---------------------------------
@@ -3605,7 +3590,7 @@ s3   | 79
                 '`features` : `pluss::RangeView<std::string_view>`, optional',
                 '    Restrict the reduction to a boolean feature subset. Leave it empty to use every compatible boolean feature in the frame.',
                 '',
-                '`skipna` : `bool`, optional',
+                '`skipnull` : `bool`, optional',
                 '    When `true`, missing boolean values are skipped. When `false`, missing state participates instead of being ignored.',
             ],
             [
@@ -3650,7 +3635,7 @@ dtype: Series""",
                 '`features` : `pluss::RangeView<std::string_view>`, optional',
                 '    Restrict the reduction to a boolean feature subset. Leave it empty to use every compatible boolean feature in the frame.',
                 '',
-                '`skipna` : `bool`, optional',
+                '`skipnull` : `bool`, optional',
                 '    When `true`, missing boolean values are skipped. When `false`, missing state participates instead of being ignored.',
             ],
             [
@@ -3827,7 +3812,7 @@ dtype: Series""",
             overloads,
             'Reduces one boolean thread with logical AND.',
             [
-                '`skipna` : `bool`, optional',
+                '`skipnull` : `bool`, optional',
                 '    When `true`, missing boolean values are skipped during the reduction.',
             ],
             [
@@ -3854,7 +3839,7 @@ dtype: Series""",
             overloads,
             'Reduces one boolean thread with logical OR.',
             [
-                '`skipna` : `bool`, optional',
+                '`skipnull` : `bool`, optional',
                 '    When `true`, missing boolean values are skipped during the reduction.',
             ],
             [
@@ -4149,7 +4134,7 @@ s2   | Bola     8           24
             [
                 (
                     'Build an expanding mean by making every window start at row zero.',
-                    df_b_metrics_base() + '\n\nauto out = numeric.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);\n        std::vector<std::int64_t> ends;\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) ends.push_back(row + 1);\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean);\n',
+                    df_b_metrics_base() + '\n\nauto out = numeric.ts().bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);\n        std::vector<std::int64_t> ends;\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) ends.push_back(row + 1);\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean);\n',
                     """===============================
      | sales        cost
 -------------------------------
@@ -4162,7 +4147,7 @@ s2   | Bola     8           24
                 ),
                 (
                     'Build a trailing-two mean with a minimum-count requirement.',
-                    df_b_metrics_base() + '\n\nauto out = numeric.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts;\n        std::vector<std::int64_t> ends;\n        starts.reserve(static_cast<std::size_t>(size));\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) {\n            starts.push_back(std::max<std::int64_t>(0, row - 1));\n            ends.push_back(row + 1);\n        }\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean,\n    WindowOptions{.min_count = 2});\n',
+                    df_b_metrics_base() + '\n\nauto out = numeric.ts().bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts;\n        std::vector<std::int64_t> ends;\n        starts.reserve(static_cast<std::size_t>(size));\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) {\n            starts.push_back(std::max<std::int64_t>(0, row - 1));\n            ends.push_back(row + 1);\n        }\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean,\n    WindowOptions{.min_count = 2});\n',
                     """==================
      | sales  cost
 ------------------
@@ -4737,7 +4722,7 @@ Kumasi  3    90.0"""
             return '["Ada", "Ada", "Kojo", "Kojo"]' if 'std::string_view name' in method.signature else '["mid", "final", "mid", "final"]'
         if n in {'drop'}:
             return DF_DROP_OUT
-        if n == 'dropna':
+        if n == 'dropnull':
             return DF_DROPNA_OUT
         if n in {'insert', 'set_features', 'set_features_', 'assign'}:
             return """id  sales  city    profit
@@ -4808,7 +4793,7 @@ West    Esi      84.0"""
 
 matched.left.features():
 ["x", "y", "z"]"""
-        if n == 'extend_cases':
+        if n == 'extend':
             return """case  x     y     z
 A     1.0   3.0   null
 C     2.0   4.0   null
@@ -4902,7 +4887,7 @@ Kumasi  3    90.0"""
             return DF_PIVOT_OUT
         if n in {'aggregate'}:
             return DF_SUMMARY_OUT
-        if n == 'select_like' or n == 'select_regex':
+        if n == 'select_like':
             return """midterm_1  midterm_2
 70.0       75.0
 80.0       85.0
@@ -4974,7 +4959,7 @@ id       1.0
 sales    233.333333333"""
         if n == 'bfill':
             return DF_BFILL_OUT
-        if n in {'fillna', 'fillna_', 'ffill', 'isna', 'isnull'}:
+        if n in {'fillnull', 'fillnull_', 'ffill', 'isna', 'isnull'}:
             return DF_BASE_OUT
         if n in {'notna', 'notnull'}:
             return """sales
@@ -4983,11 +4968,6 @@ false
 true"""
         if n in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
             return DF_BASE_OUT
-        if n in {'tz_convert', 'tz_localize', 'to_utc'}:
-            return """ts
-2024-01-01T09:10:00Z
-2024-01-01T09:40:00Z
-2024-01-01T10:05:00Z"""
         if n == 'shift_time':
             return """ts
 2024-01-01T10:10:00Z
@@ -5175,11 +5155,6 @@ id  sales  city
 1   100.0  Accra
 2   110.0  Tema
 3    90.0  Kumasi"""
-        if n in {'tz_convert', 'tz_localize', 'to_utc'}:
-            return """ts
-2024-01-01T09:10:00Z
-2024-01-01T09:40:00Z
-2024-01-01T10:05:00Z"""
         if n == 'unsqueeze':
             if 'depth_labels' in method.signature:
                 return """depth labels:
@@ -5259,9 +5234,9 @@ id  sales  city
             return '["#203930", "##7788", "4455"]' if 'std::string_view chars' in method.signature else '["Accra", "Tema", "Kumasi"]'
         if n == 'bfill':
             return THREAD_BFILL_OUT
-        if n == 'dropna':
+        if n == 'dropnull':
             return '[10.0, 30.0]'
-        if n in {'abs', 'clip', 'log', 'exp', 'fillna', 'fillna_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'lower', 'replace', 'window', 'cast', 'astype', 'clear_caselbl', 'clear_caselbl_'}:
+        if n in {'abs', 'clip', 'log', 'exp', 'fillnull', 'fillnull_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'lower', 'replace', 'window', 'cast', 'astype', 'clear_caselbl', 'clear_caselbl_'}:
             return THREAD_SERIES_OUT if 'Note' not in method.signature and n not in {'lower', 'replace'} else THREAD_NOTE_OUT
         if n == 'count':
             return THREAD_COUNT_OUT
@@ -5446,10 +5421,10 @@ out.label().values():
             return STREAM_SERIES_OUT
         if n == 'bfill':
             return STREAM_BFILL_OUT
-        if n == 'dropna':
+        if n == 'dropnull':
             return 'Series([10.0, 30.0])'
-        if n in {'fillna', 'fillna_', 'abs', 'clip', 'log', 'exp', 'with_cases', 'with_cases_', 'clear_cases', 'clear_cases_', 'with_meta', 'with_meta_', 'drop_meta', 'drop_meta_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'cast', 'astype'}:
-            return STREAM_SERIES_OUT if 'Note' not in method.signature and n not in {'fillna'} else STREAM_NOTE_OUT
+        if n in {'fillnull', 'fillnull_', 'abs', 'clip', 'log', 'exp', 'with_cases', 'with_cases_', 'clear_cases', 'clear_cases_', 'with_meta', 'with_meta_', 'drop_meta', 'drop_meta_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'cast', 'astype'}:
+            return STREAM_SERIES_OUT if 'Note' not in method.signature and n not in {'fillnull'} else STREAM_NOTE_OUT
         if n in {'sum', 'mean', 'min', 'max', 'var', 'std'}:
             return 'Series([20.0])'
         if n in {'all', 'any'}:
@@ -5489,7 +5464,7 @@ out.label().values():
             return CATALOG_BFILL_OUT
         if n == 'drop':
             return CATALOG_DROP_OUT
-        if n == 'dropna':
+        if n == 'dropnull':
             return CATALOG_DROPNA_OUT
         if n == 'extract_keywords':
             return CATALOG_KEYWORDS_OUT
@@ -5499,7 +5474,7 @@ out.label().values():
             return CATALOG_TEXT_STATS_OUT
         if n == 'compute_similarity':
             return CATALOG_SIMILARITY_OUT
-        if n in {'series', 'note', 'timeline', 'timeindex', 'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'filter', 'where', 'query', 'masked_select', 'select', 'rename', 'rename_', 'sort', 'sort_by', 'fillna', 'fillna_', 'ffill', 'isnull', 'notnull', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'astype', 'merge', 'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'text_preprocess', 'filter_by_text', 'tfidf', 'set_stream', 'set_stream_', 'set', 'set_', 'set_streams', 'set_streams_'}:
+        if n in {'series', 'note', 'timeline', 'timeindex', 'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'filter', 'where', 'query', 'masked_select', 'select', 'rename', 'rename_', 'sort', 'sort_by', 'fillnull', 'fillnull_', 'ffill', 'isnull', 'notnull', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'astype', 'merge', 'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'text_preprocess', 'filter_by_text', 'tfidf', 'set_stream', 'set_stream_', 'set', 'set_', 'set_streams', 'set_streams_'}:
             return labeled_pair('ct.head()', CATALOG_BASE_OUT, CATALOG_BASE_OUT)
         if n in {'sum', 'mean', 'min', 'max'}:
             return 'Series([20.0])'
@@ -5895,7 +5870,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});"""
 
 
 def feature_ref_base() -> str:
-    return df_base() + '\n' + 'auto ref = df.feature_ref("sales");'
+    return df_base() + '\n' + 'auto ref = pluss::table::ColumnRef("sales", df.features("sales"));'
 
 
 def sql_accessor_base() -> str:
@@ -5936,7 +5911,7 @@ def thread_fallback_args(method: Method) -> tuple[str, str]:
     args: list[str] = []
     prelude: list[str] = []
     for name, typ in method.params:
-        if name in {'skipna', 'ascending', 'inclusive', 'right', 'include_lowest', 'dropna', 'unbiased'} or typ == 'bool':
+        if name in {'skipnull', 'ascending', 'inclusive', 'right', 'include_lowest', 'dropnull', 'unbiased'} or typ == 'bool':
             args.append('true')
         elif name == 'start':
             args.append('0')
@@ -6197,7 +6172,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'cast_timeline':
                 return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_note({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\nauto out = df.cast_timeline({"ts"});'
             if n == 'timeline_features':
-                return df_temporal_mixed() + '\n\nauto out = df.timeline_features();'
+                return df_temporal_mixed() + '\n\nauto out = df.feataxis().timeline();'
             return df_base() + f'\n\nauto out = df.{n}();' if n.endswith('_features') else df_base() + f'\n\nauto out = df.{n}({{"sales"}});'
         if n in {'astype','cast'}:
             if 'feature_dtypes' in sig:
@@ -6267,9 +6242,9 @@ def example_for(class_name: str, method: Method) -> str:
                     )
                 return df_base() + '\n\nauto out = df.reorder({"city"});'
             if n == 'add_prefix':
-                return df_base() + '\n\nauto out = df.add_prefix("feat_");'
+                return df_base() + '\n\nauto out = df.feataxis().prefix("feat_");'
             if n == 'add_suffix':
-                return df_base() + '\n\nauto out = df.add_suffix("_2024");'
+                return df_base() + '\n\nauto out = df.feataxis().suffix("_2024");'
             if n == 'rename':
                 if 'old_name' in sig:
                     return df_base() + '\n\nauto out = df.rename("sales", "revenue");'
@@ -6344,7 +6319,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'label().repeated':
                 return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.label().repeated();'
             if n == 'unique_cases':
-                return df_unique_subset() + '\n\nauto out = df.unique_cases({"campus"});'
+                return df_unique_subset() + '\n\nauto out = df.drop_duplicates({"campus"});'
             if n == 'label().align':
                 return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_label = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.label().align(new_label);'
         if n == 'match':
@@ -6359,7 +6334,7 @@ def example_for(class_name: str, method: Method) -> str:
                 '    pluss::table::Thread(pluss::make_note({"B", "A"})));\n'
                 'auto matched = left.match(right);'
             )
-        if n == 'extend_cases':
+        if n == 'extend':
             return (
                 'auto left = pluss::table::DataFrame(\n'
                 '    {{"x", pluss::make_series({1.0, 2.0})},\n'
@@ -6369,7 +6344,7 @@ def example_for(class_name: str, method: Method) -> str:
                 '    {{"y", pluss::make_series({5.0, 6.0})},\n'
                 '     {"z", pluss::make_series({7.0, 8.0})}},\n'
                 '    pluss::table::Thread(pluss::make_note({"B", "A"})));\n'
-                'auto out = left.extend_cases(right);'
+                'auto out = left.extend(right);'
             )
         if n == 'lengthen':
             return (
@@ -6436,21 +6411,21 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'set_features' or n == 'set_features_':
                 if 'pluss::msharp::RangeView::Of<std::string_view> names' in sig:
                     return df_base() + (
-                        '\n\nauto out = df.set_features(\n'
+                        '\n\nauto out = df.set(\n'
                         '    {"profit", "cost"},\n'
                         '    {\n'
                         '        pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})),\n'
                         '        pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0})),\n'
                         '    });'
                         if not n.endswith('_') else
-                        '\n\ndf.set_features_(\n'
+                        '\n\ndf.set_(\n'
                         '    {"profit", "cost"},\n'
                         '    {\n'
                         '        pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})),\n'
                         '        pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0})),\n'
                         '    });'
                     )
-                return df_base() + (f'\n\nauto out = df.{n}("profit", pluss::table::Thread(pluss::make_series({{40.0, 35.0, 30.0}})));' if not n.endswith('_') else '\n\ndf.set_features_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));')
+                return df_base() + (f'\n\nauto out = df.{n}("profit", pluss::table::Thread(pluss::make_series({{40.0, 35.0, 30.0}})));' if not n.endswith('_') else '\n\ndf.set_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));')
             if n == 'set':
                 if 'initializer_list' in sig:
                     return df_base() + '\n\ndf.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};'
@@ -6505,9 +6480,7 @@ def example_for(class_name: str, method: Method) -> str:
                 )
             return df_base() + '\n\nauto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");'
         if n == 'select_like':
-            return df_named_metrics() + '\n\nauto out = df.select_like("midterm");'
-        if n == 'select_regex':
-            return df_named_metrics() + '\n\nauto out = df.select_regex("^midterm_[12]$");'
+            return df_named_metrics() + '\n\nauto out = df.feataxis().like("midterm");'
         if n == 'unstack':
             if 'std::string_view caselbl' in sig:
                 return df_case_levels_base() + '\n\nauto out = indexed.unstack("term");'
@@ -6592,21 +6565,6 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.shuffle(7);'
         if n == 'reshuffle':
             return df_base() + '\n\nauto rows = df.reshuffle(0, 7);\nauto cols = df.reshuffle(1, 7);'
-        if n in {'tz_convert','tz_localize','to_utc','shift_time','floor_time','ceil_time','round_time'}:
-            if n == 'tz_convert':
-                return df_time_naive() + '\n\nauto localized = df.tz_localize({"ts"}, "UTC");\nauto out = localized.tz_convert({"ts"}, "UTC");'
-            if n == 'tz_localize':
-                return df_time_naive() + '\n\nauto out = df.tz_localize({"ts"}, "UTC", 0, "shift_forward");'
-            if n == 'to_utc':
-                return df_time_naive() + '\n\nauto localized = df.tz_localize({"ts"}, "UTC");\nauto out = localized.to_utc({"ts"});'
-            if n == 'shift_time':
-                return df_time() + '\n\nauto out = df.shift_time({"ts"}, 1, "hour");'
-            if n == 'floor_time':
-                return df_time() + '\n\nauto out = df.floor_time({"ts"}, "hour");'
-            if n == 'ceil_time':
-                return df_time() + '\n\nauto out = df.ceil_time({"ts"}, "hour");'
-            if n == 'round_time':
-                return df_time() + '\n\nauto out = df.round_time({"ts"}, "hour");'
         if n in {'aggregate','group_by','pivot','pivot_table','count_by','mean_by'}:
             if n == 'aggregate':
                 return df_group() + '\n\nauto out = df.aggregate({{"sales_mean", "sales", pluss::table::DataFrame::SummaryOp::Mean}}, false);'
@@ -6737,18 +6695,18 @@ def example_for(class_name: str, method: Method) -> str:
                     f'auto out = df.{n}({{"sales"}});'
                 )
             return df_base() + f'\n\nauto out = df.{n}({{"sales"}});'
-        if n in {'fillna','fillna_','dropna','dropna_all','ffill','bfill','count_null_rows'}:
-            if n == 'fillna' or n == 'fillna_':
+        if n in {'fillnull','fillnull_','dropnull','dropna_all','ffill','bfill','count_null_rows'}:
+            if n == 'fillnull' or n == 'fillnull_':
                 mut = n.endswith('_')
                 if 'std::string_view' in sig or 'const char*' in sig:
                     code = 'auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});'
-                    call = ('df.fillna_("Unknown");' if mut else 'auto out = df.fillna("Unknown");')
+                    call = ('df.fillnull_("Unknown");' if mut else 'auto out = df.fillnull("Unknown");')
                     return code + '\n\n' + call
                 if 'Timeline' in sig:
-                    return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillna_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"));')
+                    return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
                 if 'TimeIndex' in sig:
-                    return 'auto df = pluss::table::DataFrame({{"idx", pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillna_(pluss::make_timeindex("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));')
-                return df_base() + ('\n\ndf.fillna_(0.0);' if mut else '\n\nauto out = df.fillna(0.0, {"sales"});')
+                    return 'auto df = pluss::table::DataFrame({{"idx", pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::make_timeindex("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));')
+                return df_base() + ('\n\ndf.fillnull_(0.0);' if mut else '\n\nauto out = df.fillnull(0.0, {"sales"});')
             if n == 'dropna_all':
                 return df_base() + '\n\nauto out = df.dropna_all({"sales"});'
             if n == 'count_null_rows':
@@ -6763,7 +6721,7 @@ def example_for(class_name: str, method: Method) -> str:
                     '\n'
                     'auto out = df.bfill();'
                 )
-            if n == 'dropna':
+            if n == 'dropnull':
                 return (
                     'auto sales = pluss::table::Thread(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
                     'auto df = pluss::table::DataFrame({\n'
@@ -6771,7 +6729,7 @@ def example_for(class_name: str, method: Method) -> str:
                     '    {"sales", sales},\n'
                     '    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},\n'
                     '});\n\n'
-                    'auto out = df.dropna();'
+                    'auto out = df.dropnull();'
                 )
             return df_base() + f'\n\nauto out = df.{n}();'
         if n in {'view','copy','equals','to_string','info_string','info','save_csv','save_excel','save_txt','save_json','save_parquet','save_as'}:
@@ -7330,11 +7288,11 @@ def example_for(class_name: str, method: Method) -> str:
             )
         if n == 'is_valid':
             return thread_series() + '\n\nauto out = thread.is_valid(0);'
-        if n in {'isnull','notnull','isnan','isfinite','abs','log','exp','dropna','ffill','bfill','sum','mean','min','max'}:
-            if n == 'dropna':
+        if n in {'isnull','notnull','isnan','isfinite','abs','log','exp','dropnull','ffill','bfill','sum','mean','min','max'}:
+            if n == 'dropnull':
                 return (
                     'auto thread = pluss::table::Thread(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n\n'
-                    'auto out = thread.dropna();'
+                    'auto out = thread.dropnull();'
                 )
             if n == 'bfill':
                 return (
@@ -7344,19 +7302,19 @@ def example_for(class_name: str, method: Method) -> str:
             return thread_series() + f'\n\nauto out = thread.{n}();'
         if n in {'var','std'}:
             return thread_series() + f'\n\nauto out = thread.{n}(true);'
-        if n in {'fillna','fillna_','clip'}:
+        if n in {'fillnull','fillnull_','clip'}:
             if 'std::string_view' in sig or 'const char*' in sig:
                 base = thread_note()
-                return base + ('\n\nthread.fillna_("Unknown");' if n.endswith('_') else '\n\nauto out = thread.fillna("Unknown");')
+                return base + ('\n\nthread.fillnull_("Unknown");' if n.endswith('_') else '\n\nauto out = thread.fillnull("Unknown");')
             if 'Timeline' in sig:
                 base = thread_time()
-                return base + ('\n\nthread.fillna_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"));')
+                return base + ('\n\nthread.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
             if 'TimeIndex' in sig:
                 base = 'auto thread = pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z"}));'
-                return base + ('\n\nthread.fillna_(pluss::make_timeindex("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));')
+                return base + ('\n\nthread.fillnull_(pluss::make_timeindex("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));')
             if n == 'clip':
                 return thread_series() + '\n\nauto out = thread.clip(0.0, 25.0);'
-            return thread_series() + ('\n\nthread.fillna_(0.0);' if n.endswith('_') else '\n\nauto out = thread.fillna(0.0);')
+            return thread_series() + ('\n\nthread.fillnull_(0.0);' if n.endswith('_') else '\n\nauto out = thread.fillnull(0.0);')
         if n in {'series','note','timeline','timeindex','as_series','as_note','as_timeline','as_timeindex'}:
             base = thread_series() if 'series' in n else thread_note() if 'note' in n else thread_time()
             return base + f'\n\nauto out = thread.{n}();'
@@ -7472,30 +7430,30 @@ def example_for(class_name: str, method: Method) -> str:
         base = stream_series()
         if n in {'defined','unique','size','kind','dtype','has_cases','cases','to_string','to_json'}:
             return base + f'\n\nauto out = stream.{n}();'
-        if n in {'isnull','notnull','abs','log','exp','clear_cases','clear_cases_','head','tail','dropna','ffill','bfill','sum','mean','min','max'}:
+        if n in {'isnull','notnull','abs','log','exp','clear_cases','clear_cases_','head','tail','dropnull','ffill','bfill','sum','mean','min','max'}:
             if n == 'bfill':
                 return (
                     'auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0, std::numeric_limits<double>::quiet_NaN()}));\n\n'
                     'auto out = stream.bfill();'
                 )
-            if n == 'dropna':
+            if n == 'dropnull':
                 return (
                     'auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n\n'
-                    'auto out = stream.dropna();'
+                    'auto out = stream.dropnull();'
                 )
             if n.endswith('_'): return base + f'\n\nstream.{n}();'
             return base + f'\n\nauto out = stream.{n}();'
         if n in {'var','std'}:
             return base + f'\n\nauto out = stream.{n}(true);'
-        if n in {'fillna','clip','with_cases','with_cases_','with_meta','with_meta_','drop_meta','drop_meta_','meta','has_meta','take','filter','slice','cast','astype','to_thread'}:
-            if n == 'fillna':
+        if n in {'fillnull','clip','with_cases','with_cases_','with_meta','with_meta_','drop_meta','drop_meta_','meta','has_meta','take','filter','slice','cast','astype','to_thread'}:
+            if n == 'fillnull':
                 if 'std::string_view' in sig or 'const char*' in sig:
-                    return stream_note() + '\n\nauto out = stream.fillna("Unknown");'
+                    return stream_note() + '\n\nauto out = stream.fillnull("Unknown");'
                 if 'Timeline' in sig:
-                    return stream_time() + '\n\nauto out = stream.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"));'
+                    return stream_time() + '\n\nauto out = stream.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));'
                 if 'TimeIndex' in sig:
-                    return 'auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));'
-                return base + '\n\nauto out = stream.fillna(0.0);'
+                    return 'auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));'
+                return base + '\n\nauto out = stream.fillnull(0.0);'
             if n == 'clip': return base + '\n\nauto out = stream.clip(0.0, 25.0);'
             if n == 'with_cases' or n == 'with_cases_':
                 snippet = 'auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\n' + base
@@ -7565,7 +7523,7 @@ def example_for(class_name: str, method: Method) -> str:
             return base + f'\n\nauto out = catalog.{n}();'
         if n in {'has','has_stream','stream','at','get','get_stream'}:
             return base + f'\n\nauto out = catalog.{n}("metric");'
-        if n in {'series','note','timeline','timeindex','head','tail','dropna','ffill','bfill','isnull','notnull','drop','display','info'}:
+        if n in {'series','note','timeline','timeindex','head','tail','dropnull','ffill','bfill','isnull','notnull','drop','display','info'}:
             if n == 'bfill':
                 return (
                     'using namespace pluss::kindle::literals;\n'
@@ -7576,7 +7534,7 @@ def example_for(class_name: str, method: Method) -> str:
                     '});\n\n'
                     'auto out = catalog.bfill({"Final Points Grade", "Midterm 3"});'
                 )
-            if n == 'dropna':
+            if n == 'dropnull':
                 return (
                     'using namespace pluss::kindle::literals;\n'
                     'auto metric = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n'
@@ -7584,7 +7542,7 @@ def example_for(class_name: str, method: Method) -> str:
                     '    "metric"_k = metric,\n'
                     '    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),\n'
                     '});\n\n'
-                    'auto out = catalog.dropna({"metric"});'
+                    'auto out = catalog.dropnull({"metric"});'
                 )
             if n == 'drop':
                 if 'vector<std::string>' in sig:
@@ -7597,7 +7555,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'head': return base + '\n\nauto out = catalog.head(2);'
             if n == 'tail': return base + '\n\nauto out = catalog.tail(2);'
             return base + f'\n\nauto out = catalog.{n}();'
-        if n in {'slice','iloc','take','sample','filter','where','query','masked_select','select','rename','rename_','sort','sort_by','group_by','fillna','cast_series','cast_note','cast_timeline','cast_timeindex','astype','sum','mean','min','max','merge','apply','apply_','apply_all','apply_all_','transform','text_preprocess','extract_keywords','compute_similarity','filter_by_text','add_text_features','aggregate_text_stats','tfidf','set_stream','set_stream_','set','set_','set_streams','set_streams_','tabelize','to_table','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','begin','end'}:
+        if n in {'slice','iloc','take','sample','filter','where','query','masked_select','select','rename','rename_','sort','sort_by','group_by','fillnull','cast_series','cast_note','cast_timeline','cast_timeindex','astype','sum','mean','min','max','merge','apply','apply_','apply_all','apply_all_','transform','text_preprocess','extract_keywords','compute_similarity','filter_by_text','add_text_features','aggregate_text_stats','tfidf','set_stream','set_stream_','set','set_','set_streams','set_streams_','tabelize','to_table','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','begin','end'}:
             if n == 'slice': return base + '\n\nauto out = catalog.slice(0, 2);'
             if n == 'iloc': return base + ('\n\nauto out = catalog.iloc(1);' if 'start' not in sig else '\n\nauto out = catalog.iloc(0, 2);')
             if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = catalog.take(picks);'
@@ -7617,14 +7575,14 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'sort': return base + '\n\nauto out = catalog.sort("metric", false);'
             if n == 'sort_by': return base + '\n\nauto out = catalog.sort_by({"city", "id"}, {true, false});'
             if n == 'group_by': return base + '\n\nauto out = catalog.group_by("city");'
-            if n == 'fillna':
+            if n == 'fillnull':
                 if 'std::string_view' in sig or 'const char*' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});\n\nauto out = catalog.fillna("Unknown", {"city"});'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});\n\nauto out = catalog.fillnull("Unknown", {"city"});'
                 if 'Timeline' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"), {"ts"});'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"), {"ts"});'
                 if 'TimeIndex' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"idx"_k = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"), {"idx"});'
-                return base + '\n\nauto out = catalog.fillna(0.0, {"metric"});'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"idx"_k = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"), {"idx"});'
+                return base + '\n\nauto out = catalog.fillnull(0.0, {"metric"});'
             if n.startswith('cast_') or n == 'astype':
                 if n == 'cast_series':
                     return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});\n\nauto out = catalog.cast_series({"metric"}, pluss::codem::ScalarType::Float64);'
@@ -7937,7 +7895,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`axis=0` reduces down the selected boolean features and returns one result per feature.',
                 '`axis=1` reduces across features and returns one result per row.',
                 'These methods expect boolean features; they are not general numeric reducers.',
-                'Nullable boolean input requires `skipna=true`.',
+                'Nullable boolean input requires `skipnull=true`.',
             ])
         if class_name == 'DataFrame' and n == 'assign':
             return bullets('Practical Behavior', [
@@ -8058,7 +8016,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`count_distinct(...)` returns one summary row containing distinct-value counts for the selected features.',
                 'With no feature list, every feature is included.',
-                '`dropna` controls whether null should participate as its own distinct value.',
+                '`dropnull` controls whether null should participate as its own distinct value.',
             ])
         if class_name == 'DataFrame' and n == 'count_null_rows':
             return bullets('Practical Behavior', [
@@ -8083,9 +8041,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`drop(...)` removes features, not rows.',
                 'The remaining features keep their existing row alignment and case axis.',
             ])
-        if class_name == 'DataFrame' and n == 'dropna':
+        if class_name == 'DataFrame' and n == 'dropnull':
             return bullets('Practical Behavior', [
-                '`dropna()` removes rows that contain at least one null value anywhere in the frame.',
+                '`dropnull()` removes rows that contain at least one null value anywhere in the frame.',
                 'Use `dropna_all(features)` when the rule should apply only to selected features and only when all of them are null.',
             ])
         if class_name == 'DataFrame' and n == 'dropna_all':
@@ -8190,7 +8148,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`transform(feature, thread_fn)` rewrites one existing feature in place within the returned frame.',
                 '`transform(feature, frame_fn)` is the derive-style overload: it can create a new feature from the whole frame, as long as the returned thread matches the frame case count.',
             ])
-        if class_name == 'DataFrame' and n in {'select_like', 'select_regex'}:
+        if class_name == 'DataFrame' and n == 'select_like':
             return bullets('Practical Behavior', [
                 f'`{n}(...)` filters feature names, not row values.',
                 'The output keeps the original row order and case axis unchanged.',
@@ -8227,9 +8185,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Repeated keys expand to every matching pair, and `validate` can enforce one-to-one or one-sided uniqueness.',
                 'When right-hand non-key names collide with left-hand names, `right_suffix` is applied only to the right-hand collisions.',
             ])
-        if class_name == 'DataFrame' and n == 'extend_cases':
+        if class_name == 'DataFrame' and n == 'extend':
             return bullets('Extension Rules', [
-                '`extend_cases(other)` appends cases vertically and matches features by name.',
+                '`extend(other)` appends cases vertically and matches features by name.',
                 'The default `Unite` feature rule preserves left feature order, appends right-only features, and null-fills one-sided payloads.',
                 'Matching numeric features must have the same dtype and platform; other matching features must have the same Thread kind.',
                 'Use `fresh_cases=true` for contiguous integer cases or `reject_repeated_cases=true` to require a unique preserved case axis.',
@@ -8387,12 +8345,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'Thread' and n == 'distinct':
             return bullets('Practical Behavior', [
-                '`distinct(dropna)` keeps the first occurrence of each distinct value in encounter order.',
-                'With `dropna=false`, at most one null entry is retained.',
+                '`distinct(dropnull)` keeps the first occurrence of each distinct value in encounter order.',
+                'With `dropnull=false`, at most one null entry is retained.',
             ])
-        if class_name == 'Thread' and n == 'dropna':
+        if class_name == 'Thread' and n == 'dropnull':
             return bullets('Practical Behavior', [
-                '`dropna()` removes invalid entries from the thread and compacts the result.',
+                '`dropnull()` removes invalid entries from the thread and compacts the result.',
                 'Use this when null rows should disappear rather than be filled.',
             ])
         if class_name == 'Thread' and n == 'dtype':
@@ -8418,9 +8376,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'These methods remove one metadata key only.',
                 'Payload values, cases, and validity remain unchanged.',
             ])
-        if class_name == 'Stream' and n == 'dropna':
+        if class_name == 'Stream' and n == 'dropnull':
             return bullets('Practical Behavior', [
-                '`dropna()` removes invalid entries from the stream while preserving stream semantics for the remaining entries.',
+                '`dropnull()` removes invalid entries from the stream while preserving stream semantics for the remaining entries.',
                 'Use it when rows with null payload values should be removed entirely.',
             ])
         if class_name == 'Catalog' and n == 'at':
@@ -8485,9 +8443,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`drop(...)` removes named streams, not rows.',
                 'The remaining streams keep their alignment.',
             ])
-        if class_name == 'Catalog' and n == 'dropna':
+        if class_name == 'Catalog' and n == 'dropnull':
             return bullets('Practical Behavior', [
-                '`dropna(keys)` applies stream-level `dropna()` to the selected keys.',
+                '`dropnull(keys)` applies stream-level `dropnull()` to the selected keys.',
                 'With no keys supplied, every stream is processed.',
                 'Unknown keys throw immediately.',
             ])
@@ -9085,6 +9043,10 @@ def main() -> None:
             ordered_names = ordered_method_names(methods)
             page_root = method_page_root(class_name)
             page_root.mkdir(parents=True, exist_ok=True)
+            live_pages = {method_page_doc_path(class_name, name).name for name in ordered_names}
+            for stale in page_root.glob('*.md'):
+                if stale.name not in live_pages:
+                    stale.unlink()
             for idx, name in enumerate(ordered_names):
                 prev_name = ordered_names[idx - 1] if idx > 0 else None
                 next_name = ordered_names[idx + 1] if idx < len(ordered_names) - 1 else None

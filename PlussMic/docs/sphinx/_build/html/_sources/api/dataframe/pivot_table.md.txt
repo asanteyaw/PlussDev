@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::pivot_table(std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, GroupOp op = GroupOp::Mean, bool dropna_keys = true, bool render = false) -> DataFrameView
+DataFrame::pivot_table(std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, GroupOp op = GroupOp::Mean, bool dropnull_keys = true, bool render = false) -> DataFrameView
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ Builds a pivoted summary table using an aggregation function when multiple rows 
 **op**
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
-**dropna_keys**
+**dropnull_keys**
     When `true`, rows with null pivot/group keys are excluded before reshaping.
 
 **render**

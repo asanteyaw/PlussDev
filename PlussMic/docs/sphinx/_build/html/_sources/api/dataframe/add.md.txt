@@ -122,8 +122,8 @@ auto out = left.add(curve);
     <span class="label">Previous</span>
     <span class="title">abs</span>
   </a>
-  <a class="next-link" href="add_prefix.html">
+  <a class="next-link" href="aggregate.html">
     <span class="label">Next</span>
-    <span class="title">add_prefix</span>
+    <span class="title">aggregate</span>
   </a>
 </div>

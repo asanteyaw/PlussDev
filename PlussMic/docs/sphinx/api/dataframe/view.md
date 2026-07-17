@@ -63,8 +63,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">var</span>
   </a>
-  <a class="next-link" href="weigh.html">
+  <a class="next-link" href="where.html">
     <span class="label">Next</span>
-    <span class="title">weigh</span>
+    <span class="title">where</span>
   </a>
 </div>

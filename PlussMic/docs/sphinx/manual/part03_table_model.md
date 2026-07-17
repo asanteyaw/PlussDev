@@ -43,7 +43,7 @@ missing values from input files.
 ```cpp
 auto missing = thread.isnull();
 auto present = thread.notnull();
-auto filled = thread.fillna(0.0);
+auto filled = thread.fillnull(0.0);
 auto complete = thread.dropnull();
 ```
 
@@ -122,8 +122,8 @@ Feature selection:
 ```cpp
 auto sales = df.features("sales");                 // Thread
 auto smaller = df.features({"region", "sales"});   // DataFrame
-auto numeric = df.series_features();
-auto text = df.note_features();
+auto numeric = df.feataxis().series();
+auto text = df.feataxis().note();
 ```
 
 `features("name")` returns a `Thread` with display labels from the frame's case

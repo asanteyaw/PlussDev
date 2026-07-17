@@ -82,9 +82,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unique_cases.html">
+  <a class="prev-link" href="unify.html">
     <span class="label">Previous</span>
-    <span class="title">unique_cases</span>
+    <span class="title">unify</span>
   </a>
   <a class="next-link" href="unstack.html">
     <span class="label">Next</span>

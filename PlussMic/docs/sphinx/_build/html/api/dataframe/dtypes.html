@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,9 +44,9 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">dtypes</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DTypes</span>
 </pre></div>
 </div>
-<p>Return the public dtype summary for every feature in the frame.</p>
-<p>This is the schema-inspection method you use before casting, selecting numeric features, or debugging mixed-type input.</p>
-<p>It answers “what kind of payload does each feature currently hold?” at the table layer.</p>
+<p>Return the concrete dtype summary for every feature in the frame.</p>
+<p>This is the schema-inspection method you use when you need both the payload family and the payload’s concrete storage/readout type.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">ptypes()</span></code> when you only need the broad payload family (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -55,22 +55,23 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DTypes</span></code>
-Feature-to-dtype summary object describing the current payload family for each feature.</p>
+Feature-to-dtype summary object describing the current concrete dtype for each feature.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a href="ptypes.html"><code>DataFrame::ptypes</code></a>: inspect broad payload families.</p></li>
 <li><p><a href="cast.html"><code>DataFrame::cast</code></a>, <a href="astype.html"><code>DataFrame::astype</code></a>: change the dtypes after inspecting them.</p></li>
 </ul>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code> reports the public table-level dtype categories such as <code class="docutils literal notranslate"><span class="pre">Series</span></code> and <code class="docutils literal notranslate"><span class="pre">Note</span></code>. It is intentionally higher-level than the scalar dtype returned by <code class="docutils literal notranslate"><span class="pre">Thread::dtype()</span></code>.</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">dtypes()</span></code> before <code class="docutils literal notranslate"><span class="pre">cast(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">astype(...)</span></code>, numeric reduction, or feature-selection logic when your frame was loaded from messy or mixed-source input.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code> reports concrete values such as <code class="docutils literal notranslate"><span class="pre">Series&lt;float64&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">Note&lt;utf8&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline&lt;datetime64[ns,</span> <span class="pre">UTC]&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">TimeIndex&lt;datetime64[ns,</span> <span class="pre">UTC]&gt;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is intentionally separate from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>: a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> stores temporal values, while a <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is the temporal axis/index payload used for time-label alignment and resampling.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect the current feature families before downstream casting.</p>
+<p>Example 1. Inspect concrete dtypes before downstream casting.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -84,9 +85,9 @@ Feature-to-dtype summary object describing the current payload family for each f
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>student_id: Series
-passed: Series
-raw_name: Note
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>student_id: Series&lt;float64&gt;
+passed: Series&lt;float64&gt;
+raw_name: Note&lt;utf8&gt;
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">

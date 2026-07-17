@@ -115,14 +115,14 @@ Use this language when reading APIs:
 Most table operations return a new object:
 
 ```cpp
-auto cleaned = df.fillna(0.0);
+auto cleaned = df.fillnull(0.0);
 auto sorted = cleaned.sort_values({"balance"});
 ```
 
 Mutating operations use a trailing underscore:
 
 ```cpp
-df.fillna_(0.0);
+df.fillnull_(0.0);
 df.rename_("old_name", "new_name");
 ```
 
@@ -135,7 +135,7 @@ intentionally want to update an owned object.
 2. Inspect with `head`, `info`, and `describe`.
 3. Select features with `features`.
 4. Filter cases with `query` or `filter`.
-5. Derive features with `assign` or `set_features`.
+5. Derive features with `assign` or `set`.
 6. Summarize with `aggregate`, `group_by`, `mean`, `corr`, and `tally`.
 7. Save with `save_csv`, `save_excel`, `save_json`, or `save_parquet`.
 

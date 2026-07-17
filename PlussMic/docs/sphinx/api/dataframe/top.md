@@ -56,9 +56,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_utc.html">
+  <a class="prev-link" href="to_string.html">
     <span class="label">Previous</span>
-    <span class="title">to_utc</span>
+    <span class="title">to_string</span>
   </a>
   <a class="next-link" href="transform.html">
     <span class="label">Next</span>

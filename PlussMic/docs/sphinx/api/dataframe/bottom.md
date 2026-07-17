@@ -84,8 +84,8 @@ s2   | Bola     8           24
     <span class="label">Previous</span>
     <span class="title">bfill</span>
   </a>
-  <a class="next-link" href="bounded.html">
+  <a class="next-link" href="bucketize.html">
     <span class="label">Next</span>
-    <span class="title">bounded</span>
+    <span class="title">bucketize</span>
   </a>
 </div>

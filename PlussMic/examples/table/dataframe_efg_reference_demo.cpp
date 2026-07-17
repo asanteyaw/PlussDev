@@ -48,11 +48,6 @@ int main() {
   for (const auto& name : sales.features()) {
     std::cout << name << "\n";
   }
-  std::cout << "\nFEATURE_REF\n";
-  const auto units_ref = sales.feature_ref("units");
-  std::cout << units_ref.name() << "\n";
-  std::cout << units_ref.thread().head(3).to_string() << "\n\n";
-
   std::cout << "FEATURE_SINGLE\n" << sales.features("units").to_string() << "\n\n";
   std::cout << "FEATURE_MULTI\n" << sales.features({"city", "units"}).to_string() << "\n\n";
 
@@ -61,11 +56,11 @@ int main() {
 
   std::cout << "FILTER\n" << sales.filter(sales.features("region") == "south").to_string() << "\n\n";
 
-  std::cout << "FILLNA_NUMERIC\n" << sales_missing.fillna(0.0, {"units"}).to_string() << "\n\n";
-  std::cout << "FILLNA_NOTE\n" << sales_missing.fillna("unknown", {"region"}).to_string() << "\n\n";
+  std::cout << "FILLNA_NUMERIC\n" << sales_missing.fillnull(0.0, {"units"}).to_string() << "\n\n";
+  std::cout << "FILLNA_NOTE\n" << sales_missing.fillnull("unknown", {"region"}).to_string() << "\n\n";
 
   auto sales_mut = sales_missing.copy();
-  sales_mut.fillna_(0.0);
+  sales_mut.fillnull_(0.0);
   std::cout << "FILLNA_INPLACE\n" << sales_mut.to_string() << "\n\n";
 
   std::cout << "FFILL\n" << sales_missing.ffill().to_string() << "\n\n";

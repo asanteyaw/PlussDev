@@ -15,7 +15,7 @@ Counts distinct observed values in the thread.
 ## Parameters
 
 **dropnull**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 ## Returns
 

@@ -13,7 +13,7 @@ auto raw = DataFrame::load_csv("input.csv", {
 });
 
 auto clean = raw
-    .fillna(0.0)
+    .fillnull(0.0)
     .dropnull({"id"}, true)
     .sort_values({"id"});
 
@@ -36,7 +36,7 @@ auto df = DataFrame::load_csv("trades.csv", options);
 
 ```cpp
 auto features = df
-    .fillna(0.0, {"price", "volume"})
+    .fillnull(0.0, {"price", "volume"})
     .assign({{
         "notional",
         [](const DataFrame& frame) {
@@ -136,7 +136,7 @@ pluss::table::Thread labels =
 pluss::table::Atlas scenarios({base, stress, optimistic}, labels);
 
 auto cleaned = scenarios.map_frames([](const DataFrame& frame) {
-  return frame.fillna(0.0);
+  return frame.fillnull(0.0);
 });
 ```
 
@@ -154,7 +154,7 @@ auto back = registry.to_kindle().tabelize();
 ## Save a report bundle
 
 ```cpp
-auto clean = df.fillna(0.0);
+auto clean = df.fillnull(0.0);
 auto summary = clean.describe();
 auto grouped = clean.group_by(
     {"group"},

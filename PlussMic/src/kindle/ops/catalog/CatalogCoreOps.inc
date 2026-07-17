@@ -292,12 +292,12 @@ std::unordered_map<std::string, Catalog> Catalog::group_by(std::string_view key_
   return out;
 }
 
-Catalog Catalog::fillna(double value, std::initializer_list<std::string_view> keys) const {
+Catalog Catalog::fillnull(double value, std::initializer_list<std::string_view> keys) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);
   if (!key_set.empty()) {
     for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::fillna: unknown key '" + k + "'");
+      PLUSS_CHECK(has(k), "Catalog::fillnull: unknown key '" + k + "'");
     }
   }
 
@@ -308,17 +308,17 @@ Catalog Catalog::fillna(double value, std::initializer_list<std::string_view> ke
     const auto& stream = impl_ref_().streams_[i];
     const bool selected = key_set.empty() ? (stream.kind() == StreamKind::Series)
                                           : (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+    out.emplace_back(key, selected ? stream.fillnull(value) : stream);
   }
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::fillna(std::string_view value, std::initializer_list<std::string_view> keys) const {
+Catalog Catalog::fillnull(std::string_view value, std::initializer_list<std::string_view> keys) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);
   if (!key_set.empty()) {
     for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::fillna(string): unknown key '" + k + "'");
+      PLUSS_CHECK(has(k), "Catalog::fillnull(string): unknown key '" + k + "'");
     }
   }
 
@@ -329,17 +329,17 @@ Catalog Catalog::fillna(std::string_view value, std::initializer_list<std::strin
     const auto& stream = impl_ref_().streams_[i];
     const bool selected = key_set.empty() ? (stream.kind() == StreamKind::Note)
                                           : (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+    out.emplace_back(key, selected ? stream.fillnull(value) : stream);
   }
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> keys) const {
+Catalog Catalog::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);
   if (!key_set.empty()) {
     for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::fillna(Timeline): unknown key '" + k + "'");
+      PLUSS_CHECK(has(k), "Catalog::fillnull(Timeline): unknown key '" + k + "'");
     }
   }
 
@@ -350,17 +350,17 @@ Catalog Catalog::fillna(const pluss::Timeline& value, std::initializer_list<std:
     const auto& stream = impl_ref_().streams_[i];
     const bool selected = key_set.empty() ? (stream.kind() == StreamKind::Timeline || stream.kind() == StreamKind::TimeIndex)
                                           : (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+    out.emplace_back(key, selected ? stream.fillnull(value) : stream);
   }
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys) const {
+Catalog Catalog::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);
   if (!key_set.empty()) {
     for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::fillna(TimeIndex): unknown key '" + k + "'");
+      PLUSS_CHECK(has(k), "Catalog::fillnull(TimeIndex): unknown key '" + k + "'");
     }
   }
 
@@ -371,7 +371,7 @@ Catalog Catalog::fillna(const pluss::TimeIndex& value, std::initializer_list<std
     const auto& stream = impl_ref_().streams_[i];
     const bool selected = key_set.empty() ? (stream.kind() == StreamKind::TimeIndex)
                                           : (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+    out.emplace_back(key, selected ? stream.fillnull(value) : stream);
   }
   return Catalog(std::move(out));
 }
@@ -541,8 +541,8 @@ Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_vi
 
   const auto left = tabelize();
   const auto right = other.tabelize();
-  PLUSS_CHECK(left.has_feature(key), "Catalog::merge: left key not found '" + key + "'");
-  PLUSS_CHECK(right.has_feature(key), "Catalog::merge: right key not found '" + key + "'");
+  PLUSS_CHECK(left.get(key).has_value(), "Catalog::merge: left key not found '" + key + "'");
+  PLUSS_CHECK(right.get(key).has_value(), "Catalog::merge: right key not found '" + key + "'");
   return kindelize(left.unify(key, right, key));
 }
 

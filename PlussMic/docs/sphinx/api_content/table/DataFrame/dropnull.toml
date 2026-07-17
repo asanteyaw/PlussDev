@@ -1,7 +1,7 @@
 summary = """
 Drop rows according to a missing-data rule.
 
-This is the row-removal counterpart to `fillna(...)` and `mask(...)`.
+This is the row-removal counterpart to `fillnull(...)` and `mask(...)`.
 
 Use it when rows with incomplete measurements, grades, or join keys should be excluded from later computation.
 """
@@ -12,7 +12,7 @@ returns = """
 """
 
 see_also = [
-  "<a href=\"#fillna\"><code>DataFrame::fillna</code></a>: replace missing values instead of dropping rows.",
+  "<a href=\"#fillnull\"><code>DataFrame::fillnull</code></a>: replace missing values instead of dropping rows.",
   "<a href=\"#isnull\"><code>DataFrame::isnull</code></a>, <a href=\"#notnull\"><code>DataFrame::notnull</code></a>: inspect missingness first."
 ]
 

@@ -81,9 +81,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeline_features.html">
+  <a class="prev-link" href="tally.html">
     <span class="label">Previous</span>
-    <span class="title">timeline_features</span>
+    <span class="title">tally</span>
   </a>
   <a class="next-link" href="title_.html">
     <span class="label">Next</span>

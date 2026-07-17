@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::feataxis &#8212; PlussMic User Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
+    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::features" href="features.html" />
+    <link rel="prev" title="DataFrame::factor" href="factor.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="dataframe-feataxis">
+<h1>DataFrame::feataxis<a class="headerlink" href="#dataframe-feataxis" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">feataxis</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameFeatureAxisAccessor</span>
+</pre></div>
+</div>
+<p>Return the feature-axis helper surface.</p>
+<p><code class="docutils literal notranslate"><span class="pre">feataxis()</span></code> is the compact surface for schema-driven feature selection and feature-name transforms. It is deliberately smaller than the main <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> API:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">df.features()</span></code> returns feature names.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.features(&quot;price&quot;)</span></code> selects one feature as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.features({&quot;price&quot;,</span> <span class="pre">&quot;volume&quot;})</span></code> selects explicit features as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.feataxis().like(&quot;price&quot;)</span></code> selects features whose names contain a substring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.feataxis().match(&quot;^score_&quot;)</span></code> selects features whose names match a regex pattern.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.feataxis().series()</span></code>, <code class="docutils literal notranslate"><span class="pre">note()</span></code>, and <code class="docutils literal notranslate"><span class="pre">timeline()</span></code> select features by payload kind.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.feataxis().prefix(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">suffix(...)</span></code> rewrite feature names in bulk.</p></li>
+</ul>
+<p>The surface intentionally does not expose <code class="docutils literal notranslate"><span class="pre">names()</span></code>, <code class="docutils literal notranslate"><span class="pre">has(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">ref(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">set(...)</span></code>. Use <code class="docutils literal notranslate"><span class="pre">features()</span></code> for names, <code class="docutils literal notranslate"><span class="pre">get(name).has_value()</span></code> for public feature-existence checks, and <code class="docutils literal notranslate"><span class="pre">rename(...)</span></code> for full positional feature-name replacement.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrameFeatureAxisAccessor</span></code>
+Lightweight feature-axis accessor bound to the current frame.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Selector and renaming methods on this accessor return a new `DataFrame`; the source frame is not mutated.
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">like(...)</span></code> for simple substring matching. Use <code class="docutils literal notranslate"><span class="pre">match(...)</span></code> when you need regex anchors, alternation, character classes, or other pattern logic.</p>
+<p><code class="docutils literal notranslate"><span class="pre">feataxis()</span></code> filters or rewrites the feature axis. It does not inspect text values inside <code class="docutils literal notranslate"><span class="pre">Note</span></code> payloads; use the <code class="docutils literal notranslate"><span class="pre">note()</span></code> surface for text-value regex work.</p>
+<p>Full positional replacement of all feature names is done with <code class="docutils literal notranslate"><span class="pre">df.rename({&quot;new_a&quot;,</span> <span class="pre">&quot;new_b&quot;,</span> <span class="pre">...})</span></code>; the feature-axis helper surface intentionally has no setter-style method.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Select features by substring.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score_math&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score_final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">93.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bo&quot;</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">like</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>score_math  score_final
+80          88
+91          93
+</pre></div>
+</div>
+<p>Example 2. Select features by regex.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;A1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;A2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;AA&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">match</span><span class="p">(</span><span class="s">&quot;^A[0-9]+$&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A1  A2
+1   3
+2   4
+</pre></div>
+</div>
+<p>Example 3. Select features by payload kind.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">series</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">note</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>numeric:
+sales
+10
+12
+
+text:
+city
+Accra
+Tema
+</pre></div>
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="factor.html">
+    <span class="label">Previous</span>
+    <span class="title">factor</span>
+  </a>
+  <a class="next-link" href="features.html">
+    <span class="label">Next</span>
+    <span class="title">features</span>
+  </a>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="factor.html" title="previous chapter">DataFrame::factor</a></li>
+      <li>Next: <a href="features.html" title="next chapter">DataFrame::features</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/feataxis.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

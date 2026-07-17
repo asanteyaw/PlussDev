@@ -58,7 +58,7 @@ void test_dataframe_ts_one_feature_and_set() {
 
   DataFrame out = df;
   out.set("Log Returns") = df.ts("Adj Close").log_returns();
-  expect(out.has_feature("Log Returns"), "set(name)=df.ts(...).log_returns() should create feature");
+  expect(out.get("Log Returns").has_value(), "set(name)=df.ts(...).log_returns() should create feature");
 }
 
 void test_dataframe_ts_resample_reindex_blocks() {
@@ -191,8 +191,8 @@ void test_dataframe_ts_resample_reindex_blocks() {
   expect(rolling_block.nfeatures() == 4, "rolling_block default should emit mean/std per window");
 
   auto cal = df.ts("Adj Close").calendar("date");
-  expect(cal.has_feature("date_year"), "calendar should emit date_year");
-  expect(cal.has_feature("date_weekday"), "calendar should emit date_weekday");
+  expect(cal.get("date_year").has_value(), "calendar should emit date_year");
+  expect(cal.get("date_weekday").has_value(), "calendar should emit date_weekday");
 }
 
 void test_dataframe_cast_timeline_from_yyyymmdd_ints() {

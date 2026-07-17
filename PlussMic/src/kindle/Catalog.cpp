@@ -248,7 +248,7 @@ pluss::table::Thread apply_fill_policy(pluss::table::Thread thread,
                   "Catalog::tabelize(fill=scalar): supported only for Series streams");
       PLUSS_CHECK(policy.fill_scalar.has_value(),
                   "Catalog::tabelize(fill=scalar): fill_scalar must be provided");
-      return thread.fillna(*policy.fill_scalar);
+      return thread.fillnull(*policy.fill_scalar);
     case FillPolicy::ForwardFill:
       return thread.ffill();
     case FillPolicy::BackwardFill:

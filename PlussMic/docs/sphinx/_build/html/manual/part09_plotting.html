@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=9df275fa"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -165,7 +165,7 @@ plotting, decide whether missing values should be dropped, filled, or kept as
 gaps:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span>
 <span class="w">    </span><span class="p">.</span><span class="n">dropnull</span><span class="p">({</span><span class="s">&quot;timestamp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;close&quot;</span><span class="p">})</span>
-<span class="w">    </span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
+<span class="w">    </span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;timestamp&quot;</span><span class="p">);</span>
 </pre></div>

@@ -483,7 +483,7 @@ void run_verb_walkthrough(const DataFrame& df) {
 
   auto miss_isnull = df.isnull({"Visibility(mi)", "Precipitation(in)", "Weather_Condition"});
   auto miss_notnull = df.notnull({"Visibility(mi)", "Precipitation(in)"});
-  auto miss_fill = df.fillna(0.0, {"Precipitation(in)"});
+  auto miss_fill = df.fillnull(0.0, {"Precipitation(in)"});
   auto miss_drop_any = df.dropnull();
   auto miss_drop_all = df.dropnull({"Precipitation(in)", "Visibility(mi)"}, true);
   auto miss_ffill = df.ffill();
@@ -535,7 +535,7 @@ void run_verb_walkthrough(const DataFrame& df) {
                  .compare(arith.add(2.0));
   (void)cmp;
 
-  auto win = numeric.rolling({
+  auto win = numeric.ts().rolling({
       DataFrame::WindowSpec{"severity_rollmean_12", "Severity", ThreadWindowOp::RollingMean, 12, 3},
       DataFrame::WindowSpec{"distance_rollmax_24", "Distance(mi)", ThreadWindowOp::RollingMax, 24, 1},
   });
@@ -941,7 +941,7 @@ int main(int argc, char** argv) {
       counts.push_back(c);
     }
     auto ydf = DataFrame({{"year", make_note_thread(years)}, {"accidents", make_i64_thread(counts)}});
-    auto trend = ydf.rolling(
+    auto trend = ydf.ts().rolling(
         {DataFrame::WindowSpec{"accidents_rollmean_3", "accidents", ThreadWindowOp::RollingMean, 3, 1}}, true);
     show_q_table(17, "Accident frequency trend over time", trend, trend.ncases());
   }

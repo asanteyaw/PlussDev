@@ -50,8 +50,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">equals</span>
   </a>
-  <a class="next-link" href="extend_cases.html">
+  <a class="next-link" href="extend.html">
     <span class="label">Next</span>
-    <span class="title">extend_cases</span>
+    <span class="title">extend</span>
   </a>
 </div>

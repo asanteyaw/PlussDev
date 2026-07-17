@@ -108,7 +108,7 @@ void test_statistics() {
   expect(column_sum.as_series().to_vec<double>() ==
              std::vector<double>({100.0, 10.0}),
          "default DataFrame::sum values should match pandas axis=0");
-  expect(column_sum.caselbl().as_note().vector() ==
+  expect(column_sum.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A1", "A2"}),
          "Axis::Case reductions should label the result by feature names");
   expect(pluss::table::detail::label_kind(column_sum) == pluss::table::LabelKind::Feature,
@@ -116,7 +116,7 @@ void test_statistics() {
   const auto row_sum = axis_frame.features({"A1", "A2"}).sum(Axis::Feature);
   expect(row_sum.size() == axis_frame.ncases(),
          "Axis::Feature DataFrame::sum should reduce across features per case");
-  expect(row_sum.caselbl().as_note().vector() ==
+  expect(row_sum.label().values().as_note().vector() ==
              std::vector<std::string_view>({"1001", "1002", "1003", "1004"}),
          "Axis::Feature reductions should label the result by original cases");
   expect(row_sum.as_series().to_vec<double>() ==
@@ -129,7 +129,7 @@ void test_statistics() {
   expect(assigned_axis.features("Assignments").as_series().to_vec<double>() ==
              std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "row-wise reduction result should assign as a same-length feature");
-  const auto direct_assigned_axis = axis_frame.set_features("Assignments2", row_sum);
+  const auto direct_assigned_axis = axis_frame.set("Assignments2", row_sum);
   expect(direct_assigned_axis.features("Assignments2").as_series().to_vec<double>() ==
              std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "set_features should accept a same-length row-wise reduction result");
@@ -147,13 +147,13 @@ void test_statistics() {
          "explicit case-label assignment should null-fill feature-indexed reduction labels");
   bool set_features_feature_labeled_default_threw = false;
   try {
-    (void)axis_frame.set_features("ColumnTotals2", column_sum);
+    (void)axis_frame.set("ColumnTotals2", column_sum);
   } catch (const std::exception&) {
     set_features_feature_labeled_default_threw = true;
   }
   expect(set_features_feature_labeled_default_threw,
          "set_features default should reject feature-labeled reductions with case-length mismatch");
-  const auto direct_feature_indexed = axis_frame.set_features(
+  const auto direct_feature_indexed = axis_frame.set(
       "ColumnTotals2",
       column_sum,
       {.align = pluss::table::AlignBy::Caselbl});
@@ -162,7 +162,7 @@ void test_statistics() {
          "set_features with explicit case-label alignment should null-fill misses");
 
   auto scholarship = Thread(pluss::make_series(std::vector<double>{1500, 2500, 1000}))
-                         .caselbl(Thread(pluss::make_note({"1003", "1001", "1004"})));
+                         .label().set(Thread(pluss::make_note({"1003", "1001", "1004"})));
   auto aligned_axis = axis_frame;
   bool scholarship_default_threw = false;
   try {
@@ -192,44 +192,209 @@ void test_statistics() {
   }
   expect(one_row_default_threw,
          "one-element 1D Thread assignment should not broadcast or align by default");
-  const auto default_cases = Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})).caselbl();
+  const auto default_cases = Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})).label().values();
   expect(default_cases.as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
          "Thread without explicit cases should expose default RangeIndex-style cases");
+  const auto default_label_values = Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})).label().values();
+  expect(default_label_values.as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Thread::label().values should expose default RangeIndex-style labels");
   expect(pluss::table::detail::label_kind(Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))) ==
              pluss::table::LabelKind::Default,
          "Thread without explicit labels should carry default-label provenance");
   const auto range_labeled =
       Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}), {.rangelbl = true});
-  expect(range_labeled.caselbl().as_note().vector() ==
-             std::vector<std::string_view>({"0", "1", "2"}),
+  expect(range_labeled.label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
          "Thread(..., {.rangelbl=true}) should materialize explicit range labels");
   expect(pluss::table::detail::label_kind(range_labeled) == pluss::table::LabelKind::Case,
          "Thread(..., {.rangelbl=true}) should carry case-label provenance");
   const auto chain_range_labeled =
-      Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})).rangelbl();
-  expect(chain_range_labeled.caselbl().as_note().vector() ==
-             std::vector<std::string_view>({"0", "1", "2"}),
-         "Thread::rangelbl() should materialize explicit range labels");
+      Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})).label().range();
+  expect(chain_range_labeled.label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Thread::label().range() should materialize explicit range labels");
+  const auto label_range_labeled =
+      Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})).label().range();
+  expect(label_range_labeled.label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Thread::label().range should materialize explicit range labels");
   expect(pluss::table::detail::label_kind(chain_range_labeled) == pluss::table::LabelKind::Case,
-         "Thread::rangelbl() should carry case-label provenance");
+         "Thread::label().range() should carry case-label provenance");
+  expect(pluss::table::detail::label_kind(label_range_labeled) == pluss::table::LabelKind::Case,
+         "Thread::label().range should carry case-label provenance");
   expect(pluss::table::detail::label_kind(
              Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
-                 .caselbl(Thread(pluss::make_note({"a", "b", "c"})))) == pluss::table::LabelKind::Custom,
-         "Thread::caselbl(labels) should carry custom-label provenance");
+                 .label().set(Thread(pluss::make_note({"a", "b", "c"})))) == pluss::table::LabelKind::Custom,
+         "Thread::label().set(labels) should carry custom-label provenance");
+  const auto label_set = Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
+                             .label().set(Thread(pluss::make_note({"a", "b", "c"})));
+  expect(label_set.label().values().as_note().vector() ==
+             std::vector<std::string_view>({"a", "b", "c"}),
+         "Thread::label().set should attach custom labels");
+  expect(label_set.label().reset().label().values().as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Thread::label().reset should clear explicit labels back to default range labels");
+
+  const auto label_df = DataFrame({
+                           {"score", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+                       },
+                       Thread(pluss::make_note({"b", "a", "b", "c"})));
+  expect(label_df.label().distinct().as_note().vector() ==
+             std::vector<std::string_view>({"b", "a", "c"}),
+         "DataFrame::label().distinct should return distinct label values");
+  expect(label_df.label().duplicated().as_series().to_vec<bool>() ==
+             std::vector<bool>({false, false, true, false}),
+         "DataFrame::label().duplicated should mark duplicate follower labels");
+  expect(label_df.label().repeated().as_series().to_vec<bool>() ==
+             std::vector<bool>({true, false, true, false}),
+         "DataFrame::label().repeated should mark every member of repeated label groups");
+  expect(label_df.label().drop({.duplicated = true}).ncases() == 3,
+         "DataFrame::label().drop({.duplicated=true}) should drop duplicate follower label rows");
+  expect(label_df.label().drop({.repeated = true}).ncases() == 2,
+         "DataFrame::label().drop({.repeated=true}) should drop all members of repeated label groups");
+  expect(label_df.repeated({"score"}).as_series().to_vec<bool>() ==
+             std::vector<bool>({false, false, false, false}),
+         "DataFrame::repeated(feature) should mark all members of repeated row-value groups");
+  const auto repeated_rows = DataFrame({
+      {"name", Thread(pluss::make_note({"A", "B", "A", "C", "B"}))},
+  });
+  expect(repeated_rows.duplicated({"name"}).as_series().to_vec<bool>() ==
+             std::vector<bool>({false, false, true, false, true}),
+         "DataFrame::duplicated should mark duplicate followers");
+  expect(repeated_rows.repeated({"name"}).as_series().to_vec<bool>() ==
+             std::vector<bool>({true, true, true, false, true}),
+         "DataFrame::repeated should mark every member of repeated groups");
+  expect(label_df.label().has("a").as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, false, false}),
+         "DataFrame::label().has should test label membership");
+  expect(label_df.label().isnull().as_series().to_vec<bool>() ==
+             std::vector<bool>({false, false, false, false}),
+         "DataFrame::label().isnull should evaluate label nullness");
+  expect(label_df.label().notnull().as_series().to_vec<bool>() ==
+             std::vector<bool>({true, true, true, true}),
+         "DataFrame::label().notnull should evaluate label non-nullness");
+  expect(label_df.label().slice(1, 3).as_note().vector() ==
+             std::vector<std::string_view>({"a", "b"}),
+         "DataFrame::label().slice should slice label values");
+  const std::array<std::int64_t, 2> label_take_idx{3, 0};
+  expect(label_df.label().take(label_take_idx).as_note().vector() ==
+             std::vector<std::string_view>({"c", "b"}),
+         "DataFrame::label().take should take label values by position");
+  expect(!label_df.label().monotonic(),
+         "DataFrame::label().monotonic should detect unsorted labels");
+  expect(label_df.label().sort().label().monotonic(),
+         "DataFrame::label().sort should produce monotonic labels");
+  expect(label_df.label().depth() == 0,
+         "DataFrame::label().depth should be zero for unsorted flat labels");
+  expect(label_df.label().codes().features("label").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 0, 2}),
+         "DataFrame::label().codes should expose factor codes for labels");
+  expect(label_df.label().levels().features("label").as_note().vector() ==
+             std::vector<std::string_view>({"b", "a", "c"}),
+         "DataFrame::label().levels should expose distinct label levels");
+  const auto peer_labels = Thread(pluss::make_note({"b", "d", "a"}));
+  expect(label_df.label().unite(peer_labels).as_note().vector() ==
+             std::vector<std::string_view>({"b", "a", "c", "d"}),
+         "DataFrame::label().unite should preserve left order then append right-only labels");
+  expect(label_df.label().intersect(peer_labels).as_note().vector() ==
+             std::vector<std::string_view>({"b", "a"}),
+         "DataFrame::label().intersect should preserve left order for common labels");
+  expect(label_df.label().diff(peer_labels).as_note().vector() ==
+             std::vector<std::string_view>({"c"}),
+         "DataFrame::label().diff should return left labels missing from the target");
+  expect(label_df.label().symdiff(peer_labels).as_note().vector() ==
+             std::vector<std::string_view>({"c", "d"}),
+         "DataFrame::label().symdiff should return labels exclusive to either side");
+  expect(label_df.label().find(Thread(pluss::make_note({"a", "missing", "b"})))
+             .as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, -1, 0}),
+         "DataFrame::label().find should return exact-match positions and -1 for misses");
+  expect(label_df.label().pos("b").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 2}),
+         "DataFrame::label().pos should return all positions for duplicate labels");
+  expect(label_df.label().slice("a", "c").as_note().vector() ==
+             std::vector<std::string_view>({"a", "b", "c"}),
+         "DataFrame::label().slice(label,label) should return inclusive label-value slices");
+  const auto thread_label_ops =
+      Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
+          .label().set(Thread(pluss::make_note({"x", "y", "x"})));
+  expect(thread_label_ops.label().find(Thread(pluss::make_note({"y", "z"})))
+             .as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, -1}),
+         "Thread::label().find should expose Index.get_indexer-style lookup");
+  expect(thread_label_ops.label().pos("x").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 2}),
+         "Thread::label().pos should expose Index.get_loc-style duplicate positions");
+  const auto numeric_label_ops =
+      Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
+          .label().set(Thread(pluss::make_series(std::vector<std::int64_t>{10, 20, 10})));
+  const auto numeric_united = numeric_label_ops.label().unite(
+      Thread(pluss::make_series(std::vector<std::int64_t>{20, 30})));
+  expect(numeric_united.kind() == pluss::table::ThreadKind::Series &&
+             numeric_united.as_series().scalar_type() == pluss::codem::ScalarType::Int64 &&
+             numeric_united.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 20, 30}),
+         "Thread::label().unite should preserve same numeric label dtype");
+  const auto mixed_numeric_united = numeric_label_ops.label().unite(
+      Thread(pluss::make_series(std::vector<double>{20.5, 30.5})));
+  expect(mixed_numeric_united.kind() == pluss::table::ThreadKind::Series &&
+             mixed_numeric_united.as_series().scalar_type() == pluss::codem::ScalarType::Float64 &&
+             mixed_numeric_united.as_series().to_vec<double>() == std::vector<double>({10.0, 20.0, 20.5, 30.5}),
+         "Thread::label().unite should upcast mixed numeric label dtypes instead of falling back to Note");
+  const auto timeline_left_values = std::vector<std::int64_t>{
+      1'704'067'200'000'000'000LL,
+      1'704'153'600'000'000'000LL,
+      1'704'067'200'000'000'000LL,
+  };
+  const auto timeline_right_values = std::vector<std::int64_t>{
+      1'704'153'600'000'000'000LL,
+      1'704'240'000'000'000'000LL,
+  };
+  const auto timeline_label_ops =
+      Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
+          .label().set(Thread(pluss::codeh::Timeline::fromSeries(
+              pluss::make_series(timeline_left_values, {3}))));
+  const auto timeline_united = timeline_label_ops.label().unite(
+      Thread(pluss::codeh::Timeline::fromSeries(pluss::make_series(timeline_right_values, {2}))));
+  expect(timeline_united.kind() == pluss::table::ThreadKind::Timeline &&
+             timeline_united.as_timeline().to_epoch_nanos_vector() ==
+                 std::vector<std::int64_t>({
+                     1'704'067'200'000'000'000LL,
+                     1'704'153'600'000'000'000LL,
+                     1'704'240'000'000'000'000LL,
+                 }),
+         "Thread::label().unite should preserve Timeline label dtype");
+  const auto numeric_label_df = DataFrame({
+      {"score", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+  }, Thread(pluss::make_series(std::vector<std::int64_t>{10, 20, 10})));
+  const auto df_numeric_intersect = numeric_label_df.label().intersect(
+      Thread(pluss::make_series(std::vector<std::int64_t>{20, 30, 10})));
+  expect(df_numeric_intersect.kind() == pluss::table::ThreadKind::Series &&
+             df_numeric_intersect.as_series().scalar_type() == pluss::codem::ScalarType::Int64 &&
+             df_numeric_intersect.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 20}),
+         "DataFrame::label().intersect should preserve numeric label dtype through Thread delegation");
 
   const auto source_labeled = Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))
-                                  .caselbl(Thread(pluss::make_note({"b", "a", "c"})));
+                                  .label().set(Thread(pluss::make_note({"b", "a", "c"})));
   const auto target_case_labels = Thread(pluss::make_note({"a", "b", "d"}));
   const auto aligned_by_case = source_labeled.align(
       target_case_labels,
       pluss::table::AlignOptions{.align = pluss::table::AlignBy::Caselbl});
-  expect(aligned_by_case.caselbl().as_note().vector() ==
+  const auto aligned_by_label_surface = source_labeled.label().align(
+      target_case_labels,
+      pluss::table::AlignOptions{.align = pluss::table::AlignBy::Caselbl});
+  expect(aligned_by_case.label().values().as_note().vector() ==
              std::vector<std::string_view>({"a", "b", "d"}),
          "Thread::align(Caselbl) should carry target case labels");
   expect(aligned_by_case.as_series().to_vec<double>()[0] == 20.0 &&
              aligned_by_case.as_series().to_vec<double>()[1] == 10.0,
          "Thread::align(Caselbl) should reorder values by label");
+  expect(aligned_by_label_surface.label().values().as_note().vector() ==
+             std::vector<std::string_view>({"a", "b", "d"}) &&
+             aligned_by_label_surface.as_series().to_vec<double>()[0] == 20.0 &&
+             aligned_by_label_surface.as_series().to_vec<double>()[1] == 10.0,
+         "Thread::label().align should delegate to Thread label alignment");
   expect(pluss::table::detail::validity_mask(aligned_by_case)->to_vec<bool>() ==
              std::vector<bool>({true, true, false}),
          "Thread::align(Caselbl) should null-mark missing target labels by default");
@@ -246,7 +411,7 @@ void test_statistics() {
          "Thread::align(Caselbl, fill) should clear validity mask after filling");
 
   const auto feature_thread = Thread(pluss::make_series(std::vector<double>{1.5, 2.5}))
-                                  .caselbl(Thread(pluss::make_note({"A2", "A1"})));
+                                  .label().set(Thread(pluss::make_note({"A2", "A1"})));
   const auto feature_labels = Thread(pluss::make_note({"A1", "A2"}));
   const auto aligned_by_feature = feature_thread.align(
       feature_labels,
@@ -311,9 +476,9 @@ void test_statistics() {
          "one-element 1D Series payload comparison should not broadcast or align by default");
 
   const auto s1 = Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))
-                      .caselbl(Thread(pluss::make_note({"Alice", "Bob", "Carol"})));
+                      .label().set(Thread(pluss::make_note({"Alice", "Bob", "Carol"})));
   const auto s2 = Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
-                      .caselbl(Thread(pluss::make_note({"Carol", "Alice", "Bob"})));
+                      .label().set(Thread(pluss::make_note({"Carol", "Alice", "Bob"})));
   const auto positional_sum = s1 + s2;
   expect(positional_sum.as_series().to_vec<double>() ==
              std::vector<double>({11.0, 22.0, 33.0}),
@@ -345,7 +510,7 @@ void test_statistics() {
        "Thread::prod should expose the 1D product reduction");
   const auto labelled_scores =
       Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0}))
-          .caselbl(Thread(pluss::make_note({"Alice", "Bob", "Carol"})));
+          .label().set(Thread(pluss::make_note({"Alice", "Bob", "Carol"})));
   expect(labelled_scores.csmin().to_str() == "Bob",
          "Thread::csmin should return the case label at the minimum value");
   expect(labelled_scores.csmax().to_str() == "Carol",
@@ -358,11 +523,11 @@ void test_statistics() {
          "Thread::bottom should return the smallest values in ascending order");
   const auto appended_scores =
       labelled_scores.append(Thread(pluss::make_series(std::vector<double>{40.0}))
-                                 .caselbl(Thread(pluss::make_note({"David"}))));
+                                 .label().set(Thread(pluss::make_note({"David"}))));
   expect(appended_scores.as_series().to_vec<double>() ==
              std::vector<double>({20.0, 10.0, 30.0, 40.0}),
          "Thread::append should concatenate 1D Series payloads");
-  expect(appended_scores.caselbl().as_note().vector() ==
+  expect(appended_scores.label().values().as_note().vector() ==
              std::vector<std::string_view>({"Alice", "Bob", "Carol", "David"}),
          "Thread::append should preserve and concatenate case labels");
   expect(Thread(pluss::make_note({"x", "y"}))
@@ -381,18 +546,18 @@ void test_statistics() {
              .as_series()
              .to_vec<bool>() == std::vector<bool>({false, true, false}),
          "Thread::has should return an exact-membership Thread mask");
-  expect(positional_sum.caselbl().as_note().vector() ==
+  expect(positional_sum.label().values().as_note().vector() ==
              std::vector<std::string_view>({"Alice", "Bob", "Carol"}),
          "Thread arithmetic should preserve left labels under positional semantics");
-  const auto aligned_sum = s1 + s2.align(s1.caselbl(), {.align = pluss::table::AlignBy::Caselbl});
+  const auto aligned_sum = s1 + s2.align(s1.label().values(), {.align = pluss::table::AlignBy::Caselbl});
   expect(aligned_sum.as_series().to_vec<double>() ==
              std::vector<double>({12.0, 23.0, 31.0}),
          "Thread arithmetic should support explicit case-label alignment via Thread::align");
 
   const auto left_missing = Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))
-                                .caselbl(Thread(pluss::make_note({"A", "B", "C"})));
+                                .label().set(Thread(pluss::make_note({"A", "B", "C"})));
   const auto right_missing = Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))
-                                 .caselbl(Thread(pluss::make_note({"B", "D"})));
+                                 .label().set(Thread(pluss::make_note({"B", "D"})));
   bool missing_sum_threw = false;
   try {
     (void)(left_missing + right_missing);
@@ -403,9 +568,9 @@ void test_statistics() {
          "Thread arithmetic should reject unequal lengths unless the user explicitly aligns first");
 
   const auto bool_a = Thread(pluss::make_series(std::vector<bool>{true, false, true}))
-                          .caselbl(Thread(pluss::make_note({"x", "y", "z"})));
+                          .label().set(Thread(pluss::make_note({"x", "y", "z"})));
   const auto bool_b = Thread(pluss::make_series(std::vector<bool>{true, true}))
-                          .caselbl(Thread(pluss::make_note({"z", "x"})));
+                          .label().set(Thread(pluss::make_note({"z", "x"})));
   bool bool_and_threw = false;
   try {
     (void)(bool_a & bool_b);
@@ -416,7 +581,7 @@ void test_statistics() {
          "Thread logical ops should reject unequal lengths unless the user explicitly aligns first");
 
   const auto cmp = s1 > s2;
-  expect(cmp.caselbl().as_note().vector() ==
+  expect(cmp.label().values().as_note().vector() ==
              std::vector<std::string_view>({"Alice", "Bob", "Carol"}),
          "Thread comparisons should carry left labels under positional semantics");
   expect(cmp.as_series().to_vec<bool>() ==
@@ -424,9 +589,9 @@ void test_statistics() {
          "Thread comparisons should compare positional values by default");
 
   const auto corr_left = Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))
-                             .caselbl(Thread(pluss::make_note({"A", "B"})));
+                             .label().set(Thread(pluss::make_note({"A", "B"})));
   const auto corr_right = Thread(pluss::make_series(std::vector<double>{20.0, 10.0}))
-                              .caselbl(Thread(pluss::make_note({"B", "A"})));
+                              .label().set(Thread(pluss::make_note({"B", "A"})));
   near(corr_left.corr(corr_right), 1.0, 1e-12,
        "Thread::corr should align by case labels before computing");
   near(corr_left.corr_with(corr_right).to_dbl(), 1.0, 1e-12,
@@ -436,7 +601,7 @@ void test_statistics() {
   near(corr_left.matmul(corr_right).to_dbl(), 50.0, 1e-12,
        "Thread::matmul should align by case labels before computing");
   const auto filter_mask = Thread(pluss::make_series(std::vector<bool>{true, false}))
-                               .caselbl(Thread(pluss::make_note({"1003", "1001"})));
+                               .label().set(Thread(pluss::make_note({"1003", "1001"})));
   const auto filtered_axis = axis_frame.filter(filter_mask);
   expect(filtered_axis.label().values().as_note().vector() ==
              std::vector<std::string_view>({"1003"}),
@@ -499,7 +664,7 @@ void test_statistics() {
          "DataFrame::add(DataFrame, Feature) should align columns by feature label");
 
   const auto feature_offsets = Thread(pluss::make_series(std::vector<double>{10.0, 100.0}))
-                                   .caselbl(Thread(pluss::make_note({"B", "A"})));
+                                   .label().set(Thread(pluss::make_note({"B", "A"})));
   const auto feature_pos = frame_left.add(feature_offsets);
   expect(feature_pos.features("A").as_series().to_vec<double>() ==
              std::vector<double>({20.0, 30.0}) &&
@@ -514,7 +679,7 @@ void test_statistics() {
          "DataFrame::add(Thread, Feature) should align one value per feature by feature label");
 
   const auto case_offsets = Thread(pluss::make_series(std::vector<double>{1000.0, 100.0}))
-                                .caselbl(Thread(pluss::make_note({"r2", "r1"})));
+                                .label().set(Thread(pluss::make_note({"r2", "r1"})));
   const auto case_pos = frame_left.add(case_offsets, Axis::Case);
   expect(case_pos.features("A").as_series().to_vec<double>() ==
              std::vector<double>({1010.0, 120.0}),
@@ -959,7 +1124,7 @@ void test_thread_delegation_and_advanced_windows() {
   near(weighted.as_series().to_vec<double>(1), 5.0 / 3.0, 1e-9,
        "weighted moving mean");
   const auto weighted_frame =
-      frame.weigh({1.0, 2.0}, WindowStatistic::Mean);
+      frame.ts().weigh({1.0, 2.0}, WindowStatistic::Mean);
   near(weighted_frame.features("x").as_series().to_vec<double>(3),
        11.0 / 3.0, 1e-9, "DataFrame weighted window delegation");
 
@@ -1123,7 +1288,7 @@ void test_udfs_and_text() {
          "case apply preserve shape");
   const auto expanded = frame.transform(
       [](const DataFrame& row) {
-        return row.extend_cases(row, pluss::table::FrameMatchRule::Unite,
+        return row.extend(row, pluss::table::FrameMatchRule::Unite,
                                 true, false);
       },
       Axis::Case, pluss::table::ResultShape::Expand);
@@ -1211,18 +1376,28 @@ void test_axis_dtype_and_host_exports() {
              std::vector<std::string>({"amount", "city", "event", "axis"}),
          "DataFrame::features() should expose feature names");
 
+  const auto ptypes = frame.ptypes();
+  expect(ptypes.size() == 4, "DataFrame::ptypes size mismatch");
+  expect(ptypes["amount"] == "Series", "numeric ptype should report Series payload");
+  expect(ptypes["city"] == "Note", "note ptype should be Note");
+  expect(ptypes["event"] == "Timeline", "timeline ptype should be Timeline");
+  expect(ptypes["axis"] == "TimeIndex", "time index ptype should be TimeIndex");
+
   const auto dtypes = frame.dtypes();
   expect(dtypes.size() == 4, "DataFrame::dtypes size mismatch");
-  expect(dtypes["amount"] == "Series", "numeric dtype should report Series payload");
-  expect(dtypes["city"] == "Note", "note dtype should be Note");
-  expect(dtypes["event"] == "Timeline", "timeline dtype should be Timeline");
-  expect(dtypes["axis"] == "TimeIndex", "time index dtype should be TimeIndex");
+  expect(dtypes["amount"].find("Series<") == 0, "numeric dtype should include Series concrete dtype");
+  expect(dtypes["city"] == "Note<utf8>", "note dtype should include Note concrete dtype");
+  expect(dtypes["event"].find("Timeline<datetime64[ns, ") == 0, "timeline dtype should include timezone-aware concrete dtype");
+  expect(dtypes["axis"].find("TimeIndex<datetime64[ns, ") == 0,
+         "time index dtype should distinguish TimeIndex concrete dtype");
+
+  expect(frame.features("amount").ptype() == "Series", "Thread::ptype should expose Series payload family");
+  expect(frame.features("axis").ptype() == "TimeIndex", "Thread::ptype should expose TimeIndex payload family");
 
   std::ostringstream stream;
-  stream << dtypes;
-  expect(stream.str().find("amount") != std::string::npos &&
-             stream.str().find("Series") != std::string::npos,
-         "DataFrame::dtypes should be streamable");
+  stream << ptypes;
+  expect(stream.str().find("amount") != std::string::npos && stream.str().find("Series") != std::string::npos,
+         "DataFrame::ptypes should be streamable");
 
   const auto scalar_note = pluss::make_note("hello").host();
   expect(scalar_note.is_scalar() && scalar_note.scalar() == "hello",

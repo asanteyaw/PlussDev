@@ -50,12 +50,12 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="has_feature.html">
+  <a class="prev-link" href="has.html">
     <span class="label">Previous</span>
-    <span class="title">has_feature</span>
+    <span class="title">has</span>
   </a>
-  <a class="next-link" href="height.html">
+  <a class="next-link" href="info.html">
     <span class="label">Next</span>
-    <span class="title">height</span>
+    <span class="title">info</span>
   </a>
 </div>

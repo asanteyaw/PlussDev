@@ -40,7 +40,7 @@ Optional feature subset to reduce.
 """
 
 [[parameters]]
-name = "skipna"
+name = "skipnull"
 body = """
 Missing-value policy for the reduction.
 

@@ -13,7 +13,7 @@ returns = """
 
 see_also = [
   "<a href=\"#transform\"><code>DataFrame::transform</code></a>: compute one derived thread from a callback when you are working row-wise or feature-wise.",
-  "<a href=\"#set_features\"><code>DataFrame::set_features</code></a>: write one feature directly when you already have the final thread.",
+  "<a href=\"#set\"><code>DataFrame::set</code></a>: write one feature directly when you already have the final thread.",
   "<a href=\"#put\"><code>DataFrame::put</code></a>: update selected cells rather than constructing whole derived features."
 ]
 

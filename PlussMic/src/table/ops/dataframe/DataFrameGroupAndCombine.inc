@@ -112,7 +112,7 @@ Thread grouped_mode_thread_(
 
 DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
                            pluss::msharp::RangeView::Of<GroupSpec> specs,
-                           bool dropna_keys,
+                           bool dropnull_keys,
                            bool render) const {
   PLUSS_CHECK(keys.size() != 0, "DataFrame::group: at least one key feature is required");
   PLUSS_CHECK(specs.size() != 0, "DataFrame::group: at least one GroupSpec is required");
@@ -129,7 +129,7 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
 
   auto composite_keys = make_unify_keys(key_columns, ncases());
   std::vector<bool> included(static_cast<std::size_t>(ncases()), true);
-  if (dropna_keys) {
+  if (dropnull_keys) {
     for (const auto& key : key_columns) {
       if (!key.has_validity_mask()) {
         continue;
@@ -341,24 +341,24 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
 
 DataFrameView DataFrame::group_by(pluss::msharp::RangeView::Of<std::string_view> keys,
                                   pluss::msharp::RangeView::Of<GroupSpec> specs,
-                                  bool dropna_keys,
+                                  bool dropnull_keys,
                                   bool render) const {
-  return DataFrameView(group(keys, specs, dropna_keys, false), render, "group_by", title());
+  return DataFrameView(group(keys, specs, dropnull_keys, false), render, "group_by", title());
 }
 
 DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
                                   pluss::msharp::RangeView::Of<GroupSpec> specs,
-                                  bool dropna_keys,
+                                  bool dropnull_keys,
                                   bool render) const {
   return group_by(pluss::msharp::RangeView::Of<std::string_view>(keys),
                   specs,
-                  dropna_keys,
+                  dropnull_keys,
                   render);
 }
 
 DataFrameView DataFrame::group_by(const LabelGroup& keys,
                                   pluss::msharp::RangeView::Of<GroupSpec> specs,
-                                  bool dropna_keys,
+                                  bool dropnull_keys,
                                   bool render) const {
   PLUSS_CHECK(has_caselbls(), "DataFrame::group_by(LabelGroup): current DataFrame has no case labels");
   std::vector<std::string> level_names = keys.names;
@@ -378,7 +378,7 @@ DataFrameView DataFrame::group_by(const LabelGroup& keys,
                 "DataFrame::group_by(LabelGroup): case-label name cannot be empty");
     auto temp = "__pluss_case_level_" + level_name;
     std::int64_t suffix = 1;
-    while (keyed.has_feature(temp)) {
+    while (keyed.get(temp).has_value()) {
       temp = fmt::format("__pluss_case_level_{}_{}", level_name, suffix++);
     }
     auto level_values = caselbl(level_name);
@@ -401,7 +401,7 @@ DataFrameView DataFrame::group_by(const LabelGroup& keys,
       pluss::msharp::RangeView::Of<std::string_view>(
           std::span<const std::string_view>(temp_views.data(), temp_views.size())),
       specs,
-      dropna_keys,
+      dropnull_keys,
       false);
 
   std::vector<std::pair<std::string_view, std::string_view>> renames;
@@ -417,12 +417,12 @@ DataFrameView DataFrame::group_by(const LabelGroup& keys,
 DataFrameView DataFrame::pivot(std::string_view case_feature,
                                std::string_view feature_feature,
                                std::string_view value_feature,
-                               bool dropna_keys,
+                               bool dropnull_keys,
                                bool render) const {
   const auto dup = group(
       {case_feature, feature_feature},
       {GroupSpec{"__pivot_cell_count__", "", GroupOp::Count}},
-      dropna_keys,
+      dropnull_keys,
       false);
   const auto counts = dup.features("__pivot_cell_count__").as_series();
   const bool has_duplicate = counts.gt(1).any().item<bool>();
@@ -430,7 +430,7 @@ DataFrameView DataFrame::pivot(std::string_view case_feature,
     throw ::pluss::Error(
         "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
   }
-  auto out = pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, false);
+  auto out = pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropnull_keys, false);
   return DataFrameView(static_cast<DataFrame>(out), render, "pivot", title());
 }
 
@@ -438,7 +438,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
                                      std::string_view feature_feature,
                                      std::string_view value_feature,
                                      GroupOp op,
-                                     bool dropna_keys,
+                                     bool dropnull_keys,
                                      bool render) const {
   PLUSS_CHECK(op == GroupOp::Count || op == GroupOp::Nunique || op == GroupOp::Sum || op == GroupOp::Mean ||
                   op == GroupOp::Median || op == GroupOp::Min || op == GroupOp::Max,
@@ -505,7 +505,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   for (std::int64_t r = 0; r < ncases(); ++r) {
     const bool case_valid = case_col.is_valid(r);
     const bool feat_valid = feat_col.is_valid(r);
-    if (dropna_keys && (!case_valid || !feat_valid)) {
+    if (dropnull_keys && (!case_valid || !feat_valid)) {
       continue;
     }
 
@@ -683,9 +683,9 @@ Atlas DataFrame::unsqueeze(const Thread& depth_labels) const {
 
 DataFrameView DataFrame::count_by(std::string_view feature_name,
                                   std::int64_t top_n,
-                                  bool dropna,
+                                  bool dropnull,
                                   bool render) const {
-  auto grouped = group({feature_name}, {GroupSpec{"count", "", GroupOp::Count}}, dropna, false);
+  auto grouped = group({feature_name}, {GroupSpec{"count", "", GroupOp::Count}}, dropnull, false);
   const auto keys_note = grouped.features(feature_name).as_note();
   const auto counts = grouped.features("count").as_series().to_vec<std::int64_t>();
 
@@ -726,7 +726,7 @@ DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
                                  std::string_view value_feature_name,
                                  std::int64_t top_n,
                                  std::int64_t min_count,
-                                 bool dropna_group,
+                                 bool dropnull_group,
                                  bool render) const {
   PLUSS_CHECK(min_count >= 1, "DataFrame::mean_by: min_count must be >= 1");
   const auto mean_name = fmt::format("mean_{}", value_feature_name);
@@ -736,7 +736,7 @@ DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
           GroupSpec{mean_name, owned_name(value_feature_name), GroupOp::Mean},
           GroupSpec{"count", owned_name(value_feature_name), GroupOp::Count},
       },
-      dropna_group,
+      dropnull_group,
       false);
 
   struct MeanRow {

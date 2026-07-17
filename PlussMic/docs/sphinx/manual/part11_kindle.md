@@ -21,8 +21,8 @@ stream.dtype();
 
 stream.isnull();
 stream.notnull();
-stream.fillna(0.0);
-stream.dropna();
+stream.fillnull(0.0);
+stream.dropnull();
 stream.ffill();
 stream.bfill();
 
@@ -78,7 +78,7 @@ preprocessing, and export.
 
 ```cpp
 auto cleaned = catalog.apply("balance", [](const pluss::kindle::Stream& s) {
-  return s.fillna(0.0);
+  return s.fillnull(0.0);
 });
 
 auto table = cleaned.to_table();
@@ -119,7 +119,7 @@ Map catalogs:
 ```cpp
 auto cleaned = archive.map_catalogs([](const pluss::kindle::Catalog& catalog) {
   return catalog.apply_all([](const pluss::kindle::Stream& stream) {
-    return stream.dropna();
+    return stream.dropnull();
   });
 });
 ```

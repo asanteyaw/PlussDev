@@ -614,6 +614,30 @@ src/table/DataFrame.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/DataFrame.cpp.s
 .PHONY : src/table/DataFrame.cpp.s
 
+src/table/Nexus.o: src/table/Nexus.cpp.o
+.PHONY : src/table/Nexus.o
+
+# target to build an object file
+src/table/Nexus.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Nexus.cpp.o
+.PHONY : src/table/Nexus.cpp.o
+
+src/table/Nexus.i: src/table/Nexus.cpp.i
+.PHONY : src/table/Nexus.i
+
+# target to preprocess a source file
+src/table/Nexus.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Nexus.cpp.i
+.PHONY : src/table/Nexus.cpp.i
+
+src/table/Nexus.s: src/table/Nexus.cpp.s
+.PHONY : src/table/Nexus.s
+
+# target to generate assembly for a file
+src/table/Nexus.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Nexus.cpp.s
+.PHONY : src/table/Nexus.cpp.s
+
 src/table/Thread.o: src/table/Thread.cpp.o
 .PHONY : src/table/Thread.o
 
@@ -993,6 +1017,9 @@ help:
 	@echo "... src/table/DataFrame.o"
 	@echo "... src/table/DataFrame.i"
 	@echo "... src/table/DataFrame.s"
+	@echo "... src/table/Nexus.o"
+	@echo "... src/table/Nexus.i"
+	@echo "... src/table/Nexus.s"
 	@echo "... src/table/Thread.o"
 	@echo "... src/table/Thread.i"
 	@echo "... src/table/Thread.s"

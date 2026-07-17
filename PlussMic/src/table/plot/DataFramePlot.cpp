@@ -1989,7 +1989,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
                                                              const ScatterMatrixPlotOptions& options) const {
   const auto scoped = features.size() > 0 ? frame_.features(features) : frame_;
-  const auto series_only = scoped.series_features();
+  const auto series_only = scoped.feataxis().series();
   const auto names = series_only.features();
   auto fig = scatter_matrix_from_names(series_only, names, resolve_scatter_matrix_pair_options(options), options_);
   apply_figure_options(fig);

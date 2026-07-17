@@ -7,7 +7,7 @@
 ```cpp
 DataFrame::save_csv(std::string_view filepath) -> void
 
-DataFrame::save_csv(std::string_view filepath, bool add_cases, bool header = true, char sep = ',', std::string na_rep = "", std::optional<std::string> case_label = std::nullopt, std::optional<std::string> float_format = std::nullopt, char quotechar = '"', bool doublequote = true, std::string line_terminator = "\n", char decimal = '.', std::string encoding = "utf-8") -> void
+DataFrame::save_csv(std::string_view filepath, bool add_cases, bool header = true, char sep = ',', std::string null_rep = "", std::optional<std::string> case_label = std::nullopt, std::optional<std::string> float_format = std::nullopt, char quotechar = '"', bool doublequote = true, std::string line_terminator = "\n", char decimal = '.', std::string encoding = "utf-8") -> void
 
 DataFrame::save_csv(std::string_view filepath, const pluss::loader::Config& config) -> void
 
@@ -34,7 +34,7 @@ Writes the frame to CSV. Set `add_cases=true` when you want the current case axi
 **sep**
     Column separator used for delimited text files such as CSV.
 
-**na_rep**
+**null_rep**
     String written anywhere a null or missing value must be serialized.
 
 **case_label**

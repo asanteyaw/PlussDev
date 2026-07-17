@@ -36,7 +36,7 @@ Writes replacement values into positions selected by a boolean mask.
     Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 ## Returns
 
@@ -185,9 +185,9 @@ auto out = thread.put(other, "demo");
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="prod.html">
+  <a class="prev-link" href="ptype.html">
     <span class="label">Previous</span>
-    <span class="title">prod</span>
+    <span class="title">ptype</span>
   </a>
   <a class="next-link" href="radd.html">
     <span class="label">Next</span>

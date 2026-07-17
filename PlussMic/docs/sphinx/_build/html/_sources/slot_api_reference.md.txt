@@ -465,7 +465,7 @@ Returns a new slot with one additional value appended.
 #### Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -513,7 +513,7 @@ Appends one additional value to the slot in place.
 #### Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 

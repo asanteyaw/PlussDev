@@ -2677,7 +2677,7 @@ Appends one new value to a named slot and returns the updated registry.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2737,7 +2737,7 @@ Appends one new value to a named slot in place.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2794,7 +2794,7 @@ Appends the same new value to every slot and returns the updated registry.
 #### Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2851,7 +2851,7 @@ Appends the same new value to every slot in place.
 #### Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3673,7 +3673,7 @@ Adds or replaces one named slot and returns the updated registry.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3733,7 +3733,7 @@ Adds or replaces one named slot in place.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 

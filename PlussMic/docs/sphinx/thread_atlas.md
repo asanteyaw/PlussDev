@@ -9,7 +9,7 @@ Use it when you want column operations without carrying the full `DataFrame` aro
 auto sales = pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}));
 auto cities = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
 
-auto cleaned = sales.fillna(0.0).clip(0.0, 150.0);
+auto cleaned = sales.fillnull(0.0).clip(0.0, 150.0);
 auto avg = cleaned.mean();
 auto city_mask = cities.contains("Accra");
 ```

@@ -153,7 +153,7 @@ int main() {
       });
   missing_demo.head(8);
   missing_demo.isnull().head(8);
-  missing_demo.fillna(0.0, {"Lifecycle Cost"}).head(8);
+  missing_demo.fillnull(0.0, {"Lifecycle Cost"}).head(8);
   missing_demo.ffill().head(8);
   missing_demo.bfill().head(8);
   missing_demo.dropnull().head(8);

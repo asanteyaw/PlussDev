@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=5a216172"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -73,7 +73,7 @@ relate. Understanding these types makes the rest of PlussMic predictable.</p>
 missing values from input files.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">present</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">complete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 </pre></div>
 </div>
@@ -141,8 +141,8 @@ integer axis shown at the left. <code class="docutils literal notranslate"><span
 <p>Feature selection:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span><span class="w">                 </span><span class="c1">// Thread</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">smaller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">});</span><span class="w">   </span><span class="c1">// DataFrame</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">series_features</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note_features</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">series</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">note</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">features(&quot;name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with display labels from the frame’s case

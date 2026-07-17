@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=5a216172"></script>
+    <script src="_static/api_nav.js?v=7d8bedc3"></script>
     <script src="_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -45,7 +45,7 @@ Use it when you want:</p>
 <ul class="simple">
 <li><p>named features with mixed typed columns</p></li>
 <li><p>a case axis that can be numeric, note-based, timeline-based, or time-index based</p></li>
-<li><p>table verbs such as <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">assign</span></code>, <code class="docutils literal notranslate"><span class="pre">group_by</span></code>, <code class="docutils literal notranslate"><span class="pre">pivot_table</span></code>, <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna</span></code>, and <code class="docutils literal notranslate"><span class="pre">describe</span></code></p></li>
+<li><p>table verbs such as <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">assign</span></code>, <code class="docutils literal notranslate"><span class="pre">group_by</span></code>, <code class="docutils literal notranslate"><span class="pre">pivot_table</span></code>, <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull</span></code>, and <code class="docutils literal notranslate"><span class="pre">describe</span></code></p></li>
 <li><p>import/export across CSV, TXT, JSON, Excel, and Parquet</p></li>
 </ul>
 </section>
@@ -135,14 +135,14 @@ full replacement of the feature axis.</p>
 <h3>Replace or create a column<a class="headerlink" href="#replace-or-create-a-column" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;profit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">60.0</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_features</span><span class="p">(</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;profit&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">60.0</span>
 <span class="p">);</span>
 </pre></div>
 </div>
 <p>Use <code class="docutils literal notranslate"><span class="pre">set(...)</span> <span class="pre">=</span> <span class="pre">...</span></code> when you want assignment-style syntax. Use
-<code class="docutils literal notranslate"><span class="pre">set_features(...)</span></code> when you prefer expression-style chaining.</p>
+<code class="docutils literal notranslate"><span class="pre">set(...)</span></code> when you prefer expression-style chaining.</p>
 </section>
 <section id="clean-a-text-column">
 <h3>Clean a text column<a class="headerlink" href="#clean-a-text-column" title="Link to this heading">¶</a></h3>
@@ -239,13 +239,13 @@ case labels should fail instead.</p>
 <section id="extend-and-unify-frames">
 <h2>Extend And Unify Frames<a class="headerlink" href="#extend-and-unify-frames" title="Link to this heading">¶</a></h2>
 <p>Append cases vertically with feature-name matching:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">january</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span><span class="n">february</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">january</span><span class="p">.</span><span class="n">extend</span><span class="p">(</span><span class="n">february</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>The default feature rule is a stable union with nulls for one-sided features.
 Pass <code class="docutils literal notranslate"><span class="pre">FrameMatchRule::Common</span></code> to retain shared features only, or set
 <code class="docutils literal notranslate"><span class="pre">fresh_cases=true</span></code> for contiguous integer cases:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">january</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">january</span><span class="p">.</span><span class="n">extend</span><span class="p">(</span>
 <span class="w">    </span><span class="n">february</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">,</span>
 <span class="w">    </span><span class="nb">true</span><span class="p">);</span>
@@ -364,11 +364,11 @@ cannot represent several streamed batches.</p>
 </section>
 <section id="missing-data-and-rolling-windows">
 <h2>Missing Data And Rolling Windows<a class="headerlink" href="#missing-data-and-rolling-windows" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">dropped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">carried</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ffill</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">window</span><span class="p">({</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">window</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales_roll3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadWindowOp</span><span class="o">::</span><span class="n">RollingMean</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
 <span class="p">});</span>
 </pre></div>
@@ -456,7 +456,7 @@ right frame should patch matching cells/features.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">hourly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">schedule</span><span class="p">.</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;value&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;1H&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mean&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">floored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">schedule</span><span class="p">.</span><span class="n">floor_time</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;hour&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">schedule</span><span class="p">.</span><span class="n">to_utc</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">schedule</span><span class="p">.</span><span class="n">tl</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">utc</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>

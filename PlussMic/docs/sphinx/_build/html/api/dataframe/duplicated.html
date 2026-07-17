@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,8 +44,8 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">duplicated</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Build a boolean duplicate mask instead of dropping rows immediately.</p>
-<p>Use this when you want to inspect, count, or reuse duplicate membership before deciding what to do with those rows.</p>
+<p>Build a boolean duplicate-occurrence mask instead of dropping rows immediately.</p>
+<p>Use this when you want to inspect, count, or reuse duplicate occurrences before deciding what to do with those rows.</p>
 <p>It is the duplicate-analysis route; <code class="docutils literal notranslate"><span class="pre">drop_duplicates(...)</span></code> is the duplicate-removal route.</p>
 </section>
 <section id="parameters">
@@ -63,18 +63,20 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Boolean-like thread with one value per row indicating duplicate membership under the requested keep policy.</p>
+Boolean-like thread with one value per row indicating duplicate occurrence status under the requested keep policy.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a href="repeated.html"><code>DataFrame::repeated</code></a>: mark every row whose key appears more than once.</p></li>
 <li><p><a href="drop_duplicates.html"><code>DataFrame::drop_duplicates</code></a>: drop the duplicate rows immediately once you know the policy you want.</p></li>
 </ul>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <p>The returned thread aligns one-for-one with the original row axis, so you can inspect it directly or reuse it in downstream masking logic.</p>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated(...)</span></code> does not change row order or remove data. It only reports duplicate membership.</p>
+<p><code class="docutils literal notranslate"><span class="pre">duplicated(...)</span></code> does not change row order or remove data. It only reports duplicate occurrences.</p>
+<p><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code> and <code class="docutils literal notranslate"><span class="pre">repeated()</span></code> intentionally differ. For <code class="docutils literal notranslate"><span class="pre">[A,</span> <span class="pre">B,</span> <span class="pre">A,</span> <span class="pre">C,</span> <span class="pre">B]</span></code>, <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code> returns <code class="docutils literal notranslate"><span class="pre">[false,</span> <span class="pre">false,</span> <span class="pre">true,</span> <span class="pre">false,</span> <span class="pre">true]</span></code>, while <code class="docutils literal notranslate"><span class="pre">repeated()</span></code> returns <code class="docutils literal notranslate"><span class="pre">[true,</span> <span class="pre">true,</span> <span class="pre">true,</span> <span class="pre">false,</span> <span class="pre">true]</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>

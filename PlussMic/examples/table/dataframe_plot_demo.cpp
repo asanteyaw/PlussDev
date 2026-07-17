@@ -53,7 +53,7 @@ int main() {
   fig_scatter.headline("Lifecycle Cost vs Agency Code");
   fig_scatter.save_pdf("plot_df_scatter.pdf");
 
-  auto top_agencies = df.tally("Agency Name", /*top_n=*/8, /*dropna=*/true, /*render=*/false);
+  auto top_agencies = df.tally("Agency Name", /*top_n=*/8, /*dropnull=*/true, /*render=*/false);
   auto ranked_agencies = top_agencies.label().set("Agency Name", /*drop_feature=*/false);
   auto fig_bar = ranked_agencies.plot().bar("count");
   fig_bar.headline("Top Agencies by count");

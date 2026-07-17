@@ -43,9 +43,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="set_features_.html">
+  <a class="prev-link" href="set_.html">
     <span class="label">Previous</span>
-    <span class="title">set_features_</span>
+    <span class="title">set_</span>
   </a>
   <a class="next-link" href="shift.html">
     <span class="label">Next</span>

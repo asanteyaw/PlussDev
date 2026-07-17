@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">all</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">all</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
 </pre></div>
 </div>
 <p>Return whether every value in a boolean thread is true.</p>
@@ -49,7 +49,7 @@
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>skipna</strong></p>
+<p><strong>skipnull</strong></p>
 <p>Missing-value policy for the reduction.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: ignore missing boolean positions while reducing.</p></li>
@@ -71,7 +71,7 @@ One scalar truth result.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <p>This method expects a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload. It is not a general numeric reduction.</p>
-<p>Nullable boolean input requires <code class="docutils literal notranslate"><span class="pre">skipna=true</span></code>.</p>
+<p>Nullable boolean input requires <code class="docutils literal notranslate"><span class="pre">skipnull=true</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>

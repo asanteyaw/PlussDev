@@ -43,8 +43,8 @@ auto out = thread.prod();
     <span class="label">Previous</span>
     <span class="title">pow</span>
   </a>
-  <a class="next-link" href="put.html">
+  <a class="next-link" href="ptype.html">
     <span class="label">Next</span>
-    <span class="title">put</span>
+    <span class="title">ptype</span>
   </a>
 </div>

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::prod(Axis axis = Axis::Case, bool skipna = true) -> Thread
+DataFrame::prod(Axis axis = Axis::Case, bool skipnull = true) -> Thread
 ```
 
 ## What It Does
@@ -17,7 +17,7 @@ Computes per-feature or per-row products across numeric data.
 **axis**
     Reduction axis. `Axis::Feature` computes one product per numeric feature, while `Axis::Case` computes one product per row across numeric features.
 
-**skipna**
+**skipnull**
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
 ## Returns
@@ -57,8 +57,8 @@ auto out = df.prod(1, true);
     <span class="label">Previous</span>
     <span class="title">prep_sql</span>
   </a>
-  <a class="next-link" href="put.html">
+  <a class="next-link" href="ptypes.html">
     <span class="label">Next</span>
-    <span class="title">put</span>
+    <span class="title">ptypes</span>
   </a>
 </div>

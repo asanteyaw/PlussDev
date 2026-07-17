@@ -90,9 +90,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="caselbl_.html">
+  <a class="prev-link" href="casefold.html">
     <span class="label">Previous</span>
-    <span class="title">caselbl_</span>
+    <span class="title">casefold</span>
   </a>
   <a class="next-link" href="chars.html">
     <span class="label">Next</span>

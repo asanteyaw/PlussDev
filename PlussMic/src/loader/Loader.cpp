@@ -1421,7 +1421,7 @@ WriteCsvOptions csv_write_options_from_config(const Config& config) {
   }
   if (const auto* v = find_config(config, {"narep", "na"})) {
     if (auto s = parse_string_value(*v); s.has_value()) {
-      options.na_rep = *s;
+      options.null_rep = *s;
     }
   }
   if (const auto* v = find_config(config, {"floatformat", "floatfmt"})) {
@@ -1483,7 +1483,7 @@ WriteExcelOptions excel_write_options_from_config(const Config& config) {
   }
   if (const auto* v = find_config(config, {"narep", "na"})) {
     if (auto s = parse_string_value(*v); s.has_value()) {
-      options.na_rep = *s;
+      options.null_rep = *s;
     }
   }
   return options;

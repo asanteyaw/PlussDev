@@ -43,7 +43,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto ref = df.feature_ref("sales");
+auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
 auto out = ref.head(2);
 ```
@@ -93,7 +93,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto ref = df.feature_ref("sales");
+auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
 auto out = ref.mean();
 ```
@@ -147,7 +147,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto ref = df.feature_ref("sales");
+auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
 auto out = ref.name();
 ```
@@ -201,7 +201,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto ref = df.feature_ref("sales");
+auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
 auto out = ref.thread();
 ```
@@ -261,7 +261,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto ref = df.feature_ref("sales");
+auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
 auto out = ref.value();
 ```
@@ -319,7 +319,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto ref = df.feature_ref("sales");
+auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
 auto out = ref.values();
 ```

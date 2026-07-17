@@ -45,8 +45,8 @@ auto out = thread.rand(other);
     <span class="label">Previous</span>
     <span class="title">radd</span>
   </a>
-  <a class="next-link" href="rangelbl.html">
+  <a class="next-link" href="rank.html">
     <span class="label">Next</span>
-    <span class="title">rangelbl</span>
+    <span class="title">rank</span>
   </a>
 </div>

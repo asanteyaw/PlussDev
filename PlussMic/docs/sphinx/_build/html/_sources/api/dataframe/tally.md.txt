@@ -5,11 +5,11 @@
 ## Signatures
 
 ```cpp
-DataFrame::tally(pluss::RangeView<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = false) -> DataFrameView
+DataFrame::tally(pluss::RangeView<std::string_view> features, std::int64_t top_n = 0, bool dropnull = true, bool render = false) -> DataFrameView
 
-DataFrame::tally(std::int64_t top_n = 0, bool dropna = true, bool render = false) -> DataFrameView
+DataFrame::tally(std::int64_t top_n = 0, bool dropnull = true, bool render = false) -> DataFrameView
 
-DataFrame::tally(std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = false) -> DataFrameView
+DataFrame::tally(std::string_view feature, std::int64_t top_n = 0, bool dropnull = true, bool render = false) -> DataFrameView
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ Counts how many rows fall into each distinct value of the grouping feature.
 **top_n**
     Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
-**dropna**
+**dropnull**
     When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 **render**
@@ -104,8 +104,8 @@ Tema    2
     <span class="label">Previous</span>
     <span class="title">take</span>
   </a>
-  <a class="next-link" href="timeline_features.html">
+  <a class="next-link" href="title.html">
     <span class="label">Next</span>
-    <span class="title">timeline_features</span>
+    <span class="title">title</span>
   </a>
 </div>

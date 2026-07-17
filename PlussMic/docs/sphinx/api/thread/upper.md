@@ -39,9 +39,9 @@ auto out = thread.upper();
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unique.html">
+  <a class="prev-link" href="ts.html">
     <span class="label">Previous</span>
-    <span class="title">unique</span>
+    <span class="title">ts</span>
   </a>
   <a class="next-link" href="value.html">
     <span class="label">Next</span>

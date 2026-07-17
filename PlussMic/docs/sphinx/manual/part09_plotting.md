@@ -130,7 +130,7 @@ gaps:
 ```cpp
 auto report = raw
     .dropnull({"timestamp", "close"})
-    .fillna(0.0, {"volume"});
+    .fillnull(0.0, {"volume"});
 
 auto fig = report.plot().line({"close", "volume"}, "timestamp");
 ```

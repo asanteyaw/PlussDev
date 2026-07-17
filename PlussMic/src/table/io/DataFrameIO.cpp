@@ -137,7 +137,7 @@ void DataFrame::save_csv(std::string_view filepath,
                          bool add_cases,
                          bool header,
                          char sep,
-                         std::string na_rep,
+                         std::string null_rep,
                          std::optional<std::string> case_label,
                          std::optional<std::string> float_format,
                          char quotechar,
@@ -150,7 +150,7 @@ void DataFrame::save_csv(std::string_view filepath,
   options.header = header;
   options.add_cases = add_cases;
   options.cases = add_cases;
-  options.na_rep = std::move(na_rep);
+  options.null_rep = std::move(null_rep);
   options.case_label = std::move(case_label);
   options.float_format = std::move(float_format);
   options.quotechar = quotechar;
@@ -182,14 +182,14 @@ void DataFrame::save_excel(std::string_view filepath,
                            std::string sheet_name,
                            bool add_cases,
                            bool header,
-                           std::string na_rep,
+                           std::string null_rep,
                            std::optional<std::string> case_label) const {
   pluss::loader::WriteExcelOptions options;
   options.sheet_name = std::move(sheet_name);
   options.add_cases = add_cases;
   options.cases = add_cases;
   options.header = header;
-  options.na_rep = std::move(na_rep);
+  options.null_rep = std::move(null_rep);
   options.case_label = std::move(case_label);
   pluss::loader::save_excel(*this, filepath, options);
 }

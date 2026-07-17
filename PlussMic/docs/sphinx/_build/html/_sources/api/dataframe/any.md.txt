@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::any(Axis axis, pluss::RangeView<std::string_view> features = {}, bool skipna = true) -> Thread
+DataFrame::any(Axis axis, pluss::RangeView<std::string_view> features = {}, bool skipnull = true) -> Thread
 
-DataFrame::any(pluss::RangeView<std::string_view> features = {}, bool skipna = true) -> Thread
+DataFrame::any(pluss::RangeView<std::string_view> features = {}, bool skipnull = true) -> Thread
 ```
 
 Return whether at least one value is truthy along the requested axis.
@@ -24,7 +24,7 @@ Optional feature subset to reduce.
 - Pass a feature subset when you want the truth test to ignore identifier, label, or unrelated measure columns.
 - The output order follows the exact left-to-right order of the selected features.
 
-**skipna**
+**skipnull**
 
 Missing-value policy for the reduction.
 
@@ -61,7 +61,7 @@ Only compatible boolean-like or numeric features participate in the reduction. T
 
 When you omit `axis`, PlussMic uses the feature-wise reduction. That is the common shape when you are checking whether each column has at least one truthy observation.
 
-`skipna=true` ignores missing values during the truth reduction. Use `skipna=false` when null propagation matters to the policy you are implementing.
+`skipnull=true` ignores missing values during the truth reduction. Use `skipnull=false` when null propagation matters to the policy you are implementing.
 
 ## Examples
 

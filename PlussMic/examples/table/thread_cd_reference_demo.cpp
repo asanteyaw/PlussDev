@@ -23,7 +23,7 @@ int main() {
   auto code_names = Thread(make_note({"A-001", "B-002", "C-003"}));
   auto scores = Thread(make_series({10.0, 20.0, 30.0, 40.0}));
   auto scores_other = Thread(make_series({10.0, 10.0, 35.0, 45.0}));
-  auto with_labels = scores.caselbl(Thread(make_note({"a", "b", "c", "d"})));
+  auto with_labels = scores.label().set(Thread(make_note({"a", "b", "c", "d"})));
   auto with_name = scores.with_display_name("scores");
   auto missing = Thread(make_series({
       10.0,
@@ -57,7 +57,7 @@ int main() {
   print_block("CHARS_RANGE", code_names.chars(0, 1).to_string());
   print_block("CHARS_STEP", code_names.chars(0, std::nullopt, 2).to_string());
 
-  print_block("CLEAR_CASES", with_labels.clear_caselbl().to_string());
+  print_block("CLEAR_CASES", with_labels.label().reset().to_string());
   print_block("CLEAR_DISPLAY_NAME", with_name.clear_display_name().to_string());
   print_block("CLIP", scores.clip(15.0, 35.0).to_string());
 
@@ -85,7 +85,7 @@ int main() {
   print_block("DESCRIBE_SERIES", scores.describe(false).to_string());
   print_block("DESCRIBE_NOTE", duplicated.describe(false).to_string());
 
-  print_block("CASES", with_labels.caselbl().to_string());
+  print_block("CASES", with_labels.label().values().to_string());
   std::cout << "DISPLAY_NAME\n" << with_name.display_name() << "\n\n";
 
   print_block("DISTINCT", duplicated.distinct(true).to_string());
@@ -94,6 +94,7 @@ int main() {
 
   print_block("DUPLICATED_DEFAULT", duplicated.duplicated(true, false).to_string());
   print_block("DUPLICATED_KEEP_LAST", duplicated.duplicated(false, true).to_string());
+  print_block("REPEATED", duplicated.repeated().to_string());
 
   return 0;
 }

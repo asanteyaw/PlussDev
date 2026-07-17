@@ -27,7 +27,7 @@ look like joined strings, but operations use the structured case-label payloads.
 
 `DataFrame::label().sort(options: SortLabelOptions) -> DataFrame`
 
-`DataFrame::group_by(keys: LabelGroup, specs: RangeView<GroupSpec>, dropna_keys: bool = true, render: bool = false) -> DataFrameView`
+`DataFrame::group_by(keys: LabelGroup, specs: RangeView<GroupSpec>, dropnull_keys: bool = true, render: bool = false) -> DataFrameView`
 
 `DataFrame::label().rename(renames: RangeView<LabelRename>) -> DataFrame`
 

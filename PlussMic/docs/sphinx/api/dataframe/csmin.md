@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::csmin(Axis axis = Axis::Case, bool skipna = true) -> Thread
+DataFrame::csmin(Axis axis = Axis::Case, bool skipnull = true) -> Thread
 ```
 
 Return the coordinate of the minimum value along the requested axis.
@@ -18,7 +18,7 @@ Return the coordinate of the minimum value along the requested axis.
 
 Direction in which to search for the minimum coordinate.
 
-**skipna**
+**skipnull**
 
 Missing-value policy during the search.
 

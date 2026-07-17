@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=9df275fa"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -108,7 +108,7 @@
 looks surprising, do not assume the manual should normalize it. Check the
 source path, add a focused regression test, and fix source-level defects before
 teaching the behavior as correct.</p>
-<p>For missing values, the expected <code class="docutils literal notranslate"><span class="pre">fillna</span></code> contract is:</p>
+<p>For missing values, the expected <code class="docutils literal notranslate"><span class="pre">fillnull</span></code> contract is:</p>
 <ul class="simple">
 <li><p>existing non-null values remain unchanged;</p></li>
 <li><p>null values in selected features are replaced;</p></li>
@@ -122,7 +122,7 @@ test for the exact operation and version you depend on.</p>
 <h2>Missing values break math<a class="headerlink" href="#missing-values-break-math" title="Link to this heading">¶</a></h2>
 <p>Audit, then fill or drop:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">isna</span><span class="p">().</span><span class="n">head</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">complete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 </pre></div>
 </div>
@@ -147,7 +147,7 @@ test for the exact operation and version you depend on.</p>
 <p>Check:</p>
 <ul class="simple">
 <li><p>grouping features have the expected type;</p></li>
-<li><p>null group keys are handled by <code class="docutils literal notranslate"><span class="pre">dropna_keys</span></code>;</p></li>
+<li><p>null group keys are handled by <code class="docutils literal notranslate"><span class="pre">dropnull_keys</span></code>;</p></li>
 <li><p>the selected value feature is numeric for numeric operations;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GroupOp::Count</span></code> vs <code class="docutils literal notranslate"><span class="pre">GroupOp::Nunique</span></code> semantics match your intent.</p></li>
 </ul>

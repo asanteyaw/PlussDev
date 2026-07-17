@@ -95,7 +95,7 @@ Thread reduce_numeric_threads_(const detail::DataFrameImpl& src,
                  {static_cast<std::int64_t>(values.size())}),
              pluss::pile(validity, 0).reshape(
                  {static_cast<std::int64_t>(validity.size())}))
-      .caselbl(make_note_thread(names));
+      .label().set(make_note_thread(names));
 }
 
 Thread pad_modes_(const Thread& source, std::int64_t size) {
@@ -341,7 +341,7 @@ Thread moving_statistic_(const Thread& source,
     const auto offset = (window - 1) / 2;
     if (offset > 0) {
       result = Thread(result, out_valid).shift(-offset).as_series();
-      out_valid = Thread(out_valid).shift(-offset).fillna(0.0).as_series();
+      out_valid = Thread(out_valid).shift(-offset).fillnull(0.0).as_series();
     }
   }
   return Thread(result, out_valid);
@@ -440,7 +440,7 @@ Thread moving_moment_(const Thread& source,
     if (offset > 0) {
       result = Thread(result, output_valid).shift(-offset).as_series();
       output_valid =
-          Thread(output_valid).shift(-offset).fillna(0.0).as_series();
+          Thread(output_valid).shift(-offset).fillnull(0.0).as_series();
     }
   }
   return Thread(result, output_valid);
@@ -853,27 +853,4 @@ DataFrame DataFrame::matmul(const DataFrame& other) const {
       result.sizes(), pluss::codem::ScalarType::Bool, result.platform());
   return frame_from_matrix_(
       result, valid, right_matrix.names, left.cases_);
-}
-
-DataFrame DataFrame::weigh(
-    pluss::msharp::RangeView::Double weights,
-    WindowStatistic statistic,
-    std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [=](const Thread& source) {
-        return source.weigh(
-            weights, statistic, min_count);
-      });
-}
-
-DataFrame DataFrame::bounded(
-    const WindowBoundsFn& bounds,
-    WindowStatistic statistic,
-    const WindowOptions& options) const {
-  PLUSS_CHECK(static_cast<bool>(bounds),
-              "DataFrame::bounded: bounds callback is empty");
-  return delegate_numeric_threads_(
-      impl_ref_(), [&](const Thread& source) {
-        return source.bounded(bounds, statistic, options);
-      });
 }

@@ -43,6 +43,84 @@ DataFrame Atlas::dloc(std::int64_t index) const {
   return frame(index);
 }
 
+AtlasLabelAccessor Atlas::label() const {
+  return AtlasLabelAccessor(*this);
+}
+
+AtlasLabelAccessor::AtlasLabelAccessor(Atlas atlas)
+    : atlas_(std::move(atlas)) {
+  PLUSS_CHECK(atlas_.defined(), "Atlas::label: atlas is undefined");
+}
+
+Thread AtlasLabelAccessor::values() const {
+  const auto& src = atlas_.impl_ref_();
+  if (src.axis0_labels_.has_value()) {
+    return *src.axis0_labels_;
+  }
+  return default_depth_labels_(atlas_.depth());
+}
+
+bool AtlasLabelAccessor::has() const {
+  return atlas_.impl_ref_().axis0_labels_.has_value();
+}
+
+Atlas AtlasLabelAccessor::set(const Thread& labels) const {
+  return atlas_.relabel_depth(labels);
+}
+
+Atlas AtlasLabelAccessor::range() const {
+  return set(default_depth_labels_(atlas_.depth()));
+}
+
+Atlas AtlasLabelAccessor::reset() const {
+  return Atlas(atlas_.impl_ref_().frames_, std::nullopt);
+}
+
+Atlas AtlasLabelAccessor::sort(bool ascending, bool nulls_last) const {
+  return atlas_.sort_depth(ascending, nulls_last);
+}
+
+Atlas AtlasLabelAccessor::align(const Thread& labels) const {
+  return atlas_.align_depth(labels);
+}
+
+Thread AtlasLabelAccessor::label_index_() const {
+  const auto labels = values();
+  return labels.label().set(labels);
+}
+
+Thread AtlasLabelAccessor::unite(const Thread& other) const {
+  return label_index_().label().unite(other);
+}
+
+Thread AtlasLabelAccessor::intersect(const Thread& other) const {
+  return label_index_().label().intersect(other);
+}
+
+Thread AtlasLabelAccessor::diff(const Thread& other) const {
+  return label_index_().label().diff(other);
+}
+
+Thread AtlasLabelAccessor::symdiff(const Thread& other) const {
+  return label_index_().label().symdiff(other);
+}
+
+Thread AtlasLabelAccessor::find(const Thread& targets) const {
+  return label_index_().label().find(targets);
+}
+
+Thread AtlasLabelAccessor::pos(double value) const {
+  return label_index_().label().pos(value);
+}
+
+Thread AtlasLabelAccessor::pos(std::string_view value) const {
+  return label_index_().label().pos(value);
+}
+
+Thread AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const {
+  return label_index_().label().slice(start, stop);
+}
+
 DataFrame Atlas::squeeze() const {
   const auto d = depth();
   PLUSS_CHECK(d == 1, "Atlas::squeeze requires depth == 1");

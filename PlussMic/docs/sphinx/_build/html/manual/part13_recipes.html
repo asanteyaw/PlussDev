@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=9df275fa"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -49,7 +49,7 @@ names and options.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span>
-<span class="w">    </span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">dropnull</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">});</span>
 
@@ -72,7 +72,7 @@ names and options.</p>
 <section id="feature-engineering-pipeline">
 <h2>Feature engineering pipeline<a class="headerlink" href="#feature-engineering-pipeline" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span>
-<span class="w">    </span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">assign</span><span class="p">({{</span>
 <span class="w">        </span><span class="s">&quot;notional&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -172,7 +172,7 @@ names and options.</p>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="nf">scenarios</span><span class="p">({</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">stress</span><span class="p">,</span><span class="w"> </span><span class="n">optimistic</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scenarios</span><span class="p">.</span><span class="n">map_frames</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
 </div>
@@ -190,7 +190,7 @@ names and options.</p>
 </section>
 <section id="save-a-report-bundle">
 <h2>Save a report bundle<a class="headerlink" href="#save-a-report-bundle" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;group&quot;</span><span class="p">},</span>

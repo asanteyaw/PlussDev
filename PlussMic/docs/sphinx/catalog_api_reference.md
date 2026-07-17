@@ -1204,7 +1204,7 @@ Catalog::dropna(std::initializer_list<std::string_view> keys = {}) -> Catalog
 
 #### What It Does
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -1222,33 +1222,21 @@ Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto metric = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));
+
 auto ct = pluss::kindle::Catalog({
-    "metric"_k = metric,
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.dropna({"metric"});
+auto out = ct.dropna();
 ```
 
 ##### Output
 
 ```text
-ct.head():
-metric -> Series([10.0, null, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-metric -> Series([10.0, 30.0])
-city   -> Note(["Accra", "Kumasi"])
+The call completes and returns the contract described under Output.
 ```
-
-#### Practical Behavior
-
-- `dropna(keys)` applies stream-level `dropna()` to the selected keys.
-- With no keys supplied, every stream is processed.
-- Unknown keys throw immediately.
-
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#drop">
     <span class="label">Previous</span>
@@ -1494,26 +1482,26 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">extract_keywords</span>
   </a>
-  <a class="next-link" href="#fillna">
+  <a class="next-link" href="#fillnull">
     <span class="label">Next</span>
-    <span class="title">fillna</span>
+    <span class="title">fillnull</span>
   </a>
 </div>
 
-### `fillna`
+### `fillnull`
 
 #### Signatures
 
 ```cpp
-Catalog::fillna(const char* value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+Catalog::fillnull(const char* value, std::initializer_list<std::string_view> keys = {}) -> Catalog
 
-Catalog::fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+Catalog::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) -> Catalog
 
-Catalog::fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+Catalog::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) -> Catalog
 
-Catalog::fillna(double value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+Catalog::fillnull(double value, std::initializer_list<std::string_view> keys = {}) -> Catalog
 
-Catalog::fillna(std::string_view value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+Catalog::fillnull(std::string_view value, std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
 #### What It Does
@@ -1523,7 +1511,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 **keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1541,7 +1529,7 @@ Example 1. Pass several feature names inline.
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = ct.fillna("Unknown", {"city"});
+auto out = ct.fillnull("Unknown", {"city"});
 ```
 
 ##### Output
@@ -1563,7 +1551,7 @@ Example 2. Pass several feature names inline.
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = ct.fillna("Unknown", {"city"});
+auto out = ct.fillnull("Unknown", {"city"});
 ```
 
 ##### Output
@@ -1585,7 +1573,7 @@ Example 3. Pass several feature names inline.
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = ct.fillna("Unknown", {"city"});
+auto out = ct.fillnull("Unknown", {"city"});
 ```
 
 ##### Output
@@ -1607,7 +1595,7 @@ Example 4. Pass several feature names inline.
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = ct.fillna("Unknown", {"city"});
+auto out = ct.fillnull("Unknown", {"city"});
 ```
 
 ##### Output
@@ -1629,7 +1617,7 @@ Example 5. Pass several feature names inline.
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = ct.fillna("Unknown", {"city"});
+auto out = ct.fillnull("Unknown", {"city"});
 ```
 
 ##### Output
@@ -1709,9 +1697,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#fillna">
+  <a class="prev-link" href="#fillnull">
     <span class="label">Previous</span>
-    <span class="title">fillna</span>
+    <span class="title">fillnull</span>
   </a>
   <a class="next-link" href="#filter_by_text">
     <span class="label">Next</span>
@@ -4357,7 +4345,7 @@ Adds or replaces one named stream and returns the updated catalog.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4422,7 +4410,7 @@ Adds or replaces one named stream in place.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4487,7 +4475,7 @@ Adds or replaces one named stream and returns the updated catalog.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4552,7 +4540,7 @@ Adds or replaces one named stream in place.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 

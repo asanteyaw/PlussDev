@@ -220,7 +220,7 @@ Thread score(
 
 std::cout << "score:\n" << score.to_string() << '\n';
 std::cout << "isnull:\n" << score.isnull().to_string() << '\n';
-std::cout << "fillna:\n" << score.fillna(99.0).to_string() << '\n';
+std::cout << "fillnull:\n" << score.fillnull(99.0).to_string() << '\n';
 std::cout << "dropnull:\n" << score.dropnull().to_string() << '\n';
 std::cout << "shift(2):\n" << score.shift(2).to_string() << '\n';
 std::cout << "sort asc nulls first:\n" << score.sort_values(true, false).to_string() << '\n';
@@ -244,7 +244,7 @@ isnull:
 3  false
 4  false
 dtype: Series
-fillna:
+fillnull:
 0  4
 1  1
 2  99
@@ -281,7 +281,7 @@ dtype: Series
 The `score` payload has five numeric values, but row 2 is masked as missing,
 so it displays as `NA`. `isnull()` is the logical inverse of the validity mask.
 
-`fillna(99.0)` keeps the valid values `4`, `1`, `3`, and `2`, and replaces only
+`fillnull(99.0)` keeps the valid values `4`, `1`, `3`, and `2`, and replaces only
 the masked row with `99`. `dropnull()` removes the masked row. `shift(2)` moves
 values down by two rows, marks rows 0 and 1 missing because there are no source
 values for them, and also carries the original missing row forward so row 4 is
@@ -564,7 +564,7 @@ auto weekdays = dates.to_note_weekday();
 These return Threads so they can be inserted back into a DataFrame:
 
 ```cpp
-auto enriched = df.set_features("year", df.features("timestamp").year());
+auto enriched = df.set("year", df.features("timestamp").year());
 ```
 
 If you need to parse string dates, cast a Note-backed Thread to Timeline first:
@@ -595,7 +595,7 @@ presentation metadata.
 Thread transforms are functional by default:
 
 ```cpp
-auto filled = thread.fillna(0.0);
+auto filled = thread.fillnull(0.0);
 auto clipped = thread.clip(0.0, 1.0);
 auto shifted = thread.shift(1);
 ```
@@ -604,7 +604,7 @@ The original Thread is unchanged unless you use a mutating method with a
 trailing underscore:
 
 ```cpp
-thread.fillna_(0.0);
+thread.fillnull_(0.0);
 ```
 
 Use mutating methods when mutation is intentional and local. Use functional

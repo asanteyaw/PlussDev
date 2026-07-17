@@ -22,7 +22,7 @@ Direction in which to search for the minimum coordinate.
 """
 
 [[parameters]]
-name = "skipna"
+name = "skipnull"
 body = """
 Missing-value policy during the search.
 """

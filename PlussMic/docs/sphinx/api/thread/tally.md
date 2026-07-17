@@ -18,7 +18,7 @@ Use this when you want a summary view instead of carrying the full input forward
     Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 **dropnull**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 **render**
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::csmax(Axis axis = Axis::Case, bool skipna = true) -> Thread
+DataFrame::csmax(Axis axis = Axis::Case, bool skipnull = true) -> Thread
 ```
 
 Return the coordinate of the maximum value along the requested axis.
@@ -21,7 +21,7 @@ Direction in which to search for the maximum coordinate.
 - `Axis::Case`: argmax across selected features for each row.
 - `Axis::Feature`: argmax across cases for each selected feature.
 
-**skipna**
+**skipnull**
 
 Missing-value policy.
 

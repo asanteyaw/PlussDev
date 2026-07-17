@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=5a216172"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -183,12 +183,12 @@ without losing type-specific operations.</p>
 <section id="functional-style">
 <h2>Functional style<a class="headerlink" href="#functional-style" title="Link to this heading">¶</a></h2>
 <p>Most table operations return a new object:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="s">&quot;balance&quot;</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>Mutating operations use a trailing underscore:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">fillna_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="n">df</span><span class="p">.</span><span class="n">rename_</span><span class="p">(</span><span class="s">&quot;old_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;new_name&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -202,7 +202,7 @@ intentionally want to update an owned object.</p>
 <li><p>Inspect with <code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, and <code class="docutils literal notranslate"><span class="pre">describe</span></code>.</p></li>
 <li><p>Select features with <code class="docutils literal notranslate"><span class="pre">features</span></code>.</p></li>
 <li><p>Filter cases with <code class="docutils literal notranslate"><span class="pre">query</span></code> or <code class="docutils literal notranslate"><span class="pre">filter</span></code>.</p></li>
-<li><p>Derive features with <code class="docutils literal notranslate"><span class="pre">assign</span></code> or <code class="docutils literal notranslate"><span class="pre">set_features</span></code>.</p></li>
+<li><p>Derive features with <code class="docutils literal notranslate"><span class="pre">assign</span></code> or <code class="docutils literal notranslate"><span class="pre">set</span></code>.</p></li>
 <li><p>Summarize with <code class="docutils literal notranslate"><span class="pre">aggregate</span></code>, <code class="docutils literal notranslate"><span class="pre">group_by</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">corr</span></code>, and <code class="docutils literal notranslate"><span class="pre">tally</span></code>.</p></li>
 <li><p>Save with <code class="docutils literal notranslate"><span class="pre">save_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">save_excel</span></code>, <code class="docutils literal notranslate"><span class="pre">save_json</span></code>, or <code class="docutils literal notranslate"><span class="pre">save_parquet</span></code>.</p></li>
 </ol>

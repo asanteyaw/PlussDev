@@ -209,7 +209,7 @@ void test_vertical_case_extension() {
       },
       {"B", "A"});
 
-  const auto extended = left.extend_cases(right);
+  const auto extended = left.extend(right);
   expect(extended.features() ==
              std::vector<std::string>({"x", "y", "z"}),
          "case extension should use the stable feature union");
@@ -224,7 +224,7 @@ void test_vertical_case_extension() {
          "case extension should null-fill a missing left feature");
 
   const auto common =
-      left.extend_cases(right, FrameMatchRule::Common, true);
+      left.extend(right, FrameMatchRule::Common, true);
   expect(common.features() == std::vector<std::string>({"y"}),
          "common case extension should retain shared features only");
   expect(common.label().values().as_series().to_vec<std::int64_t>() ==
@@ -232,7 +232,7 @@ void test_vertical_case_extension() {
          "fresh case extension should create one contiguous case axis");
 
   expect_throw(
-      [&]() { (void)left.extend_cases(right, FrameMatchRule::Unite, false, true); },
+      [&]() { (void)left.extend(right, FrameMatchRule::Unite, false, true); },
       "case extension should optionally reject repeated output cases");
 }
 
@@ -476,7 +476,7 @@ void test_hierarchical_case_axis_engine() {
          "label().drop should remove selected structured case labels");
   const auto reset = indexed.label().reset(
       DataFrame::ResetLabelOptions{.drop = false, .names = {"region_case", "account_case"}});
-  expect(reset.has_feature("region_case") && reset.has_feature("account_case") &&
+  expect(reset.get("region_case").has_value() && reset.get("account_case").has_value() &&
              !reset.label().has(),
          "label().reset should materialize case labels as ordinary features and clear hierarchy");
 
@@ -670,7 +670,7 @@ void test_case_aligned_set_and_reduction_axis_rules() {
 
   const auto scholarship = Thread(pluss::make_series(
                                std::vector<double>{1500.0, 2500.0, 1000.0}))
-                               .caselbl(Thread(pluss::make_series(
+                               .label().set(Thread(pluss::make_series(
                                    std::vector<std::int64_t>{1003, 1001, 1004})));
   bool scholarship_default_threw = false;
   try {

@@ -21,7 +21,7 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 **values**
     Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
@@ -93,8 +93,8 @@ auto out = thread.has("demo");
     <span class="label">Previous</span>
     <span class="title">gt</span>
   </a>
-  <a class="next-link" href="has_caselbl.html">
+  <a class="next-link" href="has_display_name.html">
     <span class="label">Next</span>
-    <span class="title">has_caselbl</span>
+    <span class="title">has_display_name</span>
   </a>
 </div>

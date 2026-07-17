@@ -8,9 +8,9 @@
 DataFrame::duplicated(pluss::RangeView<std::string_view> features = {}, bool keep_first = true, bool keep_last = false) -> Thread
 ```
 
-Build a boolean duplicate mask instead of dropping rows immediately.
+Build a boolean duplicate-occurrence mask instead of dropping rows immediately.
 
-Use this when you want to inspect, count, or reuse duplicate membership before deciding what to do with those rows.
+Use this when you want to inspect, count, or reuse duplicate occurrences before deciding what to do with those rows.
 
 It is the duplicate-analysis route; `drop_duplicates(...)` is the duplicate-removal route.
 
@@ -37,17 +37,20 @@ When this is `true`, earlier matches are marked duplicate and the final occurren
 ## Returns
 
 `Thread`
-    Boolean-like thread with one value per row indicating duplicate membership under the requested keep policy.
+    Boolean-like thread with one value per row indicating duplicate occurrence status under the requested keep policy.
 
 ## See Also
 
+- <a href="repeated.html"><code>DataFrame::repeated</code></a>: mark every row whose key appears more than once.
 - <a href="drop_duplicates.html"><code>DataFrame::drop_duplicates</code></a>: drop the duplicate rows immediately once you know the policy you want.
 
 ## Notes
 
 The returned thread aligns one-for-one with the original row axis, so you can inspect it directly or reuse it in downstream masking logic.
 
-`duplicated(...)` does not change row order or remove data. It only reports duplicate membership.
+`duplicated(...)` does not change row order or remove data. It only reports duplicate occurrences.
+
+`duplicated()` and `repeated()` intentionally differ. For `[A, B, A, C, B]`, `duplicated()` returns `[false, false, true, false, true]`, while `repeated()` returns `[true, true, true, false, true]`.
 
 ## Examples
 

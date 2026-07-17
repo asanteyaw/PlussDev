@@ -366,7 +366,7 @@ Thread append_cases(const Thread& left, const Thread& right) {
 Thread append_feature_values(const Thread& left, const Thread& right) {
   PLUSS_CHECK(
       left.kind() == right.kind(),
-      "DataFrame::extend_cases: matching features must use the same Thread kind");
+      "DataFrame::extend: matching features must use the same Thread kind");
   return left.append(right);
 }
 
@@ -680,13 +680,13 @@ FrameMatch DataFrame::match(
   return result;
 }
 
-DataFrame DataFrame::extend_cases(
+DataFrame DataFrame::extend(
     const DataFrame& other,
     const FrameMatchRule feature_rule,
     const bool fresh_cases,
     const bool reject_repeats) const {
-  PLUSS_CHECK(defined(), "DataFrame::extend_cases: left frame is undefined");
-  PLUSS_CHECK(other.defined(), "DataFrame::extend_cases: right frame is undefined");
+  PLUSS_CHECK(defined(), "DataFrame::extend: left frame is undefined");
+  PLUSS_CHECK(other.defined(), "DataFrame::extend: right frame is undefined");
 
   const auto feature_plan = plan_features(*this, other, feature_rule);
   const auto left_columns = dataframe_columns(*this);

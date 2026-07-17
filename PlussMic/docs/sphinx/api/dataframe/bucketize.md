@@ -171,9 +171,9 @@ auto out = metrics.bucketize(pair_features, {0.0, 25.0, 50.0, 75.0}, {1, 2, 3});
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="bounded.html">
+  <a class="prev-link" href="bottom.html">
     <span class="label">Previous</span>
-    <span class="title">bounded</span>
+    <span class="title">bottom</span>
   </a>
   <a class="next-link" href="case_study.html">
     <span class="label">Next</span>

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrame::mean_by(std::string_view group_feature, std::string_view value_feature, std::int64_t top_n = 0, std::int64_t min_count = 1, bool dropna_group = true, bool render = false) -> DataFrameView
+DataFrame::mean_by(std::string_view group_feature, std::string_view value_feature, std::int64_t top_n = 0, std::int64_t min_count = 1, bool dropnull_group = true, bool render = false) -> DataFrameView
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ Groups by one feature and returns the mean of another feature within each group.
 **min_count**
     Minimum non-null observations required before a grouped or rolling summary is considered valid.
 
-**dropna_group**
+**dropnull_group**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 **render**

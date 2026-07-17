@@ -8,11 +8,11 @@
 Thread::dtype() -> std::string
 ```
 
-Return the scalar dtype name used by the underlying numeric series payload.
+Return the concrete dtype name used by the underlying thread payload.
 
-This is the scalar-level type readout, not the higher-level payload-family summary used by `DataFrame::dtypes()`.
+This is the concrete readout, not the higher-level payload-family summary used by `Thread::ptype()` and `DataFrame::ptypes()`.
 
-Use it when you care about the concrete numeric storage type rather than only the broad payload family.
+Use it when you care about concrete storage/readout detail rather than only the broad payload family.
 
 ## Parameters
 
@@ -21,12 +21,12 @@ Use it when you care about the concrete numeric storage type rather than only th
 ## Returns
 
 `std::string`
-    Scalar dtype name such as `float64`, `int64`, or `bool`.
+    Concrete dtype name such as `float64`, `int64`, `bool`, `utf8`, or `datetime64[ns, UTC]`.
 
 ## See Also
 
-- <a href="kind.html"><code>Thread::kind</code></a>: inspect the broader payload family.
-- <a href="../dataframe/dtypes.html"><code>DataFrame::dtypes</code></a>: inspect feature families across an entire frame.
+- <a href="ptype.html"><code>Thread::ptype</code></a>: inspect the broader payload family.
+- <a href="../dataframe/dtypes.html"><code>DataFrame::dtypes</code></a>: inspect concrete feature dtypes across an entire frame.
 
 ## Notes
 

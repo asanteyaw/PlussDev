@@ -795,7 +795,7 @@ Stream::dropna() -> Stream
 
 #### What It Does
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -811,7 +811,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 Example 1. Call the simplest overload.
 
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
 auto out = stream.dropna();
 ```
@@ -819,14 +819,8 @@ auto out = stream.dropna();
 ##### Output
 
 ```text
-Series([10.0, 30.0])
+The call completes and returns the contract described under Output.
 ```
-
-#### Practical Behavior
-
-- `dropna()` removes invalid entries from the stream while preserving stream semantics for the remaining entries.
-- Use it when rows with null payload values should be removed entirely.
-
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#drop_meta_">
     <span class="label">Previous</span>
@@ -977,26 +971,26 @@ Series([10.0, 20.0, 30.0])
     <span class="label">Previous</span>
     <span class="title">exp</span>
   </a>
-  <a class="next-link" href="#fillna">
+  <a class="next-link" href="#fillnull">
     <span class="label">Next</span>
-    <span class="title">fillna</span>
+    <span class="title">fillnull</span>
   </a>
 </div>
 
-### `fillna`
+### `fillnull`
 
 #### Signatures
 
 ```cpp
-Stream::fillna(const char* value) -> Stream
+Stream::fillnull(const char* value) -> Stream
 
-Stream::fillna(const pluss::TimeIndex& value) -> Stream
+Stream::fillnull(const pluss::TimeIndex& value) -> Stream
 
-Stream::fillna(const pluss::Timeline& value) -> Stream
+Stream::fillnull(const pluss::Timeline& value) -> Stream
 
-Stream::fillna(double value) -> Stream
+Stream::fillnull(double value) -> Stream
 
-Stream::fillna(std::string_view value) -> Stream
+Stream::fillnull(std::string_view value) -> Stream
 ```
 
 #### What It Does
@@ -1006,7 +1000,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -1020,7 +1014,7 @@ Example 1. Use the overload whose parameter combination matches the data you alr
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
 
-auto out = stream.fillna("Unknown");
+auto out = stream.fillnull("Unknown");
 ```
 
 ##### Output
@@ -1033,7 +1027,7 @@ Example 2. Use the overload whose parameter combination matches the data you alr
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
 
-auto out = stream.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));
+auto out = stream.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));
 ```
 
 ##### Output
@@ -1046,7 +1040,7 @@ Example 3. Use the overload whose parameter combination matches the data you alr
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z", "2024-01-01T10:05:00Z"}));
 
-auto out = stream.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"));
+auto out = stream.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));
 ```
 
 ##### Output
@@ -1059,7 +1053,7 @@ Example 4. Use the overload whose parameter combination matches the data you alr
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.fillna(0.0);
+auto out = stream.fillnull(0.0);
 ```
 
 ##### Output
@@ -1072,7 +1066,7 @@ Example 5. Use the overload whose parameter combination matches the data you alr
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
 
-auto out = stream.fillna("Unknown");
+auto out = stream.fillnull("Unknown");
 ```
 
 ##### Output
@@ -1130,9 +1124,9 @@ auto out = stream.filter(mask);
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#fillna">
+  <a class="prev-link" href="#fillnull">
     <span class="label">Previous</span>
-    <span class="title">fillna</span>
+    <span class="title">fillnull</span>
   </a>
   <a class="next-link" href="#from_thread">
     <span class="label">Next</span>
@@ -2468,7 +2462,7 @@ Returns a new stream with one metadata key/value attached.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2537,7 +2531,7 @@ Adds or updates one metadata key/value in place.
     Name of the target slot or stream.
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
 #### Returns
 

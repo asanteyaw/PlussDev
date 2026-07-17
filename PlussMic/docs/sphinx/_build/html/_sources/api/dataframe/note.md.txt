@@ -76,8 +76,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">nfeatures</span>
   </a>
-  <a class="next-link" href="note_features.html">
+  <a class="next-link" href="notnull.html">
     <span class="label">Next</span>
-    <span class="title">note_features</span>
+    <span class="title">notnull</span>
   </a>
 </div>

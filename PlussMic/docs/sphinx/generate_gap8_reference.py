@@ -8,10 +8,10 @@ OUTPUT = ROOT / "statistics_window_api_reference.md"
 
 METHODS = {
     "match": ("other: const DataFrame&, options: FrameMatchOptions = {}", "FrameMatch", "two frames with identical case and feature axes"),
-    "extend_cases": ("other: const DataFrame&, features: FrameMatchRule = Unite, fresh_cases: bool = false, reject_repeated_cases: bool = false", "DataFrame", "case-wise extension with matched features"),
+    "extend": ("other: const DataFrame&, features: FrameMatchRule = Unite, fresh_cases: bool = false, reject_repeated_cases: bool = false", "DataFrame", "case-wise extension with matched features"),
     "unify": ("left_on: RangeView<string_view>, right: const DataFrame&, right_on: RangeView<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\"", "DataFrame", "key-matched rows from two frames"),
     "combine": ("other: const DataFrame&, spec: const CombineSpec&", "DataFrame", "feature-wise composition or aligned update"),
-    "group_by": ("keys: RangeView<string_view>, specs: RangeView<GroupSpec>, dropna_keys: bool = true, render: bool = true", "DataFrameView", "stable grouped reductions"),
+    "group_by": ("keys: RangeView<string_view>, specs: RangeView<GroupSpec>, dropnull_keys: bool = true, render: bool = true", "DataFrameView", "stable grouped reductions"),
     "lengthen": ("id_features: RangeView<string_view> = {}, value_features: RangeView<string_view> = {}, feature_name: string = \"feature\", value_name: string = \"value\", fresh_cases: bool = true", "DataFrame", "wide-to-long typed reshape"),
     "catalogue": ("feature: string_view, ordered: bool = false, sort_levels: bool = false", "CategoryEncoding", "typed codes, levels, and ordered metadata"),
     "covariance": ("options: StatisticOptions = {}, render: bool = false", "DataFrameView", "pairwise covariance matrix"),
@@ -38,7 +38,7 @@ METHODS = {
     "moving_mean_error": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving standard error"),
     "moving_asymmetry": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving bias-corrected skewness"),
     "moving_tail_weight": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving bias-corrected excess kurtosis"),
-    "weighted_moving": ("weights: RangeView<double>, statistic: WindowStatistic = Mean, min_count: int64 = 1", "DataFrame", "weighted moving statistics"),
+    "weigh": ("weights: RangeView<double>, statistic: WindowStatistic = Mean, min_count: int64 = 1", "DataFrame", "weighted moving statistics through df.ts().weigh(...)"),
     "bounded": ("bounds: WindowBoundsFn, statistic: WindowStatistic = Mean, options: WindowOptions = {}", "DataFrame", "moving statistics over caller-defined bounds"),
     "growing_sum": ("min_count: int64 = 1", "DataFrame", "expanding sums"),
     "growing_mean": ("min_count: int64 = 1", "DataFrame", "expanding means"),
@@ -72,7 +72,7 @@ SIGNATURE_OVERRIDES = {
 
 PRIMARY = {
     "match": ("auto out = left.match(right);", "out.left and out.right have identical stable-union axes"),
-    "extend_cases": ("auto out = north.extend_cases(south);", "south cases follow north cases; one-sided features are null-filled"),
+    "extend": ("auto out = north.extend(south);", "south cases follow north cases; one-sided features are null-filled"),
     "unify": ("auto out = left.unify(\"id\", right);", "only matching id rows are returned"),
     "combine": ("auto out = left.combine(right);", "right features are appended after aligned left features"),
     "group_by": ("auto out = sales.group_by({\"region\"}, {{\"total\", \"amount\", DataFrame::GroupOp::Sum}}, true, false);", "one stable first-seen row per region with total amount"),
@@ -102,8 +102,8 @@ PRIMARY = {
     "moving_mean_error": ("auto out = df.moving_mean_error(2, {.min_count=2, .ddof=1});", "x = [NA, 0.5, 0.5, 0.5]"),
     "moving_asymmetry": ("auto out = df.moving_asymmetry(3, {.min_count=3});", "x = [NA, NA, 0.0, 0.0]"),
     "moving_tail_weight": ("auto out = df.moving_tail_weight(4, {.min_count=4});", "x = [NA, NA, NA, -1.2]"),
-    "weighted_moving": ("auto out = df.weighted_moving({1.0, 2.0});", "x = [1.0, 1.666667, 2.666667, 3.666667]"),
-    "bounded": ("auto out = df.bounded(expanding_bounds);", "x = [1.0, 1.5, 2.0, 2.5]"),
+    "weigh": ("auto out = df.ts().weigh({1.0, 2.0});", "x = [1.0, 1.666667, 2.666667, 3.666667]"),
+    "bounded": ("auto out = df.ts().bounded(expanding_bounds);", "x = [1.0, 1.5, 2.0, 2.5]"),
     "growing_sum": ("auto out = df.growing_sum();", "x = [1.0, 3.0, 6.0, 10.0]"),
     "growing_mean": ("auto out = df.growing_mean();", "x = [1.0, 1.5, 2.0, 2.5]"),
     "growing_minimum": ("auto out = reversed.growing_minimum();", "x = [4.0, 3.0, 2.0, 1.0]"),
@@ -136,7 +136,7 @@ INPUT_DESCRIPTIONS = {
     "spec": "Typed composition policy.",
     "keys": "Feature names whose distinct tuples define groups.",
     "specs": "Output/source/operation descriptions for grouped reductions.",
-    "dropna_keys": "Excludes groups containing null keys when true.",
+    "dropnull_keys": "Excludes groups containing null keys when true.",
     "id_features": "Features repeated without conversion in long output.",
     "value_features": "Homogeneous features stacked into one typed value feature.",
     "feature_name": "Output name carrying original feature labels.",
@@ -307,13 +307,13 @@ def examples(name: str) -> list[tuple[str, str]]:
             ("auto out = left.match(right, {.cases=FrameMatchRule::KeepRight, .features=FrameMatchRule::KeepRight});", "both outputs use the right axes; unmatched left cells are NA"),
             ("auto out = left.match(right, {.repeated_cases=RepeatedCaseRule::Reject});", "the call fails if either case axis contains repeated labels"),
         ]
-    if name == "extend_cases":
+    if name == "extend":
         return [
             first,
-            ("auto out = north.extend_cases(south, FrameMatchRule::Common);", "only features shared by both frames are retained"),
-            ("auto out = north.extend_cases(south, FrameMatchRule::KeepLeft);", "the north schema is retained and missing south cells are NA"),
-            ("auto out = north.extend_cases(south, FrameMatchRule::Unite, true);", "output cases are contiguous integers"),
-            ("auto out = north.extend_cases(south, FrameMatchRule::Unite, false, true);", "the call fails if preserved case labels repeat"),
+            ("auto out = north.extend(south, FrameMatchRule::Common);", "only features shared by both frames are retained"),
+            ("auto out = north.extend(south, FrameMatchRule::KeepLeft);", "the north schema is retained and missing south cells are NA"),
+            ("auto out = north.extend(south, FrameMatchRule::Unite, true);", "output cases are contiguous integers"),
+            ("auto out = north.extend(south, FrameMatchRule::Unite, false, true);", "the call fails if preserved case labels repeat"),
         ]
     if name == "unify":
         return [
@@ -371,21 +371,21 @@ def examples(name: str) -> list[tuple[str, str]]:
             ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Std, {.ddof=1, .min_count=2});", "value = [NA, 0.707107, 0.707107, 0.707107]"),
             ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Sum, {}, WindowClosure::Both);", "the case exactly on the left boundary participates"),
         ]
-    if name == "weighted_moving":
+    if name == "weigh":
         return [
             first,
-            ("auto out = df.weighted_moving({1.0, 1.0}, WindowStatistic::Sum);", "x = [1.0, 3.0, 5.0, 7.0]"),
-            ("auto out = df.weighted_moving({1.0, 2.0}, WindowStatistic::Var);", "returns weighted population variance per trailing window"),
-            ("auto out = df.weighted_moving({1.0, 2.0}, WindowStatistic::Std);", "each output is the square root of weighted variance"),
-            ("auto out = nullable.weighted_moving({1.0, 2.0}, WindowStatistic::Mean, 2);", "a result is NA until two observed values carry weight"),
+            ("auto out = df.ts().weigh({1.0, 1.0}, WindowStatistic::Sum);", "x = [1.0, 3.0, 5.0, 7.0]"),
+            ("auto out = df.ts().weigh({1.0, 2.0}, WindowStatistic::Var);", "returns weighted population variance per trailing window"),
+            ("auto out = df.ts().weigh({1.0, 2.0}, WindowStatistic::Std);", "each output is the square root of weighted variance"),
+            ("auto out = nullable.ts().weigh({1.0, 2.0}, WindowStatistic::Mean, 2);", "a result is NULL until two observed values carry weight"),
         ]
     if name == "bounded":
         return [
             first,
-            ("auto out = df.bounded(expanding_bounds, WindowStatistic::Sum);", "x = [1.0, 3.0, 6.0, 10.0]"),
-            ("auto out = df.bounded(pair_bounds, WindowStatistic::Minimum);", "each result is the minimum inside its caller-defined interval"),
-            ("auto out = df.bounded(pair_bounds, WindowStatistic::Maximum);", "each result is the maximum inside its caller-defined interval"),
-            ("auto out = nullable.bounded(expanding_bounds, WindowStatistic::Mean, {.min_count=3});", "results are NA until three observed values are inside the custom bound"),
+            ("auto out = df.ts().bounded(expanding_bounds, WindowStatistic::Sum);", "x = [1.0, 3.0, 6.0, 10.0]"),
+            ("auto out = df.ts().bounded(pair_bounds, WindowStatistic::Minimum);", "each result is the minimum inside its caller-defined interval"),
+            ("auto out = df.ts().bounded(pair_bounds, WindowStatistic::Maximum);", "each result is the maximum inside its caller-defined interval"),
+            ("auto out = nullable.ts().bounded(expanding_bounds, WindowStatistic::Mean, {.min_count=3});", "results are NA until three observed values are inside the custom bound"),
         ]
     if name == "grouped_moving_mean":
         return [

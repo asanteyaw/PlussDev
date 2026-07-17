@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5a216172"></script>
+    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -56,8 +56,14 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">df.label().reset(...)</span></code> materializes labels back into ordinary features.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">df.label().sort(...)</span></code> sorts rows by label values.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">df.label().align(...)</span></code> rebuilds the frame against a target label order.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().rename(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">order(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code> edit structured label metadata.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().repeated(...)</span></code> returns a duplicate-label mask.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().unite(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">diff(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">symdiff(...)</span></code> provide pandas Index-style set operations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().find(...)</span></code> returns exact-match indexer positions and <code class="docutils literal notranslate"><span class="pre">-1</span></code> for missing targets.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().pos(...)</span></code> returns all positions for one label, including duplicate-label positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().rename(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">names(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">order(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">swap(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code> edit structured label metadata.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().distinct(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">freq(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">duplicated(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">repeated(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">drop({.duplicated=true})</span></code>, and <code class="docutils literal notranslate"><span class="pre">drop({.repeated=true})</span></code> provide distinct/duplicate/repeated label utilities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().has(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">notnull()</span></code>, and <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code> provide label membership and missingness utilities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().cast(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">map(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">take(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">slice(...)</span></code> transform or inspect label values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">df.label().monotonic(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">depth()</span></code>, <code class="docutils literal notranslate"><span class="pre">codes()</span></code>, and <code class="docutils literal notranslate"><span class="pre">levels()</span></code> expose sortedness and MultiIndex-style internals.</p></li>
 </ul>
 </section>
 <section id="parameters">
@@ -68,7 +74,7 @@
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor</span></code>
 Lightweight label accessor bound to the current frame.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Methods that inspect labels return `Thread`, `std::vector&lt;std::string&gt;`, `bool`, or duplicate masks as appropriate. Methods that transform labels return a new `DataFrame`; the source frame is not mutated.
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Methods that inspect labels return `Thread`, `std::vector&lt;std::string&gt;`, `bool`, `std::int64_t`, or small `DataFrame` inspection artifacts as appropriate. Methods that transform labels or the frame return a new `DataFrame`; the source frame is not mutated.
 </pre></div>
 </div>
 </section>
@@ -78,6 +84,7 @@ Lightweight label accessor bound to the current frame.</p>
 <p><code class="docutils literal notranslate"><span class="pre">label().values()</span></code> is the direct equivalent of the old DataFrame case-label getter. Row selection remains on <code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">label().set(feature,</span> <span class="pre">true)</span></code> promotes a feature into the case-label axis and drops that feature from ordinary columns. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> to preserve the source feature as data.</p>
 <p>Structured labels are useful for hierarchical case axes: region/account/quarter, date/symbol, campus/term, and similar multi-part row identifiers.</p>
+<p>Label set operations preserve compatible label payload dtypes through the Thread label engine. Same numeric dtype stays unchanged, mixed numeric labels upcast to <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, Note labels stay Note, and temporal labels stay temporal. Incompatible mixed label payloads fall back to Note labels.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -163,7 +170,7 @@ term
         | units
 ----------------
 Tema    | 7
-Missing | NA
+Missing | NULL
 Accra   | 10
 ----------------
 [3 cs x 1 feat]
@@ -193,7 +200,92 @@ region
 acct
 </pre></div>
 </div>
-<p>Example 6. Reset labels back into ordinary features.</p>
+<p>Example 6. Inspect distinct, duplicated, repeated, and frequency labels.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">distinct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">distinct</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">duplicated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">duplicated</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">repeated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">repeated</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">freq</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">drop</span><span class="p">({.</span><span class="n">duplicated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">united</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">unite</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">find</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">b_positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">pos</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>distinct:
+b
+a
+c
+
+duplicated:
+b  false
+a  false
+b  true
+c  false
+
+repeated:
+b  true
+a  false
+b  true
+c  false
+
+compact.ncases():
+3
+
+united:
+b
+a
+c
+d
+
+positions:
+a        1
+missing -1
+b        0
+
+b_positions:
+0
+2
+</pre></div>
+</div>
+<p>Example 7. Inspect label codes, levels, and sorted depth.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
+<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">codes</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">levels</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">sorted_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">depth</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>codes:
+        | region  quarter
+-------------------------
+west|Q1 | 0       0
+west|Q2 | 0       1
+east|Q1 | 1       0
+east|Q2 | 1       1
+
+sorted_depth:
+0
+</pre></div>
+</div>
+<p>Example 8. Reset labels back into ordinary features.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -205,8 +297,8 @@ acct
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
   | city_case  units
 -----------------------

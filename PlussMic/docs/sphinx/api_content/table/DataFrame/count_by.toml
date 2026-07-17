@@ -34,7 +34,7 @@ Optional cap on the number of groups returned.
 """
 
 [[parameters]]
-name = "dropna"
+name = "dropnull"
 body = """
 Missing-key policy.
 

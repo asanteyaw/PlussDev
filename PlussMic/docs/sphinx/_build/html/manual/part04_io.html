@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=5a216172"></script>
+    <script src="../_static/api_nav.js?v=7d8bedc3"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -220,7 +220,7 @@ examples, generated rows, or adapters that already have records in memory.</p>
 <span class="n">write_options</span><span class="p">.</span><span class="n">sep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;;&#39;</span><span class="p">;</span>
 <span class="n">write_options</span><span class="p">.</span><span class="n">add_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="n">write_options</span><span class="p">.</span><span class="n">case_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">;</span>
-<span class="n">write_options</span><span class="p">.</span><span class="n">na_rep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
+<span class="n">write_options</span><span class="p">.</span><span class="n">null_rep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
 
 <span class="n">df</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;roundtrip.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">write_options</span><span class="p">);</span>
 
@@ -252,7 +252,7 @@ A003;Kumasi;12;true
 <p>The loader inferred <code class="docutils literal notranslate"><span class="pre">city</span></code> as UTF-8 text, <code class="docutils literal notranslate"><span class="pre">units</span></code> as <code class="docutils literal notranslate"><span class="pre">int64</span></code>, and <code class="docutils literal notranslate"><span class="pre">active</span></code> as
 boolean because the default true/false sets include <code class="docutils literal notranslate"><span class="pre">yes</span></code> and <code class="docutils literal notranslate"><span class="pre">no</span></code>. The empty
 <code class="docutils literal notranslate"><span class="pre">units</span></code> cell in row <code class="docutils literal notranslate"><span class="pre">A002</span></code> becomes <code class="docutils literal notranslate"><span class="pre">NA</span></code> in the DataFrame. When saving, the
-example sets <code class="docutils literal notranslate"><span class="pre">na_rep</span> <span class="pre">=</span> <span class="pre">&quot;&quot;</span></code>, so that same missing value is written as an empty
+example sets <code class="docutils literal notranslate"><span class="pre">null_rep</span> <span class="pre">=</span> <span class="pre">&quot;&quot;</span></code>, so that same missing value is written as an empty
 field between two semicolons.</p>
 <p><code class="docutils literal notranslate"><span class="pre">write_options.add_cases</span> <span class="pre">=</span> <span class="pre">true</span></code> writes the case axis as the first output
 column. <code class="docutils literal notranslate"><span class="pre">write_options.case_label</span> <span class="pre">=</span> <span class="pre">&quot;id&quot;</span></code> names that output column <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p>
@@ -611,7 +611,7 @@ operations that can fail, timeout, or produce changing data.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">WriteCsvOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">add_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">case_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">na_rep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">null_rep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">float_format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;{:.6f}&quot;</span><span class="p">;</span>
 
 <span class="n">df</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;clean.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
@@ -637,7 +637,7 @@ operations that can fail, timeout, or produce changing data.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">case_label</span></code></p></td>
 <td><p>output name for the case column</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">na_rep</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">null_rep</span></code></p></td>
 <td><p>text written for missing values</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">float_format</span></code></p></td>
@@ -661,13 +661,13 @@ operations that can fail, timeout, or produce changing data.</p>
 </tbody>
 </table>
 <p>When creating files for another system, set <code class="docutils literal notranslate"><span class="pre">sep</span></code>, <code class="docutils literal notranslate"><span class="pre">add_cases</span></code>, <code class="docutils literal notranslate"><span class="pre">case_label</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">na_rep</span></code> deliberately. Defaults are convenient for exploration, but
+and <code class="docutils literal notranslate"><span class="pre">null_rep</span></code> deliberately. Defaults are convenient for exploration, but
 production exports should make these choices visible.</p>
 <p>Excel save options:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">WriteExcelOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">sheet_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Clean&quot;</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">add_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">na_rep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">null_rep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
 
 <span class="n">df</span><span class="p">.</span><span class="n">save_excel</span><span class="p">(</span><span class="s">&quot;clean.xlsx&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 </pre></div>

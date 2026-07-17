@@ -69,9 +69,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rolling.html">
+  <a class="prev-link" href="rmul.html">
     <span class="label">Previous</span>
-    <span class="title">rolling</span>
+    <span class="title">rmul</span>
   </a>
   <a class="next-link" href="round.html">
     <span class="label">Next</span>

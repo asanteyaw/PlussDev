@@ -71,24 +71,24 @@ Stream Stream::notnull() const {
   return Stream::from_thread(to_thread().notnull(), copy_cases(*this));
 }
 
-Stream Stream::fillna(double value) const {
+Stream Stream::fillnull(double value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
-Stream Stream::fillna(std::string_view value) const {
+Stream Stream::fillnull(std::string_view value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
-Stream Stream::fillna(const pluss::Timeline& value) const {
+Stream Stream::fillnull(const pluss::Timeline& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
-Stream Stream::fillna(const pluss::TimeIndex& value) const {
+Stream Stream::fillnull(const pluss::TimeIndex& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
 Stream Stream::abs() const {

@@ -444,7 +444,7 @@ std::string scalar_for_csv(const pluss::Series& s, std::int64_t row, const Write
 
 std::string thread_value_for_csv(const pluss::table::Thread& t, std::int64_t row, const WriteCsvOptions& options) {
   if (thread_value_is_missing_for_io(t, row)) {
-    return options.na_rep;
+    return options.null_rep;
   }
 
   switch (t.kind()) {

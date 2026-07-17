@@ -8,11 +8,11 @@
 DataFrame::dtypes() -> DTypes
 ```
 
-Return the public dtype summary for every feature in the frame.
+Return the concrete dtype summary for every feature in the frame.
 
-This is the schema-inspection method you use before casting, selecting numeric features, or debugging mixed-type input.
+This is the schema-inspection method you use when you need both the payload family and the payload's concrete storage/readout type.
 
-It answers “what kind of payload does each feature currently hold?” at the table layer.
+Use `ptypes()` when you only need the broad payload family (`Series`, `Note`, `Timeline`, or `TimeIndex`).
 
 ## Parameters
 
@@ -21,21 +21,22 @@ It answers “what kind of payload does each feature currently hold?” at the t
 ## Returns
 
 `DTypes`
-    Feature-to-dtype summary object describing the current payload family for each feature.
+    Feature-to-dtype summary object describing the current concrete dtype for each feature.
 
 ## See Also
 
+- <a href="ptypes.html"><code>DataFrame::ptypes</code></a>: inspect broad payload families.
 - <a href="cast.html"><code>DataFrame::cast</code></a>, <a href="astype.html"><code>DataFrame::astype</code></a>: change the dtypes after inspecting them.
 
 ## Notes
 
-`dtypes()` reports the public table-level dtype categories such as `Series` and `Note`. It is intentionally higher-level than the scalar dtype returned by `Thread::dtype()`.
+`dtypes()` reports concrete values such as `Series<float64>`, `Note<utf8>`, `Timeline<datetime64[ns, UTC]>`, and `TimeIndex<datetime64[ns, UTC]>`.
 
-Use `dtypes()` before `cast(...)`, `astype(...)`, numeric reduction, or feature-selection logic when your frame was loaded from messy or mixed-source input.
+`TimeIndex` is intentionally separate from `Timeline`: a `Timeline` stores temporal values, while a `TimeIndex` is the temporal axis/index payload used for time-label alignment and resampling.
 
 ## Examples
 
-Example 1. Inspect the current feature families before downstream casting.
+Example 1. Inspect concrete dtypes before downstream casting.
 
 ```cpp
 using namespace pluss::table;
@@ -52,9 +53,9 @@ auto out = raw.dtypes();
 ### Output
 
 ```text
-student_id: Series
-passed: Series
-raw_name: Note
+student_id: Series<float64>
+passed: Series<float64>
+raw_name: Note<utf8>
 ```
 
 

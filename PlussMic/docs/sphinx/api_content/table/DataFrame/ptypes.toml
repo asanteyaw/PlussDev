@@ -1,0 +1,41 @@
+summary = """
+Return the payload-family summary for every feature in the frame.
+
+`ptypes()` answers “which Pluss payload does each feature hold?” without exposing scalar storage detail.
+"""
+
+returns = """
+`DTypes`
+    Feature-to-payload summary object mapping each feature name to `Series`, `Note`, `Timeline`, or `TimeIndex`.
+"""
+
+see_also = [
+  "<a href=\"#dtypes\"><code>DataFrame::dtypes</code></a>: inspect concrete feature dtypes.",
+  "<a href=\"#feataxis\"><code>DataFrame::feataxis</code></a>: select features by payload family."
+]
+
+notes = [
+  """
+Use `ptypes()` for high-level routing decisions: numeric work usually starts from `Series`, text work from `Note`, datetime work from `Timeline`, and time-axis work from `TimeIndex`.
+""",
+  """
+Use `cast(...)` when you need to make a `Timeline` column into a `TimeIndex` column explicitly.
+"""
+]
+
+[[examples]]
+title = "Inspect payload families."
+code = """
+using namespace pluss::table;
+
+auto raw = DataFrame({
+    {"student_id", pluss::make_series({101.0, 102.0, 103.0})},
+    {"raw_name", pluss::make_note({"Ada", "Bola", "Chen"})},
+});
+
+auto out = raw.ptypes();
+"""
+output = """
+student_id: Series
+raw_name: Note
+"""

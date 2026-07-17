@@ -30,16 +30,16 @@ for (const auto& name : df.features()) {
 ```cpp
 auto one = df.features("balance");
 auto some = df.features({"age", "job", "balance"});
-auto numeric = df.series_features();
-auto text = df.note_features();
-auto temporal = df.timeline_features();
+auto numeric = df.feataxis().series();
+auto text = df.feataxis().note();
+auto temporal = df.feataxis().timeline();
 ```
 
 ### Verified example: numeric feature selection and reductions
 
 ```cpp
 auto sales = sales_frame();
-auto numeric = sales.series_features();
+auto numeric = sales.feataxis().series();
 
 std::cout << numeric.to_string() << '\n';
 std::cout << "units mean=" << sales.features("units").mean().item<double>() << '\n';
@@ -69,8 +69,8 @@ price is `5`.
 Pattern-based selection:
 
 ```cpp
-auto costs = df.select_like("Cost", false);
-auto monthly = df.select_regex(".*_month$");
+auto costs = df.feataxis().like("Cost", false);
+auto monthly = df.feataxis().match(".*_month$");
 ```
 
 Schema management:
@@ -79,8 +79,8 @@ Schema management:
 auto renamed = df.rename("old", "new");
 auto renamed_many = df.rename({{"age", "age_years"}, {"job", "role"}});
 auto relabeled = df.rename({"a", "b", "c"});
-auto prefixed = df.add_prefix("raw_");
-auto suffixed = df.add_suffix("_clean");
+auto prefixed = df.feataxis().prefix("raw_");
+auto suffixed = df.feataxis().suffix("_clean");
 auto reordered = df.reorder({"id", "date", "value"});
 auto dropped = df.drop({"temporary_feature"});
 ```
@@ -320,16 +320,16 @@ auto enriched = df.assign({{
 }});
 ```
 
-Use `set_features` when the new feature is already computed:
+Use `set` when the new feature is already computed:
 
 ```cpp
-auto doubled = df.set_features("balance_x2", df.features("balance") * 2.0);
+auto doubled = df.set("balance_x2", df.features("balance") * 2.0);
 ```
 
 Use mutable assignment only when mutation is intentional:
 
 ```cpp
-df.set_features_("balance_x2", df.features("balance") * 2.0);
+df.set_("balance_x2", df.features("balance") * 2.0);
 ```
 
 ## Transform features
@@ -359,8 +359,8 @@ auto adjusted = df.transform({
 ```cpp
 auto nulls = df.isnull();
 auto present = df.notnull();
-auto filled_numeric = df.fillna(0.0, {"balance", "duration"});
-auto filled_text = df.fillna("unknown", {"job"});
+auto filled_numeric = df.fillnull(0.0, {"balance", "duration"});
+auto filled_text = df.fillnull("unknown", {"job"});
 auto forward = df.ffill();
 auto backward = df.bfill();
 auto complete = df.dropnull();
@@ -390,8 +390,8 @@ auto df = pluss::loader::load_csv_records(records, options);
 std::cout << df.to_string() << '\n';
 std::cout << "null rows=" << df.count_null_rows() << '\n';
 std::cout << df.isna().to_string() << '\n';
-std::cout << df.fillna(0.0, {"units", "price"})
-               .fillna("unknown", {"city"})
+std::cout << df.fillnull(0.0, {"units", "price"})
+               .fillnull("unknown", {"city"})
                .to_string() << '\n';
 ```
 
@@ -467,9 +467,9 @@ auto cmp = numeric.compare(numeric.add(1.0));
 Simple reductions:
 
 ```cpp
-df.series_features().mean(true);
-df.series_features().std(true);
-df.series_features().corr(true);
+df.feataxis().series().mean(true);
+df.feataxis().series().std(true);
+df.feataxis().series().corr(true);
 ```
 
 Named summaries:

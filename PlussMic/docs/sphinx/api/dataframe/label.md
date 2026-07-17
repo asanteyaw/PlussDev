@@ -22,8 +22,14 @@ Use this surface instead of root-level `caselbl*` methods. The label accessor ke
 - `df.label().reset(...)` materializes labels back into ordinary features.
 - `df.label().sort(...)` sorts rows by label values.
 - `df.label().align(...)` rebuilds the frame against a target label order.
-- `df.label().rename(...)`, `order(...)`, and `drop(...)` edit structured label metadata.
-- `df.label().repeated(...)` returns a duplicate-label mask.
+- `df.label().unite(...)`, `intersect(...)`, `diff(...)`, and `symdiff(...)` provide pandas Index-style set operations.
+- `df.label().find(...)` returns exact-match indexer positions and `-1` for missing targets.
+- `df.label().pos(...)` returns all positions for one label, including duplicate-label positions.
+- `df.label().rename(...)`, `names(...)`, `order(...)`, `swap(...)`, and `drop(...)` edit structured label metadata.
+- `df.label().distinct(...)`, `freq(...)`, `duplicated(...)`, `repeated(...)`, `drop({.duplicated=true})`, and `drop({.repeated=true})` provide distinct/duplicate/repeated label utilities.
+- `df.label().has(...)`, `isnull()`, `notnull()`, and `fillnull(...)` provide label membership and missingness utilities.
+- `df.label().cast(...)`, `map(...)`, `take(...)`, and `slice(...)` transform or inspect label values.
+- `df.label().monotonic(...)`, `depth()`, `codes()`, and `levels()` expose sortedness and MultiIndex-style internals.
 
 ## Parameters
 
@@ -34,7 +40,7 @@ Use this surface instead of root-level `caselbl*` methods. The label accessor ke
 `DataFrameLabelAccessor`
     Lightweight label accessor bound to the current frame.
 
-    Methods that inspect labels return `Thread`, `std::vector<std::string>`, `bool`, or duplicate masks as appropriate. Methods that transform labels return a new `DataFrame`; the source frame is not mutated.
+    Methods that inspect labels return `Thread`, `std::vector<std::string>`, `bool`, `std::int64_t`, or small `DataFrame` inspection artifacts as appropriate. Methods that transform labels or the frame return a new `DataFrame`; the source frame is not mutated.
 
 ## Notes
 
@@ -45,6 +51,8 @@ The label surface is about row labels only. Feature names still live on `df.feat
 `label().set(feature, true)` promotes a feature into the case-label axis and drops that feature from ordinary columns. Pass `false` to preserve the source feature as data.
 
 Structured labels are useful for hierarchical case axes: region/account/quarter, date/symbol, campus/term, and similar multi-part row identifiers.
+
+Label set operations preserve compatible label payload dtypes through the Thread label engine. Same numeric dtype stays unchanged, mixed numeric labels upcast to `Float64`, Note labels stay Note, and temporal labels stay temporal. Incompatible mixed label payloads fall back to Note labels.
 
 ## Examples
 
@@ -139,7 +147,7 @@ auto out = sales.label().align(Thread(pluss::make_note({"Tema", "Missing", "Accr
         | units
 ----------------
 Tema    | 7
-Missing | NA
+Missing | NULL
 Accra   | 10
 ----------------
 [3 cs x 1 feat]
@@ -171,7 +179,96 @@ region
 acct
 ```
 
-Example 6. Reset labels back into ordinary features.
+Example 6. Inspect distinct, duplicated, repeated, and frequency labels.
+
+```cpp
+using namespace pluss::table;
+
+auto frame = DataFrame({
+    {"score", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
+}, Thread(pluss::make_note({"b", "a", "b", "c"})));
+
+auto distinct = frame.label().distinct();
+auto duplicated = frame.label().duplicated();
+auto repeated = frame.label().repeated();
+auto freq = frame.label().freq();
+auto compact = frame.label().drop({.duplicated = true});
+auto united = frame.label().unite(Thread(pluss::make_note({"b", "d", "a"})));
+auto positions = frame.label().find(Thread(pluss::make_note({"a", "missing", "b"})));
+auto b_positions = frame.label().pos("b");
+```
+
+### Output
+
+```text
+distinct:
+b
+a
+c
+
+duplicated:
+b  false
+a  false
+b  true
+c  false
+
+repeated:
+b  true
+a  false
+b  true
+c  false
+
+compact.ncases():
+3
+
+united:
+b
+a
+c
+d
+
+positions:
+a        1
+missing -1
+b        0
+
+b_positions:
+0
+2
+```
+
+Example 7. Inspect label codes, levels, and sorted depth.
+
+```cpp
+using namespace pluss::table;
+
+auto frame = DataFrame({
+    {"region", pluss::make_note({"west", "west", "east", "east"})},
+    {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
+    {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
+}).label().set({"region", "quarter"}, true);
+
+auto codes = frame.label().codes();
+auto levels = frame.label().levels();
+auto sorted_depth = frame.label().depth();
+```
+
+### Output
+
+```text
+codes:
+        | region  quarter
+-------------------------
+west|Q1 | 0       0
+west|Q2 | 0       1
+east|Q1 | 1       0
+east|Q2 | 1       1
+
+sorted_depth:
+0
+```
+
+Example 8. Reset labels back into ordinary features.
 
 ```cpp
 using namespace pluss::table;

@@ -221,7 +221,7 @@ pluss::loader::WriteCsvOptions write_options;
 write_options.sep = ';';
 write_options.add_cases = true;
 write_options.case_label = "id";
-write_options.na_rep = "";
+write_options.null_rep = "";
 
 df.save_csv("roundtrip.csv", write_options);
 
@@ -255,7 +255,7 @@ A003;Kumasi;12;true
 The loader inferred `city` as UTF-8 text, `units` as `int64`, and `active` as
 boolean because the default true/false sets include `yes` and `no`. The empty
 `units` cell in row `A002` becomes `NA` in the DataFrame. When saving, the
-example sets `na_rep = ""`, so that same missing value is written as an empty
+example sets `null_rep = ""`, so that same missing value is written as an empty
 field between two semicolons.
 
 `write_options.add_cases = true` writes the case axis as the first output
@@ -599,7 +599,7 @@ CSV save options:
 pluss::loader::WriteCsvOptions options;
 options.add_cases = true;
 options.case_label = "id";
-options.na_rep = "";
+options.null_rep = "";
 options.float_format = "{:.6f}";
 
 df.save_csv("clean.csv", options);
@@ -613,7 +613,7 @@ Important CSV write options:
 | `header` | write feature names |
 | `add_cases` | write the case axis as the first column |
 | `case_label` | output name for the case column |
-| `na_rep` | text written for missing values |
+| `null_rep` | text written for missing values |
 | `float_format` | optional floating-point format |
 | `quotechar` | quote character |
 | `doublequote` | escape quotes by doubling |
@@ -622,7 +622,7 @@ Important CSV write options:
 | `encoding` | output encoding label |
 
 When creating files for another system, set `sep`, `add_cases`, `case_label`,
-and `na_rep` deliberately. Defaults are convenient for exploration, but
+and `null_rep` deliberately. Defaults are convenient for exploration, but
 production exports should make these choices visible.
 
 Excel save options:
@@ -631,7 +631,7 @@ Excel save options:
 pluss::loader::WriteExcelOptions options;
 options.sheet_name = "Clean";
 options.add_cases = true;
-options.na_rep = "";
+options.null_rep = "";
 
 df.save_excel("clean.xlsx", options);
 ```

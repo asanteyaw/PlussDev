@@ -20,7 +20,7 @@ auto metric = pluss::kindle::Stream(
 
 metric = metric.with_meta("source", "demo").with_meta("unit", "km");
 
-auto cleaned = metric.fillna(0.0).clip(0.0, 35.0);
+auto cleaned = metric.fillnull(0.0).clip(0.0, 35.0);
 auto filtered = cleaned.filter(cleaned.as_series().gt(15.0));
 ```
 
