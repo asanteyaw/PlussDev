@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::ts
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,99 +7,143 @@
 ## Signatures
 
 ```cpp
-DataFrame::ts(pluss::RangeView<std::string_view> features = {}) -> DataFrameTsAccessor
-
-DataFrame::ts(std::initializer_list<std::string_view> features) -> DataFrameTsAccessor
-
-DataFrame::ts(std::string_view feature) -> DataFrameTsAccessor
+DataFrame::ts() const -> DataFrameTsAccessor
+DataFrame::ts(const TsOptions& options) const -> DataFrameTsAccessor
 ```
 
 ## What It Does
 
-Returns the time-series accessor bound to one or more selected features.
+Enters the dedicated time-series-*numerics* accessor for the current frame —
+period-over-period returns, differencing, lag/lead, rolling and expanding windows,
+exponentially-weighted statistics, and more, one method per operation. Unlike
+[`tl()`](tl.md) (which requires `Timeline`/`TimeIndex` features), `ts()` requires
+**every feature currently on the frame to already be a numeric `Series`** — narrow
+to the numeric feature(s) first with [`features()`](features.md), the same idiom
+`note()`/`tl()` use for their own kind requirement.
+
+`options` (a `TsOptions`) optionally supplies an explicit time `axis`, a `group` (for
+grouped/panel time-series operations), and an `anchor`, letting the accessor's window
+and resampling methods reason about actual elapsed time rather than plain row
+position. Omitting `options` is equivalent to a default-constructed `TsOptions{}`.
 
 ## Parameters
 
-**features**
-    Feature names to bind into the returned time-series accessor.
+**options** (`const TsOptions&`, optional)
 
-**feature**
-    Feature name to bind into the returned time-series accessor.
+- **`axis`** (`Thread`, default undefined): an explicit time axis (typically a
+  `Timeline`) to align duration-based windows against, instead of plain row order.
+- **`group`** (`TsGroup`, default empty): grouping keys for panel-style time series,
+  so window/lag operations don't cross group boundaries.
+- **`anchor`** (`Thread`, default undefined): a reference point for anchored
+  resampling operations.
 
 ## Returns
 
 `DataFrameTsAccessor`
-    Value produced by this call.
+    A lightweight accessor bound to the current (all-numeric) frame and `options`.
+    Every method on it returns a new `DataFrame`; the source frame is never mutated.
 
 ## Examples
 
-Example 1. Bind the time-series accessor to a selected feature subset.
+Example 1. Compute a lag and a period-over-period difference on a numeric feature —
+after selecting it first.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
-});
+using namespace pluss::table;
 
-auto out = df.features({"load"}).ts();
+auto readings = DataFrame({
+    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+});
+std::cout << readings;
+```
+
+### Output (before)
+
+```text
+======================
+     | sensor_id  load
+----------------------
+0    | 1          10  
+1    | 2          20  
+2    | 3          15  
+3    | 4          30  
+----------------------
+[4 cs x 2 feat]
+```
+
+```cpp
+auto lagged = readings.features({"load"}).ts().lag(1);
+std::cout << lagged;
 ```
 
 ### Output
 
 ```text
-DataFrameTsAccessor(features=["load"])
+===========
+     | load
+-----------
+0    | NULL
+1    | 10  
+2    | 20  
+3    | 15  
+-----------
+[4 cs x 1 feat]
 ```
-Example 2. Bind the time-series accessor by passing several feature names inline.
+
+`sensor_id` is a numeric `Series` too, so `readings.ts()` directly would have
+succeeded without throwing — but its accessor methods apply to **every** bound
+feature, and lagging `sensor_id` isn't wanted here. `.features({"load"})` narrows
+the frame down to just `load` first, so `.lag(1)` only affects that one feature.
+`.lag(1)` is equivalent to [`shift(1)`](shift.md) scoped to `load`: each case now
+shows the previous case's value, with case `0` becoming `NULL` since it has no
+predecessor.
+
+Example 2. Compute the period-over-period difference instead.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
-});
-
-auto out = df.features({"load"}).ts();
+auto changes = readings.features({"load"}).ts().diff(1);
+std::cout << changes;
 ```
 
 ### Output
 
 ```text
-DataFrameTsAccessor(features=["load"])
-```
-Example 3. Bind the time-series accessor to one feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
-});
-
-auto out = df.features({"load"}).ts();
+===========
+     | load
+-----------
+0    | NULL
+1    | 10  
+2    | -5  
+3    | 15  
+-----------
+[4 cs x 1 feat]
 ```
 
-### Output
+`.diff(1)` is `load[i] - load[i - 1]`: case `1` is `20 - 10 = 10`, case `2` is
+`15 - 20 = -5`, case `3` is `30 - 15 = 15`; case `0` has no prior case to subtract,
+so it's `NULL`.
 
-```text
-DataFrameTsAccessor(features=["load"])
-```
+## Notes
 
-## Practical Behavior
+- Every feature on the frame `.ts()` is called on must already be a numeric
+  `Series`; select the numeric feature(s) first with [`features()`](features.md) if
+  the source frame has other kinds mixed in.
+- `.lag(periods)` on a numeric feature behaves identically to
+  [`shift(periods)`](shift.md) scoped to that same feature — both introduce `NULL`
+  at the vacated end.
+- `ts()` on a frame with no features at all, or a frame containing a non-numeric
+  feature, throws before constructing the accessor.
 
-- `ts(...)` does not materialize a new DataFrame by itself; it returns the time-series accessor bound to the selected features.
-- Use the accessor when you want downstream resampling, lag blocks, rolling blocks, or calendar features on those bound features.
+## See Also
 
-
+- [`DataFrame::features`](features.md): the usual way to narrow a frame down to just
+  its numeric features before calling `.ts()`.
+- [`DataFrame::shift`](shift.md): the lower-level positional shift `.ts().lag()`
+  is built on, without the time-series-accessor framing.
+- [`DataFrame::tl`](tl.md): the equivalent dedicated accessor for calendar/timestamp
+  components on `Timeline`/`TimeIndex` features, instead of numeric time-series
+  values.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="truediv.html">

@@ -465,13 +465,112 @@ false
     <span class="label">Previous</span>
     <span class="title">dloc</span>
   </a>
+  <a class="next-link" href="#features">
+    <span class="label">Next</span>
+    <span class="title">features</span>
+  </a>
+</div>
+
+## F
+
+### `features`
+
+#### Signatures
+
+```cpp
+Atlas::features(pluss::RangeView<std::string_view> features) -> Atlas
+
+Atlas::features(std::initializer_list<std::string_view> features) -> Atlas
+
+Atlas::features(std::string_view feature) -> Atlas
+```
+
+#### What It Does
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### Parameters
+
+**features**
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+**feature**
+    Name of the source feature used by the operation.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Work with a selected feature subset.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.features();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.features();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Work with one named feature.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.features();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#empty">
+    <span class="label">Previous</span>
+    <span class="title">empty</span>
+  </a>
   <a class="next-link" href="#flow">
     <span class="label">Next</span>
     <span class="title">flow</span>
   </a>
 </div>
-
-## F
 
 ### `flow`
 
@@ -517,9 +616,9 @@ auto out = atlas.flow();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#empty">
+  <a class="prev-link" href="#features">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">features</span>
   </a>
   <a class="next-link" href="#frame">
     <span class="label">Next</span>
@@ -1741,14 +1840,10 @@ sales
 
 ### `tl`
 
-#### Signatures
+#### Signature
 
 ```cpp
-Atlas::tl(pluss::RangeView<std::string_view> features = {}) -> AtlasTimelineAccessor
-
-Atlas::tl(std::initializer_list<std::string_view> features) -> AtlasTimelineAccessor
-
-Atlas::tl(std::string_view feature) -> AtlasTimelineAccessor
+Atlas::tl() -> AtlasTimelineAccessor
 ```
 
 #### What It Does
@@ -1757,11 +1852,7 @@ This is part of the time-aware surface and expects timeline or time-index semant
 
 #### Parameters
 
-**features**
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-**feature**
-    Name of the source feature used by the operation.
+`None`
 
 #### Returns
 
@@ -1770,45 +1861,7 @@ This is part of the time-aware surface and expects timeline or time-index semant
 
 #### Examples
 
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.tl();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Pass several feature names inline.
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.tl();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 3. Work with one named feature.
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1902,14 +1955,10 @@ sales
 
 ### `ts`
 
-#### Signatures
+#### Signature
 
 ```cpp
-Atlas::ts(pluss::RangeView<std::string_view> features = {}) -> AtlasTsAccessor
-
-Atlas::ts(std::initializer_list<std::string_view> features) -> AtlasTsAccessor
-
-Atlas::ts(std::string_view feature) -> AtlasTsAccessor
+Atlas::ts() -> AtlasTsAccessor
 ```
 
 #### What It Does
@@ -1918,11 +1967,7 @@ This is part of the time-aware surface and expects timeline or time-index semant
 
 #### Parameters
 
-**features**
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-**feature**
-    Name of the source feature used by the operation.
+`None`
 
 #### Returns
 
@@ -1931,45 +1976,7 @@ This is part of the time-aware surface and expects timeline or time-index semant
 
 #### Examples
 
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.ts();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Pass several feature names inline.
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.ts();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 3. Work with one named feature.
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({

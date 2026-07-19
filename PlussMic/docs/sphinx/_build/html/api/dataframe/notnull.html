@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::notnull &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::notnull &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::observe" href="observe.html" />
@@ -36,56 +36,92 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-notnull">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 94e4332077eb -->
+<section id="dataframe-notnull">
 <h1>DataFrame::notnull<a class="headerlink" href="#dataframe-notnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">notnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">notnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
+<p>Returns a same-shape frame of booleans marking exactly which cells were <strong>observed</strong>:
+<code class="docutils literal notranslate"><span class="pre">true</span></code> where the source cell has a value, <code class="docutils literal notranslate"><span class="pre">false</span></code> where it is null — the exact
+complement of <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>, cell for cell. It exists as its own named method
+rather than forcing every caller to write <code class="docutils literal notranslate"><span class="pre">!isnull()</span></code>-style negation, because “which
+cells are usable” reads more directly than “which cells are not missing” at most call
+sites (building a mask to <code class="docutils literal notranslate"><span class="pre">filter()</span></code> on, for instance).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong>
-Feature name(s) that select the target DataFrame columns for the operation.</p>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default empty)</p>
+<p>Feature names to check. Leave empty to check every feature on the frame; pass a subset
+to restrict the resulting mask to just those columns.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A frame with the same case axis as the source and one boolean feature per checked
+column, <code class="docutils literal notranslate"><span class="pre">true</span></code> wherever that cell held an observed (non-null) value in the source.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Work with a selected feature subset.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sales</span><span class="p">},</span>
+<p>Example 1. Build a mask of which <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> values are usable.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">notnull</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">price_observed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">notnull</span><span class="p">({</span><span class="s">&quot;unit_price&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">price_observed</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sales
-true
-false
-true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | unit_price
+-----------------
+0    | true      
+1    | true      
+2    | true      
+3    | true      
+4    | true      
+5    | false     
+-----------------
+[6 cs x 1 feat]
 </pre></div>
 </div>
+<p>Only case <code class="docutils literal notranslate"><span class="pre">5</span></code> reads <code class="docutils literal notranslate"><span class="pre">false</span></code> — its <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> is the one missing value in this column.
+A common next step is feeding this straight into <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a>:
+<code class="docutils literal notranslate"><span class="pre">orders.filter(orders.notnull({&quot;unit_price&quot;}).features(&quot;unit_price&quot;))</span></code> keeps only the
+rows where <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> is usable, without needing a separate comparison against a
+sentinel value.</p>
 </section>
 </section>
-<section id="practical-behavior">
-<h2>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h2>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">notnull(...)</span></code> returns a boolean-style frame marking which cells are observed rather than missing.</p></li>
-<li><p>Use it to build masks before <code class="docutils literal notranslate"><span class="pre">filter(...)</span></code>, replacement policies, or diagnostic summaries.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">notna(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">notnull(...)</span></code> are equivalent.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notnull()</span></code> and <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> are exact complements: for any cell,
+<code class="docutils literal notranslate"><span class="pre">notnull()</span></code> reports <code class="docutils literal notranslate"><span class="pre">true</span></code> exactly where <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> reports <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p>Some codebases spell this <code class="docutils literal notranslate"><span class="pre">notna()</span></code>; in PlussMic, <code class="docutils literal notranslate"><span class="pre">notnull()</span></code> is the name, and it does
+not have a separate <code class="docutils literal notranslate"><span class="pre">notna()</span></code> alias — use <code class="docutils literal notranslate"><span class="pre">notnull()</span></code> consistently.</p></li>
+<li><p>Like <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>, this is a pure inspection method; it never mutates the frame or
+changes any values.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::isnull</span></code></span></a>: the inverted mask (<code class="docutils literal notranslate"><span class="pre">true</span></code> where missing).</p></li>
+<li><p><a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::dropnull</span></code></span></a>: drop rows based on a missingness rule directly,
+without building the mask yourself first.</p></li>
+<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::filter</span></code></span></a>: use a <code class="docutils literal notranslate"><span class="pre">notnull()</span></code>/<code class="docutils literal notranslate"><span class="pre">isnull()</span></code> mask to select rows.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="note.html">
@@ -107,7 +143,7 @@ true
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -127,9 +163,10 @@ true
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

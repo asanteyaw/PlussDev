@@ -48,7 +48,7 @@ auto out = Thread(pluss::make_series({0.0, 1.0, 2.0})).exp();
 0  1
 1  2.718281828
 2  7.389056099
-dtype: Series
+ptype: Series
 ```
 
 

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::unsqueeze &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::unsqueeze &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::unstack" href="unstack.html" />
@@ -36,84 +36,97 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-unsqueeze">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-unsqueeze">
 <h1>DataFrame::unsqueeze<a class="headerlink" href="#dataframe-unsqueeze" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">unsqueeze</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">unsqueeze</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">depth_labels</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">unsqueeze</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">unsqueeze</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">depth_labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Promotes the frame into a depth-1 <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> so it can participate in multi-frame workflows.</p>
+<p>Wraps the current frame into a depth-<code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> — <code class="docutils literal notranslate"><span class="pre">pluss::table</span></code>’s stacked,
+multi-frame container — so it can participate in APIs that expect an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> rather
+than a lone <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. <code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> is literally <code class="docutils literal notranslate"><span class="pre">Atlas({*this})</span></code>; the
+<code class="docutils literal notranslate"><span class="pre">depth_labels</span></code> overload is <code class="docutils literal notranslate"><span class="pre">Atlas({*this},</span> <span class="pre">depth_labels)</span></code>, additionally naming that
+one depth layer.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>depth_labels</strong>
-Single depth label to attach to the one-frame atlas produced by <code class="docutils literal notranslate"><span class="pre">unsqueeze(...)</span></code>.</p>
+<p><strong>depth_labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>, one-argument overload only)</p>
+<p>A single label naming the frame’s one depth layer. Must be defined and have exactly
+<code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">==</span> <span class="pre">1</span></code>, or the call throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
-Value produced by this call.</p>
+A new atlas of <code class="docutils literal notranslate"><span class="pre">depth()</span> <span class="pre">==</span> <span class="pre">1</span></code>, whose one frame (<code class="docutils literal notranslate"><span class="pre">.frame(0)</span></code>) is exactly this
+frame.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Lift one frame into a one-layer atlas.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. Lift a frame into a one-layer atlas with no depth label.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">depth</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">frame</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">equals</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">axis0_labels</span><span class="p">().</span><span class="n">has_value</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+true
+false
 </pre></div>
 </div>
-<p>Example 2. Lift one frame into a one-layer atlas.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;train&quot;</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">labels</span><span class="p">);</span>
+<p><code class="docutils literal notranslate"><span class="pre">atlas</span></code> has exactly one depth layer, and that layer (<code class="docutils literal notranslate"><span class="pre">.frame(0)</span></code>) is <code class="docutils literal notranslate"><span class="pre">orders</span></code>
+itself — <code class="docutils literal notranslate"><span class="pre">equals()</span></code> confirms it matches exactly. No <code class="docutils literal notranslate"><span class="pre">depth_labels</span></code> were given, so
+<code class="docutils literal notranslate"><span class="pre">axis0_labels()</span></code> reports no value.</p>
+<p>Example 2. Attach a depth label to that one layer.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled_atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;train&quot;</span><span class="p">})));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labeled_atlas</span><span class="p">.</span><span class="n">axis0_labels</span><span class="p">().</span><span class="n">has_value</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>depth labels:
-[&quot;train&quot;]
-
-frame0:
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">labeled_atlas</span></code> carries one depth label, <code class="docutils literal notranslate"><span class="pre">&quot;train&quot;</span></code>, alongside its single frame —
+useful when this frame is about to be combined with other unsqueezed frames into a
+multi-depth atlas (say, one layer per dataset split) and each layer needs a name.</p>
 </section>
 </section>
-<section id="practical-behavior">
-<h2>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h2>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> wraps one frame into a depth-1 <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">depth_labels</span></code> overload lets you attach exactly one depth label to that one-frame atlas.</p></li>
-<li><p>This is useful when downstream APIs expect atlas depth even though you currently have only one frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> never copies or transforms the frame’s data — the atlas’s one layer
+is exactly this frame, unchanged.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">depth_labels</span></code> overload requires exactly one label (<code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">==</span> <span class="pre">1</span></code>); passing a
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> of any other length throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::unsqueeze:</span> <span class="pre">depth</span> <span class="pre">labels</span> <span class="pre">must</span> <span class="pre">have</span> <span class="pre">size</span> <span class="pre">1&quot;</span></code>.</p></li>
+<li><p>This is the natural entry point when an API expects an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> (for example,
+multi-frame plotting or archival) but the data in hand is currently a single
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize</span></code></span></a>: a different “leave the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+representation” conversion, into a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> of independent streams instead of an
+<code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="unify.html">
@@ -135,7 +148,7 @@ id  sales  city
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -155,9 +168,10 @@ id  sales  city
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

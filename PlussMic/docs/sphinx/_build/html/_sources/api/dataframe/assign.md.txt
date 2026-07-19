@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f6e738ac525a -->
+
 # DataFrame::assign
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -13,6 +16,13 @@ DataFrame::assign(pluss::RangeView<std::pair<std::string, Thread>> assignments) 
 Add or replace one or more features on a DataFrame and return the resulting frame.
 
 `DataFrame::assign(...)` is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. One overload accepts already-computed `Thread` values; the other accepts `DeriveSpec` expressions so PlussMic can compute the features inside the call.
+
+The motivation is the same as any non-mutating feature-creation call: instead of
+mutating a frame in a sequence of separate statements
+(`df["total"] = ...; df["passed"] = ...;`), `assign()` lets a chain of feature
+derivations read as a single expression —
+`df.assign({...}).filter(...).sort_values({...})` — which keeps intermediate,
+partially-derived frames out of named variables you would otherwise have to track.
 
 ## Parameters
 
@@ -76,6 +86,7 @@ auto total_grade = [](const DataFrame& df) {
 auto out = grades.assign({
     std::pair<std::string, pluss::table::Thread>{"total", total_grade(grades)},
 });
+std::cout << out;
 ```
 
 ### Output
@@ -118,6 +129,7 @@ auto out = grades.assign({
         },
     },
 });
+std::cout << out;
 ```
 
 ### Output

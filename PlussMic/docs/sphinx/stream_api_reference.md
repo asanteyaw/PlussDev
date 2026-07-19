@@ -369,60 +369,13 @@ Series([10.0, 30.0, 30.0, null])
     <span class="label">Previous</span>
     <span class="title">astype</span>
   </a>
-  <a class="next-link" href="#cases">
-    <span class="label">Next</span>
-    <span class="title">cases</span>
-  </a>
-</div>
-
-## C
-
-### `cases`
-
-#### Signature
-
-```cpp
-Stream::cases() -> const std::optional<pluss::table::Thread>&
-```
-
-#### What It Does
-
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::optional<pluss::table::Thread>&`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = stream.cases();
-```
-
-##### Output
-
-```text
-["cs0", "cs1", "cs2"]
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#bfill">
-    <span class="label">Previous</span>
-    <span class="title">bfill</span>
-  </a>
   <a class="next-link" href="#cast">
     <span class="label">Next</span>
     <span class="title">cast</span>
   </a>
 </div>
+
+## C
 
 ### `cast`
 
@@ -471,27 +424,27 @@ Series([10.0, 20.0, 30.0])
 - `astype(...)` is the direct numeric-series dtype path.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#cases">
+  <a class="prev-link" href="#bfill">
     <span class="label">Previous</span>
-    <span class="title">cases</span>
+    <span class="title">bfill</span>
   </a>
-  <a class="next-link" href="#clear_cases">
+  <a class="next-link" href="#clear_label">
     <span class="label">Next</span>
-    <span class="title">clear_cases</span>
+    <span class="title">clear_label</span>
   </a>
 </div>
 
-### `clear_cases`
+### `clear_label`
 
 #### Signature
 
 ```cpp
-Stream::clear_cases() -> Stream
+Stream::clear_label() -> Stream
 ```
 
 #### What It Does
 
-Returns a stream with its case labels removed.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -504,41 +457,41 @@ Returns a stream with its case labels removed.
 
 #### Examples
 
-Example 1. Return an updated copy after changing structural metadata, cases, or validity state.
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.clear_cases();
+auto out = stream.clear_label();
 ```
 
 ##### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#cast">
     <span class="label">Previous</span>
     <span class="title">cast</span>
   </a>
-  <a class="next-link" href="#clear_cases_">
+  <a class="next-link" href="#clear_label_">
     <span class="label">Next</span>
-    <span class="title">clear_cases_</span>
+    <span class="title">clear_label_</span>
   </a>
 </div>
 
-### `clear_cases_`
+### `clear_label_`
 
 #### Signature
 
 ```cpp
-Stream::clear_cases_() -> Stream&
+Stream::clear_label_() -> Stream&
 ```
 
 #### What It Does
 
-Removes the stream case labels in place.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -551,23 +504,23 @@ Removes the stream case labels in place.
 
 #### Examples
 
-Example 1. Mutate the current object in place, then inspect the updated state.
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-stream.clear_cases_();
+auto out = stream.clear_label_();
 ```
 
 ##### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#clear_cases">
+  <a class="prev-link" href="#clear_label">
     <span class="label">Previous</span>
-    <span class="title">clear_cases</span>
+    <span class="title">clear_label</span>
   </a>
   <a class="next-link" href="#clip">
     <span class="label">Next</span>
@@ -616,9 +569,9 @@ auto out = stream.clip(0.0, 25.0);
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#clear_cases_">
+  <a class="prev-link" href="#clear_label_">
     <span class="label">Previous</span>
-    <span class="title">clear_cases_</span>
+    <span class="title">clear_label_</span>
   </a>
   <a class="next-link" href="#defined">
     <span class="label">Next</span>
@@ -668,6 +621,54 @@ true
   <a class="prev-link" href="#clip">
     <span class="label">Previous</span>
     <span class="title">clip</span>
+  </a>
+  <a class="next-link" href="#distinct">
+    <span class="label">Next</span>
+    <span class="title">distinct</span>
+  </a>
+</div>
+
+### `distinct`
+
+#### Signature
+
+```cpp
+Stream::distinct(DistinctOptions options = {}) -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.distinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
   </a>
   <a class="next-link" href="#drop_meta">
     <span class="label">Next</span>
@@ -720,9 +721,9 @@ Series([10.0, 20.0, 30.0])
 - Payload values, cases, and validity remain unchanged.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#defined">
+  <a class="prev-link" href="#distinct">
     <span class="label">Previous</span>
-    <span class="title">defined</span>
+    <span class="title">distinct</span>
   </a>
   <a class="next-link" href="#drop_meta_">
     <span class="label">Next</span>
@@ -779,23 +780,23 @@ Series([10.0, 20.0, 30.0])
     <span class="label">Previous</span>
     <span class="title">drop_meta</span>
   </a>
-  <a class="next-link" href="#dropna">
+  <a class="next-link" href="#dropnull">
     <span class="label">Next</span>
-    <span class="title">dropna</span>
+    <span class="title">dropnull</span>
   </a>
 </div>
 
-### `dropna`
+### `dropnull`
 
 #### Signature
 
 ```cpp
-Stream::dropna() -> Stream
+Stream::dropnull() -> Stream
 ```
 
 #### What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
 #### Parameters
 
@@ -811,16 +812,22 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));
 
-auto out = stream.dropna();
+auto out = stream.dropnull();
 ```
 
 ##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+Series([10.0, 30.0])
 ```
+
+#### Practical Behavior
+
+- `dropnull()` removes invalid entries from the stream while preserving stream semantics for the remaining entries.
+- Use it when rows with null payload values should be removed entirely.
+
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#drop_meta_">
     <span class="label">Previous</span>
@@ -869,17 +876,64 @@ auto out = stream.dtype();
 Float64
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#dropna">
+  <a class="prev-link" href="#dropnull">
     <span class="label">Previous</span>
-    <span class="title">dropna</span>
+    <span class="title">dropnull</span>
+  </a>
+  <a class="next-link" href="#empty">
+    <span class="label">Next</span>
+    <span class="title">empty</span>
+  </a>
+</div>
+
+## E
+
+### `empty`
+
+#### Signature
+
+```cpp
+Stream::empty() -> bool
+```
+
+#### What It Does
+
+Reports whether the current object has no rows, entries, slots, or depth items.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Examples
+
+Example 1. Inspect the `empty` property of the current object.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.empty();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#dtype">
+    <span class="label">Previous</span>
+    <span class="title">dtype</span>
   </a>
   <a class="next-link" href="#exp">
     <span class="label">Next</span>
     <span class="title">exp</span>
   </a>
 </div>
-
-## E
 
 ### `exp`
 
@@ -918,9 +972,9 @@ auto out = stream.exp();
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#dtype">
+  <a class="prev-link" href="#empty">
     <span class="label">Previous</span>
-    <span class="title">dtype</span>
+    <span class="title">empty</span>
   </a>
   <a class="next-link" href="#ffill">
     <span class="label">Next</span>
@@ -1128,6 +1182,54 @@ Series([10.0, 20.0, 30.0])
     <span class="label">Previous</span>
     <span class="title">fillnull</span>
   </a>
+  <a class="next-link" href="#freq">
+    <span class="label">Next</span>
+    <span class="title">freq</span>
+  </a>
+</div>
+
+### `freq`
+
+#### Signature
+
+```cpp
+Stream::freq(FreqOptions options = {}) -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.freq();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter">
+    <span class="label">Previous</span>
+    <span class="title">filter</span>
+  </a>
   <a class="next-link" href="#from_thread">
     <span class="label">Next</span>
     <span class="title">from_thread</span>
@@ -1175,29 +1277,29 @@ auto out = pluss::kindle::Stream::from_thread(thread);
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#filter">
+  <a class="prev-link" href="#freq">
     <span class="label">Previous</span>
-    <span class="title">filter</span>
+    <span class="title">freq</span>
   </a>
-  <a class="next-link" href="#has_cases">
+  <a class="next-link" href="#has_label">
     <span class="label">Next</span>
-    <span class="title">has_cases</span>
+    <span class="title">has_label</span>
   </a>
 </div>
 
 ## H
 
-### `has_cases`
+### `has_label`
 
 #### Signature
 
 ```cpp
-Stream::has_cases() -> bool
+Stream::has_label() -> bool
 ```
 
 #### What It Does
 
-Reports whether the stream currently carries explicit case labels.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -1215,13 +1317,13 @@ Example 1. Call the simplest overload.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.has_cases();
+auto out = stream.has_label();
 ```
 
 ##### Output
 
 ```text
-true
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#from_thread">
@@ -1273,9 +1375,9 @@ auto out = stream.has_meta("unit");
 true
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#has_cases">
+  <a class="prev-link" href="#has_label">
     <span class="label">Previous</span>
-    <span class="title">has_cases</span>
+    <span class="title">has_label</span>
   </a>
   <a class="next-link" href="#head">
     <span class="label">Next</span>
@@ -1325,13 +1427,60 @@ Series([10.0, 20.0, 30.0])
     <span class="label">Previous</span>
     <span class="title">has_meta</span>
   </a>
+  <a class="next-link" href="#invalid">
+    <span class="label">Next</span>
+    <span class="title">invalid</span>
+  </a>
+</div>
+
+## I
+
+### `invalid`
+
+#### Signature
+
+```cpp
+Stream::invalid() -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.invalid();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
   <a class="next-link" href="#isnull">
     <span class="label">Next</span>
     <span class="title">isnull</span>
   </a>
 </div>
-
-## I
 
 ### `isnull`
 
@@ -1370,9 +1519,9 @@ auto out = stream.isnull();
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#head">
+  <a class="prev-link" href="#invalid">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">invalid</span>
   </a>
   <a class="next-link" href="#kind">
     <span class="label">Next</span>
@@ -1423,13 +1572,60 @@ Series
     <span class="label">Previous</span>
     <span class="title">isnull</span>
   </a>
+  <a class="next-link" href="#label">
+    <span class="label">Next</span>
+    <span class="title">label</span>
+  </a>
+</div>
+
+## L
+
+### `label`
+
+#### Signature
+
+```cpp
+Stream::label() -> const std::optional<pluss::table::Thread>&
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::optional<pluss::table::Thread>&`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.label();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kind">
+    <span class="label">Previous</span>
+    <span class="title">kind</span>
+  </a>
   <a class="next-link" href="#log">
     <span class="label">Next</span>
     <span class="title">log</span>
   </a>
 </div>
-
-## L
 
 ### `log`
 
@@ -1468,9 +1664,9 @@ auto out = stream.log();
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#kind">
+  <a class="prev-link" href="#label">
     <span class="label">Previous</span>
-    <span class="title">kind</span>
+    <span class="title">label</span>
   </a>
   <a class="next-link" href="#max">
     <span class="label">Next</span>
@@ -1683,13 +1879,61 @@ Series([20.0])
     <span class="label">Previous</span>
     <span class="title">meta</span>
   </a>
+  <a class="next-link" href="#ndistinct">
+    <span class="label">Next</span>
+    <span class="title">ndistinct</span>
+  </a>
+</div>
+
+## N
+
+### `ndistinct`
+
+#### Signature
+
+```cpp
+Stream::ndistinct(DistinctOptions options = {}) -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.ndistinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#min">
+    <span class="label">Previous</span>
+    <span class="title">min</span>
+  </a>
   <a class="next-link" href="#notnull">
     <span class="label">Next</span>
     <span class="title">notnull</span>
   </a>
 </div>
-
-## N
 
 ### `notnull`
 
@@ -1728,17 +1972,160 @@ auto out = stream.notnull();
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#min">
+  <a class="prev-link" href="#ndistinct">
     <span class="label">Previous</span>
-    <span class="title">min</span>
+    <span class="title">ndistinct</span>
+  </a>
+  <a class="next-link" href="#nrecords">
+    <span class="label">Next</span>
+    <span class="title">nrecords</span>
+  </a>
+</div>
+
+### `nrecords`
+
+#### Signature
+
+```cpp
+Stream::nrecords() -> std::int64_t
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.nrecords();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#notnull">
+    <span class="label">Previous</span>
+    <span class="title">notnull</span>
+  </a>
+  <a class="next-link" href="#ptype">
+    <span class="label">Next</span>
+    <span class="title">ptype</span>
+  </a>
+</div>
+
+## P
+
+### `ptype`
+
+#### Signature
+
+```cpp
+Stream::ptype() -> std::string
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.ptype();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#nrecords">
+    <span class="label">Previous</span>
+    <span class="title">nrecords</span>
+  </a>
+  <a class="next-link" href="#shape">
+    <span class="label">Next</span>
+    <span class="title">shape</span>
+  </a>
+</div>
+
+## S
+
+### `shape`
+
+#### Signature
+
+```cpp
+Stream::shape() -> std::pair<std::int64_t, std::int64_t>
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::pair<std::int64_t, std::int64_t>`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.shape();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ptype">
+    <span class="label">Previous</span>
+    <span class="title">ptype</span>
   </a>
   <a class="next-link" href="#show">
     <span class="label">Next</span>
     <span class="title">show</span>
   </a>
 </div>
-
-## S
 
 ### `show`
 
@@ -1778,9 +2165,9 @@ stream.show(std::cout);
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#notnull">
+  <a class="prev-link" href="#shape">
     <span class="label">Previous</span>
-    <span class="title">notnull</span>
+    <span class="title">shape</span>
   </a>
   <a class="next-link" href="#size">
     <span class="label">Next</span>
@@ -2333,30 +2720,30 @@ Series([20.0])
     <span class="label">Previous</span>
     <span class="title">unique</span>
   </a>
-  <a class="next-link" href="#with_cases">
+  <a class="next-link" href="#with_label">
     <span class="label">Next</span>
-    <span class="title">with_cases</span>
+    <span class="title">with_label</span>
   </a>
 </div>
 
 ## W
 
-### `with_cases`
+### `with_label`
 
 #### Signature
 
 ```cpp
-Stream::with_cases(const pluss::table::Thread& cases) -> Stream
+Stream::with_label(const pluss::table::Thread& label) -> Stream
 ```
 
 #### What It Does
 
-Returns a new stream with the supplied case labels attached.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
-**cases**
-    Case-label thread to attach to the current object.
+**label**
+    Label or labels used by this overload.
 
 #### Returns
 
@@ -2365,47 +2752,46 @@ Returns a new stream with the supplied case labels attached.
 
 #### Examples
 
-Example 1. Return an updated copy after changing structural metadata, cases, or validity state.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
-auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.with_cases(cases);
+auto out = stream.with_label();
 ```
 
 ##### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#var">
     <span class="label">Previous</span>
     <span class="title">var</span>
   </a>
-  <a class="next-link" href="#with_cases_">
+  <a class="next-link" href="#with_label_">
     <span class="label">Next</span>
-    <span class="title">with_cases_</span>
+    <span class="title">with_label_</span>
   </a>
 </div>
 
-### `with_cases_`
+### `with_label_`
 
 #### Signature
 
 ```cpp
-Stream::with_cases_(const pluss::table::Thread& cases) -> Stream&
+Stream::with_label_(const pluss::table::Thread& label) -> Stream&
 ```
 
 #### What It Does
 
-Attaches the supplied case labels in place.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
-**cases**
-    Case-label thread to attach to the current object.
+**label**
+    Label or labels used by this overload.
 
 #### Returns
 
@@ -2414,24 +2800,23 @@ Attaches the supplied case labels in place.
 
 #### Examples
 
-Example 1. Mutate the current object in place, then inspect the updated state.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
-auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-stream.with_cases_(cases);
+auto out = stream.with_label_();
 ```
 
 ##### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#with_cases">
+  <a class="prev-link" href="#with_label">
     <span class="label">Previous</span>
-    <span class="title">with_cases</span>
+    <span class="title">with_label</span>
   </a>
   <a class="next-link" href="#with_meta">
     <span class="label">Next</span>
@@ -2498,9 +2883,9 @@ auto out = stream.with_meta("unit", "km");
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#with_cases_">
+  <a class="prev-link" href="#with_label_">
     <span class="label">Previous</span>
-    <span class="title">with_cases_</span>
+    <span class="title">with_label_</span>
   </a>
   <a class="next-link" href="#with_meta_">
     <span class="label">Next</span>

@@ -61,7 +61,7 @@ auto out = missing.bfill();
 2  40
 3  40
 4  50
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Limit backward fill to one missing position per run.
@@ -88,7 +88,7 @@ auto out = missing.bfill(1);
 2  40
 3  40
 4  50
-dtype: Series
+ptype: Series
 ```
 
 

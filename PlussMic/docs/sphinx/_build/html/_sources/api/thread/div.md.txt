@@ -60,7 +60,7 @@ auto out = values.div(10.0);
 0  1
 1  2
 2  3
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Divide one numeric thread by another thread element by element.
@@ -80,7 +80,7 @@ auto out = left.div(right);
 0  5
 1  5
 2  6
-dtype: Series
+ptype: Series
 ```
 
 

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::drop &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::drop &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::drop_duplicates" href="drop_duplicates.html" />
@@ -36,7 +36,9 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-drop">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6af3667cff79 -->
+<section id="dataframe-drop">
 <h1>DataFrame::drop<a class="headerlink" href="#dataframe-drop" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
@@ -44,27 +46,32 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">drop</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Remove one or more features and keep the remaining frame unchanged.</p>
-<p><code class="docutils literal notranslate"><span class="pre">drop(...)</span></code> is a schema operation. It never removes rows.</p>
-<p>Use it when your pipeline should keep the same cases but carry forward a narrower feature set.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Removes one or more features by name and keeps the remaining frame — same cases, same
+case labels, same values — otherwise unchanged. <code class="docutils literal notranslate"><span class="pre">drop()</span></code> is a pure schema operation: it
+never removes rows, and it never touches the values of any feature that survives.</p>
+<p>Conceptually, <code class="docutils literal notranslate"><span class="pre">drop()</span></code> is the complement of <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a>: where
+<code class="docutils literal notranslate"><span class="pre">features({...})</span></code> names the columns you want to <em>keep</em>, <code class="docutils literal notranslate"><span class="pre">drop({...})</span></code> names the columns
+you want to <em>remove</em>, with every unmentioned feature carried forward automatically. Reach
+for whichever reads more naturally at the call site — dropping two columns from a
+twenty-column frame is much shorter to write as a <code class="docutils literal notranslate"><span class="pre">drop()</span></code> than as a <code class="docutils literal notranslate"><span class="pre">features()</span></code> list of
+the other eighteen.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>names</strong></p>
-<p>Feature names to remove.</p>
-<p>Pass one or more names in any order. Every remaining feature keeps its original left-to-right order.</p>
-<p>This is therefore the complement of <code class="docutils literal notranslate"><span class="pre">features({...})</span></code>: instead of naming what to keep, you name what to remove.</p>
+<p><strong>names</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>)</p>
+<p>Feature names to remove. Pass one or more names in any order — order in the argument
+list has no effect on the result. Every remaining feature keeps its original
+left-to-right position in the schema; <code class="docutils literal notranslate"><span class="pre">drop()</span></code> does not reorder or re-sort what’s left.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-New frame containing every unselected feature in its original row alignment.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">drop(...)</span></code> works on feature names, not on case labels.</p>
-<p>The current case axis is preserved exactly. Only the feature set changes.</p>
-<p>The surviving features keep their original left-to-right order; <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code> does not re-sort the schema.</p>
+A new frame containing every unselected feature, in its original row alignment and
+original left-to-right feature order. The case axis (row labels) is preserved exactly
+as it was on the source frame.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -72,13 +79,14 @@ New frame containing every unselected feature in its original row alignment.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
 <span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">drop</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -94,6 +102,37 @@ D400 | Tamale  5      5
 [4 cs x 3 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">region</span></code> is gone entirely — not blanked, not renamed, simply absent from the schema —
+while <code class="docutils literal notranslate"><span class="pre">city</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, and <code class="docutils literal notranslate"><span class="pre">price</span></code> keep both their values and their original left-to-right
+order. Notice too that the case labels (<code class="docutils literal notranslate"><span class="pre">A100</span></code>, <code class="docutils literal notranslate"><span class="pre">B200</span></code>, <code class="docutils literal notranslate"><span class="pre">B200</span></code>, <code class="docutils literal notranslate"><span class="pre">D400</span></code>, including the
+repeated <code class="docutils literal notranslate"><span class="pre">B200</span></code>) are untouched: <code class="docutils literal notranslate"><span class="pre">drop()</span></code> operates purely on the feature axis, so anything
+about how rows are labeled or ordered is completely out of scope for this method.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">drop()</span></code> works on feature names, never on case labels — there is no row-dropping
+overload hiding behind this method. To remove rows, see
+<a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dropnull()</span></code></span></a> (rule-based, missing-value driven) or
+<a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a> (condition-based).</p></li>
+<li><p>The current case axis is preserved exactly; only the feature set changes.</p></li>
+<li><p>The surviving features keep their original left-to-right order — <code class="docutils literal notranslate"><span class="pre">drop()</span></code> does not
+re-sort the schema based on the order names were passed in <code class="docutils literal notranslate"><span class="pre">names</span></code>.</p></li>
+<li><p>Dropping a name that doesn’t exist on the frame is a programming error, not a silent
+no-op; confirm the name is spelled exactly as it appears in
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> if a drop unexpectedly leaves a column in place.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: the complementary operation — name what to
+<em>keep</em> rather than what to remove.</p></li>
+<li><p><a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::dropnull</span></code></span></a>: remove rows based on missingness, rather than
+removing whole columns.</p></li>
+<li><p><a class="reference internal" href="rename.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::rename</span></code></span></a>: change a feature’s name instead of removing it.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="div.html">
     <span class="label">Previous</span>
@@ -106,7 +145,6 @@ D400 | Tamale  5      5
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -115,7 +153,7 @@ D400 | Tamale  5      5
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -135,9 +173,10 @@ D400 | Tamale  5      5
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

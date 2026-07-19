@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::count_by
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,61 +7,59 @@
 ## Signature
 
 ```cpp
-DataFrame::count_by(std::string_view feature, std::int64_t top_n = 0, bool dropnull = true, bool render = false) -> DataFrameView
+DataFrame::count_by(std::string_view feature, std::int64_t top_n = 0, bool dropnull = true, bool render = false) const -> DataFrameView
 ```
 
-Group rows by one feature and return the count for each distinct key.
+## What It Does
 
-This is the compact frequency-table surface for one grouping feature.
+Builds a frequency table for a single feature: one row per distinct value of
+`feature`, paired with how many cases carry that value, sorted from most frequent to
+least frequent (ties broken alphabetically by the value itself). It is a dedicated
+shortcut for the single most common [`group_by`](group_by.md) query — "how many of
+each?" — without hand-writing a `GroupSpec` for a plain count.
 
 ## Parameters
 
-**feature**
+**feature** (`std::string_view`)
 
-Feature whose distinct values define the groups.
+The feature whose distinct values define the groups.
 
-**top_n**
+**top_n** (`std::int64_t`, default `0`)
 
-Optional cap on the number of groups returned.
+Cap the result to the `top_n` most frequent groups after sorting. `0` (the default)
+keeps every group; a positive value truncates the (already count-sorted) result down
+to that many rows.
 
-- `0`: keep every group.
-- positive integer: keep only the top `N` groups after sorting.
+**dropnull** (`bool`, default `true`)
 
-**dropnull**
+Whether a missing `feature` value is excluded from the count entirely (`true`, the
+default) or allowed to form its own group (`false`).
 
-Missing-key policy.
+**render** (`bool`, default `false`)
 
-- `true`: drop missing grouping keys.
-- `false`: allow missing keys to participate as their own group.
-
-**render**
-
-Display toggle for the returned view.
+Display toggle for the returned `DataFrameView`, following the same convention as
+[`head()`](head.md).
 
 ## Returns
 
 `DataFrameView`
-    Frequency table with the grouping key and its count.
-
-## Notes
-
-Results are sorted by count descending. Ties are then stabilized by key order.
-
-Use `top_n` when you only want the most frequent groups.
+    A two-column frequency table: `feature` (the distinct values) and `count` (an
+    `Int64` occurrence count), sorted by count descending, then by value ascending on
+    ties.
 
 ## Examples
 
-Example 1. Return counts for every distinct grouping key.
+Example 1. Tally every distinct value of a grouping feature.
 
 ```cpp
 using namespace pluss::table;
 
-auto cities = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Accra", "Tema"})},
-    {"score", pluss::make_series({10.0, 20.0, 11.0, 30.0, 12.0, 21.0})},
+auto orders = DataFrame({
+    {"city", Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Accra", "Tema"}))},
 });
 
-auto out = cities.count_by("city", 0, true, false);
+auto counts = orders.count_by("city");
+std::cout << counts;
 ```
 
 ### Output
@@ -75,17 +75,11 @@ auto out = cities.count_by("city", 0, true, false);
 [3 cs x 2 feat]
 ```
 
-Example 2. Keep only the top two most frequent groups.
+Example 2. Keep only the two most frequent groups with `top_n`.
 
 ```cpp
-using namespace pluss::table;
-
-auto cities = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Accra", "Tema"})},
-    {"score", pluss::make_series({10.0, 20.0, 11.0, 30.0, 12.0, 21.0})},
-});
-
-auto out = cities.count_by("city", 2, true, false);
+auto top_cities = orders.count_by("city", /*top_n=*/2);
+std::cout << top_cities;
 ```
 
 ### Output
@@ -100,7 +94,131 @@ auto out = cities.count_by("city", 2, true, false);
 [2 cs x 2 feat]
 ```
 
+`Kumasi` (count `1`) is dropped since only the top two rows of the already-sorted
+table survive `top_n = 2`.
 
+Example 3. See the alphabetical tie-break rule in action.
+
+```cpp
+auto letters = DataFrame({
+    {"grade", Thread(pluss::make_note({"B", "A", "B", "A", "C"}))},
+});
+
+auto out = letters.count_by("grade");
+std::cout << out;
+```
+
+### Output
+
+```text
+===================
+     | grade  count
+-------------------
+0    | A      2    
+1    | B      2    
+2    | C      1    
+-------------------
+[3 cs x 2 feat]
+```
+
+`A` and `B` are tied at count `2`; the tie is broken alphabetically, so `A` is listed
+first even though `B` happened to appear first in the source data.
+
+Example 4. `dropnull = false`: a missing `feature` value gets its own group,
+labeled `NULL`, instead of being excluded.
+
+```cpp
+auto with_missing = DataFrame({
+    {"city", Thread(
+        pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"}),
+        pluss::make_series(std::vector<bool>{true, false, true, true}))},
+});
+
+auto dropped = with_missing.count_by("city");
+std::cout << dropped;
+
+auto kept = with_missing.count_by("city", /*top_n=*/0, /*dropnull=*/false);
+std::cout << kept;
+```
+
+### Output (dropnull = true, the default)
+
+```text
+===================
+     | city   count
+-------------------
+0    | Accra  2    
+1    | Kumasi 1    
+-------------------
+[2 cs x 2 feat]
+```
+
+### Output (dropnull = false)
+
+```text
+====================
+     | city    count
+--------------------
+0    | Accra   2    
+1    | Kumasi  1    
+2    | NULL    1    
+--------------------
+[3 cs x 2 feat]
+```
+
+`with_missing`'s second row (index 1) is genuinely missing: it was built by
+pairing `"Tema"` with `false` in an explicit validity mask, so the cell itself
+is `NULL`, not the string `"Tema"`. `dropnull = true` correctly excludes it.
+With `dropnull = false`, that row forms its own group, printed as `NULL` in
+the `city` column — one occurrence, same as `Kumasi`. `NULL`'s group sorts
+after `Kumasi` despite the tied count of `1`, since a missing key is never
+alphabetized against real values; it always sorts last among ties.
+
+Example 5. Pass `render = true` and let the returned view print itself, with
+no explicit `std::cout` at all.
+
+```cpp
+orders.count_by("city", /*top_n=*/0, /*dropnull=*/true, /*render=*/true);
+```
+
+### Output
+
+```text
+====================
+     | city    count
+--------------------
+0    | Accra   3    
+1    | Tema    2    
+2    | Kumasi  1    
+--------------------
+[3 cs x 2 feat]
+```
+
+As with [`aggregate()`](aggregate.md)'s `render` parameter, this bare
+statement prints automatically only because `render = true`; with the default
+`render = false`, the same unassigned, unstreamed call would produce no
+output.
+
+## Notes
+
+- The sort is always count-descending, value-ascending-on-ties — there is no
+  parameter to reverse either ordering; pipe the result through
+  [`sort_values`](sort_values.md) afterward if you need a different order. A
+  missing key is never alphabetized against real values for tie-breaking; it
+  always sorts after every real value tied with it on count.
+- `dropnull = false` gives a missing `feature` value its own group in the count,
+  printed as `NULL` in the output, rather than excluding those rows.
+- `top_n` truncates *after* sorting, so it always keeps the most frequent groups, not
+  an arbitrary prefix of the unsorted data.
+
+## See Also
+
+- [`DataFrame::group_by`](group_by.md): the general grouped-aggregation surface
+  `count_by()` is a convenience shortcut for.
+- [`DataFrame::bucketize`](bucketize.md): often used just before `count_by()`, to
+  tally how many cases fell into each engineered band.
+- [`DataFrame::mean_by`](mean_by.md): the same grouping idea, but averaging a value
+  feature per group instead of counting rows.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="count.html">

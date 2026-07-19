@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::head &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::head &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::info" href="info.html" />
@@ -36,7 +36,9 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-head">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ef82b71d1d4b -->
+<section id="dataframe-head">
 <h1>DataFrame::head<a class="headerlink" href="#dataframe-head" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
@@ -47,40 +49,123 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> rows of the frame.</p>
+<p>Returns a new frame containing the first <code class="docutils literal notranslate"><span class="pre">n</span></code> cases (rows) of the current frame, in their
+existing order, with every feature preserved. It is the cheapest way to eyeball what a
+frame actually looks like — column names, dtypes-by-example, and a handful of real
+values — without printing the entire thing, which matters once a frame has more than a
+screenful of rows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">head()</span></code> is a read-only, non-mutating view: it does not change case order, does not
+drop or rename features, and does not recompute anything. If <code class="docutils literal notranslate"><span class="pre">n</span></code> is greater than or equal
+to the number of cases in the frame, the entire frame is returned unchanged. If <code class="docutils literal notranslate"><span class="pre">n</span></code> is
+<code class="docutils literal notranslate"><span class="pre">0</span></code>, the result has the same features but zero cases — useful for grabbing an
+empty-but-typed frame with the same schema, for example as a seed value before
+repeatedly calling <a class="reference internal" href="extend.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extend</span></code></span></a> in a loop.</p>
+<p><code class="docutils literal notranslate"><span class="pre">head()</span></code> looks at position, not value: it always returns the <em>first</em> <code class="docutils literal notranslate"><span class="pre">n</span></code> cases as
+currently ordered on the frame. If you want the first <code class="docutils literal notranslate"><span class="pre">n</span></code> cases after sorting by some
+key, call <a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_values</span></code></span></a> first and then <code class="docutils literal notranslate"><span class="pre">head()</span></code> the result — the two
+compose exactly like <code class="docutils literal notranslate"><span class="pre">df.sort_values(...).head(...)</span></code> reads.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>n</strong>
-Number of rows, entries, or depth items to keep in the preview.</p>
-<p><strong>render</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned view can auto-render in temporary terminal contexts. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> when you want explicit output control.</p>
+<p><strong>n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">5</span></code>)</p>
+<p>Number of cases to keep, counted from the top. Defaults to <code class="docutils literal notranslate"><span class="pre">5</span></code> rows. Negative values are
+not a supported “everything except the last
+<code class="docutils literal notranslate"><span class="pre">|n|</span></code> rows” idiom here — pass an explicit non-negative row count. Values larger than
+<code class="docutils literal notranslate"><span class="pre">ncases()</span></code> are clamped to the full frame instead of erroring.</p>
+<p><strong>render</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>Display toggle for the returned <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> (the default): you get an ordinary “quiet” view back, and you decide
+explicitly when and how to print it (with <code class="docutils literal notranslate"><span class="pre">show()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_string()</span></code>, or by streaming it
+with <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: the returned view is allowed to auto-render itself the moment it reaches the
+end of a temporary expression’s lifetime without being captured or streamed anywhere
+(for instance, calling <code class="docutils literal notranslate"><span class="pre">df.head(3,</span> <span class="pre">true);</span></code> as its own statement will print the result
+immediately). This exists for quick, interactive exploration; prefer <code class="docutils literal notranslate"><span class="pre">false</span></code> and an
+explicit print call inside real application code so output timing stays predictable.</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>
-Value produced by this call.</p>
+A view over a new frame holding the first <code class="docutils literal notranslate"><span class="pre">n</span></code> cases and every feature of the source
+frame, in the source frame’s feature order. <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code> behaves like a
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> everywhere it matters (it inherits from it) — the “view” distinction only
+affects auto-render behavior via <code class="docutils literal notranslate"><span class="pre">render</span></code>, plus a source/operation label used when a
+GUI viewer window is opened.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Choose whether the returned object should auto-render in display contexts.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. Preview the first three rows of a six-row order log.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">preview</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================================================
+     | order_id  city   product     units  unit_price  discount
+---------------------------------------------------------------
+0    | 101       Accra  Laptop      2      1200        0.1     
+1    | 102       Accra  Headphones  5      45.5        0.05    
+2    | 103       Tema   Laptop      1      1150        NULL    
+---------------------------------------------------------------
+[3 cs x 6 feat]
 </pre></div>
 </div>
+<p>All six features are still present; only the case count changed from <code class="docutils literal notranslate"><span class="pre">6</span></code> to <code class="docutils literal notranslate"><span class="pre">3</span></code>. Row <code class="docutils literal notranslate"><span class="pre">2</span></code>
+carries a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for <code class="docutils literal notranslate"><span class="pre">discount</span></code> exactly as it did in the source frame — <code class="docutils literal notranslate"><span class="pre">head()</span></code> never
+alters values, only which cases are included.</p>
+<p>Example 2. Use the default argument to grab a standard five-row preview.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">head</span><span class="p">();</span><span class="w">  </span><span class="c1">// same as orders.head(5)</span>
+</pre></div>
+</div>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">head()</span></code> with no arguments returns the first <code class="docutils literal notranslate"><span class="pre">5</span></code> rows, the default most people
+reach for first when opening an unfamiliar frame.</p>
+<p>Example 3. Ask for more rows than the frame has.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span><span class="w">  </span><span class="c1">// orders only has 6 cases</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">preview</span></code> is equivalent to the full <code class="docutils literal notranslate"><span class="pre">orders</span></code> frame (all <code class="docutils literal notranslate"><span class="pre">6</span></code> cases): <code class="docutils literal notranslate"><span class="pre">head()</span></code> clamps <code class="docutils literal notranslate"><span class="pre">n</span></code>
+to <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> rather than raising, so it is always safe to call with a generously large
+<code class="docutils literal notranslate"><span class="pre">n</span></code> when you simply want “the whole frame, if it’s small” without checking its size
+first.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">head()</span></code> composes naturally with the rest of the pipeline-style API:
+<code class="docutils literal notranslate"><span class="pre">orders.sort_values({{.feature</span> <span class="pre">=</span> <span class="pre">&quot;unit_price&quot;,</span> <span class="pre">.ascending</span> <span class="pre">=</span> <span class="pre">false}}).head(3)</span></code> gives you
+the three highest-priced orders without a separate sort-then-slice step.</p></li>
+<li><p>For the tail end of a frame instead of the top, use <a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail(n,</span> <span class="pre">render)</span></code></span></a>, which
+has an identical signature and clamping behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">head()</span></code> never triggers a copy of the underlying column storage beyond what is needed
+to build the smaller result frame — cheap enough to call repeatedly while exploring
+data interactively.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tail</span></code></span></a>: the same idea from the bottom of the frame.</p></li>
+<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sample</span></code></span></a>: a random subset of cases instead of a positional
+prefix.</p></li>
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::slice</span></code></span></a>: an arbitrary <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> case range.</p></li>
+<li><p><a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::info</span></code></span></a>: a structural summary when you want dtypes and null
+counts rather than a value preview.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="has.html">
     <span class="label">Previous</span>
@@ -93,7 +178,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -102,7 +186,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -122,9 +206,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

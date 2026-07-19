@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::note &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::note &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::notnull" href="notnull.html" />
@@ -36,72 +36,130 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-note">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-note">
 <h1>DataFrame::note<a class="headerlink" href="#dataframe-note" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">note</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameNoteAccessor</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">note</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameNoteAccessor</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">note</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameNoteAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns one named feature as a note-backed thread.</p>
+<p>Enters the dedicated text-operations accessor for the current frame — string
+stripping, casing, length, pattern matching, splitting, padding, and more, one method
+per operation. <code class="docutils literal notranslate"><span class="pre">note()</span></code> itself does no work beyond validating the frame and
+constructing the accessor: <strong>every feature currently on the frame must already be
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind</strong>, or it throws immediately. In practice this means selecting the text
+feature(s) you want to operate on first, then calling <code class="docutils literal notranslate"><span class="pre">.note()</span></code>:
+<code class="docutils literal notranslate"><span class="pre">df.features({&quot;city&quot;}).note().lower()</span></code>, not <code class="docutils literal notranslate"><span class="pre">df.note()</span></code> directly on a frame that
+still has numeric or other non-text columns.</p>
+<p>This page previews the accessor’s most common entry points. Each accessor method gets
+its own dedicated reference page under the <code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor</span></code> API reference.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong>
-Feature name(s) that select the target DataFrame columns for the operation.</p>
-<p><strong>feature</strong>
-Name of the source feature used by the operation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">note()</span></code> itself takes no parameters. See each accessor method’s own signature for what
+it accepts.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor</span></code>
-Value produced by this call.</p>
+A lightweight accessor bound to the current (all-<code class="docutils literal notranslate"><span class="pre">Note</span></code>) frame. Nearly every
+method on it returns a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with the text operation applied; the
+source frame is never mutated.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Work with a selected feature subset.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
+<p>Example 1. Lowercase a text feature — after selecting it first.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | id    city  
+-------------------
+0    | 1     Accra 
+1    | 2     TEMA  
+2    | 3     Kumasi
+-------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 2. Work with one named feature.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lowered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">lower</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lowered</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+     | city  
+-------------
+0    | accra 
+1    | tema  
+2    | kumasi
+-------------
+[3 cs x 1 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">orders.note()</span></code> directly would have thrown, since <code class="docutils literal notranslate"><span class="pre">orders</span></code> still has a <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+feature (<code class="docutils literal notranslate"><span class="pre">id</span></code>) at the time of the call — <code class="docutils literal notranslate"><span class="pre">.features({&quot;city&quot;})</span></code> narrows the frame down
+to just the <code class="docutils literal notranslate"><span class="pre">Note</span></code> column first, which is what <code class="docutils literal notranslate"><span class="pre">.note()</span></code> requires.</p>
+<p>Example 2. Compute each string’s length.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lengths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">length</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lengths</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | city
+-----------
+0    | 5   
+1    | 4   
+2    | 6   
+-----------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.length()</span></code> replaces the text with its character count as an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> —
+<code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">5</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;TEMA&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">4</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Kumasi&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">6</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every feature on the frame <code class="docutils literal notranslate"><span class="pre">.note()</span></code> is called on must already be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind;
+select the text feature(s) first with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> or
+<a class="reference internal" href="feataxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">feataxis().note()</span></code></span></a> if the source frame has other kinds mixed in.</p></li>
+<li><p>The accessor’s methods each apply to every feature on the (already-<code class="docutils literal notranslate"><span class="pre">Note</span></code>-only)
+frame, returning a new frame with the transformation applied — some methods (like
+<code class="docutils literal notranslate"><span class="pre">.length()</span></code>) change the resulting kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">note()</span></code> on a frame with no features at all, or a frame containing a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code>
+feature, throws before constructing the accessor.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: the usual way to narrow a frame down to just
+its text features before calling <code class="docutils literal notranslate"><span class="pre">.note()</span></code>.</p></li>
+<li><p><a class="reference internal" href="feataxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::feataxis</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">feataxis().note()</span></code> selects every <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+feature on a frame directly, another way to arrive at an all-text frame.</p></li>
+<li><p><a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl</span></code></span></a>: the equivalent dedicated accessor for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> /
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> features, instead of <code class="docutils literal notranslate"><span class="pre">Note</span></code> text.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nfeatures.html">
     <span class="label">Previous</span>
@@ -114,7 +172,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -123,7 +180,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -143,9 +200,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

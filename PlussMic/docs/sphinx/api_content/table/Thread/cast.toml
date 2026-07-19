@@ -50,7 +50,7 @@ output = """
 0  1
 1  2
 2  3
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -70,5 +70,5 @@ output = """
 0  4
 1  NA
 2  6
-dtype: Series
+ptype: Series
 """

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::plot &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::plot &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::plot3d" href="plot3d.html" />
@@ -36,66 +36,90 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-plot">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-plot">
 <h1>DataFrame::plot<a class="headerlink" href="#dataframe-plot" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">plot</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlotAccessor</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">plot</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFramePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlotAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">plot</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlotAccessor</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">plot</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFramePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlotAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This opens the plotting accessor for the current data object.</p>
+<p>Enters the 2D charting accessor bound to the current frame — line, step, area,
+scatter, bar, histogram, box, violin, heatmap, and more, one chart kind per method.
+<code class="docutils literal notranslate"><span class="pre">plot()</span></code> itself draws nothing; it just binds the frame (and, optionally, shared
+chart-wide defaults like a default x-feature or hue-feature) and hands back an
+accessor whose methods each return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — a chart/figure object from
+the <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> plotting library, which owns its own reference documentation (rendering
+backends, themes, saving to PNG/SVG, and so on). This page previews entry into the
+accessor; it does not re-document <code class="docutils literal notranslate"><span class="pre">Studio</span></code> or every chart kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFramePlotOptions&amp;</span></code>, optional)</p>
+<p>Chart-wide defaults shared across every plot drawn from the returned accessor —
+a default x-feature, a default hue-feature, tick/label rotation, figure size, tight
+layout, and more. Omit it to use the accessor’s built-in defaults.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor</span></code>
-Value produced by this call.</p>
+An accessor bound to the current frame (and, if given, <code class="docutils literal notranslate"><span class="pre">options</span></code>). Each of its
+methods (<code class="docutils literal notranslate"><span class="pre">.line()</span></code>, <code class="docutils literal notranslate"><span class="pre">.scatter()</span></code>, <code class="docutils literal notranslate"><span class="pre">.bar()</span></code>, <code class="docutils literal notranslate"><span class="pre">.hist()</span></code>, and so on) builds and
+returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure, ready to further customize or save.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Create the plotting accessor with default plot options.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. Enter the plotting accessor and draw a line chart with default options.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;monthly_sales.png&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(line/scatter/bar/hist)
-</pre></div>
-</div>
-<p>Example 2. Create the plotting accessor with an explicit plot-options object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
+<p><code class="docutils literal notranslate"><span class="pre">sales.plot()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor</span></code> bound to <code class="docutils literal notranslate"><span class="pre">sales</span></code>; <code class="docutils literal notranslate"><span class="pre">.line(&quot;amount&quot;,</span> <span class="pre">&quot;month&quot;)</span></code> draws <code class="docutils literal notranslate"><span class="pre">amount</span></code> against <code class="docutils literal notranslate"><span class="pre">month</span></code> and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, which
+<code class="docutils literal notranslate"><span class="pre">.save_png(...)</span></code> then writes to disk. No table is printed by any of this — the
+result is a rendered figure, not a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>Example 2. Share chart-wide options (a default x-feature) across every chart drawn
+from one accessor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">default_x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">;</span>
 
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">default_x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">accessor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accessor</span><span class="p">.</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// uses &quot;month&quot; as x automatically</span>
 </pre></div>
 </div>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> explicitly (as in Example 1) always takes precedence; the
+<code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> in <code class="docutils literal notranslate"><span class="pre">options</span></code> only fills in when a chart method’s own
+<code class="docutils literal notranslate"><span class="pre">x_feature</span></code> argument is omitted.</p>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(line/scatter/bar/hist)
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">plot()</span></code> never touches or copies the frame’s data beyond what the requested chart
+needs to draw — it is a lightweight accessor, not a materialized copy.</p></li>
+<li><p>Every chart method returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>; that type’s own methods (theming,
+sizing, legends, exporting) are documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s reference, not here.</p></li>
+<li><p>Use <a class="reference internal" href="plot3d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot3d()</span></code></span></a> instead for genuinely three-dimensional charts (3D
+scatter, 3D line); <code class="docutils literal notranslate"><span class="pre">plot()</span></code> covers only 2D chart kinds.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="plot3d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::plot3d</span></code></span></a>: the 3D counterpart to this accessor.</p></li>
+<li><p><a class="reference internal" href="sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sql</span></code></span></a>, <a class="reference internal" href="ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ts</span></code></span></a>: other dedicated accessors
+entered the same way, previewed on their own pages.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="place.html">
     <span class="label">Previous</span>
@@ -108,7 +132,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -117,7 +140,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -137,9 +160,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6e1bae309017 -->
+
 # DataFrame::std
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,79 +8,160 @@
 ## Signatures
 
 ```cpp
-DataFrame::std(Axis axis = Axis::Case, bool skipnull = true) -> Thread
-
-DataFrame::std(Axis axis, const StatisticOptions& options) -> Thread
+DataFrame::std(Axis axis = Axis::Case, bool skipnull = true) const -> Thread
+DataFrame::std(Axis axis, const StatisticOptions& options) const -> Thread
 ```
 
 ## What It Does
 
-Computes per-feature standard deviations for the selected numeric features.
+Reduces every numeric feature to its standard deviation, returning one `Thread` whose
+entries line up with the frame's numeric feature names — the same shape
+[`sum()`](sum.md) and [`mean()`](mean.md) return. Non-numeric features are skipped
+entirely rather than coerced into a statistic that wouldn't mean anything.
+
+By default this is the **sample** standard deviation: the sum of squared deviations from
+the mean is divided by `n - 1` rather than `n`, the conventional correction for
+estimating a population's spread from a finite sample. The `StatisticOptions` overload
+lets you override that divisor explicitly via `ddof` when you need the **population**
+standard deviation instead (divide by `n`), or require a minimum number of observations
+before a feature's result counts as valid.
 
 ## Parameters
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Case`)
 
-**skipnull**
-    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
+Reduction direction. `Axis::Case` (the default) reduces down each feature's cases,
+producing one standard deviation per feature. `Axis::Feature` reduces across each row's
+features instead, producing one value per case.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**skipnull** (`bool`, default `true`)
+
+Controls how a missing value affects that feature's result:
+
+- `true` (the default): missing values are excluded from the computation entirely, so
+  the standard deviation reflects only the observed values.
+- `false`: a single missing value in a feature poisons that feature's result, which comes
+  back `NULL`.
+
+**options** (`const StatisticOptions&`)
+
+A structured policy for the same reduction, exposing two fields the short overload
+cannot reach:
+
+- `ddof` (`std::int64_t`, default `1`): the delta-degrees-of-freedom subtracted from `n`
+  in the divisor. `ddof = 1` (the default under either overload) is the sample standard
+  deviation; `ddof = 0` is the population standard deviation, dividing by the full
+  observed count instead of `n - 1`.
+- `min_count` (`std::int64_t`, default `1`): the minimum number of non-null observations
+  a feature must have before it is assigned a real result at all; a feature with fewer
+  observed values than `min_count` reports `NULL` regardless of `ddof`.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    One entry per participating numeric feature, labeled by feature name, holding that
+    feature's standard deviation.
 
 ## Examples
 
-Example 1. Compute `std` for each numeric column in the frame.
+Example 1. Compute the sample standard deviation, skipping missing values (the default).
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
-auto out = df.std(false);
+auto spread = orders.std();
+std::cout << spread;
 ```
 
 ### Output
 
 ```text
-feature  value
-id       1.0
-sales    15.275252317
+  order_id  1.870828693
+     units  1.471960144
+unit_price  580.5111971
+  discount  0.03082207001
+ptype: Series
 ```
-Example 2. Compute `std` for each numeric column in the frame.
+
+`unit_price`'s one missing observation (case `5`) is excluded from the computation
+entirely — its standard deviation is computed over the remaining five values, the same
+way [`mean()`](mean.md) and [`describe()`](describe.md) treat that column's missing
+value.
+
+Example 2. Disable null-skipping to see a missing value propagate.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.std(false);
+auto spread_strict = orders.std(Axis::Case, false);
+std::cout << spread_strict;
 ```
 
 ### Output
 
 ```text
-feature  value
-id       1.0
-sales    15.275252317
+  order_id  1.870828693
+     units  1.471960144
+unit_price  NULL
+  discount  NULL
+ptype: Series
 ```
 
-## Practical Behavior
+With `skipnull = false`, `unit_price` and `discount` — the two features that each have
+exactly one missing value — come back `NULL` entirely. `order_id` and `units`, with no
+missing values, are unaffected either way.
 
-- `std(...)` reduces the selected numeric features to one summary row.
-- Non-numeric features are skipped rather than coerced.
-- The output stays in DataFrame form, which makes these reducers easy to reuse in downstream frame pipelines.
+Example 3. Use the `StatisticOptions` overload to compute the population standard
+deviation instead of the sample standard deviation.
 
+```cpp
+StatisticOptions population;
+population.ddof = 0;
 
+auto spread_population = orders.std(Axis::Case, population);
+std::cout << spread_population;
+```
+
+### Output
+
+```text
+  order_id  1.707825128
+     units  1.343709625
+unit_price  519.2249994
+  discount  0.0275680975
+ptype: Series
+```
+
+Every value is slightly smaller than in Example 1: dividing by the full observed count
+(`ddof = 0`) instead of `count - 1` (`ddof = 1`, the implicit default) always produces a
+standard deviation that is less than or equal to the sample statistic. Reach for
+`ddof = 0` when the data in hand **is** the entire population of interest, not a sample
+drawn from a larger one.
+
+## Notes
+
+- `std()`'s result is labeled by feature name and prints like a small labeled `Series`,
+  not like a row sliced from the source frame.
+- Non-numeric features never appear in the result; they are neither computed as an error
+  nor silently coerced.
+- A feature with fewer than two observed values has an undefined sample standard
+  deviation and reports `NULL`, independent of `min_count`.
+- For the corresponding variance (the squared statistic, no square root applied), see
+  [`var()`](var.md), which shares the exact same `axis` / `skipnull` / `StatisticOptions`
+  shape.
+
+## See Also
+
+- [`DataFrame::var`](var.md): the variance this method's square root is computed from.
+- [`DataFrame::mean`](mean.md): the center each deviation in this computation is measured
+  from.
+- [`DataFrame::describe`](describe.md): reports `std` alongside several other statistics
+  in one call.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="stack.html">

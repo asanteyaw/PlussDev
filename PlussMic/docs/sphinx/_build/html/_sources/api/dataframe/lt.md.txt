@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::lt
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,222 +7,135 @@
 ## Signatures
 
 ```cpp
-DataFrame::lt(const char* other, bool strict = true) -> DataFrame
-
-DataFrame::lt(const DataFrame& other, bool strict = true) -> DataFrame
-
-DataFrame::lt(const DataFrame& other, const AlignOptions& options, bool strict = true) -> DataFrame
-
-DataFrame::lt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) -> DataFrame
-
-DataFrame::lt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) -> DataFrame
-
-DataFrame::lt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) -> DataFrame
-
-DataFrame::lt(double other, bool strict = true) -> DataFrame
-
-DataFrame::lt(std::string_view other, bool strict = true) -> DataFrame
+DataFrame::lt(double other, bool strict = true) const -> DataFrame
+DataFrame::lt(std::string_view other, bool strict = true) const -> DataFrame
+DataFrame::lt(const DataFrame& other, bool strict = true) const -> DataFrame
+DataFrame::lt(const DataFrame& other, const AlignOptions& options, bool strict = true) const -> DataFrame
+DataFrame::lt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame::lt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
+DataFrame::lt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
 ```
 
 ## What It Does
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+The ordering relation "less than", returning a boolean-valued frame the same shape as
+the source. `lt()` shares the same scalar/string/`DataFrame`/`Thread` operand shapes as
+[`eq()`](eq.md) — see `eq()`'s "What It Does" for the full explanation — plus one
+extra parameter, `strict`, that the equality/inequality methods don't have.
+
+```{important} le() is implemented in terms of lt()
+[`le()`](le.md) has no independent implementation: `frame.le(other)` is literally
+`frame.lt(other, /* strict = */ false)`. There is no separate "less than or equal"
+code path — passing `strict = false` to `lt()` directly produces the exact same result
+as calling `le()`.
+```
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-**strict**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
+`const DataFrame&`, or `const Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for
+the full breakdown.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**strict** (`bool`, default `true`)
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+Selects which relation is actually evaluated:
+
+- `true` (the default): strict "less than" (`<`) — a cell equal to `other` reports
+  `false`.
+- `false`: "less than or equal to" (`<=`) — a cell equal to `other` reports `true`.
+  This is exactly what calling [`le()`](le.md) does internally.
+
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`eq()`](eq.md)'s `axis`.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`eq()`](eq.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, where every feature holds `true`/`false`
+    according to whether that cell is less than (or, with `strict = false`, less than
+    or equal to) `other`. A cell compared against a missing value on either side is
+    itself missing (`NULL`), matching [`eq()`](eq.md).
 
 ## Examples
 
-Example 1. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+Example 1. Strict "less than" against a scalar threshold.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.lt(110);
+auto scores = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 84.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = scores.lt(85.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales
-1   true
-2   false
-3   true
+===================
+     | quiz   final
+-------------------
+s1   | true   true 
+s2   | false  false
+s3   | true   true 
+-------------------
+[3 cs x 2 feat]
 ```
-Example 2. Compare each compatible cell using the `<` relation against another aligned frame.
+
+`84 < 85` is `true`, `90 < 85` is `false`, and `72 < 85` is `true` — an ordinary strict
+comparison.
+
+Example 2. Passing `strict = false` reproduces [`le()`](le.md) exactly.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.lt(right);
+auto out_le_style = scores.lt(84.0, false);
+std::cout << out_le_style;
 ```
 
 ### Output
 
 ```text
-id  sales
-1   true
-2   false
-3   true
-```
-Example 3. Compare each compatible cell using the `<` relation against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.lt(right);
+===================
+     | quiz   final
+-------------------
+s1   | true   true 
+s2   | false  false
+s3   | true   true 
+-------------------
+[3 cs x 2 feat]
 ```
 
-### Output
+With `strict = false`, `84 < 84` (which would be `false` under the default) now
+reports `true` for every case where the value equals `84` (`s1` and `s3` on both
+features), since `84 <= 84` holds — `scores.le(84.0)` would produce this identical
+result.
 
-```text
-id  sales
-1   true
-2   false
-3   true
-```
-Example 4. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+## Notes
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+- `le()` has no independent implementation — it is always `lt(other, false)` under the
+  hood, for every overload shape.
+- A cell compared against a missing value on either side is `NULL`, not `false`,
+  matching [`eq()`](eq.md).
+- Shares its full comparison-family overload shape with [`eq()`](eq.md), [`ne()`](ne.md),
+  [`le()`](le.md), `gt()`, and `ge()`.
 
-auto out = df.lt(110);
-```
+## See Also
 
-### Output
-
-```text
-id  sales
-1   true
-2   false
-3   true
-```
-Example 5. Compare each compatible cell using the `<` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.lt(110);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   false
-3   true
-```
-Example 6. Compare each compatible cell using the `<` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.lt(110);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   false
-3   true
-```
-Example 7. Compare each compatible cell using the `<` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.lt(110);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   false
-3   true
-```
-Example 8. Compare each compatible cell using the `<` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.lt(110);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   false
-3   true
-```
-
-## Comparison Rules
-
-- `lt(...)` returns a boolean-style frame with the same case axis and selected feature layout as the input.
-- Scalar/native comparisons broadcast the right-hand value across every compatible numeric cell.
-- Frame-vs-frame comparisons are row-wise and require compatible shape and feature alignment.
-
-
+- [`DataFrame::le`](le.md): the non-strict counterpart, implemented directly in terms
+  of this method.
+- [`DataFrame::eq`](eq.md): the full explanation of this comparison family's shared
+  operand shapes.
+- `DataFrame::gt` / `DataFrame::ge`: the mirror-image ordering relations.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lor.html">

@@ -43,5 +43,5 @@ auto out = corr_base.features({"x", "z"}).csmin(Axis::Feature);
 output = """
 x  0
 z  1
-dtype: Series
+ptype: Series
 """

@@ -43,7 +43,7 @@ auto out = names.casefold();
 0  ada
 1  bola
 2  chen
-dtype: Note
+ptype: Note
 ```
 
 

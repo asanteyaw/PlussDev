@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::query &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::query &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::radd" href="radd.html" />
@@ -36,7 +36,9 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-query">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d8103390ebf3 -->
+<section id="dataframe-query">
 <h1>DataFrame::query<a class="headerlink" href="#dataframe-query" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
@@ -46,6 +48,12 @@
 </div>
 <p>Filter rows with a boolean expression written against DataFrame feature names.</p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::query(...)</span></code> is the string-expression row filter for PlussMic. It lets you write one compact predicate instead of building a boolean mask by hand, which is especially useful when you are exploring data interactively or translating logic from notebook-style workflows into C++.</p>
+<p>The expression itself is a small language evaluated against feature names, so you can
+write <code class="docutils literal notranslate"><span class="pre">&quot;units</span> <span class="pre">&gt;=</span> <span class="pre">10</span> <span class="pre">and</span> <span class="pre">region</span> <span class="pre">==</span> <span class="pre">'south'&quot;</span></code> instead of assembling
+<code class="docutils literal notranslate"><span class="pre">df[(df.units</span> <span class="pre">&gt;=</span> <span class="pre">10)</span> <span class="pre">&amp;</span> <span class="pre">(df.region</span> <span class="pre">==</span> <span class="pre">'south')]</span></code> by hand. The C++ equivalent of the
+boolean-mask style is <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a> — reach for <code class="docutils literal notranslate"><span class="pre">query()</span></code> when the predicate
+reads more clearly as a single self-contained string, and for <code class="docutils literal notranslate"><span class="pre">filter()</span></code> when the mask is
+more naturally built up from existing C++ expressions or reused across calls.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Expression Input</p>
@@ -93,6 +101,13 @@ A filtered frame containing only the rows where the expression evaluates to <cod
 <p>Feature-to-feature comparison is supported. For example, <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">&gt;</span> <span class="pre">price</span></code> compares the two features row by row.</p>
 <p>Use backticks around feature names that contain spaces or punctuation, such as <code class="docutils literal notranslate"><span class="pre">`First</span> <span class="pre">Name`</span> <span class="pre">==</span> <span class="pre">'Laurel'</span></code>.</p>
 <p>This method is for row filtering. It does not rewrite values, create columns, or mutate the current frame in place.</p>
+<p>The expression is parsed and evaluated by PlussMic’s own small expression engine, not by
+shelling out to an external interpreter — there is no dependency on Python, a SQL engine,
+or any other runtime to use <code class="docutils literal notranslate"><span class="pre">query()</span></code>. The patterns documented above (numeric and string
+comparisons, <code class="docutils literal notranslate"><span class="pre">and</span></code> / <code class="docutils literal notranslate"><span class="pre">or</span></code> combinators, quoted literals, and backtick-quoted feature
+names) are the supported core; if a more elaborate expression does not parse the way you
+expect, fall back to building the mask explicitly with <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a>, which
+accepts any boolean <code class="docutils literal notranslate"><span class="pre">Thread</span></code> you can construct in ordinary C++.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -107,6 +122,7 @@ A filtered frame containing only the rows where the expression evaluates to <cod
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">})).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;units &gt;= 10 and region == &#39;south&#39;&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -129,6 +145,7 @@ s1   | Accra  south   10     3
 <span class="p">}).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;people&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">people</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;`First Name` == &#39;Laurel&#39;&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -154,6 +171,7 @@ s1   | Accra  south   10     3
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">})).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;units &gt; price&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -190,7 +208,7 @@ s3   | Kumasi  middle  12     2.5
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -210,9 +228,10 @@ s3   | Kumasi  middle  12     2.5
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

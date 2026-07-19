@@ -24,4 +24,11 @@ The helper/reference pages below stay in this same branch so the sidebar remains
 ../hierarchical_cases
 ../dataframe_sql_accessor_api_reference
 ../dataframe_sql_prepared_api_reference
+../dataframe_note_accessor_api_reference
+../dataframe_timeline_accessor_api_reference
+../dataframe_label_accessor_api_reference
+../dataframe_feataxis_accessor_api_reference
+../dataframe_ts_accessor_api_reference
+../dataframe_ts_window_accessor_api_reference
+../dataframe_ts_resampler_api_reference
 ```

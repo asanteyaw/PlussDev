@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::reorder
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,157 +7,162 @@
 ## Signatures
 
 ```cpp
-DataFrame::reorder(const ReorderSpec& spec) -> DataFrame
-
-DataFrame::reorder(pluss::RangeView<ReorderSpec> specs) -> DataFrame
-
-DataFrame::reorder(pluss::RangeView<std::string_view> names) -> DataFrame
-
-DataFrame::reorder(std::initializer_list<ReorderSpec> specs) -> DataFrame
+DataFrame::reorder(pluss::msharp::RangeView::Of<std::string_view> names) const -> DataFrame
+DataFrame::reorder(const ReorderSpec& spec) const -> DataFrame
+DataFrame::reorder(pluss::RangeView<ReorderSpec> specs) const -> DataFrame
+DataFrame::reorder(std::initializer_list<ReorderSpec> specs) const -> DataFrame
 ```
 
 ## What It Does
 
-Moves selected features into a new relative position while preserving row data and the untouched feature order.
+Moves one or more named features into a new relative position, while every other
+feature keeps its current relative order — without having to restate the frame's
+entire column list the way [`features()`](features.md) reordering would. There are
+two ways to describe a move:
+
+- A plain list of names (`reorder({"city"})`) moves those features together to the
+  **front**, preserving their relative order among themselves and the relative order
+  of everything else. This is shorthand for a single `ReorderSpec` with
+  `placement = Front`.
+- A `ReorderSpec` (or several, applied left to right) supports front, back, before-an-
+  anchor, or after-an-anchor placement, and can select the features to move either by
+  an explicit name list or by a regex pattern matched against every feature name.
+
+Each `ReorderSpec` in a multi-spec sequence sees the column order left behind by the
+previous spec — later specs can reference columns by name regardless of where an
+earlier spec moved them.
 
 ## Parameters
 
-**spec**
-    One partial-order move. Use this when one move instruction is enough.
+**names** (`pluss::RangeView<std::string_view>`)
 
-**specs**
-    Several partial-order moves applied in the exact order you pass them. Each move sees the column order produced by the previous move.
+Feature names to move together to the front, preserving their relative order among
+themselves and the relative order of every untouched feature. Shorthand for a single
+front-placement `ReorderSpec`.
 
-**names**
-    Column names to move together to the front while preserving the relative order of every column not listed here.
+**spec** / **specs** (`ReorderSpec` / a range or list of `ReorderSpec`)
+
+One or more move instructions, each built via `ReorderSpec::move(...)` or
+`ReorderSpec::move_regex(...)` and a placement (`.first()`, `.last()`,
+`.before(anchor)`, `.after(anchor)`). Several specs are applied in the exact order
+given, each seeing the previous spec's resulting order.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame with the moved feature(s) repositioned as described; every untouched
+    feature keeps its relative order (values, dtypes, and case labels are unchanged).
 
 ## Examples
 
-Example 1. Move selected columns to the front, back, or around an anchor while preserving the rest.
+Example 1. Move one feature to sit immediately after a named anchor.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto spec = pluss::table::DataFrame::ReorderSpec::move("sales").after("city");
-auto out = df.reorder(spec);
+auto spec = DataFrame::ReorderSpec::move("sales").after("city");
+auto reordered = orders.reorder(spec);
+std::cout << reordered;
 ```
 
 ### Output
 
 ```text
-id  city    sales
-1   Accra   100.0
-2   Tema    120.0
-3   Kumasi   90.0
+==========================
+     | id    city    sales
+--------------------------
+0    | 1     Accra   100  
+1    | 2     Tema    120  
+2    | 3     Kumasi  90   
+--------------------------
+[3 cs x 3 feat]
 ```
-Example 2. Apply a reusable multi-step reorder plan stored in a standard container.
+
+`"sales"` moves to sit right after `"city"`; `"id"` (not part of the move) keeps its
+original front position.
+
+Example 2. Apply a multi-step reorder plan, where each step sees the previous step's
+result.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-using Move = pluss::table::DataFrame::ReorderSpec;
+using Move = DataFrame::ReorderSpec;
 std::vector<Move> plan{
     Move::move({"city", "sales"}).first(),
     Move::move("id").after("sales"),
 };
-auto out = df.reorder(plan);
+auto out = orders.reorder(plan);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-city    sales  id
-Accra   100.0  1
-Tema    120.0  2
-Kumasi  90.0   3
+==========================
+     | city    sales  id  
+--------------------------
+0    | Accra   100    1   
+1    | Tema    120    2   
+2    | Kumasi  90     3   
+--------------------------
+[3 cs x 3 feat]
 ```
-Example 3. Move the named columns to the front while preserving the relative order of every untouched column.
+
+The first step moves `{"city", "sales"}` to the front (in exactly that order,
+regardless of their original position); the second step moves `"id"` to sit after
+`"sales"` in the order that first step produced — since `"id"` was already last, this
+step leaves the order unchanged.
+
+Example 3. Move a subset of features to the front using the plain-name-list
+shorthand.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.reorder({"city"});
+auto front_moved = orders.reorder({"city"});
+std::cout << front_moved;
 ```
 
 ### Output
 
 ```text
-city    id  sales
-Accra   1   100.0
-Tema    2   120.0
-Kumasi  3    90.0
-```
-Example 4. Apply an inline multi-step reorder plan that moves only the columns you care about.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"col_1", pluss::make_series({1.0, 101.0})},
-    {"col_2", pluss::make_series({2.0, 102.0})},
-    {"col_3", pluss::make_series({3.0, 103.0})},
-    {"col_4", pluss::make_series({4.0, 104.0})},
-    {"col_5", pluss::make_series({5.0, 105.0})},
-    {"col_6", pluss::make_series({6.0, 106.0})},
-    {"col_7", pluss::make_series({7.0, 107.0})},
-    {"col_8", pluss::make_series({8.0, 108.0})},
-    {"col_9", pluss::make_series({9.0, 109.0})},
-    {"col_10", pluss::make_series({10.0, 110.0})},
-    {"col_15", pluss::make_series({15.0, 115.0})},
-    {"col_16", pluss::make_series({16.0, 116.0})},
-    {"col_17", pluss::make_series({17.0, 117.0})},
-    {"col_20", pluss::make_series({20.0, 120.0})},
-    {"col_21", pluss::make_series({21.0, 121.0})},
-    {"col_22", pluss::make_series({22.0, 122.0})},
-    {"col_23", pluss::make_series({23.0, 123.0})},
-    {"col_24", pluss::make_series({24.0, 124.0})},
-    {"col_25", pluss::make_series({25.0, 125.0})},
-});
-
-using Move = pluss::table::DataFrame::ReorderSpec;
-auto out = df.reorder({
-    Move::move({"col_25", "col_10"}).first(),
-    Move::move("col_20").before("col_5"),
-    Move::move({"col_15", "col_16", "col_17"}).after("col_8"),
-    Move::move_regex("^col_2[1-4]$").last(),
-});
+==========================
+     | city    id    sales
+--------------------------
+0    | Accra   1     100  
+1    | Tema    2     120  
+2    | Kumasi  3     90   
+--------------------------
+[3 cs x 3 feat]
 ```
 
-### Output
+`reorder({"city"})` is shorthand for `reorder(ReorderSpec::move("city").first())` —
+`"city"` moves to the front, and `"id"`/`"sales"` keep their original relative order
+behind it.
 
-```text
-out.features():
-["col_25", "col_10", "col_1", "col_2", "col_3", "col_4", "col_20", "col_5", "col_6", "col_7", "col_8", "col_15", "col_16", "col_17", "col_9", "col_21", "col_22", "col_23", "col_24"]
+## Notes
 
-out.head():
-col_25  col_10  col_1  col_2  col_3  col_4  col_20  col_5  col_6  col_7  col_8  col_15  col_16  col_17  col_9  col_21  col_22  col_23  col_24
-25.0    10.0    1.0    2.0    3.0    4.0    20.0    5.0    6.0    7.0    8.0    15.0    16.0    17.0    9.0    21.0    22.0    23.0    24.0
-125.0   110.0   101.0  102.0  103.0  104.0  120.0   105.0  106.0  107.0  108.0  115.0   116.0   117.0   109.0  121.0   122.0   123.0   124.0
-```
+- `reorder({"a", "b"})` moves `"a"` and `"b"` together to the front, preserving the
+  relative order of every other feature — it does not mean "replace the entire
+  feature order with just these two."
+- `ReorderSpec::move_regex(pattern)` selects every feature whose name matches
+  `pattern` (ECMAScript regex), instead of naming them explicitly — useful when
+  moving a family of similarly-named columns (for example, `move_regex("^col_2[1-4]$")`).
+- Every feature named in a `ReorderSpec` must exist exactly once across the frame; an
+  unknown name, a duplicate within one spec, or a `before`/`after` anchor that is
+  itself one of the moved features throws.
 
-## Practical Behavior
+## See Also
 
-- `reorder({"a", "b"})` now means “move these features together and preserve the relative order of everything else.”
-- Use `ReorderSpec` when you need to move a subset to the front, back, before an anchor, or after an anchor.
-- Use the multi-spec overload when you want to apply several moves in one call from left to right.
-- This avoids listing a 3000-feature schema just to reposition two columns.
-
-
+- [`DataFrame::place`](place.md): move (or insert) exactly one feature relative to
+  one anchor, a lighter-weight alternative when only a single feature needs to move.
+- [`DataFrame::features`](features.md): select or drop features outright, rather than
+  just reordering them.
+- [`DataFrame::rename`](rename.md): change feature names, a distinct operation from
+  reordering them.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rename_.html">

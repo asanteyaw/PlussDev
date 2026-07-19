@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::eq
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,143 +7,138 @@
 ## Signatures
 
 ```cpp
-DataFrame::eq(const char* other) -> DataFrame
-
-DataFrame::eq(const DataFrame& other) -> DataFrame
-
-DataFrame::eq(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::eq(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::eq(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::eq(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::eq(double other) -> DataFrame
-
-DataFrame::eq(std::string_view other) -> DataFrame
+DataFrame::eq(double other) const -> DataFrame
+DataFrame::eq(std::string_view other) const -> DataFrame
+DataFrame::eq(const DataFrame& other) const -> DataFrame
+DataFrame::eq(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::eq(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::eq(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::eq(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
-Compare the current frame for equality against a scalar, a thread, or another frame and return a boolean-style result frame.
+## What It Does
 
-`eq(...)` is the explicit named equality surface when you want a reusable mask table instead of operator syntax.
+The named-method form of elementwise equality, returning a boolean-valued frame the
+same shape as the source. `eq()` is one of six comparison methods
+(`eq`, [`ne`](ne.md), [`lt`](lt.md), [`le`](le.md), `gt`, `ge`) that share the same
+overload set — a scalar, a string, another `DataFrame`, or a `Thread` broadcast by
+`axis` — mirroring the arithmetic family's shape (see [`add()`](add.md)), except every
+comparison method returns a `Series<bool>` per feature instead of a numeric result.
+
+Reach for the named method over the `==` operator when you want to chain it inline in
+a pipeline, or when comparing against another frame with non-default alignment rules.
 
 ## Parameters
 
 **other**
 
-Right-hand equality target.
+The right-hand operand, in one of three shapes:
 
-Supported overload families include:
+- `double`: one numeric scalar, compared against every numeric feature.
+- `std::string_view`: one text value, compared against every `Note`-kind feature.
+  Comparing a non-`Note` feature against a string is not a supported combination.
+- `const DataFrame&`: another frame, compared feature-by-feature and case-by-case
+  after the two frames are aligned.
+- `const Thread&`: one column of values, broadcast according to `axis`.
 
-- numeric scalar broadcast such as `84.0`,
-- text scalar broadcast such as `"Ada"`,
-- `const Thread&` when you want one thread compared across a chosen axis,
-- `const DataFrame&` when you want cellwise frame-to-frame equality.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
 
-**axis**
+Controls how a `Thread` right-hand operand is broadcast — identical meaning to
+[`add()`](add.md)'s `axis`: `Axis::Feature` (the default) supplies one value per
+feature; `Axis::Case` supplies one value per case.
 
-Axis used by the thread overload.
+**options** (`AlignOptions`, optional)
 
-- `Axis::Feature`: compare one thread across features.
-- `Axis::Case`: compare one thread across cases.
-
-Use the examples below as the primary guide for when a thread is being interpreted row-wise versus column-wise.
-
-**options**
-
-Optional alignment rules for overloads that compare against another `DataFrame` or `Thread`.
-
-This is where you choose label-aware matching behavior such as `AlignBy::Both` when the right-hand side has a different row order or a smaller structural footprint.
+Controls how the `DataFrame` or `Thread` right-hand operand is aligned to the current
+frame before the comparison runs. Same meaning as [`add()`](add.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Boolean-style frame marking which participating cells compare equal under the selected overload.
-
-## See Also
-
-- <a href="equals.html"><code>DataFrame::equals</code></a>: whole-frame exact identity check that returns one `bool` instead of a mask frame.
-- <a href="ne.html"><code>DataFrame::ne</code></a>: not-equal comparison.
-- <a href="../thread/eq.html"><code>Thread::eq</code></a>: equality comparison on one extracted thread.
-
-## Notes
-
-Numeric scalar equality broadcasts one value across compatible numeric features.
-
-Text scalar equality is most useful on note-backed columns. It maps the comparison across the current frame's threads and returns a boolean-style frame.
-
-Frame-to-frame equality compares matched cells. When you need explicit structural matching rules, use the overload that accepts `AlignOptions`.
+    A new frame, same shape as the source, where every feature holds `true`/`false`
+    according to whether that cell equals `other`. A cell compared against a missing
+    value on either side is itself missing (`NULL`) rather than `false`.
 
 ## Examples
 
-Example 1. Broadcast one numeric scalar across the current frame.
+Example 1. Broadcast one numeric scalar across every numeric feature.
 
 ```cpp
 using namespace pluss::table;
 
 auto scores = DataFrame({
-    {"quiz", pluss::make_series({84.0, 90.0, 84.0})},
+    {"quiz",  pluss::make_series({84.0, 90.0, 84.0})},
     {"final", pluss::make_series({84.0, 88.0, 72.0})},
 }, pluss::make_note({"s1", "s2", "s3"}));
 
-auto out = scores.eq(84.0);
+std::cout << scores;
 ```
 
-### Output
+### Output (before)
+
+```text
+==================
+     | quiz  final
+------------------
+s1   | 84    84   
+s2   | 90    88   
+s3   | 84    72   
+------------------
+[3 cs x 2 feat]
+```
+
+```cpp
+auto out = scores.eq(84.0);
+std::cout << out;
+```
+
+### Output (after)
 
 ```text
 ===================
      | quiz   final
 -------------------
-s1   | true   true
+s1   | true   true 
 s2   | false  false
 s3   | true   false
 -------------------
 [3 cs x 2 feat]
 ```
 
-Example 2. Broadcast one text scalar across a note-backed feature.
+Example 2. Broadcast one text value against a `Note`-kind feature.
 
 ```cpp
-using namespace pluss::table;
-
 auto names = DataFrame({
     {"name", pluss::make_note({"Ada", "Bola", "Ada"})},
 }, pluss::make_note({"s1", "s2", "s3"}));
 
-auto out = names.eq("Ada");
+auto out_names = names.eq("Ada");
+std::cout << out_names;
 ```
 
 ### Output
 
 ```text
 ============
-     | name
+     | name 
 ------------
-s1   | true
+s1   | true 
 s2   | false
-s3   | true
+s3   | true 
 ------------
 [3 cs x 1 feat]
 ```
 
-Example 3. Compare two frames cell by cell when they already share the same structure.
+Example 3. Compare two frames cell by cell once they share the same structure.
 
 ```cpp
-using namespace pluss::table;
-
-auto official = DataFrame({
-    {"quiz", pluss::make_series({84.0, 90.0, 84.0})},
-    {"final", pluss::make_series({84.0, 88.0, 72.0})},
-}, pluss::make_note({"s1", "s2", "s3"}));
-
 auto changed = DataFrame({
-    {"quiz", pluss::make_series({84.0, 90.0, 83.0})},
+    {"quiz",  pluss::make_series({84.0, 90.0, 83.0})},
     {"final", pluss::make_series({84.0, 88.0, 72.0})},
 }, pluss::make_note({"s1", "s2", "s3"}));
 
-auto out = official.eq(changed);
+auto out_frames = scores.eq(changed);
+std::cout << out_frames;
 ```
 
 ### Output
@@ -150,50 +147,66 @@ auto out = official.eq(changed);
 ===================
      | quiz   final
 -------------------
-s1   | true   true
-s2   | true   true
-s3   | false  true
+s1   | true   true 
+s2   | true   true 
+s3   | false  true 
 -------------------
 [3 cs x 2 feat]
 ```
 
-Example 4. Use `AlignOptions` when the right-hand frame has a different row and feature order.
+Only `s3`'s `quiz` value differs between `scores` (`84`) and `changed` (`83`) — every
+other cell still compares equal.
+
+Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+against `84`, `final` checked against `88`.
 
 ```cpp
-using namespace pluss::table;
-
-auto official = DataFrame({
-    {"quiz", pluss::make_series({84.0, 90.0, 84.0})},
-    {"final", pluss::make_series({84.0, 88.0, 72.0})},
-}, pluss::make_note({"s1", "s2", "s3"}));
-
-auto reordered = DataFrame({
-    {"final", pluss::make_series({72.0, 84.0})},
-    {"quiz", pluss::make_series({84.0, 84.0})},
-}, pluss::make_note({"s3", "s1"}));
-
-auto out = official.eq(reordered, AlignOptions{.align = AlignBy::Both});
+auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto out_thread = scores.eq(thresholds);
+std::cout << out_thread;
 ```
 
 ### Output
 
 ```text
-==================
-     | quiz  final
-------------------
-s1   | true  true
-s2   | NA    NA
-s3   | true  true
-------------------
+===================
+     | quiz   final
+-------------------
+s1   | true   false
+s2   | false  true 
+s3   | true   false
+-------------------
 [3 cs x 2 feat]
 ```
 
+Each feature is checked against its own threshold: `quiz == 84` gives `true, false,
+true`, while `final == 88` gives `false, true, false` — independent per-column
+comparisons in a single call.
 
+## Notes
+
+- A cell where either operand is missing (`NULL`) produces `NULL` in the result, not
+  `false` — a missing value is never considered equal or unequal to anything, including
+  another missing value.
+- String comparison only applies to `Note`-kind features; attempting it against a
+  numeric feature is not a supported combination.
+- Shares its full overload shape and alignment semantics with [`ne()`](ne.md),
+  [`lt()`](lt.md), [`le()`](le.md), `gt()`, and `ge()` — see those pages for the
+  distinct relations, and [`add()`](add.md) for the fuller explanation of the shared
+  `axis`/`options` parameters.
+
+## See Also
+
+- [`DataFrame::ne`](ne.md): the negated relation.
+- [`DataFrame::equals`](equals.md): a single `bool` verdict for whole-frame identity,
+  instead of a per-cell mask.
+- [`DataFrame::add`](add.md): the arithmetic family this comparison family's overload
+  shape mirrors.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="duplicated.html">
+  <a class="prev-link" href="encode.html">
     <span class="label">Previous</span>
-    <span class="title">duplicated</span>
+    <span class="title">encode</span>
   </a>
   <a class="next-link" href="equals.html">
     <span class="label">Next</span>

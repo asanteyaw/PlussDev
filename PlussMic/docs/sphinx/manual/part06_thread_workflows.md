@@ -133,19 +133,19 @@ units clipped:
 1  7
 2  10
 3  6
-dtype: Series
+ptype: Series
 city lower:
 0  accra
 1  tema
 2  kumasi
 3  tamale
-dtype: Note
+ptype: Note
 city contains 'a':
 0  true
 1  true
 2  true
 3  true
-dtype: Series
+ptype: Series
 ```
 
 `features("units")` returns a numeric Series-backed Thread. `clip(6.0, 10.0)`
@@ -236,46 +236,46 @@ score:
 2  NA
 3  3
 4  2
-dtype: Series
+ptype: Series
 isnull:
 0  false
 1  false
 2  true
 3  false
 4  false
-dtype: Series
+ptype: Series
 fillnull:
 0  4
 1  1
 2  99
 3  3
 4  2
-dtype: Series
+ptype: Series
 dropnull:
 0  4
 1  1
 2  3
 3  2
-dtype: Series
+ptype: Series
 shift(2):
 0  NA
 1  NA
 2  4
 3  1
 4  NA
-dtype: Series
+ptype: Series
 sort asc nulls first:
 0  NA
 1  1
 2  2
 3  3
 4  4
-dtype: Series
+ptype: Series
 take 4,1,0:
 0  2
 1  1
 2  4
-dtype: Series
+ptype: Series
 ```
 
 The `score` payload has five numeric values, but row 2 is masked as missing,
@@ -487,46 +487,46 @@ values + 3:
 2  7
 3  11
 4  19
-dtype: Series
+ptype: Series
 between 2 and 8 inclusive:
 0  false
 1  true
 2  true
 3  true
 4  false
-dtype: Series
+ptype: Series
 rolling mean window 3 min 2:
 0  NA
 1  1.5
 2  2.333333333
 3  4.666666667
 4  9.333333333
-dtype: Series
+ptype: Series
 returns:
 0  nan
 1  1
 2  1
 3  1
 4  1
-dtype: Series
+ptype: Series
 label cast to float64:
 0  10
 1  20
 2  NA
 3  40
-dtype: Series
+ptype: Series
 words replace/lower:
 0  north east
 1  south
 2  north west
 3  central
-dtype: Note
+ptype: Note
 words contains north:
 0  true
 1  false
 2  true
 3  false
-dtype: Series
+ptype: Series
 ```
 
 `values + 3` performs elementwise numeric addition. `btw(2.0, 8.0, true)` marks

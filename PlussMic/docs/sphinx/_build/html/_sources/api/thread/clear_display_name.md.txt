@@ -39,7 +39,7 @@ auto out = named.clear_display_name();
 1  20
 2  30
 3  40
-dtype: Series
+ptype: Series
 ```
 
 

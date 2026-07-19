@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 79eca98416cb -->
+
 # DataFrame::save_csv
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,163 +8,185 @@
 ## Signatures
 
 ```cpp
-DataFrame::save_csv(std::string_view filepath) -> void
+DataFrame::save_csv(std::string_view filepath) const -> void
 
-DataFrame::save_csv(std::string_view filepath, bool add_cases, bool header = true, char sep = ',', std::string null_rep = "", std::optional<std::string> case_label = std::nullopt, std::optional<std::string> float_format = std::nullopt, char quotechar = '"', bool doublequote = true, std::string line_terminator = "\n", char decimal = '.', std::string encoding = "utf-8") -> void
+DataFrame::save_csv(std::string_view filepath,
+                     bool add_cases,
+                     bool header = true,
+                     char sep = ',',
+                     std::string null_rep = "",
+                     std::optional<std::string> case_label = std::nullopt,
+                     std::optional<std::string> float_format = std::nullopt,
+                     char quotechar = '"',
+                     bool doublequote = true,
+                     std::string line_terminator = "\n",
+                     char decimal = '.',
+                     std::string encoding = "utf-8") const -> void
 
-DataFrame::save_csv(std::string_view filepath, const pluss::loader::Config& config) -> void
+DataFrame::save_csv(std::string_view filepath, const pluss::loader::Config& config) const -> void
 
-DataFrame::save_csv(std::string_view filepath, const pluss::loader::WriteCsvOptions& options) -> void
+DataFrame::save_csv(std::string_view filepath, const pluss::loader::WriteCsvOptions& options) const -> void
 
-DataFrame::save_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> void
+DataFrame::save_csv(std::string_view filepath,
+                     std::initializer_list<pluss::loader::ConfigEntry> config_entries) const -> void
 ```
 
 ## What It Does
 
-Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.
+Writes the frame to a delimited text file. The plain `save_csv(filepath)` overload
+covers the common case — comma-separated, header row written, case labels *not* written
+as their own column — while the fully positional overload exposes every formatting knob
+CSV round-tripping tends to need: the delimiter, the missing-value marker, whether the
+case axis should be exported as a real column, numeric formatting, quoting rules, line
+endings, and text encoding.
+
+The single detail worth deciding deliberately every time: **`add_cases`**. When `false`
+(the effective default via the filepath-only overload), the file contains only the
+frame's ordinary features — reloading it with `load_csv()` gives you back a frame with a
+fresh, auto-generated `0..N-1` case index, not the original one. When `true`, the current
+case axis is written out as its own leading column (named via `case_label`, or a default
+name if you leave it unset), so a later `load_csv(..., case_col = <that name>)` can
+restore the exact case labels the frame had when it was saved.
 
 ## Parameters
 
-**filepath**
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+**filepath** (`std::string_view`)
 
-**add_cases**
-    When `true`, the current case axis is exported as its own column so row labels can be reconstructed when the file is loaded again.
+Destination file path.
 
-**header**
-    Controls whether feature names are written to, or expected from, the file header row.
+**add_cases** (`bool`)
 
-**sep**
-    Column separator used for delimited text files such as CSV.
+When `true`, the case axis is exported as its own column so case labels survive a
+save/load round trip. When `false`, only the ordinary features are written.
 
-**null_rep**
-    String written anywhere a null or missing value must be serialized.
+**header** (`bool`, default `true`)
 
-**case_label**
-    Optional column label to use for the exported case axis when `add_cases=true`.
+Whether to write feature names as the first line of the file.
 
-**float_format**
-    Optional numeric formatting string used when floating-point values are written to text output.
+**sep** (`char`, default `','`)
 
-**quotechar**
-    Quote character used when writing delimited text output.
+Field delimiter to write between values.
 
-**doublequote**
-    When `true`, embedded quote characters are escaped by doubling them in CSV-style output.
+**null_rep** (`std::string`, default `""`)
 
-**line_terminator**
-    Line ending written between serialized rows in text-based export.
+The literal text written for a missing value. The default is an empty field; pass
+something like `"NA"` or `"NULL"` if the consuming system needs missing values to be
+visually unambiguous rather than an empty CSV field.
 
-**decimal**
-    Decimal marker used when formatting floating-point output.
+**case_label** (`std::optional<std::string>`, default unset)
 
-**encoding**
-    Text encoding used when reading or writing text-based files.
+Column name to use for the exported case-axis column when `add_cases=true`. Leave unset
+to use a default name.
 
-**config**
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+**float_format** (`std::optional<std::string>`, default unset)
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+A `fmt`-style format string applied to every floating-point value written. Leave unset
+to use the library's default numeric formatting (enough significant digits to round-trip
+typical values without excess trailing digits).
 
-**config_entries**
-    Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.
+**quotechar** (`char`, default `'"'`)
+
+Character used to quote fields that contain the delimiter, the quote character itself,
+or a line break.
+
+**doublequote** (`bool`, default `true`)
+
+When `true`, an embedded quote character inside a field is escaped by doubling it
+(standard CSV quoting); when `false`, a different escaping convention is used instead.
+
+**line_terminator** (`std::string`, default `"\n"`)
+
+Line ending written between rows.
+
+**decimal** (`char`, default `'.'`)
+
+Decimal point character used when formatting floating-point values — set to `','` for
+locales that expect a comma decimal separator (note this then requires a non-comma
+`sep`, such as `';'`, to keep fields unambiguous).
+
+**encoding** (`std::string`, default `"utf-8"`)
+
+Text encoding used when writing the file.
+
+**config** (`const pluss::loader::Config&`) / **config_entries**
+(`std::initializer_list<pluss::loader::ConfigEntry>`) / **options**
+(`const pluss::loader::WriteCsvOptions&`)
+
+Equivalent settings expressed as a reusable config object, inline entries, or a typed
+options struct, for callers who prefer not to spell out every positional parameter at
+the call site.
 
 ## Returns
 
 `void`
-    Performs the side effect and returns no value.
+    Performs the write and returns nothing. Inspect the file on disk (or catch an
+    exception from the loader layer on a write failure) to confirm the result — there is
+    no in-memory object to print afterward.
 
 ## Examples
 
-Example 1. Save the frame using the simplest filepath-only overload.
+Example 1. Save with the simple, filepath-only overload.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"order_id", Thread(pluss::make_series({101, 102, 103}))},
+    {"city",     Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Thread(pluss::make_series({2, 1, 4}))},
 });
 
-df.save_csv("path/to/output.csv");
+orders.save_csv("orders_out.csv");
 ```
 
-### Output
+Resulting `orders_out.csv`:
 
 ```text
-saved: out.*
+order_id,city,units
+101,Accra,2
+102,Tema,1
+103,Kumasi,4
 ```
-Example 2. Save the frame while controlling case-axis export and file-format details explicitly.
+
+No case-axis column is written — reloading this file gives back a frame with a fresh
+`0, 1, 2` index rather than whatever case labels `orders` had before saving (in this
+example, they happen to coincide, since `orders` itself uses the default index).
+
+Example 2. Export the case axis as its own named column.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.save_csv("path/to/output.csv", true, true, ',', "NA", "case_id");
+orders.save_csv("orders_with_case.csv", /*add_cases=*/true, /*header=*/true, ',',
+                 /*null_rep=*/"", /*case_label=*/std::string{"case_id"});
 ```
 
-### Output
+Resulting `orders_with_case.csv`:
 
 ```text
-saved: out.*
-```
-Example 3. Save the frame with an explicit loader-config object.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-pluss::loader::Config config{};
-df.save_csv("path/to/output.csv", config);
+case_id,order_id,city,units
+0,101,Accra,2
+1,102,Tema,1
+2,103,Kumasi,4
 ```
 
-### Output
+Loading this file back with
+`DataFrame::load_csv("orders_with_case.csv", ',', std::nullopt, std::vector<std::string>{}, std::string{"case_id"})`
+restores `case_id` as the case axis instead of leaving it as an ordinary feature.
 
-```text
-saved: out.*
-```
-Example 4. Save the frame with a typed writer-options object.
+## Notes
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+- `save_csv` never mutates the frame it is called on — it is a pure side-effecting write.
+- Missing values are written as `null_rep` (an empty field by default), never as the
+  literal text `"nan"` or `"NULL"` unless you set `null_rep` to that string explicitly.
+- Set `float_format` when downstream tooling expects a fixed number of decimal places
+  (for example `"{:.2f}"` for currency-style output) instead of the default
+  significant-digits formatting.
 
-pluss::loader::WriteCsvOptions options;
-df.save_csv("path/to/output.csv", options);
-```
+## See Also
 
-### Output
-
-```text
-saved: out.*
-```
-Example 5. Save the frame with inline configuration entries.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.save_csv("path/to/output.csv", {"indent", 2});
-```
-
-### Output
-
-```text
-saved: out.*
-```
-
+- [`DataFrame::load_csv`](load_csv.md): the read-side counterpart, including how
+  `case_col` restores a column written with `add_cases=true`.
+- [`DataFrame::save_excel`](save_excel.md) / [`save_json`](save_json.md) /
+  [`save_parquet`](save_parquet.md): writers for other destination formats.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="save_as.html">

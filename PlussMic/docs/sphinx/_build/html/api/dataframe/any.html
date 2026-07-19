@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::any &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::any &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::assign" href="assign.html" />
@@ -36,97 +36,88 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-any">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 27e22f5399be -->
+<section id="dataframe-any">
 <h1>DataFrame::any<a class="headerlink" href="#dataframe-any" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Return whether at least one value is truthy along the requested axis.</p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::any(...)</span></code> is the boolean reduction you use when you want an existence test rather than a count or a sum. The returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> changes shape with the axis you choose: one result per feature when you reduce feature-wise, or one result per case when you reduce row-wise.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reports whether <strong>at least one</strong> value is <code class="docutils literal notranslate"><span class="pre">true</span></code> along the requested axis, over a set
+of <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> features. Every feature it reduces over must already be a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> — <code class="docutils literal notranslate"><span class="pre">any()</span></code> never coerces numbers, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> columns
+into truthiness the way some languages implicitly do. If <code class="docutils literal notranslate"><span class="pre">features</span></code> is left empty, it
+defaults to <em>every</em> column in the frame, so a frame that mixes boolean flags with
+other feature types must pass <code class="docutils literal notranslate"><span class="pre">features</span></code> explicitly to select only the boolean ones.</p>
+<p>The two overloads differ only in whether you supply an axis: the short overload always
+reduces <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> (down each feature’s cases); the longer overload lets you choose
+<code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> instead (across each row’s selected features).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong></p>
-<p>Optional feature subset to reduce.</p>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
+<p>Which <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> features to reduce over. An empty range (the default) selects
+every column in the frame — which only works if every column actually is a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>; otherwise, pass the specific boolean feature names you want.</p>
+<p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>, default <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> when omitted)</p>
+<p>Reduction direction. <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> reduces down each feature’s cases, producing one
+<code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> per feature — “did this flag ever fire across all rows?” <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>
+reduces across each row’s selected features instead, producing one <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> per
+case — “did this row have at least one flag set?”</p>
+<p><strong>skipnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Controls how a missing value affects the reduction’s validity. A missing cell is
+always treated as <code class="docutils literal notranslate"><span class="pre">false</span></code> while computing the <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> value itself — a null can
+never <em>cause</em> an <code class="docutils literal notranslate"><span class="pre">any()</span></code> result to be <code class="docutils literal notranslate"><span class="pre">true</span></code> on its own. What <code class="docutils literal notranslate"><span class="pre">skipnull</span></code> changes is
+whether that computed result is trusted:</p>
 <ul class="simple">
-<li><p>Leave this empty to let PlussMic inspect every compatible feature in the frame.</p></li>
-<li><p>Pass a feature subset when you want the truth test to ignore identifier, label, or unrelated measure columns.</p></li>
-<li><p>The output order follows the exact left-to-right order of the selected features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default): the result is reported as-is, regardless of any nulls present.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: if any cell that participated in a reduction was missing, that reduction’s
+result comes back <code class="docutils literal notranslate"><span class="pre">NULL</span></code> instead of the computed <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> — even though the
+value was still computed the same way underneath.</p></li>
 </ul>
-<p><strong>skipnull</strong></p>
-<p>Missing-value policy for the reduction.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: ignore missing values while evaluating truthiness.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: missing values can influence whether the reduced result is considered valid.</p></li>
-</ul>
-<p>Most users will keep the default <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
-<p><strong>axis</strong></p>
-<p>Reduction axis.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pluss::Axis::Feature</span></code>: reduce down each feature and return one boolean per feature.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pluss::Axis::Case</span></code>: reduce across the selected features inside each row and return one boolean per case.</p></li>
-</ul>
-<p>Choose <code class="docutils literal notranslate"><span class="pre">pluss::Axis::Case</span></code> when you are building row-level policies such as “did this student pass any exam component?”.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Boolean reduction result.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>- With the default feature-wise reduction, the output is one boolean per participating feature.
-- With `pluss::Axis::Case`, the output is one boolean per row across the selected features.
-</pre></div>
-</div>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="all.html"><code>DataFrame::all</code></a>: require every participating value to be truthy instead of only one.</p></li>
-<li><p><a href="../thread/any.html"><code>Thread::any</code></a>: reduce one thread to one boolean truth result.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>Only compatible boolean-like or numeric features participate in the reduction. Text and temporal features are not coerced into truth values for this method.</p>
-<p>When you omit <code class="docutils literal notranslate"><span class="pre">axis</span></code>, PlussMic uses the feature-wise reduction. That is the common shape when you are checking whether each column has at least one truthy observation.</p>
-<p><code class="docutils literal notranslate"><span class="pre">skipnull=true</span></code> ignores missing values during the truth reduction. Use <code class="docutils literal notranslate"><span class="pre">skipnull=false</span></code> when null propagation matters to the policy you are implementing.</p>
+One <code class="docutils literal notranslate"><span class="pre">Bool</span></code> entry per participating feature (<code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code>, the default) or per case
+(<code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>), holding whether at least one value was <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Reduce feature-wise using the default axis.</p>
+<p>Example 1. Check whether each flag ever fires across all cases, the default axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz_ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;exam_ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;bonus_ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;flags&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">checks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;in_stock&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;paid&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">any</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ever_true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">checks</span><span class="p">.</span><span class="n">any</span><span class="p">({</span><span class="s">&quot;in_stock&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;paid&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ever_true</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>quiz_ok  true
- exam_ok  true
-bonus_ok  true
-dtype: Series
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>in_stock  true
+    paid  true
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Reduce row-wise to ask whether each case has at least one truthy flag.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz_ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;exam_ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;bonus_ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;flags&quot;</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">any</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">);</span>
+<p>Both flags are <code class="docutils literal notranslate"><span class="pre">true</span></code> in at least one row, so both come back <code class="docutils literal notranslate"><span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">order_id</span></code> was
+deliberately left out of <code class="docutils literal notranslate"><span class="pre">features</span></code> — passing it would fail, because <code class="docutils literal notranslate"><span class="pre">any()</span></code> requires
+every selected feature to already be a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> to ask, per row, whether <em>either</em> flag is set — a
+common “does this case need any attention?” check.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">needs_attention</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">checks</span><span class="p">.</span><span class="n">any</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Feature</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;in_stock&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;paid&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">needs_attention</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -134,10 +125,66 @@ dtype: Series
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
 1  true
-2  true
-dtype: Series
+2  false
+3  true
+4  false
+5  true
+ptype: Series
 </pre></div>
 </div>
+<p>Cases <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">4</span></code> are <code class="docutils literal notranslate"><span class="pre">false</span></code> because neither <code class="docutils literal notranslate"><span class="pre">in_stock</span></code> nor <code class="docutils literal notranslate"><span class="pre">paid</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> for
+those orders; every other case has at least one of the two flags set.</p>
+<p>Example 3. See how <code class="docutils literal notranslate"><span class="pre">skipnull</span></code> affects a reduction that includes a missing value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">priority_valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;is_priority&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">),</span><span class="w"> </span><span class="n">priority_valid</span><span class="p">)},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">lenient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">any</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lenient</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">any</span><span class="p">({},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">strict</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>is_priority  true
+ptype: Series
+is_priority  NULL
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">is_priority</span></code> has one <code class="docutils literal notranslate"><span class="pre">true</span></code> value (case <code class="docutils literal notranslate"><span class="pre">0</span></code>), so both calls compute the same
+underlying answer. With the default <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">true</span></code>, that <code class="docutils literal notranslate"><span class="pre">true</span></code> is reported as-is.
+With <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code>, the missing cell at case <code class="docutils literal notranslate"><span class="pre">2</span></code> invalidates the whole result —
+even though the answer would have been <code class="docutils literal notranslate"><span class="pre">true</span></code> either way, the presence of <em>any</em>
+missing value in a <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code> reduction is enough to make that feature’s
+result <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">any()</span></code>’s result is labeled by feature name (<code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code>) or by case index
+(<code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>), and prints like a small labeled <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not like a row sliced
+from the source frame.</p></li>
+<li><p>Every selected feature must already be a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> — pass <code class="docutils literal notranslate"><span class="pre">features</span></code>
+explicitly whenever the frame contains non-boolean columns.</p></li>
+<li><p>A missing value never makes an <code class="docutils literal notranslate"><span class="pre">any()</span></code> result <code class="docutils literal notranslate"><span class="pre">true</span></code> by itself; it can only make the
+result <code class="docutils literal notranslate"><span class="pre">NULL</span></code> (under <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code>) or be silently ignored (under
+<code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">true</span></code>).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::all</span></code></span></a>: require every participating value to be <code class="docutils literal notranslate"><span class="pre">true</span></code> instead
+of at least one, sharing the same parameter shape.</p></li>
+<li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::count</span></code></span></a>: counts non-missing cells instead of testing
+truthiness.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="all.html">
     <span class="label">Previous</span>
@@ -150,7 +197,6 @@ dtype: Series
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -159,7 +205,7 @@ dtype: Series
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -179,9 +225,10 @@ dtype: Series
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

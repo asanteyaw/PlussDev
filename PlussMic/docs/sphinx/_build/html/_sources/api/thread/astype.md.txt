@@ -58,7 +58,7 @@ auto out = ints.astype(pluss::ScalarType::Bool);
 0  true
 1  false
 2  true
-dtype: Series
+ptype: Series
 ```
 
 

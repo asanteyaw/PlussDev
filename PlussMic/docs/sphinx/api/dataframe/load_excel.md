@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::load_excel
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,263 +7,188 @@
 ## Signatures
 
 ```cpp
-DataFrame::load_excel(std::string_view filepath) -> DataFrame
-
-DataFrame::load_excel(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
-
-DataFrame::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) -> DataFrame
-
-DataFrame::load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, pluss::RangeView<std::int64_t> sheet_indices, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, pluss::RangeView<std::string_view> sheet_names, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
-
-DataFrame::load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true) -> DataFrame
-
-DataFrame::load_excel(std::string_view filepath, std::nullptr_t arg2, bool header = true) -> pluss::loader::LoadResult
-
-DataFrame::load_excel(std::string_view filepath, std::string_view sheet_name, bool header = true) -> DataFrame
+static DataFrame load_excel(std::string_view filepath) -> DataFrame
+static DataFrame load_excel(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
+static DataFrame load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) -> DataFrame
+static DataFrame load_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
+static DataFrame load_excel(std::string_view filepath, std::string_view sheet_name, bool header = true) -> DataFrame
+static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true) -> DataFrame
+static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true) -> pluss::loader::LoadResult
+static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true) -> pluss::loader::LoadResult
+static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true) -> pluss::loader::LoadResult
 ```
 
 ## What It Does
 
-Loads the object from disk using the corresponding PlussMic loader route.
+`DataFrame`'s static constructor for Excel workbooks — the one loader in this family
+with genuinely different *return types* depending on the overload, because a workbook
+can hold more than one sheet:
+
+- **Single sheet** (no sheet argument, or `sheet_name`/`sheet_index` named explicitly)
+  — returns a plain `DataFrame`, exactly like every other loader.
+- **Several sheets at once** (`nullptr` for "all sheets", or an explicit list of sheet
+  names/indices) — returns a `pluss::loader::LoadResult`, a tagged bundle holding
+  either a single frame or a whole `Workbook` (`std::vector<std::pair<std::string,
+  DataFrame>>`) depending on which overload produced it.
 
 ## Parameters
 
-**filepath**
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+**filepath** (`std::string_view`)
 
-**config**
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+Path to the `.xlsx` workbook to read.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**sheet_name** (`std::string_view`, single-sheet overload)
 
-**sheet_indices**
-    Zero-based worksheet positions to load together from one Excel workbook.
+The worksheet to load, by name. Passing the literal string `"none"` here is rejected
+with a message redirecting you to the `nullptr` (all-sheets) overload instead — it's
+not a valid way to request every sheet.
 
-**header**
-    Controls whether feature names are written to, or expected from, the file header row.
+**sheet_index** (`std::int64_t`, single-sheet overload)
 
-**sheet_names**
-    Worksheet names to load together from one Excel workbook. This overload returns a multi-sheet load result instead of one frame.
+The worksheet to load, by zero-based position.
 
-**config_entries**
-    Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.
+**header** (`bool`, default `true`)
 
-**sheet_index**
-    Zero-based worksheet position inside an Excel workbook.
+Whether the sheet's first row holds feature names.
 
-**arg2**
-    Pass `nullptr` here to request a multi-sheet Excel load result that includes every sheet.
+**sheet_names** (`const std::vector<std::string>&` / `std::initializer_list<std::string_view>`,
+multi-sheet overload)
 
-**sheet_name**
-    Worksheet name to read from or write to inside an Excel workbook.
+Worksheets to load together, by name. An **empty** list is equivalent to passing
+`nullptr` — both load every sheet in the workbook.
+
+**sheet_indices** (`const std::vector<std::int64_t>&` / `std::initializer_list<std::int64_t>`,
+multi-sheet overload)
+
+Worksheets to load together, by zero-based position. Same empty-list-means-all-sheets
+behavior as `sheet_names`.
+
+**config** (`const pluss::loader::Config&`) / **config_entries**
+(`std::initializer_list<pluss::loader::ConfigEntry>`) / **options**
+(`const pluss::loader::ReadExcelOptions&`)
+
+Equivalent settings expressed as a reusable config object, inline entries, or a typed
+options struct — covering sheet selection, header row handling, and multi-row header
+merging, for callers who want to configure everything in one object rather than a
+chain of positional parameters.
 
 ## Returns
 
-`DataFrame`
-    Value produced by this call.
+`DataFrame` (single-sheet overloads)
+    One fully typed frame for the requested sheet.
 
-`pluss::loader::LoadResult`
-    Multi-sheet Excel load bundle containing one frame per requested sheet.
+`pluss::loader::LoadResult` (multi-sheet overloads)
+    A tagged bundle: `.is_frame()`/`.is_workbook()` report which case applies,
+    `.dataframe()` unwraps a single-frame result, `.workbook()` returns the full
+    `std::vector<std::pair<std::string, DataFrame>>` for a multi-sheet result, and
+    `.sheets("Name")` / `.sheet_by_index(i)` reach one sheet directly without
+    unwrapping the whole vector yourself.
 
 ## Examples
 
-Example 1. Load the default worksheet from an Excel workbook.
+Example 1. Load the default (first) sheet as a plain frame.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx");
+using namespace pluss::table;
+
+auto orders = DataFrame::load_excel("workbook.xlsx");
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+==========================
+     | id    city    units
+--------------------------
+0    | 101   Accra   2    
+1    | 102   Tema    1    
+2    | 103   Kumasi  4    
+--------------------------
+[3 cs x 3 feat]
 ```
-Example 2. Load one Excel sheet with a reusable loader configuration object.
+
+Example 2. Load one named sheet explicitly.
 
 ```cpp
-pluss::loader::Config config{{"sheet_name", "Sheet 1"}};
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", config);
+auto regions = DataFrame::load_excel("workbook.xlsx", "Regions");
+std::cout << regions;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+===================
+     | id    region
+-------------------
+0    | 201   North 
+1    | 202   South 
+-------------------
+[2 cs x 2 feat]
 ```
-Example 3. Load one Excel sheet with a typed Excel options object.
+
+Example 3. Load every sheet in the workbook at once.
 
 ```cpp
-pluss::loader::ReadExcelOptions options;
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", options);
+auto all_sheets = DataFrame::load_excel("workbook.xlsx", nullptr);
+std::cout << std::boolalpha << all_sheets.is_workbook() << "\n";
+
+for (const auto& [name, frame] : all_sheets.workbook()) {
+  std::cout << name << " -> [" << frame.ncases() << " cs x " << frame.nfeatures() << " feat]\n";
+}
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 4. Load several worksheets by zero-based sheet index from a standard integer container.
-
-```cpp
-std::vector<std::int64_t> sheets{0, 1};
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
-```
-
-### Output
-
-```text
+true
 Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
+Regions -> [2 cs x 2 feat]
 ```
-Example 5. Load several worksheets by name from a standard string container.
+
+`all_sheets.is_workbook()` is `true` because more than one sheet came back — reach one
+sheet directly with `all_sheets.sheets("Regions")` instead of iterating the whole
+`.workbook()` vector, if you only need one.
+
+Example 4. Load a specific named subset of sheets — an empty list would have the same
+effect as Example 3's `nullptr`.
 
 ```cpp
-std::vector<std::string> sheets{"Sheet 1", "Sheet 2"};
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
+auto subset = DataFrame::load_excel("workbook.xlsx", std::vector<std::string>{"Regions"});
+std::cout << subset.sheets("Regions");
 ```
 
 ### Output
 
 ```text
-Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
-```
-Example 6. Load several worksheets by zero-based sheet index from a lightweight integer view.
-
-```cpp
-std::array<std::int64_t, 2> sheets{0, 1};
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
-```
-
-### Output
-
-```text
-Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
-```
-Example 7. Load several worksheets by name from a lightweight string view.
-
-```cpp
-std::array<std::string_view, 2> sheets{"Sheet 1", "Sheet 2"};
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
+===================
+     | id    region
+-------------------
+0    | 201   North 
+1    | 202   South 
+-------------------
+[2 cs x 2 feat]
 ```
 
-### Output
+## Notes
 
-```text
-Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
-```
-Example 8. Load an Excel workbook while supplying inline configuration entries instead of a named config object.
+- Requesting `sheet_name = "none"` on the single-sheet overload throws, redirecting
+  you to the `nullptr` overload — `"none"` is not itself a magic value meaning "all
+  sheets" for that particular overload.
+- An empty `sheet_names`/`sheet_indices` list on the multi-sheet overloads behaves
+  identically to the explicit `nullptr` (all-sheets) overload.
+- `header` applies uniformly to every sheet loaded in a single call — there is no way
+  to set a different header mode per sheet within one multi-sheet call.
+- Only `load_excel()` (among all the loaders in this family) can return
+  `pluss::loader::LoadResult` — every other loader always returns a plain `DataFrame`.
 
-```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {
-    {"sheet_name", "Sheet 1"},
-});
-```
+## See Also
 
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 9. Load several worksheets by zero-based sheet index using an inline integer list.
-
-```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {0, 1}, true);
-```
-
-### Output
-
-```text
-Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
-```
-Example 10. Load several worksheets by name using an inline list of sheet labels.
-
-```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {"Sheet 1", "Sheet 2"}, true);
-```
-
-### Output
-
-```text
-Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
-```
-Example 11. Load one worksheet by its zero-based sheet index.
-
-```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", 0, true);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 12. Load every worksheet from an Excel workbook into one multi-sheet load bundle.
-
-```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", nullptr, true);
-```
-
-### Output
-
-```text
-Sheet1 -> [3 cs x 3 feat]
-Sheet2 -> [3 cs x 3 feat]
-```
-Example 13. Load one worksheet by its sheet name.
-
-```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet 1", true);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-## Practical Behavior
-
-- `load_excel(...)` loads one external source into typed PlussMic columns.
-- Positional overloads are quick for ad-hoc work, while option/config overloads are better when you want repeatable loader settings.
-- Excel multi-sheet overloads return `pluss::loader::LoadResult` because several frames may be produced at once.
-
-
+- [`DataFrame::save_excel`](save_excel.md): the write-side counterpart.
+- [`DataFrame::load_csv`](load_csv.md): the fuller explanation of the shared
+  type-inference engine underlying every loader in this family.
+- [`DataFrame::load`](load.md): the format-switched entry point — note it can only
+  reach `load_excel()`'s single-frame overload, never the multi-sheet ones.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="load_csv.html">

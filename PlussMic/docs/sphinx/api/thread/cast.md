@@ -61,7 +61,7 @@ auto out = Thread(pluss::make_note({"1.0", "2.0", "3.0"}))
 0  1
 1  2
 2  3
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Use `ThreadCastOptions` when invalid text should become null instead of throwing.
@@ -84,7 +84,7 @@ auto out = Thread(pluss::make_note({"4.0", "oops", "6.0"}))
 0  4
 1  NA
 2  6
-dtype: Series
+ptype: Series
 ```
 
 

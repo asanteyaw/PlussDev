@@ -54,5 +54,5 @@ output = """
 1  x
 2  x
 3  x
-dtype: Note
+ptype: Note
 """

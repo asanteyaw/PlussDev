@@ -33,5 +33,5 @@ output = """
 1  20
 2  30
 3  35
-dtype: Series
+ptype: Series
 """

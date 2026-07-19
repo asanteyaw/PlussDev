@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::unstack &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::unstack &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::update" href="update.html" />
@@ -36,89 +36,161 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-unstack">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-unstack">
 <h1>DataFrame::unstack<a class="headerlink" href="#dataframe-unstack" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">unstack</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">UnstackOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">unstack</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">unstack</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">UnstackOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">unstack</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w">  </span><span class="c1">// shorthand for UnstackOptions{.label = label}</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Pivots one structured case label out of a multi-label case axis so its distinct values become new output columns.</p>
+<p>Pivots one named level out of a <strong>multi-level case-label axis</strong> so its distinct
+values become new output columns — the (partial) inverse of
+<a class="reference internal" href="stack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stack()</span></code></span></a>/<a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></span></a>. <code class="docutils literal notranslate"><span class="pre">unstack()</span></code> requires the
+frame to already have named case-label levels (built via
+<a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set({...},</span> <span class="pre">true)</span></code></span></a>); the level named by <code class="docutils literal notranslate"><span class="pre">options.label</span></code> (or the
+convenience overload’s <code class="docutils literal notranslate"><span class="pre">label</span></code> argument) is the one that gets spread into columns,
+while every <em>other</em> level stays as the row grouping key.</p>
+<p>Whether the new column names get prefixed by the source feature name depends on how
+many ordinary features remain on the frame at the time of the call: with exactly one
+remaining feature, the pivoted columns are named directly after the level’s distinct
+values; with more than one, each gets prefixed as <code class="docutils literal notranslate"><span class="pre">feature</span> <span class="pre">+</span> <span class="pre">options.separator</span> <span class="pre">+</span> <span class="pre">value</span></code> to keep them distinguishable.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>options</strong>
-Unstack behavior bundle.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Supported values:
-- ``caselbl``: Structured case label whose distinct values are pivoted into output columns.
-- ``drop``: When `true`, the remaining case labels stay as case labels instead of also staying as ordinary columns.
-- ``sort``: When `true`, the pivoted column labels are sorted before the new columns are built.
-- ``separator``: Separator inserted between the source value-feature name and the pivoted case-label value when several value features are present.
-</pre></div>
-</div>
-<p><strong>label</strong>
-Label or labels used by this overload.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">UnstackOptions&amp;</span></code>)</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">label</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>): the case-label level to pivot into columns. Must
+already exist on the frame’s case-label axis.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">drop</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>): whether the <em>remaining</em> case-label level(s)
+end up promoted back into the result’s case-label axis (<code class="docutils literal notranslate"><span class="pre">true</span></code>) or kept as
+ordinary columns instead (<code class="docutils literal notranslate"><span class="pre">false</span></code>).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">sort</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>): whether the pivoted column names are sorted
+alphabetically before being added.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">separator</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;_&quot;</span></code>): the separator between a source
+feature name and a pivoted value, used only when more than one feature remains
+(see above).</p></li>
+</ul>
+<p><strong>label</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, convenience overload)</p>
+<p>Shorthand for <code class="docutils literal notranslate"><span class="pre">UnstackOptions{.label</span> <span class="pre">=</span> <span class="pre">label}</span></code> — every other option keeps its
+default (<code class="docutils literal notranslate"><span class="pre">drop</span> <span class="pre">=</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">=</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">separator</span> <span class="pre">=</span> <span class="pre">&quot;_&quot;</span></code>).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with one row per distinct combination of the <em>remaining</em> case-label
+level(s), and one column per distinct value of the pivoted <code class="docutils literal notranslate"><span class="pre">label</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Pivot one named case label into output columns while controlling drop, sort, and separator behavior.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grades</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;term&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">89.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">);</span>
+<p>Example 1. Pivot one level out of a two-level case-label axis, with a single
+remaining feature (no column prefix).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">UnstackOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">drop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_&quot;</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">grades</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;term&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">89.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grades</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>score_mid  score_final
-88.0       91.0
-84.0       89.0
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============================
+     | student  term   score
+----------------------------
+0    | Ada      mid    88   
+1    | Ada      final  91   
+2    | Kojo     mid    84   
+3    | Kojo     final  89   
+----------------------------
+[4 cs x 3 feat]
 </pre></div>
 </div>
-<p>Example 2. Pivot one named case label into output columns while controlling drop, sort, and separator behavior.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grades</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;term&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">89.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">);</span>
-
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">UnstackOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">drop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_&quot;</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">keyed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">},</span><span class="w"> </span><span class="cm">/*drop_features=*/</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">by_term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keyed</span><span class="p">.</span><span class="n">unstack</span><span class="p">(</span><span class="s">&quot;term&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">by_term</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>score_mid  score_final
-88.0       91.0
-84.0       89.0
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | final  mid 
+------------------
+Ada  | 91     88  
+Kojo | 89     84  
+------------------
+[2 cs x 2 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;student&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;term&quot;</span></code> both became case-label levels (dropped as ordinary
+features), leaving <code class="docutils literal notranslate"><span class="pre">&quot;score&quot;</span></code> as the only remaining feature. <code class="docutils literal notranslate"><span class="pre">unstack(&quot;term&quot;)</span></code> pivots
+<code class="docutils literal notranslate"><span class="pre">term</span></code>’s two distinct values (<code class="docutils literal notranslate"><span class="pre">&quot;final&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mid&quot;</span></code>, alphabetically sorted since
+<code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">=</span> <span class="pre">true</span></code> by default) into columns, and — since only one feature (<code class="docutils literal notranslate"><span class="pre">score</span></code>)
+remained — those columns are named directly <code class="docutils literal notranslate"><span class="pre">final</span></code>/<code class="docutils literal notranslate"><span class="pre">mid</span></code>, with no <code class="docutils literal notranslate"><span class="pre">score_</span></code> prefix.
+<code class="docutils literal notranslate"><span class="pre">&quot;student&quot;</span></code>, the one remaining level, is promoted back into the result’s case
+labels (<code class="docutils literal notranslate"><span class="pre">drop</span> <span class="pre">=</span> <span class="pre">true</span></code> by default), rather than kept as a visible column.</p>
+<p>Example 2. With more than one remaining feature, pivoted columns get prefixed by
+feature name.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grades_with_attendance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;term&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">89.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;attendance&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">95.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">98.0</span><span class="p">,</span><span class="w"> </span><span class="mf">92.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">keyed_multi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades_with_attendance</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">wide</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keyed_multi</span><span class="p">.</span><span class="n">unstack</span><span class="p">(</span><span class="s">&quot;term&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">wide</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================================================
+     | score_final  score_mid  attendance_final  attendance_mid
+---------------------------------------------------------------
+Ada  | 91           88         90                95            
+Kojo | 89           84         92                98            
+---------------------------------------------------------------
+[2 cs x 4 feat]
+</pre></div>
+</div>
+<p>Now that <strong>two</strong> features (<code class="docutils literal notranslate"><span class="pre">score</span></code> and <code class="docutils literal notranslate"><span class="pre">attendance</span></code>) remain after promoting
+<code class="docutils literal notranslate"><span class="pre">student</span></code>/<code class="docutils literal notranslate"><span class="pre">term</span></code>, every pivoted column is prefixed with its source feature name and
+<code class="docutils literal notranslate"><span class="pre">options.separator</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;_&quot;</span></code> by default) — <code class="docutils literal notranslate"><span class="pre">score_final</span></code>, <code class="docutils literal notranslate"><span class="pre">score_mid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">attendance_final</span></code>, <code class="docutils literal notranslate"><span class="pre">attendance_mid</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">unstack()</span></code> requires the frame to already have named case-label level(s) — build
+them first with <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set({...},</span> <span class="pre">true)</span></code></span></a>; it throws
+<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::unstack:</span> <span class="pre">current</span> <span class="pre">DataFrame</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">case</span> <span class="pre">labels&quot;</span></code> otherwise.</p></li>
+<li><p>If a <code class="docutils literal notranslate"><span class="pre">(remaining-level</span> <span class="pre">combination,</span> <span class="pre">pivoted</span> <span class="pre">value)</span></code> pair occurs more than once in
+the source, <code class="docutils literal notranslate"><span class="pre">unstack()</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;duplicate</span> <span class="pre">cells</span> <span class="pre">found;</span> <span class="pre">aggregate</span> <span class="pre">before</span> <span class="pre">unstacking&quot;</span></code> rather than silently picking one — aggregate with
+<a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></span></a> first if that’s the actual intent.</p></li>
+<li><p>A remaining-level combination that never occurs for a given pivoted value produces
+a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell there, the same convention <a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></span></a> uses.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="stack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::stack</span></code></span></a>: the general melt this method partially reverses.</p></li>
+<li><p><a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::pivot_table</span></code></span></a>: the aggregating wide-reshape for
+ordinary (non-case-label) features, a related but distinct reshape.</p></li>
+<li><p><a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: building and inspecting the case-label levels
+<code class="docutils literal notranslate"><span class="pre">unstack()</span></code> operates on.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="unsqueeze.html">
     <span class="label">Previous</span>
@@ -131,7 +203,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -140,7 +211,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -160,9 +231,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

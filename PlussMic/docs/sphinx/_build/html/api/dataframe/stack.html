@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::stack &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::stack &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::std" href="std.html" />
@@ -36,51 +36,141 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-stack">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-stack">
 <h1>DataFrame::stack<a class="headerlink" href="#dataframe-stack" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">stack</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">feature_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;feature&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">value_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">stack</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">feature_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;feature&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">value_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Pivots the current feature axis into long form by creating feature/value columns.</p>
+<p>Melts <strong>every</strong> feature on the frame into long format in one call: each original
+case gets one output row per original feature, with a new <code class="docutils literal notranslate"><span class="pre">feature_name</span></code> column
+recording which feature that row came from and a new <code class="docutils literal notranslate"><span class="pre">value_name</span></code> column holding
+the corresponding stacked value. The original case index (or, if the frame already
+has named case labels, every one of those levels) and the new <code class="docutils literal notranslate"><span class="pre">feature_name</span></code> column
+together become the result’s case-label axis — <code class="docutils literal notranslate"><span class="pre">stack()</span></code> promotes them there rather
+than leaving them as ordinary columns, which is what distinguishes it from
+<a class="reference internal" href="lengthen.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengthen()</span></code></span></a> (a more configurable melt that keeps its <code class="docutils literal notranslate"><span class="pre">id_features</span></code>
+as plain columns and lets you choose a <code class="docutils literal notranslate"><span class="pre">value_features</span></code> subset instead of always
+stacking everything).</p>
+<p>Because every feature’s values get concatenated together into one <code class="docutils literal notranslate"><span class="pre">value_name</span></code>
+column, every feature on the frame must share the same <code class="docutils literal notranslate"><span class="pre">Thread</span></code> kind (and, for
+numeric features, the same concrete dtype) — the same constraint
+<a class="reference internal" href="lengthen.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengthen()</span></code></span></a> places on its <code class="docutils literal notranslate"><span class="pre">value_features</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>feature_name</strong>
-Name of the target feature to read, rewrite, sort by, or promote to cases.</p>
-<p><strong>value_name</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+<p><strong>feature_name</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;feature&quot;</span></code>)</p>
+<p>Name of the new column (well, case-label level) recording each output row’s source
+feature name.</p>
+<p><strong>value_name</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>)</p>
+<p>Name of the new column holding each output row’s stacked value. Must differ from
+<code class="docutils literal notranslate"><span class="pre">feature_name</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with <code class="docutils literal notranslate"><span class="pre">ncases()</span> <span class="pre">*</span> <span class="pre">nfeatures()</span></code> rows and a single remaining feature,
+<code class="docutils literal notranslate"><span class="pre">value_name</span></code>. The original case index and <code class="docutils literal notranslate"><span class="pre">feature_name</span></code> are promoted into the
+result’s (multi-level) case-label axis rather than kept as ordinary columns.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
+<p>Example 1. Stack a small two-feature frame, then inspect the tidy long-format
+result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">stack</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">monthly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;jan_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;feb_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">250.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">monthly</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================
+     | jan_sales  feb_sales
+---------------------------
+0    | 100        150      
+1    | 200        250      
+---------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stacked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">monthly</span><span class="p">.</span><span class="n">stack</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stacked</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">names</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// case-label levels: &quot;case&quot;, &quot;feature&quot;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stacked</span><span class="p">.</span><span class="n">features</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">        </span><span class="c1">// remaining ordinary feature: &quot;value&quot;</span>
+</pre></div>
+</div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
+1
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">stacked</span></code> no longer has <code class="docutils literal notranslate"><span class="pre">jan_sales</span></code>/<code class="docutils literal notranslate"><span class="pre">feb_sales</span></code> as its features at all — it has a
+single feature, <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>, with the original row position (<code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">stack()</span></code>’s
+default level name for a frame with no pre-existing case labels) and the source
+feature name (<code class="docutils literal notranslate"><span class="pre">&quot;feature&quot;</span></code>) both promoted into its case-label axis instead.</p>
+<p>Example 2. Pull the promoted levels back out as ordinary columns to see the tidy
+result plainly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ResetLabelOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;case&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;feature&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">plain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stacked</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">plain</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+     | value  case  feature  
+-----------------------------
+0    | 100    0     jan_sales
+1    | 200    1     jan_sales
+2    | 150    0     feb_sales
+3    | 250    1     feb_sales
+-----------------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+<p>Four output rows — <code class="docutils literal notranslate"><span class="pre">2</span></code> original cases times <code class="docutils literal notranslate"><span class="pre">2</span></code> original features. Row <code class="docutils literal notranslate"><span class="pre">0</span></code> is
+<code class="docutils literal notranslate"><span class="pre">monthly</span></code>’s case <code class="docutils literal notranslate"><span class="pre">0</span></code>, feature <code class="docutils literal notranslate"><span class="pre">jan_sales</span></code>, value <code class="docutils literal notranslate"><span class="pre">100</span></code>; row <code class="docutils literal notranslate"><span class="pre">2</span></code> is case <code class="docutils literal notranslate"><span class="pre">0</span></code>, feature
+<code class="docutils literal notranslate"><span class="pre">feb_sales</span></code>, value <code class="docutils literal notranslate"><span class="pre">150</span></code>; and so on. <code class="docutils literal notranslate"><span class="pre">stack()</span></code> concatenates feature-by-feature (every
+<code class="docutils literal notranslate"><span class="pre">jan_sales</span></code> row before any <code class="docutils literal notranslate"><span class="pre">feb_sales</span></code> row), not case-by-case.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every feature on the source frame must share the same <code class="docutils literal notranslate"><span class="pre">Thread</span></code> kind (and, for
+numeric features, the same concrete scalar dtype and platform), since their values
+are concatenated into one <code class="docutils literal notranslate"><span class="pre">value_name</span></code> column.</p></li>
+<li><p>If the source frame already has named case labels, every one of those levels is
+carried into the result’s case-label axis alongside <code class="docutils literal notranslate"><span class="pre">feature_name</span></code> — not just a
+single default position column.</p></li>
+<li><p>Reach for <a class="reference internal" href="lengthen.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengthen()</span></code></span></a> instead when you want some columns to stay
+as identifying features rather than being folded into the case-label axis, or when
+only a subset of features should be stacked.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lengthen.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::lengthen</span></code></span></a>: the more configurable melt, keeping
+<code class="docutils literal notranslate"><span class="pre">id_features</span></code> as plain columns and letting you choose which features to stack.</p></li>
+<li><p><a class="reference internal" href="unstack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unstack</span></code></span></a>: the (partial) inverse, spreading one
+case-label level back out into columns.</p></li>
+<li><p><a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::pivot_table</span></code></span></a>: reshapes long data back into a wide
+summary, the complementary direction to this melt.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sql.html">
     <span class="label">Previous</span>
@@ -93,7 +183,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -102,7 +191,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -122,9 +211,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

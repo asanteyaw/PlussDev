@@ -50,7 +50,7 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"})).distin
 0  Accra
 1  Tema
 2  Kumasi
-dtype: Note
+ptype: Note
 ```
 
 

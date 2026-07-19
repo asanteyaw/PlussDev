@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::sample &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::sample &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::save_as" href="save_as.html" />
@@ -36,172 +36,200 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-sample">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 43171cfdf167 -->
+<section id="dataframe-sample">
 <h1>DataFrame::sample<a class="headerlink" href="#dataframe-sample" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">Float</span><span class="w"> </span><span class="n">frac</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Float</span><span class="o">&gt;</span><span class="w"> </span><span class="k">requires</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">floating_point</span><span class="o">&lt;</span><span class="n">Float</span><span class="o">&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">random_state</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">Float</span><span class="w"> </span><span class="n">frac</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Float</span><span class="o">&gt;</span><span class="w"> </span><span class="k">requires</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">floating_point</span><span class="o">&lt;</span><span class="n">Float</span><span class="o">&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">Float</span><span class="w"> </span><span class="n">frac</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">random_state</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Float</span><span class="o">&gt;</span><span class="w"> </span><span class="k">requires</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">floating_point</span><span class="o">&lt;</span><span class="n">Float</span><span class="o">&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">random_state</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">floating_point</span><span class="w"> </span><span class="n">Float</span><span class="o">&gt;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">Float</span><span class="w"> </span><span class="n">frac</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">floating_point</span><span class="w"> </span><span class="n">Float</span><span class="o">&gt;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">Float</span><span class="w"> </span><span class="n">frac</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">floating_point</span><span class="w"> </span><span class="n">Float</span><span class="o">&gt;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="n">Float</span><span class="w"> </span><span class="n">frac</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">random_state</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">replace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a random sample of rows.</p>
+<p>Draws a random subset of cases (or, with <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>, a random subset of
+features) from the frame — either a fixed count (<code class="docutils literal notranslate"><span class="pre">n</span></code>) or a proportion of the axis
+(<code class="docutils literal notranslate"><span class="pre">frac</span></code>). Internally this is built on <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a>: a set of positions is drawn
+by a <code class="docutils literal notranslate"><span class="pre">std::mt19937_64</span></code> random-number engine, then those positions are taken in one
+call, so the same shape guarantees <code class="docutils literal notranslate"><span class="pre">take()</span></code> makes (original case labels preserved,
+feature order preserved) apply here too.</p>
+<p>A note on reproducibility: passing <code class="docutils literal notranslate"><span class="pre">random_state</span></code> seeds the engine so the <strong>same
+seed on the same build (same compiler and standard library) reproduces the same
+draw</strong>. The draw itself, however, is produced by <code class="docutils literal notranslate"><span class="pre">std::shuffle</span></code> / a uniform integer
+distribution from the C++ standard library, and the exact sequence those algorithms
+produce for a given seed is not fixed by the C++ standard — only the underlying
+<code class="docutils literal notranslate"><span class="pre">std::mt19937_64</span></code> engine is fully specified. In practice this means a <code class="docutils literal notranslate"><span class="pre">random_state</span></code>
+reproduces results reliably across runs on the <em>same</em> platform and toolchain, but the
+specific rows two different compilers or standard library implementations draw for
+the same seed are not guaranteed to match each other.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>frac</strong>
-Fraction of the selected axis to draw. Values above <code class="docutils literal notranslate"><span class="pre">1.0</span></code> require <code class="docutils literal notranslate"><span class="pre">replace=true</span></code>.</p>
-<p><strong>replace</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the same row may be drawn more than once. Feature sampling currently requires <code class="docutils literal notranslate"><span class="pre">replace=false</span></code>.</p>
-<p><strong>axis</strong>
-Sampling axis. Use <code class="docutils literal notranslate"><span class="pre">0</span></code> for rows and <code class="docutils literal notranslate"><span class="pre">1</span></code> for features.</p>
-<p><strong>random_state</strong>
-Deterministic seed for reproducible sampling and shuffling.</p>
-<p><strong>n</strong>
-Number of rows or features to draw from the selected axis.</p>
+<p><strong>n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
+<p>The exact number of items to draw from the selected axis.</p>
+<p><strong>frac</strong> (floating-point)</p>
+<p>The proportion of the selected axis to draw, computed as
+<code class="docutils literal notranslate"><span class="pre">round(frac</span> <span class="pre">*</span> <span class="pre">axis_size)</span></code>. Values greater than <code class="docutils literal notranslate"><span class="pre">1.0</span></code> require <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">true</span></code> (there
+aren’t enough distinct rows to draw more than the total without repeating some).</p>
+<p><strong>replace</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>Whether the same position can be drawn more than once:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> (the default): every drawn position is distinct — equivalent to shuffling
+the axis and taking the first <code class="docutils literal notranslate"><span class="pre">n</span></code> (or <code class="docutils literal notranslate"><span class="pre">frac</span></code>-implied count).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: positions are drawn independently with replacement, so the same row (or
+feature) can appear more than once in the result. Feature sampling
+(<code class="docutils literal notranslate"><span class="pre">axis</span> <span class="pre">=</span> <span class="pre">Axis::Feature</span></code>) does not support <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">true</span></code> — that combination is a
+validation error.</p></li>
+</ul>
+<p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>, default <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code>)</p>
+<p>Which axis to sample from. <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> (the default) draws rows. <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>
+draws columns instead, returning a frame with a random subset (or resampling, subject
+to the <code class="docutils literal notranslate"><span class="pre">replace</span></code> restriction above) of the original features, each with all of its
+data intact.</p>
+<p><strong>random_state</strong> (<code class="docutils literal notranslate"><span class="pre">std::uint64_t</span></code>)</p>
+<p>An explicit seed for the underlying random engine. Omit it (use one of the shorter
+overloads) to seed from <code class="docutils literal notranslate"><span class="pre">std::random_device</span></code> instead, which draws fresh entropy each
+call and is never reproducible run-to-run.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame containing the drawn subset, with the source frame’s feature order,
+dtypes, and original case labels preserved for whichever rows/features were
+selected.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Sample a fraction of the selected axis without an explicit random seed.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. Draw a fixed number of rows without a seed (result varies each run).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mf">0.67</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">three_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">three_rows</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
+<section id="output-one-possible-draw">
+<h3>Output (one possible draw)<a class="headerlink" href="#output-one-possible-draw" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================
+     | order_id  units
+----------------------
+1    | 102       5    
+3    | 104       3    
+5    | 106       2    
+----------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 2. Sample a fraction of the selected axis without an explicit random seed.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mf">0.67</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<p>The result always has exactly <code class="docutils literal notranslate"><span class="pre">3</span></code> rows, each a distinct case from <code class="docutils literal notranslate"><span class="pre">orders</span></code> (since
+<code class="docutils literal notranslate"><span class="pre">replace</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code>), always rendered in the same box-table format any
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> prints in. <em>Which</em> three rows, and in what order, is genuinely random
+without a <code class="docutils literal notranslate"><span class="pre">random_state</span></code> — the table above is one possible draw, not a fixed result;
+rerunning this exact code will draw a different set of rows almost every time, but it
+will always be three distinct case labels pulled from <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5}</span></code> with their
+original <code class="docutils literal notranslate"><span class="pre">order_id</span></code>/<code class="docutils literal notranslate"><span class="pre">units</span></code> values intact.</p>
+<p>Example 2. Draw with replacement, allowing more rows than the frame has.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_repeats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_repeats</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
+<h3>Output (one possible draw)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================
+     | order_id  units
+----------------------
+3    | 104       3    
+0    | 101       2    
+5    | 106       2    
+5    | 106       2    
+1    | 102       5    
+2    | 103       1    
+0    | 101       2    
+4    | 105       4    
+3    | 104       3    
+1    | 102       5    
+----------------------
+[10 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 3. Sample a fraction of the selected axis with an explicit random seed.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p><code class="docutils literal notranslate"><span class="pre">orders</span></code> only has <code class="docutils literal notranslate"><span class="pre">6</span></code> rows, but <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">true</span></code> allows drawing more than that — case
+<code class="docutils literal notranslate"><span class="pre">5</span></code> and case <code class="docutils literal notranslate"><span class="pre">0</span></code> each happen to appear twice above, and case <code class="docutils literal notranslate"><span class="pre">3</span></code> and case <code class="docutils literal notranslate"><span class="pre">1</span></code> also
+repeat, since with-replacement sampling can draw the same row more than once. The
+specific repeats and their order are random and will differ run to run; what is fixed
+is the shape (<code class="docutils literal notranslate"><span class="pre">10</span></code> rows) and that every value in the output traces back to one of
+<code class="docutils literal notranslate"><span class="pre">orders</span></code>’s original <code class="docutils literal notranslate"><span class="pre">6</span></code> rows. Without <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">true</span></code>, requesting more rows than
+exist is not possible for <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> sampling.</p>
+<p>Example 3. Draw a proportion of the features instead of the cases.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">orders_wide</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.08</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mf">0.67</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">half_the_features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders_wide</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Feature</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">half_the_features</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
+<h3>Output (one possible draw)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================
+     | order_id  unit_price
+---------------------------
+0    | 101       1200      
+1    | 102       45.5      
+2    | 103       1150      
+---------------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 4. Sample rows with the default settings.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
-</pre></div>
-</div>
-<p>Example 5. Sample rows with the default settings.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
-</pre></div>
-</div>
-<p>Example 6. Sample rows or features with an explicit random seed.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rows.head():
-id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
-
-cols.head():
-sales  city
-100.0  Accra
-120.0  Tema
-90.0   Kumasi
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">frac</span> <span class="pre">=</span> <span class="pre">0.5</span></code> over <code class="docutils literal notranslate"><span class="pre">4</span></code> features draws <code class="docutils literal notranslate"><span class="pre">2</span></code> of them — here, <code class="docutils literal notranslate"><span class="pre">order_id</span></code> and <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>
+happened to be chosen, but <code class="docutils literal notranslate"><span class="pre">units</span></code> and <code class="docutils literal notranslate"><span class="pre">discount</span></code> are equally likely candidates on
+another run. What is fixed is the shape: the result always keeps all <code class="docutils literal notranslate"><span class="pre">3</span></code> cases for
+whichever features were chosen, since sampling <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> only decides which
+<em>columns</em> participate, not which rows.</p>
 </section>
 </section>
-<section id="practical-behavior">
-<h2>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h2>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sample(n,</span> <span class="pre">...)</span></code> draws a fixed number of rows by default, or features when <code class="docutils literal notranslate"><span class="pre">axis=1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sample(frac,</span> <span class="pre">...)</span></code> draws a proportion of the selected axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">replace=true</span></code> enables sampling with replacement. For <code class="docutils literal notranslate"><span class="pre">frac</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>, replacement is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample()</span></code> is built on <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a>; a drawn position’s original case label
+is preserved in the result, exactly as <code class="docutils literal notranslate"><span class="pre">take()</span></code> would preserve it.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">random_state</span></code> reproduces the same draw on the same compiler/standard-library
+build, but is not guaranteed to reproduce identically across different platforms —
+don’t rely on a specific seed producing byte-identical results in, say, CI running a
+different toolchain than a developer’s laptop.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">true</span></code> is not supported for <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> sampling; every feature draw
+is always without replacement.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">frac</span></code> values above <code class="docutils literal notranslate"><span class="pre">1.0</span></code> require <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">true</span></code>, since there is no way to draw
+more distinct items than the axis contains.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::take</span></code></span></a>: the deterministic positional-selection primitive this
+method draws random positions for.</p></li>
+<li><p><a class="reference internal" href="shuffle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::shuffle</span></code></span></a> / <a class="reference internal" href="reshuffle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::reshuffle</span></code></span></a>: a full
+random reordering of the frame instead of a subset.</p></li>
+<li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::head</span></code></span></a> / <a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tail</span></code></span></a>: deterministic
+positional alternatives when randomness isn’t what you need.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rxor.html">
@@ -223,7 +251,7 @@ sales  city
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -243,9 +271,10 @@ sales  city
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

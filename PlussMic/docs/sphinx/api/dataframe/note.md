@@ -1,75 +1,132 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::note
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-DataFrame::note(pluss::RangeView<std::string_view> features = {}) -> DataFrameNoteAccessor
-
-DataFrame::note(std::string_view feature) -> DataFrameNoteAccessor
+DataFrame::note() const -> DataFrameNoteAccessor
 ```
 
 ## What It Does
 
-Returns one named feature as a note-backed thread.
+Enters the dedicated text-operations accessor for the current frame — string
+stripping, casing, length, pattern matching, splitting, padding, and more, one method
+per operation. `note()` itself does no work beyond validating the frame and
+constructing the accessor: **every feature currently on the frame must already be
+`Note`-kind**, or it throws immediately. In practice this means selecting the text
+feature(s) you want to operate on first, then calling `.note()`:
+`df.features({"city"}).note().lower()`, not `df.note()` directly on a frame that
+still has numeric or other non-text columns.
+
+This page previews the accessor's most common entry points. Each accessor method gets
+its own dedicated reference page under the `DataFrameNoteAccessor` API reference.
 
 ## Parameters
 
-**features**
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-**feature**
-    Name of the source feature used by the operation.
+`note()` itself takes no parameters. See each accessor method's own signature for what
+it accepts.
 
 ## Returns
 
 `DataFrameNoteAccessor`
-    Value produced by this call.
+    A lightweight accessor bound to the current (all-`Note`) frame. Nearly every
+    method on it returns a new `DataFrame` with the text operation applied; the
+    source frame is never mutated.
 
 ## Examples
 
-Example 1. Work with a selected feature subset.
+Example 1. Lowercase a text feature — after selecting it first.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.note();
+auto orders = DataFrame({
+    {"id",   Thread(pluss::make_series({1, 2, 3}))},
+    {"city", Thread(pluss::make_note({"Accra", "TEMA", "Kumasi"}))},
+});
+std::cout << orders;
+```
+
+### Output (before)
+
+```text
+===================
+     | id    city  
+-------------------
+0    | 1     Accra 
+1    | 2     TEMA  
+2    | 3     Kumasi
+-------------------
+[3 cs x 2 feat]
+```
+
+```cpp
+auto lowered = orders.features({"city"}).note().lower();
+std::cout << lowered;
+```
+
+### Output (after)
+
+```text
+=============
+     | city  
+-------------
+0    | accra 
+1    | tema  
+2    | kumasi
+-------------
+[3 cs x 1 feat]
+```
+
+`orders.note()` directly would have thrown, since `orders` still has a `Series`
+feature (`id`) at the time of the call — `.features({"city"})` narrows the frame down
+to just the `Note` column first, which is what `.note()` requires.
+
+Example 2. Compute each string's length.
+
+```cpp
+auto lengths = orders.features({"city"}).note().length();
+std::cout << lengths;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 2. Work with one named feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.note();
+===========
+     | city
+-----------
+0    | 5   
+1    | 4   
+2    | 6   
+-----------
+[3 cs x 1 feat]
 ```
 
-### Output
+`.length()` replaces the text with its character count as an `Int64` `Series` —
+`"Accra"` -> `5`, `"TEMA"` -> `4`, `"Kumasi"` -> `6`.
 
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
+## Notes
 
+- Every feature on the frame `.note()` is called on must already be `Note`-kind;
+  select the text feature(s) first with [`features()`](features.md) or
+  [`feataxis().note()`](feataxis.md) if the source frame has other kinds mixed in.
+- The accessor's methods each apply to every feature on the (already-`Note`-only)
+  frame, returning a new frame with the transformation applied — some methods (like
+  `.length()`) change the resulting kind from `Note` to `Series`.
+- `note()` on a frame with no features at all, or a frame containing a non-`Note`
+  feature, throws before constructing the accessor.
+
+## See Also
+
+- [`DataFrame::features`](features.md): the usual way to narrow a frame down to just
+  its text features before calling `.note()`.
+- [`DataFrame::feataxis`](feataxis.md): `feataxis().note()` selects every `Note`
+  feature on a frame directly, another way to arrive at an all-text frame.
+- [`DataFrame::tl`](tl.md): the equivalent dedicated accessor for `Timeline` /
+  `TimeIndex` features, instead of `Note` text.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nfeatures.html">

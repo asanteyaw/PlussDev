@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Registry API Reference &#8212; PlussMic User Docs  documentation</title>
+    <title>Registry API Reference &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=59a8c7d2" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="_static/layout.js?v=5a44cbdd"></script>
+    <script src="_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Aisle API Reference" href="aisle_api_reference.html" />
@@ -3941,6 +3941,56 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
     <span class="label">Previous</span>
     <span class="title">set_slots</span>
   </a>
+  <a class="next-link" href="#shape">
+    <span class="label">Next</span>
+    <span class="title">shape</span>
+  </a>
+</div>
+</section>
+</section>
+</section>
+<section id="shape">
+<h3><code class="docutils literal notranslate"><span class="pre">shape</span></code><a class="headerlink" href="#shape" title="Link to this heading">¶</a></h3>
+<section id="id404">
+<h4>Signature<a class="headerlink" href="#id404" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">shape</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="id405">
+<h4>What It Does<a class="headerlink" href="#id405" title="Link to this heading">¶</a></h4>
+<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+</section>
+<section id="id406">
+<h4>Parameters<a class="headerlink" href="#id406" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id407">
+<h4>Returns<a class="headerlink" href="#id407" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::pair&lt;std::int64_t,</span> <span class="pre">std::int64_t&gt;</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id408">
+<h4>Examples<a class="headerlink" href="#id408" title="Link to this heading">¶</a></h4>
+<p>Example 1. Call the simplest overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">shape</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="id409">
+<h5>Output<a class="headerlink" href="#id409" title="Link to this heading">¶</a></h5>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_slots_">
+    <span class="label">Previous</span>
+    <span class="title">set_slots_</span>
+  </a>
   <a class="next-link" href="#show">
     <span class="label">Next</span>
     <span class="title">show</span>
@@ -3951,28 +4001,28 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="show">
 <h3><code class="docutils literal notranslate"><span class="pre">show</span></code><a class="headerlink" href="#show" title="Link to this heading">¶</a></h3>
-<section id="id404">
-<h4>Signature<a class="headerlink" href="#id404" title="Link to this heading">¶</a></h4>
+<section id="id410">
+<h4>Signature<a class="headerlink" href="#id410" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
 </pre></div>
 </div>
 </section>
-<section id="id405">
-<h4>What It Does<a class="headerlink" href="#id405" title="Link to this heading">¶</a></h4>
+<section id="id411">
+<h4>What It Does<a class="headerlink" href="#id411" title="Link to this heading">¶</a></h4>
 <p>This renders a human-readable view for inspection instead of creating a new analytic object.</p>
 </section>
-<section id="id406">
-<h4>Parameters<a class="headerlink" href="#id406" title="Link to this heading">¶</a></h4>
+<section id="id412">
+<h4>Parameters<a class="headerlink" href="#id412" title="Link to this heading">¶</a></h4>
 <p><strong>os</strong>
 Destination output stream used instead of the default display or print target.</p>
 </section>
-<section id="id407">
-<h4>Returns<a class="headerlink" href="#id407" title="Link to this heading">¶</a></h4>
+<section id="id413">
+<h4>Returns<a class="headerlink" href="#id413" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">void</span></code>
 Performs the side effect and returns no value.</p>
 </section>
-<section id="id408">
-<h4>Examples<a class="headerlink" href="#id408" title="Link to this heading">¶</a></h4>
+<section id="id414">
+<h4>Examples<a class="headerlink" href="#id414" title="Link to this heading">¶</a></h4>
 <p>Example 1. Write the output to a caller-provided stream.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -3982,17 +4032,67 @@ Performs the side effect and returns no value.</p>
 <span class="n">rg</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id409">
-<h5>Output<a class="headerlink" href="#id409" title="Link to this heading">¶</a></h5>
+<section id="id415">
+<h5>Output<a class="headerlink" href="#id415" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_slots_">
+  <a class="prev-link" href="#shape">
     <span class="label">Previous</span>
-    <span class="title">set_slots_</span>
+    <span class="title">shape</span>
+  </a>
+  <a class="next-link" href="#size">
+    <span class="label">Next</span>
+    <span class="title">size</span>
+  </a>
+</div>
+</section>
+</section>
+</section>
+<section id="size">
+<h3><code class="docutils literal notranslate"><span class="pre">size</span></code><a class="headerlink" href="#size" title="Link to this heading">¶</a></h3>
+<section id="id416">
+<h4>Signature<a class="headerlink" href="#id416" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
+</pre></div>
+</div>
+</section>
+<section id="id417">
+<h4>What It Does<a class="headerlink" href="#id417" title="Link to this heading">¶</a></h4>
+<p>Returns a size/count summary for the current object without changing it.</p>
+</section>
+<section id="id418">
+<h4>Parameters<a class="headerlink" href="#id418" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id419">
+<h4>Returns<a class="headerlink" href="#id419" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+Integer count, size, or positional result.</p>
+</section>
+<section id="id420">
+<h4>Examples<a class="headerlink" href="#id420" title="Link to this heading">¶</a></h4>
+<p>Example 1. Inspect the <code class="docutils literal notranslate"><span class="pre">size</span></code> property of the current object.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="id421">
+<h5>Output<a class="headerlink" href="#id421" title="Link to this heading">¶</a></h5>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
   </a>
   <a class="next-link" href="#slice">
     <span class="label">Next</span>
@@ -4004,30 +4104,30 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="slice">
 <h3><code class="docutils literal notranslate"><span class="pre">slice</span></code><a class="headerlink" href="#slice" title="Link to this heading">¶</a></h3>
-<section id="id410">
-<h4>Signature<a class="headerlink" href="#id410" title="Link to this heading">¶</a></h4>
+<section id="id422">
+<h4>Signature<a class="headerlink" href="#id422" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
 </pre></div>
 </div>
 </section>
-<section id="id411">
-<h4>What It Does<a class="headerlink" href="#id411" title="Link to this heading">¶</a></h4>
+<section id="id423">
+<h4>What It Does<a class="headerlink" href="#id423" title="Link to this heading">¶</a></h4>
 <p>Returns a contiguous positional slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> across every slot.</p>
 </section>
-<section id="id412">
-<h4>Parameters<a class="headerlink" href="#id412" title="Link to this heading">¶</a></h4>
+<section id="id424">
+<h4>Parameters<a class="headerlink" href="#id424" title="Link to this heading">¶</a></h4>
 <p><strong>start</strong>
 Inclusive starting position of the slice.</p>
 <p><strong>stop</strong>
 Exclusive ending position of the slice.</p>
 </section>
-<section id="id413">
-<h4>Returns<a class="headerlink" href="#id413" title="Link to this heading">¶</a></h4>
+<section id="id425">
+<h4>Returns<a class="headerlink" href="#id425" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id414">
-<h4>Examples<a class="headerlink" href="#id414" title="Link to this heading">¶</a></h4>
+<section id="id426">
+<h4>Examples<a class="headerlink" href="#id426" title="Link to this heading">¶</a></h4>
 <p>Example 1. Inspect one contiguous positional slice from the current object.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4037,8 +4137,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id415">
-<h5>Output<a class="headerlink" href="#id415" title="Link to this heading">¶</a></h5>
+<section id="id427">
+<h5>Output<a class="headerlink" href="#id427" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4049,9 +4149,9 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#show">
+  <a class="prev-link" href="#size">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">size</span>
   </a>
   <a class="next-link" href="#slot">
     <span class="label">Next</span>
@@ -4063,28 +4163,28 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="slot">
 <h3><code class="docutils literal notranslate"><span class="pre">slot</span></code><a class="headerlink" href="#slot" title="Link to this heading">¶</a></h3>
-<section id="id416">
-<h4>Signature<a class="headerlink" href="#id416" title="Link to this heading">¶</a></h4>
+<section id="id428">
+<h4>Signature<a class="headerlink" href="#id428" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">slot</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slot</span>
 </pre></div>
 </div>
 </section>
-<section id="id417">
-<h4>What It Does<a class="headerlink" href="#id417" title="Link to this heading">¶</a></h4>
+<section id="id429">
+<h4>What It Does<a class="headerlink" href="#id429" title="Link to this heading">¶</a></h4>
 <p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
-<section id="id418">
-<h4>Parameters<a class="headerlink" href="#id418" title="Link to this heading">¶</a></h4>
+<section id="id430">
+<h4>Parameters<a class="headerlink" href="#id430" title="Link to this heading">¶</a></h4>
 <p><strong>key</strong>
 Name of the target slot or stream.</p>
 </section>
-<section id="id419">
-<h4>Returns<a class="headerlink" href="#id419" title="Link to this heading">¶</a></h4>
+<section id="id431">
+<h4>Returns<a class="headerlink" href="#id431" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id420">
-<h4>Examples<a class="headerlink" href="#id420" title="Link to this heading">¶</a></h4>
+<section id="id432">
+<h4>Examples<a class="headerlink" href="#id432" title="Link to this heading">¶</a></h4>
 <p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4094,8 +4194,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">slot</span><span class="p">(</span><span class="s">&quot;ids&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id421">
-<h5>Output<a class="headerlink" href="#id421" title="Link to this heading">¶</a></h5>
+<section id="id433">
+<h5>Output<a class="headerlink" href="#id433" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
 </pre></div>
 </div>
@@ -4114,27 +4214,27 @@ Value produced by this call.</p>
 </section>
 <section id="slot-sizes">
 <h3><code class="docutils literal notranslate"><span class="pre">slot_sizes</span></code><a class="headerlink" href="#slot-sizes" title="Link to this heading">¶</a></h3>
-<section id="id422">
-<h4>Signature<a class="headerlink" href="#id422" title="Link to this heading">¶</a></h4>
+<section id="id434">
+<h4>Signature<a class="headerlink" href="#id434" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">slot_sizes</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 </section>
-<section id="id423">
-<h4>What It Does<a class="headerlink" href="#id423" title="Link to this heading">¶</a></h4>
+<section id="id435">
+<h4>What It Does<a class="headerlink" href="#id435" title="Link to this heading">¶</a></h4>
 <p>Returns the current length of each slot.</p>
 </section>
-<section id="id424">
-<h4>Parameters<a class="headerlink" href="#id424" title="Link to this heading">¶</a></h4>
+<section id="id436">
+<h4>Parameters<a class="headerlink" href="#id436" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id425">
-<h4>Returns<a class="headerlink" href="#id425" title="Link to this heading">¶</a></h4>
+<section id="id437">
+<h4>Returns<a class="headerlink" href="#id437" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">std::unordered_map&lt;std::string,</span> <span class="pre">std::int64_t&gt;</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id426">
-<h4>Examples<a class="headerlink" href="#id426" title="Link to this heading">¶</a></h4>
+<section id="id438">
+<h4>Examples<a class="headerlink" href="#id438" title="Link to this heading">¶</a></h4>
 <p>Example 1. Call the simplest overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4144,8 +4244,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">slot_sizes</span><span class="p">();</span>
 </pre></div>
 </div>
-<section id="id427">
-<h5>Output<a class="headerlink" href="#id427" title="Link to this heading">¶</a></h5>
+<section id="id439">
+<h5>Output<a class="headerlink" href="#id439" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{&quot;ids&quot;: 3, &quot;city&quot;: 3}
 </pre></div>
 </div>
@@ -4164,27 +4264,27 @@ Value produced by this call.</p>
 </section>
 <section id="slots">
 <h3><code class="docutils literal notranslate"><span class="pre">slots</span></code><a class="headerlink" href="#slots" title="Link to this heading">¶</a></h3>
-<section id="id428">
-<h4>Signature<a class="headerlink" href="#id428" title="Link to this heading">¶</a></h4>
+<section id="id440">
+<h4>Signature<a class="headerlink" href="#id440" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">slots</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Slot</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 </section>
-<section id="id429">
-<h4>What It Does<a class="headerlink" href="#id429" title="Link to this heading">¶</a></h4>
+<section id="id441">
+<h4>What It Does<a class="headerlink" href="#id441" title="Link to this heading">¶</a></h4>
 <p>Materializes the current members as a collection you can inspect or reuse elsewhere.</p>
 </section>
-<section id="id430">
-<h4>Parameters<a class="headerlink" href="#id430" title="Link to this heading">¶</a></h4>
+<section id="id442">
+<h4>Parameters<a class="headerlink" href="#id442" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id431">
-<h4>Returns<a class="headerlink" href="#id431" title="Link to this heading">¶</a></h4>
+<section id="id443">
+<h4>Returns<a class="headerlink" href="#id443" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;Slot&gt;</span></code>
 Materialized collection of slot objects.</p>
 </section>
-<section id="id432">
-<h4>Examples<a class="headerlink" href="#id432" title="Link to this heading">¶</a></h4>
+<section id="id444">
+<h4>Examples<a class="headerlink" href="#id444" title="Link to this heading">¶</a></h4>
 <p>Example 1. Call the simplest overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4194,8 +4294,8 @@ Materialized collection of slot objects.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">slots</span><span class="p">();</span>
 </pre></div>
 </div>
-<section id="id433">
-<h5>Output<a class="headerlink" href="#id433" title="Link to this heading">¶</a></h5>
+<section id="id445">
+<h5>Output<a class="headerlink" href="#id445" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[Slot(ids), Slot(city)]
 </pre></div>
 </div>
@@ -4217,28 +4317,28 @@ Materialized collection of slot objects.</p>
 <h2>T<a class="headerlink" href="#t" title="Link to this heading">¶</a></h2>
 <section id="tail">
 <h3><code class="docutils literal notranslate"><span class="pre">tail</span></code><a class="headerlink" href="#tail" title="Link to this heading">¶</a></h3>
-<section id="id434">
-<h4>Signature<a class="headerlink" href="#id434" title="Link to this heading">¶</a></h4>
+<section id="id446">
+<h4>Signature<a class="headerlink" href="#id446" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">tail</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
 </pre></div>
 </div>
 </section>
-<section id="id435">
-<h4>What It Does<a class="headerlink" href="#id435" title="Link to this heading">¶</a></h4>
+<section id="id447">
+<h4>What It Does<a class="headerlink" href="#id447" title="Link to this heading">¶</a></h4>
 <p>Returns the last <code class="docutils literal notranslate"><span class="pre">n</span></code> values from every slot in the registry.</p>
 </section>
-<section id="id436">
-<h4>Parameters<a class="headerlink" href="#id436" title="Link to this heading">¶</a></h4>
+<section id="id448">
+<h4>Parameters<a class="headerlink" href="#id448" title="Link to this heading">¶</a></h4>
 <p><strong>n</strong>
 Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
-<section id="id437">
-<h4>Returns<a class="headerlink" href="#id437" title="Link to this heading">¶</a></h4>
+<section id="id449">
+<h4>Returns<a class="headerlink" href="#id449" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id438">
-<h4>Examples<a class="headerlink" href="#id438" title="Link to this heading">¶</a></h4>
+<section id="id450">
+<h4>Examples<a class="headerlink" href="#id450" title="Link to this heading">¶</a></h4>
 <p>Example 1. Inspect the last part of the current object without changing the source data.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4248,8 +4348,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id439">
-<h5>Output<a class="headerlink" href="#id439" title="Link to this heading">¶</a></h5>
+<section id="id451">
+<h5>Output<a class="headerlink" href="#id451" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4274,30 +4374,30 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="take">
 <h3><code class="docutils literal notranslate"><span class="pre">take</span></code><a class="headerlink" href="#take" title="Link to this heading">¶</a></h3>
-<section id="id440">
-<h4>Signatures<a class="headerlink" href="#id440" title="Link to this heading">¶</a></h4>
+<section id="id452">
+<h4>Signatures<a class="headerlink" href="#id452" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
 
 <span class="n">Registry</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
 </pre></div>
 </div>
 </section>
-<section id="id441">
-<h4>What It Does<a class="headerlink" href="#id441" title="Link to this heading">¶</a></h4>
+<section id="id453">
+<h4>What It Does<a class="headerlink" href="#id453" title="Link to this heading">¶</a></h4>
 <p>Returns the values at the requested integer positions across every slot.</p>
 </section>
-<section id="id442">
-<h4>Parameters<a class="headerlink" href="#id442" title="Link to this heading">¶</a></h4>
+<section id="id454">
+<h4>Parameters<a class="headerlink" href="#id454" title="Link to this heading">¶</a></h4>
 <p><strong>indices</strong>
 Integer positions used to select, reorder, or address entries.</p>
 </section>
-<section id="id443">
-<h4>Returns<a class="headerlink" href="#id443" title="Link to this heading">¶</a></h4>
+<section id="id455">
+<h4>Returns<a class="headerlink" href="#id455" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id444">
-<h4>Examples<a class="headerlink" href="#id444" title="Link to this heading">¶</a></h4>
+<section id="id456">
+<h4>Examples<a class="headerlink" href="#id456" title="Link to this heading">¶</a></h4>
 <p>Example 1. Pass several integer positions together.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4308,8 +4408,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">picks</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id445">
-<h5>Output<a class="headerlink" href="#id445" title="Link to this heading">¶</a></h5>
+<section id="id457">
+<h5>Output<a class="headerlink" href="#id457" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4330,8 +4430,8 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </pre></div>
 </div>
 </section>
-<section id="id446">
-<h5>Output<a class="headerlink" href="#id446" title="Link to this heading">¶</a></h5>
+<section id="id458">
+<h5>Output<a class="headerlink" href="#id458" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4356,30 +4456,30 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="take-values">
 <h3><code class="docutils literal notranslate"><span class="pre">take_values</span></code><a class="headerlink" href="#take-values" title="Link to this heading">¶</a></h3>
-<section id="id447">
-<h4>Signature<a class="headerlink" href="#id447" title="Link to this heading">¶</a></h4>
+<section id="id459">
+<h4>Signature<a class="headerlink" href="#id459" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">take_values</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
 </pre></div>
 </div>
 </section>
-<section id="id448">
-<h4>What It Does<a class="headerlink" href="#id448" title="Link to this heading">¶</a></h4>
+<section id="id460">
+<h4>What It Does<a class="headerlink" href="#id460" title="Link to this heading">¶</a></h4>
 <p>Selects values from one named slot by integer position and returns the updated registry.</p>
 </section>
-<section id="id449">
-<h4>Parameters<a class="headerlink" href="#id449" title="Link to this heading">¶</a></h4>
+<section id="id461">
+<h4>Parameters<a class="headerlink" href="#id461" title="Link to this heading">¶</a></h4>
 <p><strong>key</strong>
 Name of the target slot or stream.</p>
 <p><strong>indices</strong>
 Integer positions used to select, reorder, or address entries.</p>
 </section>
-<section id="id450">
-<h4>Returns<a class="headerlink" href="#id450" title="Link to this heading">¶</a></h4>
+<section id="id462">
+<h4>Returns<a class="headerlink" href="#id462" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id451">
-<h4>Examples<a class="headerlink" href="#id451" title="Link to this heading">¶</a></h4>
+<section id="id463">
+<h4>Examples<a class="headerlink" href="#id463" title="Link to this heading">¶</a></h4>
 <p>Example 1. Pass several integer positions together.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4390,8 +4490,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">take_values</span><span class="p">(</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">picks</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id452">
-<h5>Output<a class="headerlink" href="#id452" title="Link to this heading">¶</a></h5>
+<section id="id464">
+<h5>Output<a class="headerlink" href="#id464" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4414,32 +4514,32 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 </section>
 </section>
-<section id="id453">
-<h3><code class="docutils literal notranslate"><span class="pre">take_values_</span></code><a class="headerlink" href="#id453" title="Link to this heading">¶</a></h3>
-<section id="id454">
-<h4>Signature<a class="headerlink" href="#id454" title="Link to this heading">¶</a></h4>
+<section id="id465">
+<h3><code class="docutils literal notranslate"><span class="pre">take_values_</span></code><a class="headerlink" href="#id465" title="Link to this heading">¶</a></h3>
+<section id="id466">
+<h4>Signature<a class="headerlink" href="#id466" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">take_values_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
 </pre></div>
 </div>
 </section>
-<section id="id455">
-<h4>What It Does<a class="headerlink" href="#id455" title="Link to this heading">¶</a></h4>
+<section id="id467">
+<h4>What It Does<a class="headerlink" href="#id467" title="Link to this heading">¶</a></h4>
 <p>Selects values from one named slot by integer position in place.</p>
 </section>
-<section id="id456">
-<h4>Parameters<a class="headerlink" href="#id456" title="Link to this heading">¶</a></h4>
+<section id="id468">
+<h4>Parameters<a class="headerlink" href="#id468" title="Link to this heading">¶</a></h4>
 <p><strong>key</strong>
 Name of the target slot or stream.</p>
 <p><strong>indices</strong>
 Integer positions used to select, reorder, or address entries.</p>
 </section>
-<section id="id457">
-<h4>Returns<a class="headerlink" href="#id457" title="Link to this heading">¶</a></h4>
+<section id="id469">
+<h4>Returns<a class="headerlink" href="#id469" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry&amp;</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id458">
-<h4>Examples<a class="headerlink" href="#id458" title="Link to this heading">¶</a></h4>
+<section id="id470">
+<h4>Examples<a class="headerlink" href="#id470" title="Link to this heading">¶</a></h4>
 <p>Example 1. Pass several integer positions together.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4450,8 +4550,8 @@ Value produced by this call.</p>
 <span class="n">rg</span><span class="p">.</span><span class="n">take_values_</span><span class="p">(</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">picks</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="id459">
-<h5>Output<a class="headerlink" href="#id459" title="Link to this heading">¶</a></h5>
+<section id="id471">
+<h5>Output<a class="headerlink" href="#id471" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4476,113 +4576,9 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="to-json">
 <h3><code class="docutils literal notranslate"><span class="pre">to_json</span></code><a class="headerlink" href="#to-json" title="Link to this heading">¶</a></h3>
-<section id="id460">
-<h4>Signature<a class="headerlink" href="#id460" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_json</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
-</pre></div>
-</div>
-</section>
-<section id="id461">
-<h4>What It Does<a class="headerlink" href="#id461" title="Link to this heading">¶</a></h4>
-<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
-</section>
-<section id="id462">
-<h4>Parameters<a class="headerlink" href="#id462" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</section>
-<section id="id463">
-<h4>Returns<a class="headerlink" href="#id463" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Rendered string result.</p>
-</section>
-<section id="id464">
-<h4>Examples<a class="headerlink" href="#id464" title="Link to this heading">¶</a></h4>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
-</pre></div>
-</div>
-<section id="id465">
-<h5>Output<a class="headerlink" href="#id465" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
-</pre></div>
-</div>
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#take_values_">
-    <span class="label">Previous</span>
-    <span class="title">take_values_</span>
-  </a>
-  <a class="next-link" href="#to_kindle">
-    <span class="label">Next</span>
-    <span class="title">to_kindle</span>
-  </a>
-</div>
-</section>
-</section>
-</section>
-<section id="to-kindle">
-<h3><code class="docutils literal notranslate"><span class="pre">to_kindle</span></code><a class="headerlink" href="#to-kindle" title="Link to this heading">¶</a></h3>
-<section id="id466">
-<h4>Signature<a class="headerlink" href="#id466" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_kindle</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span>
-</pre></div>
-</div>
-</section>
-<section id="id467">
-<h4>What It Does<a class="headerlink" href="#id467" title="Link to this heading">¶</a></h4>
-<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
-</section>
-<section id="id468">
-<h4>Parameters<a class="headerlink" href="#id468" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</section>
-<section id="id469">
-<h4>Returns<a class="headerlink" href="#id469" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code>
-Value produced by this call.</p>
-</section>
-<section id="id470">
-<h4>Examples<a class="headerlink" href="#id470" title="Link to this heading">¶</a></h4>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
-</pre></div>
-</div>
-<section id="id471">
-<h5>Output<a class="headerlink" href="#id471" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id     -&gt; Series([1, 2, 3])
-metric -&gt; Series([10.0, 20.0, 30.0])
-city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
-</pre></div>
-</div>
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#to_json">
-    <span class="label">Previous</span>
-    <span class="title">to_json</span>
-  </a>
-  <a class="next-link" href="#to_string">
-    <span class="label">Next</span>
-    <span class="title">to_string</span>
-  </a>
-</div>
-</section>
-</section>
-</section>
-<section id="to-string">
-<h3><code class="docutils literal notranslate"><span class="pre">to_string</span></code><a class="headerlink" href="#to-string" title="Link to this heading">¶</a></h3>
 <section id="id472">
 <h4>Signature<a class="headerlink" href="#id472" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_json</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
 </pre></div>
 </div>
 </section>
@@ -4607,11 +4603,115 @@ Rendered string result.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="id477">
 <h5>Output<a class="headerlink" href="#id477" title="Link to this heading">¶</a></h5>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
+ids  -&gt; Slot([Series(1), Series(2), Series(3)])
+city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
+</pre></div>
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#take_values_">
+    <span class="label">Previous</span>
+    <span class="title">take_values_</span>
+  </a>
+  <a class="next-link" href="#to_kindle">
+    <span class="label">Next</span>
+    <span class="title">to_kindle</span>
+  </a>
+</div>
+</section>
+</section>
+</section>
+<section id="to-kindle">
+<h3><code class="docutils literal notranslate"><span class="pre">to_kindle</span></code><a class="headerlink" href="#to-kindle" title="Link to this heading">¶</a></h3>
+<section id="id478">
+<h4>Signature<a class="headerlink" href="#id478" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_kindle</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span>
+</pre></div>
+</div>
+</section>
+<section id="id479">
+<h4>What It Does<a class="headerlink" href="#id479" title="Link to this heading">¶</a></h4>
+<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+</section>
+<section id="id480">
+<h4>Parameters<a class="headerlink" href="#id480" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id481">
+<h4>Returns<a class="headerlink" href="#id481" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id482">
+<h4>Examples<a class="headerlink" href="#id482" title="Link to this heading">¶</a></h4>
+<p>Example 1. Call the simplest overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="id483">
+<h5>Output<a class="headerlink" href="#id483" title="Link to this heading">¶</a></h5>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id     -&gt; Series([1, 2, 3])
+metric -&gt; Series([10.0, 20.0, 30.0])
+city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
+</pre></div>
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_json">
+    <span class="label">Previous</span>
+    <span class="title">to_json</span>
+  </a>
+  <a class="next-link" href="#to_string">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
+</section>
+</section>
+</section>
+<section id="to-string">
+<h3><code class="docutils literal notranslate"><span class="pre">to_string</span></code><a class="headerlink" href="#to-string" title="Link to this heading">¶</a></h3>
+<section id="id484">
+<h4>Signature<a class="headerlink" href="#id484" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+</pre></div>
+</div>
+</section>
+<section id="id485">
+<h4>What It Does<a class="headerlink" href="#id485" title="Link to this heading">¶</a></h4>
+<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
+</section>
+<section id="id486">
+<h4>Parameters<a class="headerlink" href="#id486" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id487">
+<h4>Returns<a class="headerlink" href="#id487" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
+Rendered string result.</p>
+</section>
+<section id="id488">
+<h4>Examples<a class="headerlink" href="#id488" title="Link to this heading">¶</a></h4>
+<p>Example 1. Call the simplest overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="id489">
+<h5>Output<a class="headerlink" href="#id489" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4632,30 +4732,30 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="transform-values">
 <h3><code class="docutils literal notranslate"><span class="pre">transform_values</span></code><a class="headerlink" href="#transform-values" title="Link to this heading">¶</a></h3>
-<section id="id478">
-<h4>Signature<a class="headerlink" href="#id478" title="Link to this heading">¶</a></h4>
+<section id="id490">
+<h4>Signature<a class="headerlink" href="#id490" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">transform_values</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
 </pre></div>
 </div>
 </section>
-<section id="id479">
-<h4>What It Does<a class="headerlink" href="#id479" title="Link to this heading">¶</a></h4>
+<section id="id491">
+<h4>What It Does<a class="headerlink" href="#id491" title="Link to this heading">¶</a></h4>
 <p>Rewrites the values inside one named slot with a user function and returns the updated registry.</p>
 </section>
-<section id="id480">
-<h4>Parameters<a class="headerlink" href="#id480" title="Link to this heading">¶</a></h4>
+<section id="id492">
+<h4>Parameters<a class="headerlink" href="#id492" title="Link to this heading">¶</a></h4>
 <p><strong>key</strong>
 Name of the target slot or stream.</p>
 <p><strong>fn</strong>
 Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
-<section id="id481">
-<h4>Returns<a class="headerlink" href="#id481" title="Link to this heading">¶</a></h4>
+<section id="id493">
+<h4>Returns<a class="headerlink" href="#id493" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id482">
-<h4>Examples<a class="headerlink" href="#id482" title="Link to this heading">¶</a></h4>
+<section id="id494">
+<h4>Examples<a class="headerlink" href="#id494" title="Link to this heading">¶</a></h4>
 <p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4665,8 +4765,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">transform_values</span><span class="p">(</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">holds_alternative</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
 </pre></div>
 </div>
-<section id="id483">
-<h5>Output<a class="headerlink" href="#id483" title="Link to this heading">¶</a></h5>
+<section id="id495">
+<h5>Output<a class="headerlink" href="#id495" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4689,32 +4789,32 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 </section>
 </section>
-<section id="id484">
-<h3><code class="docutils literal notranslate"><span class="pre">transform_values_</span></code><a class="headerlink" href="#id484" title="Link to this heading">¶</a></h3>
-<section id="id485">
-<h4>Signature<a class="headerlink" href="#id485" title="Link to this heading">¶</a></h4>
+<section id="id496">
+<h3><code class="docutils literal notranslate"><span class="pre">transform_values_</span></code><a class="headerlink" href="#id496" title="Link to this heading">¶</a></h3>
+<section id="id497">
+<h4>Signature<a class="headerlink" href="#id497" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">transform_values_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
 </pre></div>
 </div>
 </section>
-<section id="id486">
-<h4>What It Does<a class="headerlink" href="#id486" title="Link to this heading">¶</a></h4>
+<section id="id498">
+<h4>What It Does<a class="headerlink" href="#id498" title="Link to this heading">¶</a></h4>
 <p>Rewrites the values inside one named slot in place.</p>
 </section>
-<section id="id487">
-<h4>Parameters<a class="headerlink" href="#id487" title="Link to this heading">¶</a></h4>
+<section id="id499">
+<h4>Parameters<a class="headerlink" href="#id499" title="Link to this heading">¶</a></h4>
 <p><strong>key</strong>
 Name of the target slot or stream.</p>
 <p><strong>fn</strong>
 Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
-<section id="id488">
-<h4>Returns<a class="headerlink" href="#id488" title="Link to this heading">¶</a></h4>
+<section id="id500">
+<h4>Returns<a class="headerlink" href="#id500" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Registry&amp;</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id489">
-<h4>Examples<a class="headerlink" href="#id489" title="Link to this heading">¶</a></h4>
+<section id="id501">
+<h4>Examples<a class="headerlink" href="#id501" title="Link to this heading">¶</a></h4>
 <p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4724,8 +4824,8 @@ Value produced by this call.</p>
 <span class="n">rg</span><span class="p">.</span><span class="n">transform_values_</span><span class="p">(</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">holds_alternative</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
 </pre></div>
 </div>
-<section id="id490">
-<h5>Output<a class="headerlink" href="#id490" title="Link to this heading">¶</a></h5>
+<section id="id502">
+<h5>Output<a class="headerlink" href="#id502" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
 ids  -&gt; Slot([Series(1), Series(2), Series(3)])
 city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
@@ -4750,27 +4850,27 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 </section>
 <section id="type-profiles">
 <h3><code class="docutils literal notranslate"><span class="pre">type_profiles</span></code><a class="headerlink" href="#type-profiles" title="Link to this heading">¶</a></h3>
-<section id="id491">
-<h4>Signature<a class="headerlink" href="#id491" title="Link to this heading">¶</a></h4>
+<section id="id503">
+<h4>Signature<a class="headerlink" href="#id503" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">type_profiles</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;&gt;</span>
 </pre></div>
 </div>
 </section>
-<section id="id492">
-<h4>What It Does<a class="headerlink" href="#id492" title="Link to this heading">¶</a></h4>
+<section id="id504">
+<h4>What It Does<a class="headerlink" href="#id504" title="Link to this heading">¶</a></h4>
 <p>Summarizes the value types stored inside each slot.</p>
 </section>
-<section id="id493">
-<h4>Parameters<a class="headerlink" href="#id493" title="Link to this heading">¶</a></h4>
+<section id="id505">
+<h4>Parameters<a class="headerlink" href="#id505" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id494">
-<h4>Returns<a class="headerlink" href="#id494" title="Link to this heading">¶</a></h4>
+<section id="id506">
+<h4>Returns<a class="headerlink" href="#id506" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">std::unordered_map&lt;std::string,</span> <span class="pre">std::unordered_map&lt;std::string,</span> <span class="pre">std::int64_t&gt;&gt;</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id495">
-<h4>Examples<a class="headerlink" href="#id495" title="Link to this heading">¶</a></h4>
+<section id="id507">
+<h4>Examples<a class="headerlink" href="#id507" title="Link to this heading">¶</a></h4>
 <p>Example 1. Call the simplest overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4780,8 +4880,8 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">type_profiles</span><span class="p">();</span>
 </pre></div>
 </div>
-<section id="id496">
-<h5>Output<a class="headerlink" href="#id496" title="Link to this heading">¶</a></h5>
+<section id="id508">
+<h5>Output<a class="headerlink" href="#id508" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{&quot;ids&quot;: {&quot;Series&quot;: 3}, &quot;city&quot;: {&quot;Note&quot;: 3}}
 </pre></div>
 </div>
@@ -4803,27 +4903,27 @@ Value produced by this call.</p>
 <h2>U<a class="headerlink" href="#u" title="Link to this heading">¶</a></h2>
 <section id="unique">
 <h3><code class="docutils literal notranslate"><span class="pre">unique</span></code><a class="headerlink" href="#unique" title="Link to this heading">¶</a></h3>
-<section id="id497">
-<h4>Signature<a class="headerlink" href="#id497" title="Link to this heading">¶</a></h4>
+<section id="id509">
+<h4>Signature<a class="headerlink" href="#id509" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
 </pre></div>
 </div>
 </section>
-<section id="id498">
-<h4>What It Does<a class="headerlink" href="#id498" title="Link to this heading">¶</a></h4>
+<section id="id510">
+<h4>What It Does<a class="headerlink" href="#id510" title="Link to this heading">¶</a></h4>
 <p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
 </section>
-<section id="id499">
-<h4>Parameters<a class="headerlink" href="#id499" title="Link to this heading">¶</a></h4>
+<section id="id511">
+<h4>Parameters<a class="headerlink" href="#id511" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id500">
-<h4>Returns<a class="headerlink" href="#id500" title="Link to this heading">¶</a></h4>
+<section id="id512">
+<h4>Returns<a class="headerlink" href="#id512" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
 Boolean status or membership result.</p>
 </section>
-<section id="id501">
-<h4>Examples<a class="headerlink" href="#id501" title="Link to this heading">¶</a></h4>
+<section id="id513">
+<h4>Examples<a class="headerlink" href="#id513" title="Link to this heading">¶</a></h4>
 <p>Example 1. Call the simplest overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
@@ -4833,8 +4933,8 @@ Boolean status or membership result.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
 </pre></div>
 </div>
-<section id="id502">
-<h5>Output<a class="headerlink" href="#id502" title="Link to this heading">¶</a></h5>
+<section id="id514">
+<h5>Output<a class="headerlink" href="#id514" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
@@ -4857,7 +4957,7 @@ Boolean status or membership result.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
 
 
 
@@ -4877,9 +4977,10 @@ Boolean status or membership result.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>

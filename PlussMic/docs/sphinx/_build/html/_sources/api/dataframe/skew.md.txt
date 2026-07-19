@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b98f110557d5 -->
+
 # DataFrame::skew
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,46 +8,149 @@
 ## Signature
 
 ```cpp
-DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) -> Thread
+DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const -> Thread
 ```
 
 ## What It Does
 
-Computes row-wise or column-wise skewness for numeric data.
+Reduces every numeric feature to its (bias-adjusted) sample skewness — a measure of how
+asymmetric the distribution of values is around its mean — returning one `Thread` whose
+entries line up with the frame's numeric feature names, the same shape
+[`std()`](std.md) and [`var()`](var.md) return. A skewness of `0` describes a
+symmetric distribution; a positive value describes a right (long upper) tail; a
+negative value describes a left (long lower) tail. Non-numeric features are skipped
+entirely.
+
+Nulls are always excluded from the underlying moment computation regardless of any
+parameter — there is no `skipnull` toggle here, because skewness has a stricter
+statistical floor instead: a feature needs at least **three** observed values before a
+skewness is even mathematically defined (a sample of one or two points has no
+meaningful notion of asymmetry). `min_count` lets you raise that floor further, but it
+can never lower it below `3`.
 
 ## Parameters
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Case`)
 
-**min_count**
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+Reduction direction. `Axis::Case` (the default) reduces down each feature's cases,
+producing one skewness value per feature. `Axis::Feature` reduces across each row's
+features instead, producing one value per case.
+
+**min_count** (`std::int64_t`, default `3`)
+
+The minimum number of non-null observations a feature must have before it is assigned
+a real skewness value at all. Passing a value below `3` has no effect — the method
+always enforces `max(3, min_count)` — but passing a larger value raises the bar: a
+feature with fewer than `min_count` observations reports `NULL` even if it has the
+statistically-required minimum of three.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    One entry per participating numeric feature, labeled by feature name, holding that
+    feature's sample skewness.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Compute the skewness of every numeric feature, the default `min_count`.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
-auto out = df.skew();
+auto skewness = orders.skew();
+std::cout << skewness;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+  order_id  0
+     units  0.4180715203
+unit_price  0.4534323226
+  discount  0.256139086
+ptype: Series
 ```
 
+`order_id` is exactly `0` because its six values are evenly spaced — a perfectly
+symmetric run with no skew. `unit_price`, `units`, and `discount` are all positive
+because each has a handful of low values pulled up by one or two much larger ones (a
+right tail), computed over the observed values only: `unit_price`'s missing case (`5`)
+and `discount`'s missing case (`2`) are excluded from the moment computation, the same
+null-handling every other statistic in this family applies.
+
+Example 2. Raise `min_count` above the statistical floor to require every case be
+present.
+
+```cpp
+auto skewness_strict = orders.skew(Axis::Case, 6);
+std::cout << skewness_strict;
+```
+
+### Output
+
+```text
+  order_id  0
+     units  0.4180715203
+unit_price  NULL
+  discount  NULL
+ptype: Series
+```
+
+`order_id` and `units` have all six values observed, so `min_count = 6` doesn't change
+their result. `unit_price` and `discount` each have only five observed values — one
+short of the demanded six — so both report `NULL`, even though five values is well
+above the statistical minimum of three.
+
+Example 3. See the hard floor in effect: a two-case frame can never produce a
+skewness, no matter what `min_count` is passed.
+
+```cpp
+auto skewness_too_small = orders.head(2).skew();
+std::cout << skewness_too_small;
+```
+
+### Output
+
+```text
+  order_id  NULL
+     units  NULL
+unit_price  NULL
+  discount  NULL
+ptype: Series
+```
+
+Every feature has at most two observed values in this two-case slice, below the
+`max(3, min_count)` floor `skew()` always enforces — so every feature comes back
+`NULL`, independent of what `min_count` you pass.
+
+## Notes
+
+- `skew()`'s result is labeled by feature name and prints like a small labeled
+  `Series`, not like a row sliced from the source frame.
+- Non-numeric features never appear in the result; they are neither computed as an
+  error nor silently coerced.
+- A feature whose values have zero variance (every observed value identical) reports a
+  skewness of exactly `0` rather than an undefined `0/0` — the implementation detects a
+  zero second moment and short-circuits to `0` instead of propagating `NaN`.
+- For the corresponding measure of tail weight rather than asymmetry, see
+  [`kurtosis()`](kurtosis.md), which shares the same `axis` / `min_count` shape (with a
+  floor of `4` instead of `3`).
+
+## See Also
+
+- [`DataFrame::kurtosis`](kurtosis.md): the tail-weight counterpart to this measure of
+  asymmetry.
+- [`DataFrame::std`](std.md), [`DataFrame::var`](var.md): the second-moment statistics
+  this method's third moment builds on.
+- [`DataFrame::describe`](describe.md): a broader summary that does not include skew or
+  kurtosis, for those on a tighter statistical budget.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="shuffle.html">

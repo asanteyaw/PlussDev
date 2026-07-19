@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d8103390ebf3 -->
+
 # DataFrame::query
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -11,6 +14,13 @@ DataFrame::query(std::string_view expression) -> DataFrame
 Filter rows with a boolean expression written against DataFrame feature names.
 
 `DataFrame::query(...)` is the string-expression row filter for PlussMic. It lets you write one compact predicate instead of building a boolean mask by hand, which is especially useful when you are exploring data interactively or translating logic from notebook-style workflows into C++.
+
+The expression itself is a small language evaluated against feature names, so you can
+write `"units >= 10 and region == 'south'"` instead of assembling
+`df[(df.units >= 10) & (df.region == 'south')]` by hand. The C++ equivalent of the
+boolean-mask style is [`filter()`](filter.md) — reach for `query()` when the predicate
+reads more clearly as a single self-contained string, and for `filter()` when the mask is
+more naturally built up from existing C++ expressions or reused across calls.
 
 ```{warning} Expression Input
 
@@ -63,6 +73,14 @@ Use backticks around feature names that contain spaces or punctuation, such as `
 
 This method is for row filtering. It does not rewrite values, create columns, or mutate the current frame in place.
 
+The expression is parsed and evaluated by PlussMic's own small expression engine, not by
+shelling out to an external interpreter — there is no dependency on Python, a SQL engine,
+or any other runtime to use `query()`. The patterns documented above (numeric and string
+comparisons, `and` / `or` combinators, quoted literals, and backtick-quoted feature
+names) are the supported core; if a more elaborate expression does not parse the way you
+expect, fall back to building the mask explicitly with [`filter()`](filter.md), which
+accepts any boolean `Thread` you can construct in ordinary C++.
+
 ## Examples
 
 Example 1. Filter rows with a combined numeric and string predicate.
@@ -78,6 +96,7 @@ auto sales = DataFrame({
 }, pluss::make_note({"s1", "s2", "s3"})).title("sales");
 
 auto out = sales.query("units >= 10 and region == 'south'");
+std::cout << out;
 ```
 
 ### Output
@@ -103,6 +122,7 @@ auto people = DataFrame({
 }).title("people");
 
 auto out = people.query("`First Name` == 'Laurel'");
+std::cout << out;
 ```
 
 ### Output
@@ -130,6 +150,7 @@ auto sales = DataFrame({
 }, pluss::make_note({"s1", "s2", "s3"})).title("sales");
 
 auto out = sales.query("units > price");
+std::cout << out;
 ```
 
 ### Output

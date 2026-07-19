@@ -34,5 +34,5 @@ output = """
 0  1
 1  2.718281828
 2  7.389056099
-dtype: Series
+ptype: Series
 """

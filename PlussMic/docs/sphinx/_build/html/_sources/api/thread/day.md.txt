@@ -51,7 +51,7 @@ auto out = Thread(pluss::make_timeline({
 0  1
 1  1
 2  5
-dtype: Series
+ptype: Series
 ```
 
 

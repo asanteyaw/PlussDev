@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::set
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,260 +7,187 @@
 ## Signatures
 
 ```cpp
-DataFrame::set(pluss::RangeView<std::string_view> names) -> LetSlots
+// In-place assignment helpers ("df.set(name) = value" syntax) — mutate *this
+DataFrame::LetSlot DataFrame::set(std::string_view name)
+DataFrame::LetSlot DataFrame::set(std::string_view name, const AlignOptions& options)
+DataFrame::LetSlots DataFrame::set(pluss::RangeView<std::string_view> names)
+DataFrame::LetSlots DataFrame::set(pluss::RangeView<std::string_view> names, const AlignOptions& options)
+DataFrame::LetSlots DataFrame::set(std::initializer_list<std::string_view> names)
+DataFrame::LetSlots DataFrame::set(std::initializer_list<const char*> names)
 
-DataFrame::set(pluss::RangeView<std::string_view> names, const AlignOptions& options) -> LetSlots
-
-DataFrame::set(pluss::RangeView<std::string_view> names, pluss::RangeView<Thread> values) -> DataFrame
-
-DataFrame::set(std::initializer_list<const char*> names) -> LetSlots
-
-DataFrame::set(std::initializer_list<const char*> names, const AlignOptions& options) -> LetSlots
-
-DataFrame::set(std::initializer_list<std::string_view> names) -> LetSlots
-
-DataFrame::set(std::initializer_list<std::string_view> names, const AlignOptions& options) -> LetSlots
-
-DataFrame::set(std::string_view name) -> LetSlot
-
-DataFrame::set(std::string_view name, const AlignOptions& options) -> LetSlot
-
-DataFrame::set(std::string_view name, const Thread& value) -> DataFrame
-
-DataFrame::set(std::string_view name, const Thread& value, const AlignOptions& options) -> DataFrame
+// Plain functional overloads — return a new frame, *this untouched
+DataFrame::set(std::string_view name, const Thread& value) const -> DataFrame
+DataFrame::set(std::string_view name, const Thread& value, const AlignOptions& options) const -> DataFrame
+DataFrame::set(pluss::RangeView<std::string_view> names, pluss::RangeView<Thread> values) const -> DataFrame
 ```
 
 ## What It Does
 
-Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.
+Adds a new feature or replaces an existing one's values, in two distinct styles:
+
+- **The `df.set(name) = value` builder style** (the no-`value`-argument overloads):
+  `set(name)` returns a lightweight `LetSlot` proxy bound to `*this`; assigning a
+  `Thread`, `ThreadValue`, `pluss::Series`/`Note`/`Timeline`/`TimeIndex`, or even a
+  single-feature `DataFrame` to that proxy **mutates the calling frame in place** —
+  creating `name` if it doesn't already exist, or overwriting it if it does.
+  `set({"a", "b"}) = {...}` is the same idea for several features assigned together
+  in one batch (at most one reindex pass, rather than one per feature). A
+  `ThreadValue` right-hand side broadcasts a single scalar to every row.
+- **The plain two-argument overloads** (`set(name, value)` / `set(names, values)`):
+  ordinary, non-mutating functions that return a **new** frame with `name`
+  created or replaced, leaving `*this` untouched — the same convention as
+  every other non-`_`-suffixed method in this reference.
+
+[`set_(name, value)`](set_.md) is the mutating counterpart to the plain two-argument
+overloads specifically — a third way to write "mutate in place" alongside the
+`LetSlot`/`LetSlots` builder style described above.
 
 ## Parameters
 
-**names**
-    Collection of feature, slot, or stream names supplied in positional order.
+**name** / **names**
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+The feature name (or names) to create or overwrite.
 
-**values**
-    Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
+**value** / **values**
 
-**name**
-    Name used to identify the target object, field, feature, or slot for this overload.
+The replacement data. For the builder style, anything assignable to a `LetSlot`
+(`Thread`, `ThreadValue`, `pluss::Series`/`Note`/`Timeline`/`TimeIndex`, or a
+single-feature `DataFrame`); for the plain overloads, a `Thread` (or a matching range
+of `Thread`s for the multi-name overload).
 
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+**options** (`const AlignOptions&`, optional)
+
+Controls how a right-hand `Thread` is aligned to the frame's case axis when it
+doesn't already match exactly.
 
 ## Returns
 
-`LetSlots`
-    Value produced by this call.
+`LetSlot` / `LetSlots`
+    A proxy bound to `*this`; assigning to it performs the mutation and creates or
+    overwrites the named feature(s) in place.
 
 `DataFrame`
-    Value produced by this call.
-
-`LetSlot`
-    Value produced by this call.
+    (Plain two-argument overloads) A new frame with the named feature(s) created or
+    replaced.
 
 ## Examples
 
-Example 1. Open the multi-feature assignment helper from a reusable feature-name range.
+Example 1. The `df.set(name) = value` builder style, mutating the frame in place.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
+orders.set("profit") = Thread(pluss::make_series({40.0, 35.0, 30.0}));
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+==================================
+     | id    sales  city    profit
+----------------------------------
+0    | 1     100    Accra   40    
+1    | 2     120    Tema    35    
+2    | 3     90     Kumasi  30    
+----------------------------------
+[3 cs x 4 feat]
 ```
-Example 2. Open the multi-feature assignment helper from a reusable feature-name range.
+
+`orders` itself now has a fourth feature, `"profit"` — `set("profit")` returned a
+`LetSlot` bound to `orders`, and assigning a `Thread` to it wrote the new column back
+into `orders` directly.
+
+Example 2. Assign several new features together in one batch.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
+orders.set({"cost", "region"}) = {
+    Thread(pluss::make_series({60.0, 85.0, 60.0})),
+    Thread(pluss::make_note({"South", "North", "South"})),
+};
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+================================================
+     | id    sales  city    profit  cost  region
+------------------------------------------------
+0    | 1     100    Accra   40      60    South 
+1    | 2     120    Tema    35      85    North 
+2    | 3     90     Kumasi  30      60    South 
+------------------------------------------------
+[3 cs x 6 feat]
 ```
-Example 3. Open the multi-feature assignment helper from a reusable feature-name range.
+
+Both `"cost"` and `"region"` are added to `orders` in one call, matched to their
+names positionally against the right-hand `{...}` list.
+
+Example 3. The plain, non-mutating overload: overwrite an existing feature's values
+without touching the source frame.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+auto fresh_start = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
+auto rebased = fresh_start.set("sales", Thread(pluss::make_series({0.0, 0.0, 0.0})));
+std::cout << rebased;
+std::cout << fresh_start;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 4. Open the multi-feature assignment helper from inline C-string names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 5. Open the multi-feature assignment helper from inline C-string names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};
+==========================
+     | id    sales  city  
+--------------------------
+0    | 1     0      Accra 
+1    | 2     0      Tema  
+2    | 3     0      Kumasi
+--------------------------
+[3 cs x 3 feat]
+==========================
+     | id    sales  city  
+--------------------------
+0    | 1     100    Accra 
+1    | 2     120    Tema  
+2    | 3     90     Kumasi
+--------------------------
+[3 cs x 3 feat]
 ```
 
-### Output
+`rebased` has `sales` zeroed out, but this two-argument, non-`_`-suffixed overload
+never touches `fresh_start` — it prints exactly as it was constructed.
 
-```text
-The call completes and returns the contract described under Output.
-```
-Example 6. Open the multi-feature assignment helper from inline string-view names.
+## Notes
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+- The `LetSlot`/`LetSlots`-returning overloads (no `value` argument) are the only
+  `set(...)` calls that mutate `*this`; every overload that takes `value`/`values`
+  directly as an argument is a plain, non-mutating function.
+- Assigning a `ThreadValue` to a `LetSlot` broadcasts a single scalar to every row —
+  useful for `df.set("flag") = ThreadValue(true)`-style constant columns.
+- Batch-assigning with `set({"a", "b"}) = {...}` performs at most one schema
+  reindex pass total, rather than one per feature — prefer it over several separate
+  single-name assignments when setting many features at once.
 
-df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};
-```
+## See Also
 
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 7. Open the multi-feature assignment helper from inline string-view names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 8. Open the assignment helper for one feature name.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 9. Open the assignment helper for one feature name.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 10. Open the assignment helper for one feature name.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 11. Open the assignment helper for one feature name.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
+- [`DataFrame::set_`](set_.md): the mutating counterpart to this page's plain
+  two-argument overloads.
+- [`DataFrame::assign`](assign.md): derive new features from expressions evaluated
+  against the frame itself, rather than assigning pre-built `Thread`s.
+- [`DataFrame::insert`](insert.md), [`DataFrame::place`](place.md): position a new
+  feature at a specific index or next to a named anchor, instead of appending it.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="se.html">

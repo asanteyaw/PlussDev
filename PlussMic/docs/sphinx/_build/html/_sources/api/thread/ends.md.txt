@@ -50,7 +50,7 @@ auto out = names.ends(".csv");
 0  true
 1  false
 2  true
-dtype: Series
+ptype: Series
 ```
 
 

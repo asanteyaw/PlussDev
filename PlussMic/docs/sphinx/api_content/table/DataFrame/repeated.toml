@@ -48,7 +48,7 @@ output = """
 2  true
 3  false
 4  true
-Name: repeated, dtype: Series
+Name: repeated, ptype: Series
 """
 
 [[examples]]

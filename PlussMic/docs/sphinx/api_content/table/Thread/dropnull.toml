@@ -33,5 +33,5 @@ auto out = values.dropnull();
 output = """
 0  10
 1  30
-dtype: Series
+ptype: Series
 """

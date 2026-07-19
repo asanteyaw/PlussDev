@@ -357,8 +357,9 @@ When you already know the aggregation at the call site, the immediate overload
 still exists:
 
 ```cpp
-auto values = df.label().set("date", false).features({"close", "volume"});
-auto daily = values.ts().resample(
+auto daily = df.features({"close", "volume"})
+    .ts({.axis = df.features("date")})
+    .resample(
     "D",
     pluss::subsp::stats::ts::ResampleOp::Mean,
     1);
@@ -366,8 +367,9 @@ auto daily = values.ts().resample(
 
 The call returns a `DataFrame` whose cases are the resample labels. In the
 verified example later in this chapter, four half-day observations become two
-daily rows. Use `df.ts(features).resample(...)` as the main time-series
-resampler surface.
+daily rows. Select value features first, then call `.ts()` with either time
+case labels or `TsOptions{.axis = ...}` as the main time-series resampler
+surface.
 
 ## As-frequency conversion
 
@@ -671,13 +673,13 @@ returns:
 1  0.05
 2  -0.01904761905
 3  0.05825242718
-dtype: Series
+ptype: Series
 rolling mean window 2:
 0  nan
 1  102.5
 2  104
 3  106
-dtype: Series
+ptype: Series
 daily mean:
 ==========================
            | close  volume

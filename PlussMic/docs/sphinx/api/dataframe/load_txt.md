@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::load_txt
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,88 +7,116 @@
 ## Signatures
 
 ```cpp
-DataFrame::load_txt(std::string_view filepath) -> DataFrame
-
-DataFrame::load_txt(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
-
-DataFrame::load_txt(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
+static DataFrame load_txt(std::string_view filepath) -> DataFrame
+static DataFrame load_txt(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
+static DataFrame load_txt(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
 ```
 
 ## What It Does
 
-Loads the object from disk using the corresponding PlussMic loader route.
+`DataFrame`'s static constructor for plain delimited text files that aren't
+necessarily comma-separated — the same underlying parser and type-inference machinery
+as [`load_csv()`](load_csv.md), read through a `Config`/`ConfigEntry` settings bundle
+instead of `load_csv()`'s rich set of dedicated positional/typed overloads.
 
 ## Parameters
 
-**filepath**
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+**filepath** (`std::string_view`)
 
-**config**
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+Path to the text file to read.
 
-**config_entries**
-    Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.
+**config** (`const pluss::loader::Config&`) / **config_entries**
+(`std::initializer_list<pluss::loader::ConfigEntry>`)
+
+A reusable or inline settings bundle. Recognizes the same kind of keys `load_csv()`'s
+`Config` overload does (`sep`, `header`, `ncases`, `case`, `usefeats`, and so on) —
+`load_txt()` doesn't default to a different delimiter on the read side; pass
+`{"sep", "\t"}` explicitly for tab-separated input, the same as you would for
+[`load_csv()`](load_csv.md).
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new, fully typed frame, with the same numeric/text type inference behavior as
+    [`load_csv()`](load_csv.md).
 
 ## Examples
 
-Example 1. Load a TXT source with the default reader for that format.
+Example 1. Load a tab-separated text file by naming the delimiter explicitly.
+
+Given `orders.txt`:
+
+```text
+id	city	units
+101	Accra	2
+102	Tema	1
+103	Kumasi	4
+```
 
 ```cpp
-auto out = pluss::table::DataFrame::load_txt("path/to/data.txt");
+using namespace pluss::table;
+
+pluss::loader::Config config{{"sep", std::string("\t")}};
+auto orders = DataFrame::load_txt("orders.txt", config);
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+==========================
+     | id    city    units
+--------------------------
+0    | 101   Accra   2    
+1    | 102   Tema    1    
+2    | 103   Kumasi  4    
+--------------------------
+[3 cs x 3 feat]
 ```
-Example 2. Load a TXT source with a reusable loader configuration object.
+
+Example 2. Cap the number of rows read with an inline config entry.
 
 ```cpp
-pluss::loader::Config config{{"ncases", 8}};
-auto out = pluss::table::DataFrame::load_txt("path/to/data.txt", config);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 3. Load a TXT source while supplying inline configuration entries.
-
-```cpp
-auto out = pluss::table::DataFrame::load_txt("path/to/data.txt", {
-    {"ncases", 8},
+auto preview = DataFrame::load_txt("orders.txt", {
+    {"sep", std::string("\t")},
+    {"ncases", std::int64_t{2}},
 });
+std::cout << preview;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+==========================
+     | id    city    units
+--------------------------
+0    | 101   Accra   2    
+1    | 102   Tema    1    
+--------------------------
+[2 cs x 3 feat]
 ```
 
-## Practical Behavior
+## Notes
 
-- `load_txt(...)` loads one external source into typed PlussMic columns.
-- Positional overloads are quick for ad-hoc work, while option/config overloads are better when you want repeatable loader settings.
-- Excel multi-sheet overloads return `pluss::loader::LoadResult` because several frames may be produced at once.
+- `load_txt()` shares its type-inference engine with [`load_csv()`](load_csv.md) —
+  numeric-looking columns become `Series`, everything else becomes `Note`, and empty
+  cells become missing values, exactly as documented there.
+- There is no dedicated `ReadTxtOptions` struct or positional overload the way
+  [`load_csv()`](load_csv.md) has — the `Config`/`ConfigEntry` overloads are the only
+  way to customize parsing.
+- The corresponding writer, [`save_txt()`](save_txt.md), *does* default to a tab
+  separator on the write side unless you override it — but `load_txt()`'s read side
+  has no such default; specify `sep` explicitly to match whatever delimiter the file
+  actually uses.
 
+## See Also
 
+- [`DataFrame::load_csv`](load_csv.md): the fuller explanation of the shared parsing
+  and type-inference behavior, plus the richer overload set (typed options,
+  `case_col`, `usefeats`, `on_bad_lines`).
+- [`DataFrame::save_txt`](save_txt.md): the write-side counterpart.
+- [`DataFrame::load`](load.md): the format-switched entry point that can dispatch to
+  `load_txt()` via `source_type = "txt"`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="load_parquet.html">

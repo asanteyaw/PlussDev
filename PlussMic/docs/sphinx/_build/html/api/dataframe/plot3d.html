@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::plot3d &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::plot3d &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::pow" href="pow.html" />
@@ -36,66 +36,83 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-plot3d">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-plot3d">
 <h1>DataFrame::plot3d<a class="headerlink" href="#dataframe-plot3d" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">plot3d</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlot3DAccessor</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">plot3d</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFramePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlot3DAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">plot3d</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlot3DAccessor</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">plot3d</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFramePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFramePlot3DAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Opens the 3D plotting accessor for the current frame.</p>
+<p>Enters the 3D charting accessor bound to the current frame — 3D scatter and 3D line
+charts, for genuinely three-axis data. Like <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> itself
+draws nothing: it binds the frame (and optional shared chart-wide <code class="docutils literal notranslate"><span class="pre">options</span></code>) and
+hands back an accessor whose methods each return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure — the
+same <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> figure type <code class="docutils literal notranslate"><span class="pre">plot()</span></code>’s 2D accessor returns, documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s
+own reference.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFramePlotOptions&amp;</span></code>, optional)</p>
+<p>Chart-wide defaults shared across every 3D chart drawn from the returned accessor —
+the same options struct <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a> accepts. Omit it to use the accessor’s
+built-in defaults.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor</span></code>
-Value produced by this call.</p>
+An accessor bound to the current frame (and, if given, <code class="docutils literal notranslate"><span class="pre">options</span></code>). Its methods
+(<code class="docutils literal notranslate"><span class="pre">.scatter()</span></code>, <code class="docutils literal notranslate"><span class="pre">.line()</span></code>) each build and return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Create the 3D plotting accessor with default plot options.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">})},</span>
+<p>Example 1. Enter the 3D plotting accessor and draw a 3D scatter chart.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;points_3d.png&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(scatter3d/line3d)
-</pre></div>
-</div>
-<p>Example 2. Create the 3D plotting accessor with an explicit plot-options object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<p><code class="docutils literal notranslate"><span class="pre">points.plot3d()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor</span></code> bound to <code class="docutils literal notranslate"><span class="pre">points</span></code>;
+<code class="docutils literal notranslate"><span class="pre">.scatter(&quot;x&quot;,</span> <span class="pre">&quot;y&quot;,</span> <span class="pre">&quot;z&quot;)</span></code> plots the three numeric features against each other in
+three dimensions and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, saved here with <code class="docutils literal notranslate"><span class="pre">.save_png(...)</span></code>.</p>
+<p>Example 2. Share chart-wide options (a wider figure) across a 3D chart.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">900.0</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot3d</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(scatter3d/line3d)
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> covers only genuinely three-dimensional chart kinds (3D scatter, 3D
+line); use <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a> for every 2D chart kind instead.</p></li>
+<li><p>Every chart method returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>; that type’s own methods are
+documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s reference, not here.</p></li>
+<li><p>Every feature named in a 3D chart call must be numeric — passing a <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature
+as one of the three axes is not a supported combination.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::plot</span></code></span></a>: the 2D counterpart to this accessor.</p></li>
+<li><p><a class="reference internal" href="matrix.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::matrix</span></code></span></a>: the raw numeric matrix behind a frame, for
+lower-level access outside the plotting accessors.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="plot.html">
     <span class="label">Previous</span>
@@ -108,7 +125,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -117,7 +133,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -137,9 +153,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

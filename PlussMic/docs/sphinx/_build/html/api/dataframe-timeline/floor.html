@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameTimelineAccessor::floor &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameTimelineAccessor::fmt" href="fmt.html" />
+    <link rel="prev" title="DataFrameTimelineAccessor::epoch" href="epoch.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframetimelineaccessor-floor">
+<h1>DataFrameTimelineAccessor::floor<a class="headerlink" href="#dataframetimelineaccessor-floor" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTimelineAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameTimelineAccessor</span><span class="o">::</span><span class="n">floor</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Replaces every selected <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature with each row rounded
+<em>down</em> to the nearest <code class="docutils literal notranslate"><span class="pre">unit</span></code> boundary, in local wall time — same feature
+name, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, same row order.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>One of <code class="docutils literal notranslate"><span class="pre">&quot;S&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;s&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;sec&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;second&quot;</span></code> (second), <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;m&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;minute&quot;</span></code>
+(minute), <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;h&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;hour&quot;</span></code> (hour), or <code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code> (day). Cannot be
+empty. Sub-day units coarser than these (weeks, months) aren’t supported.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with each selected time feature floored to <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Floor every row of a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature to the nearest hour.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">          </span><span class="s">&quot;2024-06-01T09:47:12Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s">&quot;2024-06-01T14:05:00Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="p">}))}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">events</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 09:47:12
+1    | 2024-06-01 14:05:00
+--------------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 09:00:00
+1    | 2024-06-01 14:00:00
+--------------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p>Both rows drop to the start of their hour — <code class="docutils literal notranslate"><span class="pre">09:47:12</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">09:00:00</span></code>,
+<code class="docutils literal notranslate"><span class="pre">14:05:00</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">14:00:00</span></code>.</p>
+<p>Example 2. Floor a sub-second timestamp to the nearest whole second with
+<code class="docutils literal notranslate"><span class="pre">&quot;S&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-06-01T14:05:00.750000000Z&quot;</span><span class="p">}))}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">events</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;S&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output (before)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+     | ts                    
+-----------------------------
+0    | 2024-06-01 14:05:00.7~
+-----------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (after)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 14:05:00
+--------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.750000000</span></code> seconds worth of sub-second precision is dropped entirely — <code class="docutils literal notranslate"><span class="pre">&quot;S&quot;</span></code>
+only keeps whole seconds.</p>
+<p>Example 3. Floor to the nearest minute with <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-06-01T14:05:47Z&quot;</span><span class="p">}))}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">events</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;min&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output (before)<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 14:05:47
+--------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output (after)<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 14:05:00
+--------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">14:05:47</span></code> drops its <code class="docutils literal notranslate"><span class="pre">:47</span></code> seconds, landing on the start of the <code class="docutils literal notranslate"><span class="pre">14:05</span></code>
+minute.</p>
+<p>Example 4. Floor to the nearest day with <code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code>, collapsing both rows to bare
+dates.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">          </span><span class="s">&quot;2024-06-01T14:05:00Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s">&quot;2024-06-02T23:59:59Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="p">}))}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">events</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output (before)<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 14:05:00
+1    | 2024-06-02 23:59:59
+--------------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output (after)<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 2024-06-01
+1    | 2024-06-02
+-----------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p>Both rows land on midnight of their own calendar day; since the whole result
+column is now all-midnight, it renders as bare dates instead of full
+timestamps.</p>
+<p>Example 5. Floor to the nearest day <em>after</em> relabeling the display timezone,
+to see that <code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code> aligns to <strong>local</strong> midnight, not UTC midnight.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-15T03:00:00Z&quot;</span><span class="p">}))}});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">tz</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output (before)<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-01-14 22:00:00
+--------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output (after)<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 2024-01-14
+-----------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">2024-01-15T03:00:00Z</span></code> is <code class="docutils literal notranslate"><span class="pre">2024-01-14</span> <span class="pre">22:00:00</span></code> in <code class="docutils literal notranslate"><span class="pre">America/New_York</span></code> (UTC-5
+in January). Floored in that local wall time, it lands on <code class="docutils literal notranslate"><span class="pre">2024-01-14</span></code>’s
+midnight — a full UTC day <em>earlier</em> than the UTC calendar date would suggest.
+Had <code class="docutils literal notranslate"><span class="pre">floor(&quot;D&quot;)</span></code> worked in UTC instead, this row would have landed on
+<code class="docutils literal notranslate"><span class="pre">2024-01-15</span></code>.</p>
+<p>Example 6. Pass an unsupported unit to see the call throw.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-06-01T14:05:00Z&quot;</span><span class="p">}))}});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;week&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline: unsupported unit (expected S/min/H/D)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;week&quot;</span></code> isn’t one of the four accepted units, so the call throws instead of
+guessing at a coarser boundary.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Flooring happens in <strong>local wall time</strong> (per the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>’s current
+timezone), then maps back — so <code class="docutils literal notranslate"><span class="pre">floor(&quot;D&quot;)</span></code> aligns to local midnight, not
+necessarily UTC midnight, if the timezone isn’t <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code> cannot be empty, and only accepts the fixed clock units listed above
+— there’s no <code class="docutils literal notranslate"><span class="pre">&quot;W&quot;</span></code> (week) or calendar-month unit here; see
+<a class="reference internal" href="period.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">period()</span></code></span></a> for month/year truncation instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code> requires <strong>every</strong> feature on the calling frame to already
+be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind — narrow with
+<a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first if needed.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>) regardless of <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ceil.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTimelineAccessor::ceil</span></code></span></a>,
+<a class="reference internal" href="round.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTimelineAccessor::round</span></code></span></a>: round up, or to the nearest
+boundary, instead of always down.</p></li>
+<li><p><a class="reference internal" href="date.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTimelineAccessor::date</span></code></span></a>: shorthand for
+<code class="docutils literal notranslate"><span class="pre">floor(&quot;D&quot;)</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="epoch.html">
+    <span class="label">Previous</span>
+    <span class="title">epoch</span>
+  </a>
+  <a class="next-link" href="fmt.html">
+    <span class="label">Next</span>
+    <span class="title">fmt</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_timeline_accessor_api_reference.html">DataFrameTimelineAccessor API Reference</a><ul>
+      <li>Previous: <a href="epoch.html" title="previous chapter">DataFrameTimelineAccessor::epoch</a></li>
+      <li>Next: <a href="fmt.html" title="next chapter">DataFrameTimelineAccessor::fmt</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-timeline/floor.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

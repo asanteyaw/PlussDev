@@ -452,7 +452,7 @@ auto schedule = pluss::table::DataFrame({
 
 auto hourly = schedule.resample("ts", {"value"}, "1H", "mean", 1, false);
 auto floored = schedule.floor_time({"ts"}, "hour");
-auto utc = schedule.tl("ts").utc();
+auto utc = schedule.features({"ts"}).tl().utc();
 ```
 
 ## SQL And IO

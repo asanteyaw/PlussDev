@@ -74,7 +74,7 @@ output = """
 a  20
 b  10
 d  NA
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -94,7 +94,7 @@ output = """
 a  20
 b  10
 d  0
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -113,7 +113,7 @@ auto out = feature_thread.align(
 output = """
 A1  2.5
 A2  1.5
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -133,5 +133,5 @@ output = """
 b  10
 a  20
 c  30
-dtype: Series
+ptype: Series
 """

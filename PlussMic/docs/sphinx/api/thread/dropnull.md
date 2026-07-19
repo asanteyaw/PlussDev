@@ -47,7 +47,7 @@ auto out = values.dropnull();
 ```text
 0  10
 1  30
-dtype: Series
+ptype: Series
 ```
 
 

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameTsWindowAccessor::sum &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameTsResampler API Reference" href="../../dataframe_ts_resampler_api_reference.html" />
+    <link rel="prev" title="DataFrameTsWindowAccessor::min" href="min.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframetswindowaccessor-sum">
+<h1>DataFrameTsWindowAccessor::sum<a class="headerlink" href="#dataframetswindowaccessor-sum" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_ts_window_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTsWindowAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameTsWindowAccessor</span><span class="o">::</span><span class="n">sum</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes, <strong>once per group</strong>, the sum of <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> over the trailing
+duration-length window ending at that group’s own most recent time-axis value (or
+an explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.anchor</span></code>, if one was set). This is a per-group trailing
+aggregate — not a resample-style bucketing — so the result has exactly one row
+per distinct group, not one row per original observation.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>value_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, default empty)</p>
+<p>The feature to sum. May be omitted only if exactly one feature is currently bound
+on the accessor, in which case that feature is used automatically.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per distinct group, with a group-key column (or columns) and a
+<code class="docutils literal notranslate"><span class="pre">&quot;sum_&quot;</span> <span class="pre">+</span> <span class="pre">value_feature</span></code> column.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Sum each sensor’s readings over the trailing 2 days ending at that
+sensor’s own last reading.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;sensor_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">}))}},</span>
+<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-04T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-05T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-06T00:00:00Z&quot;</span><span class="p">})));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sensor_id&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;value&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">({.</span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">groups</span><span class="p">}).</span><span class="n">window</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">).</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+           | sensor_id  value
+-----------------------------
+2024-01-01 | A          10   
+2024-01-03 | A          20   
+2024-01-04 | A          15   
+2024-01-02 | B          5    
+2024-01-05 | B          8    
+2024-01-06 | B          12   
+-----------------------------
+[6 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================
+     | sensor_id  sum_value
+---------------------------
+0    | A          35       
+1    | B          20       
+---------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p>Sensor <code class="docutils literal notranslate"><span class="pre">A</span></code>’s most recent reading is <code class="docutils literal notranslate"><span class="pre">2024-01-04</span></code>; the trailing 2-day window
+<code class="docutils literal notranslate"><span class="pre">(2024-01-02,</span> <span class="pre">2024-01-04]</span></code> includes <code class="docutils literal notranslate"><span class="pre">2024-01-03</span></code> (<code class="docutils literal notranslate"><span class="pre">20</span></code>) and <code class="docutils literal notranslate"><span class="pre">2024-01-04</span></code> (<code class="docutils literal notranslate"><span class="pre">15</span></code>),
+but excludes <code class="docutils literal notranslate"><span class="pre">2024-01-01</span></code> (too early), so <code class="docutils literal notranslate"><span class="pre">sum_value</span> <span class="pre">=</span> <span class="pre">35</span></code>. Sensor <code class="docutils literal notranslate"><span class="pre">B</span></code>’s most
+recent reading is <code class="docutils literal notranslate"><span class="pre">2024-01-06</span></code>; the window <code class="docutils literal notranslate"><span class="pre">(2024-01-04,</span> <span class="pre">2024-01-06]</span></code> includes
+<code class="docutils literal notranslate"><span class="pre">2024-01-05</span></code> (<code class="docutils literal notranslate"><span class="pre">8</span></code>) and <code class="docutils literal notranslate"><span class="pre">2024-01-06</span></code> (<code class="docutils literal notranslate"><span class="pre">12</span></code>), giving <code class="docutils literal notranslate"><span class="pre">sum_value</span> <span class="pre">=</span> <span class="pre">20</span></code>. Groups appear
+in the order they first occur in the source (<code class="docutils literal notranslate"><span class="pre">A</span></code> before <code class="docutils literal notranslate"><span class="pre">B</span></code>).</p>
+<p>Example 2. Pass <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> explicitly when more than one feature is bound
+on the accessor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;sensor_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;temp&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}))}},</span>
+<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">})));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sensor_id&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;temp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">({.</span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">groups</span><span class="p">}).</span><span class="n">window</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">).</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;humidity&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output (before)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================================
+           | sensor_id  temp  humidity
+--------------------------------------
+2024-01-01 | A          10    40      
+2024-01-02 | A          20    42      
+2024-01-01 | B          5     55      
+2024-01-02 | B          8     50      
+--------------------------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (after)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==============================
+     | sensor_id  sum_humidity
+------------------------------
+0    | A          82          
+1    | B          105         
+------------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p>With two features bound (<code class="docutils literal notranslate"><span class="pre">temp</span></code> and <code class="docutils literal notranslate"><span class="pre">humidity</span></code>), <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> can no longer
+be inferred — naming <code class="docutils literal notranslate"><span class="pre">&quot;humidity&quot;</span></code> explicitly picks it out and leaves <code class="docutils literal notranslate"><span class="pre">temp</span></code>
+untouched by the aggregate.</p>
+<p>Example 3. Call <code class="docutils literal notranslate"><span class="pre">.window(...)</span></code> without first setting <code class="docutils literal notranslate"><span class="pre">TsOptions.group</span></code>, to
+see it throw immediately — before <code class="docutils literal notranslate"><span class="pre">sum()</span></code> is even called.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">}))}},</span>
+<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-04T00:00:00Z&quot;</span><span class="p">})));</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">windowed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">window</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()).</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrameTsAccessor::window: TsOptions.group is required
+</pre></div>
+</div>
+<p>The check happens as soon as <code class="docutils literal notranslate"><span class="pre">.window(...)</span></code> builds the
+<code class="docutils literal notranslate"><span class="pre">DataFrameTsWindowAccessor</span></code> — <code class="docutils literal notranslate"><span class="pre">sum()</span></code> (or any other aggregate) never even
+gets a chance to run without a group already set via
+<code class="docutils literal notranslate"><span class="pre">df.features({...}).ts({.group</span> <span class="pre">=</span> <span class="pre">df.features(&quot;group_col&quot;)})</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires <code class="docutils literal notranslate"><span class="pre">TsOptions.group</span></code> to already be set (via
+<code class="docutils literal notranslate"><span class="pre">df.features({...}).ts({.group</span> <span class="pre">=</span> <span class="pre">df.features(&quot;group_col&quot;)})</span></code>, extracting the
+group column <em>before</em> narrowing to the numeric value feature, exactly as shown
+above) — the accessor throws at construction otherwise.</p></li>
+<li><p>The window is right-closed by default (<code class="docutils literal notranslate"><span class="pre">WindowClosure::Right</span></code>, set via
+<a class="reference internal" href="../dataframe-ts/window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">window()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">closure</span></code> parameter): it excludes the
+anchor-minus-duration boundary itself and includes the anchor.</p></li>
+<li><p>With no explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.anchor</span></code>, each group’s own anchor is that group’s
+<em>own</em> maximum time-axis value — different groups can anchor to different
+instants.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsWindowAccessor::mean</span></code></span></a>,
+<a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsWindowAccessor::min</span></code></span></a>,
+<a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsWindowAccessor::max</span></code></span></a>,
+<a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsWindowAccessor::count</span></code></span></a>: the other per-group trailing
+aggregates sharing this same window.</p></li>
+<li><p><a class="reference internal" href="../dataframe-ts/window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::window</span></code></span></a>: the entry point that
+produces this accessor.</p></li>
+<li><p><a class="reference internal" href="../dataframe-ts/grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::grouped</span></code></span></a>: a row-aligned
+(not one-row-per-group) grouped rolling statistic, a different shape entirely.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="min.html">
+    <span class="label">Previous</span>
+    <span class="title">min</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_ts_window_accessor_api_reference.html">DataFrameTsWindowAccessor API Reference</a><ul>
+      <li>Previous: <a href="min.html" title="previous chapter">DataFrameTsWindowAccessor::min</a></li>
+      <li>Next: <a href="../../dataframe_ts_resampler_api_reference.html" title="next chapter">DataFrameTsResampler API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-ts-window/sum.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

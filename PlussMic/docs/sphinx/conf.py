@@ -1,4 +1,4 @@
-project = 'PlussMic User Docs'
+project = 'PlussMic'
 author = 'PlussMa Contributors'
 
 extensions = [

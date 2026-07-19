@@ -71,7 +71,7 @@ output = """
 2  true
 3  false
 4  true
-Name: duplicated, dtype: Series
+Name: duplicated, ptype: Series
 """
 
 [[examples]]
@@ -93,5 +93,5 @@ output = """
 2  false
 3  false
 4  false
-Name: duplicated, dtype: Series
+Name: duplicated, ptype: Series
 """

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::put_
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,388 +7,130 @@
 ## Signatures
 
 ```cpp
-DataFrame::put_(std::string_view feature, const pluss::Series& bool_mask, const char* value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const pluss::Series& bool_mask, const Thread& value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const pluss::Series& bool_mask, double value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const pluss::Series& bool_mask, pluss::null_t value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const pluss::Series& bool_mask, std::string_view value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, const char* value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, const char* value, const AlignOptions& options) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, const Thread& value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, const Thread& value, const AlignOptions& options) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, double value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, double value, const AlignOptions& options) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, pluss::null_t value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, pluss::null_t value, const AlignOptions& options) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, std::string_view value) -> DataFrame&
-
-DataFrame::put_(std::string_view feature, const Thread& bool_mask, std::string_view value, const AlignOptions& options) -> DataFrame&
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, const Thread& value)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, const Thread& value, const AlignOptions& options)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, double value)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, double value, const AlignOptions& options)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, std::string_view value)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, std::string_view value, const AlignOptions& options)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, const char* value)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, const char* value, const AlignOptions& options)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, pluss::null_t value)
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, pluss::null_t value, const AlignOptions& options)
+// each Thread-mask overload above also has a pluss::Series-mask convenience:
+DataFrame& DataFrame::put_(std::string_view feature, const pluss::Series& bool_mask, /* value as above */)
 ```
 
 ## What It Does
 
-Writes a replacement value only where a boolean mask is true and mutates the frame in place.
+The in-place counterpart to [`put()`](put.md): rewrites one feature's values at the
+rows where `bool_mask` is `true`, mutating `*this` directly and returning a reference
+to it, instead of returning a new frame. Every parameter and replacement rule is
+identical to `put()` — see that page for the full breakdown of scalar-vs-`Thread`
+replacement semantics; this page only covers what differs about mutating in place.
 
 ## Parameters
 
-**feature**
-    Feature name to rewrite in place.
+**feature** (`std::string_view`)
 
-**bool_mask**
-    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
+The feature to rewrite in place. Must already exist on the frame.
 
-**value**
-    Replacement scalar, string, null, or thread written in place only where the mask is `true`.
+**bool_mask** (`const Thread&` or `const pluss::Series&`)
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+A boolean row mask, identical in behavior to [`put()`](put.md)'s `bool_mask`.
+
+**value** (`const Thread&`, `double`, `std::string_view`, `const char*`, or
+`pluss::null_t`)
+
+The replacement, identical in behavior to [`put()`](put.md)'s `value` — a scalar
+broadcasts to every masked row, a `Thread` supplies a different value per row.
+
+**options** (`const AlignOptions&`, optional)
+
+Controls how `bool_mask` is aligned to the frame's case axis, identical to
+[`put()`](put.md)'s `options`.
 
 ## Returns
 
 `DataFrame&`
-    Value produced by this call.
+    A reference to `*this`, after `feature`'s masked rows have been rewritten.
 
 ## Examples
 
-Example 1. Rewrite rows in place using a boolean Series mask and a text literal as the replacement value.
+Example 1. Rewrite a feature's masked rows in place, then keep working with the same
+frame.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
-df.put_("city", mask, "Tamale");
+auto is_middle = orders.features("id") == 2.0;
+orders.put_("sales", is_middle, 999.0);
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
+==========================
+     | id    sales  city  
+--------------------------
+0    | 1     100    Accra 
+1    | 2     999    Tema  
+2    | 3     90     Kumasi
+--------------------------
+[3 cs x 3 feat]
 ```
-Example 2. Rewrite rows in place using a boolean Series mask and another full Thread as the replacement values.
+
+`orders` itself now has `999` at case `1` — no separate result variable was needed,
+unlike [`put()`](put.md), which would have left `orders` unchanged and returned a new
+frame instead.
+
+Example 2. Chain a second in-place rewrite onto the same frame.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
-auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
-df.put_("sales", mask, repl);
+orders.put_("city", is_middle, "Tamale");
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 3. Rewrite rows in place using a boolean Series mask and a scalar numeric replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
-df.put_("sales", mask, 999.0);
+============================
+     | id    sales  city    
+----------------------------
+0    | 1     100    Accra   
+1    | 2     999    Tamale  
+2    | 3     90     Kumasi  
+----------------------------
+[3 cs x 3 feat]
 ```
 
-### Output
+Both rewrites accumulate on the same `orders` object — case `1`'s `sales` (from
+Example 1) and now its `city` too, both replaced in place.
 
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 4. Rewrite rows in place using a boolean Series mask and `pluss::null` to mark the matched cells as missing.
+## Notes
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+- `put_()` mutates and returns `*this` by reference; it never allocates a new
+  `DataFrame` the way `put()` does.
+- Any other `DataFrame` value that shares the same underlying columns (via a prior
+  copy) does not see this mutation — `pluss::table::DataFrame`'s copies are
+  value-like, not aliased references to shared state.
+- See [`put()`](put.md) for the complete parameter and replacement-semantics
+  breakdown; every rule there (scalar vs. per-row `Thread` replacement, `Series`-mask
+  convenience overloads, kind constraints) applies identically here.
 
-auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
-df.put_("sales", mask, pluss::null);
-```
+## See Also
 
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 5. Rewrite rows in place using a boolean Series mask and a text literal as the replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
-df.put_("city", mask, std::string_view("Tamale"));
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 6. Rewrite rows in place using a boolean Thread mask and a text literal as the replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("city", mask, "Tamale");
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 7. Rewrite rows in place using a boolean Thread mask and a text literal as the replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("city", mask, "Tamale");
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 8. Rewrite rows in place using a boolean Thread mask and another full Thread as the replacement values.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
-df.put_("sales", mask, repl);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 9. Rewrite rows in place using a boolean Thread mask and another full Thread as the replacement values.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
-df.put_("sales", mask, repl);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 10. Rewrite rows in place using a boolean Thread mask and a scalar numeric replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("sales", mask, 999.0);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 11. Rewrite rows in place using a boolean Thread mask and a scalar numeric replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("sales", mask, 999.0);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 12. Rewrite rows in place using a boolean Thread mask and `pluss::null` to mark the matched cells as missing.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("sales", mask, pluss::null);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 13. Rewrite rows in place using a boolean Thread mask and `pluss::null` to mark the matched cells as missing.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("sales", mask, pluss::null);
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 14. Rewrite rows in place using a boolean Thread mask and a text literal as the replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("city", mask, std::string_view("Tamale"));
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-Example 15. Rewrite rows in place using a boolean Thread mask and a text literal as the replacement value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto mask = df.features("id") == 2.0;
-df.put_("city", mask, std::string_view("Tamale"));
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tamale
-3    90.0  Kumasi
-```
-
-## Practical Behavior
-
-- `put_(feature, mask, value)` rewrites only the rows where the mask evaluates true.
-- The mask must match the frame case count.
-- Use `put(...)` when you want a new frame result, and `put_(...)` when you want the same rewrite in place.
-
-
+- [`DataFrame::put`](put.md): the non-mutating counterpart, returning a new frame
+  instead of mutating in place.
+- [`DataFrame::mask`](mask.md): nulls out masked cells outright, rather than
+  replacing them with a chosen value.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="put.html">

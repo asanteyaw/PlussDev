@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 24800483050a -->
+
 # DataFrame::mul
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,168 +8,115 @@
 ## Signatures
 
 ```cpp
-DataFrame::mul(const DataFrame& other) -> DataFrame
-
-DataFrame::mul(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::mul(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::mul(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::mul(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::mul(double other) -> DataFrame
+DataFrame::mul(double other) const -> DataFrame
+DataFrame::mul(const DataFrame& other) const -> DataFrame
+DataFrame::mul(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::mul(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::mul(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::mul(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The named-method form of elementwise multiplication. `mul()` shares the exact same
+overload shape and alignment rules as [`add()`](add.md) and the rest of the
+arithmetic family — see `add()`'s "What It Does" for the full explanation of the
+scalar/frame/Thread operand shapes and the `axis`/`options` parameters.
+
+A common use is rescaling a feature (unit conversion, currency conversion, applying a
+tax or discount rate) without hand-writing a loop over cells.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+The right-hand operand, multiplied against the current frame: `double` (broadcast
+scalar), `const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast
+per `axis`).
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
+value per feature; `Axis::Case` supplies one value per case.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`add()`](add.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, with every numeric feature multiplied by
+    `other`. Non-numeric features are left unchanged.
 
 ## Examples
 
-Example 1. Multiply each compatible numeric cell against another aligned frame.
+Example 1. Scale every numeric feature by a constant factor.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
+using namespace pluss::table;
 
-auto out = left.mul(right);
+auto prices = DataFrame({
+    {"units", pluss::make_series({2.0, 5.0, 1.0})},
+    {"price", pluss::make_series({10.0, 20.0, 30.0})},
+}, pluss::make_note({"a", "b", "c"}));
+
+auto out = prices.mul(2.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales
-2   11000.0
-4   13200.0
-12   9000.0
+===================
+     | units  price
+-------------------
+a    | 4      20   
+b    | 10     40   
+c    | 2      60   
+-------------------
+[3 cs x 2 feat]
 ```
-Example 2. Multiply each compatible numeric cell against another aligned frame.
+
+Example 2. Multiply by a `Thread` with one value per feature (`Axis::Feature`, the
+default) — apply a different scale factor to each column.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.mul(right);
+auto per_feature_scale = Thread(pluss::make_series({10.0, 0.9})); // units x10, price x0.9
+auto out = prices.mul(per_feature_scale);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales
-2   11000.0
-4   13200.0
-12   9000.0
-```
-Example 3. Multiply each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.mul(10);
+===================
+     | units  price
+-------------------
+a    | 20     9    
+b    | 50     18   
+c    | 10     27   
+-------------------
+[3 cs x 2 feat]
 ```
 
-### Output
+## Notes
 
-```text
-id  sales  city
-10  1000.0  Accra
-20  1200.0  Tema
-30   900.0  Kumasi
-```
-Example 4. Multiply each compatible numeric cell against one broadcast scalar value.
+- Non-numeric features are always left unchanged.
+- Multiplication is commutative, so `a.mul(b)` and `b.mul(a)` (or the reflected
+  [`rmul()`](rmul.md)) produce the same result for a shared shape.
+- Shares its full overload shape, alignment semantics, and `AlignOptions` behavior with
+  [`add()`](add.md), [`sub()`](sub.md), [`div()`](div.md), [`truediv()`](truediv.md),
+  [`floordiv()`](floordiv.md), [`mod()`](mod.md), and [`pow()`](pow.md).
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+## See Also
 
-auto out = df.mul(10);
-```
-
-### Output
-
-```text
-id  sales  city
-10  1000.0  Accra
-20  1200.0  Tema
-30   900.0  Kumasi
-```
-Example 5. Multiply each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.mul(10);
-```
-
-### Output
-
-```text
-id  sales  city
-10  1000.0  Accra
-20  1200.0  Tema
-30   900.0  Kumasi
-```
-Example 6. Multiply each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.mul(10);
-```
-
-### Output
-
-```text
-id  sales  city
-10  1000.0  Accra
-20  1200.0  Tema
-30   900.0  Kumasi
-```
-
+- [`DataFrame::add`](add.md): the full explanation of the shared operand shapes and
+  `axis`/`options` parameters this family uses.
+- [`DataFrame::div`](div.md) / [`DataFrame::truediv`](truediv.md): the corresponding
+  division methods.
+- [`DataFrame::assign`](assign.md): compute and attach a scaled feature as a new
+  column instead of transforming existing ones in place.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mode.html">

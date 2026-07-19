@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d20d5b3f2eca -->
+
 # DataFrame::pow
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,164 +8,88 @@
 ## Signatures
 
 ```cpp
-DataFrame::pow(const DataFrame& other) -> DataFrame
-
-DataFrame::pow(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::pow(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::pow(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::pow(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::pow(double other) -> DataFrame
+DataFrame::pow(double other) const -> DataFrame
+DataFrame::pow(const DataFrame& other) const -> DataFrame
+DataFrame::pow(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::pow(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::pow(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::pow(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The named-method form of elementwise exponentiation. `pow()` shares the exact same
+overload shape and alignment rules as [`add()`](add.md) and the rest of the arithmetic
+family — see `add()`'s "What It Does" for the full explanation of the scalar/frame/
+Thread operand shapes and the `axis`/`options` parameters.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+The right-hand operand (the exponent): `double` (broadcast scalar), `const
+DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast per `axis`).
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
+value per feature; `Axis::Case` supplies one value per case.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`add()`](add.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, with every numeric feature raised to the
+    power of `other`. Non-numeric features are left unchanged.
 
 ## Examples
 
-Example 1. Raise each compatible numeric cell against another aligned frame.
+Example 1. Raise every numeric feature to a scalar power.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({3.0, 2.0, 5.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({3.0, 2.0, 1.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 3.0, 2.0}))},
-});
+using namespace pluss::table;
 
-auto out = left.pow(right);
+auto values = DataFrame({
+    {"x", pluss::make_series({2.0, 3.0, 4.0})},
+}, pluss::make_note({"a", "b", "c"}));
+
+auto out = values.pow(2.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-a    b
-8.0  9.0
-9.0  8.0
-4.0  25.0
-```
-Example 2. Raise each compatible numeric cell against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({3.0, 2.0, 5.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({3.0, 2.0, 1.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 3.0, 2.0}))},
-});
-
-auto out = left.pow(right);
+===========
+     | x   
+-----------
+a    | 4   
+b    | 9   
+c    | 16  
+-----------
+[3 cs x 1 feat]
 ```
 
-### Output
+## Notes
 
-```text
-a    b
-8.0  9.0
-9.0  8.0
-4.0  25.0
-```
-Example 3. Raise each compatible numeric cell against one broadcast scalar value.
+- Non-numeric features are always left unchanged.
+- Unlike the other arithmetic methods in this family, `pow()` always evaluates
+  feature-by-feature rather than as a single batched matrix operation internally —
+  this is an implementation detail with no observable effect on the result.
+- Shares its full overload shape, alignment semantics, and `AlignOptions` behavior with
+  [`add()`](add.md), [`sub()`](sub.md), [`mul()`](mul.md), [`div()`](div.md),
+  [`floordiv()`](floordiv.md), and [`mod()`](mod.md).
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
+## See Also
 
-auto out = df.pow(2);
-```
-
-### Output
-
-```text
-a    b
-1.0  4.0
-4.0  16.0
-9.0  25.0
-```
-Example 4. Raise each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.pow(2);
-```
-
-### Output
-
-```text
-a    b
-1.0  4.0
-4.0  16.0
-9.0  25.0
-```
-Example 5. Raise each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.pow(2);
-```
-
-### Output
-
-```text
-a    b
-1.0  4.0
-4.0  16.0
-9.0  25.0
-```
-Example 6. Raise each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.pow(2);
-```
-
-### Output
-
-```text
-a    b
-1.0  4.0
-4.0  16.0
-9.0  25.0
-```
-
+- [`DataFrame::add`](add.md): the full explanation of the shared operand shapes and
+  `axis`/`options` parameters this family uses.
+- [`DataFrame::rpow`](rpow.md): the reflected form, computing `other ^ frame`.
+- [`DataFrame::mul`](mul.md): repeated addition's multiplicative cousin, for scaling
+  rather than exponentiating.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="plot3d.html">

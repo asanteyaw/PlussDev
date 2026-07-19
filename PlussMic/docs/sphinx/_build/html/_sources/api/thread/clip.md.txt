@@ -44,7 +44,7 @@ auto out = scores.clip(15.0, 35.0);
 1  20
 2  30
 3  35
-dtype: Series
+ptype: Series
 ```
 
 

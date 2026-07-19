@@ -54,7 +54,7 @@ auto out = Thread(ticks.as_timeindex().resample_count("D", 1));
 ```text
 0  3
 1  1
-dtype: Series
+ptype: Series
 ```
 
 

@@ -57,7 +57,7 @@ count  4
   50%  25
   75%  32.5
   max  40
-Name: value, dtype: Series
+Name: value, ptype: Series
 ```
 
 Example 2. Describe a note-backed text thread.
@@ -75,7 +75,7 @@ count  5
 unique  3
    top  Accra
   freq  2
-Name: value, dtype: Note
+Name: value, ptype: Note
 ```
 
 

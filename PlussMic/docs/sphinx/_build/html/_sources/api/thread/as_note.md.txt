@@ -51,7 +51,7 @@ auto out = Thread(names.as_note().strip().lower());
 0  ada
 1  bola
 2  chen
-dtype: Note
+ptype: Note
 ```
 
 

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::save_parquet
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,88 +7,108 @@
 ## Signatures
 
 ```cpp
-DataFrame::save_parquet(std::string_view filepath) -> void
-
-DataFrame::save_parquet(std::string_view filepath, const pluss::loader::Config& config) -> void
-
-DataFrame::save_parquet(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> void
+DataFrame::save_parquet(std::string_view filepath) const -> void
+DataFrame::save_parquet(std::string_view filepath, const pluss::loader::Config& config) const -> void
+DataFrame::save_parquet(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) const -> void
 ```
 
 ## What It Does
 
-Writes the frame to Parquet for compact typed storage.
+Writes the frame to a Parquet file via Apache Arrow's Parquet C++ library —
+compact, columnar, typed storage, the write-side counterpart to
+[`load_parquet()`](load_parquet.md).
+
+```{important} Requires an Arrow + Parquet C++ build
+Like `load_parquet()`, `save_parquet()` throws *"built without parquet-cpp support"*
+if PlussMic was compiled without the optional `PLUSSMIC_HAS_PARQUET_CPP` dependency.
+```
 
 ## Parameters
 
-**filepath**
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+**filepath** (`std::string_view`)
 
-**config**
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+Destination Parquet file path.
 
-**config_entries**
-    Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.
+**config** (`const pluss::loader::Config&`) / **config_entries**
+(`std::initializer_list<pluss::loader::ConfigEntry>`)
+
+Recognized keys:
+
+- **`addcases`** / **`cases`** / **`case`** / **`index`** (`bool`, default `false`):
+  export the case axis as its own column, matching
+  [`save_csv()`](save_csv.md)'s `add_cases` convention.
+- **`caselabel`** / **`indexlabel`** / **`case_feature`** (`std::string`): column
+  name for the exported case-axis column when the flag above is enabled.
 
 ## Returns
 
 `void`
-    Performs the side effect and returns no value.
+    Performs the write and returns nothing.
 
 ## Examples
 
-Example 1. Save the frame using the simplest filepath-only overload.
+Example 1. Save with the plain filepath-only overload — no case-axis column.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({101, 102, 103}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Thread(pluss::make_series({2, 1, 4}))},
 });
 
-df.save_parquet("path/to/output.parquet");
+orders.save_parquet("orders_out.parquet");
 ```
 
-### Output
+Resulting `orders_out.parquet`, shown as its logical column store:
 
 ```text
-saved: out.*
+| id  | city   | units |
+| 101 | Accra  | 2     |
+| 102 | Tema   | 1     |
+| 103 | Kumasi | 4     |
 ```
-Example 2. Save the frame with an explicit loader-config object.
+
+Example 2. Export the case axis as its own named column.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+orders.save_parquet("orders_with_case.parquet", {
+    {"addcases", true},
+    {"caselabel", std::string("case_id")},
 });
-
-pluss::loader::Config config{};
-df.save_parquet("path/to/output.parquet", config);
 ```
 
-### Output
+Resulting `orders_with_case.parquet`:
 
 ```text
-saved: out.*
-```
-Example 3. Save the frame with inline configuration entries.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.save_parquet("path/to/output.parquet", {"indent", 2});
+| case_id | id  | city   | units |
+| 0       | 101 | Accra  | 2     |
+| 1       | 102 | Tema   | 1     |
+| 2       | 103 | Kumasi | 4     |
 ```
 
-### Output
+## Notes
 
-```text
-saved: out.*
-```
+- Requires PlussMic to have been built with Arrow + Parquet C++ support, exactly like
+  [`load_parquet()`](load_parquet.md); otherwise every call throws immediately.
+- `addcases`/`caselabel` follow the same convention as
+  [`save_csv()`](save_csv.md)'s `add_cases`/`case_label` and
+  [`save_excel()`](save_excel.md)'s equivalent fields.
+- Values are written using Arrow's own Parquet type mapping from PlussMic's inferred
+  `Series`/`Note` dtypes — but recall from [`load_parquet()`](load_parquet.md) that
+  reading the file back re-infers types from stringified values rather than trusting
+  the Parquet schema directly, so a save/load round trip is not guaranteed to preserve
+  the exact original precision (for example, a narrower integer width).
 
+## See Also
+
+- [`DataFrame::load_parquet`](load_parquet.md): the read-side counterpart, including
+  the schema-discarding re-inference behavior worth knowing about before round-tripping.
+- [`DataFrame::save_csv`](save_csv.md): the analogous CSV writer and the fuller
+  explanation of the `add_cases`/`case_label` convention shared across writers.
+- [`DataFrame::save_as`](save_as.md): the format-switched entry point that can
+  dispatch to `save_parquet()` via `target_type = "parquet"`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="save_json.html">

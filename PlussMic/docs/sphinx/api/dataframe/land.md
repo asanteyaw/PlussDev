@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::land
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,68 +7,174 @@
 ## Signatures
 
 ```cpp
-DataFrame::land(const DataFrame& other) -> DataFrame
-
-DataFrame::land(const Thread& other) -> DataFrame
+DataFrame::land(const DataFrame& other) const -> DataFrame
+DataFrame::land(const Thread& other) const -> DataFrame
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Elementwise logical AND between every `Bool`-typed feature on this frame and the
+matching value on `other`. `land()` is one of three logical methods
+(`land`, [`lor()`](lor.md), [`lxor()`](lxor.md)) — each with a reflected counterpart
+([`rand()`](rand.md), [`ror()`](ror.md), [`rxor()`](rxor.md)) — that operate strictly
+on boolean payloads, unlike the arithmetic and comparison families.
+
+```{important} Both operands must already be Bool Series
+Every logical method requires each participating feature to be a `Series`-kind
+`Thread` with a genuine `Bool` scalar type. A numeric 0/1 column (even `int64` or
+`float64`) is rejected — cast it first with
+[`astype(..., pluss::ScalarType::Bool)`](astype.md) if it isn't already boolean.
+```
+
+```{important} Much simpler overload shape than add()/eq()
+Unlike the arithmetic family ([`add()`](add.md)) or the comparison family
+([`eq()`](eq.md)), the logical methods take no `axis` and no `AlignOptions` — there
+are exactly two overloads: another `DataFrame`, or a single `Thread`. See "Parameters"
+below for what each one requires.
+```
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+The right-hand operand, in one of two shapes:
+
+- `const DataFrame&`: another frame with the **exact same feature names, in the same
+  order**, and the **same number of cases**. Values are combined position-by-position
+  — there is no case-label alignment step; only the feature-name list and the case
+  *count* are checked, not the case label values themselves.
+- `const Thread&`: a single boolean `Thread` whose length matches `ncases()`. The
+  *same* thread is combined against **every** feature identically, position-by-position
+  — there is no per-feature broadcast the way the `Thread` overloads of [`add()`](add.md)
+  or [`eq()`](eq.md) support via `axis`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, with every feature holding the logical AND
+    of the source cell and the corresponding `other` value.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. AND two boolean frames with identical feature names, case-by-case.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.land();
+auto left = DataFrame({
+    {"a", pluss::make_series({true, false, true}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
+}, pluss::make_note({"p", "q", "r"}));
+
+std::cout << left;
+```
+
+### Output (left)
+
+```text
+===================
+     | a      b    
+-------------------
+p    | true   true 
+q    | false  true 
+r    | true   false
+-------------------
+[3 cs x 2 feat]
+```
+
+```cpp
+auto right = DataFrame({
+    {"a", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({false, true, true}, pluss::ScalarType::Bool)},
+}, pluss::make_note({"x", "y", "z"}));
+
+std::cout << right;
+```
+
+### Output (right)
+
+```text
+===================
+     | a      b    
+-------------------
+x    | true   false
+y    | true   true 
+z    | false  true 
+-------------------
+[3 cs x 2 feat]
+```
+
+```cpp
+auto out = left.land(right);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+===================
+     | a      b    
+-------------------
+p    | true   false
+q    | false  true 
+r    | false  false
+-------------------
+[3 cs x 2 feat]
 ```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+Every cell is combined by position, not by case label: position `0` in `left` (case
+`p`) is ANDed with position `0` in `right` (case `x`), and so on, even though `left`'s
+and `right`'s case labels (`p,q,r` vs `x,y,z`) don't overlap at all. `left` and `right`
+each have `3` cases and the same two feature names (`a`, `b`) in the same order, which
+is all `land(DataFrame)` requires — it never checks whether the case labels
+themselves match.
+
+Example 2. AND a frame against a single shared `Thread`, applied identically to every
+feature.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.land();
+auto mask = Thread(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto out_thread = left.land(mask);
+std::cout << out_thread;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+===================
+     | a      b    
+-------------------
+p    | true   true 
+q    | false  false
+r    | true   false
+-------------------
+[3 cs x 2 feat]
 ```
 
+The same three-value `mask` is combined against **both** `a` and `b` at matching
+positions — there is no way to supply a different mask per feature in one call, unlike
+[`add()`](add.md)'s `Axis::Feature` `Thread` overload.
+
+## Notes
+
+- Requires a genuine `Bool` scalar type on every participating `Series`; a numeric
+  0/1 column throws rather than being treated as truthy.
+- `land(const DataFrame&)` checks only that feature names match (in order) and that
+  case *counts* match — it does not verify or use the case label *values* for
+  alignment, unlike [`add()`](add.md)'s `AlignOptions`-based alignment.
+- The reflected form [`rand()`](rand.md) computes the same cell values (AND is
+  commutative) and, since a fix to an earlier revision, the same case labels and title
+  too — `rand()` and `land()` are now fully interchangeable. See [`rand()`](rand.md)
+  for a worked comparison and a note on the earlier behavior this replaced.
+
+## See Also
+
+- [`DataFrame::lor`](lor.md) / [`DataFrame::lxor`](lxor.md): the OR and XOR
+  counterparts, sharing this exact overload shape.
+- [`DataFrame::rand`](rand.md): the reflected form, and where the case-label caveat is
+  demonstrated concretely.
+- [`DataFrame::astype`](astype.md): cast a numeric feature to `Bool` before using it
+  with any logical method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="label.html">

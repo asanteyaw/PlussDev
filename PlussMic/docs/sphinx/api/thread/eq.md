@@ -66,7 +66,7 @@ auto out = values.eq(20.0);
 0  false
 1  true
 2  false
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Broadcast one text scalar across a note-backed thread.
@@ -85,7 +85,7 @@ auto out = names.eq("Bola.txt");
 0  false
 1  true
 2  false
-dtype: Series
+ptype: Series
 ```
 
 Example 3. Compare two numeric threads element by element.
@@ -105,7 +105,7 @@ auto out = left.eq(right);
 0  true
 1  false
 2  true
-dtype: Series
+ptype: Series
 ```
 
 

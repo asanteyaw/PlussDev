@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::transpose &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::transpose &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::truediv" href="truediv.html" />
@@ -36,48 +36,100 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-transpose">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 242181ddd853 -->
+<section id="dataframe-transpose">
 <h1>DataFrame::transpose<a class="headerlink" href="#dataframe-transpose" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">transpose</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">transpose</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Swaps rows and features so former feature names become row labels.</p>
+<p>Flips rows and features: each original <strong>case</strong> becomes a new <strong>feature</strong> (named
+after that case’s original label), and each original <strong>feature name</strong> becomes a new
+<strong>case label</strong>. Every value in the result is converted to its text representation —
+transposing mixes together whatever types were in each row (numbers, strings, and so
+on), and a single output column can no longer be a single-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> once it holds
+values that used to live in different feature columns of different types. This makes
+<code class="docutils literal notranslate"><span class="pre">transpose()</span></code> best suited for quick visual inspection of a small, wide-vs-tall
+swap — not as a step in a numeric pipeline, since every value becomes text and a
+missing value becomes the literal string <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>render</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned view can auto-render in temporary terminal contexts. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> when you want explicit output control.</p>
+<p><strong>render</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>Display toggle for the returned <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, identical in behavior to
+<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">render</span></code> parameter.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>
-Value produced by this call.</p>
+A new frame where the original feature names are the case labels, and the
+original case labels are the feature names, with every cell converted to text.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Choose whether the returned object should auto-render in display contexts.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. Transpose a small numeric frame.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders_small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">flipped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders_small</span><span class="p">.</span><span class="n">transpose</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">flipped</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>feature  row0   row1   row2
-id       1      2      3
-sales    100.0  120.0  90.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+           | 0     1     2   
+-----------------------------
+units      | 2     5     1   
+unit_price | 1200  45.5  NULL
+-----------------------------
+[2 cs x 3 feat]
 </pre></div>
 </div>
+<p>The original two features (<code class="docutils literal notranslate"><span class="pre">units</span></code>, <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>) are now the row labels; the original
+three cases (default labels <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>) are now the feature names. <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>’s
+missing third value became the literal text <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> — a text cell reading the word
+“NULL”, not a typed missing value — because the result is text throughout. Note also
+that <code class="docutils literal notranslate"><span class="pre">1200.0</span></code> prints as <code class="docutils literal notranslate"><span class="pre">1200</span></code>: whole-valued floats are rendered without a trailing
+<code class="docutils literal notranslate"><span class="pre">.0</span></code> in the transposed text form.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every cell in the result is text, regardless of the original column’s type — a
+transposed frame is not meant for further numeric computation, only inspection.</p></li>
+<li><p>A missing source cell becomes the literal text <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> (the word, as a text cell),
+not a typed missing value — this is different from every other reshaping method in
+this reference, which preserve an actual missing cell instead of a text
+representation of one.</p></li>
+<li><p>The new feature names come from the original case labels; if those labels would
+collide as feature names (for example, duplicate case labels), they are
+disambiguated automatically.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> composes with <code class="docutils literal notranslate"><span class="pre">render</span></code> exactly like <code class="docutils literal notranslate"><span class="pre">head()</span></code> and <code class="docutils literal notranslate"><span class="pre">tail()</span></code> do.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="stack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::stack</span></code></span></a> / <a class="reference internal" href="unstack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unstack</span></code></span></a>: reshape between
+wide and long form while preserving each feature’s original dtype, unlike
+<code class="docutils literal notranslate"><span class="pre">transpose()</span></code>.</p></li>
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::to_string</span></code></span></a>: a plain-text rendering of the frame without
+swapping rows and features.</p></li>
+<li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::head</span></code></span></a>: another <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>-returning method sharing the
+same <code class="docutils literal notranslate"><span class="pre">render</span></code> toggle.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="transform.html">
     <span class="label">Previous</span>
@@ -90,7 +142,6 @@ sales    100.0  120.0  90.0
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -99,7 +150,7 @@ sales    100.0  120.0  90.0
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -119,9 +170,10 @@ sales    100.0  120.0  90.0
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

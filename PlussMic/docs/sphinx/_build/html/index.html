@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>PlussMic User Documentation &#8212; PlussMic User Docs  documentation</title>
+    <title>Recommended Start Order &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=59a8c7d2" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="_static/layout.js?v=5a44cbdd"></script>
+    <script src="_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="API Reference" href="api_reference.html" />
@@ -35,17 +35,44 @@
 
           <div class="body" role="main">
             
-  <section id="plussmic-user-documentation">
-<h1>PlussMic User Documentation<a class="headerlink" href="#plussmic-user-documentation" title="Link to this heading">¶</a></h1>
-<p>PlussMic is the data-analysis layer in the Pluss stack. Its public surface is organized around three models:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">table</span></code>: <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">Atlas</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">kindle</span></code>: <code class="docutils literal notranslate"><span class="pre">Stream</span></code>, <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">Archive</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">bundle</span></code>: <code class="docutils literal notranslate"><span class="pre">Slot</span></code>, <code class="docutils literal notranslate"><span class="pre">Registry</span></code>, <code class="docutils literal notranslate"><span class="pre">Aisle</span></code></p></li>
-</ul>
-<p>Use the guides when you want workflow-oriented explanations. Use the API reference when you want exhaustive method signatures, parameter semantics, overload behavior, and concrete examples with verified output directly underneath the code.</p>
+  <div id="pluss-landing">
+<div class="pluss-hero">
+<div class="kicker">Pluss &middot; Space</div>
+<h1>PlussMic</h1>
+<p class="tagline">The data-analysis layer of Pluss: tabular data (<code>DataFrame</code>), typed columns (<code>Thread</code>), stacks of related frames (<code>Atlas</code>), plus aligned streaming containers and heterogeneous record bundles.</p>
+<div class="pluss-hero-actions">
+<a class="primary" href="api_reference.html">API Reference</a>
+</div>
+</div>
+<div class="pluss-section">
+<h2>What's in this space</h2>
+<p class="section-sub">PlussMic's public surface is organized around three models, plus a plotting/display branch shared across them.</p>
+<div class="pluss-package-grid">
+<div class="pluss-card">
+<span class="card-name">table</span>
+<span class="card-model">DataFrame &middot; Thread &middot; Atlas</span>
+<p class="card-desc">Named, mixed-type tabular analysis: <code>DataFrame</code> for 2D tables, <code>Thread</code> for one typed column, <code>Atlas</code> for a depth stack of frames.</p>
+</div>
+<div class="pluss-card">
+<span class="card-name">kindle</span>
+<span class="card-model">Stream &middot; Catalog &middot; Archive</span>
+<p class="card-desc">Aligned stream containers: a single named <code>Stream</code>, a <code>Catalog</code> of streams, and an <code>Archive</code> stack of catalogs.</p>
+</div>
+<div class="pluss-card">
+<span class="card-name">bundle</span>
+<span class="card-model">Slot &middot; Registry &middot; Aisle</span>
+<p class="card-desc">Heterogeneous record containers: a one-dimensional <code>Slot</code>, a <code>Registry</code> of named slots, and an <code>Aisle</code> stack of registries.</p>
+</div>
+<div class="pluss-card">
+<span class="card-name">Plotting</span>
+<span class="card-model">DataFramePlotAccessor &middot; DataFramePlot3DAccessor</span>
+<p class="card-desc">Plotting and display-oriented surfaces attached to the table model, reached through <code>DataFrame::plot()</code> and <code>DataFrame::plot3d()</code>.</p>
+</div>
+</div>
+</div>
+</div>
 <section id="recommended-start-order">
-<h2>Recommended Start Order<a class="headerlink" href="#recommended-start-order" title="Link to this heading">¶</a></h2>
+<h1>Recommended Start Order<a class="headerlink" href="#recommended-start-order" title="Link to this heading">¶</a></h1>
 <p>If you are learning the table workflow first, read these in order:</p>
 <ol class="arabic simple">
 <li><p><a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart</span></a></p></li>
@@ -53,48 +80,10 @@
 <li><p><a class="reference internal" href="manual/part05_dataframe_workflows.html"><span class="std std-doc">Manual: DataFrame Workflows</span></a></p></li>
 <li><p><a class="reference internal" href="api_reference.html"><span class="std std-doc">API Reference</span></a></p></li>
 </ol>
-</section>
-<section id="api-reference">
-<h2>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h2>
-<p>The API reference is navigable directly from this landing page.</p>
-<p>Start with the stack branch that matches the object you are holding in code:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
-</ul>
-</div>
-<section id="plussmic">
-<h3>PlussMic<a class="headerlink" href="#plussmic" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><a class="reference internal" href="api/plussmic_root.html"><span class="std std-doc">PlussMic API Reference</span></a></p></li>
-<li><p><a class="reference internal" href="api/plussmic_table.html"><span class="std std-doc">table</span></a>: <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">Atlas</span></code></p></li>
-<li><p><a class="reference internal" href="api/plussmic_kindle.html"><span class="std std-doc">kindle</span></a>: <code class="docutils literal notranslate"><span class="pre">Stream</span></code>, <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">Archive</span></code></p></li>
-<li><p><a class="reference internal" href="api/plussmic_bundle.html"><span class="std std-doc">bundle</span></a>: <code class="docutils literal notranslate"><span class="pre">Slot</span></code>, <code class="docutils literal notranslate"><span class="pre">Registry</span></code>, <code class="docutils literal notranslate"><span class="pre">Aisle</span></code></p></li>
-<li><p><a class="reference internal" href="api/plussmic_plotting.html"><span class="std std-doc">Plotting</span></a></p></li>
-</ul>
-</section>
-<section id="plussqit">
-<h3>PlussQit<a class="headerlink" href="#plussqit" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><a class="reference internal" href="api/plussqit_root.html"><span class="std std-doc">PlussQit API Reference</span></a></p></li>
-<li><p><a class="reference internal" href="api/plussqit_series.html"><span class="std std-doc">Series</span></a></p></li>
-<li><p><a class="reference internal" href="api/plussqit_note.html"><span class="std std-doc">Note</span></a></p></li>
-<li><p><a class="reference internal" href="api/plussqit_timeline.html"><span class="std std-doc">Timeline</span></a></p></li>
-<li><p><a class="reference internal" href="api/plussqit_timeindex.html"><span class="std std-doc">TimeIndex</span></a></p></li>
-</ul>
-</section>
-<section id="plusstils">
-<h3>PlussTils<a class="headerlink" href="#plusstils" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><a class="reference internal" href="api/plusstils_root.html"><span class="std std-doc">PlussTils API Reference</span></a></p></li>
-<li><p><a class="reference internal" href="api/plusstils_pathing.html"><span class="std std-doc">Pathing</span></a></p></li>
-<li><p><a class="reference internal" href="api/plusstils_view.html"><span class="std std-doc">PlussView</span></a></p></li>
-<li><p><a class="reference internal" href="api/plusstils_aux.html"><span class="std std-doc">Aux Utilities</span></a></p></li>
-</ul>
 <div class="toctree-wrapper compound">
 </div>
-</section>
-</section>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
 
@@ -104,7 +93,7 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="#">PlussMic</a></h1>
 
 
 
@@ -125,8 +114,6 @@
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>

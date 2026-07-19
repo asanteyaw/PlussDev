@@ -39,5 +39,5 @@ output = """
 0  Accra
 1  Tema
 2  Kumasi
-dtype: Note
+ptype: Note
 """

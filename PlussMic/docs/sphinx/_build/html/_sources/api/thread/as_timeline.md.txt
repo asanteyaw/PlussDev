@@ -52,7 +52,7 @@ auto out = Thread(stamps.as_timeline().year());
 0  2024
 1  2024
 2  2024
-dtype: Series
+ptype: Series
 ```
 
 

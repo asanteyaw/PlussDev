@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8cb01b1c4b3c -->
+
 # DataFrame::info
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -12,65 +15,169 @@ DataFrame::info(std::ostream& os, const display::DisplayOptions& options = {}) -
 
 ## What It Does
 
-This renders a human-readable view for inspection instead of creating a new analytic object.
+`info()` prints a concise, two-part health check of a frame: a short **summary block**
+(shape, case range, null-row count, a per-dtype feature tally, and an estimated memory
+footprint) followed by a **feature inventory** listing every column with its non-null
+count and its logical dtype. It is the fastest way to answer the three questions you
+almost always ask right after loading or deriving a frame: *how big is this, what shape
+are the columns, and where is data missing?*
+
+Unlike [`describe()`](describe.md), which summarizes the **values** of numeric features
+(mean, spread, quantiles), `info()` summarizes the **structure** of the whole frame,
+including non-numeric columns. Reach for `info()` first when you inspect a frame you did
+not build yourself — after `load_csv`, `load_excel`, a `join`, or a `group_by` — and use
+`describe()` once you already know the shape is what you expect and want to look at the
+numbers themselves.
+
+Both overloads compute the same content; the first prints to `stdout`, the second writes
+to any `std::ostream` you provide (useful for capturing the report into a log file or a
+string stream instead of the terminal).
+
+`info()` never mutates the frame and never touches non-participating columns: every
+feature that exists on the frame is listed exactly once in the inventory, in its current
+column order, regardless of dtype.
 
 ## Parameters
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`const display::DisplayOptions&`, default `{}`)
 
-**os**
-    Destination output stream used instead of the default display or print target.
+Rendering options shared with the rest of the display subsystem
+(`DataFrame::show`, `to_string`, `describe`, `corr`, ...). The fields that matter most for
+`info()` specifically:
+
+- `terminal_width` / `terminal_height`: override the detected terminal size. Leave at
+  `0` (the default) to auto-detect from the controlling terminal, or from `$COLUMNS` /
+  `$LINES` when output is not a TTY (for example, when it is redirected to a file, as
+  happens whenever these docs' examples were captured).
+- `show_shape_footer`: unused by `info()` itself — the summary block already reports
+  `Cases` and `Features` explicitly, so no separate `[N cs x M feat]` footer is appended.
+- `mode` (`DisplayMode::Auto` / `Compact` / `Wide`): influences how many feature rows are
+  shown before the inventory table truncates with `...` on very wide frames (see Notes).
+
+You will rarely need to construct a non-default `DisplayOptions` just for `info()` — the
+defaults auto-detect a sensible terminal width and print everything for typical frames.
+
+**os** (`std::ostream&`)
+
+Destination stream for the second overload. Pass `std::cout` explicitly, a
+`std::ostringstream` to capture the report as a string (via `info_string()` is usually
+more convenient for that use case, see Notes), or a file stream to append the report to
+a log.
 
 ## Returns
 
 `void`
-    Performs the side effect and returns no value.
+    `info()` performs the side effect of printing and returns nothing. Use
+    [`DataFrame::info_string()`](info_string.md) when you need the report as a
+    `std::string` instead of writing it somewhere.
 
 ## Examples
 
-Example 1. Print the frame summary with the default output route.
+Example 1. Inspect a frame with mixed dtypes and missing values right after building it.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
-df.info();
+orders.info();
 ```
 
 ### Output
 
 ```text
-rows: 3
-features: 3
-numeric: id, sales
-note: city
+========================================
+Field          | Value                  
+----------------------------------------
+Class          | pluss::table::DataFrame
+Cases          | 6                      
+Features       | 6                      
+Case Range     | 0 -> 5                 
+Null Case Rows | 2                      
+Dtypes         | Note(2), Series(4)     
+Memory         | 316.00 B               
+----------------------------------------
+=======================================
+#  | Feature     Non-Null Cases  Dtype 
+---------------------------------------
+0  | order_id    6               Series
+1  | city        6               Note  
+2  | product     6               Note  
+3  | units       6               Series
+4  | unit_price  5               Series
+5  | discount    5               Series
+---------------------------------------
 ```
-Example 2. Write the frame summary to a caller-provided output stream.
+
+Two rows have a missing value somewhere (`Null Case Rows | 2`): row 5 is missing
+`unit_price`, and row 2 is missing `discount` — you can already tell that before
+inspecting a single value directly, because the feature inventory shows `unit_price` and
+`discount` each sitting at `5` non-null cases against `6` total.
+
+Note that `Dtypes` reports **logical** thread kinds, not numeric precision — `order_id`,
+`units`, `unit_price`, and `discount` are all `Series`, whether they hold `int64` or
+`double` underneath. If you need the concrete scalar dtype per feature (`int64`,
+`float64`, and so on), use [`dtypes()`](dtypes.md) instead; `info()` intentionally keeps
+the dtype column coarse so it stays readable on a frame with dozens of features.
+
+Example 2. Write the same report to a stream instead of the terminal.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-std::ostringstream os;
-df.info(os);
+std::ostringstream log;
+orders.info(log);
+// log.str() now holds the exact text shown above, ready to append to a run log
+// or attach to a test failure message.
 ```
 
-### Output
+## What The Report Deliberately Leaves Out
 
-```text
-rows: 3
-features: 3
-numeric: id, sales
-note: city
-```
+`info()` gives you row count, column count, a per-column non-null count and dtype, and a
+rough memory estimate — a structural summary, not a value-level one. Two design choices
+worth knowing up front:
 
+- The dtype column reports the **logical** Pluss thread kind — `Series`, `Note`,
+  `Timeline`, or `TimeIndex` — rather than a concrete scalar dtype, because a single
+  `Series` column can already carry any numeric scalar type underneath. Pair `info()`
+  with [`dtypes()`](dtypes.md) when you need the concrete per-column scalar type.
+- `Case Range` reports the frame's case axis span, but the case axis is not always a
+  plain integer range — it can be a `Note`, `Timeline`, or `TimeIndex` label thread, in
+  which case `Case Range` shows the first and last case *values* rather than positions.
+
+## Notes
+
+- On a frame with many features, the inventory table truncates the middle rows with a
+  single `...` row once the number of features exceeds the terminal's row budget,
+  keeping a handful of rows from the top and bottom of the feature list visible. This
+  mirrors the row-truncation behavior of the plain frame renderer used by
+  [`show()`](show.md) / [`to_string()`](to_string.md); it is a display concern only and
+  never changes what `dtypes()`, `nfeatures()`, or any other accessor reports.
+- `Memory` is an estimate: numeric `Series` columns count `itemsize * cases`, `Note`
+  columns sum the byte length of every string cell, and one extra byte per case is added
+  for any column that carries a validity (null) mask. It is meant for a quick sense of
+  scale, not for precise capacity planning.
+- `Null Case Rows` counts rows where **at least one** feature is null, computed as
+  `frame.isnull().any(Axis::Case).sum()`. It will not tell you *which* feature is null in
+  a given row on its own — cross-reference the feature inventory's non-null counts, or
+  call [`isnull()`](isnull.md) directly for a full missing-value mask.
+
+## See Also
+
+- [`DataFrame::info_string`](info_string.md): the same report returned as a `std::string`
+  instead of printed.
+- [`DataFrame::describe`](describe.md): value-level statistics for numeric features
+  instead of structural metadata.
+- [`DataFrame::dtypes`](dtypes.md): the concrete per-feature scalar dtype.
+- [`DataFrame::isnull`](isnull.md): the full boolean missing-value mask behind `Null Case
+  Rows`.
+- [`DataFrame::shape`](shape.md): just the `(cases, features)` pair without the rest of
+  the report.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="head.html">

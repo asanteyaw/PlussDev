@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::fillnull_ &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::fillnull_ &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::filter" href="filter.html" />
@@ -36,117 +36,183 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-fillnull">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-fillnull">
 <h1>DataFrame::fillnull_<a class="headerlink" href="#dataframe-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
-
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>value</strong>
-Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame&amp;</span></code>
-Value produced by this call.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Fill missing values in place with a text scalar.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))}});</span>
+<p>The in-place, whole-frame counterpart to <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>. Where
+<code class="docutils literal notranslate"><span class="pre">fillnull()</span></code> is <code class="docutils literal notranslate"><span class="pre">const</span></code> and lets you target specific features and specific fill
+strategies (forward-fill, backward-fill, a per-feature value) through a <code class="docutils literal notranslate"><span class="pre">MissingSpec</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code> is deliberately narrower and blunter: pick the overload matching a
+column <em>kind</em>, and it fills <strong>every</strong> feature of that kind on the frame with the same
+scalar <code class="docutils literal notranslate"><span class="pre">value</span></code>, mutating the frame directly and returning <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference.</p>
+<p>```{important} There is no <code class="docutils literal notranslate"><span class="pre">features</span></code> parameter
+Unlike <code class="docutils literal notranslate"><span class="pre">fillnull()</span></code>, none of the <code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code> overloads accept a feature list. Calling
+<code class="docutils literal notranslate"><span class="pre">df.fillnull_(0.0)</span></code> fills every <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature’s nulls with <code class="docutils literal notranslate"><span class="pre">0.0</span></code> — you cannot target
+just one numeric column with this method. If you need a single-feature fill, either use
+<a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a> with an explicit <code class="docutils literal notranslate"><span class="pre">features</span></code> list, or reassign the one column
+directly (<code class="docutils literal notranslate"><span class="pre">df.features(&quot;price&quot;).fillnull(0.0)</span></code> and splice it back with
+<a class="reference internal" href="insert.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">insert()</span></code></span></a> / <a class="reference internal" href="place.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">place()</span></code></span></a>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+Each overload only touches features of the matching kind:
 
-<span class="n">df</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">);</span>
+- `fillnull_(double)`: every `Series` feature.
+- `fillnull_(std::string_view)` / `fillnull_(const char*)`: every `Note` feature.
+- `fillnull_(const pluss::Timeline&amp;)`: every `Timeline` feature.
+- `fillnull_(const pluss::TimeIndex&amp;)`: every `TimeIndex` feature.
+
+A feature of a *different* kind than the overload you called is left completely
+untouched — calling `fillnull_(0.0)` never affects a `Note` column, even if that
+column also has missing values.
+
+## Parameters
+
+**value**
+
+The replacement value, in whichever type matches the overload: a `double` for numeric
+`Series` features, a string for `Note` features, or a `Timeline` / `TimeIndex` scalar
+for those respective feature kinds. The same `value` is used for every matching
+feature on the frame — there is no per-feature value list.
+
+## Returns
+
+`DataFrame&amp;`
+    A reference to the same frame, now mutated in place. Every feature of the matching
+    kind has had its nulls replaced; every feature of a different kind is unchanged.
+
+## Examples
+
+Example 1. Fill every numeric feature&#39;s nulls with `0.0` in one call — note that both
+numeric columns are affected, not just one.
+
+```cpp
+using namespace pluss::table;
+
+auto readings = DataFrame({
+    {&quot;temp&quot;,     Thread(pluss::make_series({68.5, std::numeric_limits&lt;double&gt;::quiet_NaN(), 71.2}),
+                        pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
+    {&quot;humidity&quot;, Thread(pluss::make_series({30.0, 40.0, std::numeric_limits&lt;double&gt;::quiet_NaN()}),
+                        pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+});
+std::cout &lt;&lt; readings;
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | temp  humidity
+---------------------
+0    | 68.5  30      
+1    | NULL  40      
+2    | 71.2  NULL    
+---------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 2. Fill missing values in place with a TimeIndex scalar.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;idx&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T09:40:00Z&quot;</span><span class="p">}))}});</span>
-
-<span class="n">df</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">readings</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | temp  humidity
+---------------------
+0    | 68.5  30      
+1    | 0     40      
+2    | 71.2  0       
+---------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">temp</span></code>’s null (case <code class="docutils literal notranslate"><span class="pre">1</span></code>) and <code class="docutils literal notranslate"><span class="pre">humidity</span></code>’s null (case <code class="docutils literal notranslate"><span class="pre">2</span></code>) are filled with the same
+<code class="docutils literal notranslate"><span class="pre">0.0</span></code> in a single call — <code class="docutils literal notranslate"><span class="pre">fillnull_(double)</span></code> never singles out one numeric column.</p>
+<p>Example 2. Fill a <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature’s nulls; a numeric feature with its own null is left
+completely alone, since it isn’t the kind this overload targets.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}),</span>
+<span class="w">                     </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.5</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">79.5</span><span class="p">}),</span>
+<span class="w">                     </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<h3>Output (before)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   score
+-------------------
+0    | Accra  88.5 
+1    | NULL   NULL 
+2    | Tema   79.5 
+-------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 3. Fill missing values in place with a Timeline scalar.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T09:40:00Z&quot;</span><span class="p">}))}});</span>
-
-<span class="n">df</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">orders</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<h3>Output (after)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | city     score
+---------------------
+0    | Accra    88.5 
+1    | Unknown  NULL 
+2    | Tema     79.5 
+---------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 4. Fill missing values in place with a numeric scalar.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="n">df</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
-</pre></div>
-</div>
+<p>Only <code class="docutils literal notranslate"><span class="pre">city</span></code> (a <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature) changed; <code class="docutils literal notranslate"><span class="pre">score</span></code>’s own null at case <code class="docutils literal notranslate"><span class="pre">1</span></code> is completely
+untouched, since <code class="docutils literal notranslate"><span class="pre">fillnull_(std::string_view)</span></code> never looks at <code class="docutils literal notranslate"><span class="pre">Series</span></code> columns at all
+— a second call to <code class="docutils literal notranslate"><span class="pre">fillnull_(0.0)</span></code> would be needed to fill it.</p>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-</pre></div>
-</div>
-<p>Example 5. Fill missing values in place with a text scalar.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))}});</span>
-
-<span class="n">df</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>These overloads mutate the frame in place and return <code class="docutils literal notranslate"><span class="pre">DataFrame&amp;</span></code> — the only mutating
+members in the missing-data family. <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a> is the <code class="docutils literal notranslate"><span class="pre">const</span></code>,
+non-mutating alternative that also supports per-feature targeting and forward/backward
+fill strategies.</p></li>
+<li><p>There is no feature-selection parameter on any <code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code> overload; the fill always
+applies to every feature of the matching kind.</p></li>
+<li><p>A feature whose kind doesn’t match the overload called is left completely alone, even
+if it has nulls of its own — call the matching overload for each kind you need filled.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> and <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code> overloads follow the exact same
+kind-scoped, whole-frame, mutating pattern as the <code class="docutils literal notranslate"><span class="pre">double</span></code> and <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
+overloads shown above, filling every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature’s nulls with
+the given scalar.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::fillnull</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">const</span></code>, per-feature, multi-strategy
+alternative (constant value, forward-fill, or backward-fill via <code class="docutils literal notranslate"><span class="pre">MissingSpec</span></code>).</p></li>
+<li><p><a class="reference internal" href="ffill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ffill</span></code></span></a> / <a class="reference internal" href="bfill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::bfill</span></code></span></a>: propagate a
+neighboring observation instead of writing a fixed scalar.</p></li>
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::isnull</span></code></span></a>: locate missing cells before deciding how to fill
+them.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fillnull.html">
     <span class="label">Previous</span>
@@ -159,7 +225,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -168,7 +233,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -188,9 +253,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

@@ -79,7 +79,7 @@ output = """
 2  20
 3  25
 4  30
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -110,5 +110,5 @@ output = """
 2  25
 3  35
 4  45
-dtype: Series
+ptype: Series
 """

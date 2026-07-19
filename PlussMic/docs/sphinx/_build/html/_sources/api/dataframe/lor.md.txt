@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::lor
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,68 +7,88 @@
 ## Signatures
 
 ```cpp
-DataFrame::lor(const DataFrame& other) -> DataFrame
-
-DataFrame::lor(const Thread& other) -> DataFrame
+DataFrame::lor(const DataFrame& other) const -> DataFrame
+DataFrame::lor(const Thread& other) const -> DataFrame
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Elementwise logical OR — the same overload shape, `Bool`-only requirement, and
+positional (not case-label) matching as [`land()`](land.md). See `land()`'s "What It
+Does" for the full explanation of the two overloads and the constraints on `other`.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+`const DataFrame&` (same feature names in order, same case count, matched
+positionally) or `const Thread&` (one boolean thread applied identically to every
+feature). See [`land()`](land.md) for the full breakdown.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, with every feature holding the logical OR
+    of the source cell and the corresponding `other` value.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. OR two boolean frames with identical feature names, case-by-case.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.lor();
+auto left = DataFrame({
+    {"a", pluss::make_series({true, false, true}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
+}, pluss::make_note({"p", "q", "r"}));
+
+auto right = DataFrame({
+    {"a", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({false, true, true}, pluss::ScalarType::Bool)},
+}, pluss::make_note({"x", "y", "z"}));
+
+auto out = left.lor(right);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.lor();
+=================
+     | a     b   
+-----------------
+p    | true  true
+q    | true  true
+r    | true  true
+-----------------
+[3 cs x 2 feat]
 ```
 
-### Output
+Every position has at least one `true` operand on this particular data — feature `a`
+is `true` everywhere except where both sides happen to be `false` at once (which
+doesn't occur here), and the same holds for `b`. OR only reports `false` where
+**both** operands are `false` at that position, which this example doesn't happen to
+produce for either feature.
 
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
+## Notes
 
+- Requires a genuine `Bool` scalar type on every participating `Series` — see
+  [`land()`](land.md)'s note on casting first with
+  [`astype(..., pluss::ScalarType::Bool)`](astype.md).
+- `lor(const DataFrame&)` matches positionally by feature name and case count only —
+  it does not align by case label. See [`land()`](land.md) for the full explanation.
+- The reflected form [`ror()`](ror.md) computes the same cell values (OR is
+  commutative) and the same case labels and title too — `ror()` and `lor()` are fully
+  interchangeable. See [`rand()`](rand.md) for the fuller explanation, including a
+  note on an earlier revision where this wasn't the case.
+
+## See Also
+
+- [`DataFrame::land`](land.md): the AND counterpart, and the full explanation of this
+  family's shared overload shape.
+- [`DataFrame::lxor`](lxor.md): the XOR counterpart.
+- [`DataFrame::ror`](ror.md): the reflected form.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log.html">

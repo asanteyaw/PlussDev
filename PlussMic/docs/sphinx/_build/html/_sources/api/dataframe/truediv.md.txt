@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b40da3a6ef9c -->
+
 # DataFrame::truediv
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,175 +8,120 @@
 ## Signatures
 
 ```cpp
-DataFrame::truediv(const DataFrame& other) -> DataFrame
-
-DataFrame::truediv(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::truediv(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::truediv(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::truediv(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::truediv(double other) -> DataFrame
+DataFrame::truediv(double other) const -> DataFrame
+DataFrame::truediv(const DataFrame& other) const -> DataFrame
+DataFrame::truediv(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::truediv(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::truediv(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::truediv(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
-Applies elementwise true division to compatible numeric features.
+The named-method form of elementwise division — and, verified against the underlying
+numeric kernel, **the same operation as [`div()`](div.md)**. `truediv()` shares the
+exact same overload shape and alignment rules as [`add()`](add.md) and the rest of the
+arithmetic family — see `add()`'s "What It Does" for the full explanation of the
+scalar/frame/Thread operand shapes and the `axis`/`options` parameters.
+
+```{important} truediv() and div() are the same operation
+Both names route to the identical division kernel and produce identical results for
+every input, including integer-typed features — neither one truncates or floors the
+way [`floordiv()`](floordiv.md) does. `truediv()` exists as the more explicit name for
+readers who want it clear this is ordinary (non-floor) division; `div()` is the
+shorter alternative. There is no behavioral difference — pick whichever name reads
+better at the call site.
+```
 
 ## Parameters
 
 **other**
-    Scalar divisor or right-hand frame used for elementwise true division.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+The right-hand operand, dividing the current frame: `double` (broadcast scalar),
+`const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast per
+`axis`).
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
+value per feature; `Axis::Case` supplies one value per case.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`add()`](add.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, with every numeric feature divided by
+    `other`. Non-numeric features are left unchanged.
 
 ## Examples
 
-Example 1. Divide each compatible numeric cell against another aligned frame.
+Example 1. Divide every numeric feature by a scalar.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
+using namespace pluss::table;
 
-auto out = left.truediv(right);
+auto counts = DataFrame({
+    {"total", pluss::make_series({7.0, 9.0, 10.0})},
+}, pluss::make_note({"a", "b", "c"}));
+
+auto out = counts.truediv(2.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id    sales
-0.5   0.909091
-1.0   1.090909
-0.75  0.9
+============
+     | total
+------------
+a    | 3.5  
+b    | 4.5  
+c    | 5    
+------------
+[3 cs x 1 feat]
 ```
-Example 2. Divide each compatible numeric cell against another aligned frame.
+
+Example 2. `div()` on the same data produces the identical result.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.truediv(right);
+auto out_div = counts.div(2.0);
+std::cout << out_div;
 ```
 
 ### Output
 
 ```text
-id    sales
-0.5   0.909091
-1.0   1.090909
-0.75  0.9
-```
-Example 3. Divide each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.truediv(10);
+============
+     | total
+------------
+a    | 3.5  
+b    | 4.5  
+c    | 5    
+------------
+[3 cs x 1 feat]
 ```
 
-### Output
+## Notes
 
-```text
-id  sales  city
-0.1  10.0  Accra
-0.2  12.0  Tema
-0.3   9.0  Kumasi
-```
-Example 4. Divide each compatible numeric cell against one broadcast scalar value.
+- Non-numeric features are always left unchanged.
+- `truediv()` and `div()` are verified to be identical operations — see the note
+  above.
+- For integer-style division that rounds down to the nearest whole number instead, use
+  [`floordiv()`](floordiv.md).
+- Shares its full overload shape, alignment semantics, and `AlignOptions` behavior with
+  [`add()`](add.md), [`sub()`](sub.md), [`mul()`](mul.md), [`floordiv()`](floordiv.md),
+  [`mod()`](mod.md), and [`pow()`](pow.md).
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+## See Also
 
-auto out = df.truediv(10);
-```
-
-### Output
-
-```text
-id  sales  city
-0.1  10.0  Accra
-0.2  12.0  Tema
-0.3   9.0  Kumasi
-```
-Example 5. Divide each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.truediv(10);
-```
-
-### Output
-
-```text
-id  sales  city
-0.1  10.0  Accra
-0.2  12.0  Tema
-0.3   9.0  Kumasi
-```
-Example 6. Divide each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.truediv(10);
-```
-
-### Output
-
-```text
-id  sales  city
-0.1  10.0  Accra
-0.2  12.0  Tema
-0.3   9.0  Kumasi
-```
-
-## Practical Behavior
-
-- Scalar `truediv(...)` divides every compatible numeric cell by the supplied scalar.
-- Frame-vs-frame `truediv(...)` divides aligned numeric features row by row.
-- Non-numeric features pass through unchanged in the scalar form and are excluded from numeric combination work.
-
-
+- [`DataFrame::add`](add.md): the full explanation of the shared operand shapes and
+  `axis`/`options` parameters this family uses.
+- [`DataFrame::div`](div.md): the verified-identical alternate name for this same
+  operation.
+- [`DataFrame::floordiv`](floordiv.md): the distinct floor-division operation.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="transpose.html">

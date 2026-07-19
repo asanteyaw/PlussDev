@@ -85,7 +85,7 @@ auto out = scores.bounded(
 2  20
 3  25
 4  30
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Compute a trailing-two-row mean and require at least two observed values.
@@ -119,7 +119,7 @@ auto out = scores.bounded(
 2  25
 3  35
 4  45
-dtype: Series
+ptype: Series
 ```
 
 

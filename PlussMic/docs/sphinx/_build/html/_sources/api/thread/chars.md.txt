@@ -54,7 +54,7 @@ auto out = codes.chars(0, 1);
 0  A
 1  B
 2  C
-dtype: Note
+ptype: Note
 ```
 
 Example 2. Take every second character from the beginning to the end.
@@ -73,7 +73,7 @@ auto out = codes.chars(0, std::nullopt, 2);
 0  A01
 1  B02
 2  C03
-dtype: Note
+ptype: Note
 ```
 
 

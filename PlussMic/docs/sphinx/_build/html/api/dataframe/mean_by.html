@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::mean_by &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::mean_by &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::median" href="median.html" />
@@ -36,58 +36,146 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-mean-by">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-mean-by">
 <h1>DataFrame::mean_by<a class="headerlink" href="#dataframe-mean-by" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">mean_by</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">group_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull_group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">mean_by</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">group_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull_group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Groups by one feature and returns the mean of another feature within each group.</p>
+<p>Groups rows by <code class="docutils literal notranslate"><span class="pre">group_feature</span></code> and computes the mean of <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> within each
+group, returning a compact three-column summary (<code class="docutils literal notranslate"><span class="pre">group_feature</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;mean_&quot;</span> <span class="pre">+</span> <span class="pre">value_feature</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>) sorted by mean descending, ties broken
+alphabetically by group key. This is a focused convenience for the single most common
+group-and-summarize question — “what’s the average X per Y” — without building a full
+<a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by()</span></code></span></a> pipeline for it. <a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count_by()</span></code></span></a> is the
+sibling convenience for counting rows per group instead of averaging a value.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>group_feature</strong>
-Feature whose distinct values define the groups for grouped summaries such as <code class="docutils literal notranslate"><span class="pre">mean_by(...)</span></code>.</p>
-<p><strong>value_feature</strong>
-Feature whose values populate pivot cells or grouped summaries.</p>
-<p><strong>top_n</strong>
-Optional cap on how many grouped rows to keep after sorting. Use <code class="docutils literal notranslate"><span class="pre">0</span></code> to keep every group.</p>
-<p><strong>min_count</strong>
-Minimum non-null observations required before a grouped or rolling summary is considered valid.</p>
-<p><strong>dropnull_group</strong>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-<p><strong>render</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned view can auto-render in temporary terminal contexts. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> when you want explicit output control.</p>
+<p><strong>group_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The feature whose distinct values define the groups.</p>
+<p><strong>value_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The numeric feature averaged within each group.</p>
+<p><strong>top_n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
+<p>Keep only the <code class="docutils literal notranslate"><span class="pre">top_n</span></code> groups with the highest mean, after sorting. <code class="docutils literal notranslate"><span class="pre">0</span></code> (the default)
+keeps every group.</p>
+<p><strong>min_count</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p>
+<p>A group needs at least this many observations of <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> to appear in the
+result at all; groups with fewer observations are dropped entirely, not shown with a
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> mean.</p>
+<p><strong>dropnull_group</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Whether a missing <code class="docutils literal notranslate"><span class="pre">group_feature</span></code> value forms its own group (<code class="docutils literal notranslate"><span class="pre">false</span></code>) or is excluded
+entirely (<code class="docutils literal notranslate"><span class="pre">true</span></code>, the default).</p>
+<p><strong>render</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>Display toggle for the returned <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, identical in behavior to
+<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">render</span></code> parameter.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>
-Value produced by this call.</p>
+A frame with one row per surviving group, columns <code class="docutils literal notranslate"><span class="pre">group_feature</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;mean_&quot;</span> <span class="pre">+</span> <span class="pre">value_feature</span></code>, and <code class="docutils literal notranslate"><span class="pre">count</span></code>, sorted by mean descending (ties broken
+alphabetically by group key ascending).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Choose whether the returned object should auto-render in display contexts.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))},</span>
+<p>Example 1. Compute the mean sales amount per region.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | region  amount
+---------------------
+0    | East    100   
+1    | West    200   
+2    | East    150   
+3    | West    50    
+4    | East    90    
+---------------------
+[5 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">by_region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">mean_by</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">by_region</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================================
+     | region  mean_amount  count
+---------------------------------
+0    | West    125          2    
+1    | East    113.3333333  3    
+---------------------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">West</span></code>’s mean (<code class="docutils literal notranslate"><span class="pre">(200</span> <span class="pre">+</span> <span class="pre">50)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">125</span></code>) is higher than <code class="docutils literal notranslate"><span class="pre">East</span></code>’s
+(<code class="docutils literal notranslate"><span class="pre">(100</span> <span class="pre">+</span> <span class="pre">150</span> <span class="pre">+</span> <span class="pre">90)</span> <span class="pre">/</span> <span class="pre">3</span> <span class="pre">~=</span> <span class="pre">113.33</span></code>), so <code class="docutils literal notranslate"><span class="pre">West</span></code> sorts first.</p>
+<p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">min_count</span></code> to drop groups with too few observations to be meaningful.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales_with_north</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">500.0</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">mean_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales_with_north</span><span class="p">.</span><span class="n">mean_by</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="cm">/*min_count=*/</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">strict</span><span class="p">;</span>
 </pre></div>
 </div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>city    sales_mean
-Accra   110.0
-Tema    120.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================================
+     | region  mean_amount  count
+---------------------------------
+0    | West    125          2    
+1    | East    113.3333333  3    
+---------------------------------
+[2 cs x 3 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">North</span></code> has only one observation (<code class="docutils literal notranslate"><span class="pre">500</span></code>), which would otherwise be the highest mean
+by far — but <code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">2</span></code> excludes it from the result entirely, rather than
+showing a mean computed from a single, potentially unrepresentative value.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The output column is always named <code class="docutils literal notranslate"><span class="pre">&quot;mean_&quot;</span> <span class="pre">+</span> <span class="pre">value_feature</span></code> (for example,
+<code class="docutils literal notranslate"><span class="pre">mean_amount</span></code>), never just the plain feature name.</p></li>
+<li><p>Sorting is always mean descending, ties broken alphabetically by group key
+ascending — the same tie-break convention used by <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> and
+<a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tally()</span></code></span></a>.</p></li>
+<li><p>A group excluded by <code class="docutils literal notranslate"><span class="pre">min_count</span></code> is dropped entirely, not shown with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> mean —
+there is no way to distinguish “excluded by min_count” from “never existed” in the
+output alone.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::count_by</span></code></span></a>: the row-counting sibling of this method.</p></li>
+<li><p><a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by</span></code></span></a>: the general-purpose grouping primitive, for
+summaries this convenience doesn’t cover (multiple aggregates, multiple group
+keys).</p></li>
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean</span></code></span></a>: the ungrouped, whole-frame mean.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mean.html">
     <span class="label">Previous</span>
@@ -100,7 +188,6 @@ Tema    120.0
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -109,7 +196,7 @@ Tema    120.0
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -129,9 +216,10 @@ Tema    120.0
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

@@ -77,7 +77,7 @@ auto out = scores.bucketize({0.0, 20.0, 40.0, 60.0});
 2  1
 3  1
 4  2
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Bucketize with explicit output labels.
@@ -98,7 +98,7 @@ auto out = scores.bucketize({0.0, 20.0, 40.0, 60.0}, {10, 20, 30}, true, true);
 2  20
 3  20
 4  30
-dtype: Series
+ptype: Series
 ```
 
 

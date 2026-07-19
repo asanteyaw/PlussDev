@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::mean_by
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,60 +7,152 @@
 ## Signature
 
 ```cpp
-DataFrame::mean_by(std::string_view group_feature, std::string_view value_feature, std::int64_t top_n = 0, std::int64_t min_count = 1, bool dropnull_group = true, bool render = false) -> DataFrameView
+DataFrame::mean_by(std::string_view group_feature, std::string_view value_feature, std::int64_t top_n = 0, std::int64_t min_count = 1, bool dropnull_group = true, bool render = false) const -> DataFrameView
 ```
 
 ## What It Does
 
-Groups by one feature and returns the mean of another feature within each group.
+Groups rows by `group_feature` and computes the mean of `value_feature` within each
+group, returning a compact three-column summary (`group_feature`,
+`"mean_" + value_feature`, `count`) sorted by mean descending, ties broken
+alphabetically by group key. This is a focused convenience for the single most common
+group-and-summarize question — "what's the average X per Y" — without building a full
+[`group_by()`](group_by.md) pipeline for it. [`count_by()`](count_by.md) is the
+sibling convenience for counting rows per group instead of averaging a value.
 
 ## Parameters
 
-**group_feature**
-    Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.
+**group_feature** (`std::string_view`)
 
-**value_feature**
-    Feature whose values populate pivot cells or grouped summaries.
+The feature whose distinct values define the groups.
 
-**top_n**
-    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
+**value_feature** (`std::string_view`)
 
-**min_count**
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+The numeric feature averaged within each group.
 
-**dropnull_group**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+**top_n** (`std::int64_t`, default `0`)
 
-**render**
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
+Keep only the `top_n` groups with the highest mean, after sorting. `0` (the default)
+keeps every group.
+
+**min_count** (`std::int64_t`, default `1`)
+
+A group needs at least this many observations of `value_feature` to appear in the
+result at all; groups with fewer observations are dropped entirely, not shown with a
+`NULL` mean.
+
+**dropnull_group** (`bool`, default `true`)
+
+Whether a missing `group_feature` value forms its own group (`false`) or is excluded
+entirely (`true`, the default).
+
+**render** (`bool`, default `false`)
+
+Display toggle for the returned `DataFrameView`, identical in behavior to
+[`head()`](head.md)'s `render` parameter.
 
 ## Returns
 
 `DataFrameView`
-    Value produced by this call.
+    A frame with one row per surviving group, columns `group_feature`,
+    `"mean_" + value_feature`, and `count`, sorted by mean descending (ties broken
+    alphabetically by group key ascending).
 
 ## Examples
 
-Example 1. Choose whether the returned object should auto-render in display contexts.
+Example 1. Compute the mean sales amount per region.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"region", Thread(pluss::make_note({"East", "West", "East", "West", "East"}))},
+    {"amount", Thread(pluss::make_series({100.0, 200.0, 150.0, 50.0, 90.0}))},
+});
+std::cout << sales;
+```
+
+### Output (before)
+
+```text
+=====================
+     | region  amount
+---------------------
+0    | East    100   
+1    | West    200   
+2    | East    150   
+3    | West    50    
+4    | East    90    
+---------------------
+[5 cs x 2 feat]
+```
+
+```cpp
+auto by_region = sales.mean_by("region", "amount");
+std::cout << by_region;
+```
+
+### Output (after)
+
+```text
+=================================
+     | region  mean_amount  count
+---------------------------------
+0    | West    125          2    
+1    | East    113.3333333  3    
+---------------------------------
+[2 cs x 3 feat]
+```
+
+`West`'s mean (`(200 + 50) / 2 = 125`) is higher than `East`'s
+(`(100 + 150 + 90) / 3 ~= 113.33`), so `West` sorts first.
+
+Example 2. Use `min_count` to drop groups with too few observations to be meaningful.
+
+```cpp
+auto sales_with_north = DataFrame({
+    {"region", Thread(pluss::make_note({"East", "West", "East", "West", "East", "North"}))},
+    {"amount", Thread(pluss::make_series({100.0, 200.0, 150.0, 50.0, 90.0, 500.0}))},
 });
 
-auto out = df.mean_by("city", "sales", 3, 1, true, false);
+auto strict = sales_with_north.mean_by("region", "amount", 0, /*min_count=*/2);
+std::cout << strict;
 ```
 
 ### Output
 
 ```text
-city    sales_mean
-Accra   110.0
-Tema    120.0
+=================================
+     | region  mean_amount  count
+---------------------------------
+0    | West    125          2    
+1    | East    113.3333333  3    
+---------------------------------
+[2 cs x 3 feat]
 ```
 
+`North` has only one observation (`500`), which would otherwise be the highest mean
+by far — but `min_count = 2` excludes it from the result entirely, rather than
+showing a mean computed from a single, potentially unrepresentative value.
+
+## Notes
+
+- The output column is always named `"mean_" + value_feature` (for example,
+  `mean_amount`), never just the plain feature name.
+- Sorting is always mean descending, ties broken alphabetically by group key
+  ascending — the same tie-break convention used by [`freq()`](freq.md) and
+  [`tally()`](tally.md).
+- A group excluded by `min_count` is dropped entirely, not shown with a `NULL` mean —
+  there is no way to distinguish "excluded by min_count" from "never existed" in the
+  output alone.
+
+## See Also
+
+- [`DataFrame::count_by`](count_by.md): the row-counting sibling of this method.
+- [`DataFrame::group_by`](group_by.md): the general-purpose grouping primitive, for
+  summaries this convenience doesn't cover (multiple aggregates, multiple group
+  keys).
+- [`DataFrame::mean`](mean.md): the ungrouped, whole-frame mean.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mean.html">

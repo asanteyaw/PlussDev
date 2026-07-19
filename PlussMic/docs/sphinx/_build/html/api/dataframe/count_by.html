@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::count_by &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::count_by &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::covar" href="covar.html" />
@@ -36,57 +36,57 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-count-by">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-count-by">
 <h1>DataFrame::count_by<a class="headerlink" href="#dataframe-count-by" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">count_by</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">count_by</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
 </pre></div>
 </div>
-<p>Group rows by one feature and return the count for each distinct key.</p>
-<p>This is the compact frequency-table surface for one grouping feature.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Builds a frequency table for a single feature: one row per distinct value of
+<code class="docutils literal notranslate"><span class="pre">feature</span></code>, paired with how many cases carry that value, sorted from most frequent to
+least frequent (ties broken alphabetically by the value itself). It is a dedicated
+shortcut for the single most common <a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by</span></code></span></a> query — “how many of
+each?” — without hand-writing a <code class="docutils literal notranslate"><span class="pre">GroupSpec</span></code> for a plain count.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>feature</strong></p>
-<p>Feature whose distinct values define the groups.</p>
-<p><strong>top_n</strong></p>
-<p>Optional cap on the number of groups returned.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: keep every group.</p></li>
-<li><p>positive integer: keep only the top <code class="docutils literal notranslate"><span class="pre">N</span></code> groups after sorting.</p></li>
-</ul>
-<p><strong>dropnull</strong></p>
-<p>Missing-key policy.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: drop missing grouping keys.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: allow missing keys to participate as their own group.</p></li>
-</ul>
-<p><strong>render</strong></p>
-<p>Display toggle for the returned view.</p>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The feature whose distinct values define the groups.</p>
+<p><strong>top_n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
+<p>Cap the result to the <code class="docutils literal notranslate"><span class="pre">top_n</span></code> most frequent groups after sorting. <code class="docutils literal notranslate"><span class="pre">0</span></code> (the default)
+keeps every group; a positive value truncates the (already count-sorted) result down
+to that many rows.</p>
+<p><strong>dropnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Whether a missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value is excluded from the count entirely (<code class="docutils literal notranslate"><span class="pre">true</span></code>, the
+default) or allowed to form its own group (<code class="docutils literal notranslate"><span class="pre">false</span></code>).</p>
+<p><strong>render</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>Display toggle for the returned <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, following the same convention as
+<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>
-Frequency table with the grouping key and its count.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>Results are sorted by count descending. Ties are then stabilized by key order.</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">top_n</span></code> when you only want the most frequent groups.</p>
+A two-column frequency table: <code class="docutils literal notranslate"><span class="pre">feature</span></code> (the distinct values) and <code class="docutils literal notranslate"><span class="pre">count</span></code> (an
+<code class="docutils literal notranslate"><span class="pre">Int64</span></code> occurrence count), sorted by count descending, then by value ascending on
+ties.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Return counts for every distinct grouping key.</p>
+<p>Example 1. Tally every distinct value of a grouping feature.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">})},</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counts</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -101,15 +101,9 @@ Frequency table with the grouping key and its count.</p>
 [3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 2. Keep only the top two most frequent groups.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<p>Example 2. Keep only the two most frequent groups with <code class="docutils literal notranslate"><span class="pre">top_n</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">top_cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/*top_n=*/</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">top_cities</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -124,6 +118,127 @@ Frequency table with the grouping key and its count.</p>
 [2 cs x 2 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">Kumasi</span></code> (count <code class="docutils literal notranslate"><span class="pre">1</span></code>) is dropped since only the top two rows of the already-sorted
+table survive <code class="docutils literal notranslate"><span class="pre">top_n</span> <span class="pre">=</span> <span class="pre">2</span></code>.</p>
+<p>Example 3. See the alphabetical tie-break rule in action.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">letters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;grade&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">letters</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;grade&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | grade  count
+-------------------
+0    | A      2    
+1    | B      2    
+2    | C      1    
+-------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are tied at count <code class="docutils literal notranslate"><span class="pre">2</span></code>; the tie is broken alphabetically, so <code class="docutils literal notranslate"><span class="pre">A</span></code> is listed
+first even though <code class="docutils literal notranslate"><span class="pre">B</span></code> happened to appear first in the source data.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code>: a missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value gets its own group,
+labeled <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, instead of being excluded.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">dropped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_missing</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dropped</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">kept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_missing</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/*top_n=*/</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="cm">/*dropnull=*/</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">kept</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-dropnull-true-the-default">
+<h3>Output (dropnull = true, the default)<a class="headerlink" href="#output-dropnull-true-the-default" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   count
+-------------------
+0    | Accra  2    
+1    | Kumasi 1    
+-------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-dropnull-false">
+<h3>Output (dropnull = false)<a class="headerlink" href="#output-dropnull-false" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | city    count
+--------------------
+0    | Accra   2    
+1    | Kumasi  1    
+2    | NULL    1    
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">with_missing</span></code>’s second row (index 1) is genuinely missing: it was built by
+pairing <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">false</span></code> in an explicit validity mask, so the cell itself
+is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, not the string <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">true</span></code> correctly excludes it.
+With <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code>, that row forms its own group, printed as <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in
+the <code class="docutils literal notranslate"><span class="pre">city</span></code> column — one occurrence, same as <code class="docutils literal notranslate"><span class="pre">Kumasi</span></code>. <code class="docutils literal notranslate"><span class="pre">NULL</span></code>’s group sorts
+after <code class="docutils literal notranslate"><span class="pre">Kumasi</span></code> despite the tied count of <code class="docutils literal notranslate"><span class="pre">1</span></code>, since a missing key is never
+alphabetized against real values; it always sorts last among ties.</p>
+<p>Example 5. Pass <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">true</span></code> and let the returned view print itself, with
+no explicit <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> at all.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">orders</span><span class="p">.</span><span class="n">count_by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/*top_n=*/</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="cm">/*dropnull=*/</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="cm">/*render=*/</span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | city    count
+--------------------
+0    | Accra   3    
+1    | Tema    2    
+2    | Kumasi  1    
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>As with <a class="reference internal" href="aggregate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">aggregate()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">render</span></code> parameter, this bare
+statement prints automatically only because <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">true</span></code>; with the default
+<code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">false</span></code>, the same unassigned, unstreamed call would produce no
+output.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The sort is always count-descending, value-ascending-on-ties — there is no
+parameter to reverse either ordering; pipe the result through
+<a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_values</span></code></span></a> afterward if you need a different order. A
+missing key is never alphabetized against real values for tie-breaking; it
+always sorts after every real value tied with it on count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code> gives a missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value its own group in the count,
+printed as <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the output, rather than excluding those rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">top_n</span></code> truncates <em>after</em> sorting, so it always keeps the most frequent groups, not
+an arbitrary prefix of the unsorted data.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by</span></code></span></a>: the general grouped-aggregation surface
+<code class="docutils literal notranslate"><span class="pre">count_by()</span></code> is a convenience shortcut for.</p></li>
+<li><p><a class="reference internal" href="bucketize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::bucketize</span></code></span></a>: often used just before <code class="docutils literal notranslate"><span class="pre">count_by()</span></code>, to
+tally how many cases fell into each engineered band.</p></li>
+<li><p><a class="reference internal" href="mean_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean_by</span></code></span></a>: the same grouping idea, but averaging a value
+feature per group instead of counting rows.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="count.html">
     <span class="label">Previous</span>
@@ -136,7 +251,6 @@ Frequency table with the grouping key and its count.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -145,7 +259,7 @@ Frequency table with the grouping key and its count.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -165,9 +279,10 @@ Frequency table with the grouping key and its count.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

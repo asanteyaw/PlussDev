@@ -111,7 +111,7 @@ auto out = scores.btw(20.0, 40.0, true);
 2  true
 3  true
 4  false
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Use asymmetric scalar numeric boundaries.
@@ -132,7 +132,7 @@ auto out = scores.btw(20.0, 40.0, false, true);
 2  true
 3  true
 4  false
-dtype: Series
+ptype: Series
 ```
 
 Example 3. Use shared inclusion for scalar temporal bounds.
@@ -155,7 +155,7 @@ auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);
 0  true
 1  true
 2  false
-dtype: Series
+ptype: Series
 ```
 
 Example 4. Use asymmetric scalar temporal boundaries.
@@ -178,7 +178,7 @@ auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true
 0  false
 1  true
 2  true
-dtype: Series
+ptype: Series
 ```
 
 Example 5. Use rowwise lower and upper threads with shared inclusion.
@@ -201,7 +201,7 @@ auto out = scores.btw(lower, upper, true);
 2  false
 3  true
 4  true
-dtype: Series
+ptype: Series
 ```
 
 Example 6. Use rowwise lower and upper threads with asymmetric boundaries.
@@ -224,7 +224,7 @@ auto out = scores.btw(lower, upper, false, true);
 2  false
 3  true
 4  true
-dtype: Series
+ptype: Series
 ```
 
 

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::std &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::std &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::sub" href="sub.html" />
@@ -36,80 +36,159 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-std">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6e1bae309017 -->
+<section id="dataframe-std">
 <h1>DataFrame::std<a class="headerlink" href="#dataframe-std" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes per-feature standard deviations for the selected numeric features.</p>
+<p>Reduces every numeric feature to its standard deviation, returning one <code class="docutils literal notranslate"><span class="pre">Thread</span></code> whose
+entries line up with the frame’s numeric feature names — the same shape
+<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a> and <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> return. Non-numeric features are skipped
+entirely rather than coerced into a statistic that wouldn’t mean anything.</p>
+<p>By default this is the <strong>sample</strong> standard deviation: the sum of squared deviations from
+the mean is divided by <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> rather than <code class="docutils literal notranslate"><span class="pre">n</span></code>, the conventional correction for
+estimating a population’s spread from a finite sample. The <code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code> overload
+lets you override that divisor explicitly via <code class="docutils literal notranslate"><span class="pre">ddof</span></code> when you need the <strong>population</strong>
+standard deviation instead (divide by <code class="docutils literal notranslate"><span class="pre">n</span></code>), or require a minimum number of observations
+before a feature’s result counts as valid.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>axis</strong>
-Axis selector. On <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code> usually means rows/cases and <code class="docutils literal notranslate"><span class="pre">1</span></code> means features/columns.</p>
-<p><strong>skipnull</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, missing values are skipped during the reduction. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, missing state can affect the result.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>, default <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code>)</p>
+<p>Reduction direction. <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> (the default) reduces down each feature’s cases,
+producing one standard deviation per feature. <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> reduces across each row’s
+features instead, producing one value per case.</p>
+<p><strong>skipnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Controls how a missing value affects that feature’s result:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default): missing values are excluded from the computation entirely, so
+the standard deviation reflects only the observed values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: a single missing value in a feature poisons that feature’s result, which comes
+back <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p></li>
+</ul>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">StatisticOptions&amp;</span></code>)</p>
+<p>A structured policy for the same reduction, exposing two fields the short overload
+cannot reach:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ddof</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the delta-degrees-of-freedom subtracted from <code class="docutils literal notranslate"><span class="pre">n</span></code>
+in the divisor. <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> (the default under either overload) is the sample standard
+deviation; <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> is the population standard deviation, dividing by the full
+observed count instead of <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_count</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the minimum number of non-null observations
+a feature must have before it is assigned a real result at all; a feature with fewer
+observed values than <code class="docutils literal notranslate"><span class="pre">min_count</span></code> reports <code class="docutils literal notranslate"><span class="pre">NULL</span></code> regardless of <code class="docutils literal notranslate"><span class="pre">ddof</span></code>.</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+One entry per participating numeric feature, labeled by feature name, holding that
+feature’s standard deviation.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute <code class="docutils literal notranslate"><span class="pre">std</span></code> for each numeric column in the frame.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. Compute the sample standard deviation, skipping missing values (the default).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">spread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">std</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spread</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>feature  value
-id       1.0
-sales    15.275252317
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  1.870828693
+     units  1.471960144
+unit_price  580.5111971
+  discount  0.03082207001
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Compute <code class="docutils literal notranslate"><span class="pre">std</span></code> for each numeric column in the frame.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<p><code class="docutils literal notranslate"><span class="pre">unit_price</span></code>’s one missing observation (case <code class="docutils literal notranslate"><span class="pre">5</span></code>) is excluded from the computation
+entirely — its standard deviation is computed over the remaining five values, the same
+way <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> and <a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">describe()</span></code></span></a> treat that column’s missing
+value.</p>
+<p>Example 2. Disable null-skipping to see a missing value propagate.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">spread_strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spread_strict</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>feature  value
-id       1.0
-sales    15.275252317
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  1.870828693
+     units  1.471960144
+unit_price  NULL
+  discount  NULL
+ptype: Series
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> and <code class="docutils literal notranslate"><span class="pre">discount</span></code> — the two features that each have
+exactly one missing value — come back <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entirely. <code class="docutils literal notranslate"><span class="pre">order_id</span></code> and <code class="docutils literal notranslate"><span class="pre">units</span></code>, with no
+missing values, are unaffected either way.</p>
+<p>Example 3. Use the <code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code> overload to compute the population standard
+deviation instead of the sample standard deviation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">StatisticOptions</span><span class="w"> </span><span class="n">population</span><span class="p">;</span>
+<span class="n">population</span><span class="p">.</span><span class="n">ddof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">spread_population</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="n">population</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spread_population</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  1.707825128
+     units  1.343709625
+unit_price  519.2249994
+  discount  0.0275680975
+ptype: Series
+</pre></div>
+</div>
+<p>Every value is slightly smaller than in Example 1: dividing by the full observed count
+(<code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code>) instead of <code class="docutils literal notranslate"><span class="pre">count</span> <span class="pre">-</span> <span class="pre">1</span></code> (<code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code>, the implicit default) always produces a
+standard deviation that is less than or equal to the sample statistic. Reach for
+<code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> when the data in hand <strong>is</strong> the entire population of interest, not a sample
+drawn from a larger one.</p>
 </section>
-<section id="practical-behavior">
-<h2>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h2>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">std(...)</span></code> reduces the selected numeric features to one summary row.</p></li>
-<li><p>Non-numeric features are skipped rather than coerced.</p></li>
-<li><p>The output stays in DataFrame form, which makes these reducers easy to reuse in downstream frame pipelines.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std()</span></code>’s result is labeled by feature name and prints like a small labeled <code class="docutils literal notranslate"><span class="pre">Series</span></code>,
+not like a row sliced from the source frame.</p></li>
+<li><p>Non-numeric features never appear in the result; they are neither computed as an error
+nor silently coerced.</p></li>
+<li><p>A feature with fewer than two observed values has an undefined sample standard
+deviation and reports <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, independent of <code class="docutils literal notranslate"><span class="pre">min_count</span></code>.</p></li>
+<li><p>For the corresponding variance (the squared statistic, no square root applied), see
+<a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>, which shares the exact same <code class="docutils literal notranslate"><span class="pre">axis</span></code> / <code class="docutils literal notranslate"><span class="pre">skipnull</span></code> / <code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code>
+shape.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::var</span></code></span></a>: the variance this method’s square root is computed from.</p></li>
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean</span></code></span></a>: the center each deviation in this computation is measured
+from.</p></li>
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: reports <code class="docutils literal notranslate"><span class="pre">std</span></code> alongside several other statistics
+in one call.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="stack.html">
@@ -131,7 +210,7 @@ sales    15.275252317
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -151,9 +230,10 @@ sales    15.275252317
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

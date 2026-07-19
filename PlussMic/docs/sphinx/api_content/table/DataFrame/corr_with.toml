@@ -76,7 +76,7 @@ output = """
 x  1
 y  0.9897782666
 z  0.6
-dtype: Series
+ptype: Series
 """
 
 [[examples]]

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::to_string
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,46 +7,97 @@
 ## Signature
 
 ```cpp
-DataFrame::to_string(const display::DisplayOptions& options = {}) -> std::string
+DataFrame::to_string(const display::DisplayOptions& options = {}) const -> std::string
 ```
 
 ## What It Does
 
-Serializes or renders the current object into a text form you can inspect, log, or export.
+Returns the frame's rendered box-table text as a `std::string` — the exact same
+text `operator<<` writes when you do `std::cout << frame`, and the same text
+[`show()`](show.md)'s explicit-stream overload writes plus a trailing newline. Reach
+for `to_string()` specifically when you want the rendered text itself (to log it,
+compare it in a test, embed it in another string, and so on) rather than printing it
+as a side effect.
 
 ## Parameters
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`const display::DisplayOptions&`, default `{}`)
+
+Rendering options — terminal width/height overrides, and toggles for the shape
+footer (`show_shape_footer`) and the leftmost case-index column
+(`show_case_index`). Backend/window-related fields on `DisplayOptions` have no
+effect on this method, since it always returns plain text.
 
 ## Returns
 
 `std::string`
-    Rendered string result.
+    The frame's rendered box-table text, with no trailing newline.
 
 ## Examples
 
-Example 1. Pass an explicit options object to control the operation.
+Example 1. Get the rendered text and inspect it directly.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.to_string();
+std::string rendered = orders.to_string();
+std::cout << rendered;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+==========================
+     | id    sales  city  
+--------------------------
+0    | 1     100    Accra 
+1    | 2     120    Tema  
+2    | 3     90     Kumasi
+--------------------------
+[3 cs x 3 feat]
 ```
 
+`rendered` is identical, character for character, to what `std::cout << orders`
+would print directly — `to_string()` just hands you that same text as a value
+instead of writing it anywhere.
+
+Example 2. Confirm it matches `operator<<`'s output exactly.
+
+```cpp
+std::ostringstream via_stream;
+via_stream << orders;
+std::cout << (orders.to_string() == via_stream.str()) << "\n";
+```
+
+### Output
+
+```text
+true
+```
+
+## Notes
+
+- `to_string()` never has a trailing newline; `std::cout << frame` also doesn't add
+  one, but [`show()`](show.md) does.
+- `options`'s backend/window fields (`mode`, `backend`, viewer sizing, window title)
+  have no effect here — `to_string()` always produces plain text, unlike
+  [`show()`](show.md)'s no-stream overload, which may resolve to a GUI/HTML viewer
+  instead.
+- [`info_string()`](info_string.md) is the analogous method for the structural
+  summary view (dtypes, memory, null counts) instead of the full data table.
+
+## See Also
+
+- [`DataFrame::show`](show.md): prints this same rendered text as a side effect,
+  rather than returning it.
+- [`DataFrame::info_string`](info_string.md): the structural-summary counterpart to
+  this method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tl.html">

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::combine &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::combine &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::compare" href="compare.html" />
@@ -36,121 +36,213 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-combine">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-combine">
 <h1>DataFrame::combine<a class="headerlink" href="#dataframe-combine" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">combine</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">combine</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">CombineSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">combine</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">combine</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">CombineSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Combine this frame with another frame using either the default feature-combine route or an explicit combine policy.</p>
-<p>This is the lower-level frame composition surface behind update-style and join-like feature stitching.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Merges this frame with <code class="docutils literal notranslate"><span class="pre">other</span></code> along the <em>case</em> axis (matched by case-label value, the
+same way <a class="reference internal" href="align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align()</span></code></span></a> matches rows), then decides what happens to each of
+<code class="docutils literal notranslate"><span class="pre">other</span></code>’s features according to <code class="docutils literal notranslate"><span class="pre">spec.op</span></code>:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">CombineOp::Features</span></code></strong> (the default, via <code class="docutils literal notranslate"><span class="pre">combine(other)</span></code>): keep every feature
+from this frame as-is, then bring in <code class="docutils literal notranslate"><span class="pre">other</span></code>’s features too — a feature name that
+doesn’t already exist is added outright; a feature name that collides with an
+existing one is added under a disambiguated name (<code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">+</span> <span class="pre">spec.collision_suffix</span></code>,
+default <code class="docutils literal notranslate"><span class="pre">&quot;_right&quot;</span></code>, with a numeric <code class="docutils literal notranslate"><span class="pre">_2</span></code>, <code class="docutils literal notranslate"><span class="pre">_3</span></code>, … suffix appended if that name is
+<em>also</em> taken). Nothing from the left frame is ever overwritten in this mode.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">CombineOp::Update</span></code></strong>: only touch features that already exist on this frame —
+<code class="docutils literal notranslate"><span class="pre">other</span></code>-only features are ignored entirely. For each shared feature, <code class="docutils literal notranslate"><span class="pre">spec.overwrite</span></code>
+decides whether <code class="docutils literal notranslate"><span class="pre">other</span></code>’s non-null cells replace the left’s values outright
+(<code class="docutils literal notranslate"><span class="pre">true</span></code>, the default), or only fill in the left’s own missing cells while leaving
+its existing values alone (<code class="docutils literal notranslate"><span class="pre">false</span></code>).</p></li>
+</ul>
+<p><a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">join()</span></code></span></a> and <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> are both thin convenience wrappers
+around <code class="docutils literal notranslate"><span class="pre">combine()</span></code>: <code class="docutils literal notranslate"><span class="pre">join(other,</span> <span class="pre">suffix)</span></code> is <code class="docutils literal notranslate"><span class="pre">combine(other,</span> <span class="pre">{.op</span> <span class="pre">=</span> <span class="pre">Features,</span> <span class="pre">.collision_suffix</span> <span class="pre">=</span> <span class="pre">suffix})</span></code>, and <code class="docutils literal notranslate"><span class="pre">update(other,</span> <span class="pre">overwrite)</span></code> is <code class="docutils literal notranslate"><span class="pre">combine(other,</span> <span class="pre">{.op</span> <span class="pre">=</span> <span class="pre">Update,</span> <span class="pre">.overwrite</span> <span class="pre">=</span> <span class="pre">overwrite,</span> <span class="pre">.cases</span> <span class="pre">=</span> <span class="pre">FrameMatchRule::KeepLeft})</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong></p>
-<p>Right-hand frame to combine with the current frame.</p>
-<p>Both frames are aligned through the combine policy before the result is materialized.</p>
-<p><strong>spec</strong></p>
-<p>Explicit combine policy.</p>
-<p>Use this when you need to control:</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code>)</p>
+<p>The right-hand frame to combine with. Its cases are matched to this frame’s cases by
+case-label value, not physical row position.</p>
+<p><strong>spec</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">CombineSpec&amp;</span></code>, default <code class="docutils literal notranslate"><span class="pre">CombineSpec{}</span></code> via the plain overload)</p>
 <ul class="simple">
-<li><p>whether overlapping values are overwritten,</p></li>
-<li><p>how the case axis is matched,</p></li>
-<li><p>how duplicate or colliding features are handled.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">op</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">CombineOp</span></code>, default <code class="docutils literal notranslate"><span class="pre">Features</span></code>): <code class="docutils literal notranslate"><span class="pre">Features</span></code> or <code class="docutils literal notranslate"><span class="pre">Update</span></code>, as described
+above.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">collision_suffix</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;_right&quot;</span></code>): suffix appended to a
+colliding feature name in <code class="docutils literal notranslate"><span class="pre">Features</span></code> mode. Must be non-empty if any collision
+actually occurs, or the call throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::combine(features):</span> <span class="pre">collision_suffix</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">non-empty</span> <span class="pre">when</span> <span class="pre">duplicate</span> <span class="pre">features</span> <span class="pre">exist&quot;</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">overwrite</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>): in <code class="docutils literal notranslate"><span class="pre">Update</span></code> mode, whether <code class="docutils literal notranslate"><span class="pre">other</span></code>’s
+non-null values replace existing left values (<code class="docutils literal notranslate"><span class="pre">true</span></code>) or only fill left’s own nulls
+(<code class="docutils literal notranslate"><span class="pre">false</span></code>).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">cases</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">FrameMatchRule</span></code>, default <code class="docutils literal notranslate"><span class="pre">Unite</span></code>): how the two frames’ case axes are
+reconciled — <code class="docutils literal notranslate"><span class="pre">Unite</span></code> (union of both sides’ case labels), <code class="docutils literal notranslate"><span class="pre">Common</span></code> (only labels
+present on both sides), <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code> (exactly this frame’s case labels), or
+<code class="docutils literal notranslate"><span class="pre">KeepRight</span></code> (exactly <code class="docutils literal notranslate"><span class="pre">other</span></code>’s case labels).</p></li>
 </ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Combined frame produced by the chosen combine policy.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="update.html"><code>DataFrame::update</code></a>: focused overwrite-style combination.</p></li>
-<li><p><a href="unify.html"><code>DataFrame::unify</code></a>: key-based merge surface.</p></li>
-<li><p><a href="conform.html"><code>DataFrame::conform</code></a>: align shape before arithmetic or updates.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>The default overload appends or disambiguates features as needed so you can keep both sides of overlapping data.</p>
-<p><code class="docutils literal notranslate"><span class="pre">CombineSpec</span></code> is the route to use when you need explicit collision, overwrite, and case-alignment control.</p>
+The combined frame, following the case-matching rule and feature policy above.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Keep the existing frame and append non-overlapping features from the right-hand frame.</p>
+<p>Example 1. Default <code class="docutils literal notranslate"><span class="pre">Features</span></code> mode: bring in a right-hand frame’s features, with a
+name collision disambiguated by suffix, and case labels united across both sides.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ama&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kofi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Efua&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;age&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">28.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">extra</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.75</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">})},</span>
-<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;age&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">26.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c4&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">extra</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================================================
-     | city    region  units  price  region_right  discount
------------------------------------------------------------
-A100 | Accra   south   10     3      south         0.5     
-B200 | Tema    south   7      4      south         0.75    
-B200 | Kumasi  middle  12     2.5    middle        0.25    
-D400 | Tamale  north   5      5      north         1       
------------------------------------------------------------
-[4 cs x 6 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================
+     | name  age   age_right  score
+-----------------------------------
+c1   | Ama   30    NULL       NULL 
+c2   | Kofi  NULL  26         88   
+c3   | Efua  28    40         91   
+c4   | NULL  NULL  22         75   
+-----------------------------------
+[4 cs x 4 feat]
 </pre></div>
 </div>
-<p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">CombineSpec</span></code> to update matching rows without overwriting existing left-hand values.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">patch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">70.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">})},</span>
-<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">CombineSpec</span><span class="w"> </span><span class="n">spec</span><span class="p">;</span>
-<span class="n">spec</span><span class="p">.</span><span class="n">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CombineOp</span><span class="o">::</span><span class="n">Update</span><span class="p">;</span>
-<span class="n">spec</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="n">spec</span><span class="p">.</span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">KeepLeft</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span><span class="w"> </span><span class="n">spec</span><span class="p">);</span>
+<p>The default <code class="docutils literal notranslate"><span class="pre">cases</span> <span class="pre">=</span> <span class="pre">Unite</span></code> produces the union <code class="docutils literal notranslate"><span class="pre">c1,</span> <span class="pre">c2,</span> <span class="pre">c3,</span> <span class="pre">c4</span></code>. <code class="docutils literal notranslate"><span class="pre">left</span></code>’s <code class="docutils literal notranslate"><span class="pre">name</span></code> and
+<code class="docutils literal notranslate"><span class="pre">age</span></code> are carried over as-is (<code class="docutils literal notranslate"><span class="pre">c4</span></code> is brand-new, so both are <code class="docutils literal notranslate"><span class="pre">NULL</span></code> there). <code class="docutils literal notranslate"><span class="pre">right</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">age</span></code> collides with <code class="docutils literal notranslate"><span class="pre">left</span></code>’s own <code class="docutils literal notranslate"><span class="pre">age</span></code>, so it lands as <code class="docutils literal notranslate"><span class="pre">age_right</span></code> instead of
+overwriting anything; <code class="docutils literal notranslate"><span class="pre">right</span></code>’s <code class="docutils literal notranslate"><span class="pre">score</span></code> is entirely new, so it’s added under its own
+name. <code class="docutils literal notranslate"><span class="pre">c1</span></code> is missing from <code class="docutils literal notranslate"><span class="pre">right</span></code> entirely, so <code class="docutils literal notranslate"><span class="pre">age_right</span></code> and <code class="docutils literal notranslate"><span class="pre">score</span></code> are both
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> there.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">Update</span></code> mode via the <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> convenience wrapper:
+overwrite matching feature values, keep only the left frame’s own cases, and ignore
+any right-only feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================
-     | city    region  units  price
------------------------------------
-A100 | Accra   south   10     3    
-B200 | Tema    south   7      4    
-B200 | Kumasi  middle  12     2.5  
-D400 | Tamale  north   5      5    
------------------------------------
-[4 cs x 4 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | name  age 
+-----------------
+c1   | Ama   30  
+c2   | Kofi  26  
+c3   | Efua  40  
+-----------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">update()</span></code> forces <code class="docutils literal notranslate"><span class="pre">cases</span> <span class="pre">=</span> <span class="pre">KeepLeft</span></code>, so only <code class="docutils literal notranslate"><span class="pre">c1</span></code>, <code class="docutils literal notranslate"><span class="pre">c2</span></code>, <code class="docutils literal notranslate"><span class="pre">c3</span></code> survive — <code class="docutils literal notranslate"><span class="pre">c4</span></code> (present
+only in <code class="docutils literal notranslate"><span class="pre">right</span></code>) never appears. <code class="docutils literal notranslate"><span class="pre">right</span></code>’s <code class="docutils literal notranslate"><span class="pre">score</span></code> is ignored entirely, since <code class="docutils literal notranslate"><span class="pre">Update</span></code>
+mode never introduces new features. For <code class="docutils literal notranslate"><span class="pre">age</span></code>: <code class="docutils literal notranslate"><span class="pre">c1</span></code> is missing from <code class="docutils literal notranslate"><span class="pre">right</span></code>, so the
+left’s original <code class="docutils literal notranslate"><span class="pre">30</span></code> is kept; <code class="docutils literal notranslate"><span class="pre">c2</span></code> and <code class="docutils literal notranslate"><span class="pre">c3</span></code> both have a non-null value in <code class="docutils literal notranslate"><span class="pre">right</span></code>
+(<code class="docutils literal notranslate"><span class="pre">26</span></code>, <code class="docutils literal notranslate"><span class="pre">40</span></code>), so — with the default <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">true</span></code> — they replace the left’s
+values outright, even overwriting <code class="docutils literal notranslate"><span class="pre">c2</span></code>’s already-non-null-looking gap and <code class="docutils literal notranslate"><span class="pre">c3</span></code>’s
+already-present <code class="docutils literal notranslate"><span class="pre">28</span></code>.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">Update</span></code> mode with <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">false</span></code>: only fill the left frame’s own
+gaps, leaving its already-present values untouched, and keep the default
+<code class="docutils literal notranslate"><span class="pre">cases</span> <span class="pre">=</span> <span class="pre">Unite</span></code> so a right-only case still appears (with <code class="docutils literal notranslate"><span class="pre">name</span></code> left <code class="docutils literal notranslate"><span class="pre">NULL</span></code> there,
+since <code class="docutils literal notranslate"><span class="pre">Update</span></code> never introduces a right-only feature to populate it).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CombineSpec</span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CombineOp</span><span class="o">::</span><span class="n">Update</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">filled</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | name  age 
+-----------------
+c1   | Ama   30  
+c2   | Kofi  26  
+c3   | Efua  28  
+c4   | NULL  22  
+-----------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>Compare this to Example 2’s <code class="docutils literal notranslate"><span class="pre">update()</span></code> (which forces <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">true</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cases</span> <span class="pre">=</span> <span class="pre">KeepLeft</span></code>): here <code class="docutils literal notranslate"><span class="pre">c4</span></code> survives because <code class="docutils literal notranslate"><span class="pre">cases</span></code> stayed at the default
+<code class="docutils literal notranslate"><span class="pre">Unite</span></code>, and <code class="docutils literal notranslate"><span class="pre">c2</span></code>’s <code class="docutils literal notranslate"><span class="pre">age</span></code> still ends up <code class="docutils literal notranslate"><span class="pre">26</span></code> — not because <code class="docutils literal notranslate"><span class="pre">overwrite</span></code> replaced it,
+but because the left’s own <code class="docutils literal notranslate"><span class="pre">age</span></code> was already <code class="docutils literal notranslate"><span class="pre">NULL</span></code> there, so <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">false</span></code>’s
+“fill gaps only” rule still lets <code class="docutils literal notranslate"><span class="pre">right</span></code>’s value through. <code class="docutils literal notranslate"><span class="pre">c3</span></code>’s left-side <code class="docutils literal notranslate"><span class="pre">age</span></code>
+(<code class="docutils literal notranslate"><span class="pre">28</span></code>) is non-null, so it survives untouched instead of being replaced by <code class="docutils literal notranslate"><span class="pre">right</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">40</span></code> — the one cell where <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">false</span></code> visibly diverges from Example 2’s
+<code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">true</span></code> behavior.</p>
+<p>Example 4. An empty <code class="docutils literal notranslate"><span class="pre">collision_suffix</span></code> with a genuine feature-name collision
+throws instead of silently overwriting or dropping either side’s column.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CombineSpec</span><span class="p">{.</span><span class="n">collision_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::combine(features): collision_suffix must be non-empty when duplicate features exist
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code> both have an <code class="docutils literal notranslate"><span class="pre">age</span></code> feature, so the default <code class="docutils literal notranslate"><span class="pre">Features</span></code> mode
+needs to disambiguate one of them with <code class="docutils literal notranslate"><span class="pre">collision_suffix</span></code> — leaving it empty
+removes any way to do that safely, so the call rejects it up front rather than
+guessing.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Case matching is always by label value, never by physical row position — a <code class="docutils literal notranslate"><span class="pre">left</span></code>
+row and a <code class="docutils literal notranslate"><span class="pre">right</span></code> row line up because they share a case label, not because they
+occupy the same index.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Features</span></code> mode never overwrites anything from the left frame; <code class="docutils literal notranslate"><span class="pre">Update</span></code> mode never
+introduces a feature the left frame didn’t already have. Pick the mode based on
+which invariant you need.</p></li>
+<li><p>Setting <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">false</span></code> in <code class="docutils literal notranslate"><span class="pre">Update</span></code> mode is a “fill gaps only” merge: only cells
+that are already <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on the left get replaced by <code class="docutils literal notranslate"><span class="pre">other</span></code>’s value, and only if
+<code class="docutils literal notranslate"><span class="pre">other</span></code>’s value there is itself non-null.</p></li>
+<li><p>A feature-name collision in <code class="docutils literal notranslate"><span class="pre">Features</span></code> mode with an empty <code class="docutils literal notranslate"><span class="pre">collision_suffix</span></code> throws
+rather than silently dropping or overwriting either side’s column.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::join</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Features</span></code>-mode convenience wrapper with a
+custom collision suffix.</p></li>
+<li><p><a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::update</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Update</span></code>-mode, <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code>-cases convenience
+wrapper shown in Example 2.</p></li>
+<li><p><a class="reference internal" href="align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::align</span></code></span></a>: the lower-level case-matching primitive <code class="docutils literal notranslate"><span class="pre">combine()</span></code>
+builds on.</p></li>
+<li><p><a class="reference internal" href="conform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::conform</span></code></span></a>: reshape a frame’s structure to match another’s
+before combining, when the two don’t already line up.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="clip.html">
     <span class="label">Previous</span>
@@ -163,7 +255,6 @@ D400 | Tamale  north   5      5
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -172,7 +263,7 @@ D400 | Tamale  north   5      5
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -192,9 +283,10 @@ D400 | Tamale  north   5      5
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

@@ -57,7 +57,7 @@ output = """
 1  true
 2  true
 3  true
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -73,7 +73,7 @@ output = """
 0  false
 1  true
 2  false
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -91,5 +91,5 @@ output = """
 1  true
 2  true
 3  true
-dtype: Series
+ptype: Series
 """

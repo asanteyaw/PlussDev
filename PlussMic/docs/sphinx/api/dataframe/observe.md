@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::observe
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,83 +7,114 @@
 ## Signatures
 
 ```cpp
-DataFrame::observe(std::int64_t row, bool render = false) -> DataFrameView
-
-DataFrame::observe(std::int64_t start, std::int64_t stop, bool render = false) -> DataFrameView
+DataFrame::observe(std::int64_t row, bool render = false) const -> DataFrameView
+DataFrame::observe(std::int64_t start, std::int64_t stop, bool render = false) const -> DataFrameView
 ```
 
 ## What It Does
 
-Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.
+Previews a positional window of rows — either a single row, or a contiguous
+`[start, stop)` range — without materializing a separate named helper call for each
+shape. Internally, the single-row overload just calls the range overload with
+`(row, row + 1)`, and the range overload is a thin wrapper around
+[`slice()`](slice.md) that tags the resulting `DataFrameView` with the display
+name `"observe"`. It exists alongside [`head()`](head.md) and [`tail()`](tail.md)
+for the case those two don't cover: peeking at rows from the *middle* of a frame by
+position.
 
 ## Parameters
 
-**row**
-    Zero-based row position to preview as a one-row `DataFrameView`.
+**row** (`std::int64_t`)
 
-**render**
-    When `true`, the preview may auto-render in temporary terminal contexts. Pass `false` when you want to call `.show()` yourself.
+Zero-based positional row to preview, for the single-row overload. Equivalent to
+`observe(row, row + 1)`.
 
-**start**
-    Inclusive zero-based starting row position of the preview window.
+**start** / **stop** (`std::int64_t`)
 
-**stop**
-    Exclusive zero-based ending row position of the preview window.
+The inclusive start / exclusive stop positions of the row window to preview, for the
+range overload — identical slicing semantics to [`slice()`](slice.md).
+
+**render** (`bool`, default `false`)
+
+Display toggle for the returned `DataFrameView`, identical in behavior to
+[`head()`](head.md)'s `render` parameter.
 
 ## Returns
 
 `DataFrameView`
-    Value produced by this call.
+    A view over the selected row window, with the original feature set and the
+    original case labels of the selected rows preserved (positions are not
+    renumbered).
 
 ## Examples
 
-Example 1. Preview one row without changing the underlying frame.
+Example 1. Preview a single row from the middle of a frame by position.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto preview = df.observe(1, false);
-preview.show();
+auto middle_row = orders.observe(1);
+std::cout << middle_row;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-2   120.0  Tema
+========================
+     | id    sales  city
+------------------------
+1    | 2     120    Tema
+------------------------
+[1 cs x 3 feat]
 ```
-Example 2. Preview a contiguous row window without changing the underlying frame.
+
+The result keeps case `1`'s original label (`"1"`) rather than renumbering it to
+`"0"` — `observe()` previews by position, but the identity of the row it found is
+still visible in the output.
+
+Example 2. Preview a contiguous row window.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto preview = df.observe(0, 2, false);
-preview.show();
+auto first_two = orders.observe(0, 2);
+std::cout << first_two;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
+=========================
+     | id    sales  city 
+-------------------------
+0    | 1     100    Accra
+1    | 2     120    Tema 
+-------------------------
+[2 cs x 3 feat]
 ```
 
-## Practical Behavior
+## Notes
 
-- `observe(...)` returns a `DataFrameView`, so it is the preview-oriented row window helper alongside `head(...)` and `tail(...)`.
-- It uses positional row coordinates, not case-label lookup.
-- Use `observe(start, stop).show()` when you want a middle slice without materializing a bespoke helper or mutating the source frame.
+- `observe(row)` is exactly `observe(row, row + 1)` — a one-row range under the hood,
+  not a separate code path.
+- Both overloads use positional (`0`-based) row coordinates, never case-label
+  lookup — the resulting view's row keeps whatever case label it already had, but
+  `row`/`start`/`stop` themselves always count by position.
+- `render = true` allows the returned `DataFrameView` to auto-print in a temporary-value
+  context, the same convention `head()` and `tail()` use.
 
+## See Also
 
+- [`DataFrame::head`](head.md), [`DataFrame::tail`](tail.md): the fixed-edge previews
+  this method complements for middle-of-frame windows.
+- [`DataFrame::slice`](slice.md): the underlying positional row-range primitive
+  `observe(start, stop, ...)` wraps.
+- [`DataFrame::filter`](filter.md): select rows by a boolean condition rather than by
+  position.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="notnull.html">

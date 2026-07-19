@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::bucketize
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,170 +7,288 @@
 ## Signatures
 
 ```cpp
-DataFrame::bucketize(pluss::RangeView<double> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) -> DataFrame
-
-DataFrame::bucketize(pluss::RangeView<std::string_view> feature_names, pluss::RangeView<double> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) -> DataFrame
-
-DataFrame::bucketize(std::string_view feature_name, pluss::RangeView<double> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) -> DataFrame
+DataFrame::bucketize(pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
+DataFrame::bucketize(std::string_view feature_name, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
+DataFrame::bucketize(pluss::msharp::RangeView::Of<std::string_view> feature_names, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
 ```
 
-Convert selected numeric features into interval labels defined by explicit bin edges.
+## What It Does
 
-`DataFrame::bucketize(...)` delegates interval bucketing to the underlying numeric thread kernels while preserving the rest of the mixed-type frame. It is useful for grading bands, coarse feature engineering, histogram-style preprocessing, and rule-based segmentation.
+Replaces one, several, or every numeric `Series` feature's values with integer bucket
+codes, based on a strictly increasing list of bin edges — the classic "cut into
+bands" transform used for grading scales, coarse histogram binning, or turning a
+continuous value into a small number of discrete tiers before grouping or one-hot
+encoding. `N + 1` edges define `N` buckets; every other feature (and every non-numeric
+feature, if you called the no-argument overload) passes through completely unchanged.
+
+A value that doesn't fall into any bucket — outside the full `[bins.front(),
+bins.back()]` span, given the current `right`/`include_lowest` settings — becomes
+`NULL` in the output rather than being clamped into the nearest bucket.
 
 ## Parameters
 
-**feature_name**
+**feature_name** (`std::string_view`, single-feature overload)
 
-One feature to bucketize.
+Bucketize exactly this one feature; every other feature is left alone.
 
-Use this overload when only one numeric column should be transformed and everything else should pass through unchanged.
+**feature_names** (`pluss::RangeView<std::string_view>`, multi-feature overload)
 
-**feature_names**
+Bucketize exactly this named subset of features, all using the same `bins`/`labels`/
+`right`/`include_lowest` settings. An empty list is a no-op that returns the frame
+unchanged.
 
-Explicit feature subset to bucketize.
+*(no feature argument)*
 
-Use this overload when several numeric columns should be bucketed together while the rest of the frame stays as-is.
+Bucketize every numeric `Series` feature on the frame automatically. Throws
+`"DataFrame::bucketize: no numeric Series features available"` if there are none.
 
-**bins**
+**bins** (`pluss::RangeView<double>`)
 
-Strictly increasing interval edges.
+Strictly increasing bin edges. `N + 1` edges produce `N` buckets: edges `{0, 10, 20,
+30}` define three buckets. Must contain at least two edges, none of them `NaN`.
 
-For `N` bucket outputs you need `N + 1` edges. For example, edges `{0, 20, 40, 60}` define three intervals.
+**labels** (`pluss::RangeView<std::int64_t>`, default empty)
 
-**labels**
+Explicit integer code for each bucket, in edge order. Leave empty to get the default
+`0, 1, 2, ..., N-1`. If supplied, its length must equal the bucket count exactly
+(`bins.size() - 1`).
 
-Optional explicit labels for the resulting buckets.
+**right** (`bool`, default `true`)
 
-- Leave this empty to let PlussMic emit default bucket labels `0, 1, 2, ...`.
-- Pass an explicit integer label list when your downstream logic expects domain-specific codes such as `10, 20, 30`.
+Which side of each interval is closed:
 
-**right**
+- `true`: every bucket is right-closed — `(edge[i], edge[i+1]]` — except optionally
+  the first, governed by `include_lowest`.
+- `false`: every bucket is left-closed and right-open — `[edge[i], edge[i+1])` — for
+  *every* bucket, including the first; `include_lowest` has no effect in this mode.
 
-Right-closure policy for the intervals.
+**include_lowest** (`bool`, default `true`)
 
-- `true`: intervals are right-closed.
-- `false`: intervals are left-closed and right-open.
-
-Changing this toggle changes which side owns boundary values such as exactly `20.0` or `40.0`.
-
-**include_lowest**
-
-Whether the very first interval includes its lower boundary.
-
-- `true`: values exactly equal to the first bin edge can enter the first bucket.
-- `false`: the first lower boundary stays open like the ordinary interval rule.
+Only consulted when `right = true`: whether the very first bucket also accepts values
+exactly equal to its lower edge (making it `[edge[0], edge[1]]` instead of
+`(edge[0], edge[1]]`). Defaults to `true`, so — unlike some cut-style APIs elsewhere —
+a value sitting exactly on the lowest edge is bucketed rather than dropped by default.
 
 ## Returns
 
 `DataFrame`
-    A new frame where the targeted numeric features have been replaced by integer bucket labels.
-
-    Untargeted features are preserved unchanged.
-
-## See Also
-
-- <a href="../thread/bucketize.html"><code>Thread::bucketize</code></a>: bucketize one numeric column outside a frame.
-- <a href="count_by.html"><code>DataFrame::count_by</code></a>: summarize how many rows fell into each engineered bucket after bucketing.
-- <a href="bucketize.html"><code>DataFrame::bucketize</code></a>: use the feature-specific overloads when only one subset of columns should be bucketed.
-
-## Notes
-
-The no-feature overload auto-selects every numeric `Series` feature in the frame.
-
-The one-feature and feature-subset overloads let you target only the columns you want while leaving every other feature untouched.
-
-Out-of-range values remain missing. Bucket labels are returned as integer-like numeric outputs.
+    A new frame where every targeted feature has been replaced by its integer bucket
+    codes (or `NULL` for out-of-range values); every other feature is unchanged.
 
 ## Examples
 
-Example 1. Bucketize every numeric feature in the frame and leave text columns alone.
+Example 1. Bucketize a single feature with default labels, including an out-of-range
+value.
 
 ```cpp
 using namespace pluss::table;
 
-auto metrics = DataFrame({
-    {"sales", pluss::make_series({12.0, 27.0, 35.0, 49.0})},
-    {"cost", pluss::make_series({5.0, 18.0, 33.0, 60.0})},
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
-}).title("metrics");
-
-auto out = metrics.bucketize({0.0, 20.0, 40.0, 60.0});
+auto readings = DataFrame({
+    {"amount", Thread(pluss::make_series({5.0, 15.0, 25.0, 35.0, 45.0, 100.0}))},
+});
+std::cout << readings;
 ```
 
 ### Output
 
 ```text
-==========================
-     | sales  cost  city
---------------------------
-0    | 0      0     Accra
-1    | 1      0     Tema
-2    | 1      1     Kumasi
-3    | 2      2     Tamale
---------------------------
-[4 cs x 3 feat]
+=============
+     | amount
+-------------
+0    | 5     
+1    | 15    
+2    | 25    
+3    | 35    
+4    | 45    
+5    | 100   
+-------------
+[6 cs x 1 feat]
 ```
 
-Example 2. Bucketize one feature with explicit output labels.
-
 ```cpp
-using namespace pluss::table;
-
-auto metrics = DataFrame({
-    {"sales", pluss::make_series({12.0, 27.0, 35.0, 49.0})},
-    {"cost", pluss::make_series({5.0, 18.0, 33.0, 60.0})},
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
-}).title("metrics");
-
-auto out = metrics.bucketize("sales", {0.0, 20.0, 40.0, 60.0}, {10, 20, 30});
+auto bucketed = readings.bucketize("amount", {0.0, 10.0, 20.0, 30.0, 40.0, 50.0});
+std::cout << bucketed;
 ```
 
 ### Output
 
 ```text
-==========================
-     | sales  cost  city
---------------------------
-0    | 10     5     Accra
-1    | 20     18    Tema
-2    | 20     33    Kumasi
-3    | 30     60    Tamale
---------------------------
-[4 cs x 3 feat]
+=============
+     | amount
+-------------
+0    | 0     
+1    | 1     
+2    | 2     
+3    | 3     
+4    | 4     
+5    | NULL  
+-------------
+[6 cs x 1 feat]
 ```
 
-Example 3. Bucketize an explicit subset of numeric features together.
+Five buckets from six edges, default labels `0..4`. `100.0` falls outside the full
+`[0, 50]` span covered by the bins, so it becomes `NULL` rather than clamping into
+bucket `4`.
+
+Example 2. Switch to left-closed intervals (`right = false`) with custom labels, to
+see how a boundary value moves between buckets.
 
 ```cpp
-using namespace pluss::table;
+auto readings2 = DataFrame({
+    {"amount", Thread(pluss::make_series({0.0, 10.0, 20.0, 30.0}))},
+});
 
-auto metrics = DataFrame({
-    {"sales", pluss::make_series({12.0, 27.0, 35.0, 49.0})},
-    {"cost", pluss::make_series({5.0, 18.0, 33.0, 60.0})},
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
-}).title("metrics");
-
-std::array<std::string_view, 2> pair_features{"sales", "cost"};
-
-auto out = metrics.bucketize(pair_features, {0.0, 25.0, 50.0, 75.0}, {1, 2, 3});
+auto bucketed2 = readings2.bucketize(
+    "amount", {0.0, 10.0, 20.0, 30.0, 40.0}, {100, 200, 300, 400},
+    /*right=*/false);
+std::cout << bucketed2;
 ```
 
 ### Output
 
 ```text
-==========================
-     | sales  cost  city
---------------------------
-0    | 1      1     Accra
-1    | 2      1     Tema
-2    | 2      2     Kumasi
-3    | 2      3     Tamale
---------------------------
-[4 cs x 3 feat]
+=============
+     | amount
+-------------
+0    | 100   
+1    | 200   
+2    | 300   
+3    | 400   
+-------------
+[4 cs x 1 feat]
 ```
 
+With `right = false`, every bucket is `[edge, next_edge)`: `10.0` lands in bucket
+`[10, 20)` (label `200`), not in `[0, 10)`. Had `right` stayed at its default `true`,
+that same `10.0` would instead have landed in the *first* bucket (`(0, 10]`, or
+`[0, 10]` with `include_lowest`), one bucket earlier than shown here.
 
+Example 3. Bucketize two numeric features together with one call, leaving a third,
+non-numeric feature untouched by using the multi-feature overload alongside a
+pass-through column.
+
+```cpp
+auto orders = DataFrame({
+    {"amount", Thread(pluss::make_series({5.0, 15.0, 25.0, 35.0}))},
+    {"weight", Thread(pluss::make_series({8.0, 22.0, 12.0, 38.0}))},
+});
+
+std::array<std::string_view, 2> targets{"amount", "weight"};
+auto bucketed3 = orders.bucketize(
+    pluss::msharp::RangeView::Of<std::string_view>(targets), {0.0, 10.0, 20.0, 30.0, 40.0});
+std::cout << bucketed3;
+```
+
+### Output
+
+```text
+=====================
+     | amount  weight
+---------------------
+0    | 0       0     
+1    | 1       2     
+2    | 2       1     
+3    | 3       3     
+---------------------
+[4 cs x 2 feat]
+```
+
+Both features are bucketed with the same edges and default labels; `amount` and
+`weight` land in different buckets independently based on their own values —
+`weight`'s `22.0` (bucket `2`) and `amount`'s `15.0` (bucket `1`) demonstrate that each
+column is evaluated on its own values, not jointly.
+
+Example 4. Pass `include_lowest = false` to see a value sitting exactly on the
+lowest edge fall out of every bucket.
+
+```cpp
+auto edge_case = DataFrame({
+    {"amount", Thread(pluss::make_series({0.0, 10.0, 25.0}))},
+});
+
+auto default_lowest = edge_case.bucketize("amount", {0.0, 10.0, 20.0, 30.0});
+std::cout << default_lowest;
+
+auto excluded_lowest = edge_case.bucketize(
+    "amount", {0.0, 10.0, 20.0, 30.0}, {}, /*right=*/true, /*include_lowest=*/false);
+std::cout << excluded_lowest;
+```
+
+### Output (include_lowest = true, the default)
+
+```text
+=============
+     | amount
+-------------
+0    | 0     
+1    | 0     
+2    | 2     
+-------------
+[3 cs x 1 feat]
+```
+
+### Output (include_lowest = false)
+
+```text
+=============
+     | amount
+-------------
+0    | NULL  
+1    | 0     
+2    | 2     
+-------------
+[3 cs x 1 feat]
+```
+
+With the default `include_lowest = true`, the very first bucket is
+`[0, 10]` (closed on both ends), so `0.0` lands in bucket `0` alongside
+`10.0`. With `include_lowest = false`, that first bucket shrinks to
+`(0, 10]` — `0.0` no longer satisfies *any* bucket's lower bound, so it
+becomes `NULL` instead. `10.0` and `25.0` are unaffected either way, since
+`include_lowest` only ever changes the lowest bucket's lower edge.
+
+Example 5. Pass bin edges that aren't strictly increasing, to see the call
+throw.
+
+```cpp
+try {
+  auto out = edge_case.bucketize("amount", {0.0, 20.0, 10.0, 30.0});
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+Thread::bucketize: bin edges must be strictly increasing
+```
+
+`20.0` followed by `10.0` decreases, violating the strictly-increasing
+requirement — checked up front for the whole edge list before any value is
+bucketed.
+
+## Notes
+
+- Bin edges must be strictly increasing and non-`NaN`, checked once up front for the
+  whole call — a single bad edge rejects the entire `bucketize()` call before any
+  column is touched.
+- Out-of-range values become `NULL`, never clamped into the nearest bucket — a value
+  below the first edge or above the last edge (given the current `right` setting) is
+  simply missing in the output.
+- The no-argument overload silently limits itself to numeric `Series` features; it
+  never attempts to bucketize a `Note`, `Timeline`, or `TimeIndex` column.
+- Follow up with [`count_by`](count_by.md) on the bucketed feature to get a frequency
+  table of how many cases fell into each band.
+
+## See Also
+
+- [`DataFrame::count_by`](count_by.md): tally how many cases landed in each bucket.
+- [`DataFrame::cast`](cast.md): change a feature's underlying dtype or payload kind
+  outright, rather than binning its numeric values into a small set of codes.
+- [`DataFrame::clip`](clip.md): cap values into a numeric range instead of assigning
+  them a discrete bucket code.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bottom.html">

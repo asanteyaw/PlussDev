@@ -78,7 +78,7 @@ output = """
  quiz_ok  true
  exam_ok  true
 bonus_ok  true
-dtype: Series
+ptype: Series
 """
 
 [[examples]]
@@ -98,5 +98,5 @@ output = """
 0  true
 1  true
 2  true
-dtype: Series
+ptype: Series
 """

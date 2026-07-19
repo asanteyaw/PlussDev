@@ -50,7 +50,7 @@ auto out = Thread(scores.as_series() + 5.0);
 0  2.5
 1  5
 2  8.5
-dtype: Series
+ptype: Series
 ```
 
 

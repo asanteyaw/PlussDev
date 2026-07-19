@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::set_
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,102 +7,122 @@
 ## Signatures
 
 ```cpp
-DataFrame::set_(pluss::RangeView<std::string_view> names, pluss::RangeView<Thread> values) -> DataFrame&
-
-DataFrame::set_(std::string_view name, const Thread& value) -> DataFrame&
-
-DataFrame::set_(std::string_view name, const Thread& value, const AlignOptions& options) -> DataFrame&
+DataFrame& DataFrame::set_(std::string_view name, const Thread& value)
+DataFrame& DataFrame::set_(std::string_view name, const Thread& value, const AlignOptions& options)
+DataFrame& DataFrame::set_(pluss::RangeView<std::string_view> names, pluss::RangeView<Thread> values)
 ```
 
 ## What It Does
 
-Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
+The in-place counterpart to [`set()`](set.md)'s plain two-argument overloads:
+creates or overwrites the named feature(s), mutating `*this` directly and returning
+a reference to it, instead of returning a new frame. Every parameter is identical in
+meaning to `set()`'s corresponding overload — see that page for the full breakdown;
+this page only covers what differs about mutating in place.
+
+Note this is a **third** way to write "assign in place" in this API, alongside
+[`set()`](set.md)'s own `df.set(name) = value` `LetSlot` builder style — both mutate
+`*this`, they just read differently at the call site. Pick whichever reads better;
+neither is more "correct" than the other.
 
 ## Parameters
 
-**names**
-    Collection of feature, slot, or stream names supplied in positional order.
+**name** / **names**
 
-**values**
-    Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
+The feature name (or names) to create or overwrite in place.
 
-**name**
-    Name used to identify the target object, field, feature, or slot for this overload.
+**value** / **values**
 
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+The replacement `Thread` (or a matching range of `Thread`s for the multi-name
+overload).
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`const AlignOptions&`, optional)
+
+Controls how `value` is aligned to the frame's case axis when it doesn't already
+match exactly, identical to [`set()`](set.md)'s `options`.
 
 ## Returns
 
 `DataFrame&`
-    Value produced by this call.
+    A reference to `*this`, with the named feature(s) created or overwritten.
 
 ## Examples
 
-Example 1. Pass several thread values together in one call.
+Example 1. Overwrite an existing feature's values in place.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.set_();
+orders.set_("sales", Thread(pluss::make_series({0.0, 0.0, 0.0})));
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+==========================
+     | id    sales  city  
+--------------------------
+0    | 1     0      Accra 
+1    | 2     0      Tema  
+2    | 3     0      Kumasi
+--------------------------
+[3 cs x 3 feat]
 ```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+`orders` itself has `sales` zeroed out — `set_()` mutated it directly, unlike
+[`set()`](set.md)'s plain overload, which would have left `orders` unchanged and
+returned a new frame instead.
+
+Example 2. Create a brand-new feature in place via the multi-name overload.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.set_();
+std::vector<std::string_view> names{"profit"};
+std::vector<Thread> values{Thread(pluss::make_series({40.0, 35.0, 30.0}))};
+orders.set_(pluss::RangeView<std::string_view>(names), pluss::RangeView<Thread>(values));
+std::cout << orders;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 3. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.set_();
+==================================
+     | id    sales  city    profit
+----------------------------------
+0    | 1     0      Accra   40    
+1    | 2     0      Tema    35    
+2    | 3     0      Kumasi  30    
+----------------------------------
+[3 cs x 4 feat]
 ```
 
-### Output
+`"profit"` didn't previously exist on `orders`, so it's appended as a new feature —
+`set_()` can both create and overwrite in the same call, exactly like `set()`'s
+plain overload.
 
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
+## Notes
 
+- `set_()` mutates and returns `*this` by reference; it never allocates a new
+  `DataFrame` the way `set()`'s plain overload does.
+- Any other `DataFrame` value that shares the same underlying columns (via a prior
+  copy) does not see this mutation — `pluss::table::DataFrame`'s copies are
+  value-like, not aliased references to shared state.
+- See [`set()`](set.md) for the complete parameter breakdown and for the separate
+  `LetSlot`/`LetSlots` builder style (`df.set(name) = value`), which also mutates in
+  place but is a distinct code path from `set_()`.
+
+## See Also
+
+- [`DataFrame::set`](set.md): the non-mutating counterpart, plus the `LetSlot`
+  builder style for in-place assignment via `operator=`.
+- [`DataFrame::assign`](assign.md): derive new features from expressions evaluated
+  against the frame, rather than assigning pre-built `Thread`s.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="set.html">

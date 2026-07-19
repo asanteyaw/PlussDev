@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::ne
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,212 +7,92 @@
 ## Signatures
 
 ```cpp
-DataFrame::ne(const char* other) -> DataFrame
-
-DataFrame::ne(const DataFrame& other) -> DataFrame
-
-DataFrame::ne(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::ne(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::ne(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::ne(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::ne(double other) -> DataFrame
-
-DataFrame::ne(std::string_view other) -> DataFrame
+DataFrame::ne(double other) const -> DataFrame
+DataFrame::ne(std::string_view other) const -> DataFrame
+DataFrame::ne(const DataFrame& other) const -> DataFrame
+DataFrame::ne(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::ne(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::ne(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::ne(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+The negated counterpart of [`eq()`](eq.md): elementwise "not equal", returning a
+boolean-valued frame the same shape as the source. `ne()` shares the exact same
+overload shape as `eq()` — a scalar, a string, another `DataFrame`, or a `Thread`
+broadcast by `axis` — see `eq()`'s "What It Does" for the full explanation of the
+operand shapes and the `axis`/`options` parameters.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+The right-hand operand: `double` (numeric scalar), `std::string_view` (text value,
+`Note`-kind features only), `const DataFrame&` (aligned frame-to-frame), or `const
+Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for the full breakdown.
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`eq()`](eq.md)'s `axis`.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`eq()`](eq.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, where every feature holds `true`/`false`
+    according to whether that cell differs from `other`. A cell compared against a
+    missing value on either side is itself missing (`NULL`), matching [`eq()`](eq.md).
 
 ## Examples
 
-Example 1. Compare each compatible cell for inequality against one broadcast scalar value.
+Example 1. Broadcast one numeric scalar across every numeric feature.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.ne(10);
+auto scores = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 84.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = scores.ne(84.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 2. Compare each compatible cell for inequality against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.ne(right);
+===================
+     | quiz   final
+-------------------
+s1   | false  false
+s2   | true   true 
+s3   | false  true 
+-------------------
+[3 cs x 2 feat]
 ```
 
-### Output
+Every cell here is the exact opposite of what [`scores.eq(84.0)`](eq.md) would report
+— `ne()` and `eq()` always partition the same cells into complementary `true`/`false`
+sets, except where either side is missing (`NULL` stays `NULL` under both).
 
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 3. Compare each compatible cell for inequality against another aligned frame.
+## Notes
 
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
+- `ne()` is the logical negation of [`eq()`](eq.md), cell for cell, with the one
+  exception of missing-value cells, which stay `NULL` under both rather than flipping
+  to the opposite boolean.
+- Shares its full overload shape and alignment semantics with [`eq()`](eq.md),
+  [`lt()`](lt.md), [`le()`](le.md), `gt()`, and `ge()`.
 
-auto out = left.ne(right);
-```
+## See Also
 
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 4. Compare each compatible cell for inequality against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.ne(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 5. Compare each compatible cell for inequality against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.ne(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 6. Compare each compatible cell for inequality against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.ne(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 7. Compare each compatible cell for inequality against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.ne(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 8. Compare each compatible cell for inequality against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.ne(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-
+- [`DataFrame::eq`](eq.md): the equality relation, and the full explanation of this
+  comparison family's shared operand shapes.
+- [`DataFrame::lt`](lt.md) / [`DataFrame::le`](le.md): the ordering relations.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ndistinct.html">

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 import pathlib
 import re
+import sys
 import tomllib
 from dataclasses import dataclass
 from typing import Callable
@@ -10,7 +13,12 @@ from typing import Callable
 ROOT = pathlib.Path('/Users/yawasante/software/cxx/PlussDev')
 DOCS = ROOT / 'PlussMic/docs/sphinx'
 API_CONTENT = DOCS / 'api_content'
-PER_METHOD_CLASSES = {'DataFrame', 'Thread'}
+PER_METHOD_CLASSES = {
+    'DataFrame', 'Thread',
+    'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
+    'DataFrameFeatureAxisAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
+    'DataFrameTsWindowAccessor', 'DataFrameTsResampler',
+}
 GENERIC_CSV_PATH = "path/to/data.csv"
 GENERIC_XLSX_PATH = "path/to/data.xlsx"
 GENERIC_JSON_PATH = "path/to/data.json"
@@ -67,6 +75,70 @@ CLASS_CONFIG = {
         'title': 'DataFrameSqlPrepared API Reference',
         'subtitle': 'Practical DataFrameSqlPrepared API Reference',
         'intro': 'This page documents the public prepared-statement helper returned by `DataFrame::prep_sql()` or `DataFrameSqlAccessor::prepare()`.',
+    },
+    'DataFrameNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_note_accessor_api_reference.md',
+        'title': 'DataFrameNoteAccessor API Reference',
+        'subtitle': 'Practical DataFrameNoteAccessor API Reference',
+        'intro': 'This page documents the public string-feature accessor returned by `DataFrame::note()`.',
+        'binder': 'note()',
+    },
+    'DataFrameTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_timeline_accessor_api_reference.md',
+        'title': 'DataFrameTimelineAccessor API Reference',
+        'subtitle': 'Practical DataFrameTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `DataFrame::tl()`.',
+        'binder': 'tl()',
+    },
+    'DataFrameLabelAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_label_accessor_api_reference.md',
+        'title': 'DataFrameLabelAccessor API Reference',
+        'subtitle': 'Practical DataFrameLabelAccessor API Reference',
+        'intro': 'This page documents the public case-label accessor returned by `DataFrame::label()`.',
+        'binder': 'label()',
+    },
+    'DataFrameFeatureAxisAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_feataxis_accessor_api_reference.md',
+        'title': 'DataFrameFeatureAxisAccessor API Reference',
+        'subtitle': 'Practical DataFrameFeatureAxisAccessor API Reference',
+        'intro': 'This page documents the public feature-name-axis accessor returned by `DataFrame::feataxis()`.',
+        'binder': 'feataxis()',
+    },
+    'DataFramePlot3DAccessor': {
+        'header': ROOT / 'PlussMic/src/table/plot/DataFramePlot.h',
+        'output': DOCS / 'dataframe_plot3d_accessor_api_reference.md',
+        'title': 'DataFramePlot3DAccessor API Reference',
+        'subtitle': 'Practical DataFramePlot3DAccessor API Reference',
+        'intro': 'This page documents the public 3D plotting accessor returned by `DataFrame::plot3d()`.',
+        'binder': 'plot3d()',
+    },
+    'DataFrameTsAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_ts_accessor_api_reference.md',
+        'title': 'DataFrameTsAccessor API Reference',
+        'subtitle': 'Practical DataFrameTsAccessor API Reference',
+        'intro': 'This page documents the public time-series accessor returned by `DataFrame::ts()`.',
+        'binder': 'ts()',
+    },
+    'DataFrameTsWindowAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_ts_window_accessor_api_reference.md',
+        'title': 'DataFrameTsWindowAccessor API Reference',
+        'subtitle': 'Practical DataFrameTsWindowAccessor API Reference',
+        'intro': 'This page documents the public rolling-window aggregator returned by `DataFrame::ts().window(...)`.',
+        'binder': 'ts().window(...)',
+    },
+    'DataFrameTsResampler': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_ts_resampler_api_reference.md',
+        'title': 'DataFrameTsResampler API Reference',
+        'subtitle': 'Practical DataFrameTsResampler API Reference',
+        'intro': 'This page documents the public time-based resampling accessor returned by `DataFrame::ts().resample(...)`.',
+        'binder': 'ts().resample(...)',
     },
     'Thread': {
         'header': ROOT / 'PlussMic/src/table/Thread.h',
@@ -136,6 +208,34 @@ CLASS_CONFIG = {
 METHOD_PAGE_DIR = {
     'DataFrame': 'dataframe',
     'Thread': 'thread',
+    'DataFrameNoteAccessor': 'dataframe-note',
+    'DataFrameTimelineAccessor': 'dataframe-timeline',
+    'DataFrameLabelAccessor': 'dataframe-label',
+    'DataFrameFeatureAxisAccessor': 'dataframe-feataxis',
+    'DataFramePlot3DAccessor': 'dataframe-plot3d',
+    'DataFrameTsAccessor': 'dataframe-ts',
+    'DataFrameTsWindowAccessor': 'dataframe-ts-window',
+    'DataFrameTsResampler': 'dataframe-ts-resample',
+}
+
+# Maps a class to the accessor classes it exposes, so their landing pages can
+# be cross-linked from the parent's auto-generated index page (see
+# `build_method_index_page`). This lets `ts()`'s own landing page in turn
+# link to `window()`/`resample()`'s pages -- the nesting is just one more
+# entry in this same dict, not a special case in the generator.
+ACCESSOR_CHILDREN: dict[str, list[str]] = {
+    'DataFrame': [
+        'DataFrameNoteAccessor',
+        'DataFrameTimelineAccessor',
+        'DataFrameLabelAccessor',
+        'DataFrameFeatureAxisAccessor',
+        'DataFramePlot3DAccessor',
+        'DataFrameTsAccessor',
+    ],
+    'DataFrameTsAccessor': [
+        'DataFrameTsWindowAccessor',
+        'DataFrameTsResampler',
+    ],
 }
 
 
@@ -1589,7 +1689,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'ncases': 'Returns the number of rows in the current frame.',
             'ndistinct': 'Counts distinct observed values or distinct value-combinations across the selected features.',
             'nfeatures': 'Returns the number of features in the current frame.',
-            'note': 'Returns one named feature as a note-backed thread.',
+            'note': 'Opens the note/text surface for the current selected DataFrame. Every selected feature must be Note-backed; select text feature(s) first with `df.features({...}).note()`.',
             'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
             'label().align': 'Reorders rows so their case labels match the supplied `new_label` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
             'label().sort': 'Sorts rows by the current case-label axis rather than by a data feature.',
@@ -2053,6 +2153,8 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.'
     if name in {'text_preprocess', 'extract_keywords', 'compute_similarity', 'filter_by_text', 'add_text_features', 'aggregate_text_stats', 'tfidf', 'lower', 'replace', 'contains'}:
         return 'This is part of the text-processing surface for note-backed or text-oriented data.'
+    if name == 'tl' and class_name == 'DataFrame':
+        return 'Opens the timeline surface for the current selected DataFrame. Every selected feature must be Timeline/TimeIndex-backed; select timeline feature(s) first with `df.features({...}).tl()`.'
     if name in {'tl', 'ts', 'year', 'month', 'day', 'hour', 'to_note_weekday', 'shift', 'floor', 'ceil', 'round', 'resample'}:
         return 'This is part of the time-aware surface and expects timeline or time-index semantics.'
     return ''
@@ -3604,7 +3706,7 @@ s3   | 79
                     """ quiz_ok  false
  exam_ok  false
 bonus_ok  true
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Row-wise logical AND across features.',
@@ -3612,7 +3714,7 @@ dtype: Series""",
                     """0  true
 1  false
 2  false
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -3649,7 +3751,7 @@ dtype: Series""",
                     """ quiz_ok  true
  exam_ok  true
 bonus_ok  true
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Row-wise logical OR across features.',
@@ -3657,7 +3759,7 @@ dtype: Series""",
                     """0  true
 1  true
 2  true
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -3796,7 +3898,7 @@ def render_thread_a_page(name: str, overloads: list[Method], class_name: str) ->
                     """0  2.5
 1  0
 2  3.5
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -3878,7 +3980,7 @@ dtype: Series""",
                     """0  ada
 1  bola
 2  chen
-dtype: Note""",
+ptype: Note""",
                 ),
             ],
             [
@@ -3907,7 +4009,7 @@ dtype: Note""",
                     """0  2.5
 1  5
 2  8.5
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -3935,7 +4037,7 @@ dtype: Series""",
                     """0  2024
 1  2024
 2  2024
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -3962,7 +4064,7 @@ dtype: Series""",
                     thread_a_timeindex_base() + '\n\nauto out = Thread(ticks.as_timeindex().resample_count("D", 1));',
                     """0  3
 1  1
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -3991,7 +4093,7 @@ dtype: Series""",
                     """0  true
 1  false
 2  true
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -4277,7 +4379,7 @@ def render_thread_b_page(name: str, overloads: list[Method], class_name: str) ->
 2  40
 3  40
 4  50
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Limit the backward fill to one value per gap.',
@@ -4287,7 +4389,7 @@ dtype: Series""",
 2  40
 3  40
 4  50
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -4338,7 +4440,7 @@ dtype: Series""",
 2  20
 3  25
 4  30
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Create a trailing-two mean with a minimum-count requirement.',
@@ -4348,7 +4450,7 @@ dtype: Series""",
 2  25
 3  35
 4  45
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -4392,7 +4494,7 @@ dtype: Series""",
 2  true
 3  true
 4  false
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Numeric bounds with separate left and right boundary rules.',
@@ -4402,7 +4504,7 @@ dtype: Series""",
 2  true
 3  true
 4  false
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Temporal string bounds with one shared inclusivity flag.',
@@ -4410,7 +4512,7 @@ dtype: Series""",
                     """0  true
 1  true
 2  false
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Temporal string bounds with asymmetric closure.',
@@ -4418,7 +4520,7 @@ dtype: Series""",
                     """0  false
 1  true
 2  true
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Row-wise thread bounds with one shared inclusivity flag.',
@@ -4428,7 +4530,7 @@ dtype: Series""",
 2  false
 3  true
 4  true
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Row-wise thread bounds with asymmetric closure.',
@@ -4438,7 +4540,7 @@ dtype: Series""",
 2  false
 3  true
 4  true
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -4480,7 +4582,7 @@ dtype: Series""",
 2  1
 3  1
 4  2
-dtype: Series""",
+ptype: Series""",
                 ),
                 (
                     'Bucketize with explicit labels.',
@@ -4490,7 +4592,7 @@ dtype: Series""",
 2  20
 3  20
 4  30
-dtype: Series""",
+ptype: Series""",
                 ),
             ],
             [
@@ -5104,6 +5206,10 @@ id  sales  city
 3    90.0  Kumasi"""
         if n == 'ts':
             return 'DataFrameTsAccessor(features=["load"])'
+        if n == 'note':
+            return 'DataFrameNoteAccessor(features=["city"])'
+        if n == 'tl':
+            return 'DataFrameTimelineAccessor(features=["ts"])'
         if n in {'to_string', 'info_string'}:
             return DF_BASE_OUT
         if n in {'info'}:
@@ -5885,6 +5991,146 @@ def plot_accessor_base() -> str:
     return df_base() + '\n' + 'auto plot = df.plot();'
 
 
+# --- Generic per-method example stubs for DataFrame accessor classes -------
+#
+# NOTE: unlike the hand-tuned example_for() branches above (and unlike the
+# hand-authored .md pages under docs/sphinx/api/dataframe/*.md), the
+# per-method pages these stubs feed are NOT individually verified against
+# render_sim.py. They exist so the accessor's navigation surface (landing
+# page + per-method sidebar, wired via CLASS_CONFIG/PER_METHOD_CLASSES) has
+# *something* on every method page instead of a generator crash, exactly
+# the same bootstrap state DataFrame/Thread method pages were in before each
+# was replaced, batch by batch, with real hand-authored prose marked
+# `<!-- pluss-hand-authored -->`. Treat every page under api/dataframe-*/ as
+# an unverified stub until it carries that marker.
+
+def note_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"city\", pluss::table::Thread(pluss::make_note({\"  Accra\", \"TEMA \", \"Kumasi\"}))},
+    {\"product\", pluss::table::Thread(pluss::make_note({\"Laptop\", \"desk\", \"Chair\"}))},
+    {\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+});
+auto notes = df.note();"""
+
+
+def timeline_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({
+        \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
+    {\"load\", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+});
+auto timelines = df.tl();"""
+
+
+def label_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+    {\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+}, pluss::make_note({\"r1\", \"r2\", \"r3\"}));
+auto labels = df.label();"""
+
+
+def feataxis_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"sales_units\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"sales_price\", pluss::table::Thread(pluss::make_series({1.5, 2.0, 1.8}))},
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+});
+auto feataxis = df.feataxis();"""
+
+
+def plot3d_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"x\", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"y\", pluss::table::Thread(pluss::make_series({4.0, 5.0, 6.0}))},
+    {\"z\", pluss::table::Thread(pluss::make_series({7.0, 8.0, 9.0}))},
+});
+auto plot3d = df.plot3d();"""
+
+
+def ts_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({
+        \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
+    {\"load\", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+});
+auto ts = df.ts();"""
+
+
+def ts_window_accessor_base() -> str:
+    return ts_accessor_base() + '\n' + 'auto window = ts.window("2D");'
+
+
+def ts_resampler_accessor_base() -> str:
+    return ts_accessor_base() + '\n' + 'auto resampler = ts.resample("ts", "1D");'
+
+
+ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
+    'DataFrameNoteAccessor': note_accessor_base,
+    'DataFrameTimelineAccessor': timeline_accessor_base,
+    'DataFrameLabelAccessor': label_accessor_base,
+    'DataFrameFeatureAxisAccessor': feataxis_accessor_base,
+    'DataFramePlot3DAccessor': plot3d_accessor_base,
+    'DataFrameTsAccessor': ts_accessor_base,
+    'DataFrameTsWindowAccessor': ts_window_accessor_base,
+    'DataFrameTsResampler': ts_resampler_accessor_base,
+}
+
+ACCESSOR_STUB_VAR: dict[str, str] = {
+    'DataFrameNoteAccessor': 'notes',
+    'DataFrameTimelineAccessor': 'timelines',
+    'DataFrameLabelAccessor': 'labels',
+    'DataFrameFeatureAxisAccessor': 'feataxis',
+    'DataFramePlot3DAccessor': 'plot3d',
+    'DataFrameTsAccessor': 'ts',
+    'DataFrameTsWindowAccessor': 'window',
+    'DataFrameTsResampler': 'resampler',
+}
+
+
+def placeholder_arg_for_param(param_name: str, param_type: str) -> str:
+    """Best-effort literal for one parameter, used only by the generic
+    accessor-stub fallback in example_for(). Not meant to be exhaustively
+    correct for every overload -- just enough to render a plausible call
+    until the method gets a real, hand-verified example."""
+    t = param_type.strip()
+    p = param_name.lower()
+    if t == 'bool':
+        return 'true'
+    if 'string_view' in t and ('vector' in t or 'RangeView' in t or 'initializer_list' in t):
+        return '{"units", "price"}'
+    if 'string_view' in t:
+        if 'duration' in p or 'freq' in p:
+            return '"2D"'
+        if 'unit' in p:
+            return '"D"'
+        if 'pattern' in p or 'needle' in p:
+            return '"units"'
+        if 'name' in p or 'feature' in p:
+            return '"units"'
+        return '"units"'
+    if 'int64_t' in t or t in {'int', 'std::size_t', 'size_t', 'std::int32_t'}:
+        return '1'
+    if t in {'double', 'float'}:
+        return '0.0'
+    if 'TimeUnit' in t:
+        return 'pluss::table::TimeUnit::Nanos'
+    if 'WindowStatistic' in t:
+        return 'pluss::table::DataFrame::WindowStatistic::Mean'
+    if 'WindowClosure' in t:
+        return 'pluss::table::DataFrame::WindowClosure::Right'
+    if 'Thread' in t and '&' in t:
+        return 'df.features("load")'
+    return '{}'
+
+
+def accessor_stub_example(class_name: str, method: Method) -> str:
+    base = ACCESSOR_STUB_BASE[class_name]()
+    var = ACCESSOR_STUB_VAR[class_name]
+    args = ', '.join(placeholder_arg_for_param(name, typ) for name, typ in method.params)
+    return base + f'\n\nauto out = {var}.{method.name}({args});\nstd::cout << out;'
+
+
 def thread_value_base() -> str:
     return 'auto thread = pluss::table::Thread(pluss::make_series({10.0}));\nauto value = thread.value();'
 
@@ -5971,6 +6217,10 @@ def example_for(class_name: str, method: Method) -> str:
     sig = method.signature
     # DataFrame
     if class_name == 'DataFrame':
+        if n == 'note':
+            return df_base() + '\n\nauto out = df.features({"city"}).note();'
+        if n == 'tl':
+            return df_time() + '\n\nauto out = df.features({"ts"}).tl();'
         if n.startswith('load'):
             if n == 'load':
                 if 'ReadCsvOptions' in sig:
@@ -7807,6 +8057,9 @@ def example_for(class_name: str, method: Method) -> str:
             return archive_base() + '\n\nauto out = pluss::bundle::Aisle::from_kindle(archive);'
         return base + f'\n\nauto out = aisle.{n}();'
 
+    if class_name in ACCESSOR_STUB_BASE:
+        return accessor_stub_example(class_name, method)
+
     raise RuntimeError(f'Unhandled class {class_name}')
 
 
@@ -8949,6 +9202,18 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
         '',
     ])
 
+    children = ACCESSOR_CHILDREN.get(class_name, [])
+    if children:
+        lines.extend(['## Accessors', ''])
+        lines.append(f'`{class_name}` exposes nested accessors, each with its own method pages and sidebar:')
+        lines.append('')
+        for child in children:
+            child_cfg = CLASS_CONFIG[child]
+            binder = child_cfg.get('binder', '')
+            label = f'`{binder}`' if binder else f'`{child}`'
+            lines.append(f"- {label} -> [`{child}`]({child_cfg['output'].stem}.md)")
+        lines.append('')
+
     lines.extend([
         '```{toctree}',
         ':hidden:',
@@ -9006,25 +9271,137 @@ def build_method_page_markdown(class_name: str,
     return '\n'.join(out)
 
 
+HAND_AUTHORED_MARKER = '<!-- pluss-hand-authored -->'
+
+
+def is_hand_authored(path: pathlib.Path) -> bool:
+    """Return True if an existing per-method doc page has been promoted to
+    hand-authored prose and must not be regenerated from the header.
+
+    A page is marked hand-authored by putting HAND_AUTHORED_MARKER on its own
+    line anywhere in the first few lines of the file (an HTML comment, so it
+    renders as nothing in Sphinx/MyST output). Once a method's page carries
+    this marker, `main()` below skips writing to it entirely -- the header
+    parser still discovers the method (so it still appears in nav/toctree and
+    the index page), but its prose, examples, and output are never touched.
+    """
+    if not path.exists():
+        return False
+    try:
+        with path.open('r', encoding='utf-8') as fh:
+            head = [next(fh, '') for _ in range(5)]
+    except OSError:
+        return False
+    return any(HAND_AUTHORED_MARKER in line for line in head)
+
+
+SIGNATURE_HASH_PREFIX = '<!-- pluss-signature-hash:'
+SIGNATURE_HASH_RE = re.compile(r'<!-- pluss-signature-hash:\s*([0-9a-f]{12}) -->')
+
+
+def compute_signature_hash(overloads: list[Method]) -> str:
+    """Fingerprint every overload's full signature for one method name.
+
+    Order-independent (sorted) so reordering overloads in the header doesn't
+    manufacture false drift, but sensitive to any added/removed/changed
+    overload, parameter, default value, or return type.
+    """
+    normalized = sorted(re.sub(r'\s+', ' ', m.signature).strip() for m in overloads)
+    digest = hashlib.sha256('\n'.join(normalized).encode('utf-8')).hexdigest()
+    return digest[:12]
+
+
+def read_stored_signature_hash(path: pathlib.Path) -> str | None:
+    if not path.exists():
+        return None
+    try:
+        with path.open('r', encoding='utf-8') as fh:
+            head = [next(fh, '') for _ in range(5)]
+    except OSError:
+        return None
+    for line in head:
+        m = SIGNATURE_HASH_RE.search(line)
+        if m:
+            return m.group(1)
+    return None
+
+
+def write_stored_signature_hash(path: pathlib.Path, new_hash: str) -> None:
+    """Insert or update the `pluss-signature-hash` marker (2nd line, right
+    after the `pluss-hand-authored` marker). Never touches anything else in
+    the file -- this is the only function allowed to modify a hand-authored
+    page, and only ever the hash comment.
+    """
+    text = path.read_text(encoding='utf-8')
+    lines = text.split('\n')
+    if any(SIGNATURE_HASH_RE.search(line) for line in lines[:5]):
+        lines = [
+            (f'{SIGNATURE_HASH_PREFIX} {new_hash} -->' if SIGNATURE_HASH_RE.search(line) else line)
+            for line in lines
+        ]
+    else:
+        # Insert right after the hand-authored marker line.
+        for i, line in enumerate(lines[:5]):
+            if HAND_AUTHORED_MARKER in line:
+                lines.insert(i + 1, f'{SIGNATURE_HASH_PREFIX} {new_hash} -->')
+                break
+    path.write_text('\n'.join(lines), encoding='utf-8')
+
+
+def group_methods_by_name(methods: list[Method]) -> dict[str, list[Method]]:
+    by_name: dict[str, list[Method]] = {}
+    for m in methods:
+        by_name.setdefault(m.name, []).append(m)
+    return by_name
+
+
 def write_api_nav_manifest(extracted: dict[str, list[Method]]) -> None:
-    payload = {
-        'DataFrame': {
-            'title': 'DataFrame',
-            'slug': 'dataframe',
-            'landing': 'dataframe_api_reference.html',
-            'methods': ordered_method_names(extracted.get('DataFrame', [])),
-        },
-        'Thread': {
-            'title': 'Thread',
-            'slug': 'thread',
-            'landing': 'thread_api_reference.html',
-            'methods': ordered_method_names(extracted.get('Thread', [])),
-        },
-    }
+    """Emit one `PLUSS_API_NAV` entry per per-method class, driven entirely by
+    `CLASS_CONFIG`/`METHOD_PAGE_DIR`/`PER_METHOD_CLASSES` -- adding a new
+    per-method class (e.g. a new DataFrame accessor) only requires adding it
+    to those three, never touching this function or layout.js by hand.
+
+    Iterates `CLASS_CONFIG` (an ordinary, insertion-ordered dict) rather than
+    `PER_METHOD_CLASSES` (a set) so the emitted JSON key order is stable
+    across runs regardless of PYTHONHASHSEED.
+    """
+    payload = {}
+    for class_name, cfg in CLASS_CONFIG.items():
+        if class_name not in PER_METHOD_CLASSES:
+            continue
+        payload[class_name] = {
+            'title': cfg.get('nav_title', class_name),
+            'slug': METHOD_PAGE_DIR[class_name],
+            'landing': f"{cfg['output'].stem}.html",
+            'methods': ordered_method_names(extracted.get(class_name, [])),
+        }
     API_NAV_JS.write_text(f'window.PLUSS_API_NAV = {json.dumps(payload, indent=2)};\n')
 
 
-def main() -> None:
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description='Regenerate templated per-method API reference pages, without ever '
+                    'overwriting pages that have been promoted to hand-authored prose. '
+                    'Detects when a hand-authored page\'s C++ signature has drifted from '
+                    'what its prose was last verified against.')
+    parser.add_argument(
+        '--accept', action='append', default=[], metavar='ClassName::method',
+        help='Re-baseline a hand-authored page\'s stored signature hash to its current '
+             'header signature, after you have manually verified the prose still matches. '
+             'Repeatable. Example: --accept DataFrame::join')
+    parser.add_argument(
+        '--check', action='store_true',
+        help='CI mode: do the normal regen/preserve pass, but exit non-zero if any '
+             'hand-authored page has drifted from its stored signature hash. Nothing is '
+             'ever auto-fixed by --check; use --accept locally once you have updated the '
+             'prose.')
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+    accept_set = set(args.accept)
+
     extracted: dict[str, list[Method]] = {}
     for class_name, cfg in CLASS_CONFIG.items():
         methods = extract_methods(class_name, cfg['header'])
@@ -9034,6 +9411,7 @@ def main() -> None:
     write_api_nav_manifest(extracted)
 
     known_methods = {class_name: set(ordered_method_names(methods)) for class_name, methods in extracted.items()}
+    all_drifted: list[str] = []
 
     for class_name, cfg in CLASS_CONFIG.items():
         methods = extracted[class_name]
@@ -9041,17 +9419,36 @@ def main() -> None:
             full_page = build_page(class_name, methods)
             chunks = extract_method_chunks(full_page)
             ordered_names = ordered_method_names(methods)
+            by_name = group_methods_by_name(methods)
             page_root = method_page_root(class_name)
             page_root.mkdir(parents=True, exist_ok=True)
             live_pages = {method_page_doc_path(class_name, name).name for name in ordered_names}
             for stale in page_root.glob('*.md'):
-                if stale.name not in live_pages:
+                if stale.name not in live_pages and not is_hand_authored(stale):
                     stale.unlink()
+            skipped_hand_authored = []
+            written = 0
             for idx, name in enumerate(ordered_names):
                 prev_name = ordered_names[idx - 1] if idx > 0 else None
                 next_name = ordered_names[idx + 1] if idx < len(ordered_names) - 1 else None
                 chunk = chunks.get(name, '')
-                method_page_doc_path(class_name, name).write_text(
+                doc_path = method_page_doc_path(class_name, name)
+                if is_hand_authored(doc_path):
+                    skipped_hand_authored.append(name)
+                    current_hash = compute_signature_hash(by_name[name])
+                    stored_hash = read_stored_signature_hash(doc_path)
+                    qualified = f'{class_name}::{name}'
+                    if qualified in accept_set:
+                        write_stored_signature_hash(doc_path, current_hash)
+                        print(f'  accepted new signature baseline for {qualified}')
+                    elif stored_hash is None:
+                        # First time this page carries the marker: adopt the
+                        # current header signature as the verified baseline.
+                        write_stored_signature_hash(doc_path, current_hash)
+                    elif stored_hash != current_hash:
+                        all_drifted.append(qualified)
+                    continue
+                doc_path.write_text(
                     build_method_page_markdown(
                         class_name,
                         name,
@@ -9061,11 +9458,36 @@ def main() -> None:
                         known_methods,
                     )
                 )
+                written += 1
+            if skipped_hand_authored:
+                print(
+                    f'{class_name}: preserved {len(skipped_hand_authored)} hand-authored page(s): '
+                    f'{", ".join(skipped_hand_authored)}'
+                )
             cfg['output'].write_text(build_method_index_page(class_name, methods))
+            print(
+                f'{class_name}: wrote {written} method page(s), '
+                f'preserved {len(skipped_hand_authored)} -> {cfg["output"].name}'
+            )
         else:
             cfg['output'].write_text(build_page(class_name, methods))
-        print(f'{class_name}: wrote {len(methods)} methods -> {cfg["output"].name}')
+            print(f'{class_name}: wrote {len(methods)} methods -> {cfg["output"].name}')
+
+    if all_drifted:
+        print('')
+        print('SIGNATURE DRIFT DETECTED -- the C++ signature changed since these')
+        print('hand-authored pages were last verified. Their prose may now be stale:')
+        for qualified in all_drifted:
+            print(f'  - {qualified}')
+        print('')
+        print('Update the prose/examples for each page above, then re-run with')
+        print('  --accept ClassName::method  (repeat per page)')
+        print('to re-baseline the stored signature hash once verified.')
+        if args.check:
+            return 1
+
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

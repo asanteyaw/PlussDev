@@ -442,13 +442,60 @@ Series([10.0, 20.0, 30.0])
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
+  <a class="next-link" href="#ptype">
+    <span class="label">Next</span>
+    <span class="title">ptype</span>
+  </a>
+</div>
+
+## P
+
+### `ptype`
+
+#### Signature
+
+```cpp
+Slot::ptype() -> std::string
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.ptype();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
+  </a>
   <a class="next-link" href="#push">
     <span class="label">Next</span>
     <span class="title">push</span>
   </a>
 </div>
-
-## P
 
 ### `push`
 
@@ -488,9 +535,9 @@ auto out = slot.push(pluss::make_note("tail"));
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#kindelize">
+  <a class="prev-link" href="#ptype">
     <span class="label">Previous</span>
-    <span class="title">kindelize</span>
+    <span class="title">ptype</span>
   </a>
   <a class="next-link" href="#push_">
     <span class="label">Next</span>
@@ -540,13 +587,60 @@ Slot([Series(1), Series(2), Series(3)])
     <span class="label">Previous</span>
     <span class="title">push</span>
   </a>
+  <a class="next-link" href="#shape">
+    <span class="label">Next</span>
+    <span class="title">shape</span>
+  </a>
+</div>
+
+## S
+
+### `shape`
+
+#### Signature
+
+```cpp
+Slot::shape() -> std::pair<std::int64_t, std::int64_t>
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::pair<std::int64_t, std::int64_t>`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.shape();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#push_">
+    <span class="label">Previous</span>
+    <span class="title">push_</span>
+  </a>
   <a class="next-link" href="#show">
     <span class="label">Next</span>
     <span class="title">show</span>
   </a>
 </div>
-
-## S
 
 ### `show`
 
@@ -586,9 +680,9 @@ slot.show(std::cout);
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#push_">
+  <a class="prev-link" href="#shape">
     <span class="label">Previous</span>
-    <span class="title">push_</span>
+    <span class="title">shape</span>
   </a>
   <a class="next-link" href="#size">
     <span class="label">Next</span>

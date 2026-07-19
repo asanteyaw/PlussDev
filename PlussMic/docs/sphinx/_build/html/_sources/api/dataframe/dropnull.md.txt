@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 877896b6524b -->
+
 # DataFrame::dropnull
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -6,61 +9,60 @@
 
 ```cpp
 DataFrame::dropnull(const DropOptions& options) -> DataFrame
-
 DataFrame::dropnull(pluss::RangeView<std::string_view> features = {}, bool all = false) -> DataFrame
 ```
 
-Drop rows according to a missing-data rule.
+## What It Does
 
-This is the row-removal counterpart to `fillnull(...)` and `mask(...)`.
+Removes rows according to a missing-data rule — the row-removal counterpart to
+[`fillnull()`](fillnull.md) (which replaces missing values instead of discarding the
+row) and [`isnull()`](isnull.md)/[`notnull()`](notnull.md) (which report missingness
+without acting on it). Use `dropnull()` when incomplete rows — a grade that was never
+entered, a measurement the sensor missed, a join key that didn't resolve — should be
+excluded from whatever computation comes next, rather than papered over with a filled
+value.
 
-Use it when rows with incomplete measurements, grades, or join keys should be excluded from later computation.
+Two overloads cover the same underlying policy at different levels of explicitness:
+
+- **Short overload** (`features`, `all`): the common case — say which columns to inspect
+  for missingness (or leave it empty to inspect every column) and whether *any* or *all*
+  of them being missing should trigger a drop.
+- **`DropOptions` overload**: the fully explicit route, spelling out `features`, `axis`,
+  `all`, and additionally `threshold` (a minimum count of non-missing values a row must
+  have to survive) as named struct fields — reach for this once the short overload's two
+  positional arguments stop being expressive enough.
 
 ## Parameters
 
-**features**
+**features** (`pluss::RangeView<std::string_view>`, default empty)
 
-Selected features to inspect for missingness.
+Which features to inspect for missingness. Leave this empty to inspect every feature on
+the frame. Pass a subset when only certain columns — grading columns, measurement
+columns, join keys — should have a say in whether a row survives; missingness in an
+unlisted feature is simply not consulted.
 
-Leave this empty to inspect every feature. Pass a subset when only certain grading, measurement, or key columns should decide whether a row stays.
+**all** (`bool`, default `false`)
 
-**all**
+The row-drop rule applied across the selected features:
 
-Row-drop rule for the selected features.
+- `false` (the default): drop a row when *any* selected feature is missing — the strict
+  reading, "every inspected value must be present."
+- `true`: drop a row only when *all* selected features are missing — the lenient
+  reading, "keep the row unless it's missing everywhere we're looking."
 
-- `false`: drop a row when *any* selected feature is missing,
-- `true`: drop a row only when *all* selected features are missing.
+**options** (`const DropOptions&`)
 
-This is the main behavioral toggle. It decides whether the rule is strict (`any missing => drop`) or lenient (`drop only if everything inspected is missing`).
-
-**options**
-
-Structured row-drop policy.
-
-Use `DropOptions` when you want the explicit field names together with additional controls such as:
-- `axis` for row-versus-feature dropping routes,
-- `all` for all-missing versus any-missing logic,
-- `threshold` for minimum non-missing counts.
-
-Reach for this overload when the short overload is no longer expressive enough and you want the null policy stated field by field in user code.
+A structured policy object for the same operation, adding an explicit `axis` (row versus
+feature dropping) and `threshold` (minimum count of non-missing values required to keep a
+row) alongside `features` and `all`. Reach for this overload when the null policy needs
+to be stated field by field in calling code rather than packed into two positional
+arguments.
 
 ## Returns
 
 `DataFrame`
-    Frame containing only the rows that survive the requested null policy.
-
-## See Also
-
-- <a href="fillnull.html"><code>DataFrame::fillnull</code></a>: replace missing values instead of dropping rows.
-- <a href="isnull.html"><code>DataFrame::isnull</code></a>, <a href="notnull.html"><code>DataFrame::notnull</code></a>: inspect missingness first.
-
-## Notes
-
-The simple overload is the common “drop rows with missing values in these columns” route.
-
-`DropOptions` is the more explicit route when you want the null policy written out field by field.
-
-The output preserves the original row order of every surviving case.
+    A new frame containing only the rows that survive the requested null policy, in
+    their original row order.
 
 ## Examples
 
@@ -71,11 +73,12 @@ using namespace pluss::table;
 
 auto missing = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz", pluss::make_series({10.0, pluss::nan(), 8.0, pluss::nan()})},
-    {"final", pluss::make_series({80.0, 75.0, pluss::nan(), 90.0})},
+    {"quiz",    pluss::make_series({10.0, pluss::nan(), 8.0, pluss::nan()})},
+    {"final",   pluss::make_series({80.0, 75.0, pluss::nan(), 90.0})},
 });
 
 auto out = missing.dropnull({"quiz", "final"}, false);
+std::cout << out;
 ```
 
 ### Output
@@ -88,6 +91,11 @@ auto out = missing.dropnull({"quiz", "final"}, false);
 ---------------------------
 [1 cs x 3 feat]
 ```
+
+Only `Ada` (case `0`) has both `quiz` and `final` present. `Bola` is missing `quiz`,
+`Chen` is missing `final`, and `Dede` is missing `quiz` — under `all = false`, any one
+missing value among the selected features is enough to drop the row, so all three are
+excluded and only the fully-complete row remains.
 
 Example 2. Spell the same rule through `DropOptions`.
 
@@ -96,8 +104,8 @@ using namespace pluss::table;
 
 auto missing = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz", pluss::make_series({10.0, pluss::nan(), 8.0, pluss::nan()})},
-    {"final", pluss::make_series({80.0, 75.0, pluss::nan(), 90.0})},
+    {"quiz",    pluss::make_series({10.0, pluss::nan(), 8.0, pluss::nan()})},
+    {"final",   pluss::make_series({80.0, 75.0, pluss::nan(), 90.0})},
 });
 
 DataFrame::DropOptions options;
@@ -106,6 +114,7 @@ options.axis = Axis::Case;
 options.all = false;
 
 auto out = missing.dropnull(options);
+std::cout << out;
 ```
 
 ### Output
@@ -119,7 +128,33 @@ auto out = missing.dropnull(options);
 [1 cs x 3 feat]
 ```
 
+Identical result to Example 1 — `DropOptions` states the same `any-missing-among-{quiz,
+final}` rule explicitly as struct fields instead of positional arguments. This is the
+overload to reach for once a call site also needs `threshold` (say, "keep a row if at
+least 2 of 3 inspected columns are present" rather than an all-or-nothing rule), which
+has no positional-argument equivalent in the short overload.
 
+## Notes
+
+- The short overload is the common "drop rows with missing values in these columns"
+  route; `DropOptions` is the more explicit route when the null policy — including
+  `threshold` — needs to be written out field by field.
+- The output preserves the original row order of every surviving case; `dropnull()`
+  never reorders rows, it only removes some.
+- `student` was never inspected in either example (it wasn't listed in `features`), so a
+  missing `student` value would not by itself cause a row to drop — only `quiz` and
+  `final` participate in the decision.
+- To replace missing values instead of discarding their rows, see
+  [`fillnull()`](fillnull.md); to inspect missingness without acting on it at all, see
+  [`isnull()`](isnull.md) and [`notnull()`](notnull.md).
+
+## See Also
+
+- [`DataFrame::fillnull`](fillnull.md): replace missing values instead of dropping rows.
+- [`DataFrame::isnull`](isnull.md), [`DataFrame::notnull`](notnull.md): inspect
+  missingness first, without removing anything.
+- [`DataFrame::drop`](drop.md): remove whole features by name, the schema-level
+  counterpart to this row-level operation.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="drop_duplicates.html">

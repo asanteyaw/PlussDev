@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::feataxis
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,117 +7,160 @@
 ## Signature
 
 ```cpp
-DataFrame::feataxis() -> DataFrameFeatureAxisAccessor
+DataFrame::feataxis() const -> DataFrameFeatureAxisAccessor
 ```
 
-Return the feature-axis helper surface.
+## What It Does
 
-`feataxis()` is the compact surface for schema-driven feature selection and feature-name transforms. It is deliberately smaller than the main `DataFrame` API:
+Enters a small, dedicated accessor for selecting or renaming features by *name
+pattern* or by *payload kind*, rather than by an explicit list. `feataxis()` itself
+does nothing but bind the accessor to the current frame — the actual work happens on
+the accessor it returns, which exposes exactly seven methods:
 
-- `df.features()` returns feature names.
-- `df.features("price")` selects one feature as a `Thread`.
-- `df.features({"price", "volume"})` selects explicit features as a `DataFrame`.
-- `df.feataxis().like("price")` selects features whose names contain a substring.
-- `df.feataxis().match("^score_")` selects features whose names match a regex pattern.
-- `df.feataxis().series()`, `note()`, and `timeline()` select features by payload kind.
-- `df.feataxis().prefix(...)` and `suffix(...)` rewrite feature names in bulk.
+- `like(needle, case_sensitive = true)`: keep features whose name contains `needle`.
+- `match(pattern)`: keep features whose name matches an ECMAScript regex.
+- `series()` / `note()` / `timeline()`: keep features of one particular `Thread` kind.
+- `prefix(text)` / `suffix(text)`: rename **every** feature on the frame by prepending
+  or appending `text` to its name.
 
-The surface intentionally does not expose `names()`, `has(...)`, `ref(...)`, or `set(...)`. Use `features()` for names, `get(name).has_value()` for public feature-existence checks, and `rename(...)` for full positional feature-name replacement.
+This complements [`features(names)`](features.md), which selects an explicit,
+already-known list of names — `feataxis()` is for the "I don't want to spell out every
+name" case: selecting all the `"score_"`-prefixed columns, or every numeric feature,
+without listing them one by one.
 
 ## Parameters
 
-`None`
+`feataxis()` itself takes no parameters. See each accessor method's own signature
+above for what it accepts.
 
 ## Returns
 
 `DataFrameFeatureAxisAccessor`
-    Lightweight feature-axis accessor bound to the current frame.
-
-    Selector and renaming methods on this accessor return a new `DataFrame`; the source frame is not mutated.
-
-## Notes
-
-Use `like(...)` for simple substring matching. Use `match(...)` when you need regex anchors, alternation, character classes, or other pattern logic.
-
-`feataxis()` filters or rewrites the feature axis. It does not inspect text values inside `Note` payloads; use the `note()` surface for text-value regex work.
-
-Full positional replacement of all feature names is done with `df.rename({"new_a", "new_b", ...})`; the feature-axis helper surface intentionally has no setter-style method.
+    A lightweight accessor bound to the current frame. Every method it exposes returns
+    a new `DataFrame` (a selected subset, or the same columns under new names); the
+    source frame is never mutated.
 
 ## Examples
 
-Example 1. Select features by substring.
+Example 1. Select every feature whose name contains a substring.
 
 ```cpp
 using namespace pluss::table;
 
-auto df = DataFrame({
-    {"score_math", pluss::make_series({80.0, 91.0})},
-    {"score_final", pluss::make_series({88.0, 93.0})},
-    {"name", pluss::make_note({"Ada", "Bo"})},
+auto stats = DataFrame({
+    {"id",          Thread(pluss::make_series({1, 2, 3}))},
+    {"sales_2023",  Thread(pluss::make_series({100.0, 150.0, 120.0}))},
+    {"sales_2024",  Thread(pluss::make_series({110.0, 130.0, 140.0}))},
+    {"region",      Thread(pluss::make_note({"East", "West", "East"}))},
 });
-
-auto out = df.feataxis().like("score");
+std::cout << stats;
 ```
 
 ### Output
 
 ```text
-score_math  score_final
-80          88
-91          93
+===========================================
+     | id    sales_2023  sales_2024  region
+-------------------------------------------
+0    | 1     100         110         East  
+1    | 2     150         130         West  
+2    | 3     120         140         East  
+-------------------------------------------
+[3 cs x 4 feat]
 ```
 
-Example 2. Select features by regex.
-
 ```cpp
-using namespace pluss::table;
-
-auto df = DataFrame({
-    {"A1", pluss::make_series({1.0, 2.0})},
-    {"A2", pluss::make_series({3.0, 4.0})},
-    {"AA", pluss::make_series({5.0, 6.0})},
-});
-
-auto out = df.feataxis().match("^A[0-9]+$");
+auto sales_only = stats.feataxis().like("sales");
+std::cout << sales_only;
 ```
 
 ### Output
 
 ```text
-A1  A2
-1   3
-2   4
+=============================
+     | sales_2023  sales_2024
+-----------------------------
+0    | 100         110       
+1    | 150         130       
+2    | 120         140       
+-----------------------------
+[3 cs x 2 feat]
 ```
 
-Example 3. Select features by payload kind.
+`id` and `region` are dropped — neither name contains `"sales"` — leaving only the two
+year-over-year sales columns, in their original order.
+
+Example 2. Select every numeric feature by payload kind.
 
 ```cpp
-using namespace pluss::table;
-
-auto df = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema"})},
-    {"sales", pluss::make_series({10.0, 12.0})},
-});
-
-auto numeric = df.feataxis().series();
-auto text = df.feataxis().note();
+auto numeric_only = stats.feataxis().series();
+std::cout << numeric_only;
 ```
 
 ### Output
 
 ```text
-numeric:
-sales
-10
-12
-
-text:
-city
-Accra
-Tema
+===================================
+     | id    sales_2023  sales_2024
+-----------------------------------
+0    | 1     100         110       
+1    | 2     150         130       
+2    | 3     120         140       
+-----------------------------------
+[3 cs x 3 feat]
 ```
 
+`region` (a `Note` feature) is dropped; `id`, `sales_2023`, and `sales_2024` (all
+`Series`) are kept, in their original relative order. The mirror-image
+`.note()` and `.timeline()` methods keep only `Note` or `Timeline`/`TimeIndex`
+features instead.
 
+Example 3. Rename every feature at once with a prefix.
+
+```cpp
+auto renamed = stats.feataxis().prefix("q_");
+std::cout << renamed;
+```
+
+### Output
+
+```text
+=================================================
+     | q_id  q_sales_2023  q_sales_2024  q_region
+-------------------------------------------------
+0    | 1     100           110           East    
+1    | 2     150           130           West    
+2    | 3     120           140           East    
+-------------------------------------------------
+[3 cs x 4 feat]
+```
+
+Every feature name gets `"q_"` prepended, including `id` and `region` — `.prefix()`
+and `.suffix()` are whole-frame renames, unlike `.like()` / `.match()` / `.series()` /
+`.note()` / `.timeline()`, which are selective.
+
+## Notes
+
+- `.like()` and `.match()` operate on **feature names**, not on the text values inside
+  `Note` columns — pattern-matching a column's text contents is a job for
+  [`note()`](note.md)'s own text methods instead.
+- `.prefix()` / `.suffix()` rename every feature on the frame unconditionally; there is
+  no selective "rename only these columns" mode on this accessor — for that, see
+  [`rename()`](rename.md).
+- `feataxis()` deliberately does not expose a name-existence check or a positional
+  setter; use [`get(name).has_value()`](get.md) to check whether a feature exists, and
+  [`rename()`](rename.md) for a full positional name replacement.
+- An invalid regex passed to `.match()` throws with the message
+  `"DataFrame::feataxis().match: invalid regex '<pattern>': <reason>"`.
+
+## See Also
+
+- [`DataFrame::features`](features.md): select an explicit, already-known list of
+  feature names instead of a pattern or kind.
+- [`DataFrame::rename`](rename.md): full positional replacement of every feature name,
+  when `.prefix()` / `.suffix()` aren't the transform you need.
+- [`DataFrame::note`](note.md): text-value operations on `Note` columns' *contents*,
+  as opposed to `feataxis()`'s operations on feature *names*.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="factor.html">

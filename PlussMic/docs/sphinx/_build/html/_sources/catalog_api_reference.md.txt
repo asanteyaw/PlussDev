@@ -882,65 +882,6 @@ text__text_similarity -> Series([1.0, 1.0, 1.0])
     <span class="label">Previous</span>
     <span class="title">cloc</span>
   </a>
-  <a class="next-link" href="#count">
-    <span class="label">Next</span>
-    <span class="title">count</span>
-  </a>
-</div>
-
-### `count`
-
-#### Signature
-
-```cpp
-Catalog::count() -> std::int64_t
-```
-
-#### What It Does
-
-Returns a size/count summary for the current object without changing it.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
-
-#### Examples
-
-Example 1. Compute `count` and inspect the resulting summary value or summary object.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.count();
-```
-
-##### Output
-
-```text
-3
-```
-
-#### Practical Behavior
-
-- `count()` returns the catalog row count after alignment through `tabelize()`.
-- This is the quick “how many aligned rows do I have?” answer.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#compute_similarity">
-    <span class="label">Previous</span>
-    <span class="title">compute_similarity</span>
-  </a>
   <a class="next-link" href="#defined">
     <span class="label">Next</span>
     <span class="title">defined</span>
@@ -992,9 +933,9 @@ auto out = ct.defined();
 true
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#count">
+  <a class="prev-link" href="#compute_similarity">
     <span class="label">Previous</span>
-    <span class="title">count</span>
+    <span class="title">compute_similarity</span>
   </a>
   <a class="next-link" href="#display">
     <span class="label">Next</span>
@@ -1057,6 +998,111 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
   <a class="prev-link" href="#defined">
     <span class="label">Previous</span>
     <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#distinct">
+    <span class="label">Next</span>
+    <span class="title">distinct</span>
+  </a>
+</div>
+
+### `distinct`
+
+#### Signatures
+
+```cpp
+Catalog::distinct(DistinctOptions options = {}) -> Catalog
+
+Catalog::distinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) -> Catalog
+
+Catalog::distinct(std::string_view key, DistinctOptions options = {}) -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+**key**
+    Name of the target slot or stream.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.distinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.distinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.distinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#display">
+    <span class="label">Previous</span>
+    <span class="title">display</span>
   </a>
   <a class="next-link" href="#drop">
     <span class="label">Next</span>
@@ -1184,27 +1230,27 @@ metric -> Series([10.0, 20.0, 30.0])
 - The remaining streams keep their alignment.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#display">
+  <a class="prev-link" href="#distinct">
     <span class="label">Previous</span>
-    <span class="title">display</span>
+    <span class="title">distinct</span>
   </a>
-  <a class="next-link" href="#dropna">
+  <a class="next-link" href="#dropnull">
     <span class="label">Next</span>
-    <span class="title">dropna</span>
+    <span class="title">dropnull</span>
   </a>
 </div>
 
-### `dropna`
+### `dropnull`
 
 #### Signature
 
 ```cpp
-Catalog::dropna(std::initializer_list<std::string_view> keys = {}) -> Catalog
+Catalog::dropnull(std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
 #### What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
 #### Parameters
 
@@ -1222,21 +1268,33 @@ Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
-
+auto metric = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));
 auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "metric"_k = metric,
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.dropna();
+auto out = ct.dropnull({"metric"});
 ```
 
 ##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+metric -> Series([10.0, null, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+metric -> Series([10.0, 30.0])
+city   -> Note(["Accra", "Kumasi"])
 ```
+
+#### Practical Behavior
+
+- `dropnull(keys)` applies stream-level `dropnull()` to the selected keys.
+- With no keys supplied, every stream is processed.
+- Unknown keys throw immediately.
+
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#drop">
     <span class="label">Previous</span>
@@ -1293,9 +1351,9 @@ auto out = ct.empty();
 false
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#dropna">
+  <a class="prev-link" href="#dropnull">
     <span class="label">Previous</span>
-    <span class="title">dropna</span>
+    <span class="title">dropnull</span>
   </a>
   <a class="next-link" href="#end">
     <span class="label">Next</span>
@@ -1768,6 +1826,111 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">filter</span>
   </a>
+  <a class="next-link" href="#freq">
+    <span class="label">Next</span>
+    <span class="title">freq</span>
+  </a>
+</div>
+
+### `freq`
+
+#### Signatures
+
+```cpp
+Catalog::freq(FreqOptions options = {}) -> Catalog
+
+Catalog::freq(std::initializer_list<std::string_view> keys, FreqOptions options = {}) -> Catalog
+
+Catalog::freq(std::string_view key, FreqOptions options = {}) -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+**key**
+    Name of the target slot or stream.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.freq();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.freq();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.freq();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter_by_text">
+    <span class="label">Previous</span>
+    <span class="title">filter_by_text</span>
+  </a>
   <a class="next-link" href="#from_json">
     <span class="label">Next</span>
     <span class="title">from_json</span>
@@ -1813,9 +1976,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#filter_by_text">
+  <a class="prev-link" href="#freq">
     <span class="label">Previous</span>
-    <span class="title">filter_by_text</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="#get">
     <span class="label">Next</span>
@@ -1873,60 +2036,6 @@ Series([10.0, 20.0, 30.0])
     <span class="label">Previous</span>
     <span class="title">from_json</span>
   </a>
-  <a class="next-link" href="#get_stream">
-    <span class="label">Next</span>
-    <span class="title">get_stream</span>
-  </a>
-</div>
-
-### `get_stream`
-
-#### Signature
-
-```cpp
-Catalog::get_stream(std::string_view key) -> std::optional<Stream>
-```
-
-#### What It Does
-
-Returns one named stream from the catalog.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-#### Returns
-
-`std::optional<Stream>`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.get_stream("metric");
-```
-
-##### Output
-
-```text
-Series([10.0, 20.0, 30.0])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#get">
-    <span class="label">Previous</span>
-    <span class="title">get</span>
-  </a>
   <a class="next-link" href="#group_by">
     <span class="label">Next</span>
     <span class="title">group_by</span>
@@ -1977,9 +2086,9 @@ auto out = ct.group_by("city");
 {"Accra": Catalog(...), "Tema": Catalog(...)}
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#get_stream">
+  <a class="prev-link" href="#get">
     <span class="label">Previous</span>
-    <span class="title">get_stream</span>
+    <span class="title">get</span>
   </a>
   <a class="next-link" href="#has">
     <span class="label">Next</span>
@@ -2036,60 +2145,6 @@ true
   <a class="prev-link" href="#group_by">
     <span class="label">Previous</span>
     <span class="title">group_by</span>
-  </a>
-  <a class="next-link" href="#has_stream">
-    <span class="label">Next</span>
-    <span class="title">has_stream</span>
-  </a>
-</div>
-
-### `has_stream`
-
-#### Signature
-
-```cpp
-Catalog::has_stream(std::string_view key) -> bool
-```
-
-#### What It Does
-
-Checks whether a named stream exists.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.has_stream("metric");
-```
-
-##### Output
-
-```text
-true
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#has">
-    <span class="label">Previous</span>
-    <span class="title">has</span>
   </a>
   <a class="next-link" href="#head">
     <span class="label">Next</span>
@@ -2149,9 +2204,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#has_stream">
+  <a class="prev-link" href="#has">
     <span class="label">Previous</span>
-    <span class="title">has_stream</span>
+    <span class="title">has</span>
   </a>
   <a class="next-link" href="#info">
     <span class="label">Next</span>
@@ -2211,6 +2266,60 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
+  <a class="next-link" href="#invalid">
+    <span class="label">Next</span>
+    <span class="title">invalid</span>
+  </a>
+</div>
+
+### `invalid`
+
+#### Signature
+
+```cpp
+Catalog::invalid(std::initializer_list<std::string_view> keys = {}) -> Catalog
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.invalid();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#info">
+    <span class="label">Previous</span>
+    <span class="title">info</span>
+  </a>
   <a class="next-link" href="#isnull">
     <span class="label">Next</span>
     <span class="title">isnull</span>
@@ -2269,9 +2378,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#info">
+  <a class="prev-link" href="#invalid">
     <span class="label">Previous</span>
-    <span class="title">info</span>
+    <span class="title">invalid</span>
   </a>
   <a class="next-link" href="#keys">
     <span class="label">Next</span>
@@ -2975,6 +3084,59 @@ Series([20.0])
     <span class="label">Previous</span>
     <span class="title">masked_select</span>
   </a>
+  <a class="next-link" href="#maxrecords">
+    <span class="label">Next</span>
+    <span class="title">maxrecords</span>
+  </a>
+</div>
+
+### `maxrecords`
+
+#### Signature
+
+```cpp
+Catalog::maxrecords() -> std::int64_t
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.maxrecords();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#max">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
   <a class="next-link" href="#mean">
     <span class="label">Next</span>
     <span class="title">mean</span>
@@ -3025,9 +3187,9 @@ auto out = ct.mean("metric");
 Series([20.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#max">
+  <a class="prev-link" href="#maxrecords">
     <span class="label">Previous</span>
-    <span class="title">max</span>
+    <span class="title">maxrecords</span>
   </a>
   <a class="next-link" href="#merge">
     <span class="label">Next</span>
@@ -3162,25 +3324,23 @@ Series([20.0])
     <span class="label">Previous</span>
     <span class="title">merge</span>
   </a>
-  <a class="next-link" href="#nfields">
+  <a class="next-link" href="#minrecords">
     <span class="label">Next</span>
-    <span class="title">nfields</span>
+    <span class="title">minrecords</span>
   </a>
 </div>
 
-## N
-
-### `nfields`
+### `minrecords`
 
 #### Signature
 
 ```cpp
-Catalog::nfields() -> std::int64_t
+Catalog::minrecords() -> std::int64_t
 ```
 
 #### What It Does
 
-Returns a size/count summary for the current object without changing it.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -3204,18 +3364,178 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.nfields();
+auto out = ct.minrecords();
 ```
 
 ##### Output
 
 ```text
-3
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#min">
     <span class="label">Previous</span>
     <span class="title">min</span>
+  </a>
+  <a class="next-link" href="#ndistinct">
+    <span class="label">Next</span>
+    <span class="title">ndistinct</span>
+  </a>
+</div>
+
+## N
+
+### `ndistinct`
+
+#### Signatures
+
+```cpp
+Catalog::ndistinct(DistinctOptions options = {}) -> Catalog
+
+Catalog::ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) -> Catalog
+
+Catalog::ndistinct(std::string_view key, DistinctOptions options = {}) -> Stream
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+**key**
+    Name of the target slot or stream.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+`Stream`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.ndistinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.ndistinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.ndistinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#minrecords">
+    <span class="label">Previous</span>
+    <span class="title">minrecords</span>
+  </a>
+  <a class="next-link" href="#nkeys">
+    <span class="label">Next</span>
+    <span class="title">nkeys</span>
+  </a>
+</div>
+
+### `nkeys`
+
+#### Signature
+
+```cpp
+Catalog::nkeys() -> std::int64_t
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.nkeys();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ndistinct">
+    <span class="label">Previous</span>
+    <span class="title">ndistinct</span>
   </a>
   <a class="next-link" href="#note">
     <span class="label">Next</span>
@@ -3274,9 +3594,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#nfields">
+  <a class="prev-link" href="#nkeys">
     <span class="label">Previous</span>
-    <span class="title">nfields</span>
+    <span class="title">nkeys</span>
   </a>
   <a class="next-link" href="#notnull">
     <span class="label">Next</span>
@@ -3340,23 +3660,23 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">note</span>
   </a>
-  <a class="next-link" href="#nstreams">
+  <a class="next-link" href="#nrecords">
     <span class="label">Next</span>
-    <span class="title">nstreams</span>
+    <span class="title">nrecords</span>
   </a>
 </div>
 
-### `nstreams`
+### `nrecords`
 
 #### Signature
 
 ```cpp
-Catalog::nstreams() -> std::int64_t
+Catalog::nrecords() -> std::int64_t
 ```
 
 #### What It Does
 
-Returns a size/count summary for the current object without changing it.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -3380,13 +3700,13 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.nstreams();
+auto out = ct.nrecords();
 ```
 
 ##### Output
 
 ```text
-3
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#notnull">
@@ -3453,9 +3773,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#nstreams">
+  <a class="prev-link" href="#nrecords">
     <span class="label">Previous</span>
-    <span class="title">nstreams</span>
+    <span class="title">nrecords</span>
   </a>
   <a class="next-link" href="#rename">
     <span class="label">Next</span>
@@ -4329,9 +4649,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 
 ### `set`
 
-#### Signature
+#### Signatures
 
 ```cpp
+Catalog::set(std::initializer_list<NamedStream> items) -> Catalog
+
+Catalog::set(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog
+
 Catalog::set(std::string_view key, const Stream& value) -> Catalog
 ```
 
@@ -4340,6 +4664,9 @@ Catalog::set(std::string_view key, const Stream& value) -> Catalog
 Adds or replaces one named stream and returns the updated catalog.
 
 #### Parameters
+
+**items**
+    Inline collection passed directly at the call site.
 
 **key**
     Name of the target slot or stream.
@@ -4355,6 +4682,60 @@ Adds or replaces one named stream and returns the updated catalog.
 #### Examples
 
 Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+```
+
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+```
+
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4394,9 +4775,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 
 ### `set_`
 
-#### Signature
+#### Signatures
 
 ```cpp
+Catalog::set_(std::initializer_list<NamedStream> items) -> Catalog&
+
+Catalog::set_(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog&
+
 Catalog::set_(std::string_view key, const Stream& value) -> Catalog&
 ```
 
@@ -4405,6 +4790,9 @@ Catalog::set_(std::string_view key, const Stream& value) -> Catalog&
 Adds or replaces one named stream in place.
 
 #### Parameters
+
+**items**
+    Inline collection passed directly at the call site.
 
 **key**
     Name of the target slot or stream.
@@ -4420,6 +4808,60 @@ Adds or replaces one named stream in place.
 #### Examples
 
 Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+```
+
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+```
+
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4451,40 +4893,36 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">set</span>
   </a>
-  <a class="next-link" href="#set_stream">
+  <a class="next-link" href="#shape">
     <span class="label">Next</span>
-    <span class="title">set_stream</span>
+    <span class="title">shape</span>
   </a>
 </div>
 
-### `set_stream`
+### `shape`
 
 #### Signature
 
 ```cpp
-Catalog::set_stream(std::string_view key, const Stream& value) -> Catalog
+Catalog::shape() -> std::pair<std::int64_t, std::int64_t>
 ```
 
 #### What It Does
 
-Adds or replaces one named stream and returns the updated catalog.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
-**key**
-    Name of the target slot or stream.
-
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+`None`
 
 #### Returns
 
-`Catalog`
+`std::pair<std::int64_t, std::int64_t>`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4495,283 +4933,18 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+auto out = ct.shape();
 ```
 
 ##### Output
 
 ```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#set_">
     <span class="label">Previous</span>
     <span class="title">set_</span>
-  </a>
-  <a class="next-link" href="#set_stream_">
-    <span class="label">Next</span>
-    <span class="title">set_stream_</span>
-  </a>
-</div>
-
-### `set_stream_`
-
-#### Signature
-
-```cpp
-Catalog::set_stream_(std::string_view key, const Stream& value) -> Catalog&
-```
-
-#### What It Does
-
-Adds or replaces one named stream in place.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
-
-#### Returns
-
-`Catalog&`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
-```
-
-##### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_stream">
-    <span class="label">Previous</span>
-    <span class="title">set_stream</span>
-  </a>
-  <a class="next-link" href="#set_streams">
-    <span class="label">Next</span>
-    <span class="title">set_streams</span>
-  </a>
-</div>
-
-### `set_streams`
-
-#### Signatures
-
-```cpp
-Catalog::set_streams(std::initializer_list<NamedStream> items) -> Catalog
-
-Catalog::set_streams(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog
-```
-
-#### What It Does
-
-Adds or replaces several named streams and returns the updated catalog.
-
-#### Parameters
-
-**items**
-    Inline collection passed directly at the call site.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-using namespace pluss::kindle::literals;
-auto out = ct.set_streams({
-    "flag"_k = pluss::kindle::Stream(pluss::make_series({1, 0, 1})),
-});
-```
-
-##### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.set_streams({
-    {"flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1}))},
-});
-```
-
-##### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_stream_">
-    <span class="label">Previous</span>
-    <span class="title">set_stream_</span>
-  </a>
-  <a class="next-link" href="#set_streams_">
-    <span class="label">Next</span>
-    <span class="title">set_streams_</span>
-  </a>
-</div>
-
-### `set_streams_`
-
-#### Signatures
-
-```cpp
-Catalog::set_streams_(std::initializer_list<NamedStream> items) -> Catalog&
-
-Catalog::set_streams_(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog&
-```
-
-#### What It Does
-
-Adds or replaces several named streams in place.
-
-#### Parameters
-
-**items**
-    Inline collection passed directly at the call site.
-
-#### Returns
-
-`Catalog&`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-using namespace pluss::kindle::literals;
-ct.set_streams_({
-    "flag"_k = pluss::kindle::Stream(pluss::make_series({1, 0, 1})),
-});
-```
-
-##### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-ct.set_streams_({
-    {"flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1}))},
-});
-```
-
-##### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_streams">
-    <span class="label">Previous</span>
-    <span class="title">set_streams</span>
   </a>
   <a class="next-link" href="#show">
     <span class="label">Next</span>
@@ -4823,9 +4996,62 @@ auto out = ct.show();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_streams_">
+  <a class="prev-link" href="#shape">
     <span class="label">Previous</span>
-    <span class="title">set_streams_</span>
+    <span class="title">shape</span>
+  </a>
+  <a class="next-link" href="#size">
+    <span class="label">Next</span>
+    <span class="title">size</span>
+  </a>
+</div>
+
+### `size`
+
+#### Signature
+
+```cpp
+Catalog::size() -> std::int64_t
+```
+
+#### What It Does
+
+Returns a size/count summary for the current object without changing it.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Examples
+
+Example 1. Inspect the `size` property of the current object.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.size();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
   </a>
   <a class="next-link" href="#slice">
     <span class="label">Next</span>
@@ -4888,9 +5114,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#show">
+  <a class="prev-link" href="#size">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">size</span>
   </a>
   <a class="next-link" href="#sort">
     <span class="label">Next</span>
@@ -5022,113 +5248,6 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">sort</span>
   </a>
-  <a class="next-link" href="#stream">
-    <span class="label">Next</span>
-    <span class="title">stream</span>
-  </a>
-</div>
-
-### `stream`
-
-#### Signature
-
-```cpp
-Catalog::stream(std::string_view key) -> Stream
-```
-
-#### What It Does
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-#### Returns
-
-`Stream`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.stream("metric");
-```
-
-##### Output
-
-```text
-Series([10.0, 20.0, 30.0])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#sort_by">
-    <span class="label">Previous</span>
-    <span class="title">sort_by</span>
-  </a>
-  <a class="next-link" href="#streams">
-    <span class="label">Next</span>
-    <span class="title">streams</span>
-  </a>
-</div>
-
-### `streams`
-
-#### Signature
-
-```cpp
-Catalog::streams() -> std::vector<Stream>
-```
-
-#### What It Does
-
-Materializes the current members as a collection you can inspect or reuse elsewhere.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::vector<Stream>`
-    Materialized collection of stream objects.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.streams();
-```
-
-##### Output
-
-```text
-[Stream(id), Stream(metric), Stream(city)]
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#stream">
-    <span class="label">Previous</span>
-    <span class="title">stream</span>
-  </a>
   <a class="next-link" href="#sum">
     <span class="label">Next</span>
     <span class="title">sum</span>
@@ -5179,9 +5298,9 @@ auto out = ct.sum("metric");
 Series([20.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#streams">
+  <a class="prev-link" href="#sort_by">
     <span class="label">Previous</span>
-    <span class="title">streams</span>
+    <span class="title">sort_by</span>
   </a>
   <a class="next-link" href="#tabelize">
     <span class="label">Next</span>
@@ -5742,7 +5861,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog::to_table(const TabelizePolicy& policy = {}, bool render = true) -> pluss::table::DataFrame
+Catalog::to_table(const TabelizePolicy& policy = {}, bool render = false) -> pluss::table::DataFrame
 ```
 
 #### What It Does

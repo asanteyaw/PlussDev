@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 786bebeb14f1 -->
+
 # DataFrame::describe
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,47 +8,48 @@
 ## Signature
 
 ```cpp
-DataFrame::describe(bool render = false) -> DataFrameView
+DataFrame::describe(bool render = false) const -> DataFrameView
 ```
 
-Compute descriptive statistics for the numeric features in the current frame.
+## What It Does
 
-`describe()` is the compact whole-frame summary route when you want counts, central tendency, spread, and quartiles instead of the original rows.
+Computes descriptive statistics for every numeric feature on the frame and returns them
+as a small summary frame: one row per statistic (`count`, `mean`, `std`, `min`, `25%`,
+`50%`, `75%`, `max`), one column per participating numeric feature. It is the
+value-level counterpart to [`info()`](info.md) — where `info()` tells you the *shape* of
+a frame (dtypes, null counts, memory), `describe()` tells you what the *numbers actually
+look like*: central tendency, spread, and the shape of the distribution via quartiles.
 
-For ordinary numeric grading, sales, or sensor tables, this is the fastest way to inspect distribution shape before you start filtering, grouping, modeling, or plotting.
+For an ordinary sales, sensor, or grading table, `describe()` is usually the fastest way
+to sanity-check a frame before filtering, grouping, modeling, or plotting it — a `mean`
+wildly different from what you expected, a `min` that is negative when it should not be,
+or a `max` several orders of magnitude larger than the `75%` line are all visible in one
+glance at the summary, long before you would spot them by scrolling through raw rows.
 
 ## Parameters
 
-**render**
+**render** (`bool`, default `false`)
 
-Display toggle for the returned view.
+Display toggle for the returned view, following the same convention as
+[`head()`](head.md), [`corr()`](corr.md), and the other `DataFrameView`-returning
+methods:
 
 - `false`: keep explicit control over when and how you print or render the result.
-- `true`: allow the returned `DataFrameView` to auto-render in temporary display contexts.
+- `true`: allow the returned `DataFrameView` to auto-render in temporary display
+  contexts (for example, a bare `df.describe(true);` statement).
 
 ## Returns
 
 `DataFrameView`
-    Summary view whose rows are statistics such as `count`, `mean`, and percentiles, and whose columns are the participating numeric features.
-
-## See Also
-
-- <a href="mean.html"><code>DataFrame::mean</code></a>, <a href="std.html"><code>DataFrame::std</code></a>: one specific statistic instead of the full descriptive table.
-- <a href="../thread/describe.html"><code>Thread::describe</code></a>: summarize one extracted feature directly.
-
-## Notes
-
-`describe()` summarizes numeric series features only. Note, timeline, and other non-numeric payloads are skipped instead of coerced.
-
-Missing numeric values are ignored while the summary statistics are computed.
-
-The summary rows are returned in a fixed statistical order: `count`, `mean`, `std`, `min`, `25%`, `50%`, `75%`, `max`.
-
-`render` changes display behavior only. It does not change which statistics are computed or how missing values are handled.
+    A summary view whose rows are the eight statistics above, in that fixed order, and
+    whose columns are exactly the numeric features that participated. The result itself
+    is a small, ordinary `DataFrame` under the hood — you can chain further operations on
+    it (`round()`, `save_csv()`, `corr()`, and so on) exactly as you would on any other
+    frame.
 
 ## Examples
 
-Example 1. Summarize every numeric feature in the frame.
+Example 1. Summarize a frame with a mix of numeric and text features.
 
 ```cpp
 using namespace pluss::table;
@@ -58,6 +62,7 @@ auto corr_base = DataFrame({
 });
 
 auto out = corr_base.describe(false);
+std::cout << out;
 ```
 
 ### Output
@@ -78,40 +83,75 @@ max   | 4            8            4
 [8 cs x 3 feat]
 ```
 
-Example 2. Use `describe()` to confirm that non-numeric features are ignored rather than coerced.
+`city` never appears anywhere in the result — `describe()` silently restricts itself to
+numeric `Series` features, so text columns are excluded rather than coerced or reported
+as an error. `std` here is the **sample** standard deviation (divides by `n - 1`, not
+`n`), the conventional default for an unbiased estimate from observed data.
+
+Example 2. Missing values are skipped per feature, not per row.
 
 ```cpp
 using namespace pluss::table;
 
-auto corr_base = DataFrame({
-    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
-    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
-    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
-    {"city", pluss::make_note({"A", "B", "C", "D"})},
+auto orders = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
-auto out = corr_base.describe(false);
+auto summary = orders.describe(false);
+std::cout << summary;
 ```
 
 ### Output
 
 ```text
-=============================================
-      | x            y            z
----------------------------------------------
-count | 4            4            4
-mean  | 2.5          5            2.5
-std   | 1.290994449  2.581988897  1.290994449
-min   | 1            2            1
-25%   | 1.75         3.5          1.75
-50%   | 2.5          5            2.5
-75%   | 3.25         6.5          3.25
-max   | 4            8            4
----------------------------------------------
-[8 cs x 3 feat]
+============================================================
+      | order_id     units        unit_price   discount
+------------------------------------------------------------
+count | 6            6            5            5
+mean  | 103.5        2.833333333  551.5        0.08
+std   | 1.870828693  1.471960144  580.5111971  0.03082207001
+min   | 101          1            42           0.05
+25%   | 102.25       2            45.5         0.05
+50%   | 103.5        2.5          320          0.08
+75%   | 104.75       3.75         1150         0.1
+max   | 106          5            1200         0.12
+------------------------------------------------------------
+[8 cs x 4 feat]
 ```
 
+`unit_price` and `discount` each report `count = 5`, not `6` — their one missing value
+(different rows for each feature: case `5` for `unit_price`, case `2` for `discount`) is
+excluded from every statistic for that column independently. A row missing one feature
+does not disqualify its other, observed features from that feature's own summary; the
+skip happens per-column, not per-row.
 
+## Notes
+
+- `describe()` summarizes numeric `Series` features only. `Note`, `Timeline`, and
+  `TimeIndex` features are skipped entirely, the same way `city` was skipped in Example 1.
+- Quartiles (`25%`, `50%`, `75%`) are computed with linear interpolation between the two
+  closest ranks — `50%` therefore coincides with the median exactly, including for
+  even-sized samples.
+- `std` uses `n - 1` in the denominator (sample standard deviation, Bessel's correction),
+  not `n`. A single-observation feature would have an undefined `std` — describe a
+  wider sample, or treat a `count = 1` column's `std` as not meaningful.
+- `render` changes display behavior only; it never changes which statistics are computed
+  or how missing values are handled.
+
+## See Also
+
+- [`DataFrame::info`](info.md): structural summary (dtypes, null counts, memory) instead
+  of a value-level statistical summary.
+- [`DataFrame::mean`](mean.md), [`DataFrame::std`](std.md),
+  [`DataFrame::percentiles`](percentiles.md): compute one specific statistic directly
+  instead of the full table.
+- [`DataFrame::corr`](corr.md): pairwise correlation between numeric features, a
+  natural next step after `describe()`.
+- [`Thread::describe`](../thread/describe.md): the same summary for one already-extracted
+  feature.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="defined.html">

@@ -3939,6 +3939,56 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
     <span class="label">Previous</span>
     <span class="title">set_slots</span>
   </a>
+  <a class="next-link" href="#shape">
+    <span class="label">Next</span>
+    <span class="title">shape</span>
+  </a>
+</div>
+
+### `shape`
+
+#### Signature
+
+```cpp
+Registry::shape() -> std::pair<std::int64_t, std::int64_t>
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::pair<std::int64_t, std::int64_t>`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.shape();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_slots_">
+    <span class="label">Previous</span>
+    <span class="title">set_slots_</span>
+  </a>
   <a class="next-link" href="#show">
     <span class="label">Next</span>
     <span class="title">show</span>
@@ -3988,9 +4038,59 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_slots_">
+  <a class="prev-link" href="#shape">
     <span class="label">Previous</span>
-    <span class="title">set_slots_</span>
+    <span class="title">shape</span>
+  </a>
+  <a class="next-link" href="#size">
+    <span class="label">Next</span>
+    <span class="title">size</span>
+  </a>
+</div>
+
+### `size`
+
+#### Signature
+
+```cpp
+Registry::size() -> std::int64_t
+```
+
+#### What It Does
+
+Returns a size/count summary for the current object without changing it.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Examples
+
+Example 1. Inspect the `size` property of the current object.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.size();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
   </a>
   <a class="next-link" href="#slice">
     <span class="label">Next</span>
@@ -4048,9 +4148,9 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#show">
+  <a class="prev-link" href="#size">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">size</span>
   </a>
   <a class="next-link" href="#slot">
     <span class="label">Next</span>

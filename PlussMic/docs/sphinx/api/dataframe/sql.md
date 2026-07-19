@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::sql
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,75 +7,115 @@
 ## Signatures
 
 ```cpp
-DataFrame::sql() -> DataFrameSqlAccessor
-
-DataFrame::sql(SqlOptions options) -> DataFrameSqlAccessor
+DataFrame::sql() const -> DataFrameSqlAccessor
+DataFrame::sql(SqlOptions options) const -> DataFrameSqlAccessor
 ```
 
 ## What It Does
 
-Use this when the transformation is easier to express as SQL than as a chained sequence of table verbs.
+Enters the frame's built-in SQL accessor — a small, self-contained SQL engine that
+runs `SELECT` statements directly against the frame (referenced in the statement as
+the source table `self`), returning an ordinary `DataFrame` result. Use this when a
+transformation reads more naturally as a `SELECT`/`WHERE`/`JOIN`/`ORDER BY` statement
+than as a chained sequence of table verbs. `sql()` itself does no work beyond binding
+the frame (and, optionally, execution `options`); the real work happens on
+`.execute(statement)`.
+
+[`prep_sql(statement)`](prep_sql.md) is the sibling entry point for a statement
+that will run many times with different bound parameter values — it parses the
+statement once up front, rather than on every `.execute()` call the way
+`sql().execute(statement)` does each time it's called fresh.
 
 ## Parameters
 
-**options**
-    SQL execution options such as engine or binding policy for the returned SQL accessor.
+**options** (`SqlOptions`, optional)
+
+Execution options for the returned accessor: additional joinable `sources`, default
+`params`/`identifier_params` for `{...}`-style placeholders, missing-parameter and
+name-collision policies, row/memory/timeout limits, and diagnostics toggles. Omit it
+entirely to use every default.
 
 ## Returns
 
 `DataFrameSqlAccessor`
-    Value produced by this call.
+    An accessor bound to the current frame (and, if given, `options`). Call
+    `.execute(statement)` on it to parse and run a `SELECT` statement, returning a new
+    `DataFrame`.
 
 ## Examples
 
-Example 1. Create the SQL accessor with default options and run a query immediately.
+Example 1. Run a filtering `SELECT` statement with the default options.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.sql().execute("SELECT id, sales FROM self WHERE sales > 95");
+auto high_sales = orders.sql().execute("SELECT id, sales FROM self WHERE sales > 95");
+std::cout << high_sales;
 ```
 
 ### Output
 
 ```text
-id  sales
-1   100.0
-2   120.0
+==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 ```
-Example 2. Create the SQL accessor with an explicit SQL options object before running a query.
+
+The `WHERE` clause behaves like [`query()`](query.md)'s filtering — case `2`
+(`sales = 90`) doesn't satisfy `sales > 95`, so it's dropped, while cases `0` and `1`
+survive with their original case labels intact. The `SELECT id, sales` projection
+means `city` never appears in the result at all.
+
+Example 2. Pass an `{param}` placeholder value through `SqlOptions`.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+DataFrame::SqlOptions options;
+options.params["target_city"] = std::string("Tema");
 
-pluss::table::DataFrame::SqlOptions options;
-auto sql = df.sql(options);
-auto out = sql.execute("SELECT id, sales FROM self WHERE sales > 95");
+auto matched = orders.sql(options).execute("SELECT * FROM self WHERE city = {target_city}");
+std::cout << matched;
 ```
 
 ### Output
 
 ```text
-id  sales
-1   100.0
-2   120.0
+========================
+     | id    sales  city
+------------------------
+1    | 2     120    Tema
+------------------------
+[1 cs x 3 feat]
 ```
 
-## Practical Behavior
+`{target_city}` is substituted with the quoted string `'Tema'` before the statement
+runs, matching only case `1`. `SELECT *` keeps every column this time, unlike Example
+1's explicit projection.
 
-- `sql()` returns the SQL accessor; it does not execute a statement by itself.
-- Call `.execute(...)` on the accessor when you want a result frame immediately.
-- Use `prepare_sql(...)` when the same query will be executed repeatedly with changing bindings.
+## Notes
 
+- `sql()` returns the accessor only; it never executes a statement by itself — you
+  must call `.execute(statement)` to get a result.
+- The calling frame is always available in the statement as the source table
+  `self`; `options.sources` can bind additional named frames for joins.
+- Use [`prep_sql(statement)`](prep_sql.md) instead when the same statement text runs
+  repeatedly with different parameter bindings, to avoid re-parsing it every time.
 
+## See Also
+
+- [`DataFrame::prep_sql`](prep_sql.md): the reusable, parse-once counterpart for a
+  statement executed many times with changing parameters.
+- [`DataFrame::query`](query.md): a lighter-weight boolean-expression filter, for
+  when a full SQL statement is more machinery than the task needs.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sort_values.html">

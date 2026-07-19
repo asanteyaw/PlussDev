@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4f3eef023451 -->
+
 # DataFrame::sub
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,168 +8,141 @@
 ## Signatures
 
 ```cpp
-DataFrame::sub(const DataFrame& other) -> DataFrame
-
-DataFrame::sub(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::sub(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::sub(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::sub(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::sub(double other) -> DataFrame
+DataFrame::sub(double other) const -> DataFrame
+DataFrame::sub(const DataFrame& other) const -> DataFrame
+DataFrame::sub(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::sub(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::sub(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::sub(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The named-method form of elementwise subtraction. `sub()` shares the exact same
+overload shape and alignment rules as [`add()`](add.md), [`mul()`](mul.md),
+[`div()`](div.md), and the rest of the arithmetic family — see `add()`'s
+"What It Does" for the full explanation of the scalar/frame/Thread operand shapes and
+the `axis`/`options` parameters. Unlike addition, subtraction is not commutative, so
+operand order matters: `a.sub(b)` computes `a - b`, not `b - a`. Use
+[`rsub()`](rsub.md) when you specifically want `other - a` with `a`'s shape driving
+the result.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+The right-hand operand, subtracted from the current frame: `double` (broadcast
+scalar), `const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast
+per `axis`).
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
+value per feature; `Axis::Case` supplies one value per case.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`add()`](add.md)'s `options`: controls alignment and missing-value
+handling for the `DataFrame`/`Thread` overloads.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, with every numeric feature reduced by
+    `other`. Non-numeric features are left unchanged.
 
 ## Examples
 
-Example 1. Subtract each compatible numeric cell against another aligned frame.
+Example 1. Subtract a scalar from every numeric feature.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
+using namespace pluss::table;
 
-auto out = left.sub(right);
+auto prices = DataFrame({
+    {"units", pluss::make_series({2.0, 5.0, 1.0})},
+    {"price", pluss::make_series({10.0, 20.0, 30.0})},
+}, pluss::make_note({"a", "b", "c"}));
+
+auto out = prices.sub(1.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+===================
+     | units  price
+-------------------
+a    | 1      9    
+b    | 4      19   
+c    | 0      29   
+-------------------
+[3 cs x 2 feat]
 ```
-Example 2. Subtract each compatible numeric cell against another aligned frame.
+
+Example 2. Subtract another aligned frame, feature-by-feature.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
+auto fees = DataFrame({
+    {"units", pluss::make_series({1.0, 1.0, 0.0})},
+    {"price", pluss::make_series({2.0, 2.0, 2.0})},
+}, pluss::make_note({"a", "b", "c"}));
 
-auto out = left.sub(right);
+auto out = prices.sub(fees);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+===================
+     | units  price
+-------------------
+a    | 1      8    
+b    | 4      18   
+c    | 1      28   
+-------------------
+[3 cs x 2 feat]
 ```
-Example 3. Subtract each compatible numeric cell against one broadcast scalar value.
+
+Example 3. Subtract a `Thread` with one value per case (`Axis::Case`) — a per-row
+adjustment applied across every feature in that row.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.sub(10);
+auto per_case_discount = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+auto out = prices.sub(per_case_discount, Axis::Case);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales  city
--9  90.0   Accra
--8  110.0  Tema
--7  80.0   Kumasi
-```
-Example 4. Subtract each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.sub(10);
+===================
+     | units  price
+-------------------
+a    | 1      9    
+b    | 3      18   
+c    | -2     27   
+-------------------
+[3 cs x 2 feat]
 ```
 
-### Output
+## Notes
 
-```text
-id  sales  city
--9  90.0   Accra
--8  110.0  Tema
--7  80.0   Kumasi
-```
-Example 5. Subtract each compatible numeric cell against one broadcast scalar value.
+- Non-numeric features are always left unchanged.
+- Subtraction is not commutative: `a.sub(b)` computes `a - b`. For `b - a` with `a`
+  driving the result shape, use [`rsub()`](rsub.md).
+- Shares its full overload shape, alignment semantics, and `AlignOptions` behavior with
+  [`add()`](add.md), [`mul()`](mul.md), [`div()`](div.md), [`truediv()`](truediv.md),
+  [`floordiv()`](floordiv.md), [`mod()`](mod.md), and [`pow()`](pow.md).
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+## See Also
 
-auto out = df.sub(10);
-```
-
-### Output
-
-```text
-id  sales  city
--9  90.0   Accra
--8  110.0  Tema
--7  80.0   Kumasi
-```
-Example 6. Subtract each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.sub(10);
-```
-
-### Output
-
-```text
-id  sales  city
--9  90.0   Accra
--8  110.0  Tema
--7  80.0   Kumasi
-```
-
+- [`DataFrame::add`](add.md): the full explanation of the shared operand shapes and
+  `axis`/`options` parameters this family uses.
+- [`DataFrame::rsub`](rsub.md): the reflected form, computing `other - frame`.
+- [`DataFrame::compare`](compare.md): cell-by-cell comparison instead of arithmetic
+  combination.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="std.html">

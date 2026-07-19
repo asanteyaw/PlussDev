@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::repeated
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,49 +7,64 @@
 ## Signature
 
 ```cpp
-DataFrame::repeated(pluss::RangeView<std::string_view> features = {}) -> Thread
+DataFrame::repeated(pluss::RangeView<std::string_view> features = {}) const -> Thread
 ```
 
-Build a boolean repeated-group mask.
+## What It Does
 
-`repeated(...)` marks every row whose key appears more than once. This differs from `duplicated(...)`, which marks duplicate occurrences according to its keep policy.
+Flags **every** row that belongs to a group sharing the same composite key across
+`features` — including that group's very first occurrence, not just the ones after
+it. This is exactly [`duplicated(features, false, false)`](duplicated.md) with its
+display name changed to `"repeated"`: `repeated()` is what you reach for when you
+want "is this row part of a repeated group at all," rather than "is this row a
+duplicate follower of an earlier one" (which is what `duplicated()`'s default
+`keep_first = true` answers instead).
 
 ## Parameters
 
-**features**
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
 
-Feature subset that defines repeated groups.
-
-Leave this empty to compare whole rows. Pass one or more features when repeated membership should be keyed only on those columns.
+Which features form the composite key that defines a "group." Leave empty (the
+default) to compare whole rows across every feature.
 
 ## Returns
 
 `Thread`
-    Boolean-like thread with one value per row. `true` means the row belongs to a group that appears more than once.
-
-## See Also
-
-- <a href="duplicated.html"><code>DataFrame::duplicated</code></a>: mark duplicate occurrences after the first, before the last, or all occurrences depending on keep policy.
-- <a href="drop_duplicates.html"><code>DataFrame::drop_duplicates</code></a>: remove duplicate rows.
-
-## Notes
-
-For values `[A, B, A, C, B]`, `repeated()` returns `[true, true, true, false, true]`.
-
-Use `duplicated(...)` when you need pandas-style duplicate follower semantics such as `[false, false, true, false, true]`.
+    A boolean `Series`, one entry per case, labeled `"repeated"`. `true` marks every
+    row belonging to a key that occurs more than once anywhere in the frame; `false`
+    marks a row whose key is unique.
 
 ## Examples
 
-Example 1. Mark all rows belonging to repeated student groups.
+Example 1. Flag every row belonging to a repeated student group.
 
 ```cpp
 using namespace pluss::table;
 
-auto df = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
+auto roster = DataFrame({
+    {"student", Thread(pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"}))},
 });
+std::cout << roster;
+```
 
-auto out = df.repeated({"student"});
+### Output
+
+```text
+==============
+     | student
+--------------
+0    | Ada    
+1    | Bola   
+2    | Ada    
+3    | Chen   
+4    | Bola   
+--------------
+[5 cs x 1 feat]
+```
+
+```cpp
+auto groups = roster.repeated({"student"});
+std::cout << groups;
 ```
 
 ### Output
@@ -58,30 +75,57 @@ auto out = df.repeated({"student"});
 2  true
 3  false
 4  true
-Name: repeated, dtype: Series
+Name: repeated, ptype: Series
 ```
 
-Example 2. Compare repeated groups against duplicate occurrences.
+`"Ada"` and `"Bola"` each occur twice, so every row for either name is `true`,
+including case `0` and case `1` — their **first** appearances. `"Chen"` occurs only
+once, so case `3` is `false`.
+
+Example 2. Compare against `duplicated()`'s default follower-only semantics on the
+same data.
 
 ```cpp
-using namespace pluss::table;
-
-auto df = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
-});
-
-auto followers = df.duplicated({"student"});
-auto groups = df.repeated({"student"});
+auto followers = roster.duplicated({"student"});
+std::cout << followers;
 ```
 
 ### Output
 
 ```text
-followers: [false, false, true, false, true]
-groups:    [true, true, true, false, true]
+0  false
+1  false
+2  true
+3  false
+4  true
+Name: duplicated, ptype: Series
 ```
 
+`duplicated()`'s default (`keep_first = true`) marks only the **second and later**
+occurrence of each repeated name (`false` at cases `0` and `1`, the first
+appearances) — `repeated()` marks **all** of them, first appearance included. The two
+methods answer genuinely different questions: "which rows are extras I could drop"
+(`duplicated()`) versus "which rows belong to a group that repeats at all"
+(`repeated()`).
 
+## Notes
+
+- `repeated()` is literally `duplicated(features, /*keep_first=*/false,
+  /*keep_last=*/false)` under a different display name — it never has its own
+  separate keep-policy parameters.
+- A missing value in every selected feature is itself a valid "value" for grouping
+  purposes — two rows that are both missing on every selected feature count as
+  sharing a key, same as [`duplicated()`](duplicated.md).
+- Every selected feature name must exist on the frame; an unknown name throws.
+
+## See Also
+
+- [`DataFrame::duplicated`](duplicated.md): the keep-policy-driven sibling, for
+  marking only the extras after (or before) the first occurrence.
+- [`DataFrame::drop_duplicates`](drop_duplicates.md): removes duplicate rows outright
+  instead of just flagging them.
+- [`DataFrame::freq`](freq.md): counts *how many times* each composite key occurs,
+  rather than flagging individual rows.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="reorder.html">

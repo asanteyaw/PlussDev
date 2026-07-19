@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::assign &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::assign &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::astype" href="astype.html" />
@@ -36,7 +36,9 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-assign">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f6e738ac525a -->
+<section id="dataframe-assign">
 <h1>DataFrame::assign<a class="headerlink" href="#dataframe-assign" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
@@ -48,6 +50,12 @@
 </div>
 <p>Add or replace one or more features on a DataFrame and return the resulting frame.</p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::assign(...)</span></code> is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. One overload accepts already-computed <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values; the other accepts <code class="docutils literal notranslate"><span class="pre">DeriveSpec</span></code> expressions so PlussMic can compute the features inside the call.</p>
+<p>The motivation is the same as any non-mutating feature-creation call: instead of
+mutating a frame in a sequence of separate statements
+(<code class="docutils literal notranslate"><span class="pre">df[&quot;total&quot;]</span> <span class="pre">=</span> <span class="pre">...;</span> <span class="pre">df[&quot;passed&quot;]</span> <span class="pre">=</span> <span class="pre">...;</span></code>), <code class="docutils literal notranslate"><span class="pre">assign()</span></code> lets a chain of feature
+derivations read as a single expression —
+<code class="docutils literal notranslate"><span class="pre">df.assign({...}).filter(...).sort_values({...})</span></code> — which keeps intermediate,
+partially-derived frames out of named variables you would otherwise have to track.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -107,6 +115,7 @@ A new frame with the requested features added or replaced.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">assign</span><span class="p">({</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&gt;</span><span class="p">{</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">total_grade</span><span class="p">(</span><span class="n">grades</span><span class="p">)},</span>
 <span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -146,6 +155,7 @@ s3   | Chen     7.5         21.5   29
 <span class="w">        </span><span class="p">},</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -182,7 +192,7 @@ s3   | Chen     7.5         21.5   29     false
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -202,9 +212,10 @@ s3   | Chen     7.5         21.5   29     false
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

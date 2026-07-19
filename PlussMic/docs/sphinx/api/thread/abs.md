@@ -50,7 +50,7 @@ auto out = scores.abs();
 0  2.5
 1  0
 2  3.5
-dtype: Series
+ptype: Series
 ```
 
 

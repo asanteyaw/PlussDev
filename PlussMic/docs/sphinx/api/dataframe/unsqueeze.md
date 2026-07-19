@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::unsqueeze
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,81 +7,94 @@
 ## Signatures
 
 ```cpp
-DataFrame::unsqueeze() -> Atlas
-
-DataFrame::unsqueeze(const Thread& depth_labels) -> Atlas
+DataFrame::unsqueeze() const -> Atlas
+DataFrame::unsqueeze(const Thread& depth_labels) const -> Atlas
 ```
 
 ## What It Does
 
-Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.
+Wraps the current frame into a depth-`1` `Atlas` — `pluss::table`'s stacked,
+multi-frame container — so it can participate in APIs that expect an `Atlas` rather
+than a lone `DataFrame`. `unsqueeze()` is literally `Atlas({*this})`; the
+`depth_labels` overload is `Atlas({*this}, depth_labels)`, additionally naming that
+one depth layer.
 
 ## Parameters
 
-**depth_labels**
-    Single depth label to attach to the one-frame atlas produced by `unsqueeze(...)`.
+**depth_labels** (`const Thread&`, one-argument overload only)
+
+A single label naming the frame's one depth layer. Must be defined and have exactly
+`size() == 1`, or the call throws.
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas of `depth() == 1`, whose one frame (`.frame(0)`) is exactly this
+    frame.
 
 ## Examples
 
-Example 1. Lift one frame into a one-layer atlas.
+Example 1. Lift a frame into a one-layer atlas with no depth label.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 
-auto out = df.unsqueeze();
+auto atlas = orders.unsqueeze();
+std::cout << atlas.depth() << "\n";
+std::cout << atlas.frame(0).equals(orders) << "\n";
+std::cout << atlas.axis0_labels().has_value() << "\n";
 ```
 
 ### Output
 
 ```text
-frame0:
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+1
+true
+false
 ```
-Example 2. Lift one frame into a one-layer atlas.
+
+`atlas` has exactly one depth layer, and that layer (`.frame(0)`) is `orders`
+itself — `equals()` confirms it matches exactly. No `depth_labels` were given, so
+`axis0_labels()` reports no value.
+
+Example 2. Attach a depth label to that one layer.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto labels = pluss::table::Thread(pluss::make_note({"train"}));
-auto out = df.unsqueeze(labels);
+auto labeled_atlas = orders.unsqueeze(Thread(pluss::make_note({"train"})));
+std::cout << labeled_atlas.axis0_labels().has_value() << "\n";
 ```
 
 ### Output
 
 ```text
-depth labels:
-["train"]
-
-frame0:
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+true
 ```
 
-## Practical Behavior
+`labeled_atlas` carries one depth label, `"train"`, alongside its single frame —
+useful when this frame is about to be combined with other unsqueezed frames into a
+multi-depth atlas (say, one layer per dataset split) and each layer needs a name.
 
-- `unsqueeze()` wraps one frame into a depth-1 `Atlas`.
-- The `depth_labels` overload lets you attach exactly one depth label to that one-frame atlas.
-- This is useful when downstream APIs expect atlas depth even though you currently have only one frame.
+## Notes
 
+- `unsqueeze()` never copies or transforms the frame's data — the atlas's one layer
+  is exactly this frame, unchanged.
+- The `depth_labels` overload requires exactly one label (`size() == 1`); passing a
+  `Thread` of any other length throws `"DataFrame::unsqueeze: depth labels must have
+  size 1"`.
+- This is the natural entry point when an API expects an `Atlas` (for example,
+  multi-frame plotting or archival) but the data in hand is currently a single
+  `DataFrame`.
 
+## See Also
+
+- [`DataFrame::kindelize`](kindelize.md): a different "leave the `DataFrame`
+  representation" conversion, into a `Catalog` of independent streams instead of an
+  `Atlas`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="unify.html">

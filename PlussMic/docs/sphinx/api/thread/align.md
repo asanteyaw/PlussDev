@@ -81,7 +81,7 @@ auto out = labeled.align(
 a  20
 b  10
 d  NA
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Fill newly introduced numeric slots during case-label alignment.
@@ -104,7 +104,7 @@ auto out = labeled.align(
 a  20
 b  10
 d  0
-dtype: Series
+ptype: Series
 ```
 
 Example 3. Align a one-value-per-feature thread by feature label.
@@ -126,7 +126,7 @@ auto out = feature_thread.align(
 ```text
 A1  2.5
 A2  1.5
-dtype: Series
+ptype: Series
 ```
 
 Example 4. Use strict positional alignment when you want no label-based remapping at all.
@@ -149,7 +149,7 @@ auto out = labeled.align(
 b  10
 a  20
 c  30
-dtype: Series
+ptype: Series
 ```
 
 

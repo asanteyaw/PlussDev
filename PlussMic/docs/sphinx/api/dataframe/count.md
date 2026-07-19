@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2a54e871b92a -->
+
 # DataFrame::count
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,86 +8,142 @@
 ## Signature
 
 ```cpp
-DataFrame::count(Axis axis = Axis::Case) -> Thread
+DataFrame::count(Axis axis = Axis::Case) const -> Thread
 ```
 
-Count non-missing values along the requested axis.
+## What It Does
 
-`DataFrame::count(...)` can summarize by feature or by case depending on the axis you choose.
+Counts non-missing entries along the requested axis and returns one `Thread` of
+`Int64` counts. Unlike [`sum()`](sum.md), [`mean()`](mean.md), and the other numeric
+reducers, `count()` does not skip non-numeric features — every feature in the frame
+participates, because counting present-vs-missing cells doesn't require numeric
+semantics the way averaging or summing does. There is also no `skipnull` parameter:
+counting *is* the null-aware operation, so there is nothing to toggle.
 
 ## Parameters
 
-**axis**
+**axis** (`Axis`, default `Axis::Case`)
 
-Reduction direction.
-
-- `Axis::Feature`: one count per feature.
-- `Axis::Case`: one count per row across the currently selected features.
+Reduction direction. `Axis::Case` (the default) counts down each feature's cases,
+producing one count per feature — how many of that column's cells are non-null.
+`Axis::Feature` counts across each row's features instead, producing one count per
+case — how many of that row's cells (across every feature) are non-null.
 
 ## Returns
 
 `Thread`
-    Count result whose labels follow the retained axis.
-
-## Notes
-
-`Axis::Feature` counts down each feature and returns one count per feature.
-
-`Axis::Case` counts across the selected features for each row and returns one count per case.
+    One `Int64` entry per feature (`Axis::Case`) or per case (`Axis::Feature`),
+    holding the number of non-missing cells counted.
 
 ## Examples
 
-Example 1. Count valid values per feature.
+Example 1. Count non-missing cells per feature, the default axis.
 
 ```cpp
 using namespace pluss::table;
 
-auto corr_base = DataFrame({
-    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
-    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
-    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
-    {"city", pluss::make_note({"A", "B", "C", "D"})},
+auto orders = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
-auto out = corr_base.count(Axis::Feature);
+auto counts = orders.count();
+std::cout << counts;
 ```
 
 ### Output
 
 ```text
-x  4
-   y  4
-   z  4
-city  4
-dtype: Series
+  order_id  6
+     units  6
+unit_price  5
+  discount  5
+ptype: Series
 ```
 
-Example 2. Count valid values across selected features for each row.
+`order_id` and `units` have no missing cells, so both count all six cases. `unit_price`
+and `discount` each have exactly one missing observation — case `5` and case `2`
+respectively, the same two cells [`mean()`](mean.md) and [`std()`](std.md) exclude from
+their statistics — so each counts only five.
+
+Example 2. Count non-missing features per case with `Axis::Feature`.
 
 ```cpp
-using namespace pluss::table;
-
-auto corr_base = DataFrame({
-    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
-    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
-    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
-    {"city", pluss::make_note({"A", "B", "C", "D"})},
-});
-
-auto out = corr_base.features({"x", "y", "z"}).count(Axis::Case);
+auto counts_by_case = orders.count(Axis::Feature);
+std::cout << counts_by_case;
 ```
 
 ### Output
 
 ```text
-0  3
-1  3
+0  4
+1  4
 2  3
-3  3
-dtype: Series
+3  4
+4  4
+5  3
+ptype: Series
 ```
 
+Every case has four features. Case `2` counts only `3` because its `discount` cell is
+missing; case `5` counts only `3` because its `unit_price` cell is missing. Every other
+case has all four cells populated and counts `4`.
 
+Example 3. `count()` includes non-numeric features — unlike `sum()` or `mean()`, a
+`Note` column is counted, not skipped.
+
+```cpp
+auto status_valid = pluss::make_series({true, true, true, true, false, true}, pluss::ScalarType::Bool);
+auto orders_status = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"status",     Thread(pluss::make_note({"shipped", "shipped", "shipped", "shipped", "", "shipped"}), status_valid)},
+});
+
+auto counts_all = orders_status.count();
+std::cout << counts_all;
+```
+
+### Output
+
+```text
+  order_id  6
+     units  6
+unit_price  5
+  discount  5
+    status  5
+ptype: Series
+```
+
+`status` (a `Note` column) appears in the result and reports `5`, correctly excluding
+its one missing entry at case `4`. Compare this to [`sum()`](sum.md) or
+[`mean()`](mean.md) on the same frame: those methods would silently drop `status`
+from the result entirely rather than count it.
+
+## Notes
+
+- `count()`'s result is labeled by feature name (`Axis::Case`) or by case index
+  (`Axis::Feature`), and prints like a small labeled `Series`, not like a row sliced
+  from the source frame.
+- Every feature participates regardless of type — `Series`, `Note`, `Timeline`, and
+  `TimeIndex` columns are all counted. This is the one numeric-style reducer that does
+  not restrict itself to numeric features.
+- There is no `skipnull` parameter because there is nothing to skip: `count()` always
+  reports the non-null count, never a poisoned `NULL` result.
+- For counting distinct values rather than non-null ones, see
+  [`ndistinct()`](ndistinct.md). For the most frequent values, see [`freq()`](freq.md).
+
+## See Also
+
+- [`DataFrame::sum`](sum.md), [`DataFrame::mean`](mean.md): numeric-only reducers that
+  skip non-numeric features rather than counting them.
+- [`DataFrame::ndistinct`](ndistinct.md): counts unique values instead of non-null ones.
+- [`DataFrame::isnull`](isnull.md) / [`DataFrame::notnull`](notnull.md): the
+  cell-by-cell mask this method effectively summarizes.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="corr_with.html">

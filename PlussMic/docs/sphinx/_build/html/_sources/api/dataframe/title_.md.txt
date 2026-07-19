@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::title_
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,57 +7,67 @@
 ## Signature
 
 ```cpp
-DataFrame::title_(std::string title) -> DataFrame&
+DataFrame& DataFrame::title_(std::string title)
 ```
 
 ## What It Does
 
-Overwrites the current frame title in place.
+The in-place counterpart to [`title(title)`](title.md): sets the frame's title
+directly, mutating `*this` and returning a reference to it, instead of returning a
+new titled frame. As with [`title()`](title.md)'s one-argument overload, this never
+touches any value, dtype, feature order, or case label — only the title metadata
+changes.
 
 ## Parameters
 
-**title**
-    Human-readable title stamp written back onto the current frame.
+**title** (`std::string`)
+
+The title text to attach to the current frame, in place.
 
 ## Returns
 
 `DataFrame&`
-    Value produced by this call.
+    A reference to `*this`, now carrying `title` as its title.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Set a title in place, then read it back.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 
-df.title_("sales_report");
+orders.title_("sales_report");
+std::cout << orders.title() << "\n";
 ```
 
 ### Output
 
 ```text
-df.title():
 sales_report
-
-df.head():
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
 ```
 
-## Practical Behavior
+`orders` itself now carries the title — unlike [`title("sales_report")`](title.md),
+which would have left `orders` untitled and returned a separate titled frame
+instead.
 
-- `title()` with no argument reads the current frame title.
-- `title("...")` returns a titled copy and leaves the source frame unchanged.
-- `title_("...")` mutates the current frame title in place.
+## Notes
 
+- `title_()` mutates and returns `*this` by reference; it never allocates a new
+  `DataFrame` the way `title()`'s one-argument overload does.
+- The title has no effect on the frame's own plain-text box-table rendering — see
+  [`title()`](title.md)'s Example 2 for a direct demonstration.
 
+## See Also
+
+- [`DataFrame::title`](title.md): the non-mutating counterpart, plus the
+  no-argument overload for reading the current title back.
+- [`DataFrame::show`](show.md): where a frame's title becomes visible, as a
+  GUI/HTML viewer window title.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="title.html">

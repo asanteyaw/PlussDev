@@ -56,7 +56,7 @@ auto out = urls.encode("base64");
 0  QSBC
 1  QyZE
 2  ZW1haWxAZXhhbXBsZS5jb~
-dtype: Note
+ptype: Note
 ```
 
 Example 2. Encode note values as hexadecimal text.
@@ -75,7 +75,7 @@ auto out = urls.encode("hex");
 0  412042
 1  432644
 2  656d61696c406578616d7~
-dtype: Note
+ptype: Note
 ```
 
 Example 3. Encode note values with URL escaping.
@@ -94,7 +94,7 @@ auto out = urls.encode("url");
 0  A%20B
 1  C%26D
 2  email%40example.com
-dtype: Note
+ptype: Note
 ```
 
 

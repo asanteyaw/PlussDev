@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::unify &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::unify &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::unsqueeze" href="unsqueeze.html" />
@@ -36,159 +36,152 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-unify">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-unify">
 <h1>DataFrame::unify<a class="headerlink" href="#dataframe-unify" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">unify</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">left_on</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_right&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;many_to_many&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">unify</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">left_on</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_right&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;many_to_many&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">unify</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">left_on</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_right&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;many_to_many&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">unify</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">left_on</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_right&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;many_to_many&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">unify</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">left_on</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_right&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;many_to_many&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">unify</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">left_on</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;_right&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;many_to_many&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Combines two frames by key values. Use <code class="docutils literal notranslate"><span class="pre">right_on=&quot;&quot;</span></code> when both frames use the same key name, Pluss-native modes such as <code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;unite&quot;</span></code> to choose retained keys, and <code class="docutils literal notranslate"><span class="pre">validate</span></code> for duplicate-key checks.</p>
+<p>A relational, key-value join between this frame and <code class="docutils literal notranslate"><span class="pre">right</span></code> — matching rows by the
+<em>values</em> in <code class="docutils literal notranslate"><span class="pre">left_on</span></code>/<code class="docutils literal notranslate"><span class="pre">right_on</span></code>, not by case label or row position. This is
+distinct from <a class="reference internal" href="combine.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">combine()</span></code></span></a>/<a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">join()</span></code></span></a>/<a class="reference internal" href="align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align()</span></code></span></a>,
+which all match rows by <strong>case-label value</strong>; <code class="docutils literal notranslate"><span class="pre">unify()</span></code> matches by an arbitrary key
+feature (or several), the same shape as a SQL <code class="docutils literal notranslate"><span class="pre">JOIN</span></code> or a pandas <code class="docutils literal notranslate"><span class="pre">merge()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">right_on</span></code> defaults to reusing <code class="docutils literal notranslate"><span class="pre">left_on</span></code>’s names when left and right share the same
+key column name(s); pass it explicitly when the two frames name their keys
+differently.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>left_on</strong>
-Key feature name(s) on the left frame used to match rows during <code class="docutils literal notranslate"><span class="pre">unify(...)</span></code>.</p>
-<p><strong>right</strong>
-Right-hand frame whose rows are matched against the left frame by the requested key features.</p>
-<p><strong>right_on</strong>
-Key feature name(s) on the right frame used to match rows during <code class="docutils literal notranslate"><span class="pre">unify(...)</span></code>. Leave empty to reuse the same names as <code class="docutils literal notranslate"><span class="pre">left_on</span></code>.</p>
-<p><strong>how</strong>
-Join mode for <code class="docutils literal notranslate"><span class="pre">DataFrame::unify(...)</span></code>.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Supported values:
-- `common`: Keep only rows whose key values match on both sides.
-- `keep_left`: Preserve left keys and attach right-hand matches where they exist.
-- `keep_right`: Preserve right keys and attach left-hand matches where they exist.
-- `unite`: Keep the stable union of keys from both frames.
-- `cross`: Create the cartesian product; key feature arguments must be empty.
-- `left_only`: Keep left rows whose keys do not occur on the right.
-- `right_only`: Keep right rows whose keys do not occur on the left.
-</pre></div>
-</div>
-<p><strong>right_suffix</strong>
-Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.</p>
-<p><strong>validate</strong>
-Optional key-cardinality check for <code class="docutils literal notranslate"><span class="pre">DataFrame::unify(...)</span></code>.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Supported values:
-- `many_to_many`: Allow duplicate key values on both sides. This is the default.
-- `one_to_one`: Require each key to appear at most once on both sides.
-- `one_to_many`: Require unique keys on the left and allow duplicates on the right.
-- `many_to_one`: Allow duplicates on the left and require unique keys on the right.
-</pre></div>
-</div>
+<p><strong>left_on</strong> / <strong>right_on</strong></p>
+<p>Key feature name(s) on this frame / on <code class="docutils literal notranslate"><span class="pre">right</span></code> used to match rows. <code class="docutils literal notranslate"><span class="pre">right_on</span></code>
+defaults (empty) to reusing <code class="docutils literal notranslate"><span class="pre">left_on</span></code>’s names.</p>
+<p><strong>right</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code>)</p>
+<p>The right-hand frame to join against.</p>
+<p><strong>how</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code>)</p>
+<p>The join mode:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code> (aliases <code class="docutils literal notranslate"><span class="pre">&quot;inner&quot;</span></code>): keep only rows whose key values match on both
+sides.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;keep_left&quot;</span></code> (aliases <code class="docutils literal notranslate"><span class="pre">&quot;left&quot;</span></code>): keep every row from this frame, attaching a
+match from <code class="docutils literal notranslate"><span class="pre">right</span></code> where one exists (<code class="docutils literal notranslate"><span class="pre">NULL</span></code> on <code class="docutils literal notranslate"><span class="pre">right</span></code>’s columns otherwise).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;keep_right&quot;</span></code> (aliases <code class="docutils literal notranslate"><span class="pre">&quot;right&quot;</span></code>): the mirror image, keeping every row from
+<code class="docutils literal notranslate"><span class="pre">right</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;unite&quot;</span></code> (aliases <code class="docutils literal notranslate"><span class="pre">&quot;outer&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code>): keep the union of keys from both sides.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cross&quot;</span></code>: the cartesian product of every row in both frames; <code class="docutils literal notranslate"><span class="pre">left_on</span></code>/<code class="docutils literal notranslate"><span class="pre">right_on</span></code>
+must both be empty for this mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;left_only&quot;</span></code> (alias <code class="docutils literal notranslate"><span class="pre">&quot;left_anti&quot;</span></code>): keep only this frame’s rows whose key does
+<strong>not</strong> occur on the right — an anti-join.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;right_only&quot;</span></code>: the mirror image anti-join, keeping only <code class="docutils literal notranslate"><span class="pre">right</span></code>’s unmatched rows.</p></li>
+</ul>
+<p><strong>right_suffix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;_right&quot;</span></code>)</p>
+<p>Suffix appended to a right-hand, non-key feature name that would otherwise collide
+with an existing left-hand feature name.</p>
+<p><strong>validate</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;many_to_many&quot;</span></code>)</p>
+<p>An optional key-cardinality check: <code class="docutils literal notranslate"><span class="pre">&quot;many_to_many&quot;</span></code> (no constraint, the default),
+<code class="docutils literal notranslate"><span class="pre">&quot;one_to_one&quot;</span></code> (each key must appear at most once on both sides), <code class="docutils literal notranslate"><span class="pre">&quot;one_to_many&quot;</span></code>
+(unique on the left, duplicates allowed on the right), or <code class="docutils literal notranslate"><span class="pre">&quot;many_to_one&quot;</span></code> (the
+mirror image). A violated constraint throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+The joined frame, following the requested <code class="docutils literal notranslate"><span class="pre">how</span></code> and <code class="docutils literal notranslate"><span class="pre">validate</span></code> rules. Case
+labels are not preserved from either input — the result gets a fresh default
+case index.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Join two frames on several key features supplied through a reusable string view.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;10&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;30&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">71</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">93</span><span class="p">})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;30&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;Final Points Grade&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">88</span><span class="p">,</span><span class="w"> </span><span class="mi">99</span><span class="p">})},</span>
-<span class="p">});</span>
+<p>Example 1. The default <code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code> (inner) join: only matching keys survive.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">right</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;left&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;_right&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;many_to_one&quot;</span>
-<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Dede&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">customers</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>OrgDefinedId  midterm  Final Points Grade
-10            71       null
-20            82       88
-30            93       99
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | customer_id  amount
+--------------------------
+0    | 1            100   
+1    | 2            200   
+2    | 3            150   
+--------------------------
+[3 cs x 2 feat]
+========================
+     | customer_id  name
+------------------------
+0    | 2            Bola
+1    | 3            Chen
+2    | 4            Dede
+------------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 2. Join two frames on several key features listed inline.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;course&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;STAT200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;STAT200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;STAT300&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;10&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;30&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">71</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">93</span><span class="p">})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;course_code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;STAT200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;STAT300&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;Username&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;30&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;Final Points Grade&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">88</span><span class="p">,</span><span class="w"> </span><span class="mi">99</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;course&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="n">right</span><span class="p">,</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;course_code&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Username&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="s">&quot;inner&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;_right&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;one_to_one&quot;</span>
-<span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">matched</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>course   OrgDefinedId  midterm  course_code  Username  Final Points Grade
-STAT200  20            82       STAT200      20        88
-STAT300  30            93       STAT300      30        99
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================
+     | customer_id  amount  name
+--------------------------------
+0    | 2            200     Bola
+1    | 3            150     Chen
+--------------------------------
+[2 cs x 3 feat]
 </pre></div>
 </div>
-<p>Example 3. Join two frames on one key feature name.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;10&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;30&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">71</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">93</span><span class="p">})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;30&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;Final Points Grade&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">88</span><span class="p">,</span><span class="w"> </span><span class="mi">99</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">right</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;left&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;_right&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;many_to_one&quot;</span>
-<span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>OrgDefinedId  midterm  Final Points Grade
-10            71       null
-20            82       88
-30            93       99
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">customer_id</span> <span class="pre">=</span> <span class="pre">1</span></code> (only in <code class="docutils literal notranslate"><span class="pre">orders</span></code>) and <code class="docutils literal notranslate"><span class="pre">customer_id</span> <span class="pre">=</span> <span class="pre">4</span></code> (only in <code class="docutils literal notranslate"><span class="pre">customers</span></code>)
+both disappear — the default <code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code> mode keeps only keys present on <strong>both</strong>
+sides. The result carries a fresh <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code> case index, unrelated to either input’s
+own case labels.</p>
 </section>
 </section>
-<section id="join-semantics">
-<h2>Join Semantics<a class="headerlink" href="#join-semantics" title="Link to this heading">¶</a></h2>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">unify(...)</span></code> matches rows by key values, not by current row order.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">common</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_left</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_right</span></code>, and <code class="docutils literal notranslate"><span class="pre">unite</span></code> retain the corresponding key set while preserving stable input order.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">left_only</span></code> and <code class="docutils literal notranslate"><span class="pre">right_only</span></code> select unmatched keys; <code class="docutils literal notranslate"><span class="pre">cross</span></code> creates the cartesian case product without key features.</p></li>
-<li><p>Repeated keys expand to every matching pair, and <code class="docutils literal notranslate"><span class="pre">validate</span></code> can enforce one-to-one or one-sided uniqueness.</p></li>
-<li><p>When right-hand non-key names collide with left-hand names, <code class="docutils literal notranslate"><span class="pre">right_suffix</span></code> is applied only to the right-hand collisions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unify()</span></code> matches rows by key <strong>value</strong>, never by case label or row position —
+this is the key distinction from <a class="reference internal" href="combine.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">combine()</span></code></span></a>,
+<a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">join()</span></code></span></a>, and <a class="reference internal" href="align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align()</span></code></span></a>.</p></li>
+<li><p>Repeated key values expand to every matching pair on the opposing side — a key
+that appears twice on the left and three times on the right produces six paired
+rows in the joined result (subject to <code class="docutils literal notranslate"><span class="pre">how</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">right_suffix</span></code> is only ever applied to right-hand, <strong>non-key</strong> feature names that
+collide with an existing left-hand name — the shared key column itself is never
+suffixed.</p></li>
+<li><p>The result’s case labels are always a fresh default index, regardless of <code class="docutils literal notranslate"><span class="pre">how</span></code> —
+neither input frame’s case labels carry through.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="combine.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::combine</span></code></span></a>, <a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::join</span></code></span></a>,
+<a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::update</span></code></span></a>: the case-label-matched family of merges, a
+different alignment model from this key-value join.</p></li>
+<li><p><a class="reference internal" href="align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::align</span></code></span></a>: the lower-level case-label alignment primitive
+those methods build on.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ts.html">
@@ -210,7 +203,7 @@ STAT300  30            93       STAT300      30        99
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -230,9 +223,10 @@ STAT300  30            93       STAT300      30        99
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

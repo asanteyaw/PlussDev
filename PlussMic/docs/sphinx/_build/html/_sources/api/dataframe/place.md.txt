@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::place
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,84 +7,132 @@
 ## Signatures
 
 ```cpp
-DataFrame::place(std::string name, const Thread& feature, std::string_view anchor_feature, bool after = false) -> DataFrame
-
-DataFrame::place(std::string_view name, std::string_view anchor_feature, bool after = false) -> DataFrame
+DataFrame::place(std::string name,
+                 const Thread& feature,
+                 std::string_view anchor_feature,
+                 bool after = false) const -> DataFrame
+DataFrame::place(std::string_view name,
+                 std::string_view anchor_feature,
+                 bool after = false) const -> DataFrame
 ```
 
 ## What It Does
 
-Moves one existing feature relative to an anchor feature, or inserts a brand-new feature directly before or after that anchor.
+Positions one feature relative to another named anchor feature, either inserting a
+brand-new column there or moving an existing one — without having to restate the
+frame's entire column order the way [`reorder()`](reorder.md)'s explicit-list
+overload would. The first overload's `name` may or may not already exist on the
+frame: if it doesn't, `place()` inserts `feature` as a new column next to `anchor`;
+if it does, the existing column is replaced in place with `feature`'s values and,
+if it wasn't already adjacent to `anchor`, moved there. The second overload always
+moves an existing feature (by name only, keeping its current values) relative to
+`anchor_feature`.
 
 ## Parameters
 
-**name**
-    Feature name to insert or move.
+**name** (`std::string` or `std::string_view`)
 
-**feature**
-    Full thread payload to insert at the target position. Its length must match the frame case count.
+The feature to insert or move. For the first overload, a name not already on the
+frame inserts `feature` as new; a name that already exists replaces that column's
+values with `feature` and relocates it next to `anchor_feature`.
 
-**anchor_feature**
-    Reference feature used to place a newly inserted or moved feature before or after an existing column.
+**feature** (`const Thread&`, first overload only)
 
-**after**
-    When `false`, placement happens before the anchor. When `true`, placement happens after the anchor.
+The column data to write at the target position. Its length must match the frame's
+case count (when the frame already has features).
+
+**anchor_feature** (`std::string_view`)
+
+The existing feature `name` is placed immediately before or after. Must already
+exist on the frame.
+
+**after** (`bool`, default `false`)
+
+`false` places `name` immediately **before** `anchor_feature`; `true` places it
+immediately **after**.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame with `name` inserted or relocated next to `anchor_feature`; every
+    other feature keeps its relative order.
 
 ## Examples
 
-Example 1. Insert a new feature relative to an anchor feature without rebuilding the whole schema.
+Example 1. Insert a brand-new feature right after an existing one.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+using namespace pluss::table;
+
+auto orders = DataFrame({
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.place("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), "sales", true);
+auto profit = Thread(pluss::make_series({40.0, 35.0, 30.0}));
+auto with_profit = orders.place("profit", profit, "sales", /*after=*/true);
+std::cout << with_profit;
 ```
 
 ### Output
 
 ```text
-id  sales  profit  city
-1   100.0  40.0    Accra
-2   120.0  35.0    Tema
-3    90.0  30.0    Kumasi
+==================================
+     | id    sales  profit  city  
+----------------------------------
+0    | 1     100    40      Accra 
+1    | 2     120    35      Tema  
+2    | 3     90     30      Kumasi
+----------------------------------
+[3 cs x 4 feat]
 ```
-Example 2. Move one existing feature relative to an anchor feature.
+
+`"profit"` didn't previously exist on `orders`, so `place()` inserts it as a new
+column, positioned right after its anchor, `"sales"`.
+
+Example 2. Move an existing feature next to a different anchor.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.place("city", "id", false);
+auto city_first = orders.place("city", "id", /*after=*/false);
+std::cout << city_first;
 ```
 
 ### Output
 
 ```text
-city    id  sales
-Accra   1   100.0
-Tema    2   120.0
-Kumasi  3    90.0
+==========================
+     | city    id    sales
+--------------------------
+0    | Accra   1     100  
+1    | Tema    2     120  
+2    | Kumasi  3     90   
+--------------------------
+[3 cs x 3 feat]
 ```
 
-## Practical Behavior
+`"city"` already exists, so this overload just relocates it — its values are
+untouched, only its column position changes, landing immediately before its anchor,
+`"id"`, since `after = false`.
 
-- `place(name, feature, anchor, after)` inserts a brand-new feature relative to an existing anchor.
-- `place(name, anchor, after)` moves an existing feature without forcing you to restate the full feature order.
-- When `after=false`, placement happens before the anchor. When `after=true`, placement happens after the anchor.
+## Notes
 
+- With the first overload, if `name` already exists on the frame, `feature` replaces
+  its current values in addition to relocating it — this overload can both rewrite
+  and reposition a column in one call.
+- `anchor_feature` must always already exist on the frame; an unknown anchor throws.
+- Unlike [`reorder()`](reorder.md), `place()` only ever positions one feature at a
+  time, relative to exactly one anchor — reach for `reorder()` when several features
+  need to move in the same call.
 
+## See Also
+
+- [`DataFrame::reorder`](reorder.md): move several features at once, including
+  before/after-anchor placement via `ReorderSpec`.
+- [`DataFrame::insert`](insert.md): insert a new feature by positional index rather
+  than by anchor name.
+- [`DataFrame::drop`](drop.md): remove a feature entirely, the complement of
+  inserting one with `place()`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pivot_table.html">

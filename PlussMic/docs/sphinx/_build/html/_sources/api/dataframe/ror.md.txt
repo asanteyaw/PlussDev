@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::ror
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,68 +7,87 @@
 ## Signatures
 
 ```cpp
-DataFrame::ror(const DataFrame& other) -> DataFrame
-
-DataFrame::ror(const Thread& other) -> DataFrame
+DataFrame::ror(const DataFrame& other) const -> DataFrame
+DataFrame::ror(const Thread& other) const -> DataFrame
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+The reflected form of [`lor()`](lor.md). Since logical OR is commutative,
+`frame.ror(other)` is indistinguishable from `frame.lor(other)` in every observable
+respect — same cell values, and (for the `DataFrame` overload) the same case labels
+and title, both drawn from `frame` itself, exactly as [`lor()`](lor.md) documents. See
+[`rand()`](rand.md) for the full explanation, including a note on a previous revision
+where the `DataFrame` overload's case labels came from `other` instead — that has
+since been fixed, and `ror()` shares the fix.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+`const DataFrame&` or `const Thread&` — identical shape requirements to
+[`land()`](land.md).
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame holding the logical OR of each cell against the corresponding `other`
+    value, with case labels and title drawn from the frame `ror()` was called on —
+    identical in every respect to what [`lor()`](lor.md) would produce for the same
+    arguments.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. `ror()` and `lor()` produce identical results, values and case labels both.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.ror();
+auto left = DataFrame({
+    {"a", pluss::make_series({true, false, true}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
+}, pluss::make_note({"p", "q", "r"}));
+
+auto right = DataFrame({
+    {"a", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({false, true, true}, pluss::ScalarType::Bool)},
+}, pluss::make_note({"x", "y", "z"}));
+
+auto out = left.ror(right);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.ror();
+=================
+     | a     b   
+-----------------
+p    | true  true
+q    | true  true
+r    | true  true
+-----------------
+[3 cs x 2 feat]
 ```
 
-### Output
+The values match [`left.lor(right)`](lor.md) exactly, and the case labels are `left`'s
+own (`p, q, r`) — `right`'s labels (`x, y, z`) never appear in the result.
 
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
+## Notes
 
+- `ror()` and [`lor()`](lor.md) are fully interchangeable for `DataFrame` arguments —
+  same values, same case labels, same title. The reflected name exists purely for
+  symmetry with the rest of the reflected method family, not because it produces a
+  different result here.
+- Requires a genuine `Bool` scalar type on every participating `Series`, same as
+  [`land()`](land.md).
+
+## See Also
+
+- [`DataFrame::lor`](lor.md): the forward form.
+- [`DataFrame::rand`](rand.md): the fuller explanation of this reflected-family
+  behavior, including a note on a previous case-label quirk that has since been fixed.
+- [`DataFrame::rxor`](rxor.md): the XOR reflected form, sharing this same behavior.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rmul.html">

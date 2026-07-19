@@ -89,11 +89,11 @@ Expected output:
 ### Example 3: DataFrame timeline transformation
 
 ```cpp
-auto year_frame = df.tl("event_time").year()
+auto year_frame = df.features({"event_time"}).tl().year()
     .rename({{"event_time", "event_year"}});
 
-auto rounded = df.tl("event_time").floor("D");
-auto monthly = df.tl("event_time").period("month");
+auto rounded = df.features({"event_time"}).tl().floor("D");
+auto monthly = df.features({"event_time"}).tl().period("month");
 ```
 
 Expected output:
@@ -108,7 +108,7 @@ Expected output:
 ### Example 4: Option-struct localization
 
 ```cpp
-auto localized = df.tl("event_time").localize(
+auto localized = df.features({"event_time"}).tl().localize(
     TimelineLocalizeOptions{.tz = "UTC", .fold = 0, .nonexistent = "raise"});
 ```
 
@@ -126,8 +126,8 @@ auto months = atlas.tl("event_time").month();
 
 Expected output:
 
-- `months` is an Atlas with each frame transformed through
-  `DataFrame::tl("event_time").month()`.
+- `months` is an Atlas with each frame transformed through selected
+  DataFrame timeline features.
 
 ### Example 6: Batched numeric DataFrame math
 

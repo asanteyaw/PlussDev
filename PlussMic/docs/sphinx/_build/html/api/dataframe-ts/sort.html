@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameTsAccessor::sort &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameTsAccessor::sub" href="sub.html" />
+    <link rel="prev" title="DataFrameTsAccessor::rolling_block" href="rolling_block.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframetsaccessor-sort">
+<h1>DataFrameTsAccessor::sort<a class="headerlink" href="#dataframetsaccessor-sort" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTsAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameTsAccessor</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">nulls_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reorders every bound feature’s rows into chronological order along the accessor’s
+time axis. That axis is either an explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code> (if supplied when
+<code class="docutils literal notranslate"><span class="pre">.ts()</span></code> was called), or — when no explicit axis is set — the frame’s own case
+labels, which must already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> kind (this method throws
+otherwise). The result carries the same time axis, now sorted, as its case labels.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>ascending</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Sort chronologically forward (<code class="docutils literal notranslate"><span class="pre">true</span></code>) or backward (<code class="docutils literal notranslate"><span class="pre">false</span></code>).</p>
+<p><strong>nulls_last</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Whether undefined axis positions sort after (<code class="docutils literal notranslate"><span class="pre">true</span></code>) or before (<code class="docutils literal notranslate"><span class="pre">false</span></code>) every
+defined position.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame containing the accessor’s bound features, reordered into
+chronological order along the time axis, with that axis as its case labels.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Sort a frame whose case labels are an out-of-order <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))}},</span>
+<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-03T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+           | value
+------------------
+2024-01-03 | 30   
+2024-01-01 | 10   
+2024-01-02 | 20   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+           | value
+------------------
+2024-01-01 | 10   
+2024-01-02 | 20   
+2024-01-03 | 30   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">readings</span></code>’s case labels are already a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, so <code class="docutils literal notranslate"><span class="pre">readings.ts()</span></code> (with no
+explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>) can use them directly as the time axis. <code class="docutils literal notranslate"><span class="pre">sort()</span></code>
+reorders the rows chronologically — <code class="docutils literal notranslate"><span class="pre">2024-01-01</span></code>, then <code class="docutils literal notranslate"><span class="pre">2024-01-02</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">2024-01-03</span></code> — carrying each row’s <code class="docutils literal notranslate"><span class="pre">value</span></code> along with it.</p>
+<p>Example 2. Pass <code class="docutils literal notranslate"><span class="pre">ascending</span> <span class="pre">=</span> <span class="pre">false</span></code> to sort the same frame in reverse
+chronological order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">descending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">sort</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">descending</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+           | value
+------------------
+2024-01-03 | 30   
+2024-01-02 | 20   
+2024-01-01 | 10   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>The same three rows, now ordered latest-to-earliest — <code class="docutils literal notranslate"><span class="pre">2024-01-03</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">2024-01-02</span></code>, then <code class="docutils literal notranslate"><span class="pre">2024-01-01</span></code> — the mirror image of Example 1’s ascending
+result.</p>
+<p>Example 3. Pass <code class="docutils literal notranslate"><span class="pre">nulls_last</span> <span class="pre">=</span> <span class="pre">false</span></code> to change where an undefined (<code class="docutils literal notranslate"><span class="pre">NaT</span></code>)
+axis position sorts.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_nat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">99.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">}))}},</span>
+<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_nat</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nat_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nat_last</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nat_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">sort</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nat_first</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-with-nat">
+<h3>Output (with_nat)<a class="headerlink" href="#output-with-nat" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+           | value
+------------------
+NULL       | 99   
+2024-01-02 | 20   
+2024-01-01 | 10   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-nulls-last-true-the-default">
+<h3>Output (nulls_last = true, the default)<a class="headerlink" href="#output-nulls-last-true-the-default" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+           | value
+------------------
+2024-01-01 | 10   
+2024-01-02 | 20   
+NULL       | 99   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-nulls-last-false">
+<h3>Output (nulls_last = false)<a class="headerlink" href="#output-nulls-last-false" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+           | value
+------------------
+NULL       | 99   
+2024-01-01 | 10   
+2024-01-02 | 20   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>The empty-string constructor produces a <code class="docutils literal notranslate"><span class="pre">NaT</span></code> axis position, displayed as
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>. With the default <code class="docutils literal notranslate"><span class="pre">nulls_last</span> <span class="pre">=</span> <span class="pre">true</span></code>, it sorts after every real
+timestamp; with <code class="docutils literal notranslate"><span class="pre">nulls_last</span> <span class="pre">=</span> <span class="pre">false</span></code>, it sorts before them instead — the same
+convention <a class="reference internal" href="../dataframe-label/monotonic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::monotonic</span></code></span></a>
+and <a class="reference internal" href="../dataframe-label/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort</span></code></span></a> use.</p>
+<p>Example 4. Call <code class="docutils literal notranslate"><span class="pre">sort()</span></code> on a frame whose case labels are a plain numeric
+index, with no explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>, to see it throw.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">untimed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))}});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">untimed</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.label().set(&quot;date&quot;) first
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">untimed</span></code>’s case labels are the default integer index — no <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, and no explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code> to fall back on — so there’s no
+time axis to sort by.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>With no explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>, this method requires the frame’s own case
+labels to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — it throws if they’re a plain
+numeric or <code class="docutils literal notranslate"><span class="pre">Note</span></code> index instead.</p></li>
+<li><p>This is distinct from <a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label().sort()</span></code></span></a>,
+which sorts by whatever kind the case labels happen to be; <code class="docutils literal notranslate"><span class="pre">ts().sort()</span></code> is
+specifically the time-axis-aware entry point within the <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::rolling</span></code></span></a> (calendar-duration overload),
+<a class="reference internal" href="resample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::resample</span></code></span></a>: other methods that rely on the
+same time-axis requirement this method sorts by.</p></li>
+<li><p><a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: the general case-label accessor,
+including its own <code class="docutils literal notranslate"><span class="pre">sort()</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_block.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_block</span>
+  </a>
+  <a class="next-link" href="sub.html">
+    <span class="label">Next</span>
+    <span class="title">sub</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_ts_accessor_api_reference.html">DataFrameTsAccessor API Reference</a><ul>
+      <li>Previous: <a href="rolling_block.html" title="previous chapter">DataFrameTsAccessor::rolling_block</a></li>
+      <li>Next: <a href="sub.html" title="next chapter">DataFrameTsAccessor::sub</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-ts/sort.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

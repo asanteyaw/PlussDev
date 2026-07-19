@@ -8,6 +8,4 @@ The goal is simple: you should be able to enter through the object you are holdi
 :maxdepth: 2
 
 api/plussmic_root
-api/plussqit_root
-api/plusstils_root
 ```

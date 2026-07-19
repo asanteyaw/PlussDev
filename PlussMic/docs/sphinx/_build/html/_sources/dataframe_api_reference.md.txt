@@ -12,6 +12,17 @@ This page documents the full public `DataFrame` surface with usage-first example
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
+## Accessors
+
+`DataFrame` exposes nested accessors, each with its own method pages and sidebar:
+
+- `note()` -> [`DataFrameNoteAccessor`](dataframe_note_accessor_api_reference.md)
+- `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
+- `label()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
+- `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
+- `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
+- `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -53,6 +64,7 @@ api/dataframe/drop_duplicates
 api/dataframe/dropnull
 api/dataframe/dtypes
 api/dataframe/duplicated
+api/dataframe/encode
 api/dataframe/eq
 api/dataframe/equals
 api/dataframe/exp
@@ -158,6 +170,7 @@ api/dataframe/save_parquet
 api/dataframe/save_txt
 api/dataframe/scan
 api/dataframe/se
+api/dataframe/select
 api/dataframe/set
 api/dataframe/set_
 api/dataframe/shape

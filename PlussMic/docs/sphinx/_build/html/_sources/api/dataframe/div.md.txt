@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 754bd4a44854 -->
+
 # DataFrame::div
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,119 +8,121 @@
 ## Signatures
 
 ```cpp
-DataFrame::div(const DataFrame& other) -> DataFrame
-
-DataFrame::div(const DataFrame& other, const AlignOptions& options) -> DataFrame
-
-DataFrame::div(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::div(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
-
-DataFrame::div(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
-
-DataFrame::div(double other) -> DataFrame
+DataFrame::div(double other) const -> DataFrame
+DataFrame::div(const DataFrame& other) const -> DataFrame
+DataFrame::div(const DataFrame& other, const AlignOptions& options) const -> DataFrame
+DataFrame::div(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::div(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::div(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
-Divide numeric DataFrame values by another aligned frame or by one scalar.
+## What It Does
 
-Use `div(...)` when you want elementwise division while preserving the table shape and case/feature structure.
+The named-method form of elementwise division. `div()` shares the exact same overload
+shape and alignment rules as [`add()`](add.md) and the rest of the arithmetic family —
+see `add()`'s "What It Does" for the full explanation of the scalar/frame/Thread
+operand shapes and the `axis`/`options` parameters.
 
-The two overload families cover the common arithmetic routes:
-- broadcast one scalar across the selected numeric cells,
-- or divide one frame by another after structural matching.
+```{important} div() and truediv() are the same operation
+`div()` and [`truediv()`](truediv.md) both perform ordinary floating-point division —
+verified against the underlying numeric kernel, they compute identical results for
+every input, including integer-typed features. Neither one truncates or floors the
+result the way [`floordiv()`](floordiv.md) does. Both names are provided so code
+reading like `df.div(2)` and code reading like `df.truediv(2)` (for readers coming
+from a background where "true division" is a meaningful distinction from floor
+division) are both available — pick whichever reads better at the call site, since
+there is no behavioral reason to prefer one over the other.
+```
 
 ## Parameters
 
 **other**
 
-Right-hand operand.
+The right-hand operand, dividing the current frame: `double` (broadcast scalar),
+`const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast per
+`axis`).
 
-- `double`: broadcast one scalar divisor across every participating numeric feature.
-- `const DataFrame&`: divide one frame by another after feature/case matching.
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
 
-The scalar route is the direct “divide every selected value by this constant” operation. The frame route is the aligned elementwise operation when both sides carry matching business features such as `math`, `science`, or `units`.
+Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
+value per feature; `Axis::Case` supplies one value per case.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`add()`](add.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    New frame containing the elementwise division result for every participating numeric feature.
-
-## See Also
-
-- <a href="truediv.html"><code>DataFrame::truediv</code></a>: same arithmetic intent spelled with operator-style naming.
-- <a href="conform.html"><code>DataFrame::conform</code></a>: align structure first when the other frame is shaped differently.
-
-## Notes
-
-Scalar division broadcasts one value across every participating numeric cell.
-
-Frame-to-frame division follows the normal PlussMic frame matching rules for case labels and feature names.
-
-In mixed-schema frames, select the numeric features you intend to divide before calling `div(...)`. That keeps text and identifier columns out of the arithmetic path.
+    A new frame, same shape as the source, with every numeric feature divided by
+    `other`. Non-numeric features are left unchanged.
 
 ## Examples
 
-Example 1. Broadcast one scalar divisor across selected numeric features.
+Example 1. Divide every numeric feature by a scalar.
 
 ```cpp
 using namespace pluss::table;
 
-auto labeled = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
-    {"region", pluss::make_note({"south", "south", "middle", "north"})},
-    {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
-    {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
-}).label().set(pluss::make_note({"A100", "B200", "B200", "D400"}));
+auto counts = DataFrame({
+    {"total", pluss::make_series({7.0, 9.0, 10.0})},
+}, pluss::make_note({"a", "b", "c"}));
 
-auto out = labeled.features({"units", "price"}).div(2.0);
+auto out = counts.div(2.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-===================
-     | units  price
--------------------
-A100 | 5      1.5
-B200 | 3.5    2
-B200 | 6      1.25
-D400 | 2.5    2.5
--------------------
-[4 cs x 2 feat]
+============
+     | total
+------------
+a    | 3.5  
+b    | 4.5  
+c    | 5    
+------------
+[3 cs x 1 feat]
 ```
 
-Example 2. Divide one frame by another feature-by-feature after case and feature matching.
+Example 2. `truediv()` on the same data produces the identical result.
 
 ```cpp
-using namespace pluss::table;
-
-auto left = DataFrame({
-    {"math", pluss::make_series({80.0, 90.0, 70.0})},
-    {"science", pluss::make_series({75.0, 88.0, 92.0})},
-}, pluss::make_note({"s1", "s2", "s3"}));
-
-auto right = DataFrame({
-    {"math", pluss::make_series({10.0, 10.0, 10.0})},
-    {"science", pluss::make_series({5.0, 8.0, 4.0})},
-}, pluss::make_note({"s1", "s2", "s3"}));
-
-auto out = left.div(right);
+auto out_truediv = counts.truediv(2.0);
+std::cout << out_truediv;
 ```
 
 ### Output
 
 ```text
-====================
-     | math  science
---------------------
-s1   | 8     15
-s2   | 9     11
-s3   | 7     23
---------------------
-[3 cs x 2 feat]
+============
+     | total
+------------
+a    | 3.5  
+b    | 4.5  
+c    | 5    
+------------
+[3 cs x 1 feat]
 ```
 
+## Notes
 
+- Non-numeric features are always left unchanged.
+- `div()` and `truediv()` are verified to be identical operations — see the note
+  above.
+- For integer-style division that rounds down to the nearest whole number instead, use
+  [`floordiv()`](floordiv.md).
+- Shares its full overload shape, alignment semantics, and `AlignOptions` behavior with
+  [`add()`](add.md), [`sub()`](sub.md), [`mul()`](mul.md), [`floordiv()`](floordiv.md),
+  [`mod()`](mod.md), and [`pow()`](pow.md).
+
+## See Also
+
+- [`DataFrame::add`](add.md): the full explanation of the shared operand shapes and
+  `axis`/`options` parameters this family uses.
+- [`DataFrame::truediv`](truediv.md): the verified-identical alternate name for this
+  same operation.
+- [`DataFrame::floordiv`](floordiv.md): the distinct floor-division operation.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="describe.html">

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::rpow &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::rpow &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::rsub" href="rsub.html" />
@@ -36,48 +36,105 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-rpow">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-rpow">
 <h1>DataFrame::rpow<a class="headerlink" href="#dataframe-rpow" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">rpow</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">rpow</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This applies arithmetic across the compatible numeric payloads in the current object.</p>
+<p>The reflected (right-hand) form of <a class="reference internal" href="pow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pow()</span></code></span></a>: computes <code class="docutils literal notranslate"><span class="pre">other</span> <span class="pre">^</span> <span class="pre">frame</span></code> (the
+scalar raised to each feature’s value as the exponent) instead of <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">^</span> <span class="pre">other</span></code>
+(each feature’s value raised to the scalar exponent). Exponentiation is emphatically
+not commutative, so this is one of the reflected methods where the result looks
+nothing like its forward counterpart.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>)</p>
+<p>The scalar base; each numeric feature’s value is used as the exponent.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame, same shape as the source, holding <code class="docutils literal notranslate"><span class="pre">other</span></code> raised to the power of
+every numeric feature’s value. Non-numeric features are left unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}))},</span>
-<span class="p">});</span>
+<p>Example 1. Compare <code class="docutils literal notranslate"><span class="pre">rpow()</span></code> against plain <code class="docutils literal notranslate"><span class="pre">pow()</span></code> on the same data.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rpow</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">reflected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">rpow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reflected</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>a      b
-10.0   100.0
-100.0  10000.0
-1000.0 100000.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | x   
+-----------
+a    | 4   
+b    | 8   
+c    | 16  
+-----------
+[3 cs x 1 feat]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">values.rpow(2.0)</span></code> computes <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">^</span> <span class="pre">x</span></code> for every case: <code class="docutils literal notranslate"><span class="pre">2^2</span> <span class="pre">=</span> <span class="pre">4</span></code>, <code class="docutils literal notranslate"><span class="pre">2^3</span> <span class="pre">=</span> <span class="pre">8</span></code>, <code class="docutils literal notranslate"><span class="pre">2^4</span> <span class="pre">=</span> <span class="pre">16</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">forward</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | x   
+-----------
+a    | 4   
+b    | 9   
+c    | 16  
+-----------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>The forward <code class="docutils literal notranslate"><span class="pre">pow(2.0)</span></code> computes <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">^</span> <span class="pre">2</span></code> instead: <code class="docutils literal notranslate"><span class="pre">2^2</span> <span class="pre">=</span> <span class="pre">4</span></code> happens to coincide with the
+reflected result on this one row, but <code class="docutils literal notranslate"><span class="pre">3^2</span> <span class="pre">=</span> <span class="pre">9</span></code> and <code class="docutils literal notranslate"><span class="pre">4^2</span> <span class="pre">=</span> <span class="pre">16</span></code> diverge from the
+reflected form’s <code class="docutils literal notranslate"><span class="pre">8</span></code> and <code class="docutils literal notranslate"><span class="pre">16</span></code> — the two agree only where base and exponent trade
+places without changing the result (<code class="docutils literal notranslate"><span class="pre">2^2</span></code> either way), which is a coincidence of this
+particular value, not a general property of exponentiation.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Non-numeric features are always left unchanged.</p></li>
+<li><p>Like <a class="reference internal" href="pow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pow()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">rpow()</span></code> always evaluates feature-by-feature rather than as a
+single batched matrix operation internally — an implementation detail with no
+observable effect on the result.</p></li>
+<li><p>Only accepts a scalar <code class="docutils literal notranslate"><span class="pre">double</span></code> — see <a class="reference internal" href="radd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">radd()</span></code></span></a> for why there is no
+reflected <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="pow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::pow</span></code></span></a>: the forward form.</p></li>
+<li><p><a class="reference internal" href="radd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::radd</span></code></span></a>: the reflected addition, explaining the full reflected
+family’s scalar-only shape.</p></li>
+<li><p><a class="reference internal" href="rmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::rmul</span></code></span></a>: the reflected multiplication, where (unlike here)
+operand order never changes the result.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="round.html">
     <span class="label">Previous</span>
@@ -90,7 +147,6 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -99,7 +155,7 @@ Value produced by this call.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -119,9 +175,10 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

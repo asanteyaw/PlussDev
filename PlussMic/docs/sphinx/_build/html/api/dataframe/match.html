@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::match &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::match &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::matmul" href="matmul.html" />
@@ -36,65 +36,161 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-match">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-match">
 <h1>DataFrame::match<a class="headerlink" href="#dataframe-match" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">match</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">FrameMatchOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">FrameMatch</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">match</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">FrameMatchOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">FrameMatch</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a pair of frames whose cases and features have been matched according to explicit Pluss-native matching rules.</p>
+<p>Aligns two frames onto one shared case axis <strong>and</strong> one shared feature set at the same
+time, returning both aligned frames as a <code class="docutils literal notranslate"><span class="pre">FrameMatch{left,</span> <span class="pre">right}</span></code> pair — ready for a
+row-by-row, column-by-column comparison or computation between them. This is the
+alignment step that every <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-vs-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> arithmetic and comparison method
+(<code class="docutils literal notranslate"><span class="pre">add(other)</span></code>, <code class="docutils literal notranslate"><span class="pre">eq(other)</span></code>, and so on) already performs internally; <code class="docutils literal notranslate"><span class="pre">match()</span></code> exposes
+it directly for when you want the two aligned frames themselves rather than an
+immediate arithmetic result.</p>
+<p>Cases are matched by <strong>label</strong> (not by position): a case label present on only one
+side is padded with <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on the other, per <code class="docutils literal notranslate"><span class="pre">options.cases</span></code>. Features are matched by
+<strong>name</strong> the same way, per <code class="docutils literal notranslate"><span class="pre">options.features</span></code>. Both default to <code class="docutils literal notranslate"><span class="pre">FrameMatchRule::Unite</span></code>
+— keep this frame’s cases/features in order, then append anything unique to <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Frame whose case labels and feature names should be matched with this frame.</p>
-<p><strong>options</strong>
-Matching policy for cases, features, and repeated case labels. Defaults to a stable union on both axes and occurrence-order pairing for repeats.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code>)</p>
+<p>The frame to align against.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">FrameMatchOptions&amp;</span></code>, optional)</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">cases</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">FrameMatchRule</span></code>, default <code class="docutils literal notranslate"><span class="pre">Unite</span></code>): how the two case-label axes are
+reconciled — <code class="docutils literal notranslate"><span class="pre">Unite</span></code> (union, this frame’s order first), <code class="docutils literal notranslate"><span class="pre">Common</span></code> (intersection
+only), <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code> (this frame’s cases exactly), <code class="docutils literal notranslate"><span class="pre">KeepRight</span></code> (<code class="docutils literal notranslate"><span class="pre">other</span></code>’s cases
+exactly).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">features</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">FrameMatchRule</span></code>, default <code class="docutils literal notranslate"><span class="pre">Unite</span></code>): the same four rules, applied to
+feature names instead of case labels.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">repeated_cases</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">RepeatedCaseRule</span></code>, default <code class="docutils literal notranslate"><span class="pre">PairInOrder</span></code>): how a case label
+that appears more than once (on either side) is handled — <code class="docutils literal notranslate"><span class="pre">PairInOrder</span></code> pairs
+repeated occurrences positionally within each label group; <code class="docutils literal notranslate"><span class="pre">Reject</span></code> throws instead.</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">FrameMatch</span></code>
-Pair containing matched <code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code> frames with identical case and feature axes.</p>
+A <code class="docutils literal notranslate"><span class="pre">{left,</span> <span class="pre">right}</span></code> pair of frames sharing the identical case axis and feature set,
+ready for direct cell-by-cell comparison.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})}},</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">})},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">})}},</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
-</pre></div>
-</div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>matched.left.label().values():
-[&quot;A&quot;, &quot;C&quot;, &quot;B&quot;]
+<p>Example 1. Align two frames whose cases and features only partially overlap, using
+the default <code class="docutils literal notranslate"><span class="pre">Unite</span></code> rule on both axes.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-matched.left.features():
-[&quot;x&quot;, &quot;y&quot;, &quot;z&quot;]
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">92.0</span><span class="p">,</span><span class="w"> </span><span class="mf">79.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;bonus&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">})));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">left</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-left-before">
+<h3>Output (left, before)<a class="headerlink" href="#output-left-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | score
+------------
+a    | 88   
+b    | 92   
+c    | 79   
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">right</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
+<section id="output-right-before">
+<h3>Output (right, before)<a class="headerlink" href="#output-right-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | score  bonus
+-------------------
+b    | 10     5    
+d    | 20     8    
+-------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">matched</span><span class="p">.</span><span class="n">left</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">matched</span><span class="p">.</span><span class="n">right</span><span class="p">;</span>
+</pre></div>
+</div>
 </section>
-<section id="matching-rules">
-<h2>Matching Rules<a class="headerlink" href="#matching-rules" title="Link to this heading">¶</a></h2>
+<section id="output-matched-left">
+<h3>Output (matched.left)<a class="headerlink" href="#output-matched-left" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | score  bonus
+-------------------
+a    | 88     NULL 
+b    | 92     NULL 
+c    | 79     NULL 
+d    | NULL   NULL 
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-matched-right">
+<h3>Output (matched.right)<a class="headerlink" href="#output-matched-right" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | score  bonus
+-------------------
+a    | NULL   NULL 
+b    | 10     5    
+c    | NULL   NULL 
+d    | 20     8    
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>Both results share the identical case axis (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c,</span> <span class="pre">d</span></code> — <code class="docutils literal notranslate"><span class="pre">left</span></code>’s cases first, then
+<code class="docutils literal notranslate"><span class="pre">right</span></code>’s only-case <code class="docutils literal notranslate"><span class="pre">d</span></code>) and identical feature set (<code class="docutils literal notranslate"><span class="pre">score,</span> <span class="pre">bonus</span></code> — <code class="docutils literal notranslate"><span class="pre">left</span></code>’s features
+first, then <code class="docutils literal notranslate"><span class="pre">right</span></code>’s only-feature <code class="docutils literal notranslate"><span class="pre">bonus</span></code>). <code class="docutils literal notranslate"><span class="pre">matched.left</span></code> has <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for <code class="docutils literal notranslate"><span class="pre">bonus</span></code>
+everywhere (it never had that feature) and <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for <code class="docutils literal notranslate"><span class="pre">score</span></code> at <code class="docutils literal notranslate"><span class="pre">d</span></code> (it never had
+that case); <code class="docutils literal notranslate"><span class="pre">matched.right</span></code> mirrors this the other way around. Only case <code class="docutils literal notranslate"><span class="pre">b</span></code>, present
+on both sides, has real values from both frames after matching.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">match(other)</span></code> matches both case labels and feature names in one call.</p></li>
-<li><p>The default <code class="docutils literal notranslate"><span class="pre">Unite</span></code> rule preserves the left order and appends labels found only on the right.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Common</span></code>, <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code>, and <code class="docutils literal notranslate"><span class="pre">KeepRight</span></code> select the intersection or one side explicitly.</p></li>
-<li><p>Repeated cases pair by occurrence order by default; choose <code class="docutils literal notranslate"><span class="pre">RepeatedCaseRule::Reject</span></code> when repeated labels should be an error.</p></li>
-<li><p>Frame-to-frame arithmetic and comparisons use the same default matching behavior automatically.</p></li>
-<li><p>Only case-key matching is materialized on the host; feature gathers and arithmetic remain on the source Series platform.</p></li>
+<li><p>Matching is by <strong>label</strong>, not position — two frames with cases in a different order
+(or a different count) still align correctly as long as the shared labels match.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">match()</span></code> is the exact operation every <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-vs-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> arithmetic and
+comparison overload runs before combining values; reach for it directly when you
+need the aligned pair itself, not just the combined result.</p></li>
+<li><p>A repeated case label (the same label more than once, on either side) is paired by
+occurrence order by default (<code class="docutils literal notranslate"><span class="pre">RepeatedCaseRule::PairInOrder</span></code>); pass
+<code class="docutils literal notranslate"><span class="pre">RepeatedCaseRule::Reject</span></code> to throw instead of silently pairing by position.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::add</span></code></span></a>, <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::eq</span></code></span></a>: the arithmetic and comparison
+families that call <code class="docutils literal notranslate"><span class="pre">match()</span></code> internally before combining two frames.</p></li>
+<li><p><a class="reference internal" href="extend.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::extend</span></code></span></a>: stack two frames’ <em>cases</em> together instead of
+aligning them side by side.</p></li>
+<li><p><a class="reference internal" href="conform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::conform</span></code></span></a>: reshape one frame’s structure to match another’s
+more directly, when a full <code class="docutils literal notranslate"><span class="pre">FrameMatch</span></code> pair isn’t what you need.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mask.html">
@@ -116,7 +212,7 @@ matched.left.features():
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -136,9 +232,10 @@ matched.left.features():
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

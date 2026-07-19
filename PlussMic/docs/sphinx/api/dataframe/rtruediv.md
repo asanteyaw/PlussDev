@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::rtruediv
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,45 +7,92 @@
 ## Signature
 
 ```cpp
-DataFrame::rtruediv(double other) -> DataFrame
+DataFrame::rtruediv(double other) const -> DataFrame
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected (right-hand) form of [`truediv()`](truediv.md): computes `other / frame`
+instead of `frame / other` — and, verified against the underlying numeric kernel,
+**the same operation as [`rdiv()`](rdiv.md)**. Like the forward pair
+`div()`/`truediv()`, the two reflected names route to the identical division kernel.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double`)
+
+The scalar that the frame's values divide.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, holding `other` divided by every numeric
+    feature's value. Non-numeric features are left unchanged.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. `rtruediv()` and `rdiv()` produce the identical result.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
+using namespace pluss::table;
 
-auto out = df.rtruediv(10);
+auto values = DataFrame({
+    {"x", pluss::make_series({2.0, 3.0, 4.0})},
+}, pluss::make_note({"a", "b", "c"}));
+
+auto out = values.rtruediv(10.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-a         b
-10.0      5.0
-5.0       2.5
-3.333333  2.0
+==================
+     | x          
+------------------
+a    | 5          
+b    | 3.333333333
+c    | 2.5        
+------------------
+[3 cs x 1 feat]
 ```
 
+```cpp
+auto out_rdiv = values.rdiv(10.0);
+std::cout << out_rdiv;
+```
+
+### Output
+
+```text
+==================
+     | x          
+------------------
+a    | 5          
+b    | 3.333333333
+c    | 2.5        
+------------------
+[3 cs x 1 feat]
+```
+
+Both compute `10 / x` for every case — identical numbers, since `rtruediv()` and
+`rdiv()` share the same division kernel underneath.
+
+## Notes
+
+- Non-numeric features are always left unchanged.
+- `rtruediv()` and `rdiv()` are verified to be identical operations.
+- Only accepts a scalar `double` — see [`radd()`](radd.md) for why there is no
+  reflected `DataFrame` or `Thread` overload.
+- For the reflected floor-division variant that rounds `other / frame` down to a whole
+  number instead, use [`rfloordiv()`](rfloordiv.md).
+
+## See Also
+
+- [`DataFrame::truediv`](truediv.md): the forward form.
+- [`DataFrame::rdiv`](rdiv.md): the verified-identical alternate name for this same
+  reflected operation.
+- [`DataFrame::rfloordiv`](rfloordiv.md): the distinct reflected floor-division.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rsub.html">

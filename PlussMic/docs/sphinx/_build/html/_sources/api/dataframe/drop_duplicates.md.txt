@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f0668df6aa49 -->
+
 # DataFrame::drop_duplicates
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,116 +8,126 @@
 ## Signature
 
 ```cpp
-DataFrame::drop_duplicates(pluss::RangeView<std::string_view> features = {}, bool keep_first = true, bool keep_last = false) -> DataFrame
+DataFrame::drop_duplicates(pluss::RangeView<std::string_view> features = {}, bool keep_first = true, bool keep_last = false) const -> DataFrame
 ```
 
-Remove duplicate rows while controlling which occurrence should survive.
+## What It Does
 
-You can deduplicate on the whole row or on a selected feature subset.
-
-This is the direct row-reduction route once you already know the duplicate policy you want.
+Removes duplicate rows and returns a new `DataFrame` containing only the survivors —
+exactly the rows [`duplicated()`](duplicated.md) would flag `false` under the same
+`features` / `keep_first` / `keep_last` policy. Surviving rows keep their original
+feature set, feature order, and case labels; nothing is renumbered or reordered.
 
 ## Parameters
 
-**features**
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
 
-Feature subset that defines duplicate groups.
+Which features define a "duplicate." An empty range (the default) compares **every**
+column in the frame — including any unique identifier column, which means no row will
+ever be considered a duplicate of another. Pass the specific feature names that
+matter (for example, `{"city", "product"}`, ignoring an `order_id` column that is
+unique per row by design).
 
-- leave empty: compare whole rows,
-- pass names: compare only those features while carrying all columns through in the output.
+**keep_first** (`bool`, default `true`)
 
-This matters whenever one subset defines row identity for your use case. For example, `{"student", "quiz"}` can define duplicate assessment submissions even if other columns differ.
+When `true`, the first row in each duplicate group survives and every later row in
+that group is dropped.
 
-**keep_first**
+**keep_last** (`bool`, default `false`)
 
-Whether the first row in each duplicate group should survive.
-
-- `true`: keep the first occurrence,
-- `false`: do not automatically preserve the first occurrence.
-
-In the usual “keep first” route, the earliest matching row stays and later matches are removed.
-
-**keep_last**
-
-Whether the last row in each duplicate group should survive.
-
-- `false`: use the first-occurrence route when `keep_first=true`,
-- `true`: preserve the last occurrence instead.
-
-Use this when later rows are considered the authoritative replacement for earlier ones.
+When `true`, the last row in each duplicate group survives and every earlier row in
+that group is dropped. Cannot be combined with `keep_first = true`.
 
 ## Returns
 
 `DataFrame`
-    Frame containing one surviving row for each duplicate group under the requested keep policy.
-
-## See Also
-
-- <a href="duplicated.html"><code>DataFrame::duplicated</code></a>: produce the duplicate mask first instead of dropping rows immediately.
-
-## Notes
-
-`keep_first` and `keep_last` let you express “keep first” versus “keep last” behavior directly.
-
-The output row order follows the surviving rows in their original frame order. `drop_duplicates(...)` does not sort the result.
+    A new frame containing one row per distinct combination of the selected features
+    — the survivor chosen by `keep_first` / `keep_last` — with the original feature
+    set, feature order, and case labels of the surviving rows.
 
 ## Examples
 
-Example 1. Drop duplicate rows while keeping the first observed occurrence.
+Example 1. Keep the first occurrence of each `(city, product)` combination, the
+default policy.
 
 ```cpp
 using namespace pluss::table;
 
-auto duplicates = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
-    {"quiz", pluss::make_series({10.0, 9.0, 10.0, 7.0, 9.0})},
-    {"final", pluss::make_series({80.0, 75.0, 80.0, 90.0, 76.0})},
+auto orders = DataFrame({
+    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
+    {"product",  Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
 });
 
-auto out = duplicates.drop_duplicates({"student", "quiz"});
+auto unique_combos = orders.drop_duplicates({"city", "product"});
+std::cout << unique_combos;
 ```
 
 ### Output
 
 ```text
-===========================
-     | student  quiz  final
----------------------------
-0    | Ada      10    80
-1    | Bola     9     75
-3    | Chen     7     90
----------------------------
+================================
+     | order_id  city    product
+--------------------------------
+0    | 101       Accra   Laptop 
+2    | 103       Tema    Phone  
+4    | 105       Kumasi  Laptop 
+--------------------------------
 [3 cs x 3 feat]
 ```
 
-Example 2. Keep the last matching row instead.
+Three distinct `(city, product)` combinations exist in the frame; one representative
+of each survives, and it's the **first** row encountered for that combination — case
+`0` for `(Accra, Laptop)`, case `2` for `(Tema, Phone)`, case `4` for the one-off
+`(Kumasi, Laptop)`. Case labels `0`, `2`, and `4` are preserved from the source frame,
+not renumbered to `0`, `1`, `2`.
+
+Example 2. Use `keep_last = true` to keep the *last* occurrence of each combination
+instead.
 
 ```cpp
-using namespace pluss::table;
-
-auto duplicates = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
-    {"quiz", pluss::make_series({10.0, 9.0, 10.0, 7.0, 9.0})},
-    {"final", pluss::make_series({80.0, 75.0, 80.0, 90.0, 76.0})},
-});
-
-auto out = duplicates.drop_duplicates({"student"}, false, true);
+auto unique_combos_last = orders.drop_duplicates({"city", "product"}, false, true);
+std::cout << unique_combos_last;
 ```
 
 ### Output
 
 ```text
-===========================
-     | student  quiz  final
----------------------------
-2    | Ada      10    80
-3    | Chen     7     90
-4    | Bola     9     76
----------------------------
+================================
+     | order_id  city    product
+--------------------------------
+3    | 104       Accra   Laptop 
+4    | 105       Kumasi  Laptop 
+5    | 106       Tema    Phone  
+--------------------------------
 [3 cs x 3 feat]
 ```
 
+The same three combinations survive, but now it's case `3` representing
+`(Accra, Laptop)` and case `5` representing `(Tema, Phone)` — the last occurrence of
+each, rather than the first. Rows are still reported in their original case order,
+not grouped by combination.
 
+## Notes
+
+- `drop_duplicates()`'s result keeps the original feature set, feature order, and case
+  labels of the surviving rows — surviving rows are never renumbered.
+- Leaving `features` empty compares every column, including any unique identifier —
+  which means nothing will ever be dropped if such a column is present. This is almost
+  always a mistake; pass the specific features that define a duplicate for your use
+  case.
+- Internally this is exactly `filter(!duplicated(features, keep_first, keep_last))` —
+  anything [`duplicated()`](duplicated.md) would flag `true` is excluded here.
+- `keep_first = true` and `keep_last = true` together is a validation error.
+
+## See Also
+
+- [`DataFrame::duplicated`](duplicated.md): the mask this method filters by, useful
+  when you want to inspect or count duplicates before deciding whether to drop them.
+- [`DataFrame::filter`](filter.md): the general row-selection method this is built on
+  top of.
+- [`DataFrame::ndistinct`](ndistinct.md): counts unique combinations without
+  constructing a filtered frame.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="drop.html">

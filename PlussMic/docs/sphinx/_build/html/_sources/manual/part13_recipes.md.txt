@@ -109,8 +109,9 @@ auto engineered = sorted.assign({
 ## Daily resample
 
 ```cpp
-auto daily = df.ts({"price", "volume"}).resample(
-    "timestamp", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+auto daily = df.features({"price", "volume"})
+    .ts({.axis = df.features("timestamp")})
+    .resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
 ```
 
 ## Excel workbook ingestion

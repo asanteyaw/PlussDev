@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameTsAccessor::calendar &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameTsAccessor::diff" href="diff.html" />
+    <link rel="prev" title="DataFrameTsAccessor::bounded" href="bounded.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframetsaccessor-calendar">
+<h1>DataFrameTsAccessor::calendar<a class="headerlink" href="#dataframetsaccessor-calendar" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTsAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameTsAccessor</span><span class="o">::</span><span class="n">calendar</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameTsAccessor</span><span class="o">::</span><span class="n">calendar</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">time_feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Extracts calendar components from a time axis into their own numeric/text
+columns: year, month, day, hour, and a formatted weekday string. The no-argument
+overload uses this accessor’s own time axis (<code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code> if set, otherwise
+its case labels, which must be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>); the <code class="docutils literal notranslate"><span class="pre">time_feature</span></code> overload
+instead reads an explicit <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature by name and prefixes each
+output column with that feature’s name.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>time_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, one overload)</p>
+<p>The name of an existing <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature to extract components from,
+instead of this accessor’s own axis.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with five columns — year, month, day, hour, and a formatted
+weekday string — one row per case on the source axis.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Extract calendar components from a frame’s own <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> case labels.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))}},</span>
+<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-03-14T09:30:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-12-25T00:00:00Z&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">calendar</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================================================
+     | axis_year  axis_month  axis_day  axis_hour  axis_weekday    
+-------------------------------------------------------------------
+0    | 2024       3           14        9          2024-03-14 (Thu)
+1    | 2024       12          25        0          2024-12-25 (Wed)
+-------------------------------------------------------------------
+[2 cs x 5 feat]
+</pre></div>
+</div>
+<p>Columns are prefixed <code class="docutils literal notranslate"><span class="pre">axis_</span></code> since no explicit <code class="docutils literal notranslate"><span class="pre">time_feature</span></code> was named — this
+accessor fell back to <code class="docutils literal notranslate"><span class="pre">events</span></code>’s own case labels. <code class="docutils literal notranslate"><span class="pre">2024-03-14</span></code> is a Thursday and
+<code class="docutils literal notranslate"><span class="pre">2024-12-25</span></code> is a Wednesday; <code class="docutils literal notranslate"><span class="pre">axis_weekday</span></code> formats each as
+<code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD</span> <span class="pre">(Abbreviated</span> <span class="pre">weekday)&quot;</span></code>.</p>
+<p>Example 2. Extract calendar components from a named <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature, alongside
+a separate bound numeric feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">events_named</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;event_time&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">          </span><span class="s">&quot;2024-03-14T09:30:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-12-25T00:00:00Z&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">events_named</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events_named</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">calendar</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================================
+     | event_time           value
+---------------------------------
+0    | 2024-03-14 09:30:00  1    
+1    | 2024-12-25 00:00:00  2    
+---------------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================================================================================
+     | event_time_year  event_time_month  event_time_day  event_time_hour  event_time_weekday
+---------------------------------------------------------------------------------------------
+0    | 2024             3                 14              9                2024-03-14 (Thu)  
+1    | 2024             12                25              0                2024-12-25 (Wed)  
+---------------------------------------------------------------------------------------------
+[2 cs x 5 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.ts()</span></code> auto-binds only the numeric <code class="docutils literal notranslate"><span class="pre">value</span></code> feature here — <code class="docutils literal notranslate"><span class="pre">event_time</span></code> is left
+untouched on the underlying frame precisely so that <code class="docutils literal notranslate"><span class="pre">calendar(&quot;event_time&quot;)</span></code> can
+still look it up by name. Columns are prefixed <code class="docutils literal notranslate"><span class="pre">event_time_</span></code> instead of <code class="docutils literal notranslate"><span class="pre">axis_</span></code>
+since an explicit <code class="docutils literal notranslate"><span class="pre">time_feature</span></code> was named this time.</p>
+<p>Example 3. Call the no-argument overload on a frame whose case labels are the
+default integer index, to see it throw.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">untimed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))}});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">untimed</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">calendar</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrameTsAccessor::calendar: cases must be Timeline/TimeIndex. Use df.label().set(&quot;date&quot;) first
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">untimed</span></code> never had a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> axis attached — no <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>
+and plain integer case labels — so there’s no time axis to extract components
+from.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">axis_weekday</span></code>/<code class="docutils literal notranslate"><span class="pre">{time_feature}_weekday</span></code> is a formatted <code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD</span> <span class="pre">(Abbreviated</span> <span class="pre">weekday)&quot;</span></code> string, not a bare weekday name or numeric code.</p></li>
+<li><p>The no-argument overload requires a genuine time axis — either an explicit
+<code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>, or case labels that are already <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — and
+throws otherwise.</p></li>
+<li><p>Unlike most other <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor methods, <code class="docutils literal notranslate"><span class="pre">calendar()</span></code>’s output columns are
+unrelated to whichever numeric feature(s) happen to be bound — it only ever
+reads the time axis itself.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::ts()</span></code>/<code class="docutils literal notranslate"><span class="pre">ts(options)</span></code> auto-bind only the numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> columns on
+the calling frame as this accessor’s value features; any <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
+(or other non-numeric) column is simply skipped rather than rejected, which is
+what makes the <code class="docutils literal notranslate"><span class="pre">time_feature</span></code>-by-name overload reachable in Example 2 above —
+a frame can carry both value features and a named time-axis column at once.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dataframe/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl</span></code></span></a>: the general calendar/timestamp accessor
+for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> features, offering <code class="docutils literal notranslate"><span class="pre">.year()</span></code>/<code class="docutils literal notranslate"><span class="pre">.month()</span></code> and similar
+individually rather than as one bundled frame.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="bounded.html">
+    <span class="label">Previous</span>
+    <span class="title">bounded</span>
+  </a>
+  <a class="next-link" href="diff.html">
+    <span class="label">Next</span>
+    <span class="title">diff</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_ts_accessor_api_reference.html">DataFrameTsAccessor API Reference</a><ul>
+      <li>Previous: <a href="bounded.html" title="previous chapter">DataFrameTsAccessor::bounded</a></li>
+      <li>Next: <a href="diff.html" title="next chapter">DataFrameTsAccessor::diff</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-ts/calendar.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

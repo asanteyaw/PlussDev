@@ -79,7 +79,7 @@ auto out = scores.compare(20.0, ThreadBinaryCompareOp::Ge);
 1  true
 2  true
 3  true
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Compare a note-backed thread against one text literal.
@@ -98,7 +98,7 @@ auto out = names.compare("BOLA", ThreadBinaryCompareOp::Eq);
 0  false
 1  true
 2  false
-dtype: Series
+ptype: Series
 ```
 
 Example 3. Compare two numeric threads element by element.
@@ -119,7 +119,7 @@ auto out = scores.compare(other, ThreadBinaryCompareOp::Ne);
 1  true
 2  true
 3  true
-dtype: Series
+ptype: Series
 ```
 
 

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::gt
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,215 +7,109 @@
 ## Signatures
 
 ```cpp
-DataFrame::gt(const char* other, bool strict = true) -> DataFrame
-
-DataFrame::gt(const DataFrame& other, bool strict = true) -> DataFrame
-
-DataFrame::gt(const DataFrame& other, const AlignOptions& options, bool strict = true) -> DataFrame
-
-DataFrame::gt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) -> DataFrame
-
-DataFrame::gt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) -> DataFrame
-
-DataFrame::gt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) -> DataFrame
-
-DataFrame::gt(double other, bool strict = true) -> DataFrame
-
-DataFrame::gt(std::string_view other, bool strict = true) -> DataFrame
+DataFrame::gt(double other, bool strict = true) const -> DataFrame
+DataFrame::gt(std::string_view other, bool strict = true) const -> DataFrame
+DataFrame::gt(const DataFrame& other, bool strict = true) const -> DataFrame
+DataFrame::gt(const DataFrame& other, const AlignOptions& options, bool strict = true) const -> DataFrame
+DataFrame::gt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame::gt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
+DataFrame::gt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
 ```
 
 ## What It Does
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+The ordering relation "greater than", returning a boolean-valued frame the same shape
+as the source. `gt()` is the mirror image of [`lt()`](lt.md): same operand shapes, same
+`strict` parameter, same comparison-family alignment rules — see [`eq()`](eq.md)'s
+"What It Does" for the full explanation of the shared scalar/string/`DataFrame`/`Thread`
+operand shapes.
+
+```{important} ge() is implemented in terms of gt()
+Just like [`le()`](le.md) is `lt(other, false)` under the hood, [`ge()`](ge.md) has no
+independent implementation: `frame.ge(other)` is literally `frame.gt(other, /* strict =
+*/ false)`.
+```
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-**strict**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
+`const DataFrame&`, or `const Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for
+the full breakdown.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**strict** (`bool`, default `true`)
 
-**axis**
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+- `true` (the default): strict "greater than" (`>`) — a cell equal to `other` reports
+  `false`.
+- `false`: "greater than or equal to" (`>=`) — a cell equal to `other` reports `true`.
+  This is exactly what calling [`ge()`](ge.md) does internally.
+
+**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+
+Same meaning as [`eq()`](eq.md)'s `axis`.
+
+**options** (`AlignOptions`, optional)
+
+Same meaning as [`eq()`](eq.md)'s `options`.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame, same shape as the source, where every feature holds `true`/`false`
+    according to whether that cell is greater than (or, with `strict = false`, greater
+    than or equal to) `other`. A cell compared against a missing value on either side
+    is itself missing (`NULL`), matching [`eq()`](eq.md).
 
 ## Examples
 
-Example 1. Compare each compatible cell using the `>` relation against one broadcast scalar value.
+Example 1. Strict "greater than" against a scalar threshold.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.gt(10);
+auto scores = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 84.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = scores.gt(85.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 2. Compare each compatible cell using the `>` relation against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.gt(right);
+===================
+     | quiz   final
+-------------------
+s1   | false  false
+s2   | true   true 
+s3   | false  false
+-------------------
+[3 cs x 2 feat]
 ```
 
-### Output
+`s2` is the only case that clears the `85` threshold on both features: `90 > 85` and
+`88 > 85` are both `true`, while every `84` and the `72` fall at or below it.
 
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 3. Compare each compatible cell using the `>` relation against another aligned frame.
+## Notes
 
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
+- `ge()` has no independent implementation — it is always `gt(other, false)` under the
+  hood, mirroring how [`le()`](le.md) delegates to [`lt()`](lt.md).
+- A cell compared against a missing value on either side is `NULL`, not `false`,
+  matching [`eq()`](eq.md).
+- Shares its full comparison-family overload shape with [`eq()`](eq.md), [`ne()`](ne.md),
+  [`lt()`](lt.md), [`le()`](le.md), and [`ge()`](ge.md).
 
-auto out = left.gt(right);
-```
+## See Also
 
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 4. Compare each compatible cell using the `>` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.gt(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 5. Compare each compatible cell using the `>` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.gt(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 6. Compare each compatible cell using the `>` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.gt(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 7. Compare each compatible cell using the `>` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.gt(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 8. Compare each compatible cell using the `>` relation against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.gt(10);
-```
-
-### Output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-
+- [`DataFrame::ge`](ge.md): the non-strict counterpart, implemented directly in terms
+  of this method.
+- [`DataFrame::lt`](lt.md) / [`DataFrame::le`](le.md): the mirror-image ordering
+  relations.
+- [`DataFrame::eq`](eq.md): the full explanation of this comparison family's shared
+  operand shapes.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="group_by.html">

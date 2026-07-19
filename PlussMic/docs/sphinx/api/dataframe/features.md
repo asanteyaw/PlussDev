@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::features
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,286 +7,156 @@
 ## Signatures
 
 ```cpp
-DataFrame::features() -> const std::vector<std::string>&
-
-DataFrame::features(const NameRange& names) -> DataFrame
-
-DataFrame::features(const NameRange& names) -> DataFrame
-
-DataFrame::features(pluss::RangeView<std::string_view> names) -> DataFrame
-
-DataFrame::features(pluss::RangeView<std::string_view> names) -> DataFrame
-
-DataFrame::features(StackArray<std::string_view> names) -> DataFrame
-
-DataFrame::features(StackArray<std::string_view> names) -> DataFrame
-
-DataFrame::features(std::initializer_list<const char*> names) -> DataFrame
-
-DataFrame::features(std::initializer_list<const char*> names) -> DataFrame
-
-DataFrame::features(std::initializer_list<std::string_view> names) -> DataFrame
-
-DataFrame::features(std::initializer_list<std::string_view> names) -> DataFrame
-
-DataFrame::features(std::string_view name) -> Thread
-
-DataFrame::features(std::string_view name) -> Thread
+DataFrame::features() const -> const std::vector<std::string>&
+DataFrame::features(std::string_view name) const -> Thread
+DataFrame::features(std::initializer_list<std::string_view> names) const -> DataFrame
+DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) const -> DataFrame
+DataFrame::features(StackArray<std::string_view> names) const -> DataFrame
 ```
 
 ## What It Does
 
-Materializes the current members as a collection you can inspect or reuse elsewhere.
+Three genuinely different behaviors share this one overloaded name, distinguished
+entirely by how many names you pass:
+
+- **No arguments** — `features()` returns the frame's ordered list of feature names,
+  as a plain `const std::vector<std::string>&`.
+- **One name** — `features("sales")` extracts a *single* feature as a `Thread`, with
+  its case labels and display name attached (so printing it shows a
+  `Name: sales, ptype: Series`-style footer, exactly like other named `Thread`
+  results).
+- **Several names** — `features({"id", "sales"})` (or the equivalent range/
+  `StackArray` overloads) projects the frame down to a **subset** `DataFrame`
+  containing just those columns, in the order you named them, with every case
+  preserved.
+
+Every non-trivial name lookup throws if the name doesn't exist on the frame.
 
 ## Parameters
 
-**names**
-    Collection of feature, slot, or stream names supplied in positional order.
+**name** (`std::string_view`, single-feature overload)
 
-**name**
-    Name used to identify the target object, field, feature, or slot for this overload.
+The one feature to extract as a standalone `Thread`.
+
+**names** (`initializer_list`/`RangeView`/`StackArray` of `std::string_view`,
+multi-feature overload)
+
+The features to project, in the order you list them — the result's feature order
+follows this list, not the source frame's original order.
 
 ## Returns
 
-`const std::vector<std::string>&`
-    Borrowed list of names.
+`const std::vector<std::string>&` (no-argument overload)
+    The frame's feature names, in their current order.
 
-`DataFrame`
-    Value produced by this call.
+`Thread` (single-name overload)
+    The named feature, with case labels and display name attached.
 
-`Thread`
-    Value produced by this call.
+`DataFrame` (multi-name overload)
+    A new frame containing only the named features, in the order requested, with
+    every case preserved.
 
 ## Examples
 
-Example 1. Materialize every feature thread in left-to-right order.
+Example 1. List every feature name.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+using namespace pluss::table;
 
-auto out = df.features();
+auto orders = DataFrame({
+    {"id",    pluss::make_series({1, 2, 3})},
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"city",  pluss::make_note({"Accra", "Tema", "Kumasi"})},
+}, pluss::make_note({"p1", "p2", "p3"}));
+
+std::cout << orders;
+```
+
+### Output (orders)
+
+```text
+==========================
+     | id    sales  city  
+--------------------------
+p1   | 1     100    Accra 
+p2   | 2     120    Tema  
+p3   | 3     90     Kumasi
+--------------------------
+[3 cs x 3 feat]
+```
+
+```cpp
+for (const auto& name : orders.features()) {
+  std::cout << name << " ";
+}
 ```
 
 ### Output
 
 ```text
-[Thread(id), Thread(sales), Thread(city)]
+id sales city
 ```
-Example 2. Project a named feature subset from a reusable name-range container.
+
+Example 2. Extract a single feature as a standalone `Thread`.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features();
+auto sales_col = orders.features("sales");
+std::cout << sales_col;
 ```
 
 ### Output
 
 ```text
-[Thread(id), Thread(sales), Thread(city)]
+p1  100
+p2  120
+p3  90
+Name: sales, ptype: Series
 ```
-Example 3. Project a named feature subset from a reusable name-range container.
+
+Unlike a raw column pulled some other way, `sales_col` carries `orders`'s case labels
+(`p1, p2, p3`) and its own name (`sales`) for display — the footer shows both.
+
+Example 3. Project a named subset into a new frame.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features();
+auto subset = orders.features({"id", "sales"});
+std::cout << subset;
 ```
 
 ### Output
 
 ```text
-[Thread(id), Thread(sales), Thread(city)]
-```
-Example 4. Project a named feature subset from a lightweight string view.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features("sales");
+==================
+     | id    sales
+------------------
+p1   | 1     100  
+p2   | 2     120  
+p3   | 3     90   
+------------------
+[3 cs x 2 feat]
 ```
 
-### Output
+`city` is dropped entirely; `id` and `sales` keep their original values and case
+labels, in the order requested. Listing names in a different order (say,
+`{"sales", "id"}`) would reorder the result's columns to match.
 
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 5. Project a named feature subset from a lightweight string view.
+## Notes
 
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+- All three overload families throw if any requested name doesn't exist on the frame.
+- The multi-name overload's result order follows the order you list names in, not the
+  source frame's order — use this to reorder columns as a side effect of selecting
+  them.
+- The single-name overload's returned `Thread` carries the source frame's case labels
+  and the feature's own name for display; the no-argument overload returns a plain
+  name list with no such attachment.
 
-auto out = df.features("sales");
-```
+## See Also
 
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 6. Project a named feature subset from a fixed stack-allocated name list.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features("sales");
-```
-
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 7. Project a named feature subset from a fixed stack-allocated name list.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features("sales");
-```
-
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 8. Project a named feature subset from inline C-string feature names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features({"id", "sales"});
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 9. Project a named feature subset from inline C-string feature names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features({"id", "sales"});
-```
-
-### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 10. Project a named feature subset from inline string-view feature names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features({"id", "sales"});
-```
-
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 11. Project a named feature subset from inline string-view feature names.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features({"id", "sales"});
-```
-
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 12. Extract one feature thread by name.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features("sales");
-```
-
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-Example 13. Extract one feature thread by name.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features("sales");
-```
-
-### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-
+- [`DataFrame::nfeatures`](nfeatures.md): the count matching this list's length.
+- [`DataFrame::get`](get.md): a null-safe alternative to the single-name overload,
+  returning `std::optional<Thread>` instead of throwing on an unknown name.
+- [`DataFrame::drop`](drop.md): the complementary operation — remove named features
+  instead of projecting down to them.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="feataxis.html">

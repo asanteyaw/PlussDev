@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8d18c677161f -->
+
 # DataFrame::bottom
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,79 +8,94 @@
 ## Signature
 
 ```cpp
-DataFrame::bottom(std::string_view feature, std::int64_t n) -> DataFrame
+DataFrame::bottom(std::string_view feature, std::int64_t n) const -> DataFrame
 ```
 
-Return the rows with the smallest values in one selected feature.
+## What It Does
 
-`DataFrame::bottom(...)` is the quick “lowest N rows” helper. It is useful for failure analysis, weakest-score inspection, or checking the lower tail of a distribution without manually sorting and slicing.
+Returns the `n` rows with the smallest values in `feature`, with every other feature
+carried along unchanged — the ascending counterpart to [`top()`](top.md). This is
+exactly `sort_values({feature}, /*ascending=*/true)` followed by
+[`head(n)`](head.md).
+
+Missing values in `feature` always sort to the very end — even here, in the ascending
+case — so a row with a missing `feature` value can only appear in the result if `n` is
+large enough to reach all the way down past every real value.
 
 ## Parameters
 
-**feature**
+**feature** (`std::string_view`)
 
-Feature used as the ordering key.
+The name of the feature to rank by, smallest first.
 
-- This is the column whose smallest values determine which rows survive.
-- The feature should be compatible with ordering, typically numeric or temporal data.
+**n** (`std::int64_t`)
 
-**n**
-
-Number of bottom rows to keep.
-
-- Small values such as `1`, `3`, or `5` are useful for quick outlier or failure inspection.
-- Larger values let you pull a broader low-end slice without manually sorting the full frame yourself.
+How many bottom-ranked rows to return. Values larger than `ncases()` return the whole
+frame, sorted, rather than erroring.
 
 ## Returns
 
 `DataFrame`
-    A new frame containing the selected lowest rows.
-
-    The output preserves the original row payloads and case labels for the chosen rows.
-
-## See Also
-
-- <a href="top.html"><code>DataFrame::top</code></a>: inspect the highest rows instead of the lowest ones.
-- <a href="sort_values.html"><code>DataFrame::sort_values</code></a>: perform full explicit sorting when you need more control than `bottom(...)` exposes.
-- <a href="head.html"><code>DataFrame::head</code></a>: preview the first rows of an already sorted frame.
-
-## Notes
-
-`bottom(feature, n)` sorts ascending by the selected feature, keeps nulls last, and then returns the first `n` rows.
-
-Because nulls sort last, null rows are not selected unless there are not enough observed rows to satisfy `n`.
-
-`n == 0` returns an empty frame with the same schema.
+    A new frame with `n` rows (or fewer, if the source frame is smaller), sorted by
+    `feature` in ascending order, with every feature preserved.
 
 ## Examples
 
-Example 1. Return the two rows with the lowest final scores.
+Example 1. Get the three lowest-priced orders.
 
 ```cpp
 using namespace pluss::table;
 
-auto grades = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"assignment", pluss::make_series({9.5, 8.0, 7.5, 9.0})},
-    {"final", pluss::make_series({28.0, 24.0, 21.5, 26.0})},
-}, pluss::make_note({"s1", "s2", "s3", "s4"})).title("grades");
+auto orders = DataFrame({
+    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+});
 
-auto out = grades.bottom("final", 2);
+auto cheapest = orders.bottom("unit_price", 3);
+std::cout << cheapest;
 ```
 
 ### Output
 
 ```text
-=================================
-     | student  assignment  final
----------------------------------
-s3   | Chen     7.5         21.5
-s2   | Bola     8           24
----------------------------------
-[2 cs x 3 feat]
+================================================================
+     | order_id  city    product     units  unit_price  discount
+----------------------------------------------------------------
+4    | 105       Kumasi  Headphones  4      42          0.05    
+1    | 102       Accra   Headphones  5      45.5        0.05    
+3    | 104       Tema    Monitor     3      320         0.08    
+----------------------------------------------------------------
+[3 cs x 6 feat]
 ```
 
+The three rows with the smallest `unit_price` values (`42`, `45.5`, `320`) come back,
+each with every feature intact. Case `5`, whose `unit_price` is missing, does not
+appear even though ascending order would otherwise put a missing value "first" in a
+naive sort — missing values are always ranked last here too, so they only surface if
+`n` is large enough to reach past every real observation.
 
+## Notes
+
+- `bottom()` is exactly `sort_values({feature}, true).head(n)`; reach for
+  `sort_values()` directly if you need more than one sort key.
+- A missing value in `feature` sorts to the very end regardless of ascending or
+  descending direction — this is the same nulls-last rule `top()` follows, not a
+  nulls-first rule for the ascending case.
+- For the largest values instead of the smallest, use [`top()`](top.md), which shares
+  this exact signature.
+
+## See Also
+
+- [`DataFrame::top`](top.md): the descending counterpart, returning the largest `n`
+  rows by `feature`.
+- [`DataFrame::sort_values`](sort_values.md): the general sorting method this is built
+  on, supporting multiple keys and mixed sort directions.
+- [`DataFrame::head`](head.md): the plain positional prefix `bottom()` applies after
+  sorting.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bfill.html">

@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c191fc9fba2e -->
+
 # DataFrame::duplicated
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,92 +8,99 @@
 ## Signature
 
 ```cpp
-DataFrame::duplicated(pluss::RangeView<std::string_view> features = {}, bool keep_first = true, bool keep_last = false) -> Thread
+DataFrame::duplicated(pluss::RangeView<std::string_view> features = {}, bool keep_first = true, bool keep_last = false) const -> Thread
 ```
 
-Build a boolean duplicate-occurrence mask instead of dropping rows immediately.
+## What It Does
 
-Use this when you want to inspect, count, or reuse duplicate occurrences before deciding what to do with those rows.
+Builds a `Bool` mask, one entry per case, marking which rows are duplicates of an
+earlier or later row when compared across the selected features. Rows are grouped by
+the concatenated string value of every selected feature (missing cells compare as a
+shared `"NULL"` placeholder, so two rows both missing the same feature are still
+considered a match on that feature); any group with more than one row contributes
+`true` entries according to `keep_first` / `keep_last`. This returns the mask itself —
+for the frame with those rows already removed, see [`drop_duplicates()`](drop_duplicates.md).
 
-It is the duplicate-analysis route; `drop_duplicates(...)` is the duplicate-removal route.
+`keep_first` and `keep_last` cannot both be `true` at the same time — asking to keep
+both the first and last occurrence exempt from `true` is ambiguous when a group has
+three or more rows, so the two flags are mutually exclusive.
 
 ## Parameters
 
-**features**
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
 
-Feature subset that defines duplicate groups.
+Which features to compare when deciding whether two rows match. An empty range (the
+default) compares **every** column in the frame — including any unique identifier
+column, which means no two rows will ever match if such a column is present. Pass the
+specific feature names that define a "duplicate" for your use case (for example, just
+`{"city", "product"}`, ignoring an `order_id` column that is unique per row by design).
 
-Leave this empty to compare whole rows. Pass one or more features when duplicate membership should be keyed only on those columns.
+**keep_first** (`bool`, default `true`)
 
-**keep_first**
+When `true`, the first row encountered in each duplicate group is left `false` (not
+flagged), and every later row in that group is flagged `true`.
 
-Whether the first row in each duplicate group should be treated as the surviving reference row.
+**keep_last** (`bool`, default `false`)
 
-With the default `true`, later matches are marked duplicate and the first occurrence is left unmarked.
+When `true`, the last row encountered in each duplicate group is left `false`, and
+every earlier row in that group is flagged `true`. Cannot be combined with
+`keep_first = true`.
 
-**keep_last**
-
-Whether the last row in each duplicate group should be treated as the surviving reference row instead.
-
-When this is `true`, earlier matches are marked duplicate and the final occurrence is left unmarked.
+When both `keep_first` and `keep_last` are `false`, **every** row in a duplicate group
+is flagged `true` — including what would otherwise be the exempted first or last row —
+useful when you want to identify entire duplicate groups rather than just the "extra"
+occurrences.
 
 ## Returns
 
 `Thread`
-    Boolean-like thread with one value per row indicating duplicate occurrence status under the requested keep policy.
-
-## See Also
-
-- <a href="repeated.html"><code>DataFrame::repeated</code></a>: mark every row whose key appears more than once.
-- <a href="drop_duplicates.html"><code>DataFrame::drop_duplicates</code></a>: drop the duplicate rows immediately once you know the policy you want.
-
-## Notes
-
-The returned thread aligns one-for-one with the original row axis, so you can inspect it directly or reuse it in downstream masking logic.
-
-`duplicated(...)` does not change row order or remove data. It only reports duplicate occurrences.
-
-`duplicated()` and `repeated()` intentionally differ. For `[A, B, A, C, B]`, `duplicated()` returns `[false, false, true, false, true]`, while `repeated()` returns `[true, true, true, false, true]`.
+    One `Bool` entry per case, labeled by case index and named `"duplicated"`,
+    `true` wherever that row is considered a duplicate under the current
+    `keep_first` / `keep_last` policy.
 
 ## Examples
 
-Example 1. Mark duplicates while keeping the first occurrence as the survivor.
+Example 1. Flag every occurrence after the first one in each duplicate group — the
+default policy.
 
 ```cpp
 using namespace pluss::table;
 
-auto duplicates = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
-    {"quiz", pluss::make_series({10.0, 9.0, 10.0, 7.0, 9.0})},
-    {"final", pluss::make_series({80.0, 75.0, 80.0, 90.0, 76.0})},
+auto orders = DataFrame({
+    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
+    {"product",  Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
 });
 
-auto out = duplicates.duplicated({"student", "quiz"});
+auto dupes = orders.duplicated({"city", "product"});
+std::cout << dupes;
 ```
 
 ### Output
 
 ```text
 0  false
-1  false
-2  true
-3  false
-4  true
-Name: duplicated, dtype: Series
+1  true
+2  false
+3  true
+4  false
+5  true
+Name: duplicated, ptype: Series
 ```
 
-Example 2. Mark duplicates while keeping the last occurrence instead.
+Cases `0`, `1`, and `3` all share `(Accra, Laptop)`; case `0` is the first occurrence
+and stays `false`, while `1` and `3` are flagged. Cases `2` and `5` share
+`(Tema, Phone)`; case `2` stays `false`, case `5` is flagged. Case `4` (`Kumasi,
+Laptop`) has no match anywhere else in the frame, so it is never flagged. `order_id`
+was deliberately left out of `features` — including it would make every row unique
+and nothing would ever be flagged.
+
+Example 2. Use `keep_last = true` to exempt the *last* occurrence in each group
+instead of the first.
 
 ```cpp
-using namespace pluss::table;
-
-auto duplicates = DataFrame({
-    {"student", pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
-    {"quiz", pluss::make_series({10.0, 9.0, 10.0, 7.0, 9.0})},
-    {"final", pluss::make_series({80.0, 75.0, 80.0, 90.0, 76.0})},
-});
-
-auto out = duplicates.duplicated({"student"}, false, true);
+auto dupes_keep_last = orders.duplicated({"city", "product"}, false, true);
+std::cout << dupes_keep_last;
 ```
 
 ### Output
@@ -98,21 +108,69 @@ auto out = duplicates.duplicated({"student"}, false, true);
 ```text
 0  true
 1  true
-2  false
+2  true
 3  false
 4  false
-Name: duplicated, dtype: Series
+5  false
+Name: duplicated, ptype: Series
 ```
 
+The flags flip relative to Example 1: within `(Accra, Laptop)`, cases `0` and `1` are
+now flagged and case `3` (the last one) is exempt; within `(Tema, Phone)`, case `2` is
+flagged and case `5` (the last one) is exempt.
 
+Example 3. Pass `false` for both flags to mark every row in a duplicate group,
+including what would otherwise be the exempted first or last occurrence.
+
+```cpp
+auto dupes_all = orders.duplicated({"city", "product"}, false, false);
+std::cout << dupes_all;
+```
+
+### Output
+
+```text
+0  true
+1  true
+2  true
+3  true
+4  false
+5  true
+Name: duplicated, ptype: Series
+```
+
+Every case belonging to a group with more than one member is now flagged `true` —
+there is no exempted representative — while case `4` (the one group with a single
+member) is still `false`, since a group of one is never a duplicate of anything.
+
+## Notes
+
+- `duplicated()`'s result is always named `"duplicated"` and labeled by case index,
+  and prints like a small labeled `Series`, not like a row sliced from the source
+  frame.
+- Grouping is done by comparing string representations of the selected features'
+  values, so it works uniformly across numeric, `Note`, `Timeline`, and `TimeIndex`
+  features in the same call.
+- Missing cells compare as a shared placeholder, so two rows that are both missing the
+  same selected feature can still be grouped as duplicates of each other on that basis.
+- `keep_first = true` and `keep_last = true` together is a validation error.
+
+## See Also
+
+- [`DataFrame::drop_duplicates`](drop_duplicates.md): removes the flagged rows instead
+  of just marking them, sharing the exact same parameters.
+- [`DataFrame::repeated`](repeated.md): a convenience shorthand equivalent to
+  `duplicated(features, false, false)` — every occurrence in a duplicate group flagged.
+- [`DataFrame::ndistinct`](ndistinct.md): counts unique combinations instead of
+  flagging individual rows.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dtypes.html">
     <span class="label">Previous</span>
     <span class="title">dtypes</span>
   </a>
-  <a class="next-link" href="eq.html">
+  <a class="next-link" href="encode.html">
     <span class="label">Next</span>
-    <span class="title">eq</span>
+    <span class="title">encode</span>
   </a>
 </div>

@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DataFrame::label &#8212; PlussMic User Docs  documentation</title>
+    <title>DataFrame::label &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=54ceb763" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=7d8bedc3"></script>
-    <script src="../../_static/layout.js?v=5a44cbdd"></script>
+    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
+    <script src="../../_static/layout.js?v=e3ea884b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::land" href="land.html" />
@@ -36,279 +36,155 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-label">
+  <!-- pluss-hand-authored -->
+<section id="dataframe-label">
 <h1>DataFrame::label<a class="headerlink" href="#dataframe-label" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">label</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">label</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span>
 </pre></div>
 </div>
-<p>Return the DataFrame label machinery for inspecting and manipulating row labels.</p>
-<p><code class="docutils literal notranslate"><span class="pre">label()</span></code> is PlussMic’s public case-label surface. It centralizes the operations that are equivalent to pandas index machinery while keeping the word “case” available for the full row concept in Pluss data modelling.</p>
-<p>Use this surface instead of root-level <code class="docutils literal notranslate"><span class="pre">caselbl*</span></code> methods. The label accessor keeps case-label operations in one place:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().values()</span></code> returns the current case-label <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().names()</span></code> returns structured label component names.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().has()</span></code> reports whether structured label metadata is present.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().part(name)</span></code> or <code class="docutils literal notranslate"><span class="pre">df.label().part(position)</span></code> extracts one structured label component.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().set(...)</span></code> promotes one or more features, or an explicit <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, into case labels.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().reset(...)</span></code> materializes labels back into ordinary features.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().sort(...)</span></code> sorts rows by label values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().align(...)</span></code> rebuilds the frame against a target label order.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().unite(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">diff(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">symdiff(...)</span></code> provide pandas Index-style set operations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().find(...)</span></code> returns exact-match indexer positions and <code class="docutils literal notranslate"><span class="pre">-1</span></code> for missing targets.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().pos(...)</span></code> returns all positions for one label, including duplicate-label positions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().rename(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">names(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">order(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">swap(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code> edit structured label metadata.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().distinct(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">freq(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">duplicated(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">repeated(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">drop({.duplicated=true})</span></code>, and <code class="docutils literal notranslate"><span class="pre">drop({.repeated=true})</span></code> provide distinct/duplicate/repeated label utilities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().has(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">notnull()</span></code>, and <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code> provide label membership and missingness utilities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().cast(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">map(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">take(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">slice(...)</span></code> transform or inspect label values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">df.label().monotonic(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">depth()</span></code>, <code class="docutils literal notranslate"><span class="pre">codes()</span></code>, and <code class="docutils literal notranslate"><span class="pre">levels()</span></code> expose sortedness and MultiIndex-style internals.</p></li>
-</ul>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Enters a dedicated accessor for everything to do with the <strong>case-label axis</strong> — the
+per-row index every frame carries alongside its features. <code class="docutils literal notranslate"><span class="pre">label()</span></code> itself does
+nothing but bind the accessor to the current frame; the accessor exposes around
+thirty methods covering inspection (<code class="docutils literal notranslate"><span class="pre">.values()</span></code>, <code class="docutils literal notranslate"><span class="pre">.names()</span></code>, <code class="docutils literal notranslate"><span class="pre">.part()</span></code>), promoting a
+feature into the label axis and back (<code class="docutils literal notranslate"><span class="pre">.set()</span></code>, <code class="docutils literal notranslate"><span class="pre">.reset()</span></code>), reordering
+(<code class="docutils literal notranslate"><span class="pre">.sort()</span></code>, <code class="docutils literal notranslate"><span class="pre">.align()</span></code>), set-style operations between two label threads (<code class="docutils literal notranslate"><span class="pre">.unite()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.intersect()</span></code>, <code class="docutils literal notranslate"><span class="pre">.diff()</span></code>, <code class="docutils literal notranslate"><span class="pre">.symdiff()</span></code>), positional lookup (<code class="docutils literal notranslate"><span class="pre">.find()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pos()</span></code>), and
+distinct/duplicate inspection (<code class="docutils literal notranslate"><span class="pre">.distinct()</span></code>, <code class="docutils literal notranslate"><span class="pre">.duplicated()</span></code>, <code class="docutils literal notranslate"><span class="pre">.repeated()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.freq()</span></code>) — the label-axis counterparts of the same-named <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> methods, but
+operating on row labels instead of feature values.</p>
+<p>This page previews the accessor’s most common entry points. Each accessor method gets
+its own dedicated reference page under the <code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor</span></code> API reference.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">label()</span></code> itself takes no parameters. See each accessor method’s own signature for
+what it accepts.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor</span></code>
-Lightweight label accessor bound to the current frame.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Methods that inspect labels return `Thread`, `std::vector&lt;std::string&gt;`, `bool`, `std::int64_t`, or small `DataFrame` inspection artifacts as appropriate. Methods that transform labels or the frame return a new `DataFrame`; the source frame is not mutated.
-</pre></div>
-</div>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>The label surface is about row labels only. Feature names still live on <code class="docutils literal notranslate"><span class="pre">df.features()</span></code>, <code class="docutils literal notranslate"><span class="pre">df.rename(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">df.reorder(...)</span></code>, and related feature-axis methods.</p>
-<p><code class="docutils literal notranslate"><span class="pre">label().values()</span></code> is the direct equivalent of the old DataFrame case-label getter. Row selection remains on <code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">label().set(feature,</span> <span class="pre">true)</span></code> promotes a feature into the case-label axis and drops that feature from ordinary columns. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> to preserve the source feature as data.</p>
-<p>Structured labels are useful for hierarchical case axes: region/account/quarter, date/symbol, campus/term, and similar multi-part row identifiers.</p>
-<p>Label set operations preserve compatible label payload dtypes through the Thread label engine. Same numeric dtype stays unchanged, mixed numeric labels upcast to <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, Note labels stay Note, and temporal labels stay temporal. Incompatible mixed label payloads fall back to Note labels.</p>
+A lightweight accessor bound to the current frame. Methods that inspect labels
+return a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, or <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>; methods that transform
+the label axis or the frame return a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. The source frame is never
+mutated.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect the current case-label thread.</p>
+<p>Example 1. Read the current case-label axis as a plain <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">})));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out:
-0
-1
-2
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | id    units
+------------------
+c1   | 1     10   
+c2   | 2     7    
+c3   | 3     12   
+------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 2. Promote one feature into the label axis.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labels</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================
-       | units
-----------------
-Accra  | 10
-Tema   | 7
-Kumasi | 12
-----------------
-[3 cs x 1 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  c1
+1  c2
+2  c3
+ptype: Note
 </pre></div>
 </div>
-<p>Example 3. Build a structured label from multiple features.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<p><code class="docutils literal notranslate"><span class="pre">.values()</span></code> is the direct read of the case-label axis — the same thread <code class="docutils literal notranslate"><span class="pre">caselbl()</span></code>
+returns.</p>
+<p>Example 2. Promote a feature into the case-label axis, dropping it from the columns.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;campus&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;term&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;fall&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spring&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fall&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spring&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">82.0</span><span class="p">,</span><span class="w"> </span><span class="mf">78.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;campus&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;term&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">names</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">by_city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">customers</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/*drop_feature=*/</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">by_city</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>names:
-campus
-term
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+       | id  
+-------------
+Tema   | 1   
+Accra  | 2   
+Kumasi | 3   
+-------------
+[3 cs x 1 feat]
 </pre></div>
 </div>
-<p>Example 4. Align to an explicit label order.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">align</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">})));</span>
+<p><code class="docutils literal notranslate"><span class="pre">city</span></code>’s original values (<code class="docutils literal notranslate"><span class="pre">Tema</span></code>, <code class="docutils literal notranslate"><span class="pre">Accra</span></code>, <code class="docutils literal notranslate"><span class="pre">Kumasi</span></code>) become the new case labels,
+replacing <code class="docutils literal notranslate"><span class="pre">customers</span></code>’s original <code class="docutils literal notranslate"><span class="pre">c1,</span> <span class="pre">c2,</span> <span class="pre">c3</span></code> axis entirely, and <code class="docutils literal notranslate"><span class="pre">city</span></code> itself is
+dropped from the feature columns since <code class="docutils literal notranslate"><span class="pre">drop_feature</span> <span class="pre">=</span> <span class="pre">true</span></code>. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> to keep
+<code class="docutils literal notranslate"><span class="pre">city</span></code> as an ordinary feature alongside the new label axis.</p>
+<p>Example 3. Sort the frame by its case labels.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted_by_city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">by_city</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sorted_by_city</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================
-        | units
-----------------
-Tema    | 7
-Missing | NULL
-Accra   | 10
-----------------
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+       | id  
+-------------
+Accra  | 2   
+Kumasi | 3   
+Tema   | 1   
+-------------
 [3 cs x 1 feat]
 </pre></div>
 </div>
-<p>Example 5. Rename, reorder, and drop structured label parts.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">201.0</span><span class="p">,</span><span class="w"> </span><span class="mf">202.0</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">()</span>
-<span class="w">    </span><span class="p">.</span><span class="n">rename</span><span class="p">({{</span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;acct&quot;</span><span class="p">}})</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">order</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;acct&quot;</span><span class="p">})</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">drop</span><span class="p">({</span><span class="s">&quot;quarter&quot;</span><span class="p">});</span>
-</pre></div>
-</div>
+<p>Rows are reordered into ascending alphabetical order by case label (<code class="docutils literal notranslate"><span class="pre">Accra</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Kumasi</span></code>, <code class="docutils literal notranslate"><span class="pre">Tema</span></code>), carrying each row’s <code class="docutils literal notranslate"><span class="pre">id</span></code> value along with it.</p>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out.label().names():
-region
-acct
-</pre></div>
-</div>
-<p>Example 6. Inspect distinct, duplicated, repeated, and frequency labels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
-<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">distinct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">distinct</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">duplicated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">duplicated</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">repeated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">repeated</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">freq</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">drop</span><span class="p">({.</span><span class="n">duplicated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">united</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">unite</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">find</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">b_positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">pos</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>distinct:
-b
-a
-c
-
-duplicated:
-b  false
-a  false
-b  true
-c  false
-
-repeated:
-b  true
-a  false
-b  true
-c  false
-
-compact.ncases():
-3
-
-united:
-b
-a
-c
-d
-
-positions:
-a        1
-missing -1
-b        0
-
-b_positions:
-0
-2
-</pre></div>
-</div>
-<p>Example 7. Inspect label codes, levels, and sorted depth.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">codes</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">levels</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">sorted_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">depth</span><span class="p">();</span>
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">label()</span></code> is the dedicated surface for row-label operations, kept separate from
+<code class="docutils literal notranslate"><span class="pre">features()</span></code> and the feature-axis surface (<code class="docutils literal notranslate"><span class="pre">feataxis()</span></code>), which operate on column
+names instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.set(feature,</span> <span class="pre">true)</span></code> promotes a feature into the label axis and drops it from the
+columns; <code class="docutils literal notranslate"><span class="pre">.set(feature,</span> <span class="pre">false)</span></code> (the default) keeps the source feature as an
+ordinary column alongside the new label axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.reset(name)</span></code> is the inverse of <code class="docutils literal notranslate"><span class="pre">.set()</span></code>: it materializes the current label axis
+back into an ordinary feature under the given name.</p></li>
+</ul>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>codes:
-        | region  quarter
--------------------------
-west|Q1 | 0       0
-west|Q2 | 0       1
-east|Q1 | 1       0
-east|Q2 | 1       1
-
-sorted_depth:
-0
-</pre></div>
-</div>
-<p>Example 8. Reset labels back into ordinary features.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">reset</span><span class="p">(</span><span class="s">&quot;city_case&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
-  | city_case  units
------------------------
-0 | Accra      10
-1 | Tema       7
-2 | Kumasi     12
------------------------
-[3 cs x 2 feat]
-</pre></div>
-</div>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="feataxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::feataxis</span></code></span></a>: the equivalent dedicated accessor for feature
+<em>names</em>, rather than case labels.</p></li>
+<li><p><a class="reference internal" href="case_study.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::case_study</span></code></span></a>: select rows by label or position, once you
+know what the label axis looks like.</p></li>
+<li><p><a class="reference internal" href="#sort_caselbl.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort_caselbl</span></code></span></a>: the root-level equivalent of
+<code class="docutils literal notranslate"><span class="pre">label().sort()</span></code>.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kurtosis.html">
     <span class="label">Previous</span>
@@ -321,7 +197,6 @@ sorted_depth:
 </div>
 </section>
 </section>
-</section>
 
 
           </div>
@@ -330,7 +205,7 @@ sorted_depth:
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PlussMic User Docs</a></h1>
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
 
 
 
@@ -350,9 +225,10 @@ sorted_depth:
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
 </ul>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>

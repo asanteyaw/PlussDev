@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::align
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,290 +7,166 @@
 ## Signatures
 
 ```cpp
-DataFrame::align(const AlignSpec& spec) -> DataFrame
-
-DataFrame::align(const Thread& new_label) -> DataFrame
+DataFrame::align(const AlignSpec& spec) const -> DataFrame
+DataFrame::align(const Thread& new_label) const -> DataFrame
 ```
 
-Realign the current frame to a target case axis, a target feature axis, or both at once.
+## What It Does
 
-`align(...)` is the DataFrame-level reindexing surface for PlussMic. Use it when you already know the row labels, feature names, or both structures you want in the output and you want PlussMic to rebuild the frame to match that target.
+Reindexes the frame onto a new target case-label axis, a new target feature order, or
+both at once — the general-purpose "make this frame line up with a shape I already
+know" tool. Every source case is matched to a target case *by label value*, not by
+physical row position: a case label that appears in the target axis is looked up
+among the source's rows carrying that same label (matched in order, for the rare case
+of repeated labels), and a target label that has no match in the source becomes a
+brand-new row, filled with the null cell (or with `fill`, if provided).
 
-This is especially useful in grading, reporting, and merge-preparation workflows where one table must be forced into the same visible shape as another before arithmetic, comparison, export, or presentation.
+`align(new_label)` is the shorthand that only touches the case axis, leaving every
+feature untouched. `align(spec)` is the full form: an `AlignSpec` can reorder features
+independently of case labels, introduce brand-new feature columns that don't exist in
+the source at all (also null- or fill-filled), or restrict the output to a smaller
+feature subset — all in the same call.
 
 ## Parameters
 
-**spec**
+**new_label** (`const Thread&`, case-only overload)
 
-Structured alignment description used by the full overload.
+The target case-label axis, in the exact order you want the output rows in. Equivalent
+to `align(AlignSpec{.label = new_label})`.
 
-`AlignSpec` has three public fields:
+**spec** (`const AlignSpec&`)
 
-- `label`: optional target case labels. When present, the output rows are reordered and expanded to match these labels.
-- `features`: optional target feature order. When non-empty, the output features are emitted in exactly this order.
-- `fill`: optional numeric fill scalar. When provided, newly introduced numeric gaps are filled with that value instead of remaining null.
-
-You do not need to populate every field. Leave the fields you do not care about at their defaults and specify only the axis you want to control.
-
-**new_label**
-
-Replacement case axis used by the case-label-only overload.
-
-Pass a note-backed or otherwise defined `Thread` containing the output row labels in the exact order you want. PlussMic will gather matching rows by label, insert missing rows for unmatched labels, and keep the existing feature set unchanged.
+- **`label`** (`std::optional<Thread>`, default unset): target case-label axis. Leave
+  unset to keep the frame's existing case axis unchanged while still reordering
+  features via `features`.
+- **`features`** (`std::vector<std::string>`, default empty): target feature order.
+  Leave empty to keep every existing feature, in its existing order. A name in this
+  list that doesn't exist on the source frame becomes a brand-new, entirely missing
+  column in the output (filled with `fill`, if set) rather than an error — `align()`
+  never rejects an unknown target feature name the way [`features()`](features.md)
+  does.
+- **`fill`** (`std::optional<double>`, default unset): a numeric value used to fill
+  any newly introduced gap — a target case label absent from the source, or a target
+  feature absent entirely — instead of leaving it as `NULL`. `fill` only ever applies
+  to `Series`-kind (numeric) columns; a `Note`/`Timeline`/`TimeIndex` gap is always
+  `NULL` regardless of `fill`, since there is no sensible way to "fill" a missing
+  string or date with a `double`.
 
 ## Returns
 
 `DataFrame`
-    New frame whose case labels, feature order, and missing slots follow the requested alignment target.
-
-    - Existing matching cells are carried over into their new positions.
-    - Missing target rows or target features are introduced as missing values by default.
-    - When `fill` is supplied, newly created numeric gaps are filled with that scalar instead of remaining null.
-
-## See Also
-
-- <a href="#label().align"><code>DataFrame::label().align</code></a>: shorter case-axis-only surface when you are not also conforming features.
-- <a href="conform.html"><code>DataFrame::conform</code></a>: align this frame to another frame's schema and labels in one call.
-- <a href="../thread/align.html"><code>Thread::align</code></a>: lower-level alignment for a single extracted column.
-
-## Notes
-
-`align(const Thread& new_label)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
-
-`align(const AlignSpec& spec)` is the full structured form. Use it when you need to control target case labels, target feature order, and numeric fill behavior together.
-
-If a requested feature does not exist in the source frame, PlussMic creates a new missing feature in the output. If that new feature is numeric and `fill` is supplied, the introduced values are filled with that scalar.
-
-If a requested case label does not exist in the source frame, PlussMic inserts a new output row for that label. Matching rows are gathered by label rather than by original physical position.
-
-This call is non-mutating. The source frame is left unchanged.
+    A new frame reindexed onto the requested case axis and/or feature order. Existing
+    cells are carried over unchanged; new gaps are `NULL` unless `fill` says otherwise.
 
 ## Examples
 
-Example 1. Realign rows to a new case-label order with the case-only overload.
+Example 1. Reindex onto a new case-label order that includes one label absent from
+the source.
 
 ```cpp
 using namespace pluss::table;
 
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
+auto prices = DataFrame({
+    {"price", Thread(pluss::make_series({10.0, 20.0, 30.0}))},
+    {"grade", Thread(pluss::make_note({"A", "B", "C"}))},
+}, Thread(pluss::make_note({"p1", "p2", "p3"})));
 
-auto out = base.align(pluss::make_note({"r2", "missing", "r1"}));
+auto target = Thread(pluss::make_note({"p2", "p4", "p1"}));
+auto reindexed = prices.align(target);
+std::cout << reindexed;
 ```
 
 ### Output
 
 ```text
-====================
-        | A     B
---------------------
-r2      | 2     20
-missing | NA    NA
-r1      | 1     10
---------------------
+===================
+     | price  grade
+-------------------
+p2   | 20     B    
+p4   | NULL   NULL 
+p1   | 10     A    
+-------------------
 [3 cs x 2 feat]
 ```
 
-Example 2. Fill newly introduced numeric rows instead of leaving them missing.
+`p4` doesn't exist in `prices`, so it becomes a brand-new row filled with `NULL` in
+every feature — including `grade`, a `Note` column, since no `fill` was supplied here.
+`p2` and `p1` are matched by label and reordered to the requested position, not left in
+their original physical order.
+
+Example 2. Restrict and reorder the feature set, introduce a feature that doesn't
+exist at all, and fill every resulting gap with `0.0`.
 
 ```cpp
-using namespace pluss::table;
-
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
-
-auto out = base.align(DataFrame::AlignSpec{
-    .label = pluss::make_note({"r2", "missing", "r1"}),
+auto out = prices.align(DataFrame::AlignSpec{
+    .label = target,
+    .features = {"price", "bonus"},
     .fill = 0.0,
 });
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-====================
-        | A     B
---------------------
-r2      | 2     20
-missing | 0     0
-r1      | 1     10
---------------------
+===================
+     | price  bonus
+-------------------
+p2   | 20     0    
+p4   | 0      0    
+p1   | 10     0    
+-------------------
 [3 cs x 2 feat]
 ```
 
-Example 3. Reorder features and introduce one missing feature by name.
+`grade` is dropped entirely since it isn't in the requested `features` list. `bonus`
+doesn't exist anywhere on `prices`, so the *entire* column is manufactured from
+scratch — and because `fill = 0.0` is set, it comes back fully valid (`0`) rather than
+`NULL`, exactly like the `p4` gap in `price`. Without `fill`, both would have been
+`NULL` instead.
+
+Example 3. List the same target feature name twice, to see it throw.
 
 ```cpp
-using namespace pluss::table;
-
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
-
-auto out = base.align(DataFrame::AlignSpec{
-    .features = {"B", "C", "A"},
-});
+try {
+  auto out = prices.align(DataFrame::AlignSpec{.features = {"price", "price"}});
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-=======================
-     | B     C     A
------------------------
-r1   | 10    NA    1
-r2   | 20    NA    2
-r3   | 30    NA    3
------------------------
-[3 cs x 3 feat]
+DataFrame::align: duplicate target feature 'price'
 ```
 
-Example 4. Conform both rows and features in one call.
+Two identical entries in `features` would mean two output columns both
+called `"price"` — ambiguous, so it's rejected rather than silently
+producing a duplicate or overwriting one with the other.
 
-```cpp
-using namespace pluss::table;
+## Notes
 
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
+- Matching is by case-label *value*, not physical position — this is what
+  distinguishes `align()` from a plain [`take()`](take.md)-style reorder.
+- A missing target feature is manufactured wholesale rather than rejected, unlike
+  [`features()`](features.md)'s multi-name projection, which throws on an unknown
+  name.
+- `fill` only rescues `Series`-kind gaps from `NULL`; text and calendar features stay
+  `NULL` regardless.
+- [`DataFrame::conform`](conform.md) builds on `align()`: it matches feature order to
+  another frame's exact feature list first, then calls the case-only overload of
+  `align()` to match that frame's case order too.
 
-auto out = base.align(DataFrame::AlignSpec{
-    .label = pluss::make_note({"r3", "r1"}),
-    .features = {"B", "C", "A"},
-});
-```
+## See Also
 
-### Output
-
-```text
-=======================
-     | B     C     A
------------------------
-r3   | 30    NA    3
-r1   | 10    NA    1
------------------------
-[2 cs x 3 feat]
-```
-
-Example 5. Use `fill` together with feature conformance.
-
-```cpp
-using namespace pluss::table;
-
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
-
-auto out = base.align(DataFrame::AlignSpec{
-    .label = pluss::make_note({"r3", "r1"}),
-    .features = {"B", "C", "A"},
-    .fill = 0.0,
-});
-```
-
-### Output
-
-```text
-=======================
-     | B     C     A
------------------------
-r3   | 30    0     3
-r1   | 10    0     1
------------------------
-[2 cs x 3 feat]
-```
-
-Example 6. Align one frame to another frame's case axis before downstream comparison or joining.
-
-```cpp
-using namespace pluss::table;
-
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
-
-auto case_driver = DataFrame({
-    {"score", pluss::make_series({100.0, 200.0})},
-}, pluss::make_note({"r3", "r1"}));
-
-auto out = base.align(case_driver.label().values());
-```
-
-### Output
-
-```text
-=================
-     | A     B
------------------
-r3   | 3     30
-r1   | 1     10
------------------
-[2 cs x 2 feat]
-```
-
-Example 7. Drop features you do not want by specifying a smaller target feature list.
-
-```cpp
-using namespace pluss::table;
-
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
-
-auto out = base.align(DataFrame::AlignSpec{
-    .features = {"B"},
-});
-```
-
-### Output
-
-```text
-===========
-     | B
------------
-r1   | 10
-r2   | 20
-r3   | 30
------------
-[3 cs x 1 feat]
-```
-
-Example 8. Use `align(...)` as an explicit no-op when you want to normalize a pipeline step around known case labels.
-
-```cpp
-using namespace pluss::table;
-
-auto base = DataFrame({
-    {"A", pluss::make_series({1.0, 2.0, 3.0})},
-    {"B", pluss::make_series({10.0, 20.0, 30.0})},
-}, pluss::make_note({"r1", "r2", "r3"}));
-
-auto out = base.align(base.label().values());
-```
-
-### Output
-
-```text
-=================
-     | A     B
------------------
-r1   | 1     10
-r2   | 2     20
-r3   | 3     30
------------------
-[3 cs x 2 feat]
-```
-
-
+- [`DataFrame::conform`](conform.md): align both feature order and case order to
+  match another frame's structure in a single call.
+- [`DataFrame::features`](features.md): a stricter feature-subset projection that
+  rejects unknown names instead of manufacturing them.
+- [`DataFrame::take`](take.md): reorder/select cases by physical position instead of
+  by label.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="aggregate.html">

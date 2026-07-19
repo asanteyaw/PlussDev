@@ -58,7 +58,7 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"})
 2  true
 3  false
 4  true
-dtype: Series
+ptype: Series
 ```
 
 Example 2. Switch to a keep-last duplicate policy.
@@ -78,7 +78,7 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"})
 2  false
 3  false
 4  false
-dtype: Series
+ptype: Series
 ```
 
 

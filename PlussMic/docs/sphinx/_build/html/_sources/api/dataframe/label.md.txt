@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrame::label
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
@@ -5,296 +7,154 @@
 ## Signature
 
 ```cpp
-DataFrame::label() -> DataFrameLabelAccessor
+DataFrame::label() const -> DataFrameLabelAccessor
 ```
 
-Return the DataFrame label machinery for inspecting and manipulating row labels.
+## What It Does
 
-`label()` is PlussMic's public case-label surface. It centralizes the operations that are equivalent to pandas index machinery while keeping the word “case” available for the full row concept in Pluss data modelling.
+Enters a dedicated accessor for everything to do with the **case-label axis** — the
+per-row index every frame carries alongside its features. `label()` itself does
+nothing but bind the accessor to the current frame; the accessor exposes around
+thirty methods covering inspection (`.values()`, `.names()`, `.part()`), promoting a
+feature into the label axis and back (`.set()`, `.reset()`), reordering
+(`.sort()`, `.align()`), set-style operations between two label threads (`.unite()`,
+`.intersect()`, `.diff()`, `.symdiff()`), positional lookup (`.find()`, `.pos()`), and
+distinct/duplicate inspection (`.distinct()`, `.duplicated()`, `.repeated()`,
+`.freq()`) — the label-axis counterparts of the same-named `DataFrame` methods, but
+operating on row labels instead of feature values.
 
-Use this surface instead of root-level `caselbl*` methods. The label accessor keeps case-label operations in one place:
-
-- `df.label().values()` returns the current case-label `Thread`.
-- `df.label().names()` returns structured label component names.
-- `df.label().has()` reports whether structured label metadata is present.
-- `df.label().part(name)` or `df.label().part(position)` extracts one structured label component.
-- `df.label().set(...)` promotes one or more features, or an explicit `Thread`, into case labels.
-- `df.label().reset(...)` materializes labels back into ordinary features.
-- `df.label().sort(...)` sorts rows by label values.
-- `df.label().align(...)` rebuilds the frame against a target label order.
-- `df.label().unite(...)`, `intersect(...)`, `diff(...)`, and `symdiff(...)` provide pandas Index-style set operations.
-- `df.label().find(...)` returns exact-match indexer positions and `-1` for missing targets.
-- `df.label().pos(...)` returns all positions for one label, including duplicate-label positions.
-- `df.label().rename(...)`, `names(...)`, `order(...)`, `swap(...)`, and `drop(...)` edit structured label metadata.
-- `df.label().distinct(...)`, `freq(...)`, `duplicated(...)`, `repeated(...)`, `drop({.duplicated=true})`, and `drop({.repeated=true})` provide distinct/duplicate/repeated label utilities.
-- `df.label().has(...)`, `isnull()`, `notnull()`, and `fillnull(...)` provide label membership and missingness utilities.
-- `df.label().cast(...)`, `map(...)`, `take(...)`, and `slice(...)` transform or inspect label values.
-- `df.label().monotonic(...)`, `depth()`, `codes()`, and `levels()` expose sortedness and MultiIndex-style internals.
+This page previews the accessor's most common entry points. Each accessor method gets
+its own dedicated reference page under the `DataFrameLabelAccessor` API reference.
 
 ## Parameters
 
-`None`
+`label()` itself takes no parameters. See each accessor method's own signature for
+what it accepts.
 
 ## Returns
 
 `DataFrameLabelAccessor`
-    Lightweight label accessor bound to the current frame.
-
-    Methods that inspect labels return `Thread`, `std::vector<std::string>`, `bool`, `std::int64_t`, or small `DataFrame` inspection artifacts as appropriate. Methods that transform labels or the frame return a new `DataFrame`; the source frame is not mutated.
-
-## Notes
-
-The label surface is about row labels only. Feature names still live on `df.features()`, `df.rename(...)`, `df.reorder(...)`, and related feature-axis methods.
-
-`label().values()` is the direct equivalent of the old DataFrame case-label getter. Row selection remains on `case_study(...)`.
-
-`label().set(feature, true)` promotes a feature into the case-label axis and drops that feature from ordinary columns. Pass `false` to preserve the source feature as data.
-
-Structured labels are useful for hierarchical case axes: region/account/quarter, date/symbol, campus/term, and similar multi-part row identifiers.
-
-Label set operations preserve compatible label payload dtypes through the Thread label engine. Same numeric dtype stays unchanged, mixed numeric labels upcast to `Float64`, Note labels stay Note, and temporal labels stay temporal. Incompatible mixed label payloads fall back to Note labels.
+    A lightweight accessor bound to the current frame. Methods that inspect labels
+    return a `Thread`, `bool`, or `std::vector<std::string>`; methods that transform
+    the label axis or the frame return a new `DataFrame`. The source frame is never
+    mutated.
 
 ## Examples
 
-Example 1. Inspect the current case-label thread.
+Example 1. Read the current case-label axis as a plain `Thread`.
 
 ```cpp
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
-    {"units", pluss::make_series({10.0, 7.0, 12.0})},
-});
-
-auto out = sales.label().values();
+    {"id",    Thread(pluss::make_series({1, 2, 3}))},
+    {"units", Thread(pluss::make_series({10.0, 7.0, 12.0}))},
+}, Thread(pluss::make_note({"c1", "c2", "c3"})));
+std::cout << sales;
 ```
 
 ### Output
 
 ```text
-out:
-0
-1
-2
-```
-
-Example 2. Promote one feature into the label axis.
-
-```cpp
-using namespace pluss::table;
-
-auto sales = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
-    {"units", pluss::make_series({10.0, 7.0, 12.0})},
-});
-
-auto out = sales.label().set("city", true);
-```
-
-### Output
-
-```text
-================
-       | units
-----------------
-Accra  | 10
-Tema   | 7
-Kumasi | 12
-----------------
-[3 cs x 1 feat]
-```
-
-Example 3. Build a structured label from multiple features.
-
-```cpp
-using namespace pluss::table;
-
-auto scores = DataFrame({
-    {"campus", pluss::make_note({"north", "north", "south", "south"})},
-    {"term", pluss::make_note({"fall", "spring", "fall", "spring"})},
-    {"score", pluss::make_series({80.0, 82.0, 78.0, 88.0})},
-});
-
-auto out = scores.label().set({"campus", "term"}, true);
-auto names = out.label().names();
-```
-
-### Output
-
-```text
-names:
-campus
-term
-```
-
-Example 4. Align to an explicit label order.
-
-```cpp
-using namespace pluss::table;
-
-auto sales = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
-    {"units", pluss::make_series({10.0, 7.0, 12.0})},
-}).label().set("city", true);
-
-auto out = sales.label().align(Thread(pluss::make_note({"Tema", "Missing", "Accra"})));
-```
-
-### Output
-
-```text
-================
-        | units
-----------------
-Tema    | 7
-Missing | NULL
-Accra   | 10
-----------------
-[3 cs x 1 feat]
-```
-
-Example 5. Rename, reorder, and drop structured label parts.
-
-```cpp
-using namespace pluss::table;
-
-auto frame = DataFrame({
-    {"region", pluss::make_note({"west", "west", "east", "east"})},
-    {"account", pluss::make_series({101.0, 102.0, 201.0, 202.0})},
-    {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
-    {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
-}).label().set({"region", "account", "quarter"}, true);
-
-auto out = frame.label()
-    .rename({{"account", "acct"}})
-    .label().order({"region", "quarter", "acct"})
-    .label().drop({"quarter"});
-```
-
-### Output
-
-```text
-out.label().names():
-region
-acct
-```
-
-Example 6. Inspect distinct, duplicated, repeated, and frequency labels.
-
-```cpp
-using namespace pluss::table;
-
-auto frame = DataFrame({
-    {"score", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
-}, Thread(pluss::make_note({"b", "a", "b", "c"})));
-
-auto distinct = frame.label().distinct();
-auto duplicated = frame.label().duplicated();
-auto repeated = frame.label().repeated();
-auto freq = frame.label().freq();
-auto compact = frame.label().drop({.duplicated = true});
-auto united = frame.label().unite(Thread(pluss::make_note({"b", "d", "a"})));
-auto positions = frame.label().find(Thread(pluss::make_note({"a", "missing", "b"})));
-auto b_positions = frame.label().pos("b");
-```
-
-### Output
-
-```text
-distinct:
-b
-a
-c
-
-duplicated:
-b  false
-a  false
-b  true
-c  false
-
-repeated:
-b  true
-a  false
-b  true
-c  false
-
-compact.ncases():
-3
-
-united:
-b
-a
-c
-d
-
-positions:
-a        1
-missing -1
-b        0
-
-b_positions:
-0
-2
-```
-
-Example 7. Inspect label codes, levels, and sorted depth.
-
-```cpp
-using namespace pluss::table;
-
-auto frame = DataFrame({
-    {"region", pluss::make_note({"west", "west", "east", "east"})},
-    {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
-    {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
-}).label().set({"region", "quarter"}, true);
-
-auto codes = frame.label().codes();
-auto levels = frame.label().levels();
-auto sorted_depth = frame.label().depth();
-```
-
-### Output
-
-```text
-codes:
-        | region  quarter
--------------------------
-west|Q1 | 0       0
-west|Q2 | 0       1
-east|Q1 | 1       0
-east|Q2 | 1       1
-
-sorted_depth:
-0
-```
-
-Example 8. Reset labels back into ordinary features.
-
-```cpp
-using namespace pluss::table;
-
-auto sales = DataFrame({
-    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
-    {"units", pluss::make_series({10.0, 7.0, 12.0})},
-}).label().set("city", true);
-
-auto out = sales.label().reset("city_case");
-```
-
-### Output
-
-```text
-=======================
-  | city_case  units
------------------------
-0 | Accra      10
-1 | Tema       7
-2 | Kumasi     12
------------------------
+==================
+     | id    units
+------------------
+c1   | 1     10   
+c2   | 2     7    
+c3   | 3     12   
+------------------
 [3 cs x 2 feat]
 ```
 
+```cpp
+auto labels = sales.label().values();
+std::cout << labels;
+```
 
+### Output
+
+```text
+0  c1
+1  c2
+2  c3
+ptype: Note
+```
+
+`.values()` is the direct read of the case-label axis — the same thread `caselbl()`
+returns.
+
+Example 2. Promote a feature into the case-label axis, dropping it from the columns.
+
+```cpp
+auto customers = DataFrame({
+    {"id",   Thread(pluss::make_series({1, 2, 3}))},
+    {"city", Thread(pluss::make_note({"Tema", "Accra", "Kumasi"}))},
+}, Thread(pluss::make_note({"c1", "c2", "c3"})));
+
+auto by_city = customers.label().set("city", /*drop_feature=*/true);
+std::cout << by_city;
+```
+
+### Output
+
+```text
+=============
+       | id  
+-------------
+Tema   | 1   
+Accra  | 2   
+Kumasi | 3   
+-------------
+[3 cs x 1 feat]
+```
+
+`city`'s original values (`Tema`, `Accra`, `Kumasi`) become the new case labels,
+replacing `customers`'s original `c1, c2, c3` axis entirely, and `city` itself is
+dropped from the feature columns since `drop_feature = true`. Pass `false` to keep
+`city` as an ordinary feature alongside the new label axis.
+
+Example 3. Sort the frame by its case labels.
+
+```cpp
+auto sorted_by_city = by_city.label().sort();
+std::cout << sorted_by_city;
+```
+
+### Output
+
+```text
+=============
+       | id  
+-------------
+Accra  | 2   
+Kumasi | 3   
+Tema   | 1   
+-------------
+[3 cs x 1 feat]
+```
+
+Rows are reordered into ascending alphabetical order by case label (`Accra`,
+`Kumasi`, `Tema`), carrying each row's `id` value along with it.
+
+## Notes
+
+- `label()` is the dedicated surface for row-label operations, kept separate from
+  `features()` and the feature-axis surface (`feataxis()`), which operate on column
+  names instead.
+- `.set(feature, true)` promotes a feature into the label axis and drops it from the
+  columns; `.set(feature, false)` (the default) keeps the source feature as an
+  ordinary column alongside the new label axis.
+- `.reset(name)` is the inverse of `.set()`: it materializes the current label axis
+  back into an ordinary feature under the given name.
+
+## See Also
+
+- [`DataFrame::feataxis`](feataxis.md): the equivalent dedicated accessor for feature
+  *names*, rather than case labels.
+- [`DataFrame::case_study`](case_study.md): select rows by label or position, once you
+  know what the label axis looks like.
+- [`DataFrame::sort_caselbl`](sort_caselbl.md): the root-level equivalent of
+  `label().sort()`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kurtosis.html">
