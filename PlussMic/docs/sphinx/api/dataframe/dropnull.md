@@ -87,7 +87,7 @@ std::cout << out;
 ===========================
      | student  quiz  final
 ---------------------------
-0    | Ada      10    80
+0    | Ada      10    80   
 ---------------------------
 [1 cs x 3 feat]
 ```
@@ -123,7 +123,7 @@ std::cout << out;
 ===========================
      | student  quiz  final
 ---------------------------
-0    | Ada      10    80
+0    | Ada      10    80   
 ---------------------------
 [1 cs x 3 feat]
 ```
@@ -133,6 +133,59 @@ final}` rule explicitly as struct fields instead of positional arguments. This i
 overload to reach for once a call site also needs `threshold` (say, "keep a row if at
 least 2 of 3 inspected columns are present" rather than an all-or-nothing rule), which
 has no positional-argument equivalent in the short overload.
+
+Example 3. `all = true`: only drop a row when *every* selected feature is
+missing, keeping a row that's missing just one of them.
+
+```cpp
+using namespace pluss::table;
+
+auto missing2 = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
+    {"quiz",    pluss::make_series({10.0, pluss::nan(), pluss::nan(), 5.0})},
+    {"final",   pluss::make_series({80.0, 75.0, pluss::nan(), pluss::nan()})},
+});
+
+auto kept_any = missing2.dropnull({"quiz", "final"}, false);
+std::cout << kept_any;
+
+auto kept_all = missing2.dropnull({"quiz", "final"}, true);
+std::cout << kept_all;
+```
+
+### Output (all = false, the default)
+
+```text
+===========================
+     | student  quiz  final
+---------------------------
+0    | Ada      10    80   
+---------------------------
+[1 cs x 3 feat]
+```
+
+### Output (all = true)
+
+```text
+===========================
+     | student  quiz  final
+---------------------------
+0    | Ada      10    80   
+1    | Bola     NULL  75   
+3    | Dede     5     NULL 
+---------------------------
+[3 cs x 3 feat]
+```
+
+`missing2` has one row (`Chen`, case `2`) missing both `quiz` and `final`, and
+two rows each missing exactly one of them (`Bola` missing `quiz`, `Dede`
+missing `final`). With the default `all = false`, any one missing value is
+enough to drop a row, so only `Ada` (fully complete) survives. With `all =
+true`, only `Chen` — missing *both* selected features — is dropped; `Bola` and
+`Dede` survive despite each still having one `NULL` cell, since they aren't
+missing *everywhere* the rule is checking. Note the surviving case labels
+(`0, 1, 3`): `dropnull()` never renumbers rows, so the gap left by dropping
+case `2` stays a gap.
 
 ## Notes
 

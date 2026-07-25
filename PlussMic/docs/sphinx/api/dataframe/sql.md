@@ -15,7 +15,7 @@ DataFrame::sql(SqlOptions options) const -> DataFrameSqlAccessor
 
 Enters the frame's built-in SQL accessor — a small, self-contained SQL engine that
 runs `SELECT` statements directly against the frame (referenced in the statement as
-the source table `self`), returning an ordinary `DataFrame` result. Use this when a
+the source table `df`), returning an ordinary `DataFrame` result. Use this when a
 transformation reads more naturally as a `SELECT`/`WHERE`/`JOIN`/`ORDER BY` statement
 than as a chained sequence of table verbs. `sql()` itself does no work beyond binding
 the frame (and, optionally, execution `options`); the real work happens on
@@ -25,6 +25,9 @@ the frame (and, optionally, execution `options`); the real work happens on
 that will run many times with different bound parameter values — it parses the
 statement once up front, rather than on every `.execute()` call the way
 `sql().execute(statement)` does each time it's called fresh.
+
+See the [DataFrameSqlAccessor API Reference](../../dataframe_sql_accessor_api_reference)
+for `.execute()`'s full parameter and behavior details.
 
 ## Parameters
 
@@ -55,7 +58,7 @@ auto orders = DataFrame({
     {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto high_sales = orders.sql().execute("SELECT id, sales FROM self WHERE sales > 95");
+auto high_sales = orders.sql().execute("SELECT id, sales FROM df WHERE sales > 95");
 std::cout << high_sales;
 ```
 
@@ -82,7 +85,7 @@ Example 2. Pass an `{param}` placeholder value through `SqlOptions`.
 DataFrame::SqlOptions options;
 options.params["target_city"] = std::string("Tema");
 
-auto matched = orders.sql(options).execute("SELECT * FROM self WHERE city = {target_city}");
+auto matched = orders.sql(options).execute("SELECT * FROM df WHERE city = {target_city}");
 std::cout << matched;
 ```
 
@@ -106,7 +109,7 @@ runs, matching only case `1`. `SELECT *` keeps every column this time, unlike Ex
 - `sql()` returns the accessor only; it never executes a statement by itself — you
   must call `.execute(statement)` to get a result.
 - The calling frame is always available in the statement as the source table
-  `self`; `options.sources` can bind additional named frames for joins.
+  `df`; `options.sources` can bind additional named frames for joins.
 - Use [`prep_sql(statement)`](prep_sql.md) instead when the same statement text runs
   repeatedly with different parameter bindings, to avoid re-parsing it every time.
 

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::div" href="div.html" />
@@ -101,16 +101,16 @@ frame.</p>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================================
-      | x            y            z
+      | x            y            z          
 ---------------------------------------------
-count | 4            4            4
-mean  | 2.5          5            2.5
+count | 4            4            4          
+mean  | 2.5          5            2.5        
 std   | 1.290994449  2.581988897  1.290994449
-min   | 1            2            1
-25%   | 1.75         3.5          1.75
-50%   | 2.5          5            2.5
-75%   | 3.25         6.5          3.25
-max   | 4            8            4
+min   | 1            2            1          
+25%   | 1.75         3.5          1.75       
+50%   | 2.5          5            2.5        
+75%   | 3.25         6.5          3.25       
+max   | 4            8            4          
 ---------------------------------------------
 [8 cs x 3 feat]
 </pre></div>
@@ -137,16 +137,16 @@ as an error. <code class="docutils literal notranslate"><span class="pre">std</s
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============================================================
-      | order_id     units        unit_price   discount
+      | order_id     units        unit_price   discount     
 ------------------------------------------------------------
-count | 6            6            5            5
-mean  | 103.5        2.833333333  551.5        0.08
+count | 6            6            5            5            
+mean  | 103.5        2.833333333  551.5        0.08         
 std   | 1.870828693  1.471960144  580.5111971  0.03082207001
-min   | 101          1            42           0.05
-25%   | 102.25       2            45.5         0.05
-50%   | 103.5        2.5          320          0.08
-75%   | 104.75       3.75         1150         0.1
-max   | 106          5            1200         0.12
+min   | 101          1            42           0.05         
+25%   | 102.25       2            45.5         0.05         
+50%   | 103.5        2.5          320          0.08         
+75%   | 104.75       3.75         1150         0.1          
+max   | 106          5            1200         0.12         
 ------------------------------------------------------------
 [8 cs x 4 feat]
 </pre></div>
@@ -156,6 +156,34 @@ max   | 106          5            1200         0.12
 excluded from every statistic for that column independently. A row missing one feature
 does not disqualify its other, observed features from that feature’s own summary; the
 skip happens per-column, not per-row.</p>
+<p>Example 3. Pass <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">true</span></code> and let the returned view print itself, with no
+explicit <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> at all.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">corr_base</span><span class="p">.</span><span class="n">describe</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================================
+      | x            y            z          
+---------------------------------------------
+count | 4            4            4          
+mean  | 2.5          5            2.5        
+std   | 1.290994449  2.581988897  1.290994449
+min   | 1            2            1          
+25%   | 1.75         3.5          1.75       
+50%   | 2.5          5            2.5        
+75%   | 3.25         6.5          3.25       
+max   | 4            8            4          
+---------------------------------------------
+[8 cs x 3 feat]
+</pre></div>
+</div>
+<p>Same summary as Example 1 — this bare statement differs only in <code class="docutils literal notranslate"><span class="pre">render</span></code>. The
+temporary <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code> is destroyed at the end of the statement without
+ever being captured or streamed, and <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">true</span></code> is what makes that
+destruction print automatically; with the default <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">false</span></code>, the same
+unassigned call would produce no output.</p>
 </section>
 </section>
 <section id="notes">

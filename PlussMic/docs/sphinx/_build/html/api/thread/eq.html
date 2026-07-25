@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::exp" href="exp.html" />
@@ -36,60 +36,63 @@
 
           <div class="body" role="main">
             
-  <section id="thread-eq">
+  <!-- pluss-hand-authored -->
+<section id="thread-eq">
 <h1>Thread::eq<a class="headerlink" href="#thread-eq" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Compare the current thread for equality against a scalar literal or another thread.</p>
-<p><code class="docutils literal notranslate"><span class="pre">eq(...)</span></code> is the direct typed equality surface for thread work. It is the method form behind many mask-building operations on one extracted column.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Elementwise equality, returning a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread. The <code class="docutils literal notranslate"><span class="pre">double</span></code>
+overload compares every value against the same scalar; the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload
+compares two threads <strong>positionally</strong> (same length required, no case-label
+alignment); the <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> overload (with a <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> convenience
+wrapper that just forwards to it) behaves differently depending on the calling
+thread’s kind:</p>
+<ul class="simple">
+<li><p>On a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread, it compares each string directly against <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></li>
+<li><p>On any other kind (a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, for example), it <strong>stringifies</strong>
+each value first, then does a plain string comparison against <code class="docutils literal notranslate"><span class="pre">other</span></code>. It does not
+parse <code class="docutils literal notranslate"><span class="pre">other</span></code> as a number and compare numerically.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>eq() is the canonical comparison-family reference
+<code class="docutils literal notranslate"><span class="pre">ne</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">gt</span></code>, and <code class="docutils literal notranslate"><span class="pre">ge</span></code> all share this exact overload shape and
+positional-matching rule. Their own pages focus on what’s different about each
+operator; this page covers the shared mechanics once. See <a class="reference internal" href="lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lt()</span></code></span></a>
+specifically for why the string-overload’s stringify-then-compare behavior matters
+more for ordering operators than it does for equality.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong></p>
-<p>Right-hand equality target.</p>
-<p>Supported overload families include:</p>
-<ul class="simple">
-<li><p>numeric scalars such as <code class="docutils literal notranslate"><span class="pre">20.0</span></code>,</p></li>
-<li><p>text scalars such as <code class="docutils literal notranslate"><span class="pre">&quot;Bola.txt&quot;</span></code>,</p></li>
-<li><p>another <code class="docutils literal notranslate"><span class="pre">Thread</span></code> for elementwise equality.</p></li>
-</ul>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>The value to compare against. For the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload, must be the same length as
+<code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Boolean-style result thread with one equality decision per entry.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="compare.html"><code>Thread::compare</code></a>: generalized comparison surface when you want to choose the operator at runtime.</p></li>
-<li><p><a href="../dataframe/eq.html"><code>DataFrame::eq</code></a>: frame-level equality across several features at once.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>Numeric scalar equality broadcasts one value across the entire thread.</p>
-<p>Text scalar equality is the direct route for note-backed threads.</p>
-<p>Thread-to-thread equality is positional unless you explicitly align the threads first.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
+equality result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Broadcast one numeric scalar across a numeric thread.</p>
+<p>Example 1. Compare every value against a scalar.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="mf">20.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">72.0</span><span class="p">,</span><span class="w"> </span><span class="mf">85.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="mf">85.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -97,44 +100,103 @@ Boolean-style result thread with one equality decision per entry.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
 1  true
 2  false
+
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Broadcast one text scalar across a note-backed thread.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen.csv&quot;</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="s">&quot;Bola.txt&quot;</span><span class="p">);</span>
+<p>Example 2. Compare two threads positionally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">72.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">targets</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
-1  true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
+1  false
 2  false
+
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. Compare two numeric threads element by element.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<p>Only position <code class="docutils literal notranslate"><span class="pre">0</span></code> matches (<code class="docutils literal notranslate"><span class="pre">72</span> <span class="pre">==</span> <span class="pre">72</span></code>); the others differ (<code class="docutils literal notranslate"><span class="pre">85</span> <span class="pre">!=</span> <span class="pre">80</span></code>, <code class="docutils literal notranslate"><span class="pre">91</span> <span class="pre">!=</span> <span class="pre">95</span></code>).</p>
+<p>Example 3. String equality on a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread compares text directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="s">&quot;Bola&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_names</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
-1  false
-2  true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
+1  true
+2  false
+
 ptype: Series
 </pre></div>
 </div>
+<p>Example 4. String equality on a numeric thread stringifies first.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="s">&quot;10&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_values</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
+1  true
+2  false
+
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">10.0</span></code> stringifies to <code class="docutils literal notranslate"><span class="pre">&quot;10&quot;</span></code>, which matches the literal <code class="docutils literal notranslate"><span class="pre">&quot;10&quot;</span></code> — for equality
+specifically, stringify-then-compare and parse-then-compare-numerically happen to
+agree here. That’s not true for the ordering operators; see <a class="reference internal" href="lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lt()</span></code></span></a> for a
+case where it matters.</p>
+<p>Example 5. A length mismatch throws rather than aligning or padding.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">too_short</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">too_short</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::eq(Thread): positional comparison requires identical lengths
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The comparison family also accepts <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind threads on the
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload (comparing timestamps), and <code class="docutils literal notranslate"><span class="pre">Note</span></code>-vs-<code class="docutils literal notranslate"><span class="pre">Note</span></code> on the same
+overload (comparing strings) — this page focuses on the numeric case, which is
+the most common.</p></li>
+<li><p>Mixing incompatible payload kinds on the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload (for example, a numeric
+thread against a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread) throws <code class="docutils literal notranslate"><span class="pre">&quot;unsupported</span> <span class="pre">payload</span> <span class="pre">combination&quot;</span></code>.</p></li>
+<li><p>Every method in this family reports its own name in error messages
+(<code class="docutils literal notranslate"><span class="pre">Thread::eq(Thread)</span></code>, <code class="docutils literal notranslate"><span class="pre">Thread::lt(Thread)</span></code>, and so on), not a shared generic one.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ne.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ne</span></code></span></a>: the complementary inequality check.</p></li>
+<li><p><a class="reference internal" href="lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::lt</span></code></span></a>, <a class="reference internal" href="le.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::le</span></code></span></a>, <a class="reference internal" href="gt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::gt</span></code></span></a>,
+<a class="reference internal" href="ge.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ge</span></code></span></a>: the ordering operators, sharing this overload shape but with
+a real gotcha in the string overload.</p></li>
+<li><p><a class="reference internal" href="../dataframe/eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::eq</span></code></span></a>: the multi-feature counterpart.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ends.html">
     <span class="label">Previous</span>
@@ -145,7 +207,6 @@ ptype: Series
     <span class="title">exp</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

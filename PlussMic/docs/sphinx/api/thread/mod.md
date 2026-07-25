@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::mod
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,93 @@
 ## Signatures
 
 ```cpp
-Thread::mod(const Thread& other) -> Thread
-
-Thread::mod(double other) -> Thread
+Thread::mod(double other) const -> Thread
+Thread::mod(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+Elementwise remainder — the complement to [`floordiv()`](floordiv.md): for each
+position, `divisor * floordiv_result + mod_result` reconstructs the original
+dividend. Follows [`add()`](add.md)'s shared mechanics (positional matching,
+length-mismatch throw, no `Note`-payload support).
+
+```{important} Negative operands are deliberately not covered
+`mod()` delegates to the underlying `Series` library's own `remainder()` primitive,
+which is not implemented in this repository — its exact sign convention for negative
+dividends or divisors can't be verified here. Every example on this page uses
+positive operands only, where the convention is unambiguous.
+```
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+The divisor(s). For the `Thread` overload, must be the same length as `*this`.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new thread, same length as `*this`, holding the elementwise remainder.
 
 ## Examples
 
-Example 1. Apply `mod` to the current thread using explicit `other` arguments.
+Example 1. Remainder against a scalar divisor.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.mod(other);
+auto amounts = Thread(pluss::make_series({17.0, 26.0, 33.0}));
+auto out = amounts.mod(5.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  2
+1  1
+2  3
+ptype: Series
 ```
-Example 2. Apply `mod` to the current thread using explicit `other` arguments.
+
+`17 = 5*3 + 2`, `26 = 5*5 + 1`, `33 = 5*6 + 3` — matching
+[`amounts.floordiv(5.0)`](floordiv.md)'s `3, 5, 6` from the same dividends.
+
+Example 2. Remainder against another thread, positionally.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.mod(10.0);
+auto divisors = Thread(pluss::make_series({4.0, 7.0, 9.0}));
+auto out_pair = amounts.mod(divisors);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  1
+1  5
+2  6
+ptype: Series
 ```
 
+`17 = 4*4 + 1`, `26 = 7*3 + 5`, `33 = 9*3 + 6`.
+
+## Notes
+
+- See [`add()`](add.md) for the family-wide mechanics: positional matching and the
+  length-mismatch throw.
+- See [`floordiv()`](floordiv.md) for the complementary quotient — the two methods
+  are computed independently (not derived from each other), but always satisfy
+  `divisor * floordiv_result + mod_result == dividend` for the positive operands
+  shown here.
+
+## See Also
+
+- [`Thread::rmod`](rmod.md): the reflected form.
+- [`Thread::floordiv`](floordiv.md): the complementary floored quotient.
+- [`Thread::add`](add.md): the canonical reference for this family's shared
+  mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="min.html">

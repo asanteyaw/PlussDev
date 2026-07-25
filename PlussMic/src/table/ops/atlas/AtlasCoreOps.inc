@@ -43,6 +43,26 @@ DataFrame Atlas::dloc(std::int64_t index) const {
   return frame(index);
 }
 
+Atlas Atlas::features(std::string_view feature) const {
+  const auto single = std::array<std::string_view, 1>{feature};
+  return features(pluss::msharp::RangeView::Of<std::string_view>(
+      std::span<const std::string_view>(single.data(), single.size())));
+}
+
+Atlas Atlas::features(std::initializer_list<std::string_view> features) const {
+  return this->features(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+Atlas Atlas::features(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  PLUSS_CHECK(features.size() > 0, "Atlas::features: expected at least one feature");
+  std::vector<DataFrame> frames;
+  frames.reserve(static_cast<std::size_t>(depth()));
+  for (const auto& frame : impl_ref_().frames_) {
+    frames.push_back(frame.features(features));
+  }
+  return Atlas(std::move(frames), axis0_labels());
+}
+
 AtlasLabelAccessor Atlas::label() const {
   return AtlasLabelAccessor(*this);
 }
@@ -127,50 +147,12 @@ DataFrame Atlas::squeeze() const {
   return frame(0);
 }
 
-AtlasTimelineAccessor Atlas::tl(std::string_view feature) const {
-  const auto single = std::array<std::string_view, 1>{feature};
-  return tl(pluss::msharp::RangeView::Of<std::string_view>(
-      std::span<const std::string_view>(single.data(), single.size())));
+AtlasTsAccessor Atlas::ts() const {
+  return AtlasTsAccessor(*this, {});
 }
 
-AtlasTsAccessor Atlas::ts(std::string_view feature) const {
-  const auto single = std::array<std::string_view, 1>{feature};
-  return ts(pluss::msharp::RangeView::Of<std::string_view>(
-      std::span<const std::string_view>(single.data(), single.size())));
-}
-
-AtlasTsAccessor Atlas::ts(std::initializer_list<std::string_view> features) const {
-  return ts(pluss::msharp::RangeView::Of<std::string_view>(features));
-}
-
-AtlasTsAccessor Atlas::ts(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  std::vector<std::string> names;
-  names.reserve(features.size());
-  std::unordered_set<std::string> seen;
-  for (const auto name_sv : features) {
-    const auto name = std::string(name_sv);
-    PLUSS_CHECK(!name.empty(), "Atlas::ts: feature name cannot be empty");
-    PLUSS_CHECK(seen.insert(name).second, "Atlas::ts: duplicate feature '" + name + "'");
-    names.push_back(name);
-  }
-  return AtlasTsAccessor(*this, std::move(names));
-}
-
-AtlasTimelineAccessor Atlas::tl(std::initializer_list<std::string_view> features) const {
-  return tl(pluss::msharp::RangeView::Of<std::string_view>(features));
-}
-
-AtlasTimelineAccessor Atlas::tl(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  std::vector<std::string> names;
-  names.reserve(features.size());
-  std::unordered_set<std::string> seen;
-  for (const auto name_sv : features) {
-    const auto name = std::string(name_sv);
-    PLUSS_CHECK(!name.empty(), "Atlas::tl: feature name cannot be empty");
-    PLUSS_CHECK(seen.insert(name).second, "Atlas::tl: duplicate feature '" + name + "'");
-    names.push_back(name);
-  }
-  return AtlasTimelineAccessor(*this, std::move(names));
+AtlasTimelineAccessor Atlas::tl() const {
+  return AtlasTimelineAccessor(*this, {});
 }
 
 AtlasTimelineAccessor::AtlasTimelineAccessor(Atlas atlas, std::vector<std::string> features)
@@ -225,6 +207,22 @@ std::vector<std::string_view> atlas_ts_feature_views_(const std::vector<std::str
   return views;
 }
 
+DataFrameTimelineAccessor atlas_frame_tl_(const DataFrame& frame, const std::vector<std::string>& features) {
+  const auto views = atlas_tl_feature_views_(features);
+  if (views.empty()) {
+    return frame.tl();
+  }
+  return frame.features(pluss::msharp::RangeView::Of<std::string_view>(views)).tl();
+}
+
+DataFrameTsAccessor atlas_frame_ts_(const DataFrame& frame, const std::vector<std::string>& features) {
+  const auto views = atlas_ts_feature_views_(features);
+  if (views.empty()) {
+    return frame.ts();
+  }
+  return frame.features(pluss::msharp::RangeView::Of<std::string_view>(views)).ts();
+}
+
 } // namespace
 
 Atlas AtlasTsAccessor::map_(
@@ -237,9 +235,7 @@ Atlas AtlasTsAccessor::map_(
 #define PLUSS_ATLAS_TS_PERIOD(method_name)                                      \
   Atlas AtlasTsAccessor::method_name(std::int64_t periods) const {              \
     return map_([this, periods](const DataFrame& frame) {                       \
-      const auto views = atlas_ts_feature_views_(features_);                    \
-      return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))    \
-          .method_name(periods);                                                \
+      return atlas_frame_ts_(frame, features_).method_name(periods);            \
     }, "Atlas::ts()." #method_name);                                            \
   }
 
@@ -256,9 +252,7 @@ Atlas AtlasTsAccessor::rolling(
     WindowStatistic statistic,
     const WindowOptions& options) const {
   return map_([this, window, statistic, options](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .rolling(window, statistic, options);
+    return atlas_frame_ts_(frame, features_).rolling(window, statistic, options);
   }, "Atlas::ts().rolling");
 }
 
@@ -269,9 +263,7 @@ Atlas AtlasTsAccessor::rolling(
     WindowClosure closure) const {
   const auto owned_duration = std::string(duration);
   return map_([this, owned_duration, statistic, options, closure](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .rolling(owned_duration, statistic, options, closure);
+    return atlas_frame_ts_(frame, features_).rolling(owned_duration, statistic, options, closure);
   }, "Atlas::ts().rolling");
 }
 
@@ -279,9 +271,7 @@ Atlas AtlasTsAccessor::expanding(
     WindowStatistic statistic,
     const StatisticOptions& options) const {
   return map_([this, statistic, options](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .expanding(statistic, options);
+    return atlas_frame_ts_(frame, features_).expanding(statistic, options);
   }, "Atlas::ts().expanding");
 }
 
@@ -293,8 +283,7 @@ Atlas AtlasTsAccessor::ewm(
     std::int64_t min_count,
     bool ignore_nulls) const {
   return map_([this, alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
+    return atlas_frame_ts_(frame, features_)
         .ewm(alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls);
   }, "Atlas::ts().ewm");
 }
@@ -303,17 +292,13 @@ Atlas AtlasTsAccessor::fill_gaps(
     pluss::subsp::stats::ts::GapFillMode mode,
     std::optional<double> constant) const {
   return map_([this, mode, constant](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .fill_gaps(mode, constant);
+    return atlas_frame_ts_(frame, features_).fill_gaps(mode, constant);
   }, "Atlas::ts().fill_gaps");
 }
 
 Atlas AtlasTsAccessor::sort(bool ascending, bool nulls_last) const {
   return map_([this, ascending, nulls_last](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .sort(ascending, nulls_last);
+    return atlas_frame_ts_(frame, features_).sort(ascending, nulls_last);
   }, "Atlas::ts().sort");
 }
 
@@ -327,17 +312,13 @@ Atlas AtlasTsAccessor::asfreq(std::string_view freq,
                               std::optional<double> constant,
                               pluss::subsp::stats::ts::ResampleOp op) const {
   return map_([this, freq, step, fill_mode, constant, op](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .asfreq(freq, step, fill_mode, constant, op);
+    return atlas_frame_ts_(frame, features_).asfreq(freq, step, fill_mode, constant, op);
   }, "Atlas::ts().asfreq");
 }
 
 Atlas AtlasTsResampler::aggregate_(pluss::subsp::stats::ts::ResampleOp op) const {
   return atlas_.map_frames([this, op](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .resample(freq_, op, step_);
+    return atlas_frame_ts_(frame, features_).resample(freq_, op, step_);
   });
 }
 
@@ -351,45 +332,32 @@ Atlas AtlasTsResampler::count() const { return aggregate_(pluss::subsp::stats::t
 
 Atlas AtlasTsResampler::asfreq(std::optional<double> fill_value) const {
   return atlas_.map_frames([this, fill_value](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .resample(freq_, step_)
-        .asfreq(fill_value);
+    return atlas_frame_ts_(frame, features_).resample(freq_, step_).asfreq(fill_value);
   });
 }
 
 Atlas AtlasTsResampler::ffill() const {
   return atlas_.map_frames([this](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .resample(freq_, step_)
-        .ffill();
+    return atlas_frame_ts_(frame, features_).resample(freq_, step_).ffill();
   });
 }
 
 Atlas AtlasTsResampler::bfill() const {
   return atlas_.map_frames([this](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .resample(freq_, step_)
-        .bfill();
+    return atlas_frame_ts_(frame, features_).resample(freq_, step_).bfill();
   });
 }
 
 Atlas AtlasTsResampler::nearest() const {
   return atlas_.map_frames([this](const DataFrame& frame) {
-    const auto views = atlas_ts_feature_views_(features_);
-    return frame.ts(pluss::msharp::RangeView::Of<std::string_view>(views))
-        .resample(freq_, step_)
-        .nearest();
+    return atlas_frame_ts_(frame, features_).resample(freq_, step_).nearest();
   });
 }
 
 #define PLUSS_ATLAS_TL_NOARG(method_name)                                      \
   Atlas AtlasTimelineAccessor::method_name() const {                           \
     return map_([this](const DataFrame& frame) {                               \
-      const auto views = atlas_tl_feature_views_(features_);                   \
-      return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views))   \
+      return atlas_frame_tl_(frame, features_)                                 \
           .method_name();                                                      \
     }, "Atlas::tl()." #method_name);                                           \
   }
@@ -421,15 +389,13 @@ PLUSS_ATLAS_TL_NOARG(utc)
 
 Atlas AtlasTimelineAccessor::fmt(std::string_view pattern) const {
   return map_([this, pattern](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).fmt(pattern);
+    return atlas_frame_tl_(frame, features_).fmt(pattern);
   }, "Atlas::tl().fmt");
 }
 
 Atlas AtlasTimelineAccessor::epoch(TimeUnit unit) const {
   return map_([this, unit](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).epoch(unit);
+    return atlas_frame_tl_(frame, features_).epoch(unit);
   }, "Atlas::tl().epoch");
 }
 
@@ -437,8 +403,7 @@ Atlas AtlasTimelineAccessor::span(
     const Thread& other,
     const TimelineSpanOptions& options) const {
   return map_([this, other, options](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).span(other, options);
+    return atlas_frame_tl_(frame, features_).span(other, options);
   }, "Atlas::tl().span");
 }
 
@@ -462,50 +427,43 @@ Atlas AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) c
 
 Atlas AtlasTimelineAccessor::floor(std::string_view unit) const {
   return map_([this, unit](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).floor(unit);
+    return atlas_frame_tl_(frame, features_).floor(unit);
   }, "Atlas::tl().floor");
 }
 
 Atlas AtlasTimelineAccessor::ceil(std::string_view unit) const {
   return map_([this, unit](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).ceil(unit);
+    return atlas_frame_tl_(frame, features_).ceil(unit);
   }, "Atlas::tl().ceil");
 }
 
 Atlas AtlasTimelineAccessor::round(std::string_view unit) const {
   return map_([this, unit](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).round(unit);
+    return atlas_frame_tl_(frame, features_).round(unit);
   }, "Atlas::tl().round");
 }
 
 Atlas AtlasTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const {
   return map_([this, periods, freq](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).shift(periods, freq);
+    return atlas_frame_tl_(frame, features_).shift(periods, freq);
   }, "Atlas::tl().shift");
 }
 
 Atlas AtlasTimelineAccessor::tz(std::string_view name) const {
   return map_([this, name](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).tz(name);
+    return atlas_frame_tl_(frame, features_).tz(name);
   }, "Atlas::tl().tz");
 }
 
 Atlas AtlasTimelineAccessor::localize(const TimelineLocalizeOptions& options) const {
   return map_([this, options](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).localize(options);
+    return atlas_frame_tl_(frame, features_).localize(options);
   }, "Atlas::tl().localize");
 }
 
 Atlas AtlasTimelineAccessor::index(bool require_sorted) const {
   return map_([this, require_sorted](const DataFrame& frame) {
-    const auto views = atlas_tl_feature_views_(features_);
-    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).index(require_sorted);
+    return atlas_frame_tl_(frame, features_).index(require_sorted);
   }, "Atlas::tl().index");
 }
 

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::abs
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Thread::abs() -> Thread
+Thread::abs() const -> Thread
 ```
 
-Return the elementwise absolute value of a numeric thread.
+## What It Does
 
-`Thread::abs()` is the sign-stripping numeric helper for one-dimensional data. Use it when magnitude matters more than direction, such as absolute error, distance-from-target, or symmetric-threshold preprocessing.
+Returns the elementwise absolute value of a `Series`-kind thread — strips the sign,
+leaving magnitude. Requires the thread to be `Series`-kind.
 
 ## Parameters
 
@@ -19,29 +22,19 @@ Return the elementwise absolute value of a numeric thread.
 ## Returns
 
 `Thread`
-    A numeric thread containing the absolute value of each element.
-
-## See Also
-
-- <a href="clip.html"><code>Thread::clip</code></a>: cap values into a range instead of removing sign.
-- <a href="pow.html"><code>Thread::pow</code></a>: apply power transformations after magnitude cleanup when needed.
-
-## Notes
-
-This method is for numeric threads. Text and temporal payloads are not valid inputs.
-
-The result is non-mutating. The current thread is left unchanged.
+    A new `Series`-kind thread, same length as `*this`, holding each element's
+    absolute value.
 
 ## Examples
 
-Example 1. Take the absolute value of a numeric thread.
+Example 1. Absolute value strips sign; zero and positive values are unchanged.
 
 ```cpp
 using namespace pluss::table;
 
-auto scores = Thread(pluss::make_series({-2.5, 0.0, 3.5}));
-
-auto out = scores.abs();
+auto deltas = Thread(pluss::make_series({-2.5, 0.0, 3.5}));
+auto out = deltas.abs();
+std::cout << out;
 ```
 
 ### Output
@@ -50,10 +43,36 @@ auto out = scores.abs();
 0  2.5
 1  0
 2  3.5
+
 ptype: Series
 ```
 
+Example 2. A non-`Series` thread throws.
 
+```cpp
+auto notes = Thread(pluss::make_note({"a", "b"}));
+try {
+  auto bad = notes.abs();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread::abs is only valid for Series payload
+```
+
+## Notes
+
+- Requires the calling thread to be `Series`-kind.
+- A `NULL` cell on input stays `NULL` on output.
+
+## See Also
+
+- [`Thread::clip`](clip.md): cap values into a range, rather than stripping sign.
+- [`Thread::pow`](pow.md): more general elementwise numeric transform.
 
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="add.html">

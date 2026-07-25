@@ -749,7 +749,8 @@ Thread Thread::fillnull(const pluss::Timeline& value) const {
 }
 
 Thread Thread::fillnull(const pluss::TimeIndex& value) const {
-  PLUSS_CHECK(kind() == ThreadKind::TimeIndex, "Thread::fillnull(TimeIndex) is only valid for TimeIndex payload");
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::fillnull(TimeIndex) is only valid for Timeline/TimeIndex payload");
   PLUSS_CHECK(value.timeline().defined(), "Thread::fillnull(TimeIndex): replacement value is undefined");
   PLUSS_CHECK(value.size() == 1, "Thread::fillnull(TimeIndex): replacement value must be scalar (size == 1)");
   return fillnull(value.timeline());
@@ -1174,14 +1175,12 @@ ThreadView Thread::view(std::int64_t start, std::int64_t stop, bool render) cons
 }
 
 ThreadView Thread::top(std::int64_t n, bool render) const {
-  PLUSS_CHECK(n >= 0, "Thread::top: n must be >= 0");
   const auto clipped = std::clamp<std::int64_t>(n, 0, size());
   auto out = sort_values(false, true).slice(0, clipped);
   return ThreadView(std::move(out), render, "top");
 }
 
 ThreadView Thread::bottom(std::int64_t n, bool render) const {
-  PLUSS_CHECK(n >= 0, "Thread::bottom: n must be >= 0");
   const auto clipped = std::clamp<std::int64_t>(n, 0, size());
   auto out = sort_values(true, true).slice(0, clipped);
   return ThreadView(std::move(out), render, "bottom");
@@ -1799,7 +1798,7 @@ DataFrameView Thread::tally(std::int64_t top_n, bool dropnull, bool render) cons
     if (!is_valid && dropnull) {
       continue;
     }
-    const std::string key = is_valid ? thread_scalar_string_at(*this, i) : "NA";
+    const std::string key = is_valid ? thread_scalar_string_at(*this, i) : "NULL";
     const auto [it, inserted] = index_by_key.emplace(key, rows.size());
     if (inserted) {
       rows.push_back(TallyRow{key, 1});
@@ -1850,9 +1849,16 @@ DataFrameView Thread::tally(std::int64_t top_n, bool dropnull, bool render) cons
   return DataFrameView(std::move(out), render, "tally", "");
 }
 
-Thread Thread::freq(std::int64_t top_n, bool dropnull) const {
-  DataFrame frame = tally(top_n, dropnull, false);
-  return frame.features("count").label().set(frame.features("value")).with_display_name("freq");
+Thread detail::tally_count_thread(const Thread& thread,
+                                  std::int64_t top_n,
+                                  bool dropnull,
+                                  std::string_view display_name) {
+  DataFrame frame = thread.tally(top_n, dropnull, false);
+  auto out = frame.features("count").label().set(frame.features("value"));
+  if (!display_name.empty()) {
+    out = out.with_display_name(std::string(display_name));
+  }
+  return out;
 }
 
 ThreadValue Thread::ndistinct(bool dropnull) const {
@@ -1874,7 +1880,7 @@ Thread Thread::duplicated(bool keep_first, bool keep_last) const {
   rows_by_key.reserve(static_cast<std::size_t>(size()));
   for (std::int64_t row = 0; row < size(); ++row) {
     const bool observed = !valid.has_value() || (*valid)[static_cast<std::size_t>(row)];
-    const auto key = observed ? thread_scalar_string_at(*this, row) : std::string{"<NA>"};
+    const auto key = observed ? thread_scalar_string_at(*this, row) : std::string{"NULL"};
     rows_by_key[key].push_back(row);
   }
 
@@ -1902,7 +1908,7 @@ Thread Thread::repeated() const {
   rows_by_key.reserve(static_cast<std::size_t>(size()));
   for (std::int64_t row = 0; row < size(); ++row) {
     const bool observed = !valid.has_value() || (*valid)[static_cast<std::size_t>(row)];
-    const auto key = observed ? thread_scalar_string_at(*this, row) : std::string{"<NA>"};
+    const auto key = observed ? thread_scalar_string_at(*this, row) : std::string{"NULL"};
     rows_by_key[key].push_back(row);
   }
 
@@ -1931,10 +1937,10 @@ ThreadView Thread::describe(bool render) const {
     const auto distinct_count = distinct(/*dropnull=*/true).count(true).as_series().item<std::int64_t>();
     auto counts = tally(/*top_n=*/0, /*dropnull=*/true, /*render=*/false);
 
-    std::string top_value = "NA";
+    std::string top_value = "NULL";
     std::int64_t top_freq = 0;
     if (counts.ncases() > 0) {
-      const auto top = counts.case_study(pluss::table::pos(0), pluss::table::features({"value", "count"}));
+      const auto top = counts.case_study(DataFrame::Case::at(0), DataFrame::Feat::names({"value", "count"}));
       top_value = std::string(top.features("value").as_note().at(0));
       top_freq = std::stoll(thread_scalar_string_at(top.features("count"), 0));
     }
@@ -2265,7 +2271,7 @@ double Thread::corr(const Thread& other, ThreadCorrMethod method) const {
 }
 
 Thread Thread::lower() const {
-  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::lower is only valid for Note payload");
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::lower: expected Note payload");
   return Thread(as_note().lower(), validity_mask());
 }
 
@@ -2324,7 +2330,7 @@ std::optional<pluss::Series> nullify_matches_mask(const Thread& t, const pluss::
 } // namespace
 
 Thread Thread::replace(std::string_view from, std::string_view to) const {
-  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::replace is only valid for Note payload");
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::replace: expected Note payload");
   return Thread(as_note().replace(from, to), validity_mask());
 }
 
@@ -2472,26 +2478,32 @@ Thread Thread::replace(pluss::null_t, const pluss::Timeline& to) const {
 }
 
 Thread Thread::replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to) const {
-  PLUSS_CHECK(kind() == ThreadKind::TimeIndex,
-              "Thread::replace(TimeIndex, TimeIndex) is only valid for TimeIndex payload");
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::replace(TimeIndex, TimeIndex) is only valid for Timeline/TimeIndex payload");
   PLUSS_CHECK(from.timeline().defined(), "Thread::replace(TimeIndex, TimeIndex): from TimeIndex is undefined");
   PLUSS_CHECK(to.timeline().defined(), "Thread::replace(TimeIndex, TimeIndex): to TimeIndex is undefined");
   PLUSS_CHECK(from.size() == 1, "Thread::replace(TimeIndex, TimeIndex): from TimeIndex must be scalar");
   PLUSS_CHECK(to.size() == 1, "Thread::replace(TimeIndex, TimeIndex): to TimeIndex must be scalar");
 
   const auto keep = compare(from, ThreadBinaryCompareOp::Eq).as_series().logical_not();
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().where(keep, to.timeline()), validity_mask());
+  }
   return Thread(as_timeindex().timeline().where(keep, to.timeline()).to_timeindex(false), validity_mask());
 }
 
 Thread Thread::replace(const pluss::TimeIndex& from, pluss::null_t to) const {
-  PLUSS_CHECK(kind() == ThreadKind::TimeIndex,
-              "Thread::replace(TimeIndex, null) is only valid for TimeIndex payload");
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::replace(TimeIndex, null) is only valid for Timeline/TimeIndex payload");
   PLUSS_CHECK(from.timeline().defined(), "Thread::replace(TimeIndex, null): from TimeIndex is undefined");
   PLUSS_CHECK(from.size() == 1, "Thread::replace(TimeIndex, null): from TimeIndex must be scalar");
   bool changed = false;
   const auto new_mask = nullify_matches_mask(*this, compare(from, ThreadBinaryCompareOp::Eq).as_series(), changed);
   if (!changed) {
     return *this;
+  }
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline(), new_mask);
   }
   return Thread(as_timeindex(), new_mask);
 }
@@ -2741,6 +2753,13 @@ Thread Thread::compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) c
 
 Thread Thread::compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const {
   PLUSS_CHECK(other.timeline().defined(), "Thread::compare(TimeIndex): rhs TimeIndex is undefined");
+  if (other.size() == 1 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
+    const auto& lhs = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
+    return carry_case_labels_for_alignment_(
+        Thread(apply_compare_timeline_timeline(lhs, other.timeline(), op),
+               validity_mask()),
+        *this);
+  }
   if (other.size() != size()) {
     throw ::pluss::Error("Thread::compare(TimeIndex): positional comparison requires identical lengths");
   }
@@ -3497,24 +3516,52 @@ const pluss::Series& TimeSeriesAccessor::series_payload_(const char* op) const {
   return base_.as_series();
 }
 
+// series_payload_() hands back the raw underlying Series, with no knowledge of
+// base_'s own boolean validity mask. Methods that delegate straight to the
+// pluss::subsp::stats::ts:: free functions (which only ever see a bare Series,
+// never a Thread) would otherwise silently treat an explicitly-masked-missing
+// entry as real, valid data whenever its raw storage isn't itself NaN. This
+// helper closes that gap: it bakes base_'s validity mask into the returned
+// Series as real NaN at every invalid position (promoting to a floating dtype
+// first if needed), so downstream missingness-propagation in those free
+// functions — and the plain Thread(Series) that wraps their result — sees
+// exactly the same missing positions the source Thread does.
+pluss::Series TimeSeriesAccessor::masked_series_payload_(const char* op) const {
+  const auto& raw = series_payload_(op);
+  if (!detail::has_validity_mask(base_)) {
+    return raw;
+  }
+  const auto real_dtype = raw.dtype().is_floating()
+                               ? raw.scalar_type()
+                               : (raw.platform() == pluss::codem::Platform::MPS
+                                      ? pluss::codem::ScalarType::Float32
+                                      : pluss::codem::ScalarType::Float64);
+  auto real = raw.to(real_dtype);
+  auto mask = *detail::validity_mask(base_);
+  if (mask.platform() != real.platform()) {
+    mask = mask.to(real.platform());
+  }
+  return real.masked_fill(mask.logical_not(), std::numeric_limits<double>::quiet_NaN());
+}
+
 Thread TimeSeriesAccessor::returns(std::int64_t periods) const {
-  return Thread(pluss::subsp::stats::ts::returns(series_payload_("returns"), periods));
+  return Thread(pluss::subsp::stats::ts::returns(masked_series_payload_("returns"), periods));
 }
 
 Thread TimeSeriesAccessor::log_returns(std::int64_t periods) const {
-  return Thread(pluss::subsp::stats::ts::log_returns(series_payload_("log_returns"), periods));
+  return Thread(pluss::subsp::stats::ts::log_returns(masked_series_payload_("log_returns"), periods));
 }
 
 Thread TimeSeriesAccessor::diff(std::int64_t periods) const {
-  return Thread(pluss::subsp::stats::ts::diff(series_payload_("diff"), periods));
+  return Thread(pluss::subsp::stats::ts::diff(masked_series_payload_("diff"), periods));
 }
 
 Thread TimeSeriesAccessor::lag(std::int64_t periods) const {
-  return Thread(pluss::subsp::stats::ts::lag(series_payload_("lag"), periods));
+  return Thread(pluss::subsp::stats::ts::lag(masked_series_payload_("lag"), periods));
 }
 
 Thread TimeSeriesAccessor::lead(std::int64_t periods) const {
-  return Thread(pluss::subsp::stats::ts::lead(series_payload_("lead"), periods));
+  return Thread(pluss::subsp::stats::ts::lead(masked_series_payload_("lead"), periods));
 }
 
 Thread TimeSeriesAccessor::rolling(
@@ -3580,11 +3627,11 @@ Thread TimeSeriesAccessor::ewm(
 
 Thread TimeSeriesAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods, double epsilon) const {
   return Thread(pluss::subsp::stats::ts::zscore_rolling(
-      series_payload_("zscore_rolling"), window, min_periods, epsilon));
+      masked_series_payload_("zscore_rolling"), window, min_periods, epsilon));
 }
 
 Thread TimeSeriesAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode, std::optional<double> constant) const {
-  return Thread(pluss::subsp::stats::ts::fill_gaps(series_payload_("fill_gaps"), mode, constant));
+  return Thread(pluss::subsp::stats::ts::fill_gaps(masked_series_payload_("fill_gaps"), mode, constant));
 }
 
 Thread TimeSeriesAccessor::align_to(const Thread& source_axis,
@@ -3609,7 +3656,7 @@ Thread TimeSeriesAccessor::align_to(const Thread& source_axis,
 
 DataFrame TimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) const {
   PLUSS_CHECK(lags.size() > 0, "TimeSeriesAccessor::lag_block: expected at least one lag");
-  const auto& series = series_payload_("lag_block");
+  const auto series = masked_series_payload_("lag_block");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(lags.size());
   for (const auto lag : lags) {
@@ -3621,7 +3668,7 @@ DataFrame TimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) cons
 DataFrame TimeSeriesAccessor::rolling_block(pluss::msharp::RangeView::Int windows,
                                             const TsRollingBlockOptions& options) const {
   PLUSS_CHECK(windows.size() > 0, "TimeSeriesAccessor::rolling_block: expected at least one window");
-  const auto& series = series_payload_("rolling_block");
+  const auto series = masked_series_payload_("rolling_block");
   std::vector<std::pair<std::string, Thread>> out;
   for (const auto w : windows) {
     if (options.include_mean) {
@@ -3701,7 +3748,7 @@ TimeSeriesResample TimeSeriesAccessor::resample(
       op == pluss::subsp::stats::ts::ResampleOp::Count
           ? time_index.resample_sum(base_.notnull().as_series().to(pluss::codem::ScalarType::Int64), options)
           : time_index.resample_agg(
-                series_payload_("resample"),
+                masked_series_payload_("resample"),
                 options,
                 time_series_resample_op_key_(op));
   return TimeSeriesResample{

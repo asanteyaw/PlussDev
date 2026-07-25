@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameTimelineAccessor API Reference" href="../../dataframe_timeline_accessor_api_reference.html" />
@@ -36,18 +36,35 @@
 
           <div class="body" role="main">
             
-  <section id="dataframenoteaccessor-upper">
+  <!-- pluss-hand-authored -->
+<section id="dataframenoteaccessor-upper">
 <h1>DataFrameNoteAccessor::upper<a class="headerlink" href="#dataframenoteaccessor-upper" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">upper</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">upper</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Uppercases every character in every selected text feature’s cells, returning
+a new frame — the mirror image of <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>. Common uses include
+normalizing free-typed codes or abbreviations (<code class="docutils literal notranslate"><span class="pre">&quot;gh&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Gh&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;GH&quot;</span></code> all
+becoming <code class="docutils literal notranslate"><span class="pre">&quot;GH&quot;</span></code>) before comparing or grouping by them, or matching a display
+convention that expects codes in all caps.</p>
+<p>Like every method on this accessor, <code class="docutils literal notranslate"><span class="pre">upper()</span></code> applies to <strong>every feature the
+accessor was built with</strong> in one call — see <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a> for the
+full explanation of that shared mechanic and how null cells pass through
+unaffected.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>ASCII vs. Unicode case mapping
+Exactly the same caveat as <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>: on ASCII text, <code class="docutils literal notranslate"><span class="pre">A</span></code>-<code class="docutils literal notranslate"><span class="pre">Z</span></code>
+mapping is unambiguous and always available; correct handling of accented or
+non-Latin uppercase mapping depends on whether this build links the optional
+Unicode backend (GNU libunistring).</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,34 +73,70 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with every selected feature’s text uppercased; every
+non-alphabetic character is left exactly as it was.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<p>Example 1. Uppercase two text features in one call, with a null cell
+preserved.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">upper</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;gh-001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Gh-002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;GH-003&quot;</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p3&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">upper</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | city   code  
+--------------------
+p1   | ACCRA  GH-001
+p2   | TEMA   GH-002
+p3   | NULL   GH-003
+--------------------
+[3 cs x 2 feat]
 </pre></div>
 </div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">city</span></code> and <code class="docutils literal notranslate"><span class="pre">code</span></code> are uppercased in the same call. <code class="docutils literal notranslate"><span class="pre">p3</span></code>’s <code class="docutils literal notranslate"><span class="pre">city</span></code> cell was
+constructed invalid; it stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rather than becoming <code class="docutils literal notranslate"><span class="pre">&quot;KUMASI&quot;</span></code>. The
+hyphens and digits in <code class="docutils literal notranslate"><span class="pre">code</span></code> are untouched throughout, since <code class="docutils literal notranslate"><span class="pre">upper()</span></code> only
+ever changes letters — exactly the same guarantee <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>
+makes, in the opposite direction.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Applies to every feature the accessor was built with, in one call — see
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>’s Notes for the mechanics shared by every method on
+this accessor.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>For the opposite transform, see <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::lower</span></code></span></a>: the inverse transform.</p></li>
+<li><p><a class="reference internal" href="casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::casefold</span></code></span></a>: case folding intended for
+comparison rather than display.</p></li>
+<li><p><a class="reference internal" href="titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::titlecase</span></code></span></a>: capitalize just the
+first letter of each word instead of every letter.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="titlecase.html">
     <span class="label">Previous</span>
     <span class="title">titlecase</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

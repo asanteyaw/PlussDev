@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::prod" href="prod.html" />
@@ -36,57 +36,90 @@
 
           <div class="body" role="main">
             
-  <section id="thread-pow">
+  <!-- pluss-hand-authored -->
+<section id="thread-pow">
 <h1>Thread::pow<a class="headerlink" href="#thread-pow" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This applies arithmetic across the compatible numeric payloads in the current object.</p>
+<p>Elementwise exponentiation, computed via <code class="docutils literal notranslate"><span class="pre">std::pow</span></code> after promoting both operands to
+<code class="docutils literal notranslate"><span class="pre">Float64</span></code>. Follows <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s shared mechanics (positional matching,
+length-mismatch throw, no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload support). This reference sticks to positive
+bases and small exponents throughout — <code class="docutils literal notranslate"><span class="pre">std::pow</span></code>’s behavior for negative bases with
+fractional exponents (which can produce <code class="docutils literal notranslate"><span class="pre">NaN</span></code>) isn’t exercised here.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>The exponent(s). For the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload, must be the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Float64</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise power.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">pow</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">}));</span>
+<p>Example 1. Raise every value to the same scalar power.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">3.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  8
+1  27
+2  64
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Apply <code class="docutils literal notranslate"><span class="pre">pow</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<p><code class="docutils literal notranslate"><span class="pre">2^3</span> <span class="pre">=</span> <span class="pre">8</span></code>, <code class="docutils literal notranslate"><span class="pre">3^3</span> <span class="pre">=</span> <span class="pre">27</span></code>, <code class="docutils literal notranslate"><span class="pre">4^3</span> <span class="pre">=</span> <span class="pre">64</span></code>.</p>
+<p>Example 2. Raise each value to its own exponent, positionally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">exps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="n">exps</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2
+1  9
+2  64
+ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">2^1</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">3^2</span> <span class="pre">=</span> <span class="pre">9</span></code>, <code class="docutils literal notranslate"><span class="pre">4^3</span> <span class="pre">=</span> <span class="pre">64</span></code> — each base raised to its own matching exponent.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> for the family-wide mechanics: positional matching and the
+length-mismatch throw (here, <code class="docutils literal notranslate"><span class="pre">&quot;Thread::pow:</span> <span class="pre">operand</span> <span class="pre">length</span> <span class="pre">mismatch&quot;</span></code> for the
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload’s internal check, distinct from the generic
+<code class="docutils literal notranslate"><span class="pre">&quot;positional</span> <span class="pre">operation</span> <span class="pre">requires</span> <span class="pre">identical</span> <span class="pre">lengths&quot;</span></code> message the rest of the family
+uses).</p></li>
+<li><p>No <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload special case — <code class="docutils literal notranslate"><span class="pre">pow()</span></code> requires numeric threads only.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rpow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rpow</span></code></span></a>: the reflected form.</p></li>
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::add</span></code></span></a>: the canonical reference for this family’s shared
+mechanics.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="percentiles.html">
     <span class="label">Previous</span>
@@ -97,7 +130,6 @@ Value produced by this call.</p>
     <span class="title">prod</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

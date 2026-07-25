@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     fs::create_directories(model_dir);
 
     const DataFrame raw = DataFrame::load_csv(data_path.string(), {{"ncases", ncases}});
-    auto frame = raw.rename_features({
+    auto frame = raw.rename({
         {"dteday", "date"},
         {"holiday", "is_holiday"},
         {"workingday", "is_workingday"},
@@ -144,7 +144,6 @@ int main(int argc, char** argv) {
     std::cout << "best candidate: " << tuned.report.best_name << "\n";
 
     auto best = std::move(tuned.best_workflow);
-    best.learn_(train_x, train_y, train_options);
     const auto test_metrics = best.assess(test_x, test_y, assess_options);
     std::cout << "test metrics [rmse, r2, mae]: " << test_metrics.rmse << " " << test_metrics.r2 << " " << test_metrics.mae << "\n";
 

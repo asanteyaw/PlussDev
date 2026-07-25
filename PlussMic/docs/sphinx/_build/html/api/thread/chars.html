@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::clear_display_name" href="clear_display_name.html" />
@@ -36,71 +36,208 @@
 
           <div class="body" role="main">
             
-  <section id="thread-chars">
+  <!-- pluss-hand-authored -->
+<section id="thread-chars">
 <h1>Thread::chars<a class="headerlink" href="#thread-chars" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">chars</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">chars</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span>
+<span class="w">              </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span>
+<span class="w">              </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Slice characters out of each note-backed text entry.</p>
-<p>This is the per-entry string-slicing surface for text threads.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Slices every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread the same way Python slices a string —
+<code class="docutils literal notranslate"><span class="pre">chars(start,</span> <span class="pre">stop,</span> <span class="pre">step)</span></code> mirrors <code class="docutils literal notranslate"><span class="pre">s[start:stop:step]</span></code> exactly, including negative
+indices (counted from the end) and a negative step (walking the string backwards).
+Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Each cell is split into individual characters
+(Unicode codepoints, the same unit <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a> counts), the slice is
+applied per-cell using that cell’s own length, and the selected characters are
+rejoined into the output string.</p>
+<p>Because the slice bounds are evaluated per-cell using each cell’s own length, cells of
+different lengths in the same thread can each keep a different <em>number</em> of characters
+from the same <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">stop,</span> <span class="pre">step)</span></code> call — exactly as it would if you ran the
+equivalent Python slice separately over each string.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>start</strong></p>
-<p>Inclusive starting character position.</p>
-<p><strong>stop</strong></p>
-<p>Optional exclusive ending position.</p>
-<p>Leave this empty to slice to the end of each string.</p>
-<p><strong>step</strong></p>
-<p>Character stride.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: keep every character in the requested window.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code>: keep every second character, and so on.</p></li>
-</ul>
+<p><strong>start</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+Index of the first character to include. Negative values count from the end of
+the cell (<code class="docutils literal notranslate"><span class="pre">-1</span></code> is the last character). Out-of-range values are clamped, never
+throw.</p>
+<p><strong>stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::int64_t&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Index one past the last character to include (exclusive), or the point to stop
+just before when walking backwards. When omitted, defaults to “the end of the
+string” if <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, or “all the way to the start” if <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> — i.e.,
+<code class="docutils literal notranslate"><span class="pre">chars(0)</span></code> returns the whole cell and <code class="docutils literal notranslate"><span class="pre">chars(-1,</span> <span class="pre">std::nullopt,</span> <span class="pre">-1)</span></code> reverses it.</p>
+<p><strong>step</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+Stride between characters. <code class="docutils literal notranslate"><span class="pre">1</span></code> takes every character in order; <code class="docutils literal notranslate"><span class="pre">2</span></code> takes every
+other character; a negative step walks backwards. Must not be <code class="docutils literal notranslate"><span class="pre">0</span></code> —
+<code class="docutils literal notranslate"><span class="pre">chars(0,</span> <span class="pre">std::nullopt,</span> <span class="pre">0)</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::chars:</span> <span class="pre">step</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">zero&quot;</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Note-backed thread containing the extracted character slices.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the sliced text.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Take the leading code letter from each text value.</p>
+<p>The examples below share one input thread:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A-001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B-002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C-003&quot;</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;hello world&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ab&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">words</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  A
-1  B
-2  C
+<section id="output-before-shared-by-every-example">
+<h3>Output (before, shared by every example)<a class="headerlink" href="#output-before-shared-by-every-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  hello world
+1  Accra
+2  ab
+3  NULL
+
 ptype: Note
 </pre></div>
 </div>
-<p>Example 2. Take every second character from the beginning to the end.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<p>Example 1. A plain forward range: <code class="docutils literal notranslate"><span class="pre">chars(0,</span> <span class="pre">5)</span></code> keeps the first five characters of
+each cell (or fewer, if the cell is shorter).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  hello
+1  Accra
+2  ab
+3  NULL
 
-<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A-001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B-002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C-003&quot;</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+ptype: Note
+</pre></div>
+</div>
+<p>Row 0’s first five characters are <code class="docutils literal notranslate"><span class="pre">&quot;hello&quot;</span></code>. Row 1 (<code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>, exactly five
+characters) comes back unchanged. Row 2 (<code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;</span></code>, only two characters) is also
+unchanged — <code class="docutils literal notranslate"><span class="pre">stop</span></code> is clamped to the cell’s own length rather than padding or
+erroring. Row 3 is invalid and stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 2. A negative <code class="docutils literal notranslate"><span class="pre">start</span></code> counts from the end: <code class="docutils literal notranslate"><span class="pre">chars(-5)</span></code> keeps the last five
+characters of each cell (with <code class="docutils literal notranslate"><span class="pre">stop</span></code> defaulted to “the end”).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">-5</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  A01
-1  B02
-2  C03
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  world
+1  Accra
+2  ab
+3  NULL
+
 ptype: Note
 </pre></div>
 </div>
+<p>Row 0’s last five characters are <code class="docutils literal notranslate"><span class="pre">&quot;world&quot;</span></code>. Row 1, exactly five characters long, is
+unchanged (<code class="docutils literal notranslate"><span class="pre">-5</span></code> resolves to index 0). Row 2, only two characters long, is also
+unchanged — <code class="docutils literal notranslate"><span class="pre">-5</span></code> clamps to index 0 once it’s out of range.</p>
+<p>Example 3. A negative <code class="docutils literal notranslate"><span class="pre">step</span></code> walks backwards — <code class="docutils literal notranslate"><span class="pre">chars(-1,</span> <span class="pre">std::nullopt,</span> <span class="pre">-1)</span></code> is the
+idiomatic way to reverse a string with this method, exactly like Python’s <code class="docutils literal notranslate"><span class="pre">s[::-1]</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  dlrow olleh
+1  arccA
+2  ba
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+<p>Every valid cell comes back fully reversed, character by character (including the
+space in row 0, which reverses along with the letters around it).</p>
+<p>Example 4. A <code class="docutils literal notranslate"><span class="pre">step</span></code> greater than 1 takes every Nth character — <code class="docutils literal notranslate"><span class="pre">chars(0,</span> <span class="pre">std::nullopt,</span> <span class="pre">2)</span></code> keeps every other character starting from the first.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  hlowrd
+1  Aca
+2  a
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+<p>Row 0 keeps characters at positions 0, 2, 4, 6, 8, 10 (<code class="docutils literal notranslate"><span class="pre">h</span></code>, <code class="docutils literal notranslate"><span class="pre">l</span></code>, <code class="docutils literal notranslate"><span class="pre">o</span></code>, <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r</span></code>, <code class="docutils literal notranslate"><span class="pre">d</span></code>) —
+the space at position 5 is skipped since it falls on an odd index. Row 2 (<code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;</span></code>)
+keeps just position 0 (<code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code>); position 2 is past the end of a two-character string,
+so the stride stops there.</p>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">=</span> <span class="pre">0</span></code> throws — there’s no sensible stride of zero.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::chars: step cannot be zero
+</pre></div>
+</div>
+<p>Example 6. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">chars</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::chars: expected Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Slices by Unicode codepoint, the same unit <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a> counts.</p></li>
+<li><p>Out-of-range <code class="docutils literal notranslate"><span class="pre">start</span></code>/<code class="docutils literal notranslate"><span class="pre">stop</span></code> values are clamped rather than throwing — only
+<code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">0</span></code> throws.</p></li>
+<li><p>Bounds are evaluated per-cell against that cell’s own length, so a single call can
+keep a different number of characters from cells of different lengths (Examples 1
+and 2).</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::length</span></code></span></a>: the character count that <code class="docutils literal notranslate"><span class="pre">chars()</span></code>’s implicit
+bounds (and any manual slicing math) are computed against.</p></li>
+<li><p><a class="reference internal" href="pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::pad</span></code></span></a>: the complementary operation — grow a cell to a target
+width instead of slicing it down.</p></li>
+<li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::split</span></code></span></a> / <a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::partition</span></code></span></a>: delimiter-based
+ways to break a cell into pieces, instead of position-based.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="cast.html">
     <span class="label">Previous</span>
@@ -111,7 +248,6 @@ ptype: Note
     <span class="title">clear_display_name</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

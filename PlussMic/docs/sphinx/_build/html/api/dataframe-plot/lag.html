@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFramePlotAccessor::lag &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFramePlotAccessor::line" href="line.html" />
+    <link rel="prev" title="DataFramePlotAccessor::hist" href="hist.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframeplotaccessor-lag">
+<h1>DataFramePlotAccessor::lag<a class="headerlink" href="#dataframeplotaccessor-lag" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">lag</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">LagPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws a lag plot for one numeric feature: a scatter of <code class="docutils literal notranslate"><span class="pre">x(t)</span></code> against <code class="docutils literal notranslate"><span class="pre">x(t</span> <span class="pre">+</span> <span class="pre">lag)</span></code> — each
+point’s horizontal position is a value from the series, and its vertical position is the
+value <code class="docutils literal notranslate"><span class="pre">lag</span></code> steps later in the same series. A cloud of points scattered along the diagonal
+suggests strong positive autocorrelation at that lag; a cloud with no visible structure
+suggests the series behaves close to random noise at that lag. This is the single-lag,
+scatter-based sibling of <a class="reference internal" href="act.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">act()</span></code></span></a>, which instead sweeps every lag and reduces each
+one to a single correlation coefficient.</p>
+<p>Shares the single-feature resolution rule with <a class="reference internal" href="act.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">act()</span></code></span></a> and
+<a class="reference internal" href="bootstrap.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bootstrap()</span></code></span></a>: the named feature must resolve to exactly one numeric
+(<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind) feature — see <a class="reference internal" href="act.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">act()</span></code></span></a>’s callout for the exact throw text.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At least two data points are required
+A feature with fewer than two rows throws <code class="docutils literal notranslate"><span class="pre">&quot;flash::lagplot</span> <span class="pre">requires</span> <span class="pre">at</span> <span class="pre">least</span> <span class="pre">two</span> <span class="pre">points&quot;</span></code>.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The single numeric feature to lag against itself. Must resolve to a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
+feature — see <a class="reference internal" href="act.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">act()</span></code></span></a>’s shared-diagnostics note.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LagPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">LagPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">std::int64_t</span> <span class="pre">lag{1};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">std::int64_t</span> <span class="pre">max_points{2500};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">marker_area{16.0};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">float</span> <span class="pre">trace_width{0.55F};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">lag</span></code> is clamped internally to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">1]</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the feature’s row count — a
+<code class="docutils literal notranslate"><span class="pre">lag</span></code> of <code class="docutils literal notranslate"><span class="pre">0</span></code> or larger than the data supports is silently clamped rather than throwing.
+Given <code class="docutils literal notranslate"><span class="pre">n</span></code> rows and a clamped <code class="docutils literal notranslate"><span class="pre">lag</span></code>, <code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">lag</span></code> points are plotted: the point at
+index <code class="docutils literal notranslate"><span class="pre">i</span></code> (for <code class="docutils literal notranslate"><span class="pre">i</span></code> in <code class="docutils literal notranslate"><span class="pre">0..usable</span></code>) is <code class="docutils literal notranslate"><span class="pre">(x[i],</span> <span class="pre">x[i</span> <span class="pre">+</span> <span class="pre">lag])</span></code>. <code class="docutils literal notranslate"><span class="pre">max_points</span></code> caps how many of
+these <code class="docutils literal notranslate"><span class="pre">usable</span></code> points are actually drawn — when <code class="docutils literal notranslate"><span class="pre">usable</span></code> exceeds <code class="docutils literal notranslate"><span class="pre">max_points</span></code>, points are
+subsampled at a stride (not randomly chosen) so the count stays within budget while still
+spanning the full range. <code class="docutils literal notranslate"><span class="pre">marker_area</span></code> and <code class="docutils literal notranslate"><span class="pre">trace_width</span></code> control point size and marker
+outline width respectively (<code class="docutils literal notranslate"><span class="pre">marker_area</span></code> is floored to a minimum of <code class="docutils literal notranslate"><span class="pre">2.0</span></code>).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing a single scatter (“cloud”) trace of <code class="docutils literal notranslate"><span class="pre">x(t)</span></code> vs.
+<code class="docutils literal notranslate"><span class="pre">x(t</span> <span class="pre">+</span> <span class="pre">lag)</span></code>, axis-labeled <code class="docutils literal notranslate"><span class="pre">&quot;x(t)&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;x(t</span> <span class="pre">+</span> <span class="pre">lag)&quot;</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default options (<code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">1</span></code>): each point compares a value to the very next one in
+the series.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.5</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.8</span><span class="p">,</span><span class="w"> </span><span class="mf">11.2</span><span class="p">,</span><span class="w"> </span><span class="mf">11.5</span><span class="p">,</span><span class="w"> </span><span class="mf">11.3</span><span class="p">,</span><span class="w"> </span><span class="mf">11.8</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;level_lag1.svg&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">8</span></code> rows and <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">7</span></code> points are plotted: <code class="docutils literal notranslate"><span class="pre">(10.0,</span> <span class="pre">10.5)</span></code>, <code class="docutils literal notranslate"><span class="pre">(10.5,</span> <span class="pre">11.0)</span></code>, …, <code class="docutils literal notranslate"><span class="pre">(11.3,</span> <span class="pre">11.8)</span></code> — a tight, mostly increasing sequence suggests strong positive
+lag-1 autocorrelation.</p>
+<p>Example 2. An explicit <code class="docutils literal notranslate"><span class="pre">LagPlotOptions</span></code> with a larger lag.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">8</span> <span class="pre">-</span> <span class="pre">3</span> <span class="pre">=</span> <span class="pre">5</span></code> points are plotted: <code class="docutils literal notranslate"><span class="pre">(10.0,</span> <span class="pre">10.8)</span></code>, <code class="docutils literal notranslate"><span class="pre">(10.5,</span> <span class="pre">11.2)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">(11.0,</span> <span class="pre">11.5)</span></code>, <code class="docutils literal notranslate"><span class="pre">(10.8,</span> <span class="pre">11.3)</span></code>, <code class="docutils literal notranslate"><span class="pre">(11.2,</span> <span class="pre">11.8)</span></code>.</p>
+<p>Example 3. A <code class="docutils literal notranslate"><span class="pre">lag</span></code> request larger than the data supports is silently clamped, not thrown.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">oversized</span><span class="p">;</span>
+<span class="n">oversized</span><span class="p">.</span><span class="n">lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">oversized</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>With only 8 rows, <code class="docutils literal notranslate"><span class="pre">lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">7</span></code>, leaving exactly one usable point: <code class="docutils literal notranslate"><span class="pre">(x[0],</span> <span class="pre">x[7])</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(10.0,</span> <span class="pre">11.8)</span></code>.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">max_points</span></code> subsampling on a larger series.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">long_series</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5000</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">long_series</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">50</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.01</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">big</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;trend&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">long_series</span><span class="p">))},</span>
+<span class="p">});</span>
+
+<span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">capped</span><span class="p">;</span>
+<span class="n">capped</span><span class="p">.</span><span class="n">max_points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">500</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">big</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;trend&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">capped</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;trend_lag.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">4999</span></code> points would otherwise be plotted; capped to roughly <code class="docutils literal notranslate"><span class="pre">500</span></code> by taking every
+10th point (<code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">=</span> <span class="pre">ceil(4999</span> <span class="pre">/</span> <span class="pre">500)</span> <span class="pre">=</span> <span class="pre">10</span></code>), not a random sample.</p>
+<p>Example 5. Larger markers and a thicker outline.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">styled</span><span class="p">;</span>
+<span class="n">styled</span><span class="p">.</span><span class="n">marker_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">40.0</span><span class="p">;</span>
+<span class="n">styled</span><span class="p">.</span><span class="n">trace_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.5F</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">styled</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;level_lag_styled.png&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example 6. Fewer than two rows throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">single_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">single_row</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>flash::lagplot requires at least two points
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code> must resolve to exactly one numeric feature — see <a class="reference internal" href="act.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">act()</span></code></span></a>’s shared
+note.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">1]</span></code>, never throwing for an out-of-range request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_points</span></code> subsamples by stride, not randomly, when <code class="docutils literal notranslate"><span class="pre">usable</span></code> exceeds it.</p></li>
+<li><p>A feature with fewer than two rows throws before any point is drawn.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="act.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::act</span></code></span></a>: every lag’s correlation coefficient at once,
+instead of one lag’s raw scatter.</p></li>
+<li><p><a class="reference internal" href="bootstrap.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::bootstrap</span></code></span></a>: another single-feature diagnostic,
+based on resampling rather than lags.</p></li>
+<li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::scatter</span></code></span></a>: the general-purpose two-feature scatter
+this method specializes for a series against its own lagged copy.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="hist.html">
+    <span class="label">Previous</span>
+    <span class="title">hist</span>
+  </a>
+  <a class="next-link" href="line.html">
+    <span class="label">Next</span>
+    <span class="title">line</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="hist.html" title="previous chapter">DataFramePlotAccessor::hist</a></li>
+      <li>Next: <a href="line.html" title="next chapter">DataFramePlotAccessor::line</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-plot/lag.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -74,6 +74,28 @@ r    | true   true
 The values match [`left.lxor(right)`](lxor.md) exactly, and the case labels are
 `left`'s own (`p, q, r`) — `right`'s labels (`x, y, z`) never appear in the result.
 
+Example 2. XOR against a single shared `Thread`, applied identically to every
+feature — same result as [`left.lxor(mask)`](lxor.md).
+
+```cpp
+auto mask = Thread(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_thread = left.rxor(mask);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+===================
+     | a     b    
+-------------------
+p    | true  true 
+q    | true  false
+r    | true  false
+-------------------
+[3 cs x 2 feat]
+```
+
 ## Notes
 
 - `rxor()` and [`lxor()`](lxor.md) are fully interchangeable for `DataFrame`

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::filter" href="filter.html" />
@@ -58,55 +58,54 @@ strategies (forward-fill, backward-fill, a per-feature value) through a <code cl
 <code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code> is deliberately narrower and blunter: pick the overload matching a
 column <em>kind</em>, and it fills <strong>every</strong> feature of that kind on the frame with the same
 scalar <code class="docutils literal notranslate"><span class="pre">value</span></code>, mutating the frame directly and returning <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference.</p>
-<p>```{important} There is no <code class="docutils literal notranslate"><span class="pre">features</span></code> parameter
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>There is no features parameter
 Unlike <code class="docutils literal notranslate"><span class="pre">fillnull()</span></code>, none of the <code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code> overloads accept a feature list. Calling
 <code class="docutils literal notranslate"><span class="pre">df.fillnull_(0.0)</span></code> fills every <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature’s nulls with <code class="docutils literal notranslate"><span class="pre">0.0</span></code> — you cannot target
 just one numeric column with this method. If you need a single-feature fill, either use
 <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a> with an explicit <code class="docutils literal notranslate"><span class="pre">features</span></code> list, or reassign the one column
 directly (<code class="docutils literal notranslate"><span class="pre">df.features(&quot;price&quot;).fillnull(0.0)</span></code> and splice it back with
 <a class="reference internal" href="insert.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">insert()</span></code></span></a> / <a class="reference internal" href="place.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">place()</span></code></span></a>).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-Each overload only touches features of the matching kind:
+</div>
+<p>Each overload only touches features of the matching kind:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(double)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(std::string_view)</span></code> / <code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">char*)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">pluss::Timeline&amp;)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">pluss::TimeIndex&amp;)</span></code>: every <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature.</p></li>
+</ul>
+<p>A feature of a <em>different</em> kind than the overload you called is left completely
+untouched — calling <code class="docutils literal notranslate"><span class="pre">fillnull_(0.0)</span></code> never affects a <code class="docutils literal notranslate"><span class="pre">Note</span></code> column, even if that
+column also has missing values.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>value</strong></p>
+<p>The replacement value, in whichever type matches the overload: a <code class="docutils literal notranslate"><span class="pre">double</span></code> for numeric
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> features, a string for <code class="docutils literal notranslate"><span class="pre">Note</span></code> features, or a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> / <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> scalar
+for those respective feature kinds. The same <code class="docutils literal notranslate"><span class="pre">value</span></code> is used for every matching
+feature on the frame — there is no per-feature value list.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame&amp;</span></code>
+A reference to the same frame, now mutated in place. Every feature of the matching
+kind has had its nulls replaced; every feature of a different kind is unchanged.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Fill every numeric feature’s nulls with <code class="docutils literal notranslate"><span class="pre">0.0</span></code> in one call — note that both
+numeric columns are affected, not just one.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-- `fillnull_(double)`: every `Series` feature.
-- `fillnull_(std::string_view)` / `fillnull_(const char*)`: every `Note` feature.
-- `fillnull_(const pluss::Timeline&amp;)`: every `Timeline` feature.
-- `fillnull_(const pluss::TimeIndex&amp;)`: every `TimeIndex` feature.
-
-A feature of a *different* kind than the overload you called is left completely
-untouched — calling `fillnull_(0.0)` never affects a `Note` column, even if that
-column also has missing values.
-
-## Parameters
-
-**value**
-
-The replacement value, in whichever type matches the overload: a `double` for numeric
-`Series` features, a string for `Note` features, or a `Timeline` / `TimeIndex` scalar
-for those respective feature kinds. The same `value` is used for every matching
-feature on the frame — there is no per-feature value list.
-
-## Returns
-
-`DataFrame&amp;`
-    A reference to the same frame, now mutated in place. Every feature of the matching
-    kind has had its nulls replaced; every feature of a different kind is unchanged.
-
-## Examples
-
-Example 1. Fill every numeric feature&#39;s nulls with `0.0` in one call — note that both
-numeric columns are affected, not just one.
-
-```cpp
-using namespace pluss::table;
-
-auto readings = DataFrame({
-    {&quot;temp&quot;,     Thread(pluss::make_series({68.5, std::numeric_limits&lt;double&gt;::quiet_NaN(), 71.2}),
-                        pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
-    {&quot;humidity&quot;, Thread(pluss::make_series({30.0, 40.0, std::numeric_limits&lt;double&gt;::quiet_NaN()}),
-                        pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
-});
-std::cout &lt;&lt; readings;
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;temp&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">68.5</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">71.2</span><span class="p">}),</span>
+<span class="w">                        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}),</span>
+<span class="w">                        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output-before">

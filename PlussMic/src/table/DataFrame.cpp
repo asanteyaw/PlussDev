@@ -157,6 +157,13 @@ struct CaseAxisLevel {
 
 struct CaseAxis {
   std::vector<CaseAxisLevel> levels{};
+  // The separator used to join levels[*].values into the composite displayed
+  // case label. Preserved across operations that rebuild that composite
+  // string from the levels (order_caselbls, drop_caselbls, structured
+  // DataFrameLabelAccessor::cast) so a custom separator passed to
+  // DataFrame::set_caselbl(...) survives them, instead of silently reverting
+  // to the library default.
+  std::string separator{"\x1F"};
 
   bool defined() const noexcept { return !levels.empty(); }
 };
@@ -421,7 +428,7 @@ std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
   if (detail::has_validity_mask(t)) {
     const auto valid = detail::validity_mask(t)->to_vec<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
-      return "NA";
+      return "NULL";
     }
   }
 
@@ -2300,18 +2307,6 @@ double quantile_sorted(const std::vector<double>& sorted, double q) {
   }
   const double w = pos - static_cast<double>(lo);
   return sorted[lo] * (1.0 - w) + sorted[hi] * w;
-}
-
-std::int64_t normalize_view_start(std::int64_t start, std::int64_t nrows) {
-  const std::int64_t s = start < 0 ? nrows + start : start;
-  return std::clamp<std::int64_t>(s, 0, nrows);
-}
-
-std::int64_t normalize_view_stop(std::int64_t stop, std::int64_t nrows) {
-  // Positive stop is exclusive. Negative stop is interpreted as inclusive-from-end
-  // so `view(-5, -1)` includes the last row.
-  const std::int64_t e = stop < 0 ? (nrows + stop + 1) : stop;
-  return std::clamp<std::int64_t>(e, 0, nrows);
 }
 
 } // namespace

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::encode" href="encode.html" />
@@ -36,44 +36,56 @@
 
           <div class="body" role="main">
             
-  <section id="thread-duplicated">
+  <!-- pluss-hand-authored -->
+<section id="thread-duplicated">
 <h1>Thread::duplicated<a class="headerlink" href="#thread-duplicated" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">duplicated</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">duplicated</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Build a boolean mask that marks duplicate entries.</p>
-<p>This is the thread-level inspection route behind duplicate-aware filtering and counting workflows.</p>
-<p>It tells you which entries are duplicate followers under the keep policy you selected.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns a boolean thread, the same length as the source, marking which entries
+are duplicate <em>followers</em> of an earlier (or later) occurrence — one designated
+occurrence per distinct value is left <code class="docutils literal notranslate"><span class="pre">false</span></code> (the “survivor”), and every other
+occurrence of that value is marked <code class="docutils literal notranslate"><span class="pre">true</span></code>. Which occurrence survives is
+controlled by <code class="docutils literal notranslate"><span class="pre">keep_first</span></code>/<code class="docutils literal notranslate"><span class="pre">keep_last</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">keep_first</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default): the <em>first</em> occurrence of each value is
+the survivor; every later repeat is marked <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keep_last</span> <span class="pre">=</span> <span class="pre">true</span></code>: the <em>last</em> occurrence is the survivor instead; every
+earlier repeat is marked <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">keep_first</span></code> and <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> cannot both be <code class="docutils literal notranslate"><span class="pre">true</span></code> — that throws. A value that
+appears only once is never marked, regardless of the policy. This method only
+<em>reports</em> duplicate membership — it never removes or reorders anything itself;
+pass the result to <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a> to actually drop the flagged rows.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>keep_first</strong></p>
-<p>Whether the first observed occurrence in each duplicate group should be treated as the surviving reference entry.</p>
-<p>With the default keep-first route, the first appearance of a value stays unmarked and later repeats are marked duplicate.</p>
-<p><strong>keep_last</strong></p>
-<p>Whether the last observed occurrence in each duplicate group should be treated as the surviving reference entry instead.</p>
-<p>With this route, earlier repeats are marked duplicate and the final appearance is left unmarked.</p>
+<p><strong>keep_first</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+Treat each value’s first occurrence as the survivor (left <code class="docutils literal notranslate"><span class="pre">false</span></code>).</p>
+<p><strong>keep_last</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)
+Treat each value’s last occurrence as the survivor (left <code class="docutils literal notranslate"><span class="pre">false</span></code>) instead.
+Cannot be <code class="docutils literal notranslate"><span class="pre">true</span></code> at the same time as <code class="docutils literal notranslate"><span class="pre">keep_first</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Boolean-like thread with one value per entry indicating duplicate membership.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>The returned mask has the same length as the source thread, so it can be inspected directly or reused in later boolean-style filtering logic.</p>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated(...)</span></code> reports duplicate membership only. It never removes entries by itself.</p>
+A boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>, same length as the source, <code class="docutils literal notranslate"><span class="pre">true</span></code> at every non-survivor
+duplicate position.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Mark duplicates while keeping the first occurrence as the survivor.</p>
+<p>Example 1. Default policy — keep the first occurrence of each value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))</span>
-<span class="w">               </span><span class="p">.</span><span class="n">duplicated</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">duplicated</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -83,14 +95,16 @@ Boolean-like thread with one value per entry indicating duplicate membership.</p
 2  true
 3  false
 4  true
+
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Switch to a keep-last duplicate policy.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))</span>
-<span class="w">               </span><span class="p">.</span><span class="n">duplicated</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<p>Positions <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> (the first <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> and first <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code>) stay <code class="docutils literal notranslate"><span class="pre">false</span></code>;
+their later repeats at <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">4</span></code> are flagged <code class="docutils literal notranslate"><span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;Kumasi&quot;</span></code> (unique) is
+never flagged.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">keep_last</span> <span class="pre">=</span> <span class="pre">true</span></code> flips which occurrence survives.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">duplicated</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -101,9 +115,50 @@ ptype: Series
 2  false
 3  false
 4  false
+
 ptype: Series
 </pre></div>
 </div>
+<p>Now the <em>last</em> <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> (position <code class="docutils literal notranslate"><span class="pre">2</span></code>) and last <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> (position <code class="docutils literal notranslate"><span class="pre">4</span></code>) are the
+survivors; their earlier occurrences flip to <code class="docutils literal notranslate"><span class="pre">true</span></code> instead.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keep_first</span></code> and <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> cannot both be <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">duplicated</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::duplicated: keep_first and keep_last cannot both be true
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Grouping is by each value’s string form, matching
+<a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distinct()</span></code></span></a>/<a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tally()</span></code></span></a>; works across every payload
+kind.</p></li>
+<li><p>A value occurring only once is never flagged, under either policy.</p></li>
+<li><p>Reports membership only — combine with <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a> (or its
+logical negation) to actually drop or keep duplicates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keep_first</span> <span class="pre">&amp;&amp;</span> <span class="pre">keep_last</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::duplicated:</span> <span class="pre">keep_first</span> <span class="pre">and</span> <span class="pre">keep_last</span> <span class="pre">cannot</span> <span class="pre">both</span> <span class="pre">be</span> <span class="pre">true&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::repeated</span></code></span></a>: mark <em>every</em> member of a repeated group
+(including the would-be survivor), rather than just the followers.</p></li>
+<li><p><a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::distinct</span></code></span></a>: the deduplicated values themselves,
+instead of a boolean mask over the original positions.</p></li>
+<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::filter</span></code></span></a>: apply the mask this method returns to
+actually drop or keep rows.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dtype.html">
     <span class="label">Previous</span>
@@ -114,7 +169,6 @@ ptype: Series
     <span class="title">encode</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

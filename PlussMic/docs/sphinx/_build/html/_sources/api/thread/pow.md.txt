@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::pow
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,85 @@
 ## Signatures
 
 ```cpp
-Thread::pow(const Thread& other) -> Thread
-
-Thread::pow(double other) -> Thread
+Thread::pow(double other) const -> Thread
+Thread::pow(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+Elementwise exponentiation, computed via `std::pow` after promoting both operands to
+`Float64`. Follows [`add()`](add.md)'s shared mechanics (positional matching,
+length-mismatch throw, no `Note`-payload support). This reference sticks to positive
+bases and small exponents throughout — `std::pow`'s behavior for negative bases with
+fractional exponents (which can produce `NaN`) isn't exercised here.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+The exponent(s). For the `Thread` overload, must be the same length as `*this`.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Float64` thread, same length as `*this`, holding the elementwise power.
 
 ## Examples
 
-Example 1. Apply `pow` to the current thread using explicit `other` arguments.
+Example 1. Raise every value to the same scalar power.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.pow(other);
+auto base = Thread(pluss::make_series({2.0, 3.0, 4.0}));
+auto out = base.pow(3.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  8
+1  27
+2  64
+ptype: Series
 ```
-Example 2. Apply `pow` to the current thread using explicit `other` arguments.
+
+`2^3 = 8`, `3^3 = 27`, `4^3 = 64`.
+
+Example 2. Raise each value to its own exponent, positionally.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.pow(10.0);
+auto exps = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+auto out_pair = base.pow(exps);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  2
+1  9
+2  64
+ptype: Series
 ```
 
+`2^1 = 2`, `3^2 = 9`, `4^3 = 64` — each base raised to its own matching exponent.
+
+## Notes
+
+- See [`add()`](add.md) for the family-wide mechanics: positional matching and the
+  length-mismatch throw (here, `"Thread::pow: operand length mismatch"` for the
+  `Thread` overload's internal check, distinct from the generic
+  `"positional operation requires identical lengths"` message the rest of the family
+  uses).
+- No `Note`-payload special case — `pow()` requires numeric threads only.
+
+## See Also
+
+- [`Thread::rpow`](rpow.md): the reflected form.
+- [`Thread::add`](add.md): the canonical reference for this family's shared
+  mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="percentiles.html">

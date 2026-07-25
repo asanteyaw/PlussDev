@@ -764,9 +764,9 @@ std::string render_thread_series_like_(const Thread& thread,
     out.push_back('\n');
   }
   if (thread.has_display_name()) {
-    out += fmt::format("Name: {}, dtype: {}", thread.display_name(), dtype_footer);
+    out += fmt::format("Name: {}, ptype: {}", thread.display_name(), dtype_footer);
   } else {
-    out += fmt::format("dtype: {}", dtype_footer);
+    out += fmt::format("ptype: {}", dtype_footer);
   }
   return out;
 }

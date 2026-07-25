@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::shuffle
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,39 +7,104 @@
 ## Signature
 
 ```cpp
-Thread::shuffle(std::optional<std::uint64_t> random_state = std::nullopt) -> Thread
+Thread::shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a new thread with every entry in a random order — the same entries as the
+original, just permuted. Internally this builds the index range `[0, size())`,
+seeds a `std::mt19937_64` from `random_state` (or from `std::random_device` if
+`random_state` is omitted), calls `std::shuffle`, and takes the result — so it's
+equivalent to [`sample(size(), random_state, false)`](sample.md) but reads more
+directly at the call site when you just want "reorder everything," rather than
+"draw a subset."
+
+```{important} random_state reproduces results on a given build, not across toolchains
+As with [`sample()`](sample.md), `shuffle()` uses `std::shuffle`, whose exact
+output for a given seed is not fixed by the C++ standard — only its statistical
+properties are. The same `random_state` reliably reproduces the same permutation
+*within one build* (same compiler, same standard library), but different
+toolchains may legitimately produce a different permutation for the same seed. The
+example output below reflects one particular build.
+```
 
 ## Parameters
 
-**random_state**
-    Optional seed used to make sampling or shuffling reproducible.
+**random_state** (`std::optional<std::uint64_t>`, default `std::nullopt`)
+    Seed for the random number generator. Omitted (`std::nullopt`) draws a fresh,
+    non-reproducible seed each call via `std::random_device`.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new thread of the same length and kind, with entries reordered.
 
 ## Examples
 
-Example 1. Apply `shuffle` to the current thread using explicit `random_state` arguments.
+Example 1. Shuffle with a fixed seed, reproducible on this build.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.shuffle({});
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto out = scores.shuffle(42);
+std::cout << out;
+```
+
+### Output (illustrative — see the important callout above)
+
+```text
+0  40
+1  10
+2  50
+3  20
+4  30
+
+ptype: Series
+```
+
+Same five values, same length, just reordered — every original value appears
+exactly once.
+
+Example 2. Two calls with the same `random_state` produce the same permutation on
+a given build.
+
+```cpp
+auto a = scores.shuffle(99);
+auto b = scores.shuffle(99);
+std::cout << (a.value(0) == b.value(0) && a.value(4) == b.value(4));
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+1
 ```
 
+Example 3. Omitting `random_state` draws a fresh seed each call — two calls are
+not guaranteed to (and in practice essentially never do) match.
+
+```cpp
+auto c = scores.shuffle();
+auto d = scores.shuffle();
+// c and d are each some permutation of {10, 20, 30, 40, 50}, independently drawn
+```
+
+## Notes
+
+- Equivalent to `sample(size(), random_state, false)`, but expresses intent more
+  directly for "reorder everything" use.
+- Same length and kind as the original; no entries are dropped or duplicated.
+- See the important callout above regarding cross-build reproducibility of a given
+  `random_state`.
+
+## See Also
+
+- [`Thread::sample`](sample.md): draw a random subset (or the whole thread,
+  reordered) with more control over count/fraction and replacement.
+- [`Thread::sort_values`](sort_values.md): reorder deterministically by value,
+  rather than randomly.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="show.html">

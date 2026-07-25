@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::round" href="round.html" />
@@ -36,43 +36,75 @@
 
           <div class="body" role="main">
             
-  <section id="thread-ror">
+  <!-- pluss-hand-authored -->
+<section id="thread-ror">
 <h1>Thread::ror<a class="headerlink" href="#thread-ror" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">ror</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">ror</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>The reflected form of <a class="reference internal" href="lor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lor()</span></code></span></a>. Logical OR is commutative, so <code class="docutils literal notranslate"><span class="pre">ror()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lor()</span></code> always compute the same boolean values — but, exactly like
+<a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rand()</span></code></span></a> versus <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">ror()</span></code>’s result carries display
+labels from <code class="docutils literal notranslate"><span class="pre">other</span></code> instead of from <code class="docutils literal notranslate"><span class="pre">*this</span></code>. See <a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rand()</span></code></span></a> for the full
+explanation and a worked example of this label-carry difference.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>Same shape as <a class="reference internal" href="lor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lor()</span></code></span></a>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+The same values <a class="reference internal" href="lor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lor()</span></code></span></a> would produce for the same arguments, with
+display labels carried from <code class="docutils literal notranslate"><span class="pre">other</span></code> instead of <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">ror</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">}));</span>
+<p>Example 1. Same values as <code class="docutils literal notranslate"><span class="pre">lor()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">ror</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">ror</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
+1  false
+2  true
+
+ptype: Series
 </pre></div>
 </div>
+<p>Matches <a class="reference internal" href="lor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">left.lor(right)</span></code></span></a> exactly here, since neither thread has display
+labels set — the label-carry difference between <code class="docutils literal notranslate"><span class="pre">lor()</span></code>/<code class="docutils literal notranslate"><span class="pre">ror()</span></code> only becomes visible
+once labels are involved. See <a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rand()</span></code></span></a> for a worked example with labels.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See <a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rand()</span></code></span></a> for the full explanation of this label-carry difference,
+which applies identically here.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::lor</span></code></span></a>: the forward form.</p></li>
+<li><p><a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rand</span></code></span></a>: the fuller explanation of this reflected-family
+label-carry behavior.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rmul.html">
     <span class="label">Previous</span>
@@ -83,7 +115,6 @@ Value produced by this call.</p>
     <span class="title">round</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

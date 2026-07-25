@@ -63,6 +63,7 @@ window.PLUSS_API_NAV = {
       "gt",
       "has",
       "head",
+      "height",
       "info",
       "info_string",
       "insert",
@@ -75,6 +76,7 @@ window.PLUSS_API_NAV = {
       "label",
       "land",
       "le",
+      "length",
       "lengthen",
       "load",
       "load_csv",
@@ -181,7 +183,8 @@ window.PLUSS_API_NAV = {
       "update",
       "var",
       "view",
-      "where"
+      "where",
+      "width"
     ]
   },
   "DataFrameNoteAccessor": {
@@ -309,6 +312,36 @@ window.PLUSS_API_NAV = {
       "timeline"
     ]
   },
+  "DataFramePlotAccessor": {
+    "title": "DataFramePlotAccessor",
+    "slug": "dataframe-plot",
+    "landing": "dataframe_plot_api_reference.html",
+    "methods": [
+      "act",
+      "andrews_curves",
+      "area",
+      "area_stacked",
+      "auto_plot",
+      "bar",
+      "bar_stacked",
+      "bootstrap",
+      "box",
+      "brief",
+      "corr_heatmap",
+      "density",
+      "heatmap",
+      "hist",
+      "lag",
+      "line",
+      "parallel",
+      "pie",
+      "radviz",
+      "scatter",
+      "scatter_matrix",
+      "step",
+      "violin"
+    ]
+  },
   "DataFramePlot3DAccessor": {
     "title": "DataFramePlot3DAccessor",
     "slug": "dataframe-plot3d",
@@ -384,6 +417,39 @@ window.PLUSS_API_NAV = {
       "sum"
     ]
   },
+  "Nexus": {
+    "title": "Nexus",
+    "slug": "nexus",
+    "landing": "nexus_api_reference.html",
+    "methods": [
+      "apply",
+      "apply_all",
+      "deduce",
+      "defined",
+      "dloc",
+      "drop",
+      "empty",
+      "flow",
+      "frame",
+      "frames",
+      "get",
+      "has",
+      "head",
+      "inject",
+      "keys",
+      "map_frames",
+      "names",
+      "ntables",
+      "profile",
+      "rename",
+      "scan",
+      "select",
+      "size",
+      "summary",
+      "tail",
+      "unique"
+    ]
+  },
   "Thread": {
     "title": "Thread",
     "slug": "thread",
@@ -444,7 +510,6 @@ window.PLUSS_API_NAV = {
       "floordiv",
       "flow",
       "fold",
-      "freq",
       "fullmatch",
       "ge",
       "gt",

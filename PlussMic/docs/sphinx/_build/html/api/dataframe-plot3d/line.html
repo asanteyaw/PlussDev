@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFramePlot3DAccessor::scatter" href="scatter.html" />
@@ -36,54 +36,254 @@
 
           <div class="body" role="main">
             
-  <section id="dataframeplot3daccessor-line">
+  <!-- pluss-hand-authored -->
+<section id="dataframeplot3daccessor-line">
 <h1>DataFramePlot3DAccessor::line<a class="headerlink" href="#dataframeplot3daccessor-line" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_plot3d_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFramePlot3DAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlot3DAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">z_feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Line3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlot3DAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">z_feature</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Line3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Draws a single connected 3D path: row <code class="docutils literal notranslate"><span class="pre">i</span></code>’s <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">z)</span></code> triple becomes point <code class="docutils literal notranslate"><span class="pre">i</span></code> on the
+line, and consecutive rows are joined in <strong>frame row order</strong> — there is no sorting by any
+axis first. This is the 3D counterpart of <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>,
+but every axis here is an explicit, required feature; there is no x-axis-resolution fallback
+to row labels the way the 2D accessor has.</p>
+<p>This page also establishes mechanics shared by every method on
+<code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor</span></code> — <a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scatter()</span></code></span></a>, <a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hist()</span></code></span></a>,
+<a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>, and <a class="reference internal" href="wireframe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wireframe()</span></code></span></a> all work the same way with
+respect to <code class="docutils literal notranslate"><span class="pre">Studio</span></code>, feature-to-axis conversion, and the two 3D options structs described
+below.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Every method returns a Studio, same as the 2D accessor
+Nothing is drawn to the console. Every method on <code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor</span></code> builds and
+returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, exactly like every method on the 2D
+<a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">Studio</span></code> has no <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>, so
+<code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">chart</span></code> does not compile. Call <code class="docutils literal notranslate"><span class="pre">.show()</span></code>, <code class="docutils literal notranslate"><span class="pre">.save_svg(path)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.save_png(path)</span></code>, <code class="docutils literal notranslate"><span class="pre">.save_pdf(path)</span></code>, <code class="docutils literal notranslate"><span class="pre">.to_svg()</span></code>, or <code class="docutils literal notranslate"><span class="pre">.to_pdf()</span></code> to actually view or
+persist the figure. Every example on this page ends with one of these calls instead of a
+<code class="docutils literal notranslate"><span class="pre">std::cout</span></code> block.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>How a feature becomes a numeric axis value
+Every 3D method resolves each named feature to a plain <code class="docutils literal notranslate"><span class="pre">double</span></code> per row before plotting:
+a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind feature is used as-is; a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind feature is
+converted to <strong>epoch nanoseconds</strong> (so a genuine timestamp feature can be used directly as
+an <code class="docutils literal notranslate"><span class="pre">x</span></code>/<code class="docutils literal notranslate"><span class="pre">y</span></code>/<code class="docutils literal notranslate"><span class="pre">z</span></code> axis, plotted on a raw nanosecond scale); a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind feature is cast to
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> (a text-to-number parse, which produces <code class="docutils literal notranslate"><span class="pre">NaN</span></code> for text that doesn’t parse as a
+number rather than throwing outright). Any other <code class="docutils literal notranslate"><span class="pre">Thread</span></code> kind throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot:</span> <span class="pre">unsupported</span> <span class="pre">Thread</span> <span class="pre">kind</span> <span class="pre">for</span> <span class="pre">numeric</span> <span class="pre">plotting&quot;</span></code>. A resolved axis whose length doesn’t match
+the frame’s row count throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot:</span> <span class="pre">feature</span> <span class="pre">'&lt;name&gt;'</span> <span class="pre">length</span> <span class="pre">mismatch</span> <span class="pre">with</span> <span class="pre">cases&quot;</span></code> — note this shared low-level check’s message always says <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot&quot;</span></code>, even
+when it fires from a <code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> call.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>x_feature</strong>
-Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.</p>
-<p><strong>y_feature</strong>
-Single numeric feature to draw on the vertical axis or as the primary plotted measure.</p>
-<p><strong>z_feature</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>x_feature</strong>, <strong>y_feature</strong>, <strong>z_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, all required)
+The three features providing each row’s <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, and <code class="docutils literal notranslate"><span class="pre">z</span></code> coordinate — see the note
+above for how each is converted to a numeric value. Unlike the 2D accessor’s <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>
+arguments, none of these are optional and there is no frame-row-label fallback.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">Line3DPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">Line3DPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DSceneOptions</span> <span class="pre">scene{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DTraceOptions</span> <span class="pre">trace{};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">scene</span></code> controls the 3D pane’s camera, lighting, theme, and grid style; <code class="docutils literal notranslate"><span class="pre">trace</span></code>
+controls the drawn line’s shading, lighting response, material, stroke width, and
+transparency. Both are described in full below, since every method on this accessor
+shares the exact same two structs.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>```cpp
+enum class ScenePreset3D { Survey, Presentation, Studio, Topology };
+enum class ThemePreset3D { Paper, Ocean, Slate, Mist };
+enum class CameraPreset3D { Spatial, TopDown, Front, Side, Isometric };
+enum class ProjectionKind { Perspective, Orthographic };
+
+struct Camera3DOptions {
+  double azimuth_deg{-37.5};
+  double elevation_deg{30.0};
+  double view_angle_deg{30.0};
+  ProjectionKind projection{ProjectionKind::Orthographic};
+};
+
+struct Lighting3DOptions {
+  bool clear_first{true};
+  bool headlight{true};
+  bool lamp_left{false};
+  bool lamp_right{false};
+  bool sun_key{false};
+};
+
+struct Plot3DSceneOptions {
+  std::optional&lt;ScenePreset3D&gt; preset{std::nullopt};
+  std::optional&lt;ThemePreset3D&gt; theme{std::nullopt};
+  std::optional&lt;CameraPreset3D&gt; camera_preset{std::nullopt};
+  std::optional&lt;Camera3DOptions&gt; camera{std::nullopt};
+  std::optional&lt;Lighting3DOptions&gt; lighting{std::nullopt};
+  std::optional&lt;pluss::pl::GridStyle&gt; grid_style{std::nullopt};
+};
+```
+
+Every field in `Plot3DSceneOptions` is a `std::optional` that defaults to
+`std::nullopt`, meaning &quot;leave the pane&#39;s built-in default alone.&quot; When several
+fields *are* set, they&#39;re applied in a fixed order, each one layering on top of
+(and able to override) whatever came before: **`preset`** first (a bundle that sets
+a theme, grid style, camera angle, and a lighting rig all at once — see the preset
+table below), then **`theme`** (overrides just the color theme), then
+**`grid_style`** (`None`, `Major`, or `MajorMinor`), then **`camera_preset`**
+(overrides just the camera angle), then **`camera`** (an explicit
+`Camera3DOptions`, overriding any preset&#39;s angle with exact numbers), then
+**`lighting`** (an explicit `Lighting3DOptions`, overriding any preset&#39;s lights).
+Setting both `camera_preset` and `camera` is legal — `camera` applies last and wins.
+
+| `ScenePreset3D` | Theme | Camera | Lighting |
+|---|---|---|---|
+| `Survey` | Ocean | Isometric | headlight + left lamp |
+| `Presentation` | Paper | perspective, low/wide angle | headlight + right lamp + sun key |
+| `Studio` | Slate | Spatial (the library-wide default angle) | headlight + both lamps |
+| `Topology` | Mist | TopDown | headlight only |
+
+```cpp
+enum class TracePreset3D { Path, Cloud, Surface, Wireframe, Spire, Volume };
+enum class ShadeMode { Faceted, Flat, Smooth };
+enum class LightingMode { None, Flat, Gouraud };
+enum class MaterialProfile { Default, Dull, Shiny, Metal };
+
+struct Plot3DTraceOptions {
+  std::optional&lt;TracePreset3D&gt; preset{std::nullopt};
+  std::optional&lt;ShadeMode&gt; shade{std::nullopt};
+  std::optional&lt;LightingMode&gt; lighting{std::nullopt};
+  std::optional&lt;MaterialProfile&gt; material{std::nullopt};
+  std::optional&lt;float&gt; line_width{std::nullopt};
+  std::optional&lt;bool&gt; transparent{std::nullopt};
+};
+```
+
+Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a bundle of
+shade/lighting/material/width/transparency tuned for one trace shape — `Path` is
+tuned for line traces, `Cloud` for scatter, `Surface` for filled meshes,
+`Wireframe` for mesh edges, `Spire` for 3D-bar histograms, `Volume` for
+translucent solids), then any explicitly-set `shade`, `lighting`, `material`,
+`line_width`, or `transparent` fields override just that one aspect of the preset.
+None of `line()`&#39;s example calls below set a `preset`, so the pane/trace defaults
+(not any preset&#39;s values) are what&#39;s actually drawn unless noted otherwise.
+</pre></div>
+</div>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
-Value produced by this call.</p>
+A figure with one 3D pane containing a single connected line trace through the <code class="docutils literal notranslate"><span class="pre">n</span></code>
+<code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">z)</span></code> points, in row order.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">plot3d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot3d</span><span class="p">();</span>
+<p>Example 1. Default options: a simple 3D path.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot3d</span><span class="p">.</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;path3d.svg&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<p>Four points are connected in row order: <code class="docutils literal notranslate"><span class="pre">(1,4,2)</span> <span class="pre">→</span> <span class="pre">(2,3,5)</span> <span class="pre">→</span> <span class="pre">(3,5,4)</span> <span class="pre">→</span> <span class="pre">(4,2,6)</span></code> — not
+sorted by <code class="docutils literal notranslate"><span class="pre">x</span></code> or any other axis first.</p>
+<p>Example 2. A <code class="docutils literal notranslate"><span class="pre">Line3DPlotOptions</span></code> with a scene preset for a presentation-style camera and
+theme.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">scene</span><span class="p">.</span><span class="n">preset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">ScenePreset3D</span><span class="o">::</span><span class="n">Presentation</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p>Example 3. Overriding just the camera angle with an explicit <code class="docutils literal notranslate"><span class="pre">Camera3DOptions</span></code>, leaving
+the theme and lighting at their pane defaults.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">scene</span><span class="p">.</span><span class="n">camera</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">Camera3DOptions</span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">azimuth_deg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">elevation_deg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">45.0</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">view_angle_deg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">25.0</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">projection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">ProjectionKind</span><span class="o">::</span><span class="n">Perspective</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;path3d_camera.png&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example 4. A trace preset (<code class="docutils literal notranslate"><span class="pre">Path</span></code>, tuned for line traces) combined with an explicit
+<code class="docutils literal notranslate"><span class="pre">line_width</span></code> override — the preset sets shading/lighting/material/width, and the explicit
+<code class="docutils literal notranslate"><span class="pre">line_width</span></code> then overrides just that one field.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">trace</span><span class="p">.</span><span class="n">preset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">TracePreset3D</span><span class="o">::</span><span class="n">Path</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">trace</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.5F</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;path3d_styled.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example 5. Both a <code class="docutils literal notranslate"><span class="pre">camera_preset</span></code> and an explicit <code class="docutils literal notranslate"><span class="pre">camera</span></code> set together — the explicit
+<code class="docutils literal notranslate"><span class="pre">camera</span></code> applies last and wins, since it’s later in the fixed layering order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">scene</span><span class="p">.</span><span class="n">camera_preset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">CameraPreset3D</span><span class="o">::</span><span class="n">TopDown</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">scene</span><span class="p">.</span><span class="n">camera</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">Camera3DOptions</span><span class="p">{.</span><span class="n">azimuth_deg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">elevation_deg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">15.0</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The final camera angle is <code class="docutils literal notranslate"><span class="pre">(azimuth</span> <span class="pre">=</span> <span class="pre">60.0,</span> <span class="pre">elevation</span> <span class="pre">=</span> <span class="pre">15.0)</span></code> from the explicit <code class="docutils literal notranslate"><span class="pre">camera</span></code>
+field — the <code class="docutils literal notranslate"><span class="pre">TopDown</span></code> preset’s <code class="docutils literal notranslate"><span class="pre">(0.0,</span> <span class="pre">90.0)</span></code> angle is set first, then immediately
+overridden.</p>
+<p>Example 6. A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature used directly as an axis — converted to epoch
+nanoseconds, per the note above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;measured_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03T00:00:00Z&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">17.5</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;measured_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">measured_at</span></code>’s <code class="docutils literal notranslate"><span class="pre">x</span></code> coordinates are its epoch-nanosecond values — a very large numeric
+range compared to <code class="docutils literal notranslate"><span class="pre">depth_m</span></code>/<code class="docutils literal notranslate"><span class="pre">temp_c</span></code>, so the pane’s own auto-scaling handles the disparity;
+this call does not reformat the x-axis into calendar tick labels the way the 2D accessor’s
+Timeline-aware axis labeling does.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every axis argument is required — there is no optional-argument or row-label fallback
+here, unlike <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>.</p></li>
+<li><p>Points are connected strictly in frame row order, never sorted by any axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code> and <code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code> both apply their fields in a fixed
+preset-then-explicit-override order — see the callouts above; this same layering rule
+applies to every method on this accessor.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature used as an axis is converted to epoch nanoseconds, not
+calendar-aware tick labels.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see the important callout above for how to view or save
+the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>: the 2D counterpart, with
+optional x-axis resolution and row-label fallback this method doesn’t have.</p></li>
+<li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::scatter</span></code></span></a>: unconnected 3D points instead of a
+connected path, with optional size/color encoding.</p></li>
+<li><p><a class="reference internal" href="../dataframe/plot3d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::plot3d</span></code></span></a>: how to enter this accessor.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="hist.html">
     <span class="label">Previous</span>
@@ -94,7 +294,6 @@ Value produced by this call.</p>
     <span class="title">scatter</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

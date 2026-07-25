@@ -1,4 +1,4 @@
-project = 'PlussPl API Docs'
+project = 'PlussPl'
 author = 'Pluss Contributors'
 
 extensions = [

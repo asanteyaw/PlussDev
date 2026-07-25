@@ -104,6 +104,49 @@ At `q1` and `q2`, `sales` is larger than `cost`; at `q3`, `cost` (`95`) overtake
 `sales` (`90`). The result now has one entry per case, labeled by the source frame's
 case labels.
 
+Example 3. `skipnull = false`: a single missing value anywhere in a feature
+poisons that feature's whole result to `NULL`, even though the same feature
+still finds a perfectly good maximum among its non-null cells under the
+default `skipnull = true`.
+
+```cpp
+auto regions2 = DataFrame({
+    {"sales", pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0})},
+    {"cost",  pluss::make_series({60.0, 80.0, 95.0})},
+}, pluss::make_note({"q1", "q2", "q3"}));
+
+auto peak_skip = regions2.csmax(Axis::Case, true);
+std::cout << peak_skip;
+
+auto peak_no_skip = regions2.csmax(Axis::Case, false);
+std::cout << peak_no_skip;
+```
+
+### Output (skipnull = true, the default)
+
+```text
+sales  q1
+ cost  q3
+ptype: Note
+```
+
+### Output (skipnull = false)
+
+```text
+sales  NULL
+ cost  q3
+ptype: Note
+```
+
+`sales` is missing at `q2`; with `skipnull = true`, the search simply ignores
+that cell and finds the maximum (`100`) among what's left, at `q1`. With
+`skipnull = false`, the presence of any missing value anywhere in `sales`
+invalidates the whole result for that feature — `sales` comes back `NULL`
+outright, even though a perfectly good maximum among the non-null values still
+exists. `cost` has no missing values at all, so it reports `q3` identically
+under both settings. This same call also demonstrates `Axis::Case` passed
+explicitly, rather than relying on it being the default.
+
 ## Notes
 
 - `csmax()` always returns label strings, never the numeric maximum itself — reach for

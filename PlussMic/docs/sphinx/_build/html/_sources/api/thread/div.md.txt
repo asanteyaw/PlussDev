@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::div
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,85 +7,94 @@
 ## Signatures
 
 ```cpp
-Thread::div(const Thread& other) -> Thread
-
-Thread::div(double other) -> Thread
+Thread::div(double other) const -> Thread
+Thread::div(const Thread& other) const -> Thread
 ```
 
-Divide a numeric thread by one scalar or by another numeric thread.
+## What It Does
 
-`div(...)` is the named thread-level division surface behind `/`-style arithmetic when you want a method in a chain or you want the overload family documented explicitly.
+Elementwise division, following [`add()`](add.md)'s shared mechanics (positional
+matching, length-mismatch throw, no `Note`-payload support). `div()` delegates to the
+underlying `Series` library's own `div()` algebra, which is a distinct code path from
+[`truediv()`](truediv.md) (which always promotes to floating point via
+`true_divide()`). For the `Float64`-typed threads used throughout this reference, the
+two produce identical results; the distinction can matter for integer-typed threads,
+where `div()`'s exact type-preservation behavior comes from outside this repository
+and isn't asserted here — prefer [`truediv()`](truediv.md) when you specifically want
+guaranteed floating-point division regardless of input type.
 
 ## Parameters
 
-**other**
+**other** (`double` or `const Thread&`)
 
-Right-hand divisor.
-
-- `double`: broadcast one numeric divisor across the whole thread.
-- `const Thread&`: divide element by element against another numeric thread of compatible size.
+The divisor(s). For the `Thread` overload, must be the same length as `*this`.
 
 ## Returns
 
 `Thread`
-    Numeric result thread with elementwise division applied.
-
-## See Also
-
-- <a href="truediv.html"><code>Thread::truediv</code></a>: explicit true-division surface.
-- <a href="mul.html"><code>Thread::mul</code></a>: same typed arithmetic model for multiplication.
-- <a href="align.html"><code>Thread::align</code></a>: align threads first when you need label-aware preparation before arithmetic.
-
-## Notes
-
-Scalar division broadcasts the divisor across the full thread length.
-
-Thread-to-thread division is positional unless you explicitly align the threads beforehand.
-
-This method is numeric. Use note, timeline, or timeindex accessors for non-numeric payload work.
+    A new thread, same length as `*this`, holding the elementwise quotient.
 
 ## Examples
 
-Example 1. Broadcast one scalar divisor across a numeric thread.
+Example 1. Divide every value by a scalar.
 
 ```cpp
 using namespace pluss::table;
 
-auto values = Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = values.div(10.0);
+auto prices = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto out = prices.div(4.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-0  1
-1  2
-2  3
-ptype: Series
-```
-
-Example 2. Divide one numeric thread by another thread element by element.
-
-```cpp
-using namespace pluss::table;
-
-auto left = Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto right = Thread(pluss::make_series({2.0, 4.0, 5.0}));
-
-auto out = left.div(right);
-```
-
-### Output
-
-```text
-0  5
+0  2.5
 1  5
-2  6
+2  7.5
+
 ptype: Series
 ```
 
+Example 2. Divide two threads positionally.
 
+```cpp
+auto splits = Thread(pluss::make_series({4.0, 8.0, 9.0}));
+auto out_pair = prices.div(splits);
+std::cout << out_pair;
+```
+
+### Output
+
+```text
+0  2.5
+1  2.5
+2  3.333333333
+
+ptype: Series
+```
+
+`30 / 9` doesn't divide evenly — the result is displayed to 10 significant digits
+(`3.333333333`), the same formatting every numeric thread uses.
+
+## Notes
+
+- See [`add()`](add.md) for the family-wide mechanics: positional matching and the
+  length-mismatch throw (`"Thread::div(Thread): positional operation requires
+  identical lengths"`).
+- `div()` has no `Note`-payload special case, unlike `add()`/`mul()`.
+- For `Float64` data, `div()` and [`truediv()`](truediv.md) always agree — reach for
+  `truediv()` when the underlying type might not be floating-point and you need
+  float division guaranteed.
+
+## See Also
+
+- [`Thread::truediv`](truediv.md): the always-floating-point counterpart.
+- [`Thread::rdiv`](rdiv.md): the reflected form.
+- [`Thread::floordiv`](floordiv.md), [`Thread::mod`](mod.md): related division-family
+  operators with their own rounding behavior.
+- [`Thread::add`](add.md): the canonical reference for this family's shared
+  mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="distinct.html">

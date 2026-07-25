@@ -158,11 +158,11 @@ std::string frame_rule(char ch, std::int64_t width) {
 std::string catalog_keys_preview(const Catalog& catalog,
                                  const EffectiveOptions& options,
                                  std::int64_t max_width) {
-  if (catalog.nstreams() == 0) {
+  if (catalog.nkeys() == 0) {
     return "[]";
   }
   bool ellipsis = false;
-  const auto idx = visible_indices(catalog.nstreams(), options.edge_items, options.tail_items, ellipsis);
+  const auto idx = visible_indices(catalog.nkeys(), options.edge_items, options.tail_items, ellipsis);
   std::vector<std::string> names;
   names.reserve(static_cast<std::size_t>(idx.size()) + (ellipsis ? 1u : 0u));
   for (std::size_t i = 0; i < idx.size(); ++i) {
@@ -183,15 +183,15 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
   std::ostringstream oss;
   oss << frame_rule('=', width) << "\n";
   oss << fit_line(
-      fmt::format("kindle::Stream  kind={}  dtype={}  cs={}",
+      fmt::format("kindle::Stream  kind={}  dtype={}  records={}",
                   kind_name(stream.kind()),
                   stream.dtype(),
                   stream.size()),
       width)
       << "\n";
   oss << fit_line(
-      fmt::format("cases={}  mask={}  meta={}",
-                  stream.has_cases() ? "yes" : "no",
+      fmt::format("label={}  mask={}  meta={}",
+                  stream.has_label() ? "yes" : "no",
                   detail::has_validity_mask(stream) ? "yes" : "no",
                   stream.meta().size()),
       width)
@@ -206,10 +206,10 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
   bool ellipsis = false;
   const auto idx = visible_indices(stream.size(), head, tail, ellipsis);
 
-  const auto case_w = std::max<std::int64_t>(4, std::min<std::int64_t>(12, width / 5));
+  const auto case_w = std::max<std::int64_t>(5, std::min<std::int64_t>(12, width / 5));
   const auto value_w = std::max<std::int64_t>(8, width - case_w - 3);
 
-  oss << right_pad("case", case_w) << " | " << right_pad("value", value_w) << "\n";
+  oss << right_pad("label", case_w) << " | " << right_pad("value", value_w) << "\n";
   oss << frame_rule('-', width) << "\n";
 
   for (std::size_t i = 0; i < idx.size(); ++i) {
@@ -218,8 +218,8 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
     }
     const auto row = idx[i];
     std::string case_cell;
-    if (stream.has_cases()) {
-      case_cell = thread_value_at(stream.cases()->cast(pluss::table::ThreadCastTarget::Note), row, case_w);
+    if (stream.has_label()) {
+      case_cell = thread_value_at(stream.label()->cast(pluss::table::ThreadCastTarget::Note), row, case_w);
     } else {
       case_cell = std::to_string(row);
     }
@@ -249,7 +249,7 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
   const auto width = frame_rule_width(options.terminal_width);
   std::ostringstream oss;
   oss << frame_rule('=', width) << "\n";
-  oss << fit_line(fmt::format("kindle::Catalog  streams={}", catalog.nstreams()), width) << "\n";
+  oss << fit_line(fmt::format("kindle::Catalog  keys={}", catalog.nkeys()), width) << "\n";
   oss << fit_line(fmt::format("keys: {}", catalog_keys_preview(catalog, options, width - 6)), width) << "\n";
   oss << frame_rule('-', width) << "\n";
 
@@ -279,9 +279,8 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
   const auto head = std::max<std::int64_t>(1, std::min<std::int64_t>(options.edge_items, body_budget - 1));
   const auto tail = std::max<std::int64_t>(1, std::min<std::int64_t>(options.tail_items, body_budget - head - 1));
   bool ellipsis = false;
-  const auto idx = visible_indices(catalog.nstreams(), head, tail, ellipsis);
+  const auto idx = visible_indices(catalog.nkeys(), head, tail, ellipsis);
 
-  const auto streams = catalog.streams();
   for (std::size_t i = 0; i < idx.size(); ++i) {
     if (ellipsis && i == static_cast<std::size_t>(head)) {
       oss << right_pad("...", key_w) << " | " << right_pad("...", kind_w);
@@ -296,7 +295,7 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
 
     const auto row = static_cast<std::size_t>(idx[i]);
     const auto& key = catalog.keys()[row];
-    const auto& stream = streams[row];
+    const auto stream = catalog.at(key);
     std::string line = right_pad(clip_text(key, key_w), key_w) + " | "
                      + right_pad(kind_name(stream.kind()), kind_w);
     if (show_dtype) {
@@ -330,18 +329,18 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
 
   const auto frame_w = 6;
   const auto label_w = show_label ? std::max<std::int64_t>(8, std::min<std::int64_t>(22, width / 5)) : 0;
-  const auto nstreams_w = 8;
+  const auto nkeys_w = 8;
   const auto min_w = show_span ? 6 : 0;
   const auto max_w = show_span ? 6 : 0;
   const auto sep_count = show_label ? (show_span ? 5 : 4) : (show_span ? 4 : 3);
-  const auto fixed = frame_w + label_w + nstreams_w + min_w + max_w + sep_count * 3;
+  const auto fixed = frame_w + label_w + nkeys_w + min_w + max_w + sep_count * 3;
   const auto keys_w = std::max<std::int64_t>(12, width - fixed);
 
   std::string header = right_pad("frame", frame_w);
   if (show_label) {
     header += " | " + right_pad("label", label_w);
   }
-  header += " | " + right_pad("streams", nstreams_w);
+  header += " | " + right_pad("keys", nkeys_w);
   if (show_span) {
     header += " | " + right_pad("min_cs", min_w) + " | " + right_pad("max_cs", max_w);
   }
@@ -366,7 +365,7 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
       if (show_label) {
         line += " | " + right_pad("...", label_w);
       }
-      line += " | " + right_pad("...", nstreams_w);
+      line += " | " + right_pad("...", nkeys_w);
       if (show_span) {
         line += " | " + right_pad("...", min_w) + " | " + right_pad("...", max_w);
       }
@@ -379,9 +378,10 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
 
     std::int64_t min_cs = 0;
     std::int64_t max_cs = 0;
-    if (cat.nstreams() > 0) {
+    if (cat.nkeys() > 0) {
       min_cs = std::numeric_limits<std::int64_t>::max();
-      for (const auto& s : cat.streams()) {
+      for (const auto& key : cat.keys()) {
+        const auto s = cat.at(key);
         min_cs = std::min(min_cs, s.size());
         max_cs = std::max(max_cs, s.size());
       }
@@ -392,7 +392,7 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
       auto lbl = thread_value_at(*label_thread, row, label_w);
       line += " | " + right_pad(lbl, label_w);
     }
-    line += " | " + right_pad(std::to_string(cat.nstreams()), nstreams_w);
+    line += " | " + right_pad(std::to_string(cat.nkeys()), nkeys_w);
     if (show_span) {
       line += " | " + right_pad(std::to_string(min_cs), min_w)
            + " | " + right_pad(std::to_string(max_cs), max_w);

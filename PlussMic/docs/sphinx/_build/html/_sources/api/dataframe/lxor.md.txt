@@ -71,6 +71,32 @@ Position `0` (`left`'s `a=true` against `right`'s `a=true`) agrees, so XOR repor
 `false`; position `1` (`left`'s `a=false` against `right`'s `a=true`) disagrees, so XOR
 reports `true` — and so on for `b`.
 
+Example 2. XOR a frame against a single shared `Thread`, applied identically to every
+feature.
+
+```cpp
+auto mask = Thread(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_thread = left.lxor(mask);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+===================
+     | a     b    
+-------------------
+p    | true  true 
+q    | true  false
+r    | true  false
+-------------------
+[3 cs x 2 feat]
+```
+
+The same three-value `mask` is combined against **both** `a` and `b` at matching
+positions — there is no way to supply a different mask per feature in one call,
+unlike [`add()`](add.md)'s `Axis::Feature` `Thread` overload.
+
 ## Notes
 
 - Requires a genuine `Bool` scalar type on every participating `Series` — see

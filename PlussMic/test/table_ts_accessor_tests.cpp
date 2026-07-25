@@ -21,6 +21,7 @@ using pluss::table::ThreadCastOptions;
 using pluss::table::ThreadCastTarget;
 using pluss::table::ThreadKind;
 using pluss::table::TsAlignMode;
+using pluss::table::TsOptions;
 using pluss::table::TsReindexFill;
 using pluss::table::WindowStatistic;
 
@@ -50,15 +51,15 @@ void test_dataframe_ts_one_feature_and_set() {
       {"Adj Close", Thread(pluss::make_series(std::vector<double>{100.0, 110.0, 121.0, 133.1}))},
   });
 
-  auto lr = df.ts("Adj Close").log_returns();
+  auto lr = df.features({"Adj Close"}).ts().log_returns();
   expect(lr.nfeatures() == 1, "log_returns should return one feature for one selected column");
   const auto vals = to_f64(lr.features("Adj Close"));
   expect(std::isnan(vals[0]), "log_returns first value should be NaN");
   expect(std::abs(vals[1] - std::log(1.1)) < 1e-12, "log_returns value mismatch");
 
   DataFrame out = df;
-  out.set("Log Returns") = df.ts("Adj Close").log_returns();
-  expect(out.get("Log Returns").has_value(), "set(name)=df.ts(...).log_returns() should create feature");
+  out.set("Log Returns") = df.features({"Adj Close"}).ts().log_returns();
+  expect(out.get("Log Returns").has_value(), "set(name)=df.features(...).ts().log_returns() should create feature");
 }
 
 void test_dataframe_ts_resample_reindex_blocks() {
@@ -79,8 +80,9 @@ void test_dataframe_ts_resample_reindex_blocks() {
       {"date", Thread(timeline)},
   });
 
-  auto daily = df.ts({"Adj Close", "Volume"}).resample("date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
-  auto daily_chain = df.ts({"Adj Close", "Volume"}).resample("date", "D").mean();
+  const auto ts_opts = TsOptions{.axis = df.features("date")};
+  auto daily = df.features({"Adj Close", "Volume"}).ts(ts_opts).resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
+  auto daily_chain = df.features({"Adj Close", "Volume"}).ts(ts_opts).resample("D").mean();
   expect(daily.ncases() == 2, "daily resample should produce 2 bins");
   expect(daily.nfeatures() == 2, "daily resample should keep selected features");
   const auto daily_adj = to_f64(daily.features("Adj Close"));
@@ -103,12 +105,14 @@ void test_dataframe_ts_resample_reindex_blocks() {
                     }))},
       {"date", Thread(timeline)},
   });
-  auto daily_count = counted.ts("Adj Close").resample("date", "D", pluss::subsp::stats::ts::ResampleOp::Count);
+  auto daily_count = counted.features({"Adj Close"})
+                         .ts({.axis = counted.features("date")})
+                         .resample("D", pluss::subsp::stats::ts::ResampleOp::Count);
   const auto counts = daily_count.features("Adj Close").as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
   expect(counts.size() == 2 && counts[0] == 1 && counts[1] == 2,
          "count resample should exclude missing values inside each bin");
 
-  auto six_hour_exact = df.ts("Adj Close").resample("date", "6H").asfreq();
+  auto six_hour_exact = df.features({"Adj Close"}).ts(ts_opts).resample("6H").asfreq();
   const auto six_hour_exact_vals = to_f64(six_hour_exact.features("Adj Close"));
   expect(six_hour_exact_vals.size() == 7, "asfreq should materialize the resampled axis");
   expect(std::abs(six_hour_exact_vals[0] - 1.0) < 1e-12
@@ -120,7 +124,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
              && std::abs(six_hour_exact_vals[6] - 4.0) < 1e-12,
          "asfreq should behave like an exact reindex onto the target frequency");
 
-  auto six_hour_fill = df.ts("Adj Close").resample("date", "6H").asfreq(0.0);
+  auto six_hour_fill = df.features({"Adj Close"}).ts(ts_opts).resample("6H").asfreq(0.0);
   const auto six_hour_fill_vals = to_f64(six_hour_fill.features("Adj Close"));
   expect(six_hour_fill_vals.size() == 7
              && std::abs(six_hour_fill_vals[1] - 0.0) < 1e-12
@@ -128,7 +132,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
              && std::abs(six_hour_fill_vals[5] - 0.0) < 1e-12,
          "asfreq(fill_value) should fill only the newly introduced timestamps");
 
-  auto six_hour_ffill = df.ts("Adj Close").resample("date", "6H").ffill();
+  auto six_hour_ffill = df.features({"Adj Close"}).ts(ts_opts).resample("6H").ffill();
   const auto six_hour_ffill_vals = to_f64(six_hour_ffill.features("Adj Close"));
   expect(six_hour_ffill_vals.size() == 7
              && std::abs(six_hour_ffill_vals[0] - 1.0) < 1e-12
@@ -140,7 +144,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
              && std::abs(six_hour_ffill_vals[6] - 4.0) < 1e-12,
          "ffill should use the last observed source value at or before each resampled timestamp");
 
-  auto six_hour_bfill = df.ts("Adj Close").resample("date", "6H").bfill();
+  auto six_hour_bfill = df.features({"Adj Close"}).ts(ts_opts).resample("6H").bfill();
   const auto six_hour_bfill_vals = to_f64(six_hour_bfill.features("Adj Close"));
   expect(six_hour_bfill_vals.size() == 7
              && std::abs(six_hour_bfill_vals[0] - 1.0) < 1e-12
@@ -152,7 +156,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
              && std::abs(six_hour_bfill_vals[6] - 4.0) < 1e-12,
          "bfill should use the next observed source value at or after each resampled timestamp");
 
-  auto weekly_max = df.ts({"Adj Close", "Volume"}).resample("date", "W").max();
+  auto weekly_max = df.features({"Adj Close", "Volume"}).ts(ts_opts).resample("W").max();
   expect(weekly_max.ncases() == 1, "weekly resample should group the sample into one weekly bin");
   const auto weekly_adj = to_f64(weekly_max.features("Adj Close"));
   const auto weekly_vol = to_f64(weekly_max.features("Volume"));
@@ -161,7 +165,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
   expect(weekly_vol.size() == 1 && std::abs(weekly_vol[0] - 40.0) < 1e-12,
          "weekly max resample should aggregate each selected feature");
 
-  auto monthly_max = df.ts("Adj Close").resample("date", "M").max();
+  auto monthly_max = df.features({"Adj Close"}).ts(ts_opts).resample("M").max();
   expect(monthly_max.ncases() == 1, "monthly resample should group the sample into one monthly bin");
   const auto monthly_adj = to_f64(monthly_max.features("Adj Close"));
   expect(monthly_adj.size() == 1 && std::abs(monthly_adj[0] - 4.0) < 1e-12,
@@ -181,18 +185,69 @@ void test_dataframe_ts_resample_reindex_blocks() {
       std::span<const std::string_view>(target_iso.data(), target_iso.size()),
       std::span<const std::int64_t>(t_shape.data(), t_shape.size()));
 
-  auto reindexed = df.ts("Adj Close").align_to("date", Thread(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
+  auto reindexed = df.features({"Adj Close"})
+                       .ts(ts_opts)
+                       .align_to(Thread(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
   expect(reindexed.ncases() == static_cast<std::int64_t>(target_iso.size()), "reindexed row count mismatch");
 
-  auto lag_block = df.ts({"Adj Close", "Volume"}).lag_block({1, 2});
+  auto lag_block = df.features({"Adj Close", "Volume"}).ts().lag_block({1, 2});
   expect(lag_block.nfeatures() == 4, "lag_block should emit feature x lag cartesian output");
 
-  auto rolling_block = df.ts({"Adj Close"}).rolling_block({2, 3});
+  auto rolling_block = df.features({"Adj Close"}).ts().rolling_block({2, 3});
   expect(rolling_block.nfeatures() == 4, "rolling_block default should emit mean/std per window");
 
-  auto cal = df.ts("Adj Close").calendar("date");
-  expect(cal.get("date_year").has_value(), "calendar should emit date_year");
-  expect(cal.get("date_weekday").has_value(), "calendar should emit date_weekday");
+  auto cal = df.features({"Adj Close"}).ts(ts_opts).calendar();
+  expect(cal.get("axis_year").has_value(), "calendar should emit axis_year");
+  expect(cal.get("axis_weekday").has_value(), "calendar should emit axis_weekday");
+
+  const std::vector<std::string_view> grouped_iso{
+      "2024-01-01T00:00:00Z",
+      "2024-01-02T00:00:00Z",
+      "2024-01-01T00:00:00Z",
+      "2024-01-03T00:00:00Z",
+  };
+  const std::array<std::int64_t, 1> grouped_shape{static_cast<std::int64_t>(grouped_iso.size())};
+  const auto grouped_timeline = pluss::codeh::ops_internal::timeline_from_utf8(
+      std::span<const std::string_view>(grouped_iso.data(), grouped_iso.size()),
+      std::span<const std::int64_t>(grouped_shape.data(), grouped_shape.size()));
+  DataFrame grouped_roll({
+      {"date", Thread(grouped_timeline)},
+      {"group", Thread(pluss::make_note({"a", "a", "b", "a"}))},
+      {"cohort", Thread(pluss::make_note({"x", "x", "x", "y"}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 3.0, 10.0, 5.0}))},
+  });
+  auto grouped_timed = grouped_roll.features({"value"})
+                           .ts({.axis = grouped_roll.features("date"),
+                                .group = grouped_roll.features("group")})
+                           .rolling("2D", WindowStatistic::Mean);
+  const auto grouped_timed_values = to_f64(grouped_timed.features("value"));
+  expect(grouped_timed_values.size() == 4
+             && std::abs(grouped_timed_values[0] - 1.0) < 1e-12
+             && std::abs(grouped_timed_values[1] - 2.0) < 1e-12
+             && std::abs(grouped_timed_values[2] - 10.0) < 1e-12
+             && std::abs(grouped_timed_values[3] - 4.0) < 1e-12,
+         "features(...).ts({.axis, .group}).rolling(duration) should roll within groups");
+  auto grouped_timed_multi = grouped_roll.features({"value"})
+                                 .ts({.axis = grouped_roll.features("date"),
+                                      .group = grouped_roll.features({"group", "cohort"})})
+                                 .rolling("2D", WindowStatistic::Mean);
+  const auto grouped_timed_multi_values = to_f64(grouped_timed_multi.features("value"));
+  expect(grouped_timed_multi_values.size() == 4
+             && std::abs(grouped_timed_multi_values[0] - 1.0) < 1e-12
+             && std::abs(grouped_timed_multi_values[1] - 2.0) < 1e-12
+             && std::abs(grouped_timed_multi_values[2] - 10.0) < 1e-12
+             && std::abs(grouped_timed_multi_values[3] - 5.0) < 1e-12,
+         "features(...).ts({.axis, .group = multi-feature DataFrame}).rolling(duration) should roll within composite groups");
+  auto grouped_fixed_multi = grouped_roll.features({"value"})
+                                 .ts({.group = grouped_roll.features({"group", "cohort"})})
+                                 .grouped(2, WindowStatistic::Mean);
+  const auto grouped_fixed_multi_values = to_f64(grouped_fixed_multi.features("value"));
+  expect(grouped_fixed_multi_values.size() == 4
+             && std::abs(grouped_fixed_multi_values[0] - 1.0) < 1e-12
+             && std::abs(grouped_fixed_multi_values[1] - 2.0) < 1e-12
+             && std::abs(grouped_fixed_multi_values[2] - 10.0) < 1e-12
+             && std::abs(grouped_fixed_multi_values[3] - 5.0) < 1e-12,
+         "features(...).ts({.group = multi-feature DataFrame}).grouped(window) should roll within composite groups");
 }
 
 void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
@@ -328,10 +383,10 @@ void test_payload_surfaces_reject_wrong_payloads() {
                "Thread.note() should reject Series payloads");
   expect_throw([&] { (void)df.features("name").tl().year(); },
                "Thread.tl() should reject Note payloads");
-  expect_throw([&] { (void)df.note("price").upper(); },
-               "DataFrame.note(feature) should reject non-Note features");
-  expect_throw([&] { (void)df.tl("name").year(); },
-               "DataFrame.tl(feature) should reject non-Timeline features");
+  expect_throw([&] { (void)df.features({"price"}).note().upper(); },
+               "DataFrame.features(...).note() should reject non-Note features");
+  expect_throw([&] { (void)df.features({"name"}).tl().year(); },
+               "DataFrame.features(...).tl() should reject non-Timeline features");
   expect_throw([&] { (void)df.note().upper(); },
                "DataFrame.note() should require an intentional all-Note selection");
   expect_throw([&] { (void)df.tl().year(); },

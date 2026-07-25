@@ -46,7 +46,7 @@ namespace detail {
 class CatalogImpl;
 }
 
-enum class AlignPolicy : std::uint8_t {
+enum class Align : std::uint8_t {
   Strict = 0,
   Inner = 1,
   Outer = 2,
@@ -54,9 +54,9 @@ enum class AlignPolicy : std::uint8_t {
   Right = 4,
 };
 
-enum class IndexMode : std::uint8_t {
-  Positional = 0,
-  ByCaseLabel = 1,
+enum class AlignBy : std::uint8_t {
+  Pos = 0,
+  Label = 1,
 };
 
 enum class FillPolicy : std::uint8_t {
@@ -78,21 +78,21 @@ enum class CollisionPolicy : std::uint8_t {
 };
 
 struct KindelizePolicy {
-  bool attach_cases_to_streams{true};
-  bool materialize_case_stream{false};
-  std::string case_stream_name{"_case"};
+  bool attach_labels{true};
+  bool materialize_label{false};
+  std::string label_key{"_label"};
 };
 
 struct TabelizePolicy {
-  AlignPolicy align{AlignPolicy::Inner};
-  IndexMode index_mode{IndexMode::ByCaseLabel};
+  Align align{Align::Inner};
+  AlignBy align_by{AlignBy::Label};
   FillPolicy fill{FillPolicy::Null};
   std::optional<double> fill_scalar{std::nullopt};
   DTypePolicy dtype{DTypePolicy::BestEffort};
   CollisionPolicy collision{CollisionPolicy::Error};
   std::optional<std::string> anchor{std::nullopt};
-  bool include_case_feature{false};
-  std::string case_feature_name{"case"};
+  bool include_label_feature{false};
+  std::string label_feature{"label"};
 };
 
 class Catalog {
@@ -135,18 +135,18 @@ public:
   bool defined() const noexcept;
   bool unique() const noexcept;
 
-  std::int64_t nstreams() const;
-  std::int64_t nfields() const;
+  std::int64_t nkeys() const;
+  std::int64_t nrecords() const;
+  std::int64_t minrecords() const;
+  std::int64_t maxrecords() const;
+  std::int64_t size() const;
+  std::pair<std::int64_t, std::int64_t> shape() const;
   bool empty() const;
 
   const std::vector<std::string>& keys() const;
   bool has(std::string_view key) const;
-  bool has_stream(std::string_view key) const;
-  Stream stream(std::string_view key) const;
   Stream at(std::string_view key) const;
   std::optional<Stream> get(std::string_view key) const;
-  std::optional<Stream> get_stream(std::string_view key) const;
-  std::vector<Stream> streams() const;
 
   // Kind projections.
   Catalog series() const;
@@ -185,11 +185,12 @@ public:
   }
   Catalog fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const;
   Catalog fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog dropna(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog dropnull(std::initializer_list<std::string_view> keys = {}) const;
   Catalog ffill(std::initializer_list<std::string_view> keys = {}) const;
   Catalog bfill(std::initializer_list<std::string_view> keys = {}) const;
   Catalog isnull(std::initializer_list<std::string_view> keys = {}) const;
   Catalog notnull(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog invalid(std::initializer_list<std::string_view> keys = {}) const;
   Catalog cast(std::initializer_list<std::string_view> keys,
                pluss::table::ThreadCastTarget target,
                const pluss::table::ThreadCastOptions& options = {}) const;
@@ -199,7 +200,16 @@ public:
   Stream mean(std::string_view field) const;
   Stream min(std::string_view field) const;
   Stream max(std::string_view field) const;
-  std::int64_t count() const;
+  Stream distinct(std::string_view key, DistinctOptions options = {}) const;
+  Catalog distinct(DistinctOptions options = {}) const;
+  Catalog distinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) const;
+  Stream freq(std::string_view key, FreqOptions options = {}) const;
+  Catalog freq(FreqOptions options = {}) const;
+  Catalog freq(std::initializer_list<std::string_view> keys,
+               FreqOptions options = {}) const;
+  Stream ndistinct(std::string_view key, DistinctOptions options = {}) const;
+  Catalog ndistinct(DistinctOptions options = {}) const;
+  Catalog ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) const;
   Catalog merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const;
   Catalog apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const;
   Catalog& apply_(std::string_view field, const std::function<Stream(const Stream&)>& func);
@@ -217,18 +227,16 @@ public:
   Catalog aggregate_text_stats(std::string_view field, std::string_view stat_type) const;
   Catalog tfidf(std::string_view field) const;
 
-  Catalog set_stream(std::string_view key, const Stream& value) const;
-  Catalog& set_stream_(std::string_view key, const Stream& value);
   Catalog set(std::string_view key, const Stream& value) const;
   Catalog& set_(std::string_view key, const Stream& value);
-  Catalog set_streams(std::initializer_list<std::pair<std::string_view, Stream>> items) const;
-  Catalog& set_streams_(std::initializer_list<std::pair<std::string_view, Stream>> items);
-  Catalog set_streams(std::initializer_list<NamedStream> items) const;
-  Catalog& set_streams_(std::initializer_list<NamedStream> items);
+  Catalog set(std::initializer_list<std::pair<std::string_view, Stream>> items) const;
+  Catalog& set_(std::initializer_list<std::pair<std::string_view, Stream>> items);
+  Catalog set(std::initializer_list<NamedStream> items) const;
+  Catalog& set_(std::initializer_list<NamedStream> items);
   Catalog drop(std::initializer_list<std::string_view> keys) const;
 
   pluss::table::DataFrame tabelize(const TabelizePolicy& policy = {}) const;
-  pluss::table::DataFrame to_table(const TabelizePolicy& policy = {}, bool render = true) const;
+  pluss::table::DataFrame to_table(const TabelizePolicy& policy = {}, bool render = false) const;
 
   void display() const;
   void info() const;
@@ -253,6 +261,11 @@ public:
 
 private:
   explicit Catalog(pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl);
+  std::int64_t nstreams() const;
+  std::int64_t count() const;
+  std::vector<Stream> streams() const;
+  Catalog set_stream(std::string_view key, const Stream& value) const;
+  Catalog& set_stream_(std::string_view key, const Stream& value);
   const detail::CatalogImpl& impl_ref_() const;
   detail::CatalogImpl& mut_impl_();
 

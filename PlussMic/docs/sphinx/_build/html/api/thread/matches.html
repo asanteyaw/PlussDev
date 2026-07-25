@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::matmul" href="matmul.html" />
@@ -36,42 +36,97 @@
 
           <div class="body" role="main">
             
-  <section id="thread-matches">
+  <!-- pluss-hand-authored -->
+<section id="thread-matches">
 <h1>Thread::matches<a class="headerlink" href="#thread-matches" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">matches</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">matches</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks whether each note-backed text value matches the requested regular expression.</p>
+<p>Checks each cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread against a regular expression, replacing
+each cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>. <code class="docutils literal notranslate"><span class="pre">matches()</span></code> is a <strong>start-anchored search</strong>, not a full-string
+match: it reports <code class="docutils literal notranslate"><span class="pre">true</span></code> as soon as <code class="docutils literal notranslate"><span class="pre">pattern</span></code> matches a <em>prefix</em> of the cell’s text
+— anything left over after the match doesn’t matter. For a check that requires the
+pattern to consume the entire string, see <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>. Requires the
+thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>pattern</strong>
-Pattern string used for matching or extraction.</p>
+<p><strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>A regular expression (ECMAScript-flavored, via <code class="docutils literal notranslate"><span class="pre">std::regex</span></code>). Internally,
+<code class="docutils literal notranslate"><span class="pre">matches()</span></code> wraps it as <code class="docutils literal notranslate"><span class="pre">^(?:pattern)</span></code> before searching.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the
+elementwise match result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">matches</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">pattern</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. A pattern matching only part of the string still counts as <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;Acc&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;SKU-1001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-42&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-4&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;SKU-[0-9]{2}&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
+1  true
+2  false
+
+ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;SKU-1001&quot;</span></code> matches <code class="docutils literal notranslate"><span class="pre">true</span></code> even though the pattern only asks for exactly two
+digits after <code class="docutils literal notranslate"><span class="pre">SKU-</span></code> — the prefix <code class="docutils literal notranslate"><span class="pre">&quot;SKU-10&quot;</span></code> already satisfies it, and the trailing
+<code class="docutils literal notranslate"><span class="pre">&quot;01&quot;</span></code> is simply ignored. <code class="docutils literal notranslate"><span class="pre">&quot;SKU-4&quot;</span></code> has only one digit after <code class="docutils literal notranslate"><span class="pre">SKU-</span></code>, so it can’t
+satisfy even the two-digit prefix requirement, and comes back <code class="docutils literal notranslate"><span class="pre">false</span></code>. Compare with
+<a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>, which requires the whole string to be consumed and
+would report <code class="docutils literal notranslate"><span class="pre">&quot;SKU-1001&quot;</span></code> as <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::matches: expected Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>An invalid regex pattern throws at call time (from the internal pattern
+compilation), independent of the thread’s contents.</p></li>
+<li><p>Changes the thread’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fullmatch</span></code></span></a>: the whole-string-must-match counterpart.</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::extract</span></code></span></a>: pull out capture groups instead of just a
+boolean result.</p></li>
+<li><p><a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::starts</span></code></span></a>: a literal (non-regex) prefix check.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="map.html">
     <span class="label">Previous</span>
@@ -82,7 +137,6 @@ Value produced by this call.</p>
     <span class="title">matmul</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

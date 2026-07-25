@@ -25,6 +25,9 @@ struct Conv1dOptions {
 class PLUSS_API Conv1dImpl final : public Module {
 public:
   explicit Conv1dImpl(Conv1dOptions options) : Module(true), options_(std::move(options)) {
+    // register_parameters_() allocates real (defined) storage for
+    // weight_/bias_ and registers each immediately after -- see
+    // FusionImpl's identical fix and Module::parameter_record()'s contract.
     register_parameters_();
     reset_parameters();
   }
@@ -52,25 +55,19 @@ public:
             .seed = seed,
         }) {}
 
+  // Re-randomizes weight/bias values in place. Never reassigns weight_/
+  // bias_, so it's safe to call any number of times after construction --
+  // registration and tracks_slope_ (set once, in register_parameters_())
+  // are never disturbed.
   void reset_parameters() {
-    PLUSS_CHECK(options_.kernel_size > 0, "pluss::ai::nn::Conv1d: kernel_size must be > 0");
-    PLUSS_CHECK(options_.stride > 0, "pluss::ai::nn::Conv1d: stride must be > 0");
-    PLUSS_CHECK(options_.padding >= 0, "pluss::ai::nn::Conv1d: padding must be >= 0");
-    PLUSS_CHECK(options_.padding_lr[0] >= 0 && options_.padding_lr[1] >= 0, "pluss::ai::nn::Conv1d: padding_lr values must be >= 0");
-    PLUSS_CHECK(options_.dilation > 0, "pluss::ai::nn::Conv1d: dilation must be > 0");
-    PLUSS_CHECK(options_.groups > 0, "pluss::ai::nn::Conv1d: groups must be > 0");
-    PLUSS_CHECK(options_.in_channels % options_.groups == 0, "pluss::ai::nn::Conv1d: in_channels must be divisible by groups");
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    const std::int64_t group_in = options_.in_channels / options_.groups;
+    const std::int64_t group_in = weight_.sizes()[1];
     const double fan_in = static_cast<double>(group_in * options_.kernel_size);
     const double bound = 1.0 / std::sqrt(fan_in);
-    weight_ = ::pluss::detail::nn::uniform_(
-        {options_.out_channels, group_in, options_.kernel_size},
-        -bound,
-        bound,
-        cfg,
-        options_.seed);
-    bias_ = options_.bias ? ::pluss::detail::nn::uniform_({options_.out_channels}, -bound, bound, cfg, options_.seed + 1ULL) : Series();
+    weight_.copy_(::pluss::detail::nn::uniform_(weight_.sizes(), -bound, bound, cfg, options_.seed));
+    if (options_.bias) {
+      bias_.copy_(::pluss::detail::nn::uniform_({options_.out_channels}, -bound, bound, cfg, options_.seed + 1ULL));
+    }
   }
 
   Padding1d padding() const noexcept {
@@ -98,8 +95,21 @@ public:
 private:
   void register_parameters_() {
     this->clear_parameter_records_();
+    PLUSS_CHECK(options_.kernel_size > 0, "pluss::ai::nn::Conv1d: kernel_size must be > 0");
+    PLUSS_CHECK(options_.stride > 0, "pluss::ai::nn::Conv1d: stride must be > 0");
+    PLUSS_CHECK(options_.padding >= 0, "pluss::ai::nn::Conv1d: padding must be >= 0");
+    PLUSS_CHECK(options_.padding_lr[0] >= 0 && options_.padding_lr[1] >= 0, "pluss::ai::nn::Conv1d: padding_lr values must be >= 0");
+    PLUSS_CHECK(options_.dilation > 0, "pluss::ai::nn::Conv1d: dilation must be > 0");
+    PLUSS_CHECK(options_.groups > 0, "pluss::ai::nn::Conv1d: groups must be > 0");
+    PLUSS_CHECK(options_.in_channels % options_.groups == 0, "pluss::ai::nn::Conv1d: in_channels must be divisible by groups");
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    const std::int64_t group_in = options_.in_channels / options_.groups;
+    weight_ = Series::empty({options_.out_channels, group_in, options_.kernel_size}, cfg.dtype, cfg.platform);
     this->parameter_record("weight", weight_);
-    this->parameter_record("bias", bias_);
+    if (options_.bias) {
+      bias_ = Series::empty({options_.out_channels}, cfg.dtype, cfg.platform);
+      this->parameter_record("bias", bias_);
+    }
   }
 
   void on_platform_changed_(Platform platform) override { options_.cfg = options_.cfg.with_platform(platform); }

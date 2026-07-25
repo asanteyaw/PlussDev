@@ -21,8 +21,11 @@ feature(s) you want to operate on first, then calling `.note()`:
 `df.features({"city"}).note().lower()`, not `df.note()` directly on a frame that
 still has numeric or other non-text columns.
 
-This page previews the accessor's most common entry points. Each accessor method gets
-its own dedicated reference page under the `DataFrameNoteAccessor` API reference.
+This page previews the accessor's most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+[DataFrameNoteAccessor API Reference](../../dataframe_note_accessor_api_reference) and
+use its left sidebar to jump straight to any method (`starts`, `has`, `count`,
+`encode`, `matches`, `split`, `pad`, `replace`, and more).
 
 ## Parameters
 

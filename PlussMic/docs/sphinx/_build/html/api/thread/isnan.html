@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::isnull" href="isnull.html" />
@@ -36,18 +36,22 @@
 
           <div class="body" role="main">
             
-  <section id="thread-isnan">
+  <!-- pluss-hand-authored -->
+<section id="thread-isnan">
 <h1>Thread::isnan<a class="headerlink" href="#thread-isnan" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">isnan</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">isnan</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
+wherever the underlying floating-point value is <code class="docutils literal notranslate"><span class="pre">NaN</span></code>. Requires the thread to be
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind — checks the actual numeric value, unlike <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>,
+which only looks at the validity mask and doesn’t inspect the value at all.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +60,63 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">isnan</span></code> to the current thread values and inspect the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">isnan()</span></code> flags <code class="docutils literal notranslate"><span class="pre">NaN</span></code> values regardless of the validity mask.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">isnan</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nan</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">),</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">isnan</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[true, false, true]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
+1  true
+2  false
+
+ptype: Series
 </pre></div>
 </div>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">isnan</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::isnan is only valid for Series payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
+<li><p>Checks the actual floating-point value — unaffected by, and independent of, the
+validity mask that <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a> checks.</p></li>
+<li><p>A cell can be <code class="docutils literal notranslate"><span class="pre">NaN</span></code> and still report <code class="docutils literal notranslate"><span class="pre">false</span></code> from <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>, and vice versa (a
+masked-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> non-<code class="docutils literal notranslate"><span class="pre">NaN</span></code> value reports <code class="docutils literal notranslate"><span class="pre">false</span></code> from <code class="docutils literal notranslate"><span class="pre">isnan()</span></code>).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::isnull</span></code></span></a>: the validity-mask check, as opposed to this
+method’s numeric-value check.</p></li>
+<li><p><a class="reference internal" href="isfinite.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::isfinite</span></code></span></a>: the complementary “is this both non-<code class="docutils literal notranslate"><span class="pre">NaN</span></code> and
+non-<code class="docutils literal notranslate"><span class="pre">Inf</span></code>, and also valid” check.</p></li>
+<li><p><a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::invalid</span></code></span></a>: the union of <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, and <code class="docutils literal notranslate"><span class="pre">Inf</span></code> in one
+call.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isfinite.html">
     <span class="label">Previous</span>
@@ -81,7 +127,6 @@ Value produced by this call.</p>
     <span class="title">isnull</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

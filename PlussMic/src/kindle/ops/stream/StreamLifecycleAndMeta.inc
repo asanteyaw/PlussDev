@@ -51,9 +51,35 @@ std::int64_t Stream::size() const {
   return impl_ref_().size_;
 }
 
+std::int64_t Stream::nrecords() const {
+  return size();
+}
+
+bool Stream::empty() const {
+  return size() == 0;
+}
+
+std::pair<std::int64_t, std::int64_t> Stream::shape() const {
+  return {size(), 1};
+}
+
 StreamKind Stream::kind() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return impl_ref_().kind_;
+}
+
+std::string Stream::ptype() const {
+  switch (kind()) {
+    case StreamKind::Series:
+      return "Series";
+    case StreamKind::Note:
+      return "Note";
+    case StreamKind::Timeline:
+      return "Timeline";
+    case StreamKind::TimeIndex:
+      return "TimeIndex";
+  }
+  PLUSS_FAIL("Stream::ptype: unknown StreamKind");
 }
 
 std::string Stream::dtype() const {
@@ -63,52 +89,57 @@ std::string Stream::dtype() const {
 
 Stream Stream::isnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().isnull(), copy_cases(*this));
+  return Stream::from_thread(to_thread().isnull(), copy_label(*this));
 }
 
 Stream Stream::notnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().notnull(), copy_cases(*this));
+  return Stream::from_thread(to_thread().notnull(), copy_label(*this));
+}
+
+Stream Stream::invalid() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_thread(to_thread().invalid(), copy_label(*this));
 }
 
 Stream Stream::fillnull(double value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
 Stream Stream::fillnull(std::string_view value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
 Stream Stream::fillnull(const pluss::Timeline& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
 Stream Stream::fillnull(const pluss::TimeIndex& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
 Stream Stream::abs() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [](const pluss::table::Thread& t) { return t.abs(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.abs(); });
 }
 
 Stream Stream::clip(double min_value, double max_value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.clip(min_value, max_value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.clip(min_value, max_value); });
 }
 
 Stream Stream::log() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [](const pluss::table::Thread& t) { return t.log(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.log(); });
 }
 
 Stream Stream::exp() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [](const pluss::table::Thread& t) { return t.exp(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.exp(); });
 }
 
 bool Stream::has_validity_mask() const {
@@ -152,40 +183,40 @@ Stream& Stream::clear_validity_mask_() {
   return *this;
 }
 
-bool Stream::has_cases() const {
+bool Stream::has_label() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return impl_ref_().cases_.has_value();
 }
 
-const std::optional<pluss::table::Thread>& Stream::cases() const {
+const std::optional<pluss::table::Thread>& Stream::label() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return impl_ref_().cases_;
 }
 
-Stream Stream::with_cases(const pluss::table::Thread& cases) const {
+Stream Stream::with_label(const pluss::table::Thread& label) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = *this;
-  out.with_cases_(cases);
+  out.with_label_(label);
   return out;
 }
 
-Stream& Stream::with_cases_(const pluss::table::Thread& cases) {
+Stream& Stream::with_label_(const pluss::table::Thread& label) {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto& w = mut_impl_();
-  validate_cases_size(cases, w.size_);
-  w.cases_ = cases;
+  validate_label_size(label, w.size_);
+  w.cases_ = label;
   w.sync_fields();
   return *this;
 }
 
-Stream Stream::clear_cases() const {
+Stream Stream::clear_label() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = *this;
-  out.clear_cases_();
+  out.clear_label_();
   return out;
 }
 
-Stream& Stream::clear_cases_() {
+Stream& Stream::clear_label_() {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto& w = mut_impl_();
   w.cases_.reset();

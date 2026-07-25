@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::describe" href="describe.html" />
@@ -105,6 +105,27 @@ operations; <code class="docutils literal notranslate"><span class="pre">false</
 <p><code class="docutils literal notranslate"><span class="pre">empty_handle</span></code> was constructed with no columns argument at all — it has no backing
 object yet, unlike a frame constructed with an empty column list, which would be
 defined but hold zero features.</p>
+<p>Example 3. Calling an ordinary method on an undefined frame throws, exactly as
+the warning above states.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">empty_handle</span><span class="p">.</span><span class="n">ncases</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame: undefined handle
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ncases()</span></code> (like nearly every other <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> method) needs a real backing
+object to read from; calling it on <code class="docutils literal notranslate"><span class="pre">empty_handle</span></code> — which <code class="docutils literal notranslate"><span class="pre">defined()</span></code> already
+reported as <code class="docutils literal notranslate"><span class="pre">false</span></code> in Example 2 — rejects immediately rather than returning a
+meaningless <code class="docutils literal notranslate"><span class="pre">0</span></code> or crashing. Checking <code class="docutils literal notranslate"><span class="pre">defined()</span></code> first, as this page
+recommends, lets calling code sidestep this throw entirely.</p>
 </section>
 </section>
 <section id="notes">

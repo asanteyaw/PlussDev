@@ -44,8 +44,8 @@ auto left = DataFrame({
 }, pluss::make_note({"p", "q", "r"}));
 
 auto right = DataFrame({
-    {"a", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
-    {"b", pluss::make_series({false, true, true}, pluss::ScalarType::Bool)},
+    {"a", pluss::make_series({false, false, false}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({false, false, true}, pluss::ScalarType::Bool)},
 }, pluss::make_note({"x", "y", "z"}));
 
 auto out = left.lor(right);
@@ -55,21 +55,46 @@ std::cout << out;
 ### Output
 
 ```text
-=================
-     | a     b   
------------------
-p    | true  true
-q    | true  true
-r    | true  true
------------------
+===================
+     | a      b    
+-------------------
+p    | true   true 
+q    | false  true 
+r    | true   true 
+-------------------
 [3 cs x 2 feat]
 ```
 
-Every position has at least one `true` operand on this particular data — feature `a`
-is `true` everywhere except where both sides happen to be `false` at once (which
-doesn't occur here), and the same holds for `b`. OR only reports `false` where
-**both** operands are `false` at that position, which this example doesn't happen to
-produce for either feature.
+Position `1` (`q`) is the only cell where OR reports `false` for feature `a` — that's
+the one position where **both** operands (`left`'s `false` and `right`'s `false`) are
+false at once. Every other cell has at least one `true` operand on either side, so OR
+reports `true`.
+
+Example 2. OR a frame against a single shared `Thread`, applied identically to every
+feature.
+
+```cpp
+auto mask = Thread(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_thread = left.lor(mask);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+===================
+     | a     b    
+-------------------
+p    | true  true 
+q    | true  true 
+r    | true  false
+-------------------
+[3 cs x 2 feat]
+```
+
+The same three-value `mask` is combined against **both** `a` and `b` at matching
+positions — there is no way to supply a different mask per feature in one call,
+unlike [`add()`](add.md)'s `Axis::Feature` `Thread` overload.
 
 ## Notes
 

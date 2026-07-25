@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::lor" href="lor.html" />
@@ -36,18 +36,24 @@
 
           <div class="body" role="main">
             
-  <section id="thread-log">
+  <!-- pluss-hand-authored -->
+<section id="thread-log">
 <h1>Thread::log<a class="headerlink" href="#thread-log" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">log</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">log</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Applies the elementwise natural logarithm to a numeric thread.</p>
+<p>Applies the elementwise natural logarithm (<code class="docutils literal notranslate"><span class="pre">ln</span></code>). Requires the thread to be
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind. A non-floating scalar type (integer, bool) is promoted to <code class="docutils literal notranslate"><span class="pre">Float64</span></code>
+before the logarithm is computed — <code class="docutils literal notranslate"><span class="pre">log()</span></code> never throws on integer input purely for
+being integer.</p>
+<p>Standard IEEE-754 domain behavior applies: <code class="docutils literal notranslate"><span class="pre">log(0.0)</span></code> produces <code class="docutils literal notranslate"><span class="pre">-Inf</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">log(negative)</span></code> produces <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, rather than throwing.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +62,77 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the natural log of
+each element (promoted to a floating scalar type if the input was integral).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">log</span></code> elementwise and inspect the returned result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Natural log of positive values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">log</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">log</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  0
+1  2.302585093
+2  4.605170186
+
+ptype: Series
 </pre></div>
 </div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">log(0.0)</span></code> and <code class="docutils literal notranslate"><span class="pre">log(negative)</span></code> don’t throw — they produce <code class="docutils literal notranslate"><span class="pre">-Inf</span></code> and
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code>, following standard IEEE-754 domain conventions.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">edge_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-5.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge_cases</span><span class="p">.</span><span class="n">log</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  -inf
+1  nan
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">log</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::log is only valid for Series payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
+<li><p>Integer/bool input is promoted to <code class="docutils literal notranslate"><span class="pre">Float64</span></code> automatically before computing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log(0.0)</span></code> yields <code class="docutils literal notranslate"><span class="pre">-Inf</span></code>; <code class="docutils literal notranslate"><span class="pre">log(negative)</span></code> yields <code class="docutils literal notranslate"><span class="pre">NaN</span></code> — neither throws. Check
+with <a class="reference internal" href="isfinite.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isfinite()</span></code></span></a> / <a class="reference internal" href="isnan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnan()</span></code></span></a> afterward if that matters.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell on input stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on output.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::exp</span></code></span></a>: the inverse transform.</p></li>
+<li><p><a class="reference internal" href="pow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::pow</span></code></span></a>: general exponentiation, for bases other than <em>e</em>.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="length.html">
     <span class="label">Previous</span>
@@ -81,7 +143,6 @@ Value produced by this call.</p>
     <span class="title">lor</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

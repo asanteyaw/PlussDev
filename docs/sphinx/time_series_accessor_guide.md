@@ -8,14 +8,15 @@ This guide documents the general time-series surface built on top of `Series`, `
 #include <pluss/mic.h>
 
 using pluss::table::DataFrame;
+using pluss::table::TsOptions;
 
 DataFrame df = /* load or build */;
 
 // Single-column TS transform.
-auto lr = df.ts("Adj Close").log_returns();
+auto lr = df.features({"Adj Close"}).ts().log_returns();
 
 // One-liner assignment.
-df.set("Log Returns") = df.ts("Adj Close").log_returns();
+df.set("Log Returns") = df.features({"Adj Close"}).ts().log_returns();
 ```
 
 ## Surfaces
@@ -25,49 +26,61 @@ df.set("Log Returns") = df.ts("Adj Close").log_returns();
 `df.features("Adj Close").ts()` returns a `TimeSeriesAccessor` with:
 
 - `returns`, `log_returns`, `diff`, `lag`, `lead`
-- `rolling_mean`, `rolling_std`, `rolling_sum`, `rolling_var`, `rolling_min`, `rolling_max`
-- `ema`, `ewm_mean`, `ewm_std`
-- `expanding_mean`, `expanding_std`
+- `rolling(window, statistic, options)`
+- `timed(axis, window, statistic, options)`
+- `grouped(group, window, statistic, options)`
+- `ewm(alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls)`
+- `expanding(statistic, options)`
 - `zscore_rolling`
 - `fill_gaps`
 - `resample(axis, freq, op, step)` returning `{labels, values}`
 
 ## `DataFrame` surface
 
-`df.ts("feature")` or `df.ts({"f1","f2"})` returns `DataFrameTsAccessor`.
+`df.features({"f1","f2"}).ts()` returns `DataFrameTsAccessor` for selected value features.
+Use `TsOptions` when the operation needs a separate time or group axis:
+
+```cpp
+auto opts = TsOptions{.axis = df.features("date")};
+auto daily = df.features({"Adj Close", "Volume"}).ts(opts).resample("D").mean();
+```
 
 Transform methods return a `DataFrame` containing transformed selected features:
 
 - `returns`, `log_returns`, `diff`, `lag`, `lead`
-- `rolling_mean`, `rolling_std`, `rolling_sum`, `rolling_var`, `rolling_min`, `rolling_max`
-- `ema`, `ewm_mean`, `ewm_std`
-- `expanding_mean`, `expanding_std`
+- `rolling(window, statistic, options)`
+- `rolling(duration, statistic, options, closure)`
+- `grouped(window, statistic, options)` when `TsOptions.group` is provided
+- `ewm(alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls)`
+- `expanding(statistic, options)`
 - `zscore_rolling`, `fill_gaps`
 
 Time-axis utilities:
 
-- `resample(time_feature, freq, op, step)`
-- `asfreq(time_feature, freq, step, fill_mode, constant, op)`
-- `insert_gaps(time_feature, freq, step)`
-- `align_to(time_feature, target_axis, mode)`
-- `reindex_time(time_feature, target_axis, mode, fill, constant)`
+- `resample(freq, op, step)` using `TsOptions.axis` or time case labels
+- `asfreq(freq, step, fill_mode, constant, op)`
+- `insert_gaps(freq, step)`
+- `align_to(target_axis, mode)`
+- `align_to(target_axis, mode, fill, constant)`
 
 Feature builders:
 
-- `calendar(time_feature)`
+- `calendar()`
 - `lag_block({lags...})`
 - `rolling_block({windows...}, options)`
 
 ## Example: End-to-End Feature Prep
 
 ```cpp
-auto lr = df.ts("Adj Close").log_returns();
-auto lag = df.ts({"Adj Close", "Volume"}).lag_block({1, 2, 3});
-auto roll = df.ts({"Adj Close", "Volume"}).rolling_block({5, 20});
-auto cal = df.ts("Adj Close").calendar("date");
+auto opts = TsOptions{.axis = df.features("date")};
 
-auto daily = df.ts({"Adj Close", "Volume"}).resample(
-    "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean, 1);
+auto lr = df.features({"Adj Close"}).ts().log_returns();
+auto lag = df.features({"Adj Close", "Volume"}).ts().lag_block({1, 2, 3});
+auto roll = df.features({"Adj Close", "Volume"}).ts().rolling_block({5, 20});
+auto cal = df.features({"Adj Close"}).ts(opts).calendar();
+
+auto daily = df.features({"Adj Close", "Volume"}).ts(opts).resample(
+    "D", pluss::subsp::stats::ts::ResampleOp::Mean, 1);
 ```
 
 ## Notes

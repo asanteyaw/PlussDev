@@ -18,6 +18,8 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "CodeM/core/Errors.h"
 #include "loader/CsvLoader.h"
 
@@ -40,6 +42,8 @@ struct NexusRelationshipAuditProfile {
   NexusKeyAuditProfile right{};
   std::int64_t left_orphan_rows{0};
   std::int64_t right_orphan_rows{0};
+  DataFrame left_orphans{};
+  DataFrame right_orphans{};
   bool left_unique_required{false};
   bool right_unique_required{false};
   bool valid{false};
@@ -63,12 +67,20 @@ public:
   std::unordered_map<std::string, TableMeta> table_meta_{};
   std::vector<Relationship> relationships_{};
   std::unordered_map<std::string, std::int64_t> rel_name_to_pos_{};
+  std::unordered_map<std::string, JoinPlan> saved_views_{};
   std::int64_t next_auto_id_{0};
   mutable std::unordered_map<std::string, NexusKeyAuditProfile> key_profile_cache_{};
   mutable std::unordered_map<std::string, NexusRelationshipAuditProfile> relationship_audit_cache_{};
   mutable std::unordered_map<std::string, JoinPath> path_cache_{};
+  mutable std::unordered_map<std::string, JoinPlan> plan_cache_{};
+  mutable std::unordered_map<std::string, DataFrame> neighbors_cache_{};
+  mutable std::optional<DataFrame> profile_cache_{};
+  mutable std::optional<DataFrame> scan_cache_{};
+  mutable std::optional<DataFrame> deduce_cache_{};
   mutable bool adjacency_built_{false};
   mutable std::unordered_map<std::string, std::vector<NexusAdjacencyLink>> adjacency_{};
+  mutable bool feature_owners_built_{false};
+  mutable std::unordered_map<std::string, std::vector<std::size_t>> feature_owners_{};
 };
 
 } // namespace detail
@@ -82,6 +94,8 @@ public:
 #include "table/ops/nexus/NexusRelational.inc"
 #include "table/ops/nexus/NexusQuery.inc"
 #include "table/ops/nexus/NexusStore.inc"
+#include "table/ops/nexus/NexusExplore.inc"
+#include "table/ops/nexus/NexusViews.inc"
 #include "table/ops/nexus/NexusInterop.inc"
 #include "table/ops/nexus/NexusRender.inc"
 

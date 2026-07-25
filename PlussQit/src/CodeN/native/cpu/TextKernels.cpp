@@ -64,10 +64,6 @@ inline bool is_ascii_word_start(unsigned char c) {
   return is_ascii_alnum(c) || c == '_';
 }
 
-inline bool is_ascii_word_body(unsigned char c) {
-  return is_ascii_alnum(c) || c == '_' || c == '\'';
-}
-
 #if defined(__ARM_NEON)
 inline ::std::uint32_t char_eq_mask_16(const unsigned char* p, unsigned char c) {
   const uint8x16_t v = vld1q_u8(p);
@@ -295,6 +291,232 @@ inline std::string transform_lines(std::string_view s, const std::function<bool(
     }
   }
   return out;
+}
+
+inline bool is_ascii_word_connector(unsigned char c) {
+  return c == '_' || c == '\'' || c == '-';
+}
+
+inline bool is_ascii_quote_or_closer(unsigned char c) {
+  return c == '"' || c == '\'' || c == ')' || c == ']' || c == '}';
+}
+
+inline bool is_ascii_url_char(unsigned char c) {
+  return is_ascii_alnum(c) || c == '_' || c == '-' || c == '.' || c == '/' ||
+         c == ':' || c == '?' || c == '&' || c == '=' || c == '%' || c == '#' ||
+         c == '+' || c == '~' || c == '@';
+}
+
+inline bool is_ascii_email_local_char(unsigned char c) {
+  return is_ascii_alnum(c) || c == '.' || c == '_' || c == '%' || c == '+' || c == '-';
+}
+
+inline bool is_ascii_email_domain_char(unsigned char c) {
+  return is_ascii_alnum(c) || c == '.' || c == '-';
+}
+
+inline bool starts_with_ci(std::string_view s, std::string_view prefix) {
+  if (prefix.size() > s.size()) return false;
+  for (std::size_t i = 0; i < prefix.size(); ++i) {
+    if (to_lower_ascii_byte(static_cast<unsigned char>(s[i])) !=
+        to_lower_ascii_byte(static_cast<unsigned char>(prefix[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline bool is_punct_only_span(std::string_view s, std::size_t start, std::size_t len) {
+  if (len == 0) return false;
+  for (std::size_t i = start; i < start + len; ++i) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
+    if (!is_ascii_punct(c)) return false;
+  }
+  return true;
+}
+
+inline std::size_t trim_trailing_token_punct(std::string_view s,
+                                             std::size_t start,
+                                             std::size_t end) {
+  while (end > start) {
+    const unsigned char c = static_cast<unsigned char>(s[end - 1]);
+    if (c == '.' || c == ',' || c == '!' || c == '?' || c == ';' || c == ':') {
+      --end;
+      continue;
+    }
+    if ((c == ')' || c == ']' || c == '}') && s.substr(start, end - start).find_first_of("([{") == std::string_view::npos) {
+      --end;
+      continue;
+    }
+    break;
+  }
+  return end;
+}
+
+inline bool looks_like_known_abbreviation(std::string_view token) {
+  static const std::array<std::string_view, 34> kAbbrev{
+      "mr",   "mrs",  "ms",   "dr",   "prof", "sr",   "jr",   "vs",
+      "etc",  "e.g",  "i.e",  "cf",   "fig",  "eq",   "dept", "est",
+      "approx", "misc", "inc", "ltd", "corp", "co",   "st",   "mt",
+      "ft",   "no",   "jan",  "feb",  "mar",  "apr",  "jun",  "jul",
+      "aug",  "sep"};
+  for (std::string_view abbr : kAbbrev) {
+    if (token == abbr) return true;
+  }
+  return token == "oct" || token == "nov" || token == "dec";
+}
+
+inline bool looks_like_title_abbreviation(std::string_view token) {
+  return token == "mr" || token == "mrs" || token == "ms" || token == "dr" ||
+         token == "prof" || token == "sr" || token == "jr" || token == "st";
+}
+
+inline bool looks_like_dotted_abbreviation(std::string_view token) {
+  if (token.size() < 4 || token.back() != '.') return false;
+  std::size_t i = 0;
+  std::size_t groups = 0;
+  while (i < token.size()) {
+    std::size_t j = i;
+    while (j < token.size() && is_ascii_alpha(static_cast<unsigned char>(token[j]))) ++j;
+    const std::size_t span = j - i;
+    if (j == i || j >= token.size() || token[j] != '.' || span > 3) return false;
+    ++groups;
+    i = j + 1;
+  }
+  return groups >= 2;
+}
+
+inline std::size_t scan_url_span(std::string_view s, std::size_t start) {
+  const std::string_view tail = s.substr(start);
+  if (!starts_with_ci(tail, "http://") &&
+      !starts_with_ci(tail, "https://") &&
+      !starts_with_ci(tail, "ftp://") &&
+      !starts_with_ci(tail, "www.")) {
+    return start;
+  }
+
+  std::size_t end = start;
+  while (end < s.size() && !is_ascii_space(static_cast<unsigned char>(s[end])) &&
+         is_ascii_url_char(static_cast<unsigned char>(s[end]))) {
+    ++end;
+  }
+  return trim_trailing_token_punct(s, start, end);
+}
+
+inline std::size_t scan_email_span(std::string_view s, std::size_t start) {
+  if (!is_ascii_alnum(static_cast<unsigned char>(s[start]))) return start;
+
+  std::size_t at = start;
+  while (at < s.size() && is_ascii_email_local_char(static_cast<unsigned char>(s[at]))) ++at;
+  if (at == start || at >= s.size() || s[at] != '@') return start;
+  if (at > start && s[at - 1] == '.') return start;
+
+  std::size_t end = at + 1;
+  std::size_t last_dot = std::string_view::npos;
+  while (end < s.size() && is_ascii_email_domain_char(static_cast<unsigned char>(s[end]))) {
+    if (s[end] == '.') last_dot = end;
+    ++end;
+  }
+  end = trim_trailing_token_punct(s, start, end);
+  if (end == at + 1 || end <= at + 2 || s[end - 1] == '.') return start;
+  last_dot = std::string_view::npos;
+  for (std::size_t i = at + 1; i < end; ++i) {
+    if (s[i] == '.') last_dot = i;
+  }
+  if (last_dot == std::string_view::npos || last_dot + 2 >= end) return start;
+  return end;
+}
+
+inline std::size_t scan_dotted_abbreviation_span(std::string_view s, std::size_t start) {
+  if (!is_ascii_alpha(static_cast<unsigned char>(s[start]))) return start;
+  std::size_t i = start;
+  std::size_t groups = 0;
+  while (i < s.size()) {
+    std::size_t j = i;
+    while (j < s.size() && is_ascii_alpha(static_cast<unsigned char>(s[j]))) ++j;
+    const std::size_t span = j - i;
+    if (j == i || j >= s.size() || s[j] != '.' || span > 3) break;
+    ++groups;
+    i = j + 1;
+  }
+  return groups >= 2 ? i : start;
+}
+
+inline std::size_t scan_known_abbreviation_span(std::string_view s, std::size_t start) {
+  if (!is_ascii_alpha(static_cast<unsigned char>(s[start]))) return start;
+  std::size_t end = start;
+  while (end < s.size() && is_ascii_alpha(static_cast<unsigned char>(s[end]))) ++end;
+  if (end >= s.size() || s[end] != '.') return start;
+  const std::string lower = lower_ascii(s.substr(start, end - start));
+  return looks_like_known_abbreviation(lower) ? end + 1 : start;
+}
+
+inline std::size_t scan_word_like_span(std::string_view s, std::size_t start) {
+  if (!is_ascii_word_start(static_cast<unsigned char>(s[start]))) return start;
+  std::size_t end = start + 1;
+  while (end < s.size()) {
+    const unsigned char c = static_cast<unsigned char>(s[end]);
+    if (is_ascii_alnum(c) || c == '_') {
+      ++end;
+      continue;
+    }
+    if (is_ascii_word_connector(c) &&
+        end > start &&
+        end + 1 < s.size() &&
+        is_ascii_alnum(static_cast<unsigned char>(s[end - 1])) &&
+        is_ascii_alnum(static_cast<unsigned char>(s[end + 1]))) {
+      ++end;
+      continue;
+    }
+    break;
+  }
+
+  if (end < s.size() &&
+      (s[end] == '+' || s[end] == '#') &&
+      end > start &&
+      is_ascii_alpha(static_cast<unsigned char>(s[end - 1]))) {
+    while (end < s.size() && (s[end] == '+' || s[end] == '#')) ++end;
+  }
+  return end;
+}
+
+inline bool suppress_sentence_break(std::string_view s,
+                                    std::size_t punct_pos,
+                                    std::size_t next_pos) {
+  if (s[punct_pos] != '.') return false;
+  if (punct_pos > 0 && punct_pos + 1 < s.size() &&
+      is_ascii_digit(static_cast<unsigned char>(s[punct_pos - 1])) &&
+      is_ascii_digit(static_cast<unsigned char>(s[punct_pos + 1]))) {
+    return true;
+  }
+
+  std::size_t begin = punct_pos;
+  while (begin > 0 && !is_ascii_space(static_cast<unsigned char>(s[begin - 1]))) --begin;
+  std::string token(s.substr(begin, punct_pos - begin + 1));
+  while (!token.empty() && (token.front() == '"' || token.front() == '\'' ||
+                            token.front() == '(' || token.front() == '[' || token.front() == '{')) {
+    token.erase(token.begin());
+  }
+  while (!token.empty() && is_ascii_quote_or_closer(static_cast<unsigned char>(token.back()))) {
+    token.pop_back();
+  }
+  if (token.empty()) return false;
+
+  std::string lower = lower_ascii(token);
+  if (!lower.empty() && lower.back() == '.') lower.pop_back();
+
+  while (next_pos < s.size() && is_ascii_space(static_cast<unsigned char>(s[next_pos]))) ++next_pos;
+  const unsigned char next = next_pos < s.size()
+                                 ? static_cast<unsigned char>(s[next_pos])
+                                 : 0;
+  const bool next_is_alpha = next_pos < s.size() && is_ascii_alpha(next);
+  const bool next_is_lower = next_pos < s.size() && (next >= 'a' && next <= 'z');
+
+  if (looks_like_title_abbreviation(lower) && next_is_alpha) return true;
+  if (looks_like_known_abbreviation(lower) && next_is_lower) return true;
+  if (looks_like_dotted_abbreviation(token) && next_is_lower) return true;
+
+  return false;
 }
 
 } // namespace
@@ -1385,44 +1607,44 @@ void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
   return out;
 }
 
-::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_word_spans(::std::string_view s) {
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_nlp_token_spans(::std::string_view s,
+                                                                                bool keep_punct) {
   ::std::vector<::std::pair<::std::size_t, ::std::size_t>> out;
   const ::std::size_t n = s.size();
-  const auto* bytes = reinterpret_cast<const unsigned char*>(s.data());
   ::std::size_t i = 0;
 
   while (i < n) {
-    while (i + 16 <= n) {
-      ::std::uint32_t delim = non_alnum_mask_16(bytes + i) & 0xFFFFu;
-      delim &= ~char_eq_mask_16(bytes + i, static_cast<unsigned char>('_'));
-      delim &= 0xFFFFu;
-      if (delim == 0xFFFFu) {
-        i += 16;
-        continue;
-      }
-      if (delim != 0u) {
-        i += first_set_bit_32((~delim) & 0xFFFFu);
-      }
-      break;
-    }
-    while (i < n && !is_ascii_word_start(bytes[i])) ++i;
+    while (i < n && is_ascii_space(static_cast<unsigned char>(s[i]))) ++i;
     if (i >= n) break;
-    const ::std::size_t start = i;
 
-    while (i + 16 <= n) {
-      ::std::uint32_t delim = non_alnum_mask_16(bytes + i) & 0xFFFFu;
-      delim &= ~char_eq_mask_16(bytes + i, static_cast<unsigned char>('_'));
-      delim &= ~char_eq_mask_16(bytes + i, static_cast<unsigned char>('\''));
-      delim &= 0xFFFFu;
-      if (delim == 0u) {
-        i += 16;
-        continue;
-      }
-      i += first_set_bit_32(delim);
-      break;
+    const ::std::size_t start = i;
+    ::std::size_t end = scan_url_span(s, i);
+    if (end == i) end = scan_email_span(s, i);
+    if (end == i) end = scan_dotted_abbreviation_span(s, i);
+    if (end == i) end = scan_known_abbreviation_span(s, i);
+    if (end == i) end = scan_word_like_span(s, i);
+
+    if (end > i) {
+      out.emplace_back(start, end - start);
+      i = end;
+      continue;
     }
-    while (i < n && is_ascii_word_body(bytes[i])) ++i;
-    out.emplace_back(start, i - start);
+
+    ++i;
+    if (keep_punct && is_ascii_punct(static_cast<unsigned char>(s[start]))) {
+      out.emplace_back(start, 1);
+    }
+  }
+
+  return out;
+}
+
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_word_spans(::std::string_view s) {
+  ::std::vector<::std::pair<::std::size_t, ::std::size_t>> out;
+  const auto spans = split_nlp_token_spans(s, false);
+  out.reserve(spans.size());
+  for (const auto& [start, len] : spans) {
+    if (!is_punct_only_span(s, start, len)) out.emplace_back(start, len);
   }
   return out;
 }
@@ -1462,7 +1684,8 @@ void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
 
       ::std::size_t j = i + 1;
       while (j < n && (bytes[j] == '.' || bytes[j] == '!' || bytes[j] == '?')) ++j;
-      if (j == n || is_ascii_space(bytes[j])) {
+      while (j < n && is_ascii_quote_or_closer(bytes[j])) ++j;
+      if ((j == n || is_ascii_space(bytes[j])) && !suppress_sentence_break(s, i, j)) {
         emit_trimmed(start, j);
         i = j;
         break;
@@ -1471,6 +1694,203 @@ void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
     }
   }
   return out;
+}
+
+::std::string simple_lemma_ascii(::std::string_view token) {
+  std::string lower = lower_ascii(token);
+  if (lower.empty()) return lower;
+  if (lower.find("://") != std::string::npos || lower.find('@') != std::string::npos) {
+    return lower;
+  }
+  if (lower.find('+') != std::string::npos || lower.find('#') != std::string::npos) {
+    return lower;
+  }
+  if (lower.size() > 2 && lower.ends_with("'s")) {
+    lower.resize(lower.size() - 2);
+  } else if (lower.size() > 1 && lower.back() == '\'' ) {
+    lower.pop_back();
+  }
+
+  static const std::array<std::pair<std::string_view, std::string_view>, 16> kIrregular{{
+      {"am", "be"}, {"is", "be"}, {"are", "be"}, {"was", "be"},
+      {"were", "be"}, {"has", "have"}, {"had", "have"}, {"does", "do"},
+      {"did", "do"}, {"done", "do"}, {"children", "child"}, {"men", "man"},
+      {"women", "woman"}, {"mice", "mouse"}, {"geese", "goose"}, {"feet", "foot"},
+  }};
+  for (const auto& [from, to] : kIrregular) {
+    if (lower == from) return std::string(to);
+  }
+
+  if (lower.size() > 5 && lower.ends_with("ies")) {
+    lower.replace(lower.size() - 3, 3, "y");
+    return lower;
+  }
+  if (lower.size() > 5 && lower.ends_with("ing")) {
+    lower.resize(lower.size() - 3);
+    if (lower.size() >= 2 && lower.back() == lower[lower.size() - 2]) lower.pop_back();
+    return lower;
+  }
+  if (lower.size() > 4 && lower.ends_with("ed")) {
+    lower.resize(lower.size() - 2);
+    if (lower.size() >= 2 && lower.back() == lower[lower.size() - 2]) lower.pop_back();
+    return lower;
+  }
+  if (lower.size() > 4 && lower.ends_with("es")) {
+    if (lower.ends_with("ches") || lower.ends_with("shes") || lower.ends_with("ses") ||
+        lower.ends_with("xes") || lower.ends_with("zes") || lower.ends_with("oes")) {
+      lower.resize(lower.size() - 2);
+    } else {
+      lower.resize(lower.size() - 1);
+    }
+    return lower;
+  }
+  if (lower.size() > 3 && lower.ends_with("s") && !lower.ends_with("ss")) {
+    lower.pop_back();
+    return lower;
+  }
+  return lower;
+}
+
+bool is_ascii_number_like(::std::string_view token) noexcept {
+  if (token.empty()) return false;
+  bool saw_digit = false;
+  bool saw_decimal = false;
+  bool saw_sign = false;
+  for (std::size_t i = 0; i < token.size(); ++i) {
+    const unsigned char c = static_cast<unsigned char>(token[i]);
+    if (is_ascii_digit(c)) {
+      saw_digit = true;
+      continue;
+    }
+    if ((c == '+' || c == '-') && i == 0 && !saw_sign) {
+      saw_sign = true;
+      continue;
+    }
+    if ((c == '.' || c == ',') && !saw_decimal) {
+      saw_decimal = true;
+      continue;
+    }
+    if (c == '%' && i + 1 == token.size() && saw_digit) {
+      continue;
+    }
+    return false;
+  }
+  return saw_digit;
+}
+
+AsciiTokenTraits analyze_ascii_token(::std::string_view token) noexcept {
+  AsciiTokenTraits traits{};
+  if (token.empty()) {
+    traits.is_ascii = true;
+    return traits;
+  }
+
+  bool saw_non_punct = false;
+  for (unsigned char c : token) {
+    if (c > 127U) traits.is_ascii = false;
+    if (is_ascii_alpha(c)) {
+      traits.has_alpha = true;
+      saw_non_punct = true;
+      if (std::islower(c)) traits.is_lowercase = true;
+      if (std::isupper(c)) traits.is_uppercase = true;
+      continue;
+    }
+    if (is_ascii_digit(c)) {
+      traits.has_digit = true;
+      saw_non_punct = true;
+      continue;
+    }
+    if (c == '-') {
+      traits.has_hyphen = true;
+    } else if (c == '\'') {
+      traits.has_apostrophe = true;
+    }
+    if (c == '_' || std::isspace(c) != 0) {
+      saw_non_punct = true;
+    }
+  }
+
+  traits.is_number_like = is_ascii_number_like(token);
+  traits.is_titlecase = is_ascii_titlecase_token(token);
+  traits.is_uppercase = is_ascii_uppercase_token(token);
+  traits.is_url = is_ascii_url_token(token);
+  traits.is_email = is_ascii_email_token(token);
+  traits.is_punct_only = !saw_non_punct && !traits.has_alpha && !traits.has_digit;
+  if (traits.is_titlecase || traits.is_uppercase) {
+    traits.is_lowercase = false;
+  }
+  return traits;
+}
+
+bool is_ascii_titlecase_token(::std::string_view token) noexcept {
+  if (token.empty()) return false;
+  std::size_t first_alpha = token.size();
+  for (std::size_t i = 0; i < token.size(); ++i) {
+    if (is_ascii_alpha(static_cast<unsigned char>(token[i]))) {
+      first_alpha = i;
+      break;
+    }
+  }
+  if (first_alpha == token.size()) return false;
+  if (!std::isupper(static_cast<unsigned char>(token[first_alpha]))) return false;
+  bool saw_tail_alpha = false;
+  for (std::size_t i = first_alpha + 1; i < token.size(); ++i) {
+    const unsigned char c = static_cast<unsigned char>(token[i]);
+    if (!is_ascii_alpha(c)) continue;
+    saw_tail_alpha = true;
+    if (!std::islower(c)) return false;
+  }
+  return saw_tail_alpha || is_ascii_alpha(static_cast<unsigned char>(token[first_alpha]));
+}
+
+bool is_ascii_uppercase_token(::std::string_view token) noexcept {
+  if (token.empty()) return false;
+  bool saw_alpha = false;
+  for (unsigned char c : token) {
+    if (!is_ascii_alpha(c)) continue;
+    saw_alpha = true;
+    if (!std::isupper(c)) return false;
+  }
+  return saw_alpha;
+}
+
+bool is_ascii_url_token(::std::string_view token) noexcept {
+  if (token.empty()) return false;
+  return scan_url_span(token, 0) == token.size();
+}
+
+bool is_ascii_email_token(::std::string_view token) noexcept {
+  if (token.empty()) return false;
+  return scan_email_span(token, 0) == token.size();
+}
+
+::std::string token_shape_ascii(::std::string_view token) {
+  std::string out;
+  out.reserve(token.size());
+  for (unsigned char c : token) {
+    if (is_ascii_alpha(c) && std::isupper(c)) {
+      out.push_back('X');
+    } else if (is_ascii_alpha(c) && std::islower(c)) {
+      out.push_back('x');
+    } else if (is_ascii_digit(c)) {
+      out.push_back('d');
+    } else {
+      out.push_back(static_cast<char>(c));
+    }
+  }
+  return out;
+}
+
+::std::string prefix_ascii(::std::string_view token, ::std::size_t width) {
+  if (width == 0 || token.empty()) return {};
+  if (token.size() <= width) return std::string(token);
+  return std::string(token.substr(0, width));
+}
+
+::std::string suffix_ascii(::std::string_view token, ::std::size_t width) {
+  if (width == 0 || token.empty()) return {};
+  if (token.size() <= width) return std::string(token);
+  return std::string(token.substr(token.size() - width));
 }
 
 void tokenize_words_ascii_lower_filtered(::std::string_view s,

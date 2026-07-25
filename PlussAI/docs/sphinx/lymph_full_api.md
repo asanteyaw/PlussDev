@@ -1,6 +1,6 @@
 # Lymph Full API Reference
 
-Lymph method-centric reference generated from public headers.
+Lymph method-centric reference, organized around the public API surface.
 Each page follows **API Signature -> Inputs -> Output -> Options -> Examples (with expected outputs)**.
 Options/enums are documented under the methods that consume them.
 

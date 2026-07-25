@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::lengthen" href="lengthen.html" />
+    <link rel="next" title="DataFrame::length" href="length.html" />
     <link rel="prev" title="DataFrame::land" href="land.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -115,6 +115,79 @@ s3   | true   true
 <p><code class="docutils literal notranslate"><span class="pre">90</span> <span class="pre">&lt;=</span> <span class="pre">88</span></code> is the only <code class="docutils literal notranslate"><span class="pre">false</span></code> here — every other cell in both features is at or below
 <code class="docutils literal notranslate"><span class="pre">88</span></code>. Note that <code class="docutils literal notranslate"><span class="pre">final</span></code>’s <code class="docutils literal notranslate"><span class="pre">s2</span></code> value (<code class="docutils literal notranslate"><span class="pre">88</span></code>) reports <code class="docutils literal notranslate"><span class="pre">true</span></code> because the boundary value
 itself counts as satisfying <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, unlike the strict <a class="reference internal" href="lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lt()</span></code></span></a> relation.</p>
+<p>Example 2. Broadcast one text value against a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind feature — lexicographic
+comparison, same ordering <code class="docutils literal notranslate"><span class="pre">std::string</span></code> itself uses.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">le</span><span class="p">(</span><span class="s">&quot;Ada&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_names</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+      | name 
+-------------
+s1    | true 
+s2    | false
+s3    | true 
+-------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Ada&quot;</span> <span class="pre">&lt;=</span> <span class="pre">&quot;Ada&quot;</span></code> holds (the boundary case), but <code class="docutils literal notranslate"><span class="pre">&quot;Bola&quot;</span> <span class="pre">&lt;=</span> <span class="pre">&quot;Ada&quot;</span></code> does not —
+<code class="docutils literal notranslate"><span class="pre">&quot;Bola&quot;</span></code> sorts after <code class="docutils literal notranslate"><span class="pre">&quot;Ada&quot;</span></code> lexicographically.</p>
+<p>Example 3. Compare two frames cell by cell once they share the same structure.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">83.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">72.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out_frames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">le</span><span class="p">(</span><span class="n">changed</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_frames</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+      | quiz   final
+--------------------
+s1    | true   true 
+s2    | true   true 
+s3    | false  true 
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Only <code class="docutils literal notranslate"><span class="pre">s3</span></code>’s <code class="docutils literal notranslate"><span class="pre">quiz</span></code> fails: <code class="docutils literal notranslate"><span class="pre">scores</span></code>’s <code class="docutils literal notranslate"><span class="pre">84</span></code> is not <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code> <code class="docutils literal notranslate"><span class="pre">changed</span></code>’s <code class="docutils literal notranslate"><span class="pre">83</span></code>. Every equal
+cell (all of <code class="docutils literal notranslate"><span class="pre">final</span></code>, and <code class="docutils literal notranslate"><span class="pre">quiz</span></code> at <code class="docutils literal notranslate"><span class="pre">s1</span></code>/<code class="docutils literal notranslate"><span class="pre">s2</span></code>) reports <code class="docutils literal notranslate"><span class="pre">true</span></code>, since equality
+satisfies <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>.</p>
+<p>Example 4. Compare against a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with one value per feature — <code class="docutils literal notranslate"><span class="pre">quiz</span></code> checked
+against <code class="docutils literal notranslate"><span class="pre">84</span></code>, <code class="docutils literal notranslate"><span class="pre">final</span></code> checked against <code class="docutils literal notranslate"><span class="pre">88</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">thresholds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">le</span><span class="p">(</span><span class="n">thresholds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+      | quiz   final
+--------------------
+s1    | true   true 
+s2    | false  true 
+s3    | true   true 
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">quiz</span> <span class="pre">&lt;=</span> <span class="pre">84</span></code> fails only at <code class="docutils literal notranslate"><span class="pre">s2</span></code> (<code class="docutils literal notranslate"><span class="pre">90</span></code>); <code class="docutils literal notranslate"><span class="pre">final</span> <span class="pre">&lt;=</span> <span class="pre">88</span></code> holds everywhere, since every
+<code class="docutils literal notranslate"><span class="pre">final</span></code> value is at most <code class="docutils literal notranslate"><span class="pre">88</span></code>.</p>
 </section>
 </section>
 <section id="notes">
@@ -142,9 +215,9 @@ operand shapes.</p></li>
     <span class="label">Previous</span>
     <span class="title">land</span>
   </a>
-  <a class="next-link" href="lengthen.html">
+  <a class="next-link" href="length.html">
     <span class="label">Next</span>
-    <span class="title">lengthen</span>
+    <span class="title">length</span>
   </a>
 </div>
 </section>
@@ -199,7 +272,7 @@ operand shapes.</p></li>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
       <li>Previous: <a href="land.html" title="previous chapter">DataFrame::land</a></li>
-      <li>Next: <a href="lengthen.html" title="next chapter">DataFrame::lengthen</a></li>
+      <li>Next: <a href="length.html" title="next chapter">DataFrame::length</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

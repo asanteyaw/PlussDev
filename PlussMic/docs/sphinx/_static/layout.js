@@ -144,6 +144,7 @@
     sidebar.appendChild(nav);
 
     let currentLetter = "";
+    let activeLink = null;
     navData[page.key].methods.forEach((name) => {
       const letter = (name[0] || "#").toUpperCase();
       if (letter !== currentLetter) {
@@ -159,11 +160,31 @@
       link.href = page.landing ? `api/${page.slug}/${name}.html` : `${name}.html`;
       if (!page.landing && page.method === name) {
         link.classList.add("active");
+        activeLink = link;
       }
       nav.appendChild(link);
     });
 
     documentRoot.appendChild(sidebar);
+
+    // Every method click is a full page navigation, so this sidebar is torn
+    // down and rebuilt from scratch on each new page -- without this, it
+    // always renders scrolled to the top ("A" group) no matter where you
+    // clicked from. Jump the freshly built sidebar straight to the active
+    // method instead, keeping it roughly centered in the scrollable rail.
+    if (activeLink) {
+      const scrollActiveIntoView = () => {
+        const railRect = sidebar.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
+        const offset = (linkRect.top - railRect.top) - sidebar.clientHeight / 2 + linkRect.height / 2;
+        sidebar.scrollTop = Math.max(0, sidebar.scrollTop + offset);
+      };
+      // Run after layout has settled so getBoundingClientRect reflects the
+      // real, final sidebar height (fonts/CSS can still be applying at the
+      // moment this function first runs).
+      requestAnimationFrame(scrollActiveIntoView);
+    }
+
     return { apiSidebar: true };
   }
 

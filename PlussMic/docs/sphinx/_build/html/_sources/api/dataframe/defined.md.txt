@@ -74,6 +74,30 @@ false
 object yet, unlike a frame constructed with an empty column list, which would be
 defined but hold zero features.
 
+Example 3. Calling an ordinary method on an undefined frame throws, exactly as
+the warning above states.
+
+```cpp
+try {
+  auto n = empty_handle.ncases();
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+DataFrame: undefined handle
+```
+
+`ncases()` (like nearly every other `DataFrame` method) needs a real backing
+object to read from; calling it on `empty_handle` — which `defined()` already
+reported as `false` in Example 2 — rejects immediately rather than returning a
+meaningless `0` or crashing. Checking `defined()` first, as this page
+recommends, lets calling code sidestep this throw entirely.
+
 ## Notes
 
 - `defined()` is `noexcept` and cheap — it's a pointer check, not a data scan.

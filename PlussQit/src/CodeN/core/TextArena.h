@@ -22,6 +22,10 @@ public:
   explicit TextArena(::std::vector<char>&& bytes)
       : data_(::std::move(bytes)) {}
 
+  void reserve(::std::size_t n) {
+    data_.reserve(n);
+  }
+
   // Append bytes to the arena and return (offset, length).
   ::std::pair<::std::size_t, ::std::size_t> append(::std::string_view bytes) {
     const ::std::size_t off = data_.size();

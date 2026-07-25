@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # DataFrameNoteAccessor::starts
 
 [Back to DataFrameNoteAccessor API Reference](../../dataframe_note_accessor_api_reference)
@@ -5,45 +7,158 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::starts(std::string_view prefix) -> DataFrame
+DataFrameNoteAccessor::starts(std::string_view prefix) const -> DataFrame
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Checks every selected text feature's cells for a literal, case-sensitive
+prefix match, replacing each cell with a `Bool` — `true` where the cell's
+text begins with `prefix`, `false` where it doesn't. The feature's payload
+kind changes from `Note` to `Series` (`Bool`), same as every other
+boolean-producing method on this accessor ([`has()`](has.md),
+[`matches()`](matches.md), [`fullmatch()`](fullmatch.md)).
+
+`starts()` has exactly one overload and takes no options — it is always a
+plain, case-sensitive, literal substring-at-position-0 check. There's no
+regex mode and no case-insensitive toggle; for either of those, use
+[`has()`](has.md) with a `TextOptions` and an anchoring pattern (e.g.
+`has("^prefix", {.regex = true})`), or [`matches()`](matches.md) with a
+regex pattern anchored at the start.
 
 ## Parameters
 
-**prefix**
-    Text prefix inserted ahead of the existing label or value.
+**prefix** (`std::string_view`)
+    The literal text to check for at the start of each cell. An empty
+    prefix matches every non-null cell (every string starts with the empty
+    string).
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    A new frame with every selected feature replaced by a `Bool` Series:
+    `true` where the cell starts with `prefix`, `false` where it doesn't.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Check a text feature for a literal prefix.
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"city", pluss::table::Thread(pluss::make_note({"  Accra", "TEMA ", "Kumasi"}))},
-    {"product", pluss::table::Thread(pluss::make_note({"Laptop", "desk", "Chair"}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto notes = df.note();
+using namespace pluss::table;
 
-auto out = notes.starts("units");
+auto catalog = DataFrame({
+    {"code", Thread(pluss::make_note(
+        {"SKU-1001", "sku-1002", "REF-2003", "SKU-1004"}),
+        pluss::make_series(std::vector<bool>{true, true, true, false}))},
+});
+std::cout << catalog;
+
+auto out = catalog.note().starts("SKU-");
 std::cout << out;
+```
+
+### Output (before)
+
+```text
+===============
+     | code    
+---------------
+0    | SKU-1001
+1    | sku-1002
+2    | REF-2003
+3    | NULL    
+---------------
+[4 cs x 1 feat]
+```
+
+### Output (after)
+
+```text
+============
+     | code 
+------------
+0    | true 
+1    | false
+2    | false
+3    | NULL 
+------------
+[4 cs x 1 feat]
+```
+
+Row 0 (`"SKU-1001"`) starts with `"SKU-"`, so it's `true`. Row 1
+(`"sku-1002"`) does not — the comparison is case-sensitive, so a lowercase
+`"sku-"` is not a match for `"SKU-"`. Row 2 doesn't start with `"SKU-"` at
+all. Row 3 was constructed invalid; it stays `NULL` rather than being
+evaluated as `true` or `false`.
+
+Example 2. Chain `starts()` directly into `DataFrame::filter()` to keep only
+the matching rows — the most common real use of a prefix check.
+
+```cpp
+auto skus_only = catalog.filter(catalog.note().starts("SKU-").features("code"));
+std::cout << skus_only;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+===============
+     | code    
+---------------
+0    | SKU-1001
+---------------
+[1 cs x 1 feat]
 ```
 
+Only row 0 survives: it's the sole row where `code` is both valid and starts
+with `"SKU-"`. Rows with `false` or `NULL` in the boolean mask are dropped by
+`filter()`.
+
+Example 3. An empty prefix matches every valid cell, regardless of content.
+
+```cpp
+auto trivial = catalog.note().starts("");
+std::cout << trivial;
+```
+
+### Output
+
+```text
+============
+     | code 
+------------
+0    | true 
+1    | true 
+2    | true 
+3    | NULL 
+------------
+[4 cs x 1 feat]
+```
+
+Every valid row is `true` — any string starts with the empty string. Row 3
+is still `NULL`, since validity is checked before the prefix comparison ever
+runs.
+
+## Notes
+
+- Case-sensitive, literal comparison only — no regex mode, no
+  case-insensitivity toggle. Use [`has()`](has.md) with `TextOptions` (or a
+  prior [`lower()`](lower.md)/[`casefold()`](casefold.md) normalization
+  step) for anything more flexible.
+- Changes the feature's payload kind from `Note` to `Series` (`Bool`).
+- A null cell on input stays null on output — it evaluates to neither `true`
+  nor `false`.
+- Pairs naturally with `DataFrame::filter()` to keep only rows matching a
+  prefix (Example 2).
+
+## See Also
+
+- [`DataFrameNoteAccessor::ends`](ends.md): the same check anchored at the
+  end of the cell instead of the start.
+- [`DataFrameNoteAccessor::has`](has.md): substring search anywhere in the
+  cell, with optional regex and case-insensitive modes.
+- [`DataFrameNoteAccessor::matches`](matches.md): a regex-anchored-at-start
+  check, for patterns more flexible than a literal prefix.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="split.html">

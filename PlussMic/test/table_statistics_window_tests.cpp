@@ -21,6 +21,7 @@ using pluss::table::StatisticOptions;
 using pluss::table::Thread;
 using pluss::table::ThreadValue;
 using pluss::table::TimeWindowStatistic;
+using pluss::table::TsOptions;
 using pluss::table::WindowClosure;
 using pluss::table::WindowOptions;
 using pluss::table::WindowStatistic;
@@ -955,7 +956,9 @@ void test_windows() {
   near(grouped_values[1], 10.0, 1e-9, "grouped moving first b");
   near(grouped_values[2], 2.0, 1e-9, "grouped moving second a");
   near(grouped_values[3], 15.0, 1e-9, "grouped moving second b");
-  const auto grouped_df = grouped_frame.ts("value").grouped("group", 2, WindowStatistic::Mean);
+  const auto grouped_df = grouped_frame.features({"value"})
+                              .ts({.group = grouped_frame.features("group")})
+                              .grouped(2, WindowStatistic::Mean);
   expect(grouped_df.features("value").as_series().to_vec<double>() == grouped_values,
          "DataFrame::ts().grouped should delegate to Thread::ts().grouped");
   const auto grouped_sum_frame = DataFrame({
@@ -988,6 +991,49 @@ void test_windows() {
       StatisticOptions{.ddof = 1, .min_count = 2});
   near(timed_variance.as_series().to_vec<double>(2),
        0.5, 1e-9, "time moving variance");
+
+  const auto grouped_window_frame = DataFrame({
+      {"customer", Thread(pluss::make_note({"a", "a", "b", "b", "b"}))},
+      {"event_time", Thread(pluss::make_timeline({
+          "2024-01-01T00:00:00Z",
+          "2024-01-20T00:00:00Z",
+          "2024-01-01T00:00:00Z",
+          "2024-01-10T00:00:00Z",
+          "2024-02-15T00:00:00Z",
+      }))},
+      {"anchor_time", Thread(pluss::make_timeline({
+          "2024-01-31T00:00:00Z",
+          "2024-01-31T00:00:00Z",
+          "2024-01-31T00:00:00Z",
+          "2024-01-31T00:00:00Z",
+          "2024-01-31T00:00:00Z",
+      }))},
+      {"spend", Thread(pluss::make_series(std::vector<double>{1, 4, 2, 5, 8}))},
+  });
+  const auto grouped_window = grouped_window_frame.features({"spend"})
+                                  .ts({.axis = grouped_window_frame.features("event_time"),
+                                       .group = grouped_window_frame.features("customer")})
+                                  .window("30D", WindowClosure::Both)
+                                  .sum();
+  expect(grouped_window.features().size() == 2 &&
+             grouped_window.get("customer").has_value() &&
+             grouped_window.get("sum_spend").has_value(),
+         "DataFrame ts grouped window should emit keys plus the aggregate feature");
+  expect(grouped_window.features("customer").as_note().vector() ==
+             std::vector<std::string_view>({"a", "b"}) &&
+             grouped_window.features("sum_spend").as_series().to_vec<double>() ==
+                 std::vector<double>({5.0, 8.0}),
+         "DataFrame ts grouped window should anchor to the latest time in each group by default");
+
+  const auto anchored_window = grouped_window_frame.features({"spend"})
+                                   .ts({.axis = grouped_window_frame.features("event_time"),
+                                        .group = grouped_window_frame.features("customer"),
+                                        .anchor = grouped_window_frame.features("anchor_time")})
+                                   .window("30D", WindowClosure::Both)
+                                   .sum();
+  expect(anchored_window.features("sum_spend").as_series().to_vec<double>() ==
+             std::vector<double>({5.0, 7.0}),
+         "DataFrame ts grouped window should support explicit anchor columns");
 }
 
 void test_thread_delegation_and_advanced_windows() {
@@ -1040,8 +1086,7 @@ void test_thread_delegation_and_advanced_windows() {
       {"when", resample_axis},
       {"x", resample_values},
   });
-  const auto frame_right_labeled = resample_frame.ts("x").resample(
-      "when",
+  const auto frame_right_labeled = resample_frame.features({"x"}).ts({.axis = resample_frame.features("when")}).resample(
       pluss::TimeIndex::ResampleOptions{
           .freq = "D",
           .label = pluss::TimeIndex::ResampleLabel::Right,
@@ -1081,7 +1126,7 @@ void test_thread_delegation_and_advanced_windows() {
       {"when", rhs_axis},
       {"x", rhs_values},
   }).label().set("when", true);
-  const auto frame_ts_sum = lhs_frame.ts("x").add(rhs_frame);
+  const auto frame_ts_sum = lhs_frame.features({"x"}).ts().add(rhs_frame);
   expect(frame_ts_sum.features("x").is_valid(0) &&
              !frame_ts_sum.features("x").is_valid(1) &&
              frame_ts_sum.features("x").is_valid(2) &&
@@ -1228,7 +1273,7 @@ void test_udfs_and_text() {
   const DataFrame text_frame({
       {"raw", text},
   });
-  expect(text_frame.note("raw").has("red").features("raw").as_series().to_vec<bool>(2),
+  expect(text_frame.features({"raw"}).note().has("red").features("raw").as_series().to_vec<bool>(2),
          "DataFrame note has delegates to Thread");
 
   const auto mapped = Thread(
@@ -1277,7 +1322,7 @@ void test_udfs_and_text() {
       }).as_series().to_vec<double>(0),
        6.0, 1e-9, "arbitrary aggregation UDF");
   expect(frame.flow([](const DataFrame& value) {
-           return value.note("label").upper();
+           return value.features({"label"}).note().upper();
          }).features("label").as_note().at(1) == "BB",
          "chainable DataFrame flow");
   const auto preserved = frame.transform(
@@ -1297,7 +1342,7 @@ void test_udfs_and_text() {
 
   const auto atlas = Atlas({frame, frame});
   const auto atlas_moving =
-      atlas.ts({"x"}).rolling(2, WindowStatistic::Sum);
+      atlas.features({"x"}).ts().rolling(2, WindowStatistic::Sum);
   expect(atlas_moving.depth() == 2 &&
              atlas_moving.frame(1).features("x")
                      .as_series().to_vec<double>() ==
@@ -1305,7 +1350,7 @@ void test_udfs_and_text() {
          "Atlas delegates windows to DataFrame");
   expect(atlas.flow([](const Atlas& value) {
            return value.map_frames([](const DataFrame& part) {
-             return part.note("label").upper();
+             return part.features({"label"}).note().upper();
            });
          }).frame(0).features("label").as_note().at(0) == "A",
          "chainable Atlas flow and DataFrame delegation");

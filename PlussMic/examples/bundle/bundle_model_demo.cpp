@@ -9,7 +9,7 @@
 
 namespace {
 
-using pluss::bundle::Aisle;
+using pluss::bundle::Axel;
 using pluss::bundle::Registry;
 using pluss::bundle::Slot;
 
@@ -90,7 +90,7 @@ void demo_slot_methods() {
 
   const auto stream = ids.to_kindle();
   const auto back_slot = Slot::from_kindle(stream);
-  std::cout << "slot -> stream -> slot size: " << back_slot.size() << "\n";
+  std::cout << "slot -> stream -> field size: " << back_slot.size() << "\n";
 
   const Slot hetero({
       as_series_i64(7),
@@ -167,25 +167,25 @@ void demo_registry_methods() {
       {"flag", Slot({as_series_bool(true), as_series_bool(false)})},
   });
   const auto combined = registry.combine(other, "_rhs");
-  const auto with_new_slot = registry.set_slot("status", Slot({as_note("ok"), as_note("ok")}));
-  registry.set_slot_("city_copy", cities);
+  const auto with_status = registry.set("status", Slot({as_note("ok"), as_note("ok")}));
+  registry.set_("city_copy", cities);
 
-  std::cout << "registry nslots: " << registry.nslots()
-            << ", head(ids) size: " << head.slot("ids").size()
-            << ", tail(ids) size: " << tail.slot("ids").size()
-            << ", slice(ids) size: " << slice.slot("ids").size()
-            << ", select nslots: " << select.nslots()
-            << ", drop nslots: " << drop.nslots()
+  std::cout << "registry nfields: " << registry.nfields()
+            << ", head(ids) size: " << head.at("ids").size()
+            << ", tail(ids) size: " << tail.at("ids").size()
+            << ", slice(ids) size: " << slice.at("ids").size()
+            << ", select nfields: " << select.nfields()
+            << ", drop nfields: " << drop.nfields()
             << ", rename has(location): " << rename.has("location")
-            << ", applied ids[0] updated: " << to_i64(applied.slot("ids").at(0))
-            << ", apply_all city[0]: " << to_string_value(all_upper.slot("city").at(0))
-            << ", combined nslots: " << combined.nslots()
-            << ", with_new_slot has(status): " << with_new_slot.has("status")
+            << ", applied ids[0] updated: " << to_i64(applied.at("ids").at(0))
+            << ", apply_all city[0]: " << to_string_value(all_upper.at("city").at(0))
+            << ", combined nfields: " << combined.nfields()
+            << ", with_status has(status): " << with_status.has("status")
             << ", has(city_copy): " << registry.has("city_copy") << "\n";
 
-  const auto sizes = registry.slot_sizes();
+  const auto sizes = registry.sizes();
   for (const auto& [k, n] : sizes) {
-    std::cout << "slot_sizes[" << k << "] = " << n << "\n";
+    std::cout << "sizes[" << k << "] = " << n << "\n";
   }
 
   const auto catalog = Registry({
@@ -194,13 +194,13 @@ void demo_registry_methods() {
                        })
                            .to_kindle();
   const auto from_catalog = Registry::from_kindle(catalog);
-  std::cout << "registry -> catalog -> registry nslots: " << from_catalog.nslots() << "\n";
+  std::cout << "registry -> catalog -> registry nfields: " << from_catalog.nfields() << "\n";
   std::cout << "registry display:\n" << registry << "\n";
   std::cout << "registry json:\n" << registry.to_json() << "\n";
 }
 
-void demo_aisle_methods() {
-  std::cout << "\n=== Aisle Methods ===\n";
+void demo_axel_methods() {
+  std::cout << "\n=== Axel Methods ===\n";
 
   const auto r0 = Registry({
       {"ids", Slot({as_series_i64(1), as_series_i64(2), as_series_i64(3)})},
@@ -211,24 +211,24 @@ void demo_aisle_methods() {
       {"city", Slot({as_note("Accra"), as_note("Kumasi"), as_note("Tema")})},
   });
   const auto labels = Slot({as_note("train"), as_note("test")});
-  const Aisle aisle({r0, r1}, labels);
+  const Axel axel({r0, r1}, labels);
 
-  const auto head = aisle.head(1);
-  const auto tail = aisle.tail(1);
-  const auto slice = aisle.slice(0, 2);
-  const auto mapped = aisle.map([](const Registry& r) {
-    return r.set_slot("source", Slot({as_note("demo"), as_note("demo"), as_note("demo")}));
+  const auto head = axel.head(1);
+  const auto tail = axel.tail(1);
+  const auto slice = axel.slice(0, 2);
+  const auto mapped = axel.map([](const Registry& r) {
+    return r.set("source", Slot({as_note("demo"), as_note("demo"), as_note("demo")}));
   });
-  const auto selected = aisle.select({"ids"});
-  const auto applied_slot = aisle.apply_slot("ids", [](const Slot& s) {
+  const auto selected = axel.select({"ids"});
+  const auto applied_slot = axel.apply_slot("ids", [](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
       if (is_series(v)) return as_series_i64(to_i64(v) * 3);
       return v;
     });
   });
-  const auto concatenated = aisle.concat_depth(aisle);
+  const auto concatenated = axel.concat_depth(axel);
 
-  std::cout << "aisle depth: " << aisle.depth()
+  std::cout << "axel depth: " << axel.depth()
             << ", head depth: " << head.depth()
             << ", tail depth: " << tail.depth()
             << ", slice depth: " << slice.depth()
@@ -237,12 +237,12 @@ void demo_aisle_methods() {
             << ", applied depth: " << applied_slot.depth()
             << ", concat depth: " << concatenated.depth() << "\n";
 
-  const auto archive = aisle.to_kindle();
-  const auto back = Aisle::from_kindle(archive);
-  std::cout << "aisle -> archive -> aisle depth: " << back.depth()
+  const auto archive = axel.to_kindle();
+  const auto back = Axel::from_kindle(archive);
+  std::cout << "axel -> archive -> axel depth: " << back.depth()
             << ", labels: " << (back.labels().has_value() ? "yes" : "no") << "\n";
-  std::cout << "aisle display:\n" << aisle << "\n";
-  std::cout << "aisle json:\n" << aisle.to_json() << "\n";
+  std::cout << "axel display:\n" << axel << "\n";
+  std::cout << "axel json:\n" << axel.to_json() << "\n";
 }
 
 } // namespace
@@ -251,7 +251,7 @@ int main() {
   try {
     demo_slot_methods();
     demo_registry_methods();
-    demo_aisle_methods();
+    demo_axel_methods();
   } catch (const std::exception& e) {
     std::cerr << "bundle_model_demo failed: " << e.what() << "\n";
     return 1;

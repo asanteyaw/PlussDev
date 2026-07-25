@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::put" href="put.html" />
@@ -36,16 +36,22 @@
 
           <div class="body" role="main">
             
-  <section id="thread-ptype">
+  <!-- pluss-hand-authored -->
+<section id="thread-ptype">
 <h1>Thread::ptype<a class="headerlink" href="#thread-ptype" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">ptype</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">ptype</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
 </pre></div>
 </div>
-<p>Return the broad Pluss payload family stored by this thread.</p>
-<p>This is the 1D equivalent of <code class="docutils literal notranslate"><span class="pre">DataFrame::ptypes()</span></code>.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns the broad payload family as a display string: <code class="docutils literal notranslate"><span class="pre">&quot;Series&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Note&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;TimeIndex&quot;</span></code> — the same information <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind()</span></code></span></a> returns as
+a typed <code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code> enum, formatted for printing. This is the 1D analog of
+<code class="docutils literal notranslate"><span class="pre">DataFrame::ptypes()</span></code>, which reports the same family names per feature.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -54,32 +60,49 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Payload family name: <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="dtype.html"><code>Thread::dtype</code></a>: inspect the concrete payload dtype.</p></li>
-<li><p><a href="../dataframe/ptypes.html"><code>DataFrame::ptypes</code></a>: inspect payload families across a frame.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">ptype()</span></code> is for dispatching by payload family. Use <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> when storage detail matters.</p>
+One of <code class="docutils literal notranslate"><span class="pre">&quot;Series&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Note&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;TimeIndex&quot;</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect a numeric thread’s payload family.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">ptype()</span></code> across all four payload kinds.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})).</span><span class="n">ptype</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">numeric</span><span class="p">.</span><span class="n">ptype</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">text</span><span class="p">.</span><span class="n">ptype</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">ptype</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series
+Note
+Timeline
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ptype()</span></code> is for dispatching or displaying by payload <em>family</em>. Use
+<a class="reference internal" href="dtype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtype()</span></code></span></a> when you need the concrete storage detail within that
+family (e.g. which numeric scalar type a <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread holds).</p></li>
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">ptype()</span></code> on an undefined thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::kind</span></code></span></a>: the same information as a typed <code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code> enum,
+for use in C++ comparisons and <code class="docutils literal notranslate"><span class="pre">switch</span></code> statements.</p></li>
+<li><p><a class="reference internal" href="dtype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::dtype</span></code></span></a>: the concrete dtype, one level more specific.</p></li>
+<li><p><a class="reference internal" href="../dataframe/ptypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ptypes</span></code></span></a>: the same summary across every
+feature of an entire frame.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="prod.html">
     <span class="label">Previous</span>
@@ -90,7 +113,6 @@ Payload family name: <code class="docutils literal notranslate"><span class="pre
     <span class="title">put</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

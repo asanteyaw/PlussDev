@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::compare" href="compare.html" />
@@ -36,36 +36,45 @@
 
           <div class="body" role="main">
             
-  <section id="thread-clip">
+  <!-- pluss-hand-authored -->
+<section id="thread-clip">
 <h1>Thread::clip<a class="headerlink" href="#thread-clip" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">clip</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">min_value</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">max_value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">clip</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">min_value</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">max_value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Clamp numeric values into a closed interval.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Clamps every element into the closed interval <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code> — a value
+below <code class="docutils literal notranslate"><span class="pre">min_value</span></code> becomes <code class="docutils literal notranslate"><span class="pre">min_value</span></code>, a value above <code class="docutils literal notranslate"><span class="pre">max_value</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">max_value</span></code>, and everything in between is left untouched. Requires the thread to be
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>min_value</strong></p>
-<p>Lower bound of the closed interval.</p>
-<p><strong>max_value</strong></p>
-<p>Upper bound of the closed interval.</p>
+<p><strong>min_value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>)
+The lower bound. Values below this are raised to it.</p>
+<p><strong>max_value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>)
+The upper bound. Values above this are lowered to it.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Numeric thread with every value clipped into <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code>.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every value clamped
+into <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Clip a numeric series into a bounded grade or score range.</p>
+<p>Example 1. Values outside the bounds are pulled to the nearest bound; values already
+inside are untouched.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
-
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -74,9 +83,43 @@ Numeric thread with every value clipped into <code class="docutils literal notra
 1  20
 2  30
 3  35
+
 ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">10.0</span></code> (below <code class="docutils literal notranslate"><span class="pre">15.0</span></code>) is raised to <code class="docutils literal notranslate"><span class="pre">15.0</span></code>; <code class="docutils literal notranslate"><span class="pre">40.0</span></code> (above <code class="docutils literal notranslate"><span class="pre">35.0</span></code>) is lowered to
+<code class="docutils literal notranslate"><span class="pre">35.0</span></code>; <code class="docutils literal notranslate"><span class="pre">20.0</span></code> and <code class="docutils literal notranslate"><span class="pre">30.0</span></code>, already inside <code class="docutils literal notranslate"><span class="pre">[15.0,</span> <span class="pre">35.0]</span></code>, are unchanged.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::clip is only valid for Series payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
+<li><p>Both bounds are inclusive.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell on input stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on output.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::abs</span></code></span></a>: a different sign/magnitude transform, not a range clamp.</p></li>
+<li><p><a class="reference internal" href="btw.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::btw</span></code></span></a>: test membership in a range, rather than clamping into it.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="clear_display_name.html">
     <span class="label">Previous</span>
@@ -87,7 +130,6 @@ ptype: Series
     <span class="title">compare</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

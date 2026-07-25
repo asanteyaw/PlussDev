@@ -446,7 +446,8 @@ DataFrame DataFrame::land(const Thread& other) const {
 }
 
 DataFrame DataFrame::rand(const DataFrame& other) const {
-  return other.land(*this);
+  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::rand(DataFrame)",
+                                          [](const Thread& lhs, const Thread& rhs) { return lhs.rand(rhs); }));
 }
 
 DataFrame DataFrame::rand(const Thread& other) const {
@@ -463,7 +464,8 @@ DataFrame DataFrame::lor(const Thread& other) const {
 }
 
 DataFrame DataFrame::ror(const DataFrame& other) const {
-  return other.lor(*this);
+  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::ror(DataFrame)",
+                                          [](const Thread& lhs, const Thread& rhs) { return lhs.ror(rhs); }));
 }
 
 DataFrame DataFrame::ror(const Thread& other) const {
@@ -480,7 +482,8 @@ DataFrame DataFrame::lxor(const Thread& other) const {
 }
 
 DataFrame DataFrame::rxor(const DataFrame& other) const {
-  return other.lxor(*this);
+  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::rxor(DataFrame)",
+                                          [](const Thread& lhs, const Thread& rhs) { return lhs.rxor(rhs); }));
 }
 
 DataFrame DataFrame::rxor(const Thread& other) const {
@@ -1305,24 +1308,25 @@ Thread DataFrame::freq(pluss::msharp::RangeView::Of<std::string_view> features,
                        bool dropnull) const {
   const auto scoped = features.empty() ? *this : this->features(features);
   if (scoped.nfeatures() == 1) {
-    return scoped.features(scoped.features().front()).freq(top_n, dropnull);
+    return detail::tally_count_thread(scoped.features(scoped.features().front()), top_n, dropnull, "freq");
   }
 
   std::unordered_map<std::string, std::int64_t> counts;
   std::vector<std::string> order;
   for (std::int64_t row = 0; row < scoped.ncases(); ++row) {
-    bool observed = true;
+    bool skip_row = false;
     std::string key;
     for (const auto& name : scoped.features()) {
       const auto column = scoped.features(name);
-      if (!column.is_valid(row)) {
-        observed = false;
-        if (dropnull) break;
+      const auto column_valid = column.is_valid(row);
+      if (!column_valid && dropnull) {
+        skip_row = true;
+        break;
       }
       if (!key.empty()) key += "|";
-      key += observed ? thread_scalar_string_at(column, row) : "NA";
+      key += column_valid ? thread_scalar_string_at(column, row) : "NULL";
     }
-    if (!observed && dropnull) continue;
+    if (skip_row) continue;
     if (!counts.contains(key)) order.push_back(key);
     counts[key] += 1;
   }
@@ -1367,7 +1371,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     for (const auto& name : scoped.features()) {
       const auto column = scoped.features(name);
       if (!key.empty()) key += "|";
-      key += column.is_valid(row) ? thread_scalar_string_at(column, row) : "NA";
+      key += column.is_valid(row) ? thread_scalar_string_at(column, row) : "NULL";
     }
     rows_by_key[key].push_back(row);
   }
@@ -2349,7 +2353,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
         skip = true;
         break;
       }
-      key_values.push_back(valid ? thread_scalar_string_at(key_info.value_col, r) : "NA");
+      key_values.push_back(valid ? thread_scalar_string_at(key_info.value_col, r) : "NULL");
     }
     if (skip) {
       continue;
@@ -2405,8 +2409,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
 
 DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {
   const auto n = ncases();
-  const auto s = normalize_view_start(start, n);
-  const auto e = normalize_view_stop(stop, n);
+  const auto [s, e] = normalize_slice(start, stop, n);
 
   DataFrame out;
   if (e <= s) {
@@ -2427,44 +2430,102 @@ DataFrame DataFrame::copy() const {
   return *this;
 }
 
-bool DataFrame::equals(const DataFrame& other) const {
-  if (ncases() != other.ncases() || nfeatures() != other.nfeatures()) {
+namespace {
+
+bool dataframe_scalar_equal_(const Thread& lhs, const Thread& rhs, std::int64_t row) {
+  return thread_scalar_string_at(lhs, row) == thread_scalar_string_at(rhs, row);
+}
+
+bool dataframe_scalar_close_(const Thread& lhs,
+                             const Thread& rhs,
+                             std::int64_t row,
+                             double atol,
+                             double rtol) {
+  const bool lhs_numeric = lhs.kind() == ThreadKind::Series && is_numeric_series_type(lhs.as_series());
+  const bool rhs_numeric = rhs.kind() == ThreadKind::Series && is_numeric_series_type(rhs.as_series());
+  if (!lhs_numeric || !rhs_numeric) {
+    return dataframe_scalar_equal_(lhs, rhs, row);
+  }
+
+  double lv = 0.0;
+  double rv = 0.0;
+  if (!extract_numeric_value(lhs.as_series(), row, lv) || !extract_numeric_value(rhs.as_series(), row, rv)) {
     return false;
   }
-  if (features() != other.features()) {
+  if (std::isnan(lv) || std::isnan(rv)) {
+    return std::isnan(lv) && std::isnan(rv);
+  }
+  if (std::isinf(lv) || std::isinf(rv)) {
+    return lv == rv;
+  }
+
+  const auto diff = std::fabs(lv - rv);
+  const auto scale = std::max(std::fabs(lv), std::fabs(rv));
+  return diff <= atol + (rtol * scale);
+}
+
+bool dataframe_equals_impl_(const DataFrame& lhs,
+                            const DataFrame& rhs,
+                            bool tolerant,
+                            double atol,
+                            double rtol) {
+  const auto lhs_labels = lhs.label().values();
+  const auto rhs_labels = rhs.label().values();
+
+  if (lhs.ncases() != rhs.ncases() || lhs.nfeatures() != rhs.nfeatures()) {
     return false;
   }
-  if (case_labels_().dtype() != other.label().values().dtype()) {
+  if (lhs.features() != rhs.features()) {
     return false;
   }
-  for (std::int64_t r = 0; r < ncases(); ++r) {
-    if (case_labels_().is_valid(r) != other.label().values().is_valid(r)) {
+  if (lhs_labels.dtype() != rhs_labels.dtype()) {
+    return false;
+  }
+
+  for (std::int64_t r = 0; r < lhs.ncases(); ++r) {
+    if (lhs_labels.is_valid(r) != rhs_labels.is_valid(r)) {
       return false;
     }
-    if (!case_labels_().is_valid(r)) {
+    if (!lhs_labels.is_valid(r)) {
       continue;
     }
-    if (thread_scalar_string_at(case_labels_(), r) != thread_scalar_string_at(other.label().values(), r)) {
+    if (!dataframe_scalar_equal_(lhs_labels, rhs_labels, r)) {
       return false;
     }
   }
-  for (const auto& name : features()) {
-    const auto lhs = features(name);
-    const auto rhs = other.features(name);
-    if (lhs.kind() != rhs.kind() || lhs.size() != rhs.size()) {
+
+  for (const auto& name : lhs.features()) {
+    const auto lhs_col = lhs.features(name);
+    const auto rhs_col = rhs.features(name);
+    if (lhs_col.kind() != rhs_col.kind() || lhs_col.size() != rhs_col.size()) {
       return false;
     }
-    for (std::int64_t r = 0; r < lhs.size(); ++r) {
-      if (lhs.is_valid(r) != rhs.is_valid(r)) {
+    for (std::int64_t r = 0; r < lhs_col.size(); ++r) {
+      if (lhs_col.is_valid(r) != rhs_col.is_valid(r)) {
         return false;
       }
-      if (!lhs.is_valid(r)) {
+      if (!lhs_col.is_valid(r)) {
         continue;
       }
-      if (thread_scalar_string_at(lhs, r) != thread_scalar_string_at(rhs, r)) {
+      const bool same = tolerant
+                            ? dataframe_scalar_close_(lhs_col, rhs_col, r, atol, rtol)
+                            : dataframe_scalar_equal_(lhs_col, rhs_col, r);
+      if (!same) {
         return false;
       }
     }
   }
   return true;
+}
+
+} // namespace
+
+bool DataFrame::equals(const DataFrame& other) const {
+  return dataframe_equals_impl_(*this, other, false, 0.0, 0.0);
+}
+
+bool DataFrame::equals(const DataFrame& other, double atol, double rtol) const {
+  PLUSS_CHECK(atol >= 0.0, "DataFrame::equals(tolerant): atol must be non-negative");
+  PLUSS_CHECK(rtol >= 0.0, "DataFrame::equals(tolerant): rtol must be non-negative");
+  return dataframe_equals_impl_(*this, other, true, atol, rtol);
 }

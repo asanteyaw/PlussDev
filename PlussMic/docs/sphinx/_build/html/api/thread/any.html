@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::append" href="append.html" />
@@ -36,51 +36,49 @@
 
           <div class="body" role="main">
             
-  <section id="thread-any">
+  <!-- pluss-hand-authored -->
+<section id="thread-any">
 <h1>Thread::any<a class="headerlink" href="#thread-any" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">any</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
 </pre></div>
 </div>
-<p>Return whether at least one value in a boolean thread is true.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Thread::any(...)</span></code> is the scalar existence test for one boolean thread. Use it when one truthy element is enough to satisfy the condition.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns whether <strong>at least one</strong> entry in a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread is <code class="docutils literal notranslate"><span class="pre">true</span></code> —
+a scalar existence test. Restricted to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; any other kind
+or dtype throws. With a validity mask present, missing entries are excluded
+from consideration entirely (their underlying stored value, whatever it happens
+to be, never contributes to the result) — <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code> combined with a
+validity mask throws instead of attempting to define what “missing counts as
+true or false” should mean.</p>
+<p>See <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code>’s note on printing a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code></span></a> — every example
+below uses <code class="docutils literal notranslate"><span class="pre">.to_str()</span></code> to print a clean <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code> instead of streaming
+the <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> directly.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>skipnull</strong></p>
-<p>Missing-value policy for the reduction.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: ignore missing boolean positions while reducing.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: missing boolean payloads are not supported for this reduction path.</p></li>
-</ul>
+<p><strong>skipnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+Must stay <code class="docutils literal notranslate"><span class="pre">true</span></code> when the thread has a validity mask — missing entries are
+always excluded from the reduction when a mask is present. <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span>&#160;&#160;&#160;&#160; <span class="pre">false</span></code> together with a validity mask throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
-One scalar truth result.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="all.html"><code>Thread::all</code></a>: require every element to be true instead of only one.</p></li>
-<li><p><a href="../dataframe/any.html"><code>DataFrame::any</code></a>: apply the same idea across a frame.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>This method expects a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload. It is not a general numeric reduction.</p>
-<p>Nullable boolean input requires <code class="docutils literal notranslate"><span class="pre">skipnull=true</span></code>.</p>
+A scalar <code class="docutils literal notranslate"><span class="pre">Bool</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if any observed entry is <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise
+(including for an all-<code class="docutils literal notranslate"><span class="pre">false</span></code> or entirely-missing thread).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Reduce one boolean thread to a single truth result.</p>
+<p>Example 1. At least one <code class="docutils literal notranslate"><span class="pre">true</span></code> value makes the result <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
-
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">any</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">to_str</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
@@ -88,6 +86,74 @@ One scalar truth result.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
+<p>Example 2. A missing entry is excluded, even if its underlying stored value
+happens to be <code class="docutils literal notranslate"><span class="pre">true</span></code> — it never spuriously flips the result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">masked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">masked</span><span class="p">.</span><span class="n">any</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="n">to_str</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">1</span></code> is missing; its stored <code class="docutils literal notranslate"><span class="pre">true</span></code> is excluded from consideration, so
+only the two observed <code class="docutils literal notranslate"><span class="pre">false</span></code>s remain — the result is <code class="docutils literal notranslate"><span class="pre">false</span></code>, not <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code> together with a validity mask throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">masked</span><span class="p">.</span><span class="n">any</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::any(skipnull=false) is not supported for nullable Bool Series payload
+</pre></div>
+</div>
+<p>Example 4. Restricted to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> — any other dtype or payload kind
+throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">any</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::any is only valid for Bool Series payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Missing entries are always excluded from consideration when a validity mask
+is present — their raw stored value never contributes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code> with a validity mask throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::any(skipnull=false)</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">supported</span> <span class="pre">for</span> <span class="pre">nullable</span> <span class="pre">Bool</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
+<li><p>Restricted to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>; a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> kind throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::any</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>, and a non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::any</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Bool</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::all</span></code></span></a>: require every entry to be <code class="docutils literal notranslate"><span class="pre">true</span></code>, instead of just
+one.</p></li>
+<li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::count</span></code></span></a>: count <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> entries instead of a
+single existence test.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="all.html">
     <span class="label">Previous</span>
@@ -98,7 +164,6 @@ One scalar truth result.</p>
     <span class="title">append</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

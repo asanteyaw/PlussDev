@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::ge
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,85 +7,102 @@
 ## Signatures
 
 ```cpp
-Thread::ge(const char* other) -> Thread
-
-Thread::ge(const Thread& other) -> Thread
-
-Thread::ge(double other) -> Thread
-
-Thread::ge(std::string_view other) -> Thread
+Thread::ge(double other) const -> Thread
+Thread::ge(std::string_view other) const -> Thread
+Thread::ge(const char* other) const -> Thread
+Thread::ge(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+Elementwise "greater than or equal", the mirror image of [`le()`](le.md), following
+[`eq()`](eq.md)'s shared overload shape and positional matching. Like `le()`, the
+string overload stringifies numeric values before comparing lexicographically — see
+[`lt()`](lt.md) for a concrete example of why that can disagree with numeric
+ordering.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double`, `std::string_view`, or `const Thread&`)
+
+Same shape as [`eq()`](eq.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    "greater than or equal" result.
 
 ## Examples
 
-Example 1. Apply `ge` to the current thread using explicit `other` arguments.
+Example 1. Compare every value against a scalar.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.ge("demo");
+auto scores = Thread(pluss::make_series({72.0, 85.0, 91.0}));
+auto out = scores.ge(85.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  true
+
+ptype: Series
 ```
-Example 2. Apply `ge` to the current thread using explicit `other` arguments.
+
+Position `1` is `true` here (`85 >= 85`) where [`gt(85.0)`](gt.md) gave `false` —
+the only difference between the two operators.
+
+Example 2. Compare two threads positionally.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
-
-auto out = thread.ge(other);
+auto targets = Thread(pluss::make_series({72.0, 80.0, 95.0}));
+auto out_pair = scores.ge(targets);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  true
+1  true
+2  false
+
+ptype: Series
 ```
-Example 3. Apply `ge` to the current thread using explicit `other` arguments.
+
+Example 3. String comparison on a `Note` thread.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.ge(10.0);
+auto names = Thread(pluss::make_note({"Ada", "Bola", "Chen"}));
+auto out_names = names.ge("Bola");
+std::cout << out_names;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
-```
-Example 4. Apply `ge` to the current thread using explicit `other` arguments.
+0  false
+1  true
+2  true
 
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.ge("demo");
+ptype: Series
 ```
 
-### Output
+## Notes
 
-```text
-[10.0, 20.0, 30.0]
-```
+- See [`eq()`](eq.md) for the family-wide mechanics.
+- `ge(x)` is always the exact logical negation of `lt(x)` for the same argument.
 
+## See Also
+
+- [`Thread::gt`](gt.md): the strict form.
+- [`Thread::le`](le.md): the opposite direction's inclusive form.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fullmatch.html">

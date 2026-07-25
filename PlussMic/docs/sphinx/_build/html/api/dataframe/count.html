@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::count_by" href="count_by.html" />
@@ -99,14 +99,30 @@ ptype: Series
 and <code class="docutils literal notranslate"><span class="pre">discount</span></code> each have exactly one missing observation — case <code class="docutils literal notranslate"><span class="pre">5</span></code> and case <code class="docutils literal notranslate"><span class="pre">2</span></code>
 respectively, the same two cells <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> and <a class="reference internal" href="std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std()</span></code></span></a> exclude from
 their statistics — so each counts only five.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> is the default, so passing it explicitly changes nothing:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">counts_explicit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counts_explicit</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  6
+     units  6
+unit_price  5
+  discount  5
+ptype: Series
+</pre></div>
+</div>
+<p>Byte-for-byte the same result as the bare <code class="docutils literal notranslate"><span class="pre">orders.count()</span></code> call above.</p>
 <p>Example 2. Count non-missing features per case with <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">counts_by_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Feature</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counts_by_case</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  4
 1  4
 2  3
@@ -135,8 +151,8 @@ case has all four cells populated and counts <code class="docutils literal notra
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  6
      units  6
 unit_price  5

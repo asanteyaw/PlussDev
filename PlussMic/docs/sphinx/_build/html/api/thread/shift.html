@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::show" href="show.html" />
@@ -36,42 +36,133 @@
 
           <div class="body" role="main">
             
-  <section id="thread-shift">
+  <!-- pluss-hand-authored -->
+<section id="thread-shift">
 <h1>Thread::shift<a class="headerlink" href="#thread-shift" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">periods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">periods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+<p>Shifts every value forward (<code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>) or backward (<code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>) by
+<code class="docutils literal notranslate"><span class="pre">periods</span></code> positions, keeping the thread the same length — positions that shift in
+from beyond either edge become <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and values shifted past the opposite edge
+are dropped entirely (not wrapped around). <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code> (or an empty thread) is a
+no-op, returning <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>periods</strong>
-Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.</p>
+<p><strong>periods</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+Number of positions to shift. Positive shifts values to later positions
+(introducing <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s at the start); negative shifts values to earlier positions
+(introducing <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s at the end).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with values shifted and the vacated
+positions set to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">shift</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">periods</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. A positive shift moves values later; the leading positions become
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  10
+2  20
+3  30
+
+ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">40.0</span></code> (the last value) is dropped entirely — shifted past the end, not wrapped
+back to the front.</p>
+<p>Example 2. A negative shift moves values earlier; the trailing positions become
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">-2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  30
+1  40
+2  NULL
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code> is a no-op.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  20
+2  30
+3  40
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 4. A cell that was already <code class="docutils literal notranslate"><span class="pre">NULL</span></code> before the shift stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> after
+moving to its new position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_null</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_null</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  1
+2  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Row <code class="docutils literal notranslate"><span class="pre">2</span></code>’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code> comes from row <code class="docutils literal notranslate"><span class="pre">1</span></code>’s already-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> value moving into that
+position, not from the shift itself vacating it.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Values shifted past either edge are dropped, not wrapped around.</p></li>
+<li><p>Vacated positions (and any already-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> positions that moved) are <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in
+the result.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code>, or shifting an empty thread, returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged.</p></li>
+<li><p>Works on every payload kind, not just <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ffill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ffill</span></code></span></a> / <a class="reference internal" href="bfill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::bfill</span></code></span></a>: fill the <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s a
+shift introduces, if that’s the goal instead.</p></li>
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::slice</span></code></span></a> / <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::take</span></code></span></a>: drop or reorder entries
+without introducing <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="shares_payload_with.html">
     <span class="label">Previous</span>
@@ -82,7 +173,6 @@ Value produced by this call.</p>
     <span class="title">show</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

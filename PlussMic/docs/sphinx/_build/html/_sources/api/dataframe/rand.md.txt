@@ -18,7 +18,7 @@ The reflected form of [`land()`](land.md). Since logical AND is commutative,
 respect — same cell values, and (for the `DataFrame` overload) the same case labels
 and title, both drawn from `frame` itself, exactly as [`land()`](land.md) documents.
 
-```{note} Previously, the DataFrame overload inherited case labels from `other`
+```{note} Previously, the DataFrame overload inherited case labels from other
 An earlier revision of `rand(const DataFrame&)` computed the reflection as
 `other.land(*this)`, which meant the result's case labels and title came from
 `other` instead of from the frame the method was called on — a real, verified quirk

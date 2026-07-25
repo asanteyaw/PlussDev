@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::std
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,57 +7,131 @@
 ## Signatures
 
 ```cpp
-Thread::std(bool unbiased = true) -> ThreadValue
-
-Thread::std(const StatisticOptions& options) -> ThreadValue
+Thread::std(bool unbiased = true) const -> ThreadValue
+Thread::std(const StatisticOptions& options) const -> ThreadValue
 ```
 
 ## What It Does
 
-Returns the standard deviation of a numeric thread.
+Returns the standard deviation of every observed (non-missing) value in a
+numeric `Series` thread — the square root of [`var()`](var.md)'s result, with
+the exact same overload split and failure-mode difference:
+
+- **`std(unbiased)`**: `unbiased = true` (the default) computes the sample
+  standard deviation (`n - 1` divisor underneath); `unbiased = false` computes
+  the population standard deviation (`n` divisor). An empty thread, or one
+  where every entry is missing, **throws**.
+- **`std(options)`**: takes a `StatisticOptions{ddof, min_count}`. Instead of
+  throwing on an insufficient sample, this overload returns a result marked
+  *invalid* (see the important caveat below) when the observed count is below
+  `min_count`.
+
+See [`Thread::sum`'s note on printing a `ThreadValue`](sum.md) — every example
+below uses `.to_dbl()` for a clean number, and the note there also covers the
+"invalid `ThreadValue` still prints a number" trap that Example 4 below runs
+into.
 
 ## Parameters
 
-**unbiased**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+**unbiased** (`bool`, default `true`)
+    `true`: sample standard deviation (`n - 1` divisor underneath). `false`:
+    population standard deviation (`n` divisor underneath).
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`StatisticOptions`)
+    `ddof` (default `1`): the divisor underneath is `n - ddof`. `min_count`
+    (default `1`): the smallest observed count still considered valid; below
+    it, the result is marked invalid rather than thrown.
 
 ## Returns
 
 `ThreadValue`
-    Value produced by this call.
+    A scalar `Float64` (or `Float32` off-CPU) holding the standard deviation.
 
 ## Examples
 
-Example 1. Compute `std` and inspect the resulting summary value or summary object.
+Example 1. Sample standard deviation (the default).
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.std(true);
+auto values = Thread(pluss::make_series({2.0, 4.0, 6.0, 8.0}));
+auto out = values.std();
+std::cout << out.to_dbl();
 ```
 
 ### Output
 
 ```text
-20.0
+2.58199
 ```
-Example 2. Pass an explicit options object to control the operation.
+
+Example 2. Population standard deviation.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.std(true);
+auto out2 = values.std(false);
+std::cout << out2.to_dbl();
 ```
 
 ### Output
 
 ```text
-20.0
+2.23607
 ```
 
+Example 3. The `unbiased`-form throws on an empty (all-missing) selection.
+
+```cpp
+auto all_missing = Thread(
+    pluss::make_series({1.0, 2.0}),
+    pluss::make_series(std::vector<bool>{false, false})
+);
+try {
+  auto bad = all_missing.std();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread::std on an empty (all-null) selection
+```
+
+Example 4. The `StatisticOptions`-form returns an invalid result below
+`min_count`, rather than throwing — check `.thread().is_valid(0)`, not the
+number itself.
+
+```cpp
+auto small = Thread(pluss::make_series({10.0, 20.0}));
+auto out4 = small.std(StatisticOptions{.ddof = 1, .min_count = 5});
+std::cout << out4.thread().is_valid(0);
+```
+
+### Output
+
+```text
+false
+```
+
+## Notes
+
+- Missing entries are excluded before computing, in both overloads.
+- The `unbiased`-form throws on an empty/all-missing selection; the
+  `options`-form returns an invalid result below `min_count` instead of
+  throwing.
+- `ddof = 1` (the `options`-form's default) matches `unbiased = true`; `ddof =
+  0` matches `unbiased = false`.
+- Restricted to `Series` payloads; anything else throws `"Thread::std is only
+  valid for Series payload"`.
+
+## See Also
+
+- [`Thread::var`](var.md): the variance this method takes the square root of.
+- [`Thread::se`](se.md): the standard error of the mean, a related but
+  distinct spread measure.
+- [`Thread::describe`](describe.md): reports `std` as part of a wider numeric
+  summary.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="starts.html">

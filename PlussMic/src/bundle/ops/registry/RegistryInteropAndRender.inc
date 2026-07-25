@@ -19,11 +19,10 @@ pluss::kindle::Catalog Registry::as_kindle() const {
 Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
   PLUSS_CHECK(catalog.defined(), "Registry::from_kindle: catalog undefined");
   std::vector<std::pair<std::string, Slot>> out;
-  out.reserve(static_cast<std::size_t>(catalog.nstreams()));
-  const auto streams = catalog.streams();
+  out.reserve(static_cast<std::size_t>(catalog.nkeys()));
   const auto& names = catalog.keys();
   for (std::size_t i = 0; i < names.size(); ++i) {
-    out.emplace_back(names[i], Slot::from_kindle(streams[i]));
+    out.emplace_back(names[i], Slot::from_kindle(catalog.at(names[i])));
   }
   return Registry(std::move(out));
 }
@@ -34,12 +33,12 @@ pluss::table::DataFrame registry_to_io_frame(const Registry& registry) {
   registry.ensure_stream_compatible("Registry::save_as");
   auto catalog = registry.to_kindle();
   pluss::kindle::TabelizePolicy policy;
-  policy.align = pluss::kindle::AlignPolicy::Outer;
-  policy.index_mode = pluss::kindle::IndexMode::Positional;
+  policy.align = pluss::kindle::Align::Outer;
+  policy.align_by = pluss::kindle::AlignBy::Pos;
   policy.fill = pluss::kindle::FillPolicy::Null;
   policy.dtype = pluss::kindle::DTypePolicy::BestEffort;
   policy.collision = pluss::kindle::CollisionPolicy::Suffix;
-  policy.include_case_feature = false;
+  policy.include_label_feature = false;
   return catalog.tabelize(policy);
 }
 
@@ -110,7 +109,7 @@ std::string Registry::to_string() const {
   oss << "{\n";
   oss << "  \"_type\": \"Registry\",\n";
   oss << "  \"defined\": true,\n";
-  oss << "  \"nslots\": " << nslots() << ",\n";
+  oss << "  \"nfields\": " << nfields() << ",\n";
   oss << "  \"fields\": {\n";
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     const auto& key = impl_ref_().keys_[i];
@@ -145,7 +144,7 @@ std::string Registry::to_json() const {
   oss << "{\n";
   oss << "  \"_type\": \"Registry\",\n";
   oss << "  \"defined\": true,\n";
-  oss << "  \"nslots\": " << nslots() << ",\n";
+  oss << "  \"nfields\": " << nfields() << ",\n";
   oss << "  \"fields\": {\n";
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     oss << "    \"" << json_escape(impl_ref_().keys_[i]) << "\": " << impl_ref_().slots_[i].to_json();

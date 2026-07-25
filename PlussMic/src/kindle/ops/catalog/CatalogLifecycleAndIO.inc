@@ -22,21 +22,21 @@ Catalog::Catalog(pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl) : impl_
 Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy) {
   PLUSS_CHECK(frame.defined(), "Catalog::kindelize requires a defined DataFrame");
   std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(static_cast<std::size_t>(frame.nfeatures()) + (policy.materialize_case_stream ? 1u : 0u));
+  out.reserve(static_cast<std::size_t>(frame.nfeatures()) + (policy.materialize_label ? 1u : 0u));
 
   const auto case_axis = frame.label().values();
   for (const auto& key : frame.features()) {
     auto s = Stream::from_thread(frame.features(key),
-                                 policy.attach_cases_to_streams ? std::optional<pluss::table::Thread>{case_axis}
-                                                                 : std::nullopt);
+                                 policy.attach_labels ? std::optional<pluss::table::Thread>{case_axis}
+                                                      : std::nullopt);
     out.emplace_back(key, std::move(s));
   }
 
-  if (policy.materialize_case_stream) {
+  if (policy.materialize_label) {
     PLUSS_CHECK(frame.features().end() ==
-                    std::find(frame.features().begin(), frame.features().end(), policy.case_stream_name),
-                "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
-    out.emplace_back(policy.case_stream_name, Stream::from_thread(case_axis));
+                    std::find(frame.features().begin(), frame.features().end(), policy.label_key),
+                "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
+    out.emplace_back(policy.label_key, Stream::from_thread(case_axis));
   }
   return Catalog(std::move(out));
 }
@@ -150,9 +150,9 @@ Catalog Catalog::load_csv_with_key(std::string_view filepath,
   raw.cases = std::move(*it);
   raw.features.erase(it);
   KindelizePolicy policy;
-  policy.attach_cases_to_streams = true;
-  policy.materialize_case_stream = true;
-  policy.case_stream_name = "_case";
+  policy.attach_labels = true;
+  policy.materialize_label = true;
+  policy.label_key = "_label";
   return catalog_from_raw_batch(raw, options, policy);
 }
 
@@ -170,11 +170,50 @@ std::int64_t Catalog::nstreams() const {
   return static_cast<std::int64_t>(impl_ref_().streams_.size());
 }
 
-std::int64_t Catalog::nfields() const {
+std::int64_t Catalog::nkeys() const {
   return nstreams();
 }
 
-bool Catalog::empty() const { return nstreams() == 0; }
+std::int64_t Catalog::minrecords() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  if (impl_ref_().streams_.empty()) return 0;
+  std::int64_t out = impl_ref_().streams_.front().size();
+  for (const auto& stream : impl_ref_().streams_) {
+    out = std::min(out, stream.size());
+  }
+  return out;
+}
+
+std::int64_t Catalog::maxrecords() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::int64_t out = 0;
+  for (const auto& stream : impl_ref_().streams_) {
+    out = std::max(out, stream.size());
+  }
+  return out;
+}
+
+std::int64_t Catalog::nrecords() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  if (impl_ref_().streams_.empty()) return 0;
+  const auto n = impl_ref_().streams_.front().size();
+  for (const auto& stream : impl_ref_().streams_) {
+    PLUSS_CHECK(stream.size() == n,
+                "Catalog::nrecords: catalog has ragged stream lengths; use minrecords()/maxrecords() or tabelize()");
+  }
+  return n;
+}
+
+std::int64_t Catalog::size() const {
+  return nkeys();
+}
+
+std::pair<std::int64_t, std::int64_t> Catalog::shape() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  return {maxrecords(), nkeys()};
+}
+
+bool Catalog::empty() const { return nkeys() == 0; }
 
 const std::vector<std::string>& Catalog::keys() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
@@ -186,19 +225,11 @@ bool Catalog::has(std::string_view key) const {
   return impl_ref_().key_to_pos_.find(std::string(key)) != impl_ref_().key_to_pos_.end();
 }
 
-bool Catalog::has_stream(std::string_view key) const {
-  return has(key);
-}
-
-Stream Catalog::stream(std::string_view key) const {
+Stream Catalog::at(std::string_view key) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   auto it = impl_ref_().key_to_pos_.find(std::string(key));
   PLUSS_CHECK(it != impl_ref_().key_to_pos_.end(), "Catalog: key '" + std::string(key) + "' not found");
   return impl_ref_().streams_[static_cast<std::size_t>(it->second)];
-}
-
-Stream Catalog::at(std::string_view key) const {
-  return stream(key);
 }
 
 std::optional<Stream> Catalog::get(std::string_view key) const {
@@ -206,10 +237,6 @@ std::optional<Stream> Catalog::get(std::string_view key) const {
   auto it = impl_ref_().key_to_pos_.find(std::string(key));
   if (it == impl_ref_().key_to_pos_.end()) return std::nullopt;
   return impl_ref_().streams_[static_cast<std::size_t>(it->second)];
-}
-
-std::optional<Stream> Catalog::get_stream(std::string_view key) const {
-  return get(key);
 }
 
 std::vector<Stream> Catalog::streams() const {

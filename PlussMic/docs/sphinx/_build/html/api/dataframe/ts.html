@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::unify" href="unify.html" />
@@ -60,6 +60,11 @@ to the numeric feature(s) first with <a class="reference internal" href="feature
 grouped/panel time-series operations), and an <code class="docutils literal notranslate"><span class="pre">anchor</span></code>, letting the accessor’s window
 and resampling methods reason about actual elapsed time rather than plain row
 position. Omitting <code class="docutils literal notranslate"><span class="pre">options</span></code> is equivalent to a default-constructed <code class="docutils literal notranslate"><span class="pre">TsOptions{}</span></code>.</p>
+<p>This page previews the accessor’s most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+<a class="reference internal" href="../../dataframe_ts_accessor_api_reference.html"><span class="doc std std-doc">DataFrameTsAccessor API Reference</span></a> and
+use its left sidebar to jump straight to any method (<code class="docutils literal notranslate"><span class="pre">lag</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code>,
+<code class="docutils literal notranslate"><span class="pre">expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">ewm</span></code>, and more).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>

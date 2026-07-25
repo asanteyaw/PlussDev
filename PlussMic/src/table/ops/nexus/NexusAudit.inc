@@ -50,24 +50,13 @@ detail::NexusKeyAuditProfile build_key_audit_profile(const DataFrame& frame,
   detail::NexusKeyAuditProfile profile;
   profile.keys = std::move(keys);
   profile.total_rows = frame.ncases();
-
-  std::vector<bool> keep(static_cast<std::size_t>(frame.ncases()), true);
-  for (const auto& key : profile.keys) {
-    const auto column = frame.features(key);
-    for (std::int64_t row = 0; row < frame.ncases(); ++row) {
-      if (keep[static_cast<std::size_t>(row)] && !column.is_valid(row)) {
-        keep[static_cast<std::size_t>(row)] = false;
-      }
-    }
-  }
-
-  profile.complete_rows = 0;
-  for (const bool value : keep) {
-    profile.complete_rows += value ? 1 : 0;
-  }
-  profile.missing_rows = profile.total_rows - profile.complete_rows;
-  profile.complete_frame = frame.filter(pluss::make_series(keep));
   const auto key_views = key_views_of(profile.keys);
+  const auto complete_mask = frame.features(pluss::msharp::RangeView::Of<std::string_view>(key_views))
+                                 .notnull()
+                                 .all(Axis::Feature);
+  profile.complete_rows = complete_mask.count(true).to_int();
+  profile.missing_rows = profile.total_rows - profile.complete_rows;
+  profile.complete_frame = frame.filter(complete_mask);
   profile.duplicate_frame = profile.complete_frame.filter(
       profile.complete_frame.duplicated(pluss::msharp::RangeView::Of<std::string_view>(key_views), false, false)
           .as_series());
@@ -165,20 +154,20 @@ detail::NexusRelationshipAuditProfile build_relationship_audit_profile(const det
   audit.rel = rel;
   audit.left = cached_key_audit_profile(src, left_frame, rel.left_table, left_keys, where);
   audit.right = cached_key_audit_profile(src, right_frame, rel.right_table, right_keys, where);
-  audit.left_orphan_rows = orphan_rows(
-                               audit.left.complete_frame,
-                               audit.left.keys,
-                               audit.right.complete_frame,
-                               audit.right.keys,
-                               "__right__")
-                               .ncases();
-  audit.right_orphan_rows = orphan_rows(
-                                audit.right.complete_frame,
-                                audit.right.keys,
-                                audit.left.complete_frame,
-                                audit.left.keys,
-                                "__left__")
-                                .ncases();
+  audit.left_orphans = orphan_rows(
+      audit.left.complete_frame,
+      audit.left.keys,
+      audit.right.complete_frame,
+      audit.right.keys,
+      "__right__");
+  audit.right_orphans = orphan_rows(
+      audit.right.complete_frame,
+      audit.right.keys,
+      audit.left.complete_frame,
+      audit.left.keys,
+      "__left__");
+  audit.left_orphan_rows = audit.left_orphans.ncases();
+  audit.right_orphan_rows = audit.right_orphans.ncases();
   audit.left_unique_required =
       rel.cardinality == RelationshipCardinality::OneToOne ||
       rel.cardinality == RelationshipCardinality::OneToMany;
@@ -228,7 +217,7 @@ const detail::NexusRelationshipAuditProfile& cached_relationship_audit_profile(
 bool Nexus::validate_keys(std::string_view table) const {
   const auto& src = impl_ref_();
   const auto keys = default_table_keys(src, table, "Nexus::validate_keys");
-  const auto& profile = cached_key_audit_profile(src, frame(table), table, keys, "Nexus::validate_keys");
+  const auto& profile = cached_key_audit_profile(src, frame_ref(src, table, "Nexus::validate_keys"), table, keys, "Nexus::validate_keys");
   return key_profile_valid(profile);
 }
 
@@ -236,14 +225,14 @@ bool Nexus::validate_keys(std::string_view table,
                           std::initializer_list<std::string_view> keys) const {
   const auto& src = impl_ref_();
   const auto owned = normalize_requested_keys(keys, "Nexus::validate_keys");
-  const auto& profile = cached_key_audit_profile(src, frame(table), table, owned, "Nexus::validate_keys");
+  const auto& profile = cached_key_audit_profile(src, frame_ref(src, table, "Nexus::validate_keys"), table, owned, "Nexus::validate_keys");
   return key_profile_valid(profile);
 }
 
 DataFrame Nexus::detect_duplicates(std::string_view table) const {
   const auto& src = impl_ref_();
   const auto keys = default_table_keys(src, table, "Nexus::detect_duplicates");
-  const auto& profile = cached_key_audit_profile(src, frame(table), table, keys, "Nexus::detect_duplicates");
+  const auto& profile = cached_key_audit_profile(src, frame_ref(src, table, "Nexus::detect_duplicates"), table, keys, "Nexus::detect_duplicates");
   return profile.duplicate_frame;
 }
 
@@ -251,7 +240,7 @@ DataFrame Nexus::detect_duplicates(std::string_view table,
                                    std::initializer_list<std::string_view> keys) const {
   const auto& src = impl_ref_();
   const auto owned = normalize_requested_keys(keys, "Nexus::detect_duplicates");
-  const auto& profile = cached_key_audit_profile(src, frame(table), table, owned, "Nexus::detect_duplicates");
+  const auto& profile = cached_key_audit_profile(src, frame_ref(src, table, "Nexus::detect_duplicates"), table, owned, "Nexus::detect_duplicates");
   return profile.duplicate_frame;
 }
 
@@ -316,8 +305,8 @@ bool Nexus::validate_relationship(std::string_view name) const {
               "Nexus::validate_relationship: unknown relationship '" + std::string(name) + "'");
   return cached_relationship_audit_profile(
              src,
-             frame(rel->left_table),
-             frame(rel->right_table),
+             frame_ref(src, rel->left_table, "Nexus::validate_relationship"),
+             frame_ref(src, rel->right_table, "Nexus::validate_relationship"),
              *rel,
              "Nexus::validate_relationship")
       .valid;
@@ -330,13 +319,15 @@ DataFrame Nexus::detect_orphans(std::string_view relationship_name,
   PLUSS_CHECK(rel.has_value(),
               "Nexus::detect_orphans: unknown relationship '" + std::string(relationship_name) + "'");
   const auto& audit = cached_relationship_audit_profile(
-      src, frame(rel->left_table), frame(rel->right_table), *rel, "Nexus::detect_orphans");
+      src,
+      frame_ref(src, rel->left_table, "Nexus::detect_orphans"),
+      frame_ref(src, rel->right_table, "Nexus::detect_orphans"),
+      *rel,
+      "Nexus::detect_orphans");
   if (side == RelationshipSide::Left) {
-    return orphan_rows(
-        audit.left.complete_frame, audit.left.keys, audit.right.complete_frame, audit.right.keys, "__right__");
+    return audit.left_orphans;
   }
-  return orphan_rows(
-      audit.right.complete_frame, audit.right.keys, audit.left.complete_frame, audit.left.keys, "__left__");
+  return audit.right_orphans;
 }
 
 DataFrame Nexus::relationship_audit(std::string_view name) const {
@@ -345,7 +336,11 @@ DataFrame Nexus::relationship_audit(std::string_view name) const {
   PLUSS_CHECK(rel.has_value(),
               "Nexus::relationship_audit: unknown relationship '" + std::string(name) + "'");
   const auto& audit = cached_relationship_audit_profile(
-      src, frame(rel->left_table), frame(rel->right_table), *rel, "Nexus::relationship_audit");
+      src,
+      frame_ref(src, rel->left_table, "Nexus::relationship_audit"),
+      frame_ref(src, rel->right_table, "Nexus::relationship_audit"),
+      *rel,
+      "Nexus::relationship_audit");
 
   const auto left_unique_valid =
       !audit.left_unique_required || audit.left.duplicate_frame.ncases() == 0;

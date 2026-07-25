@@ -135,4 +135,8 @@ literal mask did.
     <span class="label">Previous</span>
     <span class="title">view</span>
   </a>
+  <a class="next-link" href="width.html">
+    <span class="label">Next</span>
+    <span class="title">width</span>
+  </a>
 </div>

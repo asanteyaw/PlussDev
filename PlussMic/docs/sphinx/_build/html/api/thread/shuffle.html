@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::size" href="size.html" />
@@ -36,42 +36,110 @@
 
           <div class="body" role="main">
             
-  <section id="thread-shuffle">
+  <!-- pluss-hand-authored -->
+<section id="thread-shuffle">
 <h1>Thread::shuffle<a class="headerlink" href="#thread-shuffle" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">shuffle</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">random_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">shuffle</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">random_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Returns a new thread with every entry in a random order — the same entries as the
+original, just permuted. Internally this builds the index range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">size())</span></code>,
+seeds a <code class="docutils literal notranslate"><span class="pre">std::mt19937_64</span></code> from <code class="docutils literal notranslate"><span class="pre">random_state</span></code> (or from <code class="docutils literal notranslate"><span class="pre">std::random_device</span></code> if
+<code class="docutils literal notranslate"><span class="pre">random_state</span></code> is omitted), calls <code class="docutils literal notranslate"><span class="pre">std::shuffle</span></code>, and takes the result — so it’s
+equivalent to <a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sample(size(),</span> <span class="pre">random_state,</span> <span class="pre">false)</span></code></span></a> but reads more
+directly at the call site when you just want “reorder everything,” rather than
+“draw a subset.”</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>random_state reproduces results on a given build, not across toolchains
+As with <a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code> uses <code class="docutils literal notranslate"><span class="pre">std::shuffle</span></code>, whose exact
+output for a given seed is not fixed by the C++ standard — only its statistical
+properties are. The same <code class="docutils literal notranslate"><span class="pre">random_state</span></code> reliably reproduces the same permutation
+<em>within one build</em> (same compiler, same standard library), but different
+toolchains may legitimately produce a different permutation for the same seed. The
+example output below reflects one particular build.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>random_state</strong>
-Optional seed used to make sampling or shuffling reproducible.</p>
+<p><strong>random_state</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::uint64_t&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Seed for the random number generator. Omitted (<code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>) draws a fresh,
+non-reproducible seed each call via <code class="docutils literal notranslate"><span class="pre">std::random_device</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread of the same length and kind, with entries reordered.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">shuffle</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">random_state</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Shuffle with a fixed seed, reproducible on this build.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">shuffle</span><span class="p">({});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">shuffle</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output-illustrative-see-the-important-callout-above">
+<h3>Output (illustrative — see the important callout above)<a class="headerlink" href="#output-illustrative-see-the-important-callout-above" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  40
+1  10
+2  50
+3  20
+4  30
+
+ptype: Series
+</pre></div>
+</div>
+<p>Same five values, same length, just reordered — every original value appears
+exactly once.</p>
+<p>Example 2. Two calls with the same <code class="docutils literal notranslate"><span class="pre">random_state</span></code> produce the same permutation on
+a given build.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">shuffle</span><span class="p">(</span><span class="mi">99</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">shuffle</span><span class="p">(</span><span class="mi">99</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">value</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">value</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">value</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">value</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
 </pre></div>
 </div>
+<p>Example 3. Omitting <code class="docutils literal notranslate"><span class="pre">random_state</span></code> draws a fresh seed each call — two calls are
+not guaranteed to (and in practice essentially never do) match.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">shuffle</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">shuffle</span><span class="p">();</span>
+<span class="c1">// c and d are each some permutation of {10, 20, 30, 40, 50}, independently drawn</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">sample(size(),</span> <span class="pre">random_state,</span> <span class="pre">false)</span></code>, but expresses intent more
+directly for “reorder everything” use.</p></li>
+<li><p>Same length and kind as the original; no entries are dropped or duplicated.</p></li>
+<li><p>See the important callout above regarding cross-build reproducibility of a given
+<code class="docutils literal notranslate"><span class="pre">random_state</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sample</span></code></span></a>: draw a random subset (or the whole thread,
+reordered) with more control over count/fraction and replacement.</p></li>
+<li><p><a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sort_values</span></code></span></a>: reorder deterministically by value,
+rather than randomly.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="show.html">
     <span class="label">Previous</span>
@@ -82,7 +150,6 @@ Value produced by this call.</p>
     <span class="title">size</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -36,49 +36,49 @@
     return `${title}(${args.join(", ")})`;
   }
 
+  function siteBrandFromTitle() {
+    const raw = document.title || "";
+    const parts = raw.split("—").map((p) => p.trim()).filter(Boolean);
+    let candidate = parts.length ? parts[parts.length - 1] : raw.trim();
+    candidate = candidate.replace(/\s*documentation\s*$/i, "").trim();
+    candidate = candidate.replace(/\s{2,}/g, " ");
+    return candidate || "Pluss";
+  }
+
+  function urlRoot() {
+    if (window.DOCUMENTATION_OPTIONS && typeof window.DOCUMENTATION_OPTIONS.URL_ROOT === "string") {
+      return window.DOCUMENTATION_OPTIONS.URL_ROOT;
+    }
+    return "";
+  }
+
   function buildTopbar() {
-    const sidebarLinks = Array.from(
-      document.querySelectorAll(".sphinxsidebar .toctree-l1 > a.reference.internal")
-    );
-    const unique = new Map();
-
+    const root = urlRoot();
     const currentPath = window.location.pathname.split("/").pop() || "index.html";
-
-    sidebarLinks.forEach((link) => {
-      let href = (link.getAttribute("href") || "").trim();
-      const title = (link.textContent || "").trim();
-      if (!title) {
-        return;
-      }
-      if (!href || href === "#") {
-        href = currentPath;
-      }
-      if (href.startsWith("#") || href.includes("#")) {
-        return;
-      }
-      if (!unique.has(href)) {
-        unique.set(href, title);
-      }
-    });
 
     const topbar = document.createElement("div");
     topbar.id = "pluss-topbar";
 
     const brand = document.createElement("a");
     brand.className = "brand";
-    brand.href = "index.html";
-    brand.textContent = "PlussPl";
+    brand.href = `${root}index.html`;
+    brand.textContent = siteBrandFromTitle();
     topbar.appendChild(brand);
 
     const links = document.createElement("div");
     links.className = "top-links";
     topbar.appendChild(links);
 
-    Array.from(unique.entries()).forEach(([href, title]) => {
+    const navItems = [
+      { href: `${root}index.html`, label: "Home", match: "index.html" },
+      { href: `${root}api_reference.html`, label: "API Reference", match: "api_reference.html" },
+    ];
+
+    navItems.forEach(({ href, label, match }) => {
       const a = document.createElement("a");
       a.href = href;
-      a.textContent = title;
-      if (href === currentPath || href.endsWith("/" + currentPath)) {
+      a.textContent = label;
+      if (currentPath === match) {
         a.classList.add("active");
       }
       links.appendChild(a);

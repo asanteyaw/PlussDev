@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFramePlot3DAccessor::surface" href="surface.html" />
@@ -36,58 +36,155 @@
 
           <div class="body" role="main">
             
-  <section id="dataframeplot3daccessor-scatter">
+  <!-- pluss-hand-authored -->
+<section id="dataframeplot3daccessor-scatter">
 <h1>DataFramePlot3DAccessor::scatter<a class="headerlink" href="#dataframeplot3daccessor-scatter" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_plot3d_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFramePlot3DAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlot3DAccessor</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">z_feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">size_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">color_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Scatter3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlot3DAccessor</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">z_feature</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">size_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">color_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Scatter3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Draws an unconnected 3D point cloud: row <code class="docutils literal notranslate"><span class="pre">i</span></code>’s <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">z)</span></code> triple becomes one point, with
+two optional per-point encodings layered on top — <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> scales each point’s marker
+size, and <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> maps each point’s numeric value onto the trace’s color scale. This
+is the 3D counterpart of <a class="reference internal" href="../dataframe-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::scatter</span></code></span></a>,
+though the two differ meaningfully: the 2D <code class="docutils literal notranslate"><span class="pre">scatter()</span></code> accepts a categorical <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code>
+that splits points into separate colored/labeled traces, while this method’s
+<code class="docutils literal notranslate"><span class="pre">color_feature</span></code> is a single continuous numeric gradient across one trace, closer in spirit
+to a heatmap’s color scale than to the 2D accessor’s hue grouping.</p>
+<p>See <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for the shared <code class="docutils literal notranslate"><span class="pre">Studio</span></code>-return / no-<code class="docutils literal notranslate"><span class="pre">cout</span></code> mechanics, feature-to-
+axis conversion rules, and the full <code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>/<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code> layering
+explanation — this page only covers what’s specific to <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>size_feature and color_feature combine independently
+There are effectively four call shapes, chosen entirely by which of <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> and
+<code class="docutils literal notranslate"><span class="pre">color_feature</span></code> are present: neither present draws uniform points at the pane’s default
+marker size; <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> alone scales marker size per point; <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> alone
+colors every point by its value while marker size stays fixed at
+<code class="docutils literal notranslate"><span class="pre">options.default_marker_size</span></code>; both present scale size <em>and</em> color together. There is no
+overload that lets you set a per-point color without also implicitly sizing every point
+uniformly at <code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> when <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> is omitted — the size argument
+passed to the underlying trace call is always populated, just filled with a constant when
+<code class="docutils literal notranslate"><span class="pre">size_feature</span></code> isn’t given.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>x_feature</strong>
-Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.</p>
-<p><strong>y_feature</strong>
-Single numeric feature to draw on the vertical axis or as the primary plotted measure.</p>
-<p><strong>z_feature</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>size_feature</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>color_feature</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>x_feature</strong>, <strong>y_feature</strong>, <strong>z_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, all required)
+The three features providing each point’s <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, and <code class="docutils literal notranslate"><span class="pre">z</span></code> coordinate — see
+<a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s note on feature-to-axis conversion.</p>
+<p><strong>size_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Optional numeric feature controlling each point’s marker size. Omitted means every
+point uses <code class="docutils literal notranslate"><span class="pre">options.default_marker_size</span></code> uniformly.</p>
+<p><strong>color_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Optional numeric feature mapped onto the trace’s color scale, one continuous gradient
+across all points (not a categorical split into separate traces — contrast the 2D
+accessor’s <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code>).</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">Scatter3DPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">Scatter3DPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DSceneOptions</span> <span class="pre">scene{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DTraceOptions</span> <span class="pre">trace{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">default_marker_size{12.0};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> is only consulted when <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> is omitted; <code class="docutils literal notranslate"><span class="pre">scene</span></code>/<code class="docutils literal notranslate"><span class="pre">trace</span></code>
+are the same shared structs documented in full on <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
-Value produced by this call.</p>
+A figure with one 3D pane containing a single point-cloud trace of the <code class="docutils literal notranslate"><span class="pre">n</span></code> <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">z)</span></code>
+points.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">plot3d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot3d</span><span class="p">();</span>
+<p>Example 1. Default options: uniform points, no size or color encoding.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot3d</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;mass&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">25.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;speed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.2</span><span class="p">,</span><span class="w"> </span><span class="mf">3.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="mf">4.1</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;points3d.svg&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> only: marker size scales with <code class="docutils literal notranslate"><span class="pre">mass</span></code>, color stays uniform.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mass&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> only: every point stays <code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> (12.0), but
+color now maps to <code class="docutils literal notranslate"><span class="pre">speed</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;speed&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;points3d_colored.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> explicitly for <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> here is required syntax — there is no
+overload that skips straight to <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> while omitting <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> entirely.</p>
+<p>Example 4. Both <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> and <code class="docutils literal notranslate"><span class="pre">color_feature</span></code>: marker size scales with <code class="docutils literal notranslate"><span class="pre">mass</span></code>, color
+maps to <code class="docutils literal notranslate"><span class="pre">speed</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mass&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;speed&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;points3d_full.png&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example 5. An explicit <code class="docutils literal notranslate"><span class="pre">Scatter3DPlotOptions</span></code>, raising <code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> (which only
+takes effect because <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> is omitted here) and applying a <code class="docutils literal notranslate"><span class="pre">Cloud</span></code> trace preset.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Scatter3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">default_marker_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">30.0</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">trace</span><span class="p">.</span><span class="n">preset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">TracePreset3D</span><span class="o">::</span><span class="n">Cloud</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example 6. A mismatched-length <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> (fewer rows than the frame) throws, same as
+every axis feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mismatched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">mismatched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mismatched</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// A contrived example: size_feature named here doesn&#39;t exist on the frame.</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mismatched</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;missing&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size_feature</span></code> and <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> are independent optional encodings — see the note
+above for exactly how the four combinations behave.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> only applies when <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> is omitted.</p></li>
+<li><p>Unlike the 2D accessor’s <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code>, <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> is a single continuous gradient
+across one trace, not a split into separate colored/labeled traces.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dataframe-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::scatter</span></code></span></a>: the 2D counterpart,
+with a categorical <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> instead of a continuous <code class="docutils literal notranslate"><span class="pre">color_feature</span></code>.</p></li>
+<li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::line</span></code></span></a>: connected points in row order, instead of an
+unconnected cloud.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="line.html">
     <span class="label">Previous</span>
@@ -98,7 +195,6 @@ Value produced by this call.</p>
     <span class="title">surface</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

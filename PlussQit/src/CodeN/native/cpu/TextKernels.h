@@ -116,12 +116,48 @@ void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
 // Split on ASCII punctuation boundaries (delimiter = non-alnum).
 ::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_on_punct_spans(::std::string_view s);
 
-// Split on ASCII word boundaries: start=[A-Za-z0-9_], body=[A-Za-z0-9_'].
+// Split on NLP-aware token boundaries. This keeps technical text such as
+// C++, C#, URLs, emails, apostrophes, hyphenated words, and common
+// abbreviations intact. When keep_punct=false, punctuation-only tokens are
+// omitted from the output.
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_nlp_token_spans(::std::string_view s,
+                                                                                bool keep_punct = true);
+
+// Split on ASCII word boundaries with NLP-aware technical token handling.
+// Punctuation-only tokens are excluded.
 ::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_word_spans(::std::string_view s);
 
-// ASCII sentence splitting with punctuation boundary scan.
-// Boundary markers: '.', '!', '?' followed by whitespace or end-of-input.
+// ASCII sentence splitting with abbreviation/decimal-aware heuristics.
 ::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_sentences_spans_ascii(::std::string_view s);
+
+// Lightweight ASCII lemma normalization for token-like inputs.
+::std::string simple_lemma_ascii(::std::string_view token);
+
+struct AsciiTokenTraits {
+  bool is_ascii = true;
+  bool has_alpha = false;
+  bool has_digit = false;
+  bool has_hyphen = false;
+  bool has_apostrophe = false;
+  bool is_titlecase = false;
+  bool is_uppercase = false;
+  bool is_lowercase = false;
+  bool is_number_like = false;
+  bool is_url = false;
+  bool is_email = false;
+  bool is_punct_only = false;
+};
+
+// Lightweight ASCII token-shape helpers used by higher-level NLP runtimes.
+AsciiTokenTraits analyze_ascii_token(::std::string_view token) noexcept;
+bool is_ascii_number_like(::std::string_view token) noexcept;
+bool is_ascii_titlecase_token(::std::string_view token) noexcept;
+bool is_ascii_uppercase_token(::std::string_view token) noexcept;
+bool is_ascii_url_token(::std::string_view token) noexcept;
+bool is_ascii_email_token(::std::string_view token) noexcept;
+::std::string token_shape_ascii(::std::string_view token);
+::std::string prefix_ascii(::std::string_view token, ::std::size_t width = 3);
+::std::string suffix_ascii(::std::string_view token, ::std::size_t width = 3);
 
 // Lowercase with SIMD lower_ascii + single-pass token extraction/filtering.
 void tokenize_words_ascii_lower_filtered(::std::string_view s,

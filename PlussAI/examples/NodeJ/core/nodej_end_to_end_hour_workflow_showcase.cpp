@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
   //========== schema normalization ========
   // This section gives consistent names and explicit core column dtypes.
-  DataFrame frame = raw.rename_features({
+  DataFrame frame = raw.rename({
       {"dteday", "date"},
       {"holiday", "is_holiday"},
       {"workingday", "is_workingday"},
@@ -57,14 +57,25 @@ int main(int argc, char** argv) {
       {"yr", "year"},
   });
 
-  frame = frame.cast_timeline({"date"});
-  frame = frame.cast_series(
-      {
-          "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday",
-          "weather_condition", "temp", "atemp", "humidity", "windspeed", "casual", "registered",
-          "total_count",
-      },
-      ScalarType::Float64);
+  // This batches the timeline cast and the numeric-dtype casts into one DataFrame::cast call.
+  frame = frame.cast({
+      DataFrame::CastSpec{"date", pluss::table::ThreadCastTarget::Timeline, {}},
+      DataFrame::CastSpec{"season", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"year", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"month", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"hour", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"is_holiday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"weekday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"is_workingday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"weather_condition", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"temp", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"atemp", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"humidity", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"windspeed", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"casual", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"registered", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+      DataFrame::CastSpec{"total_count", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+  });
 
   //========== feature engineering ========
   // This section creates interaction and nonlinear terms directly on DataFrame columns.
@@ -76,28 +87,41 @@ int main(int argc, char** argv) {
   const Series s_month = frame.features("month").as_series();
   const Series s_weather = frame.features("weather_condition").as_series();
 
-  frame = frame.set_features("temp_sq", Thread(s_temp.square()));
-  frame = frame.set_features("atemp_sq", Thread(s_atemp.square()));
-  frame = frame.set_features("humidity_sq", Thread(s_humidity.square()));
-  frame = frame.set_features("windspeed_sq", Thread(s_windspeed.square()));
-  frame = frame.set_features("temp_humidity_interaction", Thread(s_temp.mul(s_humidity)));
-  frame = frame.set_features("temp_windspeed_interaction", Thread(s_temp.mul(s_windspeed)));
-  frame = frame.set_features("atemp_humidity_interaction", Thread(s_atemp.mul(s_humidity)));
-  frame = frame.set_features("atemp_windspeed_interaction", Thread(s_atemp.mul(s_windspeed)));
-  frame = frame.set_features("temp_minus_atemp", Thread(s_temp.sub(s_atemp)));
-  frame = frame.set_features("hour_centered", Thread(s_hour.sub(12.0)));
-  frame = frame.set_features("hour_centered_sq", Thread(s_hour.sub(12.0).square()));
-  frame = frame.set_features("month_centered", Thread(s_month.sub(6.5)));
-  frame = frame.set_features("month_centered_sq", Thread(s_month.sub(6.5).square()));
-  frame = frame.set_features("weather_sq", Thread(s_weather.square()));
+  frame = frame.assign(std::vector<std::pair<std::string, Thread>>{
+      {"temp_sq", Thread(s_temp.square())},
+      {"atemp_sq", Thread(s_atemp.square())},
+      {"humidity_sq", Thread(s_humidity.square())},
+      {"windspeed_sq", Thread(s_windspeed.square())},
+      {"temp_humidity_interaction", Thread(s_temp.mul(s_humidity))},
+      {"temp_windspeed_interaction", Thread(s_temp.mul(s_windspeed))},
+      {"atemp_humidity_interaction", Thread(s_atemp.mul(s_humidity))},
+      {"atemp_windspeed_interaction", Thread(s_atemp.mul(s_windspeed))},
+      {"temp_minus_atemp", Thread(s_temp.sub(s_atemp))},
+      {"hour_centered", Thread(s_hour.sub(12.0))},
+      {"hour_centered_sq", Thread(s_hour.sub(12.0).square())},
+      {"month_centered", Thread(s_month.sub(6.5))},
+      {"month_centered_sq", Thread(s_month.sub(6.5).square())},
+      {"weather_sq", Thread(s_weather.square())},
+  });
 
   //========== missingness diagnostics ========
   // This section computes missingness rates before model preprocessing.
-  const DataFrame missing_binary = frame.isna({
+  const DataFrame missing_binary = frame.isnull({
       "temp", "atemp", "humidity", "windspeed", "total_count",
       "temp_sq", "atemp_sq", "humidity_sq", "windspeed_sq",
   });
-  const DataFrame missing_rate = missing_binary.mean(false);
+  // Axis::Case reduces down each column across all rows, producing one missingness rate per
+  // feature; the result is a Feature-labeled Thread, so its own labels are the original feature
+  // names. Those labels are surfaced both as an explicit "feature" column (so they show up in
+  // the CSV, which is saved with the library's default add_cases=false) and as the summary
+  // frame's own case labels.
+  const Thread missing_rate_thread = missing_binary.mean(pluss::table::Axis::Case);
+  const DataFrame missing_rate = DataFrame(
+      {
+          {"feature", missing_rate_thread.label().values()},
+          {"missing_rate", missing_rate_thread},
+      },
+      missing_rate_thread.label().values());
   missing_rate.save_csv((out_dir / "missing_rate.csv").string());
 
   //========== exploratory data analysis (EDA) ========
@@ -134,13 +158,19 @@ int main(int argc, char** argv) {
       .headline("Demand vs hour")
       .save_pdf((out_dir / "eda_scatter_hour_target.pdf").string());
 
-  frame.mean_by("hour", "total_count", 0, 1, true, false)
+  // mean_by groups on the feature's own labels, so the numeric group keys are cast to Note
+  // (string) form just for these calls; the underlying `frame` used for modelling is untouched.
+  frame.cast({{"hour", pluss::table::ThreadCastTarget::Note}})
+      .mean_by("hour", "total_count", 0, 1, true, false)
       .save_csv((out_dir / "eda_hour_mean_total_count.csv").string());
-  frame.mean_by("weather_condition", "total_count", 0, 1, true, false)
+  frame.cast({{"weather_condition", pluss::table::ThreadCastTarget::Note}})
+      .mean_by("weather_condition", "total_count", 0, 1, true, false)
       .save_csv((out_dir / "eda_weather_mean_total_count.csv").string());
-  frame.mean_by("month", "total_count", 0, 1, true, false)
+  frame.cast({{"month", pluss::table::ThreadCastTarget::Note}})
+      .mean_by("month", "total_count", 0, 1, true, false)
       .save_csv((out_dir / "eda_month_mean_total_count.csv").string());
-  frame.mean_by("weekday", "total_count", 0, 1, true, false)
+  frame.cast({{"weekday", pluss::table::ThreadCastTarget::Note}})
+      .mean_by("weekday", "total_count", 0, 1, true, false)
       .save_csv((out_dir / "eda_weekday_mean_total_count.csv").string());
 
   //========== holdout split ========
@@ -415,6 +445,10 @@ int main(int argc, char** argv) {
   cv_split.shuffle = true;
   cv_split.random.seed = 73;
   cv_split.random.deterministic = true;
+  // Force sequential fold evaluation: the shared ParallelRuntime singleton used by
+  // pluss::msharp::parallel_for is not safe for concurrent top-level callers, and both
+  // cross_assess (fold-level) and sweep (trial-level) can otherwise dispatch concurrently.
+  cv_split.max_parallel = 1;
 
   //========== modelling: broad candidate sweep ========
   // This section runs broad ModelSpec sweep with CV over the preprocessed train batch.
@@ -603,7 +637,8 @@ int main(int argc, char** argv) {
       train_options,
       assess_options,
       MetricKind::Rmse,
-      TuneObjectivePolicy::Minimize);
+      TuneObjectivePolicy::Minimize,
+      /*max_parallel=*/1);
   if (!broad_sweep_or.ok()) {
     std::cerr << "sweep(broad) failed: " << broad_sweep_or.status().message << "\n";
     return 1;
@@ -872,7 +907,8 @@ int main(int argc, char** argv) {
       train_options,
       assess_options,
       MetricKind::Rmse,
-      TuneObjectivePolicy::Minimize);
+      TuneObjectivePolicy::Minimize,
+      /*max_parallel=*/1);
   if (!tuned_sweep_or.ok()) {
     std::cerr << "sweep(tuned) failed: " << tuned_sweep_or.status().message << "\n";
     return 1;

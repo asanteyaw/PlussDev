@@ -12,7 +12,7 @@ Catalog Catalog::text_preprocess(std::string_view field) const {
       }
       out.push_back(std::move(joined));
     }
-    return Stream(pluss::make_note(out), detail::validity_mask(s), s.cases());
+    return Stream(pluss::make_note(out), detail::validity_mask(s), s.label());
   });
 }
 
@@ -21,7 +21,7 @@ Catalog Catalog::extract_keywords(std::string_view field, int top_n) const {
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::extract_keywords: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::extract_keywords: unknown key '" + key + "'");
-  const auto src = stream(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto src = at(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
 
   std::unordered_map<std::string, std::int64_t> counts;
   for (std::int64_t i = 0; i < src.numel(); ++i) {
@@ -71,8 +71,8 @@ Catalog Catalog::compute_similarity(std::string_view field1,
   PLUSS_CHECK(lowercase_copy(trim_copy(method)) == "cosine",
               "Catalog::compute_similarity currently supports only method='cosine'");
 
-  const auto lhs = stream(left_name).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
-  const auto rhs = stream(right_name).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto lhs = at(left_name).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto rhs = at(right_name).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
   PLUSS_CHECK(lhs.numel() == rhs.numel(), "Catalog::compute_similarity: fields must have same length");
 
   std::vector<double> sim;
@@ -97,7 +97,7 @@ Catalog Catalog::compute_similarity(std::string_view field1,
   }
 
   const auto sim_name = left_name + "__" + right_name + "_similarity";
-  return set_stream(sim_name, Stream(pluss::make_series(sim, {static_cast<std::int64_t>(sim.size())})));
+  return set(sim_name, Stream(pluss::make_series(sim, {static_cast<std::int64_t>(sim.size())})));
 }
 
 Catalog Catalog::filter_by_text(std::string_view field, std::string_view pattern) const {
@@ -106,7 +106,7 @@ Catalog Catalog::filter_by_text(std::string_view field, std::string_view pattern
   const auto pat = lowercase_copy(trim_copy(pattern));
   PLUSS_CHECK(!key.empty(), "Catalog::filter_by_text: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::filter_by_text: unknown field '" + key + "'");
-  const auto src = stream(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto src = at(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
   std::vector<bool> keep(static_cast<std::size_t>(src.numel()), false);
   for (std::int64_t i = 0; i < src.numel(); ++i) {
     const auto txt = lowercase_copy(src.at(i));
@@ -120,7 +120,7 @@ Catalog Catalog::add_text_features(std::string_view field) const {
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::add_text_features: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::add_text_features: unknown field '" + key + "'");
-  const auto src = stream(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto src = at(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
 
   std::vector<std::int64_t> char_len;
   std::vector<std::int64_t> word_count;
@@ -133,10 +133,10 @@ Catalog Catalog::add_text_features(std::string_view field) const {
   }
 
   auto out = *this;
-  out = out.set_stream(key + "_char_len",
-                       Stream(pluss::make_series(char_len, {static_cast<std::int64_t>(char_len.size())})));
-  out = out.set_stream(key + "_word_count",
-                       Stream(pluss::make_series(word_count, {static_cast<std::int64_t>(word_count.size())})));
+  out = out.set(key + "_char_len",
+                Stream(pluss::make_series(char_len, {static_cast<std::int64_t>(char_len.size())})));
+  out = out.set(key + "_word_count",
+                Stream(pluss::make_series(word_count, {static_cast<std::int64_t>(word_count.size())})));
   return out;
 }
 
@@ -146,7 +146,7 @@ Catalog Catalog::aggregate_text_stats(std::string_view field, std::string_view s
   const auto stat = lowercase_copy(trim_copy(stat_type));
   PLUSS_CHECK(!key.empty(), "Catalog::aggregate_text_stats: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::aggregate_text_stats: unknown field '" + key + "'");
-  const auto src = stream(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto src = at(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
 
   std::vector<std::int64_t> lens;
   lens.reserve(static_cast<std::size_t>(src.numel()));
@@ -187,7 +187,7 @@ Catalog Catalog::tfidf(std::string_view field) const {
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::tfidf: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::tfidf: unknown field '" + key + "'");
-  const auto src = stream(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto src = at(key).to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
   const auto n = src.numel();
 
   std::vector<std::vector<std::string>> docs;
@@ -218,8 +218,8 @@ Catalog Catalog::tfidf(std::string_view field) const {
     norm.push_back(std::sqrt(sum_sq));
   }
 
-  return set_stream(key + "_tfidf_norm",
-                    Stream(pluss::make_series(norm, {static_cast<std::int64_t>(norm.size())})));
+  return set(key + "_tfidf_norm",
+             Stream(pluss::make_series(norm, {static_cast<std::int64_t>(norm.size())})));
 }
 
 Catalog Catalog::set_stream(std::string_view key, const Stream& value) const {
@@ -256,14 +256,14 @@ Catalog& Catalog::set_(std::string_view key, const Stream& value) {
   return set_stream_(key, value);
 }
 
-Catalog Catalog::set_streams(std::initializer_list<std::pair<std::string_view, Stream>> items) const {
+Catalog Catalog::set(std::initializer_list<std::pair<std::string_view, Stream>> items) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   auto out = *this;
-  out.set_streams_(items);
+  out.set_(items);
   return out;
 }
 
-Catalog& Catalog::set_streams_(std::initializer_list<std::pair<std::string_view, Stream>> items) {
+Catalog& Catalog::set_(std::initializer_list<std::pair<std::string_view, Stream>> items) {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   for (const auto& [k, s] : items) {
     set_stream_(k, s);
@@ -271,14 +271,14 @@ Catalog& Catalog::set_streams_(std::initializer_list<std::pair<std::string_view,
   return *this;
 }
 
-Catalog Catalog::set_streams(std::initializer_list<NamedStream> items) const {
+Catalog Catalog::set(std::initializer_list<NamedStream> items) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   auto out = *this;
-  out.set_streams_(items);
+  out.set_(items);
   return out;
 }
 
-Catalog& Catalog::set_streams_(std::initializer_list<NamedStream> items) {
+Catalog& Catalog::set_(std::initializer_list<NamedStream> items) {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   for (const auto& kv : items) {
     set_stream_(kv.key, kv.value);

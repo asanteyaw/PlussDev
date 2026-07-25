@@ -1,0 +1,65 @@
+name: Docs Lint
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  docs-lint:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Regenerate PlussMic API reference (fail on hand-authored signature drift)
+        run: python3 PlussMic/docs/sphinx/generate_api_reference.py --check
+
+      - name: Refresh each package's local docs aggregation
+        run: |
+          python3 docs/scripts/aggregate_docs.py --into PlussQit/docs --scan PlussQit
+          python3 docs/scripts/aggregate_docs.py --into PlussMic/docs/sphinx --scan PlussMic
+          python3 docs/scripts/aggregate_docs.py --into PlussMa/docs --scan PlussMa
+          python3 docs/scripts/aggregate_docs.py --into PlussPl/docs/sphinx --scan PlussPl
+          python3 docs/scripts/aggregate_docs.py --into PlussAI/docs/sphinx --scan PlussAI
+          python3 docs/scripts/aggregate_docs.py --into PlussTils/view/docs --scan PlussTils
+
+      - name: Refresh root docs aggregation of all six package hubs
+        run: |
+          python3 docs/scripts/aggregate_docs.py \
+            --into docs/sphinx \
+            --package-hub PlussQit=PlussQit/docs \
+            --package-hub PlussMic=PlussMic/docs/sphinx \
+            --package-hub PlussMa=PlussMa/docs \
+            --package-hub PlussPl=PlussPl/docs/sphinx \
+            --package-hub PlussAI=PlussAI/docs/sphinx \
+            --package-hub PlussTils=PlussTils/view/docs
+
+      - name: Install Sphinx toolchain
+        run: python3 -m pip install -r docs/sphinx/requirements.txt
+
+      - name: Build root Sphinx site (HTML only, catches broken toctree/glob refs)
+        run: |
+          cd docs/sphinx
+          sphinx-build -W --keep-going -b html . _build/html
+
+      - name: Fail if generated/aggregated docs left an unexpected working-tree diff
+        run: |
+          git status --porcelain -- PlussQit/docs PlussMic/docs PlussMa/docs PlussPl/docs PlussAI/docs PlussTils/view/docs docs/sphinx \
+            | grep -v '/_local/' \
+            | grep -v '/_build/' \
+            > /tmp/docs_diff.txt || true
+          if [ -s /tmp/docs_diff.txt ]; then
+            echo "Generated or aggregated docs are out of date with what's committed."
+            echo "Run the regeneration/aggregation commands above locally and commit the result:"
+            cat /tmp/docs_diff.txt
+            exit 1
+          fi

@@ -90,8 +90,7 @@ NexusQuery NexusQuery::join(std::string_view right, const JoinSpec& spec) const 
 }
 
 NexusQuery NexusQuery::via(std::string_view to, JoinHow how) const {
-  const auto path_value = nexus_.path(anchor_table_, to);
-  const auto subplan = nexus_.plan(path_value, how);
+  const auto subplan = nexus_.plan(anchor_table_, to, how);
   auto next_plan = append_join_plan(plan_, plan_.root_table, subplan.steps);
   return NexusQuery(nexus_, std::move(next_plan), std::string(to), picked_, dropped_, title_);
 }

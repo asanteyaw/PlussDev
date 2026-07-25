@@ -1,0 +1,5 @@
+add_executable(plussai_nodeb_textcat_mvp
+  nodeb_textcat_mvp.cpp
+)
+target_link_libraries(plussai_nodeb_textcat_mvp PRIVATE pluss)
+target_compile_features(plussai_nodeb_textcat_mvp PRIVATE cxx_std_20)

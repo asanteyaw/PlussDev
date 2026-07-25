@@ -1912,8 +1912,8 @@ Linear 0 0
 plussview_html_scroll_tests 25 0.0184536
 plussview_html_export_tests 10 0.0305616
 plussmic_table_csv 0 0
-plussmic_kindle_catalog 3 93.1993
-plussmic_bundle_model 3 52.4255
+plussmic_kindle_catalog 10 26.0015
+plussmic_bundle_model 7 27.0427
 plussmic_table_dataframe_plot_api 3 2.23931
 plussmic_table_ts_accessor 7 7.10983
 plussmic_table_axis_match 6 9.88071

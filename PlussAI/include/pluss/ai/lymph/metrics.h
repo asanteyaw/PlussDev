@@ -1,0 +1,542 @@
+#pragma once
+
+#include "pluss/ai/lymph/common.h"
+
+namespace pluss::ai::lymph {
+
+struct MetricReport {
+  std::vector<MetricKind> requested{};
+  Series values = Series::undefined();
+  Series accuracy = Series::undefined();
+  Series balanced_accuracy = Series::undefined();
+  Series precision = Series::undefined();
+  Series recall = Series::undefined();
+  Series sensitivity = Series::undefined();
+  Series f1 = Series::undefined();
+  Series specificity = Series::undefined();
+  Series geometric_mean = Series::undefined();
+  Series balance_quality = Series::undefined();
+  Series roc_auc = Series::undefined();
+  Series logloss = Series::undefined();
+  Series mse = Series::undefined();
+  Series rmse = Series::undefined();
+  Series mae = Series::undefined();
+  Series r2 = Series::undefined();
+  Series quantile_loss = Series::undefined();
+};
+
+struct SeriesCompareReport {
+  Series abs_error = Series::undefined();
+  Series max_abs_diff = Series::undefined();
+  Series mae = Series::undefined();
+};
+
+[[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs) {
+  const Series a = lhs.to(pluss::pCPU, ScalarType::Float64).reshape({lhs.numel()});
+  const Series b = rhs.to(pluss::pCPU, ScalarType::Float64).reshape({rhs.numel()});
+  if (a.numel() != b.numel()) {
+    ::pluss::throw_error("compare_series: shape mismatch.");
+  }
+  const Series abs = a.sub(b).abs();
+  return SeriesCompareReport{
+      .abs_error = abs,
+      .max_abs_diff = abs.amax().reshape({1}),
+      .mae = abs.mean().reshape({1}),
+  };
+}
+
+[[nodiscard]] inline double max_abs_diff(const Series& lhs, const Series& rhs) {
+  return compare_series(lhs, rhs).max_abs_diff.item<double>();
+}
+
+struct LinearParameters {
+  Series coeff = Series::undefined();
+  Series intercept = Series::undefined();
+  bool fit_intercept = false;
+};
+
+struct HoldoutSplitOptions {
+  double test_size = 0.2;
+  Series stratify = Series::undefined();
+  std::string stratify_feature{};
+  std::uint64_t random_state = 0;
+  bool deterministic = true;
+  bool shuffle = true;
+};
+
+struct FrameHoldoutSplit {
+  pluss::table::DataFrame train_set{};
+  pluss::table::DataFrame test_set{};
+  IndexSplit indices{};
+};
+
+struct BatchHoldoutSplit {
+  LabeledBatch train_set{};
+  LabeledBatch test_set{};
+  IndexSplit indices{};
+};
+
+[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
+
+struct CrossValidationOptions {
+  CVPlanKind plan = CVPlanKind::CrossVal;
+  double holdout_fraction = 0.2;
+  std::int64_t folds = 5;
+  std::int64_t repeats = 1;
+  bool stratified = false;
+  Series groups = Series::undefined();
+  bool reliability_defaults = true;
+  bool shuffle = true;
+  // 0 = auto-detect (one worker per fold, capped at hardware_concurrency());
+  // each fold trains an independent out-of-place clone of the model, so
+  // parallelizing changes nothing about the result, only how long it takes
+  // to get it. Set to 1 to force serial evaluation, or a specific count to
+  // cap worker threads.
+  std::int64_t max_parallel = 0;
+  std::uint64_t random_state = 0;
+  bool deterministic = true;
+};
+
+struct CrossValidationReport {
+  CrossAssessReport report{};
+  MetricReport mean{};
+  MetricReport stdev{};
+};
+
+struct FoldBatchPair {
+  LabeledBatch train{};
+  LabeledBatch test{};
+};
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  SplitOptions split{};
+  split.plan = cv.plan;
+  split.holdout_fraction = cv.holdout_fraction;
+  split.folds = cv.folds;
+  split.repeats = cv.repeats;
+  split.stratified = cv.stratified;
+  split.groups = cv.groups;
+  split.reliability_defaults = cv.reliability_defaults;
+  split.shuffle = cv.shuffle;
+  split.random.seed = cv.random_state;
+  split.random.deterministic = cv.deterministic;
+  return resolve(::pluss::ai::nodej::cross_scores(spec, batch, metric, split, train_options, assess_options),
+                 "cross_validate_scores");
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  SplitOptions split{};
+  split.plan = cv.plan;
+  split.holdout_fraction = cv.holdout_fraction;
+  split.folds = cv.folds;
+  split.repeats = cv.repeats;
+  split.stratified = cv.stratified;
+  split.groups = cv.groups;
+  split.reliability_defaults = cv.reliability_defaults;
+  split.shuffle = cv.shuffle;
+  split.random.seed = cv.random_state;
+  split.random.deterministic = cv.deterministic;
+  return resolve(::pluss::ai::nodej::cross_score(spec, batch, metric, split, train_options, assess_options),
+                 "cross_validate_score");
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& frame,
+                                                  const DataFrameBatchOptions& data_options,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_scores.labeled_batch_from_dataframe");
+  return cross_validate_scores(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& frame,
+                                                 const DataFrameBatchOptions& data_options,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_score.labeled_batch_from_dataframe");
+  return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline ClassMix class_mix(const Series& labels) {
+  return resolve(::pluss::ai::nodej::class_mix(labels), "class_mix");
+}
+
+[[nodiscard]] inline WeightPlan resolve_weight_plan(const Series& labels,
+                                                    const Series& batch_sample_weights,
+                                                    const TrainOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::resolve_weight_plan(labels, batch_sample_weights, options),
+                 "resolve_weight_plan");
+}
+
+[[nodiscard]] inline Series resolve_training_weights(const Series& labels,
+                                                     const Series& batch_sample_weights = Series::undefined(),
+                                                     const TrainOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::resolve_training_weights(labels, batch_sample_weights, options),
+                 "resolve_training_weights");
+}
+
+[[nodiscard]] inline BalancePlan plan_balance(const Series& labels,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::plan_balance(labels, target, random), "plan_balance");
+}
+
+[[nodiscard]] inline BalancePlan plan_balance(const LabeledBatch& batch,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::plan_balance(batch, target, random), "plan_balance");
+}
+
+[[nodiscard]] inline LabeledBatch balance_rows(const LabeledBatch& batch,
+                                               const BalanceTarget& target,
+                                               RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::balance_rows(batch, target, random), "balance_rows");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    const ConfusionOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options), "confusion_table");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    pluss::msharp::RangeView::Of<double> label_order,
+                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, label_order, normalize),
+                 "confusion_table");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    std::initializer_list<double> label_order,
+                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return ::pluss::ai::lymph::confusion_table(truth_labels,
+                                             predicted_labels,
+                                             pluss::msharp::RangeView::Of<double>(label_order),
+                                             normalize);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, options),
+                 "classification_summary");
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        pluss::msharp::RangeView::Of<double> label_order,
+                                                        double zero_division = 0.0) {
+  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, label_order, zero_division),
+                 "classification_summary");
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        std::initializer_list<double> label_order,
+                                                        double zero_division = 0.0) {
+  return ::pluss::ai::lymph::classification_summary(truth_labels,
+                                                    predicted_labels,
+                                                    pluss::msharp::RangeView::Of<double>(label_order),
+                                                    zero_division);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const Series& truth_labels,
+                                                         const Series& predicted_labels,
+                                                         const std::vector<MetricKind>& metrics = {},
+                                                         const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_metrics(truth_labels, predicted_labels, metrics, options),
+                 "classification_metric_series");
+}
+
+[[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
+  SplitOptions split{};
+  split.holdout_fraction = options.test_size;
+  split.shuffle = options.shuffle;
+  split.random.seed = options.random_state;
+  split.random.deterministic = options.deterministic;
+  return split;
+}
+
+[[nodiscard]] inline SplitOptions make_cross_validation_split_options(const CrossValidationOptions& options) {
+  SplitOptions split{};
+  split.plan = options.plan;
+  split.holdout_fraction = options.holdout_fraction;
+  split.folds = options.folds;
+  split.repeats = options.repeats;
+  split.stratified = options.stratified;
+  split.groups = options.groups;
+  split.reliability_defaults = options.reliability_defaults;
+  split.shuffle = options.shuffle;
+  split.max_parallel = options.max_parallel;
+  split.random.seed = options.random_state;
+  split.random.deterministic = options.deterministic;
+  return split;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_platt(TrainOptions options = {},
+                                                       std::int64_t calibration_iterations = 400,
+                                                       double calibration_tolerance = 1e-6) {
+  options.calibration = ScoreCalibration::Platt;
+  options.calibration_iterations = calibration_iterations;
+  options.calibration_tolerance = calibration_tolerance;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_isotonic(TrainOptions options = {}) {
+  options.calibration = ScoreCalibration::Isotonic;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_temperature(TrainOptions options = {},
+                                                             std::int64_t calibration_iterations = 400,
+                                                             double calibration_tolerance = 1e-6) {
+  options.calibration = ScoreCalibration::Temperature;
+  options.calibration_iterations = calibration_iterations;
+  options.calibration_tolerance = calibration_tolerance;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions without_calibration(TrainOptions options = {}) {
+  options.calibration = ScoreCalibration::None;
+  return options;
+}
+
+[[nodiscard]] inline MetricReport metric_report_from_series_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
+  MetricReport report{};
+  report.requested = copy_range_values(requested);
+  report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
+
+  // Slice each named metric straight off `report.values` instead of
+  // round-tripping through a host std::vector and rebuilding one fresh
+  // 1-element Series per metric.
+  const std::size_t n = std::min(static_cast<std::size_t>(report.values.numel()), requested.size());
+  for (std::size_t i = 0; i < n; ++i) {
+    const Series scalar = report.values.narrow_copy(0, static_cast<std::int64_t>(i), 1);
+    switch (requested[i]) {
+      case MetricKind::Accuracy: report.accuracy = scalar; break;
+      case MetricKind::BalancedAccuracy: report.balanced_accuracy = scalar; break;
+      case MetricKind::Precision: report.precision = scalar; break;
+      case MetricKind::Recall: report.recall = scalar; break;
+      case MetricKind::Sensitivity: report.sensitivity = scalar; break;
+      case MetricKind::F1: report.f1 = scalar; break;
+      case MetricKind::Specificity: report.specificity = scalar; break;
+      case MetricKind::GeometricMean: report.geometric_mean = scalar; break;
+      case MetricKind::BalanceQuality: report.balance_quality = scalar; break;
+      case MetricKind::RocAuc: report.roc_auc = scalar; break;
+      case MetricKind::LogLoss: report.logloss = scalar; break;
+      case MetricKind::Mse: report.mse = scalar; break;
+      case MetricKind::Rmse: report.rmse = scalar; break;
+      case MetricKind::Mae: report.mae = scalar; break;
+      case MetricKind::R2: report.r2 = scalar; break;
+      case MetricKind::QuantileLoss: report.quantile_loss = scalar; break;
+    }
+  }
+  return report;
+}
+
+[[nodiscard]] inline std::vector<MetricKind> default_assess_metrics_(TaskKind task, const AssessOptions& options) {
+  if (!options.metrics.empty()) return options.metrics;
+  if (task == TaskKind::Regression) return {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
+  if (task == TaskKind::Classification) return {MetricKind::Accuracy};
+  return {};
+}
+
+[[nodiscard]] inline std::vector<std::string> cross_validate_default_feature_names_(
+    const pluss::table::DataFrame& frame,
+    const char* where) {
+  const auto names = frame.feataxis().series().features();
+  if (names.empty()) {
+    ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
+  }
+  return names;
+}
+
+[[nodiscard]] inline DataFrameBatchOptions cross_validate_default_data_options_(pluss::msharp::RangeView::Of<std::string> names) {
+  DataFrameBatchOptions options{};
+  options.feature_names = copy_range_values(names);
+  options.layout = ObservationLayout::Rows;
+  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  options.note_policy = DataNotePolicy::Reject;
+  return options;
+}
+
+[[nodiscard]] inline LabeledBatch cross_validate_labeled_from_xy_(const pluss::table::DataFrame& x,
+                                                                  const Series& y,
+                                                                  pluss::msharp::RangeView::Of<std::string> feature_names,
+                                                                  const char* where) {
+  const auto x_batch = resolve(feature_batch_from_dataframe(x, cross_validate_default_data_options_(feature_names)),
+                               std::string(where) + ".feature_batch_from_dataframe");
+  const Series y_aligned = y.to(x_batch.x.platform(), ScalarType::Float64).reshape({x_batch.sample_count()});
+  LabeledBatch batch{
+      .features = x_batch,
+      .y = y_aligned,
+      .sample_weights = Series::undefined(),
+  };
+  resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
+  return batch;
+}
+
+[[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
+                                                          const LabeledBatch& batch,
+                                                          CrossValidationOptions cv = {},
+                                                          TrainOptions train_options = {},
+                                                          AssessOptions assess_options = {}) {
+  const SplitOptions split = make_cross_validation_split_options(cv);
+  CrossAssessReport report =
+      resolve(pluss::ai::nodej::cross_assess(spec, batch, split, train_options, assess_options), "cross_assess");
+  const auto metrics = default_assess_metrics_(spec.task, assess_options);
+  return CrossValidationReport{
+      .report = report,
+      .mean = metric_report_from_series_(report.mean_metrics, metrics),
+      .stdev = metric_report_from_series_(report.std_metrics, metrics),
+  };
+}
+
+[[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
+                                                          const pluss::table::DataFrame& frame,
+                                                          const DataFrameBatchOptions& data_options,
+                                                          CrossValidationOptions cv = {},
+                                                          TrainOptions train_options = {},
+                                                          AssessOptions assess_options = {}) {
+  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate.labeled_batch_from_dataframe");
+  return cross_validate(spec, batch, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
+                                                          const pluss::table::DataFrame& x,
+                                                          const Series& y,
+                                                          CrossValidationOptions cv = {},
+                                                          TrainOptions train_options = {},
+                                                          AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate(x,y)");
+  return cross_validate(spec, batch, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
+                                                          const pluss::table::DataFrame& x,
+                                                          const pluss::table::Thread& y,
+                                                          CrossValidationOptions cv = {},
+                                                          TrainOptions train_options = {},
+                                                          AssessOptions assess_options = {}) {
+  return cross_validate(spec, x, as_stratify_series(y), cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate_scores(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate_scores(x,y)");
+  return cross_validate_scores(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate_score(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate_score(x,y)");
+  return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& x,
+                                                  const pluss::table::Thread& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  return cross_validate_scores(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& x,
+                                                 const pluss::table::Thread& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  return cross_validate_score(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
+  if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
+  return thread.cast(pluss::table::ThreadCastTarget::Series, ScalarType::Float64).as_series();
+}
+
+[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options) {
+  const SplitOptions split = make_holdout_split_options(options);
+  Series stratify = options.stratify;
+  if (!stratify.defined() && !options.stratify_feature.empty()) {
+    stratify = as_stratify_series(frame.features(options.stratify_feature));
+  }
+  if (stratify.defined()) {
+    return resolve(pluss::ai::nodej::strat_holdout_split(stratify, split), "strat_holdout_split");
+  }
+  return resolve(pluss::ai::nodej::holdout_split(frame.ncases(), split), "holdout_split");
+}
+
+[[nodiscard]] inline FrameHoldoutSplit holdout_split(const pluss::table::DataFrame& frame,
+                                                     HoldoutSplitOptions options = {}) {
+  const IndexSplit indices = make_holdout_indices(frame, options);
+  const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                   .reshape({indices.train_indices.numel()})
+                                                   .to_vec<std::int64_t>();
+  const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                 .reshape({indices.test_indices.numel()})
+                                                 .to_vec<std::int64_t>();
+  return FrameHoldoutSplit{
+      .train_set = frame.take(train_idx),
+      .test_set = frame.take(test_idx),
+      .indices = indices,
+  };
+}
+
+[[nodiscard]] inline BatchHoldoutSplit holdout_split(const LabeledBatch& batch,
+                                                     HoldoutSplitOptions options = {}) {
+  const SplitOptions split = make_holdout_split_options(options);
+  const bool use_stratify = options.stratify.defined();
+  const IndexSplit indices = use_stratify
+                                 ? resolve(pluss::ai::nodej::strat_holdout_split(options.stratify, split), "strat_holdout_split")
+                                 : resolve(pluss::ai::nodej::holdout_split(batch.features.sample_count(), split), "holdout_split");
+  return BatchHoldoutSplit{
+      .train_set = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices), "slice_labeled_batch(train)"),
+      .test_set = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices), "slice_labeled_batch(test)"),
+      .indices = indices,
+  };
+}
+
+[[nodiscard]] inline std::pair<pluss::table::DataFrame, pluss::table::DataFrame> hold_out_split(
+    const pluss::table::DataFrame& frame,
+    HoldoutSplitOptions options = {}) {
+  auto split = holdout_split(frame, std::move(options));
+  return std::pair<pluss::table::DataFrame, pluss::table::DataFrame>(std::move(split.train_set), std::move(split.test_set));
+}
+
+} // namespace pluss::ai::lymph

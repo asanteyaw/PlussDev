@@ -5,6 +5,8 @@
 #include <iosfwd>
 #include <optional>
 #include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
@@ -38,6 +40,14 @@ public:
   bool unique() const noexcept;
 
   std::int64_t depth() const;
+  std::int64_t size() const;
+  std::int64_t nkeys() const;
+  std::int64_t minkeys() const;
+  std::int64_t maxkeys() const;
+  std::int64_t nrecords() const;
+  std::int64_t minrecords() const;
+  std::int64_t maxrecords() const;
+  std::tuple<std::int64_t, std::int64_t, std::int64_t> shape() const;
   bool empty() const;
 
   const std::optional<Stream>& depth_labels() const;
@@ -57,8 +67,40 @@ public:
   Archive map_catalogs(const std::function<Catalog(const Catalog&)>& fn) const;
   Catalog aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const;
 
+  bool has(std::string_view key) const;
+  Archive select(std::initializer_list<std::string_view> keys) const;
+  Archive select(const std::vector<std::string>& keys) const;
+  Archive drop(std::initializer_list<std::string_view> keys) const;
+  Archive drop(const std::vector<std::string>& keys) const;
+  Archive rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const;
+  Archive rename(std::string_view from, std::string_view to) const;
+  Archive fillnull(double value, std::initializer_list<std::string_view> keys = {}) const;
+  Archive fillnull(std::string_view value, std::initializer_list<std::string_view> keys = {}) const;
+  Archive fillnull(const char* value, std::initializer_list<std::string_view> keys = {}) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""}, keys);
+  }
+  Archive fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const;
+  Archive fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const;
+  Archive dropnull(std::initializer_list<std::string_view> keys = {}) const;
+  Archive ffill(std::initializer_list<std::string_view> keys = {}) const;
+  Archive bfill(std::initializer_list<std::string_view> keys = {}) const;
+  Archive isnull(std::initializer_list<std::string_view> keys = {}) const;
+  Archive notnull(std::initializer_list<std::string_view> keys = {}) const;
+  Archive invalid(std::initializer_list<std::string_view> keys = {}) const;
+  Archive cast(std::initializer_list<std::string_view> keys,
+               pluss::table::ThreadCastTarget target,
+               const pluss::table::ThreadCastOptions& options = {}) const;
+  Archive astype(std::initializer_list<std::string_view> keys,
+                 pluss::codem::ScalarType dtype) const;
+  Archive distinct(DistinctOptions options = {}) const;
+  Archive distinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) const;
+  Archive freq(FreqOptions options = {}) const;
+  Archive freq(std::initializer_list<std::string_view> keys, FreqOptions options = {}) const;
+  Archive ndistinct(DistinctOptions options = {}) const;
+  Archive ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) const;
+
   pluss::table::Atlas tabelize(const TabelizePolicy& policy = {}) const;
-  pluss::table::Atlas to_table(const TabelizePolicy& policy = {}, bool render = true) const;
+  pluss::table::Atlas to_table(const TabelizePolicy& policy = {}, bool render = false) const;
 
   std::string to_string() const;
   void show(std::ostream& os) const;

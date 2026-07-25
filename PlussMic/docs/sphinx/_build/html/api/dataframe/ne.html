@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::nfeatures" href="nfeatures.html" />
@@ -106,6 +106,79 @@ s3   | false  true
 <p>Every cell here is the exact opposite of what <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scores.eq(84.0)</span></code></span></a> would report
 — <code class="docutils literal notranslate"><span class="pre">ne()</span></code> and <code class="docutils literal notranslate"><span class="pre">eq()</span></code> always partition the same cells into complementary <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code>
 sets, except where either side is missing (<code class="docutils literal notranslate"><span class="pre">NULL</span></code> stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> under both).</p>
+<p>Example 2. Broadcast one text value against a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">ne</span><span class="p">(</span><span class="s">&quot;Bola&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_names</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+      | name 
+-------------
+s1    | true 
+s2    | false
+s3    | true 
+-------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>Only <code class="docutils literal notranslate"><span class="pre">s2</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;Bola&quot;</span></code> matches the compared value, so it’s the sole <code class="docutils literal notranslate"><span class="pre">false</span></code> — everything
+else differs and reports <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p>Example 3. Compare two frames cell by cell — only <code class="docutils literal notranslate"><span class="pre">s3</span></code>’s <code class="docutils literal notranslate"><span class="pre">quiz</span></code> value actually
+differs.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">83.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">72.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out_frames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">ne</span><span class="p">(</span><span class="n">changed</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_frames</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+      | quiz   final
+--------------------
+s1    | false  false
+s2    | false  false
+s3    | true   false
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Exactly one <code class="docutils literal notranslate"><span class="pre">true</span></code> cell — <code class="docutils literal notranslate"><span class="pre">s3</span></code>’s <code class="docutils literal notranslate"><span class="pre">quiz</span></code> (<code class="docutils literal notranslate"><span class="pre">84</span></code> vs. <code class="docutils literal notranslate"><span class="pre">83</span></code>) — the complement of what
+<a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scores.eq(changed)</span></code></span></a> reports for the same two frames.</p>
+<p>Example 4. Compare against a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with one value per feature — <code class="docutils literal notranslate"><span class="pre">quiz</span></code> checked
+against <code class="docutils literal notranslate"><span class="pre">84</span></code>, <code class="docutils literal notranslate"><span class="pre">final</span></code> checked against <code class="docutils literal notranslate"><span class="pre">88</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">thresholds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">ne</span><span class="p">(</span><span class="n">thresholds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+      | quiz   final
+--------------------
+s1    | false  true 
+s2    | true   false
+s3    | false  true 
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Each feature is checked against its own threshold, independently per column, exactly
+as <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>’s matching example does — every cell here is that example’s logical
+complement.</p>
 </section>
 </section>
 <section id="notes">

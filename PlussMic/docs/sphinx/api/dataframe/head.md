@@ -144,8 +144,8 @@ first.
     <span class="label">Previous</span>
     <span class="title">has</span>
   </a>
-  <a class="next-link" href="info.html">
+  <a class="next-link" href="height.html">
     <span class="label">Next</span>
-    <span class="title">info</span>
+    <span class="title">height</span>
   </a>
 </div>

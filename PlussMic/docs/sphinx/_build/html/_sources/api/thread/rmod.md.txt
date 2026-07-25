@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rmod
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,85 @@
 ## Signatures
 
 ```cpp
-Thread::rmod(const Thread& other) -> Thread
-
-Thread::rmod(double other) -> Thread
+Thread::rmod(double other) const -> Thread
+Thread::rmod(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected form of [`mod()`](mod.md) — computes `other % (*this)` instead of
+`(*this) % other`. Same positive-operands-only caveat as `mod()` applies: the
+underlying remainder algorithm's negative-operand convention isn't verified in this
+repository.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+Same shape as [`mod()`](mod.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new thread holding `other % (*this)`, elementwise.
 
 ## Examples
 
-Example 1. Apply `rmod` to the current thread using explicit `other` arguments.
+Example 1. Remainder of a scalar against every value.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rmod(other);
+auto amounts = Thread(pluss::make_series({17.0, 26.0, 33.0}));
+auto out = amounts.rmod(200.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  13
+1  18
+2  2
+ptype: Series
 ```
-Example 2. Apply `rmod` to the current thread using explicit `other` arguments.
+
+`200 = 17*11 + 13`, `200 = 26*7 + 18`, `200 = 33*6 + 2` — the opposite framing from
+[`amounts.mod(...)`](mod.md), where `amounts` supplied the dividends.
+
+Example 2. Reflected against another thread.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.rmod(10.0);
+auto multiples = Thread(pluss::make_series({50.0, 80.0, 90.0}));
+auto out_pair = amounts.rmod(multiples);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  16
+1  2
+2  24
+ptype: Series
 ```
 
+`amounts.rmod(multiples)` computes exactly what `multiples.mod(amounts)` would:
+`50 % 17 = 16`, `80 % 26 = 2`, `90 % 33 = 24`.
+
+## Notes
+
+- `amounts.rmod(x)` always equals `x % amounts` — the mirror image of
+  [`mod()`](mod.md).
+- If the scalar or `other` value at a position is smaller than the corresponding
+  value in `*this`, the remainder is just that smaller value itself (dividing `0`
+  whole times) — for example, `amounts.rmod(5.0)` would give `5, 5, 5` here, since
+  `5` is smaller than every value in `amounts`.
+
+## See Also
+
+- [`Thread::mod`](mod.md): the forward form.
+- [`Thread::rfloordiv`](rfloordiv.md): the complementary reflected quotient.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rfloordiv.html">

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::extract" href="extract.html" />
@@ -36,48 +36,158 @@
 
           <div class="body" role="main">
             
-  <section id="dataframenoteaccessor-ends">
+  <!-- pluss-hand-authored -->
+<section id="dataframenoteaccessor-ends">
 <h1>DataFrameNoteAccessor::ends<a class="headerlink" href="#dataframenoteaccessor-ends" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">ends</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">suffix</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">ends</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">suffix</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Checks every selected text feature’s cells for a literal, case-sensitive
+suffix match, replacing each cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> — <code class="docutils literal notranslate"><span class="pre">true</span></code> where the cell’s
+text ends with <code class="docutils literal notranslate"><span class="pre">suffix</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> where it doesn’t. This is the mirror image
+of <a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts()</span></code></span></a>: same single-overload, no-options shape, just
+anchored at the end of the string instead of the beginning. As with every
+boolean-producing method on this accessor, the feature’s payload kind
+changes from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">ends()</span></code> has exactly one overload — always literal, always case-sensitive,
+no regex mode. For a case-insensitive or pattern-based suffix check, use
+<a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> with a <code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> and a trailing anchor (e.g.
+<code class="docutils literal notranslate"><span class="pre">has(&quot;suffix$&quot;,</span> <span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true})</span></code>), or normalize case first with
+<a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>/<a class="reference internal" href="casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">casefold()</span></code></span></a>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>suffix</strong>
-Text suffix appended after the existing label or value.</p>
+<p><strong>suffix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The literal text to check for at the end of each cell. An empty suffix
+matches every non-null cell (every string ends with the empty string).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with every selected feature replaced by a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> Series:
+<code class="docutils literal notranslate"><span class="pre">true</span></code> where the cell ends with <code class="docutils literal notranslate"><span class="pre">suffix</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> where it doesn’t.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<p>Example 1. Check a filenames feature for a literal, case-sensitive suffix.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;filename&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;report.pdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;notes.PDF&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;summary.docx&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;invoice.pdf&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">files</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;.pdf&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | filename    
+-------------------
+0    | report.pdf  
+1    | notes.PDF   
+2    | summary.docx
+3    | NULL        
+-------------------
+[4 cs x 1 feat]
 </pre></div>
 </div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============
+     | filename
+---------------
+0    | true    
+1    | false   
+2    | false   
+3    | NULL    
+---------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>Row 0 (<code class="docutils literal notranslate"><span class="pre">&quot;report.pdf&quot;</span></code>) ends with <code class="docutils literal notranslate"><span class="pre">&quot;.pdf&quot;</span></code>, so it’s <code class="docutils literal notranslate"><span class="pre">true</span></code>. Row 1
+(<code class="docutils literal notranslate"><span class="pre">&quot;notes.PDF&quot;</span></code>) doesn’t — the uppercase <code class="docutils literal notranslate"><span class="pre">&quot;.PDF&quot;</span></code> extension doesn’t match
+lowercase <code class="docutils literal notranslate"><span class="pre">&quot;.pdf&quot;</span></code> under a case-sensitive comparison. Row 2 doesn’t end with
+<code class="docutils literal notranslate"><span class="pre">.pdf</span></code> at all. Row 3 was constructed invalid; it stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 2. Case-insensitive suffix matching by normalizing first: chain
+<a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a> ahead of <code class="docutils literal notranslate"><span class="pre">ends()</span></code> to catch both <code class="docutils literal notranslate"><span class="pre">&quot;.pdf&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;.PDF&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">lower</span><span class="p">().</span><span class="n">note</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;.pdf&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============
+     | filename
+---------------
+0    | true    
+1    | true    
+2    | false   
+3    | NULL    
+---------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>Lowercasing first folds <code class="docutils literal notranslate"><span class="pre">&quot;notes.PDF&quot;</span></code> down to <code class="docutils literal notranslate"><span class="pre">&quot;notes.pdf&quot;</span></code>, so row 1 now
+matches too. <code class="docutils literal notranslate"><span class="pre">ends()</span></code> itself never gained a case-insensitivity option — the
+normalization happens entirely in the <code class="docutils literal notranslate"><span class="pre">lower()</span></code> step ahead of it.</p>
+<p>Example 3. An empty suffix matches every valid cell, regardless of content —
+symmetric with <code class="docutils literal notranslate"><span class="pre">starts(&quot;&quot;)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">trivial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">trivial</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============
+     | filename
+---------------
+0    | true    
+1    | true    
+2    | true    
+3    | NULL    
+---------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Case-sensitive, literal comparison only — no regex mode, no
+case-insensitivity toggle. See Example 2 for the normalize-then-check
+pattern that works around this.</p></li>
+<li><p>Changes the feature’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>Pairs naturally with <code class="docutils literal notranslate"><span class="pre">DataFrame::filter()</span></code> (via <code class="docutils literal notranslate"><span class="pre">.features(name)</span></code> to pull
+the single-column <code class="docutils literal notranslate"><span class="pre">Thread</span></code> result out) to keep only matching rows — see
+<a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts()</span></code></span></a>’s Example 2 for the pattern.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::starts</span></code></span></a>: the same check anchored at
+the start of the cell instead of the end.</p></li>
+<li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::has</span></code></span></a>: substring search anywhere in the
+cell, with optional regex and case-insensitive modes.</p></li>
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::lower</span></code></span></a> / <a class="reference internal" href="casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">casefold()</span></code></span></a>:
+normalize case ahead of a case-insensitive suffix check, as in Example 2.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="encode.html">
     <span class="label">Previous</span>
@@ -88,7 +198,6 @@ Value produced by this call.</p>
     <span class="title">extract</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

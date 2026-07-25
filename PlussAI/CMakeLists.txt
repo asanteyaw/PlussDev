@@ -85,6 +85,14 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/io")
     add_subdirectory(NodeJ/io)
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeB")
+    add_subdirectory(NodeB)
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Ice")
+    add_subdirectory(Ice)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Lymph")
     add_subdirectory(Lymph)
 endif()

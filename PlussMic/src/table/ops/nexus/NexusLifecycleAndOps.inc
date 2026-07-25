@@ -167,6 +167,9 @@ Nexus& Nexus::rename_(std::string_view from, std::string_view to) {
       rel.right_table = to_key;
     }
   }
+  for (auto& [_, plan] : dst.saved_views_) {
+    rewrite_join_plan_table(plan, from_key, to_key);
+  }
   std::int64_t parsed = 0;
   if (parse_auto_key_index(to_key, parsed)) {
     dst.next_auto_id_ = std::max(dst.next_auto_id_, parsed + 1);
@@ -256,7 +259,18 @@ Nexus& Nexus::apply_(std::string_view key, const std::function<DataFrame(const D
 }
 
 Nexus Nexus::apply_all(const std::function<DataFrame(const DataFrame&)>& fn) const {
-  return map_frames(fn);
+  PLUSS_CHECK(static_cast<bool>(fn), "Nexus::apply_all: callback is empty");
+  const auto& src = impl_ref_();
+  std::vector<std::pair<std::string, DataFrame>> out;
+  out.reserve(src.keys_.size());
+  for (std::size_t i = 0; i < src.keys_.size(); ++i) {
+    auto mapped = fn(src.frames_[i]);
+    PLUSS_CHECK(mapped.defined(), "Nexus::apply_all: callback returned undefined DataFrame");
+    out.emplace_back(src.keys_[i], std::move(mapped));
+  }
+  auto next = pluss::msharp::make_intrusive<detail::NexusImpl>(std::move(out));
+  carry_schema_subset(src, *next);
+  return Nexus(std::move(next));
 }
 
 Nexus Nexus::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const {

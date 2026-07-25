@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::repeated
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +7,20 @@
 ## Signature
 
 ```cpp
-Thread::repeated() -> Thread
+Thread::repeated() const -> Thread
 ```
 
-Build a boolean mask that marks every entry whose value appears more than once.
+## What It Does
 
-`repeated()` differs from `duplicated()`: `duplicated()` marks duplicate occurrences according to a keep policy, while `repeated()` marks the whole repeated group.
+Returns a boolean thread, the same length as the source, marking **every**
+entry whose value occurs more than once — including the occurrence that
+[`duplicated()`](duplicated.md) would leave unmarked as the "survivor." Where
+`duplicated()` answers "which entries are extra copies to drop," `repeated()`
+answers "which entries belong to a repeated group at all." For values `[A, B,
+A, C, B]`, `repeated()` marks `[true, true, true, false, true]` — both `A`s and
+both `B`s are `true`, `C` (unique) is `false` — whereas `duplicated()` with the
+default policy would mark only the second `A` and second `B`
+(`[false, false, true, false, true]`).
 
 ## Parameters
 
@@ -19,23 +29,19 @@ Build a boolean mask that marks every entry whose value appears more than once.
 ## Returns
 
 `Thread`
-    Boolean-like thread with one value per entry indicating whether that value belongs to a repeated group.
-
-## Notes
-
-For values `[A, B, A, C, B]`, `repeated()` returns `[true, true, true, false, true]`.
-
-Use `duplicated(...)` when you want pandas-style duplicate follower semantics such as `[false, false, true, false, true]`.
+    A boolean `Series`, same length as the source, `true` at every position
+    whose value occurs more than once anywhere in the thread.
 
 ## Examples
 
-Example 1. Mark every member of repeated value groups.
+Example 1. Mark every member of a repeated value's group.
 
 ```cpp
 using namespace pluss::table;
 
-auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}))
-               .repeated();
+auto cities = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}));
+auto out = cities.repeated();
+std::cout << out;
 ```
 
 ### Output
@@ -46,10 +52,28 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"})
 2  true
 3  false
 4  true
+
 ptype: Series
 ```
 
+Both `"Accra"` occurrences (positions `0`, `2`) and both `"Tema"` occurrences
+(positions `1`, `4`) are `true`. Only `"Kumasi"` (unique) is `false`.
 
+## Notes
+
+- Grouping is by each value's string form, matching
+  [`distinct()`](distinct.md)/[`duplicated()`](duplicated.md)/[`tally()`](tally.md);
+  works across every payload kind.
+- Marks the whole repeated group, unlike `duplicated()`, which leaves one
+  designated survivor per group unmarked.
+
+## See Also
+
+- [`Thread::duplicated`](duplicated.md): mark only the *extra* occurrences
+  under a keep-first/keep-last policy, leaving one survivor per group unmarked.
+- [`Thread::distinct`](distinct.md): the deduplicated values themselves.
+- [`Thread::filter`](filter.md): apply the mask this method returns to
+  actually select the repeated rows.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rdiv.html">

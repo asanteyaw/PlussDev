@@ -11,9 +11,9 @@ look like joined strings, but operations use the structured case-label payloads.
 
 `DataFrame::label().set(options: SetLabelOptions) -> DataFrame`
 
-`DataFrame::label().set(feature_name: string_view, drop_feature: bool = false) -> DataFrame`
+`DataFrame::label().set(feature_name: string_view, drop_feature: bool = true) -> DataFrame`
 
-`DataFrame::label().set(feature_names: initializer_list<string_view>, drop_features: bool = false, separator: string_view = "\x1F") -> DataFrame`
+`DataFrame::label().set(feature_names: initializer_list<string_view>, drop_features: bool = true, separator: string_view = "\x1F") -> DataFrame`
 
 `DataFrame::label().has() -> bool`
 

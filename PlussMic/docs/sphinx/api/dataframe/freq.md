@@ -16,7 +16,8 @@ Counts how often each distinct value (or, with several features, each distinct
 *combination* of values) occurs, and returns the counts as a `Thread` labeled by the
 value itself — sorted most-frequent first, ties broken alphabetically by the value's
 own text. With exactly one feature named, this delegates straight to that feature's
-own [`Thread::freq()`](tally.md). With zero or several features, it builds a
+own [`Thread::tally()`](../thread/tally.md), reshaped into this labeled-`Thread`
+form. With zero or several features, it builds a
 `"|"`-joined composite key per row from the selected features' string representations
 and counts occurrences of that composite key instead.
 
@@ -176,8 +177,8 @@ never affects any other feature's part of the same row's key.
 ## Notes
 
 - With one feature named, `freq()` is exactly that feature's own frequency count (see
-  [`Thread::freq()`](tally.md)); the multi-feature composite-key behavior described
-  above only applies when zero or several feature names are given.
+  [`Thread::tally()`](../thread/tally.md)); the multi-feature composite-key behavior
+  described above only applies when zero or several feature names are given.
 - Sorting is always most-frequent first; ties are broken by ascending alphabetical
   order of the value (or composite key) itself, never by first-appearance order.
 - `top_n = 0` (the default) keeps every distinct value or combination; a positive

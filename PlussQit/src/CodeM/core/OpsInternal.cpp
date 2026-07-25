@@ -4128,9 +4128,7 @@ Series maximum(const Series& a, const Series& b) {
   auto bb = b.contiguous().to(out.scalar_type());
   if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
     native::mps::maximum(aa, bb, out);
-    return out;
-  }
-  if (a.platform() == Platform::CUDA) {
+  } else if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
@@ -4138,20 +4136,29 @@ Series maximum(const Series& a, const Series& b) {
       if (!native::cuda::run_binary_elementwise(native::cpu::BinaryOpId::Maximum, aa, bb, out)) {
         PLUSS_FAIL("maximum: native CUDA elementwise kernel launch failed");
       }
-      return out;
+    } else {
+      out = cuda_elementwise_route_or_bridge_(
+          "maximum",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() {
+            native::cpu::maximum(aa, bb, out);
+            return out;
+          });
     }
-    return cuda_elementwise_route_or_bridge_(
-        "maximum",
-        native_enabled,
-        native_strict,
-        route_supported,
-        [&]() {
-          native::cpu::maximum(aa, bb, out);
-          return out;
-        });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "maximum");
+    native::cpu::maximum(aa, bb, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "maximum");
-  native::cpu::maximum(aa, bb, out);
+  // No gradient registration existed here at all until this fix -- ties
+  // (a == b) attribute the full gradient to `a`, matching this file's
+  // established inclusive-boundary convention for clamp_min/clamp_max
+  // (see those functions' own comments).
+  maybe_link_binary_op_(
+      out, a, b, "maximum",
+      [a, b](const Series& g) { return mul(g, ge(a, b).to(g.scalar_type())); },
+      [a, b](const Series& g) { return mul(g, lt(a, b).to(g.scalar_type())); });
   return out;
 }
 
@@ -4162,9 +4169,7 @@ Series minimum(const Series& a, const Series& b) {
   auto bb = b.contiguous().to(out.scalar_type());
   if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
     native::mps::minimum(aa, bb, out);
-    return out;
-  }
-  if (a.platform() == Platform::CUDA) {
+  } else if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
@@ -4172,20 +4177,29 @@ Series minimum(const Series& a, const Series& b) {
       if (!native::cuda::run_binary_elementwise(native::cpu::BinaryOpId::Minimum, aa, bb, out)) {
         PLUSS_FAIL("minimum: native CUDA elementwise kernel launch failed");
       }
-      return out;
+    } else {
+      out = cuda_elementwise_route_or_bridge_(
+          "minimum",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() {
+            native::cpu::minimum(aa, bb, out);
+            return out;
+          });
     }
-    return cuda_elementwise_route_or_bridge_(
-        "minimum",
-        native_enabled,
-        native_strict,
-        route_supported,
-        [&]() {
-          native::cpu::minimum(aa, bb, out);
-          return out;
-        });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "minimum");
+    native::cpu::minimum(aa, bb, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "minimum");
-  native::cpu::minimum(aa, bb, out);
+  // No gradient registration existed here at all until this fix -- ties
+  // (a == b) attribute the full gradient to `a`, matching this file's
+  // established inclusive-boundary convention for clamp_min/clamp_max
+  // (see those functions' own comments).
+  maybe_link_binary_op_(
+      out, a, b, "minimum",
+      [a, b](const Series& g) { return mul(g, le(a, b).to(g.scalar_type())); },
+      [a, b](const Series& g) { return mul(g, gt(a, b).to(g.scalar_type())); });
   return out;
 }
 
@@ -4563,7 +4577,7 @@ Series clamp_min(const Series& a, double lo) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    Series out = cuda_elementwise_route_or_bridge_(
         "clamp_min",
         native_enabled,
         native_strict,
@@ -4574,11 +4588,26 @@ Series clamp_min(const Series& a, double lo) {
           native::cpu::clamp_min(aa, lo, out);
           return out;
         });
+    // No gradient registration existed on this path at all until this fix
+    // (the MPS branches above are already correctly differentiable via
+    // maximum()'s own gradient, which this path doesn't go through).
+    // Inclusive at the boundary: d/dx clamp_min(x, lo) = 1 for x >= lo, so
+    // that combined with relu(x)'s own (exclusive) backward, elu(x) =
+    // relu(x) + alpha*(exp(clamp_max(x,0))-1) has a single, correct
+    // derivative of 1 at x == 0 from both branches, matching ELU's true
+    // (continuously differentiable) derivative there.
+    maybe_link_unary_op_(out, a, "clamp_min", [a, lo](const Series& g) {
+      return mul(g, ge(a, scalar_like_(a, lo)).to(g.scalar_type()));
+    });
+    return out;
   }
   require_backend_dispatch_supported_(a.platform(), "clamp_min");
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
   native::cpu::clamp_min(aa, lo, out);
+  maybe_link_unary_op_(out, a, "clamp_min", [a, lo](const Series& g) {
+    return mul(g, ge(a, scalar_like_(a, lo)).to(g.scalar_type()));
+  });
   return out;
 }
 Series& clamp_min_(Series& a, double lo) {
@@ -4617,7 +4646,7 @@ Series clamp_max(const Series& a, double hi) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    Series out = cuda_elementwise_route_or_bridge_(
         "clamp_max",
         native_enabled,
         native_strict,
@@ -4628,11 +4657,24 @@ Series clamp_max(const Series& a, double hi) {
           native::cpu::clamp_max(aa, hi, out);
           return out;
         });
+    // No gradient registration existed on this path at all until this fix
+    // (the MPS branches above are already correctly differentiable via
+    // minimum()'s own gradient, which this path doesn't go through).
+    // Inclusive at the boundary: d/dx clamp_max(x, hi) = 1 for x <= hi --
+    // see clamp_min's identical note for why this specific convention
+    // matters for elu(x)'s own correctness at x == 0.
+    maybe_link_unary_op_(out, a, "clamp_max", [a, hi](const Series& g) {
+      return mul(g, le(a, scalar_like_(a, hi)).to(g.scalar_type()));
+    });
+    return out;
   }
   require_backend_dispatch_supported_(a.platform(), "clamp_max");
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
   native::cpu::clamp_max(aa, hi, out);
+  maybe_link_unary_op_(out, a, "clamp_max", [a, hi](const Series& g) {
+    return mul(g, le(a, scalar_like_(a, hi)).to(g.scalar_type()));
+  });
   return out;
 }
 Series& clamp_max_(Series& a, double hi) {

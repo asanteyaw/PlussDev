@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::sub" href="sub.html" />
@@ -36,56 +36,119 @@
 
           <div class="body" role="main">
             
-  <section id="thread-strip">
+  <!-- pluss-hand-authored -->
+<section id="thread-strip">
 <h1>Thread::strip<a class="headerlink" href="#thread-strip" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">strip</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">chars</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">strip</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">chars</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Trims note-backed text values. Use <code class="docutils literal notranslate"><span class="pre">strip()</span></code> for whitespace or <code class="docutils literal notranslate"><span class="pre">strip(chars)</span></code> for an explicit trim set.</p>
+<p>Trims characters from both ends of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread’s cells. Requires the
+thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Two distinct trimming policies:</p>
+<ul class="simple">
+<li><p><strong>No-argument overload</strong>: trims the classic ASCII whitespace set — space, tab,
+newline, carriage return, form feed, vertical tab — from both ends of each cell.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">chars</span></code> overload</strong>: trims by <strong>character-set membership</strong>, not by matching
+<code class="docutils literal notranslate"><span class="pre">chars</span></code> as a literal prefix/suffix substring. Every leading character that appears
+anywhere in <code class="docutils literal notranslate"><span class="pre">chars</span></code> is removed, one at a time, until a character not in the set is
+reached; the same happens independently from the trailing end — the same
+convention Python’s <code class="docutils literal notranslate"><span class="pre">str.strip(chars)</span></code> uses.</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>chars</strong>
-Characters to trim from the edge of each text value.</p>
+<p><strong>chars</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">chars</span></code>-overload only)</p>
+<p>The set of characters to strip from each cell’s edges. Order doesn’t matter.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with each cell’s text trimmed.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">strip</span></code> to the current thread values and inspect the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
+<p>Example 1. The default overload trims ASCII whitespace from both ends.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">skus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  SKU-1001</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">SKU-1002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-1003   &quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">skus</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  SKU-1001
+1  SKU-1002
+2  SKU-1003
+
+ptype: Note
 </pre></div>
 </div>
-<p>Example 2. Apply <code class="docutils literal notranslate"><span class="pre">strip</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">chars</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;# &quot;</span><span class="p">);</span>
+<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">chars</span></code> overload strips by character-set membership, not by matching
+a literal substring — proven here by stripping mismatched bracket characters that
+never appear together as the literal text <code class="docutils literal notranslate"><span class="pre">&quot;[]()&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;[[[SKU-1001]]]&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;((SKU-1002))&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-1003&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;[]()&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  SKU-1001
+1  SKU-1002
+2  SKU-1003
+
+ptype: Note
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;[[[SKU-1001]]]&quot;</span></code> has no <code class="docutils literal notranslate"><span class="pre">&quot;[]()&quot;</span></code> substring anywhere in it, yet every edge
+character still gets stripped: <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">]</span></code>, <code class="docutils literal notranslate"><span class="pre">(</span></code>, and <code class="docutils literal notranslate"><span class="pre">)</span></code> are each individually members
+of the <code class="docutils literal notranslate"><span class="pre">chars</span></code> set, so <code class="docutils literal notranslate"><span class="pre">strip(&quot;[]()&quot;)</span></code> peels off <code class="docutils literal notranslate"><span class="pre">[[[</span></code> from the front and <code class="docutils literal notranslate"><span class="pre">]]]</span></code>
+from the back, one character at a time, stopping the instant it reaches <code class="docutils literal notranslate"><span class="pre">S</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::strip is only valid for Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">chars</span></code> overload’s set-membership semantics apply to <a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstrip()</span></code></span></a>
+and <a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rstrip()</span></code></span></a> identically — one-sided versions of everything shown
+here.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>See <a class="reference internal" href="../dataframe-note/strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::strip</span></code></span></a> for the
+multi-feature counterpart.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::lstrip</span></code></span></a> / <a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rstrip</span></code></span></a>: the one-sided
+equivalents.</p></li>
+<li><p><a class="reference internal" href="pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::pad</span></code></span></a>: the inverse operation — add characters instead of
+removing them.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="std.html">
     <span class="label">Previous</span>
@@ -96,7 +159,6 @@ Value produced by this call.</p>
     <span class="title">sub</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

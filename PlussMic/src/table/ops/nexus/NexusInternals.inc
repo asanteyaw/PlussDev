@@ -62,6 +62,7 @@ pluss::msharp::intrusive_ptr<detail::NexusImpl> clone_impl(const detail::NexusIm
   out->table_meta_ = src.table_meta_;
   out->relationships_ = src.relationships_;
   out->rel_name_to_pos_ = src.rel_name_to_pos_;
+  out->saved_views_ = src.saved_views_;
   out->next_auto_id_ = src.next_auto_id_;
   return out;
 }
@@ -126,6 +127,50 @@ std::unordered_set<std::string> retained_key_set(const detail::NexusImpl& dst) {
   return std::unordered_set<std::string>(dst.keys_.begin(), dst.keys_.end());
 }
 
+std::vector<std::string> join_plan_tables(const JoinPlan& plan) {
+  std::vector<std::string> out;
+  if (plan.root_table.empty()) {
+    return out;
+  }
+  out.push_back(plan.root_table);
+  out.reserve(plan.steps.size() + 1);
+  for (const auto& step : plan.steps) {
+    if (out.back() != step.left_table) {
+      out.push_back(step.left_table);
+    }
+    if (out.back() != step.right_table) {
+      out.push_back(step.right_table);
+    }
+  }
+  return out;
+}
+
+bool join_plan_supported_by(const JoinPlan& plan,
+                            const std::unordered_set<std::string>& retained) {
+  const auto tables = join_plan_tables(plan);
+  return std::all_of(tables.begin(), tables.end(), [&](const std::string& table) {
+    return retained.find(table) != retained.end();
+  });
+}
+
+void rewrite_join_plan_table(JoinPlan& plan,
+                             std::string_view from,
+                             std::string_view to) {
+  const auto from_key = std::string(from);
+  const auto to_key = std::string(to);
+  if (plan.root_table == from_key) {
+    plan.root_table = to_key;
+  }
+  for (auto& step : plan.steps) {
+    if (step.left_table == from_key) {
+      step.left_table = to_key;
+    }
+    if (step.right_table == from_key) {
+      step.right_table = to_key;
+    }
+  }
+}
+
 void rebuild_relationship_index(detail::NexusImpl& dst) {
   dst.rel_name_to_pos_.clear();
   dst.rel_name_to_pos_.reserve(dst.relationships_.size() * 2 + 1);
@@ -153,12 +198,28 @@ void carry_schema_subset(const detail::NexusImpl& src, detail::NexusImpl& dst) {
     }
   }
   rebuild_relationship_index(dst);
+
+  dst.saved_views_.clear();
+  for (const auto& [name, plan] : src.saved_views_) {
+    if (join_plan_supported_by(plan, retained)) {
+      dst.saved_views_.emplace(name, plan);
+    }
+  }
   dst.next_auto_id_ = src.next_auto_id_;
 }
 
 void require_known_table(const detail::NexusImpl& src, std::string_view key, std::string_view where) {
   PLUSS_CHECK(src.name_to_pos_.find(std::string(key)) != src.name_to_pos_.end(),
               std::string(where) + ": unknown table '" + std::string(key) + "'");
+}
+
+const DataFrame& frame_ref(const detail::NexusImpl& src,
+                           std::string_view key,
+                           std::string_view where) {
+  const auto it = src.name_to_pos_.find(std::string(key));
+  PLUSS_CHECK(it != src.name_to_pos_.end(),
+              std::string(where) + ": unknown table '" + std::string(key) + "'");
+  return src.frames_[static_cast<std::size_t>(it->second)];
 }
 
 void validate_relationship_payload(const detail::NexusImpl& src, const Relationship& rel, std::string_view where) {

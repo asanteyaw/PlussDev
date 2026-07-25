@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::duplicated
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,49 +7,52 @@
 ## Signature
 
 ```cpp
-Thread::duplicated(bool keep_first = true, bool keep_last = false) -> Thread
+Thread::duplicated(bool keep_first = true, bool keep_last = false) const -> Thread
 ```
 
-Build a boolean mask that marks duplicate entries.
+## What It Does
 
-This is the thread-level inspection route behind duplicate-aware filtering and counting workflows.
+Returns a boolean thread, the same length as the source, marking which entries
+are duplicate *followers* of an earlier (or later) occurrence — one designated
+occurrence per distinct value is left `false` (the "survivor"), and every other
+occurrence of that value is marked `true`. Which occurrence survives is
+controlled by `keep_first`/`keep_last`:
 
-It tells you which entries are duplicate followers under the keep policy you selected.
+- `keep_first = true` (the default): the *first* occurrence of each value is
+  the survivor; every later repeat is marked `true`.
+- `keep_last = true`: the *last* occurrence is the survivor instead; every
+  earlier repeat is marked `true`.
+
+`keep_first` and `keep_last` cannot both be `true` — that throws. A value that
+appears only once is never marked, regardless of the policy. This method only
+*reports* duplicate membership — it never removes or reorders anything itself;
+pass the result to [`filter()`](filter.md) to actually drop the flagged rows.
 
 ## Parameters
 
-**keep_first**
+**keep_first** (`bool`, default `true`)
+    Treat each value's first occurrence as the survivor (left `false`).
 
-Whether the first observed occurrence in each duplicate group should be treated as the surviving reference entry.
-
-With the default keep-first route, the first appearance of a value stays unmarked and later repeats are marked duplicate.
-
-**keep_last**
-
-Whether the last observed occurrence in each duplicate group should be treated as the surviving reference entry instead.
-
-With this route, earlier repeats are marked duplicate and the final appearance is left unmarked.
+**keep_last** (`bool`, default `false`)
+    Treat each value's last occurrence as the survivor (left `false`) instead.
+    Cannot be `true` at the same time as `keep_first`.
 
 ## Returns
 
 `Thread`
-    Boolean-like thread with one value per entry indicating duplicate membership.
-
-## Notes
-
-The returned mask has the same length as the source thread, so it can be inspected directly or reused in later boolean-style filtering logic.
-
-`duplicated(...)` reports duplicate membership only. It never removes entries by itself.
+    A boolean `Series`, same length as the source, `true` at every non-survivor
+    duplicate position.
 
 ## Examples
 
-Example 1. Mark duplicates while keeping the first occurrence as the survivor.
+Example 1. Default policy — keep the first occurrence of each value.
 
 ```cpp
 using namespace pluss::table;
 
-auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}))
-               .duplicated();
+auto cities = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}));
+auto out = cities.duplicated();
+std::cout << out;
 ```
 
 ### Output
@@ -58,16 +63,19 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"})
 2  true
 3  false
 4  true
+
 ptype: Series
 ```
 
-Example 2. Switch to a keep-last duplicate policy.
+Positions `0` and `1` (the first `"Accra"` and first `"Tema"`) stay `false`;
+their later repeats at `2` and `4` are flagged `true`. `"Kumasi"` (unique) is
+never flagged.
+
+Example 2. `keep_last = true` flips which occurrence survives.
 
 ```cpp
-using namespace pluss::table;
-
-auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}))
-               .duplicated(false, true);
+auto out2 = cities.duplicated(false, true);
+std::cout << out2;
 ```
 
 ### Output
@@ -78,10 +86,48 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"})
 2  false
 3  false
 4  false
+
 ptype: Series
 ```
 
+Now the *last* `"Accra"` (position `2`) and last `"Tema"` (position `4`) are the
+survivors; their earlier occurrences flip to `true` instead.
 
+Example 3. `keep_first` and `keep_last` cannot both be `true`.
+
+```cpp
+try {
+  auto bad = cities.duplicated(true, true);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread::duplicated: keep_first and keep_last cannot both be true
+```
+
+## Notes
+
+- Grouping is by each value's string form, matching
+  [`distinct()`](distinct.md)/[`tally()`](tally.md); works across every payload
+  kind.
+- A value occurring only once is never flagged, under either policy.
+- Reports membership only — combine with [`filter()`](filter.md) (or its
+  logical negation) to actually drop or keep duplicates.
+- `keep_first && keep_last` throws `"Thread::duplicated: keep_first and
+  keep_last cannot both be true"`.
+
+## See Also
+
+- [`Thread::repeated`](repeated.md): mark *every* member of a repeated group
+  (including the would-be survivor), rather than just the followers.
+- [`Thread::distinct`](distinct.md): the deduplicated values themselves,
+  instead of a boolean mask over the original positions.
+- [`Thread::filter`](filter.md): apply the mask this method returns to
+  actually drop or keep rows.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dtype.html">

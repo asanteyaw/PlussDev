@@ -115,7 +115,7 @@ int main() {
 
   Atlas atlas({time_indexed, time_indexed});
   std::cout << "Atlas tl month using selected datetime feature\n"
-            << atlas.tl("event_time").month().frame(0).head(4) << "\n";
+            << atlas.features({"event_time"}).tl().month().frame(0).head(4) << "\n";
   std::cout << "Atlas ts moving mean using selected numeric frame\n"
             << Atlas({values, values}).ts().rolling(2, WindowStatistic::Mean).frame(0).head(4) << "\n";
   std::cout << "Atlas ts seven-day rolling mean using selected numeric frame\n"

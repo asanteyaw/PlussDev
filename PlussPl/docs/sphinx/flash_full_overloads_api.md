@@ -1,6 +1,6 @@
 # Flash Full Overload Reference
 
-This page expands flash to one section per callable form (all overloads), using clean snippets and real generated outputs.
+This page expands flash to one section per callable form (all overloads), using clean snippets and verified outputs.
 
 Pattern per section: Signature -> Notes -> Example -> Output.
 

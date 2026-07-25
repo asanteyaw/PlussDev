@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::dropnull" href="dropnull.html" />
@@ -36,83 +36,99 @@
 
           <div class="body" role="main">
             
-  <section id="thread-div">
+  <!-- pluss-hand-authored -->
+<section id="thread-div">
 <h1>Thread::div<a class="headerlink" href="#thread-div" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Divide a numeric thread by one scalar or by another numeric thread.</p>
-<p><code class="docutils literal notranslate"><span class="pre">div(...)</span></code> is the named thread-level division surface behind <code class="docutils literal notranslate"><span class="pre">/</span></code>-style arithmetic when you want a method in a chain or you want the overload family documented explicitly.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Elementwise division, following <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s shared mechanics (positional
+matching, length-mismatch throw, no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload support). <code class="docutils literal notranslate"><span class="pre">div()</span></code> delegates to the
+underlying <code class="docutils literal notranslate"><span class="pre">Series</span></code> library’s own <code class="docutils literal notranslate"><span class="pre">div()</span></code> algebra, which is a distinct code path from
+<a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truediv()</span></code></span></a> (which always promotes to floating point via
+<code class="docutils literal notranslate"><span class="pre">true_divide()</span></code>). For the <code class="docutils literal notranslate"><span class="pre">Float64</span></code>-typed threads used throughout this reference, the
+two produce identical results; the distinction can matter for integer-typed threads,
+where <code class="docutils literal notranslate"><span class="pre">div()</span></code>’s exact type-preservation behavior comes from outside this repository
+and isn’t asserted here — prefer <a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truediv()</span></code></span></a> when you specifically want
+guaranteed floating-point division regardless of input type.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong></p>
-<p>Right-hand divisor.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">double</span></code>: broadcast one numeric divisor across the whole thread.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>: divide element by element against another numeric thread of compatible size.</p></li>
-</ul>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>The divisor(s). For the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload, must be the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Numeric result thread with elementwise division applied.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="truediv.html"><code>Thread::truediv</code></a>: explicit true-division surface.</p></li>
-<li><p><a href="mul.html"><code>Thread::mul</code></a>: same typed arithmetic model for multiplication.</p></li>
-<li><p><a href="align.html"><code>Thread::align</code></a>: align threads first when you need label-aware preparation before arithmetic.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p>Scalar division broadcasts the divisor across the full thread length.</p>
-<p>Thread-to-thread division is positional unless you explicitly align the threads beforehand.</p>
-<p>This method is numeric. Use note, timeline, or timeindex accessors for non-numeric payload work.</p>
+A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise quotient.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Broadcast one scalar divisor across a numeric thread.</p>
+<p>Example 1. Divide every value by a scalar.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="mf">4.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1
-1  2
-2  3
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2.5
+1  5
+2  7.5
+
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Divide one numeric thread by another thread element by element.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<p>Example 2. Divide two threads positionally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">splits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">splits</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  5
-1  5
-2  6
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2.5
+1  2.5
+2  3.333333333
+
 ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">/</span> <span class="pre">9</span></code> doesn’t divide evenly — the result is displayed to 10 significant digits
+(<code class="docutils literal notranslate"><span class="pre">3.333333333</span></code>), the same formatting every numeric thread uses.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> for the family-wide mechanics: positional matching and the
+length-mismatch throw (<code class="docutils literal notranslate"><span class="pre">&quot;Thread::div(Thread):</span> <span class="pre">positional</span> <span class="pre">operation</span> <span class="pre">requires</span> <span class="pre">identical</span> <span class="pre">lengths&quot;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">div()</span></code> has no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload special case, unlike <code class="docutils literal notranslate"><span class="pre">add()</span></code>/<code class="docutils literal notranslate"><span class="pre">mul()</span></code>.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">Float64</span></code> data, <code class="docutils literal notranslate"><span class="pre">div()</span></code> and <a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truediv()</span></code></span></a> always agree — reach for
+<code class="docutils literal notranslate"><span class="pre">truediv()</span></code> when the underlying type might not be floating-point and you need
+float division guaranteed.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::truediv</span></code></span></a>: the always-floating-point counterpart.</p></li>
+<li><p><a class="reference internal" href="rdiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rdiv</span></code></span></a>: the reflected form.</p></li>
+<li><p><a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::floordiv</span></code></span></a>, <a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::mod</span></code></span></a>: related division-family
+operators with their own rounding behavior.</p></li>
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::add</span></code></span></a>: the canonical reference for this family’s shared
+mechanics.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="distinct.html">
     <span class="label">Previous</span>
@@ -123,7 +139,6 @@ ptype: Series
     <span class="title">dropnull</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -12,6 +12,12 @@ This page documents the full public `Thread` surface with direct typed-column ex
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
+## Accessors
+
+`Thread` exposes a nested accessor with its own method pages and sidebar:
+
+- `ts()` -> [`TimeSeriesAccessor`](thread_ts_accessor_api_reference.md)
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -71,7 +77,6 @@ api/thread/filter
 api/thread/floordiv
 api/thread/flow
 api/thread/fold
-api/thread/freq
 api/thread/fullmatch
 api/thread/ge
 api/thread/gt

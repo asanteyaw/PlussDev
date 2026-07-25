@@ -64,30 +64,30 @@ void validate_mask_size(const std::optional<pluss::Series>& mask, std::int64_t n
   PLUSS_CHECK(mask->numel() == n, "Stream: validity mask length must match payload length");
 }
 
-void validate_cases_size(const std::optional<pluss::table::Thread>& cases, std::int64_t n) {
-  if (!cases.has_value()) return;
-  PLUSS_CHECK(cases->defined(), "Stream: cases axis is undefined");
-  PLUSS_CHECK(cases->size() == n, "Stream: cases axis length must match payload length");
+void validate_label_size(const std::optional<pluss::table::Thread>& label, std::int64_t n) {
+  if (!label.has_value()) return;
+  PLUSS_CHECK(label->defined(), "Stream: label axis is undefined");
+  PLUSS_CHECK(label->size() == n, "Stream: label axis length must match payload length");
 }
 
-std::optional<pluss::table::Thread> copy_cases(const Stream& stream) {
-  if (!stream.has_cases()) return std::nullopt;
-  return *stream.cases();
+std::optional<pluss::table::Thread> copy_label(const Stream& stream) {
+  if (!stream.has_label()) return std::nullopt;
+  return *stream.label();
 }
 
 template <typename Op>
-Stream unary_stream_same_cases(const Stream& stream, Op&& op) {
+Stream unary_stream_same_label(const Stream& stream, Op&& op) {
   const auto out = std::forward<Op>(op)(stream.to_thread());
-  return Stream::from_thread(out, copy_cases(stream));
+  return Stream::from_thread(out, copy_label(stream));
 }
 
 template <typename Op>
 Stream rowwise_stream_transform(const Stream& stream, Op&& op) {
   const auto source = stream.to_thread();
   const auto out = std::forward<Op>(op)(source);
-  if (!stream.has_cases()) return Stream::from_thread(out);
-  const auto cases_out = std::forward<Op>(op)(*stream.cases());
-  return Stream::from_thread(out, cases_out);
+  if (!stream.has_label()) return Stream::from_thread(out);
+  const auto label_out = std::forward<Op>(op)(*stream.label());
+  return Stream::from_thread(out, label_out);
 }
 } // namespace
 
@@ -112,7 +112,7 @@ public:
         kind_(to_kind(payload_)),
         dtype_(payload_dtype(payload_)) {
     validate_mask_size(validity_mask_, size_);
-    validate_cases_size(cases_, size_);
+    validate_label_size(cases_, size_);
     sync_fields();
   }
 

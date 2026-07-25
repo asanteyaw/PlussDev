@@ -48,8 +48,8 @@ auto out = thread.fold(other, {});
     <span class="label">Previous</span>
     <span class="title">flow</span>
   </a>
-  <a class="next-link" href="freq.html">
+  <a class="next-link" href="fullmatch.html">
     <span class="label">Next</span>
-    <span class="title">freq</span>
+    <span class="title">fullmatch</span>
   </a>
 </div>

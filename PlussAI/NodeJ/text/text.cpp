@@ -1,9 +1,9 @@
 #include "pluss/ai/nodej/text.h"
 
+#include "CodeN/native/cpu/TextKernels.h"
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -24,35 +24,110 @@ namespace {
 
 [[nodiscard]] std::string normalized_token(const std::string& token, bool lowercase) {
   if (!lowercase) return token;
-  std::string out = token;
-  for (char& ch : out) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  return ::pluss::coden::native::cpu::lower_ascii(token);
+}
+
+[[nodiscard]] Status validate_ngram_range(std::int64_t min_ngram,
+                                          std::int64_t max_ngram,
+                                          std::string_view where) {
+  if (min_ngram <= 0 || max_ngram <= 0) {
+    return Status::invalid_argument(std::string(where) + " requires min_ngram and max_ngram to be > 0.");
+  }
+  if (min_ngram > max_ngram) {
+    return Status::invalid_argument(std::string(where) + " requires min_ngram <= max_ngram.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] std::vector<std::string> tokenize_terms(const std::string& text, bool lowercase) {
+  const std::string normalized =
+      lowercase ? ::pluss::coden::native::cpu::lower_ascii(text) : text;
+  const auto spans = ::pluss::coden::native::cpu::split_word_spans(normalized);
+  std::vector<std::string> tokens{};
+  tokens.reserve(spans.size());
+  for (const auto& [start, len] : spans) {
+    tokens.push_back(normalized.substr(start, len));
+  }
+  return tokens;
+}
+
+[[nodiscard]] std::vector<std::string> build_ngrams(const std::vector<std::string>& tokens,
+                                                    std::int64_t min_ngram,
+                                                    std::int64_t max_ngram) {
+  std::vector<std::string> out{};
+  if (tokens.empty()) return out;
+  const auto capped_max = std::min<std::int64_t>(max_ngram, static_cast<std::int64_t>(tokens.size()));
+  for (std::int64_t n = min_ngram; n <= capped_max; ++n) {
+    for (std::int64_t i = 0; i + n <= static_cast<std::int64_t>(tokens.size()); ++i) {
+      std::string gram = tokens[static_cast<std::size_t>(i)];
+      for (std::int64_t j = 1; j < n; ++j) {
+        gram.push_back(' ');
+        gram += tokens[static_cast<std::size_t>(i + j)];
+      }
+      out.push_back(std::move(gram));
+    }
+  }
   return out;
 }
 
-[[nodiscard]] std::vector<std::string> tokenize(const std::string& text, bool lowercase) {
-  std::vector<std::string> tokens{};
-  std::string cur{};
-  cur.reserve(32);
-  for (char ch : text) {
-    const unsigned char uch = static_cast<unsigned char>(ch);
-    if (std::isalnum(uch) || ch == '_') {
-      cur.push_back(ch);
-      continue;
-    }
-    if (!cur.empty()) {
-      tokens.push_back(normalized_token(cur, lowercase));
-      cur.clear();
-    }
+[[nodiscard]] std::vector<std::string> analyze_terms(const std::string& text,
+                                                     bool lowercase,
+                                                     std::int64_t min_ngram,
+                                                     std::int64_t max_ngram) {
+  return build_ngrams(tokenize_terms(text, lowercase), min_ngram, max_ngram);
+}
+
+[[nodiscard]] std::uint64_t stable_hash64(std::string_view value) noexcept {
+  constexpr std::uint64_t kOffset = 1469598103934665603ULL;
+  constexpr std::uint64_t kPrime = 1099511628211ULL;
+  std::uint64_t hash = kOffset;
+  for (unsigned char ch : value) {
+    hash ^= ch;
+    hash *= kPrime;
   }
-  if (!cur.empty()) {
-    tokens.push_back(normalized_token(cur, lowercase));
-  }
-  return tokens;
+  return hash;
 }
 
 } // namespace
 
 LexiconMapper::LexiconMapper(LexiconMapOptions options) : options_(options) {}
+
+LexiconMapperState LexiconMapper::dump_state() const {
+  return LexiconMapperState{
+      .options = options_,
+      .learned = learned_,
+      .learned_document_count = learned_document_count_,
+      .vocabulary = vocabulary_,
+      .document_frequency = document_frequency_,
+  };
+}
+
+Status LexiconMapper::load_state(const LexiconMapperState& state) {
+  if (state.options.max_features <= 0) {
+    return Status::invalid_argument("LexiconMapper::load_state requires max_features > 0.");
+  }
+  if (state.options.min_document_frequency <= 0) {
+    return Status::invalid_argument("LexiconMapper::load_state requires min_document_frequency > 0.");
+  }
+  if (const auto status =
+          validate_ngram_range(state.options.min_ngram, state.options.max_ngram, "LexiconMapper::load_state");
+      !status.ok()) {
+    return status;
+  }
+  if (state.vocabulary.size() != state.document_frequency.size()) {
+    return Status::shape_mismatch("LexiconMapper::load_state vocabulary/document_frequency size mismatch.");
+  }
+  if (state.learned && state.vocabulary.empty()) {
+    return Status::invalid_argument("LexiconMapper::load_state learned state requires a non-empty vocabulary.");
+  }
+
+  options_ = state.options;
+  learned_ = state.learned;
+  learned_document_count_ = state.learned_document_count;
+  vocabulary_ = state.vocabulary;
+  document_frequency_ = state.document_frequency;
+  return Status::success();
+}
 
 Status LexiconMapper::learn(pluss::msharp::RangeView::Of<std::string> documents) {
   if (documents.empty()) return Status::invalid_argument("LexiconMapper::learn requires at least one document.");
@@ -62,11 +137,17 @@ Status LexiconMapper::learn(pluss::msharp::RangeView::Of<std::string> documents)
   if (options_.min_document_frequency <= 0) {
     return Status::invalid_argument("LexiconMapOptions.min_document_frequency must be > 0.");
   }
+  if (const auto status =
+          validate_ngram_range(options_.min_ngram, options_.max_ngram, "LexiconMapper::learn");
+      !status.ok()) {
+    return status;
+  }
 
   learned_document_count_ = static_cast<std::int64_t>(documents.size());
   std::unordered_map<std::string, std::int64_t> df{};
   for (const std::string& doc : documents) {
-    std::vector<std::string> tokens = tokenize(doc, options_.lowercase);
+    std::vector<std::string> tokens =
+        analyze_terms(doc, options_.lowercase, options_.min_ngram, options_.max_ngram);
     std::sort(tokens.begin(), tokens.end());
     tokens.erase(std::unique(tokens.begin(), tokens.end()), tokens.end());
     for (const std::string& token : tokens) {
@@ -118,7 +199,11 @@ StatusOr<FeatureBatch> LexiconMapper::map_dense(pluss::msharp::RangeView::Of<std
   const std::int64_t cols = static_cast<std::int64_t>(vocabulary_.size());
   std::vector<double> matrix(static_cast<std::size_t>(rows * cols), 0.0);
   for (std::int64_t r = 0; r < rows; ++r) {
-    const std::vector<std::string> tokens = tokenize(documents[static_cast<std::size_t>(r)], options_.lowercase);
+    const std::vector<std::string> tokens =
+        analyze_terms(documents[static_cast<std::size_t>(r)],
+                      options_.lowercase,
+                      options_.min_ngram,
+                      options_.max_ngram);
     for (const std::string& tok : tokens) {
       const auto it = vocab_index.find(tok);
       if (it == vocab_index.end()) continue;
@@ -160,7 +245,11 @@ StatusOr<SparseTripletMatrix> LexiconMapper::map_sparse(pluss::msharp::RangeView
 
   for (std::int64_t r = 0; r < rows; ++r) {
     std::unordered_map<std::int64_t, double> local{};
-    const std::vector<std::string> tokens = tokenize(documents[static_cast<std::size_t>(r)], options_.lowercase);
+    const std::vector<std::string> tokens =
+        analyze_terms(documents[static_cast<std::size_t>(r)],
+                      options_.lowercase,
+                      options_.min_ngram,
+                      options_.max_ngram);
     for (const std::string& tok : tokens) {
       const auto it = vocab_index.find(tok);
       if (it == vocab_index.end()) continue;
@@ -275,7 +364,11 @@ StatusOr<SparseTripletMatrix> LexiconMapper::map_tfidf_sparse(pluss::msharp::Ran
   std::vector<double> values{};
   for (std::int64_t r = 0; r < rows; ++r) {
     std::unordered_map<std::int64_t, double> local{};
-    const std::vector<std::string> tokens = tokenize(documents[static_cast<std::size_t>(r)], options_.lowercase);
+    const std::vector<std::string> tokens =
+        analyze_terms(documents[static_cast<std::size_t>(r)],
+                      options_.lowercase,
+                      options_.min_ngram,
+                      options_.max_ngram);
     for (const std::string& tok : tokens) {
       const auto it = vocab_index.find(tok);
       if (it == vocab_index.end()) continue;
@@ -302,6 +395,104 @@ StatusOr<SparseTripletMatrix> LexiconMapper::map_tfidf_sparse(pluss::msharp::Ran
       row_idx.push_back(r);
       col_idx.push_back(kv.first);
       values.push_back(kv.second / denom);
+    }
+  }
+
+  return StatusOr<SparseTripletMatrix>(SparseTripletMatrix{
+      .row_indices = pluss::make_series(row_idx, {static_cast<std::int64_t>(row_idx.size())}, i64_cpu()),
+      .column_indices = pluss::make_series(col_idx, {static_cast<std::int64_t>(col_idx.size())}, i64_cpu()),
+      .values = pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, f64_cpu()),
+      .rows = rows,
+      .cols = cols,
+  });
+}
+
+HashMapper::HashMapper(HashMapOptions options) : options_(options) {}
+
+StatusOr<FeatureBatch> HashMapper::map_dense(pluss::msharp::RangeView::Of<std::string> documents) const {
+  if (documents.empty()) {
+    return StatusOr<FeatureBatch>(Status::invalid_argument("HashMapper::map_dense requires at least one document."));
+  }
+  if (options_.n_features <= 0) {
+    return StatusOr<FeatureBatch>(Status::invalid_argument("HashMapOptions.n_features must be > 0."));
+  }
+  if (const auto status =
+          validate_ngram_range(options_.min_ngram, options_.max_ngram, "HashMapper::map_dense");
+      !status.ok()) {
+    return StatusOr<FeatureBatch>(status);
+  }
+
+  const std::int64_t rows = static_cast<std::int64_t>(documents.size());
+  const std::int64_t cols = options_.n_features;
+  std::vector<double> matrix(static_cast<std::size_t>(rows * cols), 0.0);
+  for (std::int64_t r = 0; r < rows; ++r) {
+    const auto terms =
+        analyze_terms(documents[static_cast<std::size_t>(r)],
+                      options_.lowercase,
+                      options_.min_ngram,
+                      options_.max_ngram);
+    for (const auto& term : terms) {
+      const auto hash = stable_hash64(term);
+      const auto col = static_cast<std::int64_t>(hash % static_cast<std::uint64_t>(cols));
+      const auto sign = options_.alternate_sign && ((hash >> 63U) != 0U) ? -1.0 : 1.0;
+      const auto pos = static_cast<std::size_t>(r * cols + col);
+      if (options_.binary) {
+        matrix[pos] = sign;
+      } else {
+        matrix[pos] += sign;
+      }
+    }
+  }
+  return StatusOr<FeatureBatch>(FeatureBatch{
+      .x = pluss::make_series(std::move(matrix), {rows, cols}, f64_cpu()),
+      .layout = ObservationLayout::Rows,
+  });
+}
+
+StatusOr<SparseTripletMatrix> HashMapper::map_sparse(pluss::msharp::RangeView::Of<std::string> documents) const {
+  if (documents.empty()) {
+    return StatusOr<SparseTripletMatrix>(Status::invalid_argument("HashMapper::map_sparse requires at least one document."));
+  }
+  if (options_.n_features <= 0) {
+    return StatusOr<SparseTripletMatrix>(Status::invalid_argument("HashMapOptions.n_features must be > 0."));
+  }
+  if (const auto status =
+          validate_ngram_range(options_.min_ngram, options_.max_ngram, "HashMapper::map_sparse");
+      !status.ok()) {
+    return StatusOr<SparseTripletMatrix>(status);
+  }
+
+  const std::int64_t rows = static_cast<std::int64_t>(documents.size());
+  const std::int64_t cols = options_.n_features;
+  std::vector<std::int64_t> row_idx{};
+  std::vector<std::int64_t> col_idx{};
+  std::vector<double> values{};
+
+  for (std::int64_t r = 0; r < rows; ++r) {
+    std::unordered_map<std::int64_t, double> local{};
+    const auto terms =
+        analyze_terms(documents[static_cast<std::size_t>(r)],
+                      options_.lowercase,
+                      options_.min_ngram,
+                      options_.max_ngram);
+    for (const auto& term : terms) {
+      const auto hash = stable_hash64(term);
+      const auto col = static_cast<std::int64_t>(hash % static_cast<std::uint64_t>(cols));
+      const auto sign = options_.alternate_sign && ((hash >> 63U) != 0U) ? -1.0 : 1.0;
+      if (options_.binary) {
+        local[col] = sign;
+      } else {
+        local[col] += sign;
+      }
+    }
+    std::vector<std::pair<std::int64_t, double>> sorted{};
+    sorted.reserve(local.size());
+    for (const auto& kv : local) sorted.push_back(kv);
+    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    for (const auto& kv : sorted) {
+      row_idx.push_back(r);
+      col_idx.push_back(kv.first);
+      values.push_back(kv.second);
     }
   }
 

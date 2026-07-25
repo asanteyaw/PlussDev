@@ -105,6 +105,74 @@ c    | 5
 [3 cs x 1 feat]
 ```
 
+Example 3. Divide one frame by another elementwise, using the default
+positional alignment.
+
+```cpp
+auto left = DataFrame({
+    {"amount", Thread(pluss::make_series({100.0, 200.0, 50.0}))},
+}, Thread(pluss::make_note({"a", "b", "c"})));
+
+auto right = DataFrame({
+    {"amount", Thread(pluss::make_series({4.0, 5.0, 2.0}))},
+}, Thread(pluss::make_note({"x", "y", "z"})));
+
+auto out = left.div(right);
+std::cout << out;
+```
+
+### Output
+
+```text
+=============
+     | amount
+-------------
+a    | 25    
+b    | 40    
+c    | 25    
+-------------
+[3 cs x 1 feat]
+```
+
+`right`'s case labels (`x, y, z`) are never consulted under the default
+`AlignOptions{}` (`AlignBy::Pos`): the two frames only need the same shape, and
+cells are paired by physical position — `left`'s row `0` (`100`) divides by
+`right`'s row `0` (`4`) regardless of either side's labels — so the result
+keeps `left`'s own case labels (`a, b, c`).
+
+Example 4. The `Thread` overload with `axis` passed explicitly as
+`Axis::Feature` — one divisor per feature, broadcast down every case in that
+column.
+
+```cpp
+auto values = DataFrame({
+    {"x", Thread(pluss::make_series({100.0, 200.0}))},
+    {"y", Thread(pluss::make_series({50.0, 25.0}))},
+}, Thread(pluss::make_note({"p", "q"})));
+
+auto divisors = Thread(pluss::make_series({4.0, 5.0}));
+auto out_thread = values.div(divisors, Axis::Feature);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+=================
+     | x     y   
+-----------------
+p    | 25    10  
+q    | 50    5   
+-----------------
+[2 cs x 2 feat]
+```
+
+`divisors`'s two values pair up with `x` and `y` respectively: every case's
+`x` is divided by `4` (`100/4=25`, `200/4=50`), and every case's `y` is
+divided by `5` (`50/5=10`, `25/5=5`) — `Axis::Feature` is already the default
+for this overload, so passing it here changes nothing except making the
+broadcast direction explicit at the call site.
+
 ## Notes
 
 - Non-numeric features are always left unchanged.

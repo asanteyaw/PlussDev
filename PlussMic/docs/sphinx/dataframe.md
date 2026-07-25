@@ -458,7 +458,7 @@ auto utc = schedule.features({"ts"}).tl().utc();
 ## SQL And IO
 
 ```cpp
-auto result = df.sql().query("SELECT city, sales FROM self ORDER BY sales DESC");
+auto result = df.sql().execute("SELECT city, sales FROM df ORDER BY sales DESC");
 
 result.save_csv("path/to/output.csv");
 result.save_excel("path/to/output.xlsx");

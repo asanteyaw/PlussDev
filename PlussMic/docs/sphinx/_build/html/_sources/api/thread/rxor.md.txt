@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rxor
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,40 +7,67 @@
 ## Signature
 
 ```cpp
-Thread::rxor(const Thread& other) -> Thread
+Thread::rxor(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+The reflected form of [`lxor()`](lxor.md). Logical XOR is commutative, so `rxor()`
+and `lxor()` always compute the same boolean values — but, exactly like
+[`rand()`](rand.md) versus [`land()`](land.md), `rxor()`'s result carries display
+labels from `other` instead of from `*this`. See [`rand()`](rand.md) for the full
+explanation and a worked example of this label-carry difference.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+
+Same shape as [`lxor()`](lxor.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    The same values [`lxor()`](lxor.md) would produce for the same arguments, with
+    display labels carried from `other` instead of `*this`.
 
 ## Examples
 
-Example 1. Apply `rxor` to the current thread using explicit `other` arguments.
+Example 1. Same values as `lxor()`.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rxor(other);
+auto left = Thread(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto right = Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool));
+
+auto out = left.rxor(right);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  true
+
+ptype: Series
 ```
 
+Matches [`left.lxor(right)`](lxor.md) exactly here — the label-carry difference only
+becomes visible once display labels are involved. See [`rand()`](rand.md) for a
+worked example with labels.
+
+## Notes
+
+- See [`rand()`](rand.md) for the full explanation of this label-carry difference,
+  which applies identically here.
+
+## See Also
+
+- [`Thread::lxor`](lxor.md): the forward form.
+- [`Thread::rand`](rand.md): the fuller explanation of this reflected-family
+  label-carry behavior.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rtruediv.html">

@@ -23,7 +23,7 @@ strategies (forward-fill, backward-fill, a per-feature value) through a `Missing
 column *kind*, and it fills **every** feature of that kind on the frame with the same
 scalar `value`, mutating the frame directly and returning `*this` by reference.
 
-```{important} There is no `features` parameter
+```{important} There is no features parameter
 Unlike `fillnull()`, none of the `fillnull_()` overloads accept a feature list. Calling
 `df.fillnull_(0.0)` fills every `Series` feature's nulls with `0.0` — you cannot target
 just one numeric column with this method. If you need a single-feature fill, either use

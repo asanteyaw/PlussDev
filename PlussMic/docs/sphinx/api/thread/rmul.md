@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rmul
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,66 @@
 ## Signatures
 
 ```cpp
-Thread::rmul(const Thread& other) -> Thread
-
-Thread::rmul(double other) -> Thread
+Thread::rmul(double other) const -> Thread
+Thread::rmul(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected form of [`mul()`](mul.md). Multiplication is commutative, so `rmul()`
+and `mul()` always agree — including for `Note`-thread repetition, since the
+repetition special case never inspects operand order.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+Same shape as [`mul()`](mul.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    Identical to what `mul()` would produce for the same arguments.
 
 ## Examples
 
-Example 1. Apply `rmul` to the current thread using explicit `other` arguments.
+Example 1. `rmul()` and `mul()` agree, for numbers and for `Note` repetition alike.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rmul(other);
+auto prices = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto word = Thread(pluss::make_note({"ab", "xy", "q"}));
+
+std::cout << prices.rmul(2.0) << "\n" << word.rmul(3.0);
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
-```
-Example 2. Apply `rmul` to the current thread using explicit `other` arguments.
+0  20
+1  40
+2  60
 
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+ptype: Series
+0  ababab
+1  xyxyxy
+2  qqq
 
-auto out = thread.rmul(10.0);
-```
-
-### Output
-
-```text
-[10.0, 20.0, 30.0]
+ptype: Note
 ```
 
+Both match [`prices.mul(2.0)`](mul.md) and [`word.mul(3.0)`](mul.md) exactly.
+
+## Notes
+
+- `rmul()` exists purely for API symmetry with the rest of the reflected family —
+  there is no case where it behaves differently from `mul()`.
+
+## See Also
+
+- [`Thread::mul`](mul.md): the forward form, and the full documentation of the
+  `Note`-repetition special case.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rmod.html">

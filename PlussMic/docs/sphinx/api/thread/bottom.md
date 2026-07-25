@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::bottom
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,42 +7,78 @@
 ## Signature
 
 ```cpp
-Thread::bottom(std::int64_t n, bool render = false) -> ThreadView
+Thread::bottom(std::int64_t n, bool render = false) const -> ThreadView
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the `n` **smallest**-valued entries, sorted ascending, as a `ThreadView` —
+the mirror image of [`top()`](top.md). `n` is clamped into `[0, size()]`, the same
+convention as `top()`/[`head()`](head.md)/[`tail()`](tail.md) — a negative `n`
+clamps to an empty result rather than throwing.
 
 ## Parameters
 
-**n**
-    Number of rows, entries, or depth items to keep in the preview.
+**n** (`std::int64_t`)
+    Number of smallest-valued entries to keep. Clamped into `[0, size()]` — no
+    error for a negative or oversized value.
 
-**render**
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
+**render** (`bool`, default `false`)
+    See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
+    only.
 
 ## Returns
 
 `ThreadView`
-    Value produced by this call.
+    A view over the `n` smallest values, in ascending order, with `NULL`s sorted
+    last.
 
 ## Examples
 
-Example 1. Choose whether the returned object should auto-render in display contexts.
+Example 1. The three smallest values, ascending.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.bottom(2, true);
+auto scores = Thread(pluss::make_series({30.0, 10.0, 50.0, 20.0, 40.0}));
+auto out = scores.bottom(3);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  10
+1  20
+2  30
+
+ptype: Series
 ```
 
+Example 2. A negative `n` clamps to an empty result rather than throwing.
+
+```cpp
+auto out2 = scores.bottom(-1);
+std::cout << out2;
+```
+
+### Output
+
+```text
+ptype: Series
+```
+
+## Notes
+
+- `n` is clamped into `[0, size()]` — never throws for a negative or oversized
+  value.
+- `NULL` cells sort last, same as [`top()`](top.md).
+
+## See Also
+
+- [`Thread::top`](top.md): the largest-values counterpart.
+- [`Thread::sort_values`](sort_values.md): the full sort this method takes a
+  prefix of.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bfill.html">

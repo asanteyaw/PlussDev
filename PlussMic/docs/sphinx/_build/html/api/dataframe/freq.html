@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::ge" href="ge.html" />
@@ -52,7 +52,8 @@
 <em>combination</em> of values) occurs, and returns the counts as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> labeled by the
 value itself — sorted most-frequent first, ties broken alphabetically by the value’s
 own text. With exactly one feature named, this delegates straight to that feature’s
-own <a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a>. With zero or several features, it builds a
+own <a class="reference internal" href="../thread/tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally()</span></code></span></a>, reshaped into this labeled-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+form. With zero or several features, it builds a
 <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code>-joined composite key per row from the selected features’ string representations
 and counts occurrences of that composite key instead.</p>
 <p>This is a values-first counting tool: it answers “what are the most common cities in
@@ -200,8 +201,8 @@ never affects any other feature’s part of the same row’s key.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>With one feature named, <code class="docutils literal notranslate"><span class="pre">freq()</span></code> is exactly that feature’s own frequency count (see
-<a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a>); the multi-feature composite-key behavior described
-above only applies when zero or several feature names are given.</p></li>
+<a class="reference internal" href="../thread/tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally()</span></code></span></a>); the multi-feature composite-key behavior
+described above only applies when zero or several feature names are given.</p></li>
 <li><p>Sorting is always most-frequent first; ties are broken by ascending alphabetical
 order of the value (or composite key) itself, never by first-appearance order.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">top_n</span> <span class="pre">=</span> <span class="pre">0</span></code> (the default) keeps every distinct value or combination; a positive

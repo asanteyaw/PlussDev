@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::distinct
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,43 +7,43 @@
 ## Signature
 
 ```cpp
-Thread::distinct(bool dropnull = true) -> Thread
+Thread::distinct(bool dropnull = true) const -> Thread
 ```
 
-Return distinct values in stable first-seen order.
+## What It Does
 
-Use this when you want the unique observed values themselves, not just the count.
-
-Unlike a sorting operation, `distinct(...)` preserves the encounter order of the first surviving representatives.
+Returns the distinct values of the thread, one representative per value, in
+**first-seen order** — not sorted. Grouping is done by each value's string form
+(the same conversion [`tally()`](tally.md) uses), so this works on any payload
+kind, not just `Note`. Unlike a sort-based dedup, the surviving representative
+for each value is always the earliest occurrence, and the relative order of
+distinct values in the output matches the order they first appeared in the
+source thread.
 
 ## Parameters
 
-**dropnull**
-
-Whether missing entries should be removed before distinctness is computed.
-
-- `true`: ignore null entries,
-- `false`: keep at most one null entry in the output.
-
-This flag matters when missingness itself is meaningful and you want a single null representative preserved among the distinct values.
+**dropnull** (`bool`, default `true`)
+    - `true` (the default): missing entries are excluded entirely from the
+      result.
+    - `false`: at most one missing entry is kept, appearing at the position of
+      its first occurrence among the survivors.
 
 ## Returns
 
 `Thread`
-    Thread containing one representative of each distinct value, ordered by first appearance.
-
-## Notes
-
-`distinct(...)` is value-returning, not count-returning. Use `ndistinct(...)` when you only need the number of distinct values.
+    A new thread holding one representative of each distinct value, in
+    first-seen order. Shorter than (or equal in length to) the source thread.
 
 ## Examples
 
-Example 1. Collect distinct note values in first-seen order.
+Example 1. Collect distinct values in first-seen order.
 
 ```cpp
 using namespace pluss::table;
 
-auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"})).distinct(true);
+auto cities = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"}));
+auto out = cities.distinct();
+std::cout << out;
 ```
 
 ### Output
@@ -50,10 +52,54 @@ auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"})).distin
 0  Accra
 1  Tema
 2  Kumasi
+
 ptype: Note
 ```
 
+`"Accra"`'s repeat at position `2` is dropped, but the survivors keep the order
+they were first seen in — `"Tema"` before `"Kumasi"`, not alphabetical order.
 
+Example 2. `dropnull = false` keeps a single representative missing entry.
+
+```cpp
+auto with_gap = Thread(
+    pluss::make_note({"Accra", "", "Tema", ""}),
+    pluss::make_series(std::vector<bool>{true, false, true, false})
+);
+auto out2 = with_gap.distinct(false);
+std::cout << out2;
+```
+
+### Output
+
+```text
+0  Accra
+1  NULL
+2  Tema
+
+ptype: Note
+```
+
+Only one `NULL` survives (from its first occurrence at position `1`), even
+though the source had two missing entries.
+
+## Notes
+
+- Order is first-seen, never sorted — see [`sort_values()`](sort_values.md) if
+  you want the distinct values in value order instead.
+- `dropnull = false` keeps at most one missing entry, not one per occurrence.
+- Grouping is by each value's string form, so this works across every payload
+  kind.
+
+## See Also
+
+- [`Thread::ndistinct`](ndistinct.md): the count of distinct values, without
+  the values themselves.
+- [`Thread::tally`](tally.md): distinct values paired with their occurrence
+  counts, sorted by frequency instead of first-seen order.
+- [`Thread::duplicated`](duplicated.md) / [`Thread::repeated`](repeated.md):
+  boolean masks over the original thread's positions, rather than a
+  deduplicated thread.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="display_name.html">

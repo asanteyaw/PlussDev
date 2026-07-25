@@ -1,10 +1,18 @@
 if(TARGET pluss)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeB")
+    add_subdirectory(NodeB)
+  endif()
+
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ")
     add_subdirectory(NodeJ)
   endif()
 
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeK")
     add_subdirectory(NodeK)
+  endif()
+
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Ice")
+    add_subdirectory(Ice)
   endif()
 
   add_executable(plussai_minimax_demo

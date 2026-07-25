@@ -180,9 +180,9 @@ worth knowing up front:
   the report.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="head.html">
+  <a class="prev-link" href="height.html">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">height</span>
   </a>
   <a class="next-link" href="info_string.html">
     <span class="label">Next</span>

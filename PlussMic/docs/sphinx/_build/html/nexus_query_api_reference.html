@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NexusQuery API Reference &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=59a8c7d2" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ColumnRef API Reference" href="column_ref_api_reference.html" />
+    <link rel="prev" title="Nexus::unique" href="api/nexus/unique.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="nexusquery-api-reference">
+<h1>NexusQuery API Reference<a class="headerlink" href="#nexusquery-api-reference" title="Link to this heading">¶</a></h1>
+<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> surface — the fluent join-graph query
+builder returned by <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::from(table)</span></code></span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Coming soon
+<code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> method pages are not written yet — this landing page is a placeholder
+reserved as part of building out the <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus</span></code></span></a> reference.</p>
+</div>
+<section id="what-it-is">
+<h2>What It Is<a class="headerlink" href="#what-it-is" title="Link to this heading">¶</a></h2>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">nexus.from(&quot;table_name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> anchored at that table.
+From there, <code class="docutils literal notranslate"><span class="pre">.join(other)</span></code> (optionally with a <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code>) or <code class="docutils literal notranslate"><span class="pre">.via(other,</span> <span class="pre">how)</span></code>
+extends the walk across the join graph, <code class="docutils literal notranslate"><span class="pre">.pick()</span></code>/<code class="docutils literal notranslate"><span class="pre">.drop()</span></code> narrow the result
+columns, <code class="docutils literal notranslate"><span class="pre">.name()</span></code> labels the result, and <code class="docutils literal notranslate"><span class="pre">.collect()</span></code> executes the accumulated plan
+and returns the joined <a class="reference internal" href="dataframe_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></span></a>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+  <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+      <li>Previous: <a href="api/nexus/unique.html" title="previous chapter">Nexus::unique</a></li>
+      <li>Next: <a href="column_ref_api_reference.html" title="next chapter">ColumnRef API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/nexus_query_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -97,6 +97,74 @@ std::int64_t Archive::depth() const {
   return static_cast<std::int64_t>(impl_ref_().catalogs_.size());
 }
 
+std::int64_t Archive::size() const {
+  return depth();
+}
+
+std::int64_t Archive::nkeys() const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  if (impl_ref_().catalogs_.empty()) return 0;
+  const auto n = impl_ref_().catalogs_.front().nkeys();
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    PLUSS_CHECK(catalog.nkeys() == n, "Archive::nkeys: catalogs have different key counts");
+  }
+  return n;
+}
+
+std::int64_t Archive::minkeys() const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  if (impl_ref_().catalogs_.empty()) return 0;
+  auto out = impl_ref_().catalogs_.front().nkeys();
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    out = std::min(out, catalog.nkeys());
+  }
+  return out;
+}
+
+std::int64_t Archive::maxkeys() const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  if (impl_ref_().catalogs_.empty()) return 0;
+  auto out = impl_ref_().catalogs_.front().nkeys();
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    out = std::max(out, catalog.nkeys());
+  }
+  return out;
+}
+
+std::int64_t Archive::nrecords() const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  if (impl_ref_().catalogs_.empty()) return 0;
+  const auto n = impl_ref_().catalogs_.front().nrecords();
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    PLUSS_CHECK(catalog.nrecords() == n, "Archive::nrecords: catalogs have different record counts");
+  }
+  return n;
+}
+
+std::int64_t Archive::minrecords() const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  if (impl_ref_().catalogs_.empty()) return 0;
+  auto out = impl_ref_().catalogs_.front().minrecords();
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    out = std::min(out, catalog.minrecords());
+  }
+  return out;
+}
+
+std::int64_t Archive::maxrecords() const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  if (impl_ref_().catalogs_.empty()) return 0;
+  auto out = impl_ref_().catalogs_.front().maxrecords();
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    out = std::max(out, catalog.maxrecords());
+  }
+  return out;
+}
+
+std::tuple<std::int64_t, std::int64_t, std::int64_t> Archive::shape() const {
+  return {depth(), maxrecords(), maxkeys()};
+}
+
 bool Archive::empty() const { return depth() == 0; }
 
 const std::optional<Stream>& Archive::depth_labels() const {
@@ -242,6 +310,113 @@ Catalog Archive::aggregate_over_catalogs(const std::function<Catalog(const std::
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   PLUSS_CHECK(static_cast<bool>(fn), "Archive::aggregate_over_catalogs: reducer function is empty");
   return fn(impl_ref_().catalogs_);
+}
+
+bool Archive::has(std::string_view key) const {
+  PLUSS_CHECK(defined(), "Archive: undefined handle");
+  for (const auto& catalog : impl_ref_().catalogs_) {
+    if (!catalog.has(key)) return false;
+  }
+  return true;
+}
+
+Archive Archive::select(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.select(keys); });
+}
+
+Archive Archive::select(const std::vector<std::string>& keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.select(keys); });
+}
+
+Archive Archive::drop(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.drop(keys); });
+}
+
+Archive Archive::drop(const std::vector<std::string>& keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.drop(keys); });
+}
+
+Archive Archive::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.rename(mapping); });
+}
+
+Archive Archive::rename(std::string_view from, std::string_view to) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.rename(from, to); });
+}
+
+Archive Archive::fillnull(double value, std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+}
+
+Archive Archive::fillnull(std::string_view value, std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+}
+
+Archive Archive::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+}
+
+Archive Archive::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+}
+
+Archive Archive::dropnull(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.dropnull(keys); });
+}
+
+Archive Archive::ffill(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.ffill(keys); });
+}
+
+Archive Archive::bfill(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.bfill(keys); });
+}
+
+Archive Archive::isnull(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.isnull(keys); });
+}
+
+Archive Archive::notnull(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.notnull(keys); });
+}
+
+Archive Archive::invalid(std::initializer_list<std::string_view> keys) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.invalid(keys); });
+}
+
+Archive Archive::cast(std::initializer_list<std::string_view> keys,
+                      pluss::table::ThreadCastTarget target,
+                      const pluss::table::ThreadCastOptions& options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.cast(keys, target, options); });
+}
+
+Archive Archive::astype(std::initializer_list<std::string_view> keys,
+                        pluss::codem::ScalarType dtype) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.astype(keys, dtype); });
+}
+
+Archive Archive::distinct(DistinctOptions options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.distinct(options); });
+}
+
+Archive Archive::distinct(std::initializer_list<std::string_view> keys, DistinctOptions options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.distinct(keys, options); });
+}
+
+Archive Archive::freq(FreqOptions options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.freq(options); });
+}
+
+Archive Archive::freq(std::initializer_list<std::string_view> keys, FreqOptions options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.freq(keys, options); });
+}
+
+Archive Archive::ndistinct(DistinctOptions options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.ndistinct(options); });
+}
+
+Archive Archive::ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.ndistinct(keys, options); });
 }
 
 pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {

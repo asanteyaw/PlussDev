@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::rstrip" href="rstrip.html" />
@@ -36,72 +36,269 @@
 
           <div class="body" role="main">
             
-  <section id="dataframenoteaccessor-replace">
+  <!-- pluss-hand-authored -->
+<section id="dataframenoteaccessor-replace">
 <h1>DataFrameNoteAccessor::replace<a class="headerlink" href="#dataframenoteaccessor-replace" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">replace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">replace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">from</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
-<span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">replace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">replace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">from</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">,</span>
+<span class="w">                                </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the text-processing surface for note-backed or text-oriented data.</p>
+<p>Replaces occurrences of <code class="docutils literal notranslate"><span class="pre">from</span></code> with <code class="docutils literal notranslate"><span class="pre">to</span></code> in every selected text feature’s
+cells, returning a new frame. Like <a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a>, the two-argument
+overload’s default (<code class="docutils literal notranslate"><span class="pre">{}</span></code>) is a <strong>literal, case-sensitive, unlimited</strong>
+replace — but unlike <code class="docutils literal notranslate"><span class="pre">count()</span></code>, this default matches what the
+single-argument-style call actually does, so there’s no regex-by-default
+surprise here: <code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to)</span></code> and <code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to,</span> <span class="pre">{})</span></code> are exactly
+the same call.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Verified fast path: replace(from, to) and replace(from, to, {}) are byte-identical
+When <code class="docutils literal notranslate"><span class="pre">options</span></code> is left at its default (<code class="docutils literal notranslate"><span class="pre">regex</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">case_sensitive</span> <span class="pre">=</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">-1</span></code>), <code class="docutils literal notranslate"><span class="pre">replace()</span></code> takes a fast path straight to the
+underlying <code class="docutils literal notranslate"><span class="pre">Note::replace</span></code> primitive — the same code path the
+two-argument overload uses. There is no behavioral difference between the
+two spellings; the two-argument overload exists purely for convenience
+when no options are needed.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">options</span></code> controls three independent things:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">options.regex</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">from</span></code> as a regular
+expression instead of literal text. Regex replacement text (<code class="docutils literal notranslate"><span class="pre">to</span></code>)
+supports ECMAScript-style backreferences (<code class="docutils literal notranslate"><span class="pre">$1</span></code>, <code class="docutils literal notranslate"><span class="pre">$2</span></code>, …) to capture
+groups in <code class="docutils literal notranslate"><span class="pre">from</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>): when <code class="docutils literal notranslate"><span class="pre">false</span></code>, matching
+ignores case (ASCII fold), but the replacement text <code class="docutils literal notranslate"><span class="pre">to</span></code> is inserted
+exactly as given — case-insensitive <em>matching</em> doesn’t mean
+case-preserving <em>replacement</em>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">options.limit</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">-1</span></code>): caps the number of replacements per
+cell; <code class="docutils literal notranslate"><span class="pre">-1</span></code> means unlimited. Matches are always non-overlapping — after a
+replacement, scanning resumes right after the inserted <code class="docutils literal notranslate"><span class="pre">to</span></code> text, not
+back inside it.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> is not used by <code class="docutils literal notranslate"><span class="pre">replace()</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>from</strong>
-Boundary or replacement value used by this overload. Its type determines which payload family participates.</p>
-<p><strong>to</strong>
-Boundary or replacement value used by this overload. Its type determines which payload family participates.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>from</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The literal text or regex pattern to search for. An empty <code class="docutils literal notranslate"><span class="pre">from</span></code> under
+literal mode is a no-op (the cell is returned unchanged).</p>
+<p><strong>to</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The replacement text. Under regex mode, may contain <code class="docutils literal notranslate"><span class="pre">$1</span></code>, <code class="docutils literal notranslate"><span class="pre">$2</span></code>, …
+backreferences to <code class="docutils literal notranslate"><span class="pre">from</span></code>’s capture groups.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code>, two-argument overload only)
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code>, <code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code>, <code class="docutils literal notranslate"><span class="pre">options.limit</span></code> as described
+above.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with every selected feature’s text transformed by the
+replacement.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<p>Example 1. The default: literal, case-sensitive, unlimited replacement.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;cat and cat&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cat there&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no match&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">notes</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;cat&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dog&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | text       
+------------------
+0    | cat and cat
+1    | Cat there  
+2    | no match   
+3    | NULL       
+------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | text       
+------------------
+0    | dog and dog
+1    | Cat there  
+2    | no match   
+3    | NULL       
+------------------
+[4 cs x 1 feat]
 </pre></div>
 </div>
-<p>Example 2. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<p>Both occurrences of <code class="docutils literal notranslate"><span class="pre">&quot;cat&quot;</span></code> in row 0 are replaced. Row 1’s <code class="docutils literal notranslate"><span class="pre">&quot;Cat&quot;</span></code> (capital
+C) doesn’t match the lowercase, case-sensitive <code class="docutils literal notranslate"><span class="pre">&quot;cat&quot;</span></code> needle, so it’s left
+untouched. Row 3 is invalid and stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">case_sensitive</span> <span class="pre">=</span> <span class="pre">false</span></code>: matching ignores case, but the
+replacement text is still inserted literally as given.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;cat&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dog&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">case_sensitive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | text       
+------------------
+0    | dog and dog
+1    | dog there  
+2    | no match   
+3    | NULL       
+------------------
+[4 cs x 1 feat]
 </pre></div>
 </div>
+<p>Now row 1’s <code class="docutils literal notranslate"><span class="pre">&quot;Cat&quot;</span></code> matches too (case-insensitively) and is replaced with
+the literal lowercase <code class="docutils literal notranslate"><span class="pre">&quot;dog&quot;</span></code> — the original capitalization of the matched
+text (<code class="docutils literal notranslate"><span class="pre">&quot;Cat&quot;</span></code>) is discarded, not preserved or transferred to the
+replacement.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">limit</span></code> caps replacements per cell, and matches never overlap —
+notice the second cell’s <em>second</em> replacement lands on what was originally
+its <em>third</em> <code class="docutils literal notranslate"><span class="pre">a</span></code>, not its second, because the first replacement’s <code class="docutils literal notranslate"><span class="pre">X</span></code>
+already consumed one match.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;word&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;aardvark&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;xyz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">words</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;X&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (before)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============
+     | word    
+---------------
+0    | banana  
+1    | aardvark
+2    | xyz     
+3    | NULL    
+---------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============
+     | word    
+---------------
+0    | bXnXna  
+1    | XXrdvark
+2    | xyz     
+3    | NULL    
+---------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;banana&quot;</span></code> has three <code class="docutils literal notranslate"><span class="pre">a</span></code>s, but only the first two are replaced (<code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">2</span></code>), leaving the trailing <code class="docutils literal notranslate"><span class="pre">&quot;na&quot;</span></code> untouched: <code class="docutils literal notranslate"><span class="pre">&quot;bXnXna&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;aardvark&quot;</span></code> has
+two <code class="docutils literal notranslate"><span class="pre">a</span></code>s <em>adjacent</em> to each other at the start — both get replaced
+(<code class="docutils literal notranslate"><span class="pre">&quot;XXrdvark&quot;</span></code>), reaching the limit before the third <code class="docutils literal notranslate"><span class="pre">a</span></code> (inside
+<code class="docutils literal notranslate"><span class="pre">&quot;vark&quot;</span></code>) is ever considered. <code class="docutils literal notranslate"><span class="pre">&quot;xyz&quot;</span></code> has no <code class="docutils literal notranslate"><span class="pre">a</span></code> at all, so it’s
+unchanged.</p>
+<p>Example 4. Regex mode with backreferences: swap the two sides of an <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>
+using capture groups.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">emails</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;alice@example&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bob@test&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;invalid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">emails</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">emails</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">replace</span><span class="p">(</span>
+<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">(\w+)@(\w+)</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;$2#$1&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output (before)<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | email        
+--------------------
+0    | alice@example
+1    | bob@test     
+2    | invalid      
+3    | NULL         
+--------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | email        
+--------------------
+0    | example#alice
+1    | test#bob     
+2    | invalid      
+3    | NULL         
+--------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">(\w+)&#64;(\w+)</span></code> captures the text before and after <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;$2#$1&quot;</span></code> swaps them
+around a <code class="docutils literal notranslate"><span class="pre">#</span></code>. Row 2 (<code class="docutils literal notranslate"><span class="pre">&quot;invalid&quot;</span></code>) has no <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> at all, so the pattern doesn’t
+match and the text is returned unchanged — <code class="docutils literal notranslate"><span class="pre">regex_replace</span></code> leaves
+non-matching text exactly as it was, it never errors on a cell with zero
+matches.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to)</span></code> and <code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to,</span> <span class="pre">{})</span></code> are the exact same
+operation — see the note above.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">from</span></code> under literal mode is a no-op (returns the cell
+unchanged); this check happens before any matching is attempted.</p></li>
+<li><p>Matches never overlap: after a replacement, scanning resumes
+immediately past the inserted <code class="docutils literal notranslate"><span class="pre">to</span></code> text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">case_sensitive</span> <span class="pre">=</span> <span class="pre">false</span></code> affects matching only — the replacement text is
+always inserted exactly as given, never case-adjusted to match what was
+found.</p></li>
+<li><p>Regex mode supports <code class="docutils literal notranslate"><span class="pre">$1</span></code>, <code class="docutils literal notranslate"><span class="pre">$2</span></code>, … backreferences in <code class="docutils literal notranslate"><span class="pre">to</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> has no effect on <code class="docutils literal notranslate"><span class="pre">replace()</span></code>.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::strip</span></code></span></a> / <a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstrip()</span></code></span></a> /
+<a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rstrip()</span></code></span></a>: remove specific characters rather than replace
+arbitrary substrings.</p></li>
+<li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::count</span></code></span></a>: count matches instead of
+replacing them (and note its opposite single-argument regex default).</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::extract</span></code></span></a>: pull matched text out
+into new columns instead of substituting it in place.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="partition.html">
     <span class="label">Previous</span>
@@ -112,7 +309,6 @@ Value produced by this call.</p>
     <span class="title">rstrip</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -61,20 +61,16 @@ public:
   bool defined() const noexcept;
   bool unique() const noexcept;
 
-  std::int64_t nslots() const;
   std::int64_t nfields() const;
+  std::int64_t size() const;
+  std::pair<std::int64_t, std::int64_t> shape() const;
   bool empty() const;
-  const std::vector<std::string>& keys() const;
-  const std::vector<std::string>& field_names() const;
+  const std::vector<std::string>& fields() const;
   bool has(std::string_view key) const;
-  bool has_slot(std::string_view key) const;
   bool has_all(std::initializer_list<std::string_view> keys) const;
   bool has_any(std::initializer_list<std::string_view> keys) const;
-  Slot slot(std::string_view key) const;
   Slot at(std::string_view key) const;
   std::optional<Slot> get(std::string_view key) const;
-  std::optional<Slot> get_slot(std::string_view key) const;
-  std::vector<Slot> slots() const;
   bool is_stream_compatible() const;
   void ensure_stream_compatible(std::string_view where = "Registry") const;
 
@@ -107,20 +103,61 @@ public:
   Registry apply_all(const std::function<Slot(const Slot&)>& fn) const;
   Registry map(const std::function<Slot(const Slot&)>& fn) const;
   Registry& map_(const std::function<Slot(const Slot&)>& fn);
-  std::unordered_map<std::string, std::int64_t> slot_sizes() const;
+  std::unordered_map<std::string, std::int64_t> sizes() const;
   std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> type_profiles() const;
   Registry combine(const Registry& other, std::string suffix = "_other") const;
   Registry clear() const;
   Registry& clear_();
-  Registry drop_empty_slots() const;
-  Registry& drop_empty_slots_();
+  Registry drop_empty() const;
+  Registry& drop_empty_();
 
-  Registry set_slot(std::string_view key, const Slot& value) const;
-  Registry& set_slot_(std::string_view key, const Slot& value);
-  Registry set_slots(std::initializer_list<std::pair<std::string_view, Slot>> items) const;
-  Registry& set_slots_(std::initializer_list<std::pair<std::string_view, Slot>> items);
-  Registry set_slots(std::initializer_list<std::pair<std::string, Slot>> items) const;
-  Registry& set_slots_(std::initializer_list<std::pair<std::string, Slot>> items);
+  Registry isnull() const;
+  Registry isnull(std::initializer_list<std::string_view> fields) const;
+  Registry notnull() const;
+  Registry notnull(std::initializer_list<std::string_view> fields) const;
+  Registry invalid() const;
+  Registry invalid(std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(double value) const;
+  Registry fillnull(double value, std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(std::string_view value) const;
+  Registry fillnull(std::string_view value, std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
+  }
+  Registry fillnull(const char* value, std::initializer_list<std::string_view> fields) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""}, fields);
+  }
+  Registry fillnull(const pluss::Timeline& value) const;
+  Registry fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(const pluss::TimeIndex& value) const;
+  Registry fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields) const;
+  Registry dropnull() const;
+  Registry dropnull(std::initializer_list<std::string_view> fields) const;
+  Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
+  Registry distinct(std::initializer_list<std::string_view> fields,
+                    pluss::kindle::DistinctOptions options = {}) const;
+  Registry freq(pluss::kindle::FreqOptions options = {}) const;
+  Registry freq(std::initializer_list<std::string_view> fields,
+                pluss::kindle::FreqOptions options = {}) const;
+  Registry ndistinct(pluss::kindle::DistinctOptions options = {}) const;
+  Registry ndistinct(std::initializer_list<std::string_view> fields,
+                     pluss::kindle::DistinctOptions options = {}) const;
+  Registry cast(std::initializer_list<std::string_view> fields,
+                pluss::table::ThreadCastTarget target,
+                const pluss::table::ThreadCastOptions& options = {}) const;
+  Registry astype(std::initializer_list<std::string_view> fields,
+                  pluss::codem::ScalarType dtype) const;
+  Slot sum(std::string_view field) const;
+  Slot mean(std::string_view field) const;
+  Slot min(std::string_view field) const;
+  Slot max(std::string_view field) const;
+
+  Registry set(std::string_view key, const Slot& value) const;
+  Registry& set_(std::string_view key, const Slot& value);
+  Registry set(std::initializer_list<std::pair<std::string_view, Slot>> items) const;
+  Registry& set_(std::initializer_list<std::pair<std::string_view, Slot>> items);
+  Registry set(std::initializer_list<std::pair<std::string, Slot>> items) const;
+  Registry& set_(std::initializer_list<std::pair<std::string, Slot>> items);
   Registry push(std::string_view key, const Slot::Value& value) const;
   Registry& push_(std::string_view key, const Slot::Value& value);
   Registry push_all(const Slot::Value& value) const;
@@ -171,6 +208,22 @@ public:
 
 private:
   explicit Registry(pluss::msharp::intrusive_ptr<detail::RegistryImpl> impl);
+  std::int64_t nslots() const;
+  const std::vector<std::string>& keys() const;
+  const std::vector<std::string>& field_names() const;
+  bool has_slot(std::string_view key) const;
+  Slot slot(std::string_view key) const;
+  std::optional<Slot> get_slot(std::string_view key) const;
+  std::vector<Slot> slots() const;
+  std::unordered_map<std::string, std::int64_t> slot_sizes() const;
+  Registry drop_empty_slots() const;
+  Registry& drop_empty_slots_();
+  Registry set_slot(std::string_view key, const Slot& value) const;
+  Registry& set_slot_(std::string_view key, const Slot& value);
+  Registry set_slots(std::initializer_list<std::pair<std::string_view, Slot>> items) const;
+  Registry& set_slots_(std::initializer_list<std::pair<std::string_view, Slot>> items);
+  Registry set_slots(std::initializer_list<std::pair<std::string, Slot>> items) const;
+  Registry& set_slots_(std::initializer_list<std::pair<std::string, Slot>> items);
   const detail::RegistryImpl& impl_ref_() const;
   detail::RegistryImpl& mut_impl_();
 

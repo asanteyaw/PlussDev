@@ -79,6 +79,6 @@ int main() {
       false).to_string() << "\n\n";
 
   std::cout << "EVENTS\n" << events.to_string() << "\n\n";
-  std::cout << "FLOOR_TIME\n" << events.tl("stamp").floor("day").to_string() << "\n";
+  std::cout << "FLOOR_TIME\n" << events.features({"stamp"}).tl().floor("day").to_string() << "\n";
   return 0;
 }

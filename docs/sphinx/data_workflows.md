@@ -242,8 +242,9 @@ df.mean_by("job", "balance", 10, 1, true, true);
 For date/time features, use the time accessors and resampling helpers:
 
 ```cpp
-auto daily = df.ts({"close", "volume"}).resample(
-    "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+auto daily = df.features({"close", "volume"})
+    .ts({.axis = df.features("date")})
+    .resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
 auto lagged = df.shift({"close"}, 1);
 auto rolling = df.rolling({
     {"close_5_mean", "close", pluss::table::ThreadWindowOp::RollingMean, 5, 3},

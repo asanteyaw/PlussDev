@@ -1112,10 +1112,18 @@ static void token_feature_extract_to(::std::string_view s,
     keep_unique_in_place(out);
     return;
   }
-  if (op == "nlp_stems" || op == "nlp_lemmas") {
+  if (op == "nlp_stems") {
     ::std::vector<::std::string> words;
     word_tokens_lower(s, words);
     for (auto& w : words) out.push_back(stem_simple(::std::move(w)));
+    return;
+  }
+  if (op == "nlp_lemmas") {
+    ::std::vector<::std::string> words;
+    word_tokens_lower(s, words);
+    for (const auto& w : words) {
+      out.push_back(::pluss::coden::native::cpu::simple_lemma_ascii(w));
+    }
     return;
   }
   if (op == "nlp_bigrams") {
@@ -3540,6 +3548,28 @@ static Note transform_note_any(const Note& x, Transform&& fn) {
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
+template <class Estimate, class Transform>
+static Note transform_note_any_reserve(const Note& x,
+                                       Estimate&& estimate,
+                                       Transform&& fn) {
+  if (!x.defined()) return Note::undefined();
+  const auto& impl = NoteAccess::impl(x);
+  auto arena = ::pluss::flame::make_intrusive<TextArena>();
+  ::std::size_t total_bytes = 0;
+  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+    total_bytes += estimate(impl->bytes_at(i));
+  }
+  arena->reserve(total_bytes);
+  ::std::vector<NoteImpl::OffLen> spans;
+  spans.reserve(static_cast<::std::size_t>(impl->numel()));
+  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+    spans.push_back(arena->append(fn(impl->bytes_at(i))));
+  }
+  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+  return NoteFactoryAccess::wrap(::std::move(new_impl));
+}
+
 template <class Transform>
 static Note transform_note_with_encoding(const Note& x,
                                          NoteImpl::Encoding out_encoding,
@@ -4749,7 +4779,10 @@ Note unquote(const Note& x) {
 }
 
 Note base64_encode(const Note& x) {
-  return transform_note_any(x, [](auto s) { return base64_encode_text(s); });
+  return transform_note_any_reserve(
+      x,
+      [](auto s) { return ((s.size() + 2u) / 3u) * 4u; },
+      [](auto s) { return base64_encode_text(s); });
 }
 
 Note base64_decode(const Note& x) {
@@ -4757,7 +4790,10 @@ Note base64_decode(const Note& x) {
 }
 
 Note hex_encode(const Note& x) {
-  return transform_note_any(x, [](auto s) { return hex_encode_text(s); });
+  return transform_note_any_reserve(
+      x,
+      [](auto s) { return s.size() * 2u; },
+      [](auto s) { return hex_encode_text(s); });
 }
 
 Note hex_decode(const Note& x) {
@@ -4765,7 +4801,10 @@ Note hex_decode(const Note& x) {
 }
 
 Note url_encode(const Note& x) {
-  return transform_note_any(x, [](auto s) { return url_encode_text(s); });
+  return transform_note_any_reserve(
+      x,
+      [](auto s) { return s.size() * 3u; },
+      [](auto s) { return url_encode_text(s); });
 }
 
 Note url_decode(const Note& x) {

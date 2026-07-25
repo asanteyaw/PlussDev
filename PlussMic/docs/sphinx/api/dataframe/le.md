@@ -87,6 +87,88 @@ s3   | true   true
 `88`. Note that `final`'s `s2` value (`88`) reports `true` because the boundary value
 itself counts as satisfying `<=`, unlike the strict [`lt()`](lt.md) relation.
 
+Example 2. Broadcast one text value against a `Note`-kind feature — lexicographic
+comparison, same ordering `std::string` itself uses.
+
+```cpp
+auto names = DataFrame({
+    {"name", pluss::make_note({"Ada", "Bola", "Ada"})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_names = names.le("Ada");
+std::cout << out_names;
+```
+
+### Output
+
+```text
+=============
+      | name 
+-------------
+s1    | true 
+s2    | false
+s3    | true 
+-------------
+[3 cs x 1 feat]
+```
+
+`"Ada" <= "Ada"` holds (the boundary case), but `"Bola" <= "Ada"` does not —
+`"Bola"` sorts after `"Ada"` lexicographically.
+
+Example 3. Compare two frames cell by cell once they share the same structure.
+
+```cpp
+auto changed = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 83.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_frames = scores.le(changed);
+std::cout << out_frames;
+```
+
+### Output
+
+```text
+====================
+      | quiz   final
+--------------------
+s1    | true   true 
+s2    | true   true 
+s3    | false  true 
+--------------------
+[3 cs x 2 feat]
+```
+
+Only `s3`'s `quiz` fails: `scores`'s `84` is not `<=` `changed`'s `83`. Every equal
+cell (all of `final`, and `quiz` at `s1`/`s2`) reports `true`, since equality
+satisfies `<=`.
+
+Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+against `84`, `final` checked against `88`.
+
+```cpp
+auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto out_thread = scores.le(thresholds);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+====================
+      | quiz   final
+--------------------
+s1    | true   true 
+s2    | false  true 
+s3    | true   true 
+--------------------
+[3 cs x 2 feat]
+```
+
+`quiz <= 84` fails only at `s2` (`90`); `final <= 88` holds everywhere, since every
+`final` value is at most `88`.
+
 ## Notes
 
 - `le()` always delegates to [`lt(other, false)`](lt.md); there is no separate code
@@ -109,8 +191,8 @@ itself counts as satisfying `<=`, unlike the strict [`lt()`](lt.md) relation.
     <span class="label">Previous</span>
     <span class="title">land</span>
   </a>
-  <a class="next-link" href="lengthen.html">
+  <a class="next-link" href="length.html">
     <span class="label">Next</span>
-    <span class="title">lengthen</span>
+    <span class="title">length</span>
   </a>
 </div>

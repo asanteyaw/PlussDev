@@ -13,12 +13,18 @@ DataFrame::plot3d(const DataFramePlotOptions& options) const -> DataFramePlot3DA
 
 ## What It Does
 
-Enters the 3D charting accessor bound to the current frame — 3D scatter and 3D line
-charts, for genuinely three-axis data. Like [`plot()`](plot.md), `plot3d()` itself
-draws nothing: it binds the frame (and optional shared chart-wide `options`) and
-hands back an accessor whose methods each return a `pluss::pl::Studio` figure — the
-same `PlussPl` figure type `plot()`'s 2D accessor returns, documented in `PlussPl`'s
-own reference.
+Enters the 3D charting accessor bound to the current frame — 3D scatter, 3D line, a
+3D (bivariate) histogram, and aggregated surface/wireframe meshes, for genuinely
+three-axis data. Like [`plot()`](plot.md), `plot3d()` itself draws nothing: it binds
+the frame (and optional shared chart-wide `options`) and hands back an accessor whose
+methods each return a `pluss::pl::Studio` figure — the same `PlussPl` figure type
+`plot()`'s 2D accessor returns, documented in `PlussPl`'s own reference.
+
+Every one of the accessor's methods has its own dedicated, example-rich reference
+page — start at the
+[DataFramePlot3DAccessor API Reference](../../dataframe_plot3d_accessor_api_reference)
+and use its left sidebar to jump straight to any method (`scatter`, `line`, `hist`,
+`surface`, `wireframe`).
 
 ## Parameters
 
@@ -32,7 +38,8 @@ built-in defaults.
 
 `DataFramePlot3DAccessor`
     An accessor bound to the current frame (and, if given, `options`). Its methods
-    (`.scatter()`, `.line()`) each build and return a `pluss::pl::Studio` figure.
+    (`.scatter()`, `.line()`, `.hist()`, `.surface()`, `.wireframe()`) each build and
+    return a `pluss::pl::Studio` figure.
 
 ## Examples
 
@@ -64,14 +71,36 @@ options.width = 900.0;
 auto chart = points.plot3d(options).scatter("x", "y", "z");
 ```
 
+Example 3. Draw an aggregated surface mesh instead — see
+[`surface()`](../dataframe-plot3d/surface.md) for the full grid-construction rules.
+
+```cpp
+auto readings = DataFrame({
+    {"depth_m", Thread(pluss::make_series({10.0, 10.0, 20.0, 20.0}))},
+    {"hour",    Thread(pluss::make_series({0.0, 12.0, 0.0, 12.0}))},
+    {"temp_c",  Thread(pluss::make_series({18.0, 20.0, 15.0, 16.5}))},
+});
+
+auto surface_chart = readings.plot3d().surface("hour", "depth_m", "temp_c");
+surface_chart.save_svg("temp_surface.svg");
+```
+
 ## Notes
 
 - `plot3d()` covers only genuinely three-dimensional chart kinds (3D scatter, 3D
-  line); use [`plot()`](plot.md) for every 2D chart kind instead.
+  line, 3D histogram, surface, wireframe); use [`plot()`](plot.md) for every 2D
+  chart kind instead.
 - Every chart method returns a `pluss::pl::Studio`; that type's own methods are
   documented in `PlussPl`'s reference, not here.
-- Every feature named in a 3D chart call must be numeric — passing a `Note` feature
-  as one of the three axes is not a supported combination.
+- Every axis feature is converted to a numeric value before plotting: a `Series`
+  feature is used as-is, a `Timeline`/`TimeIndex` feature is converted to epoch
+  nanoseconds, and a `Note` feature is cast to numbers (text that doesn't parse as a
+  number becomes `NaN` rather than throwing outright). See each method's own page
+  for the exact conversion rule and throw text.
+- `surface()` and `wireframe()` build their grid via `DataFrame::pivot_table()`
+  internally, which only supports 7 of `DataFrame::GroupOp`'s 10 aggregation values
+  (`Std`/`Var`/`Mode` throw) — see [`surface()`](../dataframe-plot3d/surface.md)'s
+  important callout.
 
 ## See Also
 

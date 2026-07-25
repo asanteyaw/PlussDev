@@ -53,15 +53,14 @@ public:
 
   DataFrame frame(std::int64_t index) const;
   DataFrame dloc(std::int64_t index) const;
+  Atlas features(std::string_view feature) const;
+  Atlas features(std::initializer_list<std::string_view> features) const;
+  Atlas features(pluss::msharp::RangeView::Of<std::string_view> features) const;
   AtlasLabelAccessor label() const;
   AtlasPlotAccessor plot() const;
   AtlasPlotAccessor plot(const AtlasPlotOptions& options) const;
-  AtlasTsAccessor ts(std::string_view feature) const;
-  AtlasTsAccessor ts(std::initializer_list<std::string_view> features) const;
-  AtlasTsAccessor ts(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  AtlasTimelineAccessor tl(std::string_view feature) const;
-  AtlasTimelineAccessor tl(std::initializer_list<std::string_view> features) const;
-  AtlasTimelineAccessor tl(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  AtlasTsAccessor ts() const;
+  AtlasTimelineAccessor tl() const;
   DataFrame squeeze() const;
 
   DataFrame loc(std::string_view label) const;

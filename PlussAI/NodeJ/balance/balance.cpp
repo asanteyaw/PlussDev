@@ -399,6 +399,10 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
     return StatusOr<BalancePlan>(
         Status::invalid_argument(std::string(where) + " cleaning requires plan_balance(LabeledBatch, ...)."));
   }
+  if (target.growth == BalanceGrowthKind::BlendNeighbors) {
+    return StatusOr<BalancePlan>(
+        Status::invalid_argument(std::string(where) + " BlendNeighbors requires plan_balance(LabeledBatch, ...)."));
+  }
   StatusOr<ClassMix> before_or = class_mix(labels);
   if (!before_or.ok()) return StatusOr<BalancePlan>(before_or.status());
   ClassMix before = before_or.move_value();

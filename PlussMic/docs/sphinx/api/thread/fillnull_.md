@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::fillnull_
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,99 +7,123 @@
 ## Signatures
 
 ```cpp
-Thread::fillnull_(const char* value) -> Thread&
-
-Thread::fillnull_(const pluss::TimeIndex& value) -> Thread&
-
-Thread::fillnull_(const pluss::Timeline& value) -> Thread&
-
-Thread::fillnull_(double value) -> Thread&
-
-Thread::fillnull_(std::string_view value) -> Thread&
+Thread& Thread::fillnull_(double value)
+Thread& Thread::fillnull_(std::string_view value)
+Thread& Thread::fillnull_(const pluss::Timeline& value)
+Thread& Thread::fillnull_(const pluss::TimeIndex& value)
 ```
 
 ## What It Does
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+The mutating counterpart to [`fillnull()`](fillnull.md): fills `NULL` cells with
+`value` and updates `*this` in place, returning a reference to it, instead of
+returning a new `Thread`. Copy-on-write applies — if this thread's storage is shared
+with another `Thread` (see [`shares_payload_with()`](shares_payload_with.md)), the
+mutation clones the storage first, so the other thread is unaffected.
+
+```{note} Only the double overload is genuinely in-place
+The `double` overload mutates the underlying `Series` storage directly through the
+copy-on-write path. The `std::string_view`, `Timeline`, and `TimeIndex` overloads are
+implemented as `*this = fillnull(value);` — they call the functional
+[`fillnull()`](fillnull.md) and reassign the result to `*this`. The end result and
+copy-on-write behavior are the same either way; only the internal mechanism differs.
+```
 
 ## Parameters
 
 **value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+    Same as [`fillnull()`](fillnull.md) — the replacement for `NULL` cells,
+    selecting the overload (and required payload kind) by its C++ type.
 
 ## Returns
 
 `Thread&`
-    Value produced by this call.
+    A reference to `*this`, after the fill.
 
 ## Examples
 
-Example 1. Apply `fillnull_` to the current thread using explicit `value` arguments.
+Example 1. Fill in place; the return value is a reference to the same object.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+using namespace pluss::table;
 
-thread.fillnull_("Unknown");
+auto readings = Thread(pluss::make_series({10.0, 20.0, 30.0}),
+    pluss::make_series(std::vector<bool>{true, false, true}));
+readings.fillnull_(0.0);
+std::cout << readings;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  10
+1  0
+2  30
+
+ptype: Series
 ```
-Example 2. Apply `fillnull_` to the current thread using explicit `value` arguments.
+
+Example 2. Copy-on-write: mutating a copy leaves the original thread untouched.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z"}));
+auto original = Thread(pluss::make_series({1.0, 2.0}),
+    pluss::make_series(std::vector<bool>{true, false}));
+auto copy = original;
 
-thread.fillnull_(pluss::make_timeindex("2024-01-01T00:00:00Z"));
+copy.fillnull_(99.0);
+std::cout << original << "\n";
+std::cout << copy;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  1
+1  NULL
+
+ptype: Series
+0  1
+1  99
+
+ptype: Series
 ```
-Example 3. Apply `fillnull_` to the current thread using explicit `value` arguments.
+
+`copy` and `original` shared storage right up until the mutating call; `fillnull_()`
+detached `copy`'s storage before writing, so `original` is unaffected.
+
+Example 3. Payload-kind mismatches throw, same as the functional form.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"}));
-
-thread.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));
+auto notes = Thread(pluss::make_note({"a", "b"}));
+try {
+  notes.fillnull_(0.0);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
-```
-Example 4. Apply `fillnull_` to the current thread using explicit `value` arguments.
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-thread.fillnull_(0.0);
+Thread::fillnull_(double) is only valid for Series payload
 ```
 
-### Output
+## Notes
 
-```text
-[10.0, 20.0, 30.0]
-```
-Example 5. Apply `fillnull_` to the current thread using explicit `value` arguments.
+- Copy-on-write: mutating a thread that shares storage with another detaches it
+  first, leaving the other thread untouched. See Example 2 and
+  [`shares_payload_with()`](shares_payload_with.md).
+- Only the `double` overload mutates storage directly; the others reassign `*this`
+  via the functional [`fillnull()`](fillnull.md). See the note above.
+- The `double` overload's error message includes the underscore:
+  `"Thread::fillnull_(double) is only valid for Series payload"` — a detail that
+  differs from the functional form's own message for the same overload.
 
-```cpp
-auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+## See Also
 
-thread.fillnull_("Unknown");
-```
-
-### Output
-
-```text
-[10.0, 20.0, 30.0]
-```
-
+- [`Thread::fillnull`](fillnull.md): the functional (non-mutating) form.
+- [`Thread::shares_payload_with`](shares_payload_with.md): check storage sharing
+  directly.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fillnull.html">

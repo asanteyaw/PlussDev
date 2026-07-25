@@ -56,7 +56,7 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.label().set("region", false);
 std::cout << labeled;
 
 auto out = labeled.label().drop({"region"});

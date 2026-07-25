@@ -28,6 +28,11 @@ already-known list of names — `feataxis()` is for the "I don't want to spell o
 name" case: selecting all the `"score_"`-prefixed columns, or every numeric feature,
 without listing them one by one.
 
+Every one of the accessor's seven methods has its own dedicated, example-rich
+reference page — start at the
+[DataFrameFeatureAxisAccessor API Reference](../../dataframe_feataxis_accessor_api_reference)
+and use its left sidebar to jump straight to any method.
+
 ## Parameters
 
 `feataxis()` itself takes no parameters. See each accessor method's own signature

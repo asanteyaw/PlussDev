@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::pow" href="pow.html" />
@@ -49,12 +49,17 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Enters the 3D charting accessor bound to the current frame — 3D scatter and 3D line
-charts, for genuinely three-axis data. Like <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> itself
-draws nothing: it binds the frame (and optional shared chart-wide <code class="docutils literal notranslate"><span class="pre">options</span></code>) and
-hands back an accessor whose methods each return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure — the
-same <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> figure type <code class="docutils literal notranslate"><span class="pre">plot()</span></code>’s 2D accessor returns, documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s
-own reference.</p>
+<p>Enters the 3D charting accessor bound to the current frame — 3D scatter, 3D line, a
+3D (bivariate) histogram, and aggregated surface/wireframe meshes, for genuinely
+three-axis data. Like <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> itself draws nothing: it binds
+the frame (and optional shared chart-wide <code class="docutils literal notranslate"><span class="pre">options</span></code>) and hands back an accessor whose
+methods each return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure — the same <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> figure type
+<code class="docutils literal notranslate"><span class="pre">plot()</span></code>’s 2D accessor returns, documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s own reference.</p>
+<p>Every one of the accessor’s methods has its own dedicated, example-rich reference
+page — start at the
+<a class="reference internal" href="../../dataframe_plot3d_accessor_api_reference.html"><span class="doc std std-doc">DataFramePlot3DAccessor API Reference</span></a>
+and use its left sidebar to jump straight to any method (<code class="docutils literal notranslate"><span class="pre">scatter</span></code>, <code class="docutils literal notranslate"><span class="pre">line</span></code>, <code class="docutils literal notranslate"><span class="pre">hist</span></code>,
+<code class="docutils literal notranslate"><span class="pre">surface</span></code>, <code class="docutils literal notranslate"><span class="pre">wireframe</span></code>).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -67,7 +72,8 @@ built-in defaults.</p>
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor</span></code>
 An accessor bound to the current frame (and, if given, <code class="docutils literal notranslate"><span class="pre">options</span></code>). Its methods
-(<code class="docutils literal notranslate"><span class="pre">.scatter()</span></code>, <code class="docutils literal notranslate"><span class="pre">.line()</span></code>) each build and return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure.</p>
+(<code class="docutils literal notranslate"><span class="pre">.scatter()</span></code>, <code class="docutils literal notranslate"><span class="pre">.line()</span></code>, <code class="docutils literal notranslate"><span class="pre">.hist()</span></code>, <code class="docutils literal notranslate"><span class="pre">.surface()</span></code>, <code class="docutils literal notranslate"><span class="pre">.wireframe()</span></code>) each build and
+return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -94,16 +100,36 @@ three dimensions and returns a <code class="docutils literal notranslate"><span 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<p>Example 3. Draw an aggregated surface mesh instead — see
+<a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a> for the full grid-construction rules.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.5</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">surface_chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span>
+<span class="n">surface_chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;temp_surface.svg&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> covers only genuinely three-dimensional chart kinds (3D scatter, 3D
-line); use <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a> for every 2D chart kind instead.</p></li>
+line, 3D histogram, surface, wireframe); use <a class="reference internal" href="plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></span></a> for every 2D
+chart kind instead.</p></li>
 <li><p>Every chart method returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>; that type’s own methods are
 documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s reference, not here.</p></li>
-<li><p>Every feature named in a 3D chart call must be numeric — passing a <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature
-as one of the three axes is not a supported combination.</p></li>
+<li><p>Every axis feature is converted to a numeric value before plotting: a <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+feature is used as-is, a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature is converted to epoch
+nanoseconds, and a <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature is cast to numbers (text that doesn’t parse as a
+number becomes <code class="docutils literal notranslate"><span class="pre">NaN</span></code> rather than throwing outright). See each method’s own page
+for the exact conversion rule and throw text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">surface()</span></code> and <code class="docutils literal notranslate"><span class="pre">wireframe()</span></code> build their grid via <code class="docutils literal notranslate"><span class="pre">DataFrame::pivot_table()</span></code>
+internally, which only supports 7 of <code class="docutils literal notranslate"><span class="pre">DataFrame::GroupOp</span></code>’s 10 aggregation values
+(<code class="docutils literal notranslate"><span class="pre">Std</span></code>/<code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Mode</span></code> throw) — see <a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s
+important callout.</p></li>
 </ul>
 </section>
 <section id="see-also">

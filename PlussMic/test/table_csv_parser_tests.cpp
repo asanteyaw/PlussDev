@@ -711,9 +711,10 @@ void test_view_windowing() {
   expect(x1.front() == 5 && x1.back() == 9, "view(5,10) should show rows 5..9");
 
   const auto v2 = df.view(-5, -1, false);
-  expect(v2.ncases() == 5, "view(-5,-1) should contain last 5 rows");
+  expect(v2.ncases() == 4, "view(-5,-1) should follow half-open slice semantics");
   const auto x2 = v2.features("x").as_series().to_vec<std::int64_t>();
-  expect(x2.front() == 5 && x2.back() == 9, "view(-5,-1) should include last row");
+  expect(x2.front() == 5 && x2.back() == 8, "view(-5,-1) should exclude the last row");
+  expect(v2.equals(df.slice(-5, -1)), "view(-5,-1) should match slice(-5,-1)");
 
   const auto v3 = df.view(0, 3, false);
   expect(v3.ncases() == 3, "view(0,3) should behave like head(3)");
@@ -721,9 +722,51 @@ void test_view_windowing() {
   expect(x3.front() == 0 && x3.back() == 2, "view(0,3) mismatch");
 
   const auto v4 = df.view(3, -1, false);
-  expect(v4.ncases() == 7, "view(3,-1) should include row 3 to last");
+  expect(v4.ncases() == 6, "view(3,-1) should follow half-open slice semantics");
   const auto x4 = v4.features("x").as_series().to_vec<std::int64_t>();
-  expect(x4.front() == 3 && x4.back() == 9, "view(3,-1) mismatch");
+  expect(x4.front() == 3 && x4.back() == 8, "view(3,-1) mismatch");
+  expect(v4.equals(df.slice(3, -1)), "view(3,-1) should match slice(3,-1)");
+}
+
+void test_dataframe_equals_and_reflected_logicals() {
+  const auto exact = DataFrame(
+      {{"x", pluss::table::Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
+      pluss::table::Thread(pluss::make_note({"r0", "r1"})));
+  const auto rounded = DataFrame(
+      {{"x", pluss::table::Thread(pluss::make_series(std::vector<double>{1.0 + 1e-7, 2.0 - 5e-7}))}},
+      pluss::table::Thread(pluss::make_note({"r0", "r1"})));
+
+  expect(exact.eq(rounded).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, false}),
+         "eq should remain elementwise exact even for tiny floating differences");
+  expect(!exact.equals(rounded), "equals(frame) should remain strict whole-frame equality");
+  expect(exact.equals(rounded, 1e-6, 1e-6),
+         "equals(frame, atol, rtol) should tolerate tiny floating differences");
+
+  const auto left = DataFrame(
+                        {{"flag", pluss::table::Thread(pluss::make_series(std::vector<bool>{true, false}))}},
+                        pluss::table::Thread(pluss::make_note({"left_0", "left_1"})))
+                        .title("lhs");
+  const auto right = DataFrame(
+                         {{"flag", pluss::table::Thread(pluss::make_series(std::vector<bool>{false, true}))}},
+                         pluss::table::Thread(pluss::make_note({"right_0", "right_1"})))
+                         .title("rhs");
+
+  const auto reflected_and = left.rand(right);
+  const auto reflected_or = left.ror(right);
+  const auto reflected_xor = left.rxor(right);
+
+  expect(reflected_and.label().values().as_note().vector() == left.label().values().as_note().vector(),
+         "rand(frame) should preserve caller case labels");
+  expect(reflected_or.label().values().as_note().vector() == left.label().values().as_note().vector(),
+         "ror(frame) should preserve caller case labels");
+  expect(reflected_xor.label().values().as_note().vector() == left.label().values().as_note().vector(),
+         "rxor(frame) should preserve caller case labels");
+  expect(reflected_and.title() == "lhs", "rand(frame) should preserve caller title");
+  expect(reflected_or.title() == "lhs", "ror(frame) should preserve caller title");
+  expect(reflected_xor.title() == "lhs", "rxor(frame) should preserve caller title");
+  expect(reflected_and.equals(left.land(right)), "rand(frame) values should match land(frame)");
+  expect(reflected_or.equals(left.lor(right)), "ror(frame) values should match lor(frame)");
+  expect(reflected_xor.equals(left.lxor(right)), "rxor(frame) values should match lxor(frame)");
 }
 
 void test_render_then_stream_suppression_once() {
@@ -1470,43 +1513,45 @@ void test_versatile_dataframe_families() {
   }
   expect(masked_one_row_thread_threw,
          "masked one-row Thread comparison should not broadcast or align by default");
-  const auto one_case = df.case_study(pluss::table::pos(0));
+  const auto one_case = df.case_study(DataFrame::Case::at(0));
   expect(one_case.ncases() == 1, "case_study(pos(row)) should return exactly one case");
-  const auto row_span = df.case_study(pluss::table::pos(2, 7));
+  const auto row_span = df.case_study(DataFrame::Case::slice(2, 7));
   expect(row_span.ncases() == 5, "case_study(pos(start, stop)) should return half-open row slice");
-  const auto pos_list = df.case_study(pluss::table::pos({4, 1, 3}));
+  const auto pos_list = df.case_study(DataFrame::Case::take({4, 1, 3}));
   expect(pos_list.ncases() == 3, "case_study(pos({..})) should keep one row per requested position");
   expect(std::string(pos_list.features("job").as_note().at(1)) == std::string(df.features("job").as_note().at(1)),
          "case_study(pos({..})) should preserve requested positional order");
 
-  const auto one_column = df.case_study(pluss::table::pos(0), pluss::table::feature("job"));
+  const auto one_column = df.case_study(DataFrame::Case::at(0), DataFrame::Feat::name("job"));
   expect(one_column.ncases() == 1 && one_column.nfeatures() == 1,
          "case_study(row, feature(name)) should return a 1x1 frame");
 
-  const auto one_column_by_pos = df.case_study(pluss::table::pos(0), pluss::table::feature(1));
+  const auto one_column_by_pos = df.case_study(DataFrame::Case::at(0), DataFrame::Feat::at(1));
   expect(one_column_by_pos.nfeatures() == 1, "case_study(row, feature(pos)) should project one feature");
-  auto labeled_source = df.case_study(pluss::table::pos(0, 8));
+  auto labeled_source = df.case_study(DataFrame::Case::slice(0, 8));
   auto labeled = labeled_source.label().set(
       pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs1", "cs3", "cs4", "cs5", "cs6", "cs7"})));
-  const auto label_match = labeled.case_study(pluss::table::label("cs1"));
+  const auto label_match = labeled.case_study(DataFrame::Case::label("cs1"));
   expect(label_match.ncases() == 2, "case_study(label(...)) should return every matching case label");
 
-  const auto label_list = labeled.case_study(pluss::table::labels({"cs4", "cs1"}), pluss::table::features({"job", "age"}));
+  const auto label_list = labeled.case_study(DataFrame::Case::labels({"cs4", "cs1"}),
+                                             DataFrame::Feat::names({"job", "age"}));
   expect(label_list.ncases() == 3 && label_list.nfeatures() == 2,
          "case_study(labels({...}), features({...})) should preserve label order and selected features");
 
-  const auto label_window = labeled.case_study(pluss::table::label_range("cs1", "cs4"));
+  const auto label_window = labeled.case_study(DataFrame::Case::span("cs1", "cs4"));
   expect(label_window.ncases() == 4, "case_study(label_range(...)) should include both label endpoints");
-  const auto masked_rows = df.case_study(pluss::table::mask(df.features("age") > 30.0), pluss::table::features({"age", "job"}));
+  const auto masked_rows = df.case_study(DataFrame::Case::where(df.features("age") > 30.0),
+                                         DataFrame::Feat::names({"age", "job"}));
   expect(masked_rows.nfeatures() == 2, "case_study(mask(...), features({...})) should keep requested feature subset");
   expect(masked_rows.ncases() == df.filter(df.features("age") > 30.0).ncases(),
          "case_study(mask(...)) should match ordinary boolean row filtering");
 
-  const auto feature_span = df.case_study(pluss::table::pos(0, 2), pluss::table::features(0, 2));
+  const auto feature_span = df.case_study(DataFrame::Case::slice(0, 2), DataFrame::Feat::slice(0, 2));
   expect(feature_span.ncases() == 2 && feature_span.nfeatures() == 2,
          "case_study(..., features(start, stop)) should use half-open positional feature slices");
 
-  const auto feature_window = df.case_study(pluss::table::pos(0, 2), pluss::table::feature_range("age", "job"));
+  const auto feature_window = df.case_study(DataFrame::Case::slice(0, 2), DataFrame::Feat::span("age", "job"));
   expect(feature_window.nfeatures() == 2, "case_study(..., feature_range(...)) should use inclusive feature-name slices");
 
   expect(df.get("job").has_value() && !df.get("not_a_feature").has_value(),
@@ -2282,7 +2327,7 @@ void test_versatile_dataframe_families() {
   expect(tdf_timeindex.feataxis().timeline().nfeatures() == 2 && tdf_timeindex.get("start").has_value()
              && tdf_timeindex.get("end").has_value(),
          "timeline_features() should retain Timeline/TimeIndex-backed features");
-  const auto shifted_tdf = tdf.tl("start").shift(1, "D");
+  const auto shifted_tdf = tdf.features({"start"}).tl().shift(1, "D");
   expect(shifted_tdf.ncases() == tdf.ncases() && shifted_tdf.get("start").has_value(),
          "shift_time should preserve shape and update selected temporal feature");
 
@@ -2310,13 +2355,14 @@ void test_versatile_dataframe_families() {
   const auto zero_shift = df.shift(0);
   expect(zero_shift.equals(df), "shift(periods=0) should be identity");
 
-  const auto floored_tdf = tdf.tl("start").floor("D");
+  const auto floored_tdf = tdf.features({"start"}).tl().floor("D");
   expect(floored_tdf.ncases() == tdf.ncases(), "tl().floor should preserve shape");
-  const auto localized_tdf = tdf.tl("start").localize({.tz = "UTC"});
-  const auto utc_tdf = localized_tdf.tl("start").utc();
+  const auto localized_tdf = tdf.features({"start"}).tl().localize({.tz = "UTC"});
+  const auto utc_tdf = localized_tdf.features({"start"}).tl().utc();
   expect(utc_tdf.ncases() == tdf.ncases(), "tz_localize/to_utc should preserve shape");
-  const auto daily_mean = tdf.ts("Duration_min").resample(
-      "start", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+  const auto daily_mean = tdf.features({"Duration_min"})
+                              .ts({.axis = tdf.features("start")})
+                              .resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
   expect(daily_mean.ncases() == 2 && daily_mean.get("Duration_min").has_value(),
          "resample should aggregate values onto time bins");
 
@@ -3279,6 +3325,37 @@ void test_select_and_place_helpers() {
              static_cast<int>(thread_selected_null_valid[2]),
              static_cast<int>(thread_selected_null_valid[3])));
 
+  const auto row_labels = Thread(pluss::make_note({"r0", "r1", "r2", "r3"}));
+  const auto branch0 = DataFrame({
+      {"score", Thread(pick0)},
+      {"grade", pluss::make_note({"A", "A", "A", "A"})},
+  }, row_labels);
+  const auto branch1 = DataFrame({
+      {"score", Thread(pick1)},
+      {"grade", pluss::make_note({"B", "B", "B", "B"})},
+  }, row_labels);
+  const auto branch2 = DataFrame({
+      {"score", Thread(pick2)},
+      {"grade", pluss::make_note({"C", "C", "C", "C"})},
+  }, row_labels);
+  const auto default_branch = DataFrame({
+      {"score", Thread(pluss::make_series(std::vector<double>{-1.0, -1.0, -1.0, -1.0}))},
+      {"grade", pluss::make_note({"NA", "NA", "NA", "NA"})},
+  }, row_labels);
+
+  const auto frame_selected = DataFrame::select(
+      {Thread(cond0), Thread(cond1), Thread(cond2)},
+      {branch0, branch1, branch2},
+      default_branch);
+  expect(frame_selected.features("score").as_series().to_vec<double>() ==
+             std::vector<double>({10.0, 20.0, 30.0, -1.0}) &&
+             frame_selected.features("grade").as_note().vector() ==
+                 std::vector<std::string_view>({"A", "B", "C", "NA"}),
+         "DataFrame::select should delegate multi-branch feature selection through Thread::select");
+  expect(frame_selected.label().values().as_note().vector() ==
+             std::vector<std::string_view>({"r0", "r1", "r2", "r3"}),
+         "DataFrame::select should preserve default case labels");
+
   const auto inventory = Thread(pluss::make_series(std::vector<double>{5.0, 6.0}));
   const auto price = Thread(pluss::make_series(std::vector<double>{3.0, 4.0}));
   const auto tips = Thread(pluss::make_series(std::vector<double>{1.0, 2.0}));
@@ -4003,6 +4080,203 @@ void test_nexus_query_surface() {
          "Nexus query chains should support post-join column dropping with a one-word verb");
 }
 
+void test_nexus_pull_surface() {
+  const auto customers = DataFrame({
+      {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 2, 3})},
+      {"region_id", pluss::make_series(std::vector<std::int64_t>{10, 11, 10})},
+      {"observed_at", pluss::make_timeline({
+          "2026-02-01T00:00:00Z",
+          "2026-01-31T00:00:00Z",
+          "2026-01-10T00:00:00Z",
+      })},
+      {"tier", pluss::make_note({"gold", "silver", "bronze"})},
+  });
+  const auto regions = DataFrame({
+      {"region_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"zone", pluss::make_note({"west", "east"})},
+  });
+  const auto events = DataFrame({
+      {"event_id", pluss::make_series(std::vector<std::int64_t>{100, 101, 102, 103, 104})},
+      {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 1, 2, 2, 2})},
+      {"occurred_at", pluss::make_timeline({
+          "2026-01-01T00:00:00Z",
+          "2026-01-20T00:00:00Z",
+          "2026-01-05T00:00:00Z",
+          "2026-01-25T00:00:00Z",
+          "2026-02-10T00:00:00Z",
+      })},
+      {"spend", pluss::make_series(std::vector<double>{10.0, 5.0, 2.0, 8.0, 4.0})},
+      {"metric.value", pluss::make_series(std::vector<double>{100.0, 120.0, 80.0, 90.0, 110.0})},
+  });
+
+  pluss::table::TableMeta customers_meta;
+  customers_meta.primary_key = {"customer_id"};
+  customers_meta.time_field = "observed_at";
+
+  pluss::table::TableMeta events_meta;
+  events_meta.time_field = "occurred_at";
+
+  pluss::table::Relationship customers_regions;
+  customers_regions.name = "customers_regions";
+  customers_regions.left_table = "customers";
+  customers_regions.right_table = "regions";
+  customers_regions.keys = {{"region_id", "region_id"}};
+  customers_regions.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  pluss::table::Relationship customers_events;
+  customers_events.name = "customers_events";
+  customers_events.left_table = "customers";
+  customers_events.right_table = "events";
+  customers_events.keys = {{"customer_id", "customer_id"}};
+  customers_events.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+
+  const auto nx = pluss::table::Nexus({
+                        {"customers", customers},
+                        {"regions", regions},
+                        {"events", events},
+                    })
+                      .meta("customers", customers_meta)
+                      .meta("events", events_meta)
+                      .links({customers_regions, customers_events});
+
+  const auto pulled = nx.pull("customers", {
+      "customer_id",
+      "tier",
+      "regions.zone",
+      "events.spend.count",
+      "events.spend.sum",
+      "events.spend.sum_30d",
+      "events.spend.sum_30d_root",
+      "events.`metric.value`.max",
+  });
+  expect(pulled.title() == "customers_pull" && pulled.ncases() == customers.ncases(),
+         "Nexus::pull should materialize a root-grain analytical table with a stable title");
+  expect(pulled.features().size() == 8 &&
+             pulled.get("customer_id").has_value() &&
+             pulled.get("tier").has_value() &&
+             pulled.get("regions_zone").has_value() &&
+             pulled.get("events_spend_count").has_value() &&
+             pulled.get("events_spend_sum").has_value() &&
+             pulled.get("events_spend_sum_30d").has_value() &&
+             pulled.get("events_spend_sum_30d_root").has_value() &&
+             pulled.get("events_metric_value_max").has_value(),
+         "Nexus::pull should expose plain workspace projections and aggregate child projections with stable aliases");
+  expect(pulled.features("regions_zone").as_note().at(0) == "west" &&
+             pulled.features("regions_zone").as_note().at(1) == "east" &&
+             pulled.features("events_spend_count").as_series().to_vec<std::int64_t>()
+                 == std::vector<std::int64_t>({2, 3, 0}) &&
+             pulled.features("events_spend_sum").as_series().to_vec<double>(0) == 15.0 &&
+             pulled.features("events_spend_sum_30d").as_series().to_vec<double>(1) == 12.0 &&
+             pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0) == 5.0 &&
+             pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(1) == 10.0 &&
+             pulled.features("events_metric_value_max").as_series().to_vec<double>(0) == 120.0 &&
+             !pulled.features("events_spend_sum").is_valid(2) &&
+             !pulled.features("events_metric_value_max").is_valid(2) &&
+             pulled.features("events_spend_sum_30d").as_series().to_vec<double>(0) !=
+                 pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0),
+         "Nexus::pull should aggregate one-to-many related rows back to root grain, including dotted feature names and explicit root-relative windows");
+
+  expect_throw([&]() { (void)nx.pull("customers", {"events.event_id"}); },
+               "Nexus::pull should still reject raw one-to-many projections that would break root grain");
+}
+
+void test_nexus_workspace_insights_and_views() {
+  const auto loan = DataFrame({
+      {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"amount", pluss::make_series(std::vector<double>{5000.0, 7000.0})},
+  });
+  const auto account = DataFrame({
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 11})},
+      {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"segment", pluss::make_note({"retail", "vip"})},
+  });
+  const auto trans = DataFrame({
+      {"trans_id", pluss::make_series(std::vector<std::int64_t>{100, 101, 102})},
+      {"account_id", pluss::make_series(std::vector<std::int64_t>{10, 10, 11})},
+      {"amount", pluss::make_series(std::vector<double>{25.0, 40.0, 10.0})},
+  });
+
+  pluss::table::TableMeta loan_meta;
+  loan_meta.grain = "one row per loan";
+  loan_meta.primary_key = {"loan_id"};
+  loan_meta.candidate_keys = {{"account_id"}};
+  loan_meta.time_field = "booked_at";
+  loan_meta.source = "loan.csv";
+
+  pluss::table::TableMeta account_meta;
+  account_meta.grain = "one row per account";
+  account_meta.primary_key = {"account_id"};
+  account_meta.source = "account.csv";
+
+  pluss::table::Relationship loan_account;
+  loan_account.name = "loan_account";
+  loan_account.left_table = "loan";
+  loan_account.right_table = "account";
+  loan_account.keys = {{"account_id", "account_id"}};
+  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+
+  const auto nx = pluss::table::Nexus({
+                        {"loan", loan},
+                        {"account", account},
+                        {"trans", trans},
+                    })
+                      .meta("loan", loan_meta)
+                      .meta("account", account_meta)
+                      .links({loan_account});
+
+  const auto profile = nx.profile();
+  expect(profile.ncases() == 3 && profile.get("null_cells").has_value(),
+         "Nexus::profile should return one profiling row per workspace table");
+  expect(profile.features("table").as_note().at(0) == "loan" &&
+             profile.features("key_duplicate_rows").as_series().to_vec<std::int64_t>()[0] == 0,
+         "Nexus::profile should expose declared-key health beside size metrics");
+
+  const auto scan = nx.scan();
+  expect(scan.ncases() == 4 && scan.get("kind").has_value(),
+         "Nexus::scan should combine table and relationship diagnostics into one command-center frame");
+  expect(scan.features("kind").as_note().at(3) == "relationship" &&
+             scan.features("computed_status").as_note().at(3) == "validated",
+         "Nexus::scan should surface relationship validation state");
+
+  const auto deduced = nx.deduce();
+  expect(deduced.ncases() >= 1,
+         "Nexus::deduce should suggest plausible joins from shared names and uniqueness pressure");
+  expect(deduced.features("left").as_note().at(0) == "loan" &&
+             deduced.features("right").as_note().at(0) == "account" &&
+             deduced.features("confidence").as_series().to_vec<double>()[0] >= 0.5,
+         "Nexus::deduce should report confident advisory matches without auto-committing them");
+  {
+    const auto names = deduced.features("name").as_note();
+    bool unique_names = true;
+    for (std::int64_t i = 0; i < deduced.ncases() && unique_names; ++i) {
+      for (std::int64_t j = i + 1; j < deduced.ncases(); ++j) {
+        if (names.at(i) == names.at(j)) {
+          unique_names = false;
+          break;
+        }
+      }
+    }
+    expect(unique_names,
+           "Nexus::deduce should assign a distinct suggestion name to each candidate row");
+  }
+
+  const auto neigh = nx.neighbors("loan");
+  expect(neigh.ncases() == 1 && neigh.features("other").as_note().at(0) == "account",
+         "Nexus::neighbors should expose graph-local adjacent tables");
+
+  const auto plan = nx.plan("loan", "account");
+  const auto staged = nx.store("sheet", plan);
+  expect(staged.has_store("sheet") && staged.store("sheet")->result_name == "sheet",
+         "Nexus::store(name, plan) should persist a named run-plan inside the workspace");
+  expect(staged.run("sheet").title() == "sheet" &&
+             staged.run("sheet").features("segment").as_note().at(0) == "retail",
+         "Nexus::run(name) should materialize stored plans under the saved store name");
+  expect(staged.run("quick", plan).title() == "quick" &&
+             staged.run("quick", plan).features("segment").as_note().at(1) == "vip",
+         "Nexus::run(name, plan) should support ad hoc named materialization without pre-storing");
+}
+
 void test_nexus_persistence_and_alias_surface() {
   const auto loan = DataFrame({
       {"loan_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
@@ -4037,7 +4311,20 @@ void test_nexus_persistence_and_alias_surface() {
                         {"account", account},
                     })
                       .meta("loan", loan_meta)
-                      .links({loan_account});
+                      .links({loan_account})
+                      .store("loan_sheet", pluss::table::JoinPlan{
+                                              .root_table = "loan",
+                                              .result_name = "loan_sheet",
+                                              .steps = {{
+                                                  .left_table = "loan",
+                                                  .right_table = "account",
+                                                  .spec =
+                                                      pluss::table::JoinSpec{
+                                                          .how = pluss::table::JoinHow::Left,
+                                                          .relationship_name = "loan_account",
+                                                      },
+                                              }},
+                                          });
 
   expect(nx.meta("loan")->primary_key == std::vector<std::string>({"loan_id"}),
          "Nexus::meta should alias table metadata access cleanly");
@@ -4101,6 +4388,10 @@ void test_nexus_persistence_and_alias_surface() {
          "Nexus::load should preserve the canonical schema snapshot");
   expect(loaded.graph().equals(nx.graph()),
          "Nexus::load should preserve the canonical relationship graph snapshot");
+  expect(loaded.has_store("loan_sheet") &&
+             loaded.run("loan_sheet").title() == "loan_sheet" &&
+             loaded.run("loan_sheet").features("segment").as_note().at(0) == "retail",
+         "Nexus::load should restore persisted named workspace stores");
   expect(loaded.fingerprint() == before_fp,
          "Nexus save/load roundtrips should preserve the workspace fingerprint");
 }
@@ -4132,6 +4423,8 @@ void test_nexus_cache_invalidation_on_mutation() {
          "Baseline relationship validation should succeed before the phase-7 caches are warmed");
   expect(nx.path("loan", "account").steps.size() == 1,
          "Baseline direct path discovery should succeed before mutation");
+  expect(nx.scan().features("computed_status").as_note().at(2) == "validated",
+         "Baseline workspace scan should succeed before the runtime caches are warmed");
 
   nx.apply_("account", [](const DataFrame&) {
     return DataFrame({
@@ -4141,6 +4434,8 @@ void test_nexus_cache_invalidation_on_mutation() {
   });
   expect(!nx.check("loan_account"),
          "Relationship audit caches should invalidate after in-place frame mutation");
+  expect(nx.scan().features("computed_status").as_note().at(2) == "invalid",
+         "Workspace scan caches should invalidate after in-place frame mutation");
 
   auto renamed = pluss::table::Nexus({
                                            {"loan", loan},
@@ -4148,11 +4443,15 @@ void test_nexus_cache_invalidation_on_mutation() {
                                        })
                      .links({loan_account});
   (void)renamed.path("loan", "account");
+  renamed = renamed.store("sheet", renamed.plan("loan", "account"));
   renamed.rename_("account", "acct");
   expect(renamed.path("loan", "acct").steps.size() == 1,
          "Path caches should invalidate after in-place table renaming");
   expect_throw([&]() { (void)renamed.path("loan", "account"); },
                "Old path cache entries should not survive an in-place rename");
+  expect(renamed.has_store("sheet") &&
+             renamed.run("sheet").features("district_id").as_series().to_vec<std::int64_t>()[1] == 2,
+         "Stored plans should rewrite their table references after in-place rename");
 }
 
 } // namespace
@@ -4173,6 +4472,7 @@ int main(int argc, char** argv) {
       {"atlas_html_display_renderer", test_atlas_html_display_renderer},
       {"describe_numeric_summary", test_describe_numeric_summary},
       {"view_windowing", test_view_windowing},
+      {"dataframe_equals_and_reflected_logicals", test_dataframe_equals_and_reflected_logicals},
       {"render_then_stream_suppression_once", test_render_then_stream_suppression_once},
       {"dataframe_titles_mutable_and_immutable", test_dataframe_titles_mutable_and_immutable},
       {"simple_load_config_api_and_auto_sep", test_simple_load_config_api_and_auto_sep},
@@ -4204,6 +4504,8 @@ int main(int argc, char** argv) {
       {"nexus_validation_and_audit_layer", test_nexus_validation_and_audit_layer},
       {"nexus_relational_execution_helpers", test_nexus_relational_execution_helpers},
       {"nexus_query_surface", test_nexus_query_surface},
+      {"nexus_pull_surface", test_nexus_pull_surface},
+      {"nexus_workspace_insights_and_views", test_nexus_workspace_insights_and_views},
       {"nexus_persistence_and_alias_surface", test_nexus_persistence_and_alias_surface},
       {"nexus_cache_invalidation_on_mutation", test_nexus_cache_invalidation_on_mutation},
   };

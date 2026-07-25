@@ -23,8 +23,11 @@ distinct/duplicate inspection (`.distinct()`, `.duplicated()`, `.repeated()`,
 `.freq()`) — the label-axis counterparts of the same-named `DataFrame` methods, but
 operating on row labels instead of feature values.
 
-This page previews the accessor's most common entry points. Each accessor method gets
-its own dedicated reference page under the `DataFrameLabelAccessor` API reference.
+This page previews the accessor's most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+[DataFrameLabelAccessor API Reference](../../dataframe_label_accessor_api_reference)
+and use its left sidebar to jump straight to any method (`values`, `set`, `reset`,
+`sort`, `unite`, `distinct`, and more).
 
 ## Parameters
 

@@ -69,16 +69,16 @@ std::cout << out;
 
 ```text
 =============================================
-      | x            y            z
+      | x            y            z          
 ---------------------------------------------
-count | 4            4            4
-mean  | 2.5          5            2.5
+count | 4            4            4          
+mean  | 2.5          5            2.5        
 std   | 1.290994449  2.581988897  1.290994449
-min   | 1            2            1
-25%   | 1.75         3.5          1.75
-50%   | 2.5          5            2.5
-75%   | 3.25         6.5          3.25
-max   | 4            8            4
+min   | 1            2            1          
+25%   | 1.75         3.5          1.75       
+50%   | 2.5          5            2.5        
+75%   | 3.25         6.5          3.25       
+max   | 4            8            4          
 ---------------------------------------------
 [8 cs x 3 feat]
 ```
@@ -108,16 +108,16 @@ std::cout << summary;
 
 ```text
 ============================================================
-      | order_id     units        unit_price   discount
+      | order_id     units        unit_price   discount     
 ------------------------------------------------------------
-count | 6            6            5            5
-mean  | 103.5        2.833333333  551.5        0.08
+count | 6            6            5            5            
+mean  | 103.5        2.833333333  551.5        0.08         
 std   | 1.870828693  1.471960144  580.5111971  0.03082207001
-min   | 101          1            42           0.05
-25%   | 102.25       2            45.5         0.05
-50%   | 103.5        2.5          320          0.08
-75%   | 104.75       3.75         1150         0.1
-max   | 106          5            1200         0.12
+min   | 101          1            42           0.05         
+25%   | 102.25       2            45.5         0.05         
+50%   | 103.5        2.5          320          0.08         
+75%   | 104.75       3.75         1150         0.1          
+max   | 106          5            1200         0.12         
 ------------------------------------------------------------
 [8 cs x 4 feat]
 ```
@@ -127,6 +127,37 @@ max   | 106          5            1200         0.12
 excluded from every statistic for that column independently. A row missing one feature
 does not disqualify its other, observed features from that feature's own summary; the
 skip happens per-column, not per-row.
+
+Example 3. Pass `render = true` and let the returned view print itself, with no
+explicit `std::cout` at all.
+
+```cpp
+corr_base.describe(true);
+```
+
+### Output
+
+```text
+=============================================
+      | x            y            z          
+---------------------------------------------
+count | 4            4            4          
+mean  | 2.5          5            2.5        
+std   | 1.290994449  2.581988897  1.290994449
+min   | 1            2            1          
+25%   | 1.75         3.5          1.75       
+50%   | 2.5          5            2.5        
+75%   | 3.25         6.5          3.25       
+max   | 4            8            4          
+---------------------------------------------
+[8 cs x 3 feat]
+```
+
+Same summary as Example 1 — this bare statement differs only in `render`. The
+temporary `DataFrameView` is destroyed at the end of the statement without
+ever being captured or streamed, and `render = true` is what makes that
+destruction print automatically; with the default `render = false`, the same
+unassigned call would produce no output.
 
 ## Notes
 

@@ -34,16 +34,6 @@ This hub is organized by surface area.
 - [Flash Scene Presets and 3D Controls API](flash_scene_presets_api.md)
   explicit camera, lighting, theme, scene, and trace preset helpers.
 
-## Generated Outputs Policy
-
-All output images shown in the API pages are produced from runnable snippets in:
-
-`PlussPl/examples/docs/flash_api_capture_demo.cpp`
-
-Generated artifacts are stored under:
-
-`PlussPl/docs/sphinx/_static/plots/methods/`
-
 ## Header entry points
 
 ```cpp

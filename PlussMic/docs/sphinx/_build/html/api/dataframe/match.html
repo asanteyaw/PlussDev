@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::matmul" href="matmul.html" />
@@ -167,6 +167,114 @@ first, then <code class="docutils literal notranslate"><span class="pre">right</
 everywhere (it never had that feature) and <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for <code class="docutils literal notranslate"><span class="pre">score</span></code> at <code class="docutils literal notranslate"><span class="pre">d</span></code> (it never had
 that case); <code class="docutils literal notranslate"><span class="pre">matched.right</span></code> mirrors this the other way around. Only case <code class="docutils literal notranslate"><span class="pre">b</span></code>, present
 on both sides, has real values from both frames after matching.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">FrameMatchRule::Common</span></code> on both axes — keep only what’s shared, dropping
+everything unique to either side.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">common</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">,</span>
+<span class="w">                                  </span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">common</span><span class="p">.</span><span class="n">left</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">common</span><span class="p">.</span><span class="n">right</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-common-left">
+<h3>Output (common.left)<a class="headerlink" href="#output-common-left" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | score
+------------
+b    | 92   
+------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-common-right">
+<h3>Output (common.right)<a class="headerlink" href="#output-common-right" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | score
+------------
+b    | 10   
+------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p>Only case <code class="docutils literal notranslate"><span class="pre">b</span></code> (the one label present on both sides) and <code class="docutils literal notranslate"><span class="pre">score</span></code> (the one feature name
+present on both sides) survive — <code class="docutils literal notranslate"><span class="pre">bonus</span></code> and cases <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">c</span></code>, <code class="docutils literal notranslate"><span class="pre">d</span></code> are dropped entirely
+rather than padded with <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. Contrast this with Example 1’s <code class="docutils literal notranslate"><span class="pre">Unite</span></code>, which keeps
+everything and pads the gaps instead.</p>
+<p>Example 3. Mixed rules — <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code> cases with <code class="docutils literal notranslate"><span class="pre">Common</span></code> features. The two axes don’t
+have to use the same rule.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">KeepLeft</span><span class="p">,</span>
+<span class="w">                                 </span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">left</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">right</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-mixed-left">
+<h3>Output (mixed.left)<a class="headerlink" href="#output-mixed-left" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | score
+------------
+a    | 88   
+b    | 92   
+c    | 79   
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-mixed-right">
+<h3>Output (mixed.right)<a class="headerlink" href="#output-mixed-right" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | score
+------------
+a    | NULL 
+b    | 10   
+c    | NULL 
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code> forces the case axis to be exactly <code class="docutils literal notranslate"><span class="pre">left</span></code>’s own cases (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c</span></code>) —
+<code class="docutils literal notranslate"><span class="pre">right</span></code>’s only-case <code class="docutils literal notranslate"><span class="pre">d</span></code> never appears, and <code class="docutils literal notranslate"><span class="pre">mixed.right</span></code> gets <code class="docutils literal notranslate"><span class="pre">NULL</span></code> at <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code>
+since <code class="docutils literal notranslate"><span class="pre">right</span></code> never had those labels. <code class="docutils literal notranslate"><span class="pre">Common</span></code> on the feature axis drops <code class="docutils literal notranslate"><span class="pre">bonus</span></code>
+from both sides, since it isn’t shared.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">FrameMatchRule::KeepRight</span></code> on both axes — the mirror image of <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code>,
+forcing both the case and feature axes to exactly match <code class="docutils literal notranslate"><span class="pre">right</span></code>’s.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">keep_right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">KeepRight</span><span class="p">,</span>
+<span class="w">                                      </span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">KeepRight</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">keep_right</span><span class="p">.</span><span class="n">left</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">keep_right</span><span class="p">.</span><span class="n">right</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-keep-right-left">
+<h3>Output (keep_right.left)<a class="headerlink" href="#output-keep-right-left" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | score  bonus
+-------------------
+b    | 92     NULL 
+d    | NULL   NULL 
+-------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-keep-right-right">
+<h3>Output (keep_right.right)<a class="headerlink" href="#output-keep-right-right" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | score  bonus
+-------------------
+b    | 10     5    
+d    | 20     8    
+-------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p>The case axis is now exactly <code class="docutils literal notranslate"><span class="pre">right</span></code>’s (<code class="docutils literal notranslate"><span class="pre">b,</span> <span class="pre">d</span></code>, dropping <code class="docutils literal notranslate"><span class="pre">left</span></code>’s only-case <code class="docutils literal notranslate"><span class="pre">a</span></code>), and
+the feature axis is exactly <code class="docutils literal notranslate"><span class="pre">right</span></code>’s (<code class="docutils literal notranslate"><span class="pre">score,</span> <span class="pre">bonus</span></code>) — since <code class="docutils literal notranslate"><span class="pre">left</span></code> never had a
+<code class="docutils literal notranslate"><span class="pre">bonus</span></code> feature at all, <code class="docutils literal notranslate"><span class="pre">keep_right.left</span></code> shows <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for <code class="docutils literal notranslate"><span class="pre">bonus</span></code> on every case, not
+just the unmatched ones.</p>
 </section>
 </section>
 <section id="notes">
@@ -180,6 +288,12 @@ need the aligned pair itself, not just the combined result.</p></li>
 <li><p>A repeated case label (the same label more than once, on either side) is paired by
 occurrence order by default (<code class="docutils literal notranslate"><span class="pre">RepeatedCaseRule::PairInOrder</span></code>); pass
 <code class="docutils literal notranslate"><span class="pre">RepeatedCaseRule::Reject</span></code> to throw instead of silently pairing by position.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cases</span></code> and <code class="docutils literal notranslate"><span class="pre">features</span></code> are independent settings — mixing rules (e.g. <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code>
+cases with <code class="docutils literal notranslate"><span class="pre">Common</span></code> features, Example 3) is perfectly valid, and each axis’s rule
+only affects that axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Unite</span></code> and <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code>/<code class="docutils literal notranslate"><span class="pre">KeepRight</span></code> always produce output at least as large as their
+reference side, padding gaps with <code class="docutils literal notranslate"><span class="pre">NULL</span></code>; <code class="docutils literal notranslate"><span class="pre">Common</span></code> is the only rule that can shrink
+the result, since it drops anything not shared by both sides instead of padding it.</p></li>
 </ul>
 </section>
 <section id="see-also">

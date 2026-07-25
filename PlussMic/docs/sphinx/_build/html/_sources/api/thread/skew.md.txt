@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::skew
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,39 +7,105 @@
 ## Signature
 
 ```cpp
-Thread::skew(std::int64_t min_count = 3) -> ThreadValue
+Thread::skew(std::int64_t min_count = 3) const -> ThreadValue
 ```
 
 ## What It Does
 
-Returns sample skewness of a numeric thread.
+Returns the sample skewness (the adjusted Fisher-Pearson standardized third
+moment) of every observed value in a numeric `Series` thread — a measure of
+asymmetry: `0` for a symmetric distribution, positive for a right-leaning tail,
+negative for a left-leaning tail. Rather than throwing on a too-small sample,
+this method returns a result marked *invalid* whenever the observed count is
+below `max(3, min_count)` — skewness is undefined below 3 observations, so
+`min_count` can only raise that floor, never lower it. See
+[`Thread::sum`'s note](sum.md) on why you should check `.thread().is_valid(0)`
+rather than trust the printed number for an invalid result.
+
+If every observed value is identical (zero variance), the result is `0`
+exactly, rather than the `NaN`/`Infinity` that dividing by a zero standard
+deviation would otherwise produce.
 
 ## Parameters
 
-**min_count**
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+**min_count** (`std::int64_t`, default `3`)
+    The smallest observed count still considered valid. The effective floor is
+    always `max(3, min_count)` — skewness needs at least 3 observations
+    regardless of what you pass here.
 
 ## Returns
 
 `ThreadValue`
-    Value produced by this call.
+    A scalar `Float64` (or `Float32` off-CPU) holding the sample skewness.
 
 ## Examples
 
-Example 1. Compute `skew` and inspect the scalar-like thread result.
+Example 1. A right-skewed sample — a small cluster of low values plus one
+large outlier.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.skew(2);
+auto values = Thread(pluss::make_series({1.0, 2.0, 2.0, 3.0, 10.0}));
+auto out = values.skew();
+std::cout << out.to_dbl();
 ```
 
 ### Output
 
 ```text
-10.0
+2.0287
 ```
 
+Example 2. Identical values produce exactly `0`, not `NaN`.
+
+```cpp
+auto flat = Thread(pluss::make_series({5.0, 5.0, 5.0, 5.0}));
+auto out2 = flat.skew();
+std::cout << out2.to_dbl();
+```
+
+### Output
+
+```text
+0
+```
+
+Example 3. Fewer than 3 observed values marks the result invalid rather than
+throwing.
+
+```cpp
+auto small = Thread(pluss::make_series({1.0, 2.0}));
+auto out3 = small.skew();
+std::cout << out3.thread().is_valid(0);
+```
+
+### Output
+
+```text
+false
+```
+
+## Notes
+
+- The effective minimum observed count is always `max(3, min_count)` — passing
+  a smaller `min_count` doesn't lower the floor below `3`.
+- Zero variance (every observed value identical) yields `0` exactly, never
+  `NaN`.
+- Below the effective minimum count, the result is marked invalid rather than
+  thrown — see the caveat on [`Thread::sum`'s page](sum.md) about checking
+  `.thread().is_valid(0)` rather than trusting the printed number.
+- Restricted to numeric `Series` payloads; anything else throws
+  `"Thread::skew: expected a real numeric Series Thread"`.
+
+## See Also
+
+- [`Thread::kurtosis`](kurtosis.md): the fourth-moment counterpart, measuring
+  tail weight instead of asymmetry.
+- [`Thread::mean`](mean.md) / [`Thread::var`](var.md): the lower moments
+  skewness builds on.
+- [`Thread::describe`](describe.md): a broader numeric summary that doesn't
+  include skewness.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="size.html">

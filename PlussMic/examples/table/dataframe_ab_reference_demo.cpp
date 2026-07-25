@@ -129,14 +129,17 @@ int main() {
   std::cout << "BOTTOM\n" << grades.bottom("final", 2).to_string() << "\n";
   std::cout << "\nRESHUFFLE_ROWS\n" << grades.reshuffle(Axis::Case, 7).to_string() << "\n\n";
   std::cout << "RESHUFFLE_FEATURES\n" << grades.reshuffle(Axis::Feature, 7).to_string() << "\n\n";
+  const auto tick_ts = pluss::table::TsOptions{.axis = ticks.features("stamp")};
   std::cout << "RESAMPLE_COUNT\n"
-            << ticks.ts("load")
-                   .resample("stamp", "D", pluss::subsp::stats::ts::ResampleOp::Count)
+            << ticks.features({"load"})
+                   .ts(tick_ts)
+                   .resample("D", pluss::subsp::stats::ts::ResampleOp::Count)
                    .to_string()
             << "\n\n";
   std::cout << "RESAMPLE_MEAN\n"
-            << ticks.ts("load")
-                   .resample("stamp", "D", pluss::subsp::stats::ts::ResampleOp::Mean)
+            << ticks.features({"load"})
+                   .ts(tick_ts)
+                   .resample("D", pluss::subsp::stats::ts::ResampleOp::Mean)
                    .to_string()
             << "\n";
 

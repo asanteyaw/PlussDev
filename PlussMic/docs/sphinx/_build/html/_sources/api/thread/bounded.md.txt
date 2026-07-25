@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::bounded
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,59 +7,53 @@
 ## Signature
 
 ```cpp
-Thread::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) -> Thread
+Thread::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> Thread
 ```
 
-Compute custom-window statistics on one thread by supplying explicit per-row bounds.
+## What It Does
 
-`Thread::bounded(...)` is the one-dimensional version of custom windowing. It is the right tool when fixed rolling widths are not expressive enough and each row should choose its own window.
+Computes a window statistic over the thread using **custom, per-row window
+boundaries** you supply — the general-purpose escape hatch behind
+[`weigh()`](weigh.md) and the fixed-width rolling window methods on
+[`Thread::ts()`](ts.md)'s `TimeSeriesAccessor` (`rolling()`, `expanding()`,
+`timed()`, `grouped()` are all thin wrappers that compute their `starts`/`ends`
+internally and delegate to the same machinery this method exposes directly).
+Reach for `bounded()` when a fixed rolling width isn't expressive enough and
+each output row needs its own, independently-computed window.
+
+`bounds` is called once, given the thread's `size()` and the active
+`WindowOptions`, and must return a `{starts, ends}` pair of equal-length
+vectors — one `[start, end)` half-open interval per output row. Restricted to
+numeric `Series` payloads; every other kind or dtype throws.
 
 ## Parameters
 
-**bounds**
+**bounds** (`const WindowBoundsFn&`)
+    A callback `(size, options) -> {starts, ends}` producing one half-open
+    `[start, end)` window per output row. Must not be empty (a default
+    `std::function`), or it throws.
 
-Callback that generates the per-row window boundaries.
+**statistic** (`WindowStatistic`, default `Mean`)
+    Which statistic to compute inside each row's window: `Sum`, `Mean`,
+    `Minimum`, `Maximum`, `Var`, or `Std`.
 
-- It receives the thread size and active `WindowOptions`.
-- It returns `starts` and `ends`, one pair per output row.
-- Each row’s window is interpreted as `[start, end)`.
-
-**statistic**
-
-Window statistic to compute inside each row’s bounds.
-
-Common values include `WindowStatistic::Mean`, `Sum`, `Minimum`, `Maximum`, `Var`, and `Std`.
-
-**options**
-
-Additional window policy.
-
-Important fields include:
-
-- `min_count`: minimum observed values required for a valid output.
-- `ddof`: degrees of freedom for variance-style statistics.
-- `centered`: centering hint for methods that honor it.
-- `closure`: interval-closure policy for methods that honor it.
+**options** (`WindowOptions`, default `{}`)
+    `min_count` (default `1`): the smallest number of observed values inside a
+    window still considered valid. `ddof` (default `1`): the divisor
+    adjustment for `Var`/`Std`. `centered`/`closure` are accepted but have no
+    effect here — your `bounds` callback already fully determines each
+    window's shape.
 
 ## Returns
 
 `Thread`
-    One output value per input row after applying the requested window statistic.
-
-## See Also
-
-- <a href="../dataframe/ts.html"><code>DataFrame::ts()</code></a>: open the DataFrame time-series surface, then call <code>.bounded(...)</code> across selected numeric features.
-- <a href="#rolling"><code>Thread::rolling</code></a>: use fixed-width rolling windows instead of custom row bounds.
-
-## Notes
-
-The bounds callback returns half-open intervals `[start, end)` for each output row.
-
-`WindowOptions::min_count` controls how many observed values must be present before one row’s result becomes valid.
+    A new thread the same length as the source, holding the requested
+    statistic evaluated over each row's custom window.
 
 ## Examples
 
-Example 1. Compute an expanding mean from the first row through the current row.
+Example 1. An expanding mean — every row's window runs from the very start
+through that row.
 
 ```cpp
 using namespace pluss::table;
@@ -75,6 +71,7 @@ auto out = scores.bounded(
       return std::pair{std::move(starts), std::move(ends)};
     },
     WindowStatistic::Mean);
+std::cout << out;
 ```
 
 ### Output
@@ -85,17 +82,18 @@ auto out = scores.bounded(
 2  20
 3  25
 4  30
+
 ptype: Series
 ```
 
-Example 2. Compute a trailing-two-row mean and require at least two observed values.
+Each row's mean is over every value seen so far — `15` is `mean(10, 20)`, `20`
+is `mean(10, 20, 30)`, and so on.
+
+Example 2. A trailing two-row window, requiring at least two observed values
+per window.
 
 ```cpp
-using namespace pluss::table;
-
-auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
-
-auto out = scores.bounded(
+auto out2 = scores.bounded(
     [](std::int64_t size, const WindowOptions&) {
       std::vector<std::int64_t> starts;
       std::vector<std::int64_t> ends;
@@ -109,20 +107,43 @@ auto out = scores.bounded(
     },
     WindowStatistic::Mean,
     WindowOptions{.min_count = 2});
+std::cout << out2;
 ```
 
 ### Output
 
 ```text
-0  NA
+0  NULL
 1  15
 2  25
 3  35
 4  45
+
 ptype: Series
 ```
 
+Row `0`'s window is just `[0, 1)` — only one observed value, below
+`min_count = 2` — so it's `NULL`. Every later row has a genuine two-value
+window: `15 = mean(10, 20)`, `25 = mean(20, 30)`, and so on.
 
+## Notes
+
+- `bounds` must return `starts`/`ends` vectors the same length as the source
+  thread; each row's window is `[start, end)`, half-open.
+- `centered` and `closure` in `options` have no effect here, since your
+  `bounds` callback already fully controls each window's shape — they only
+  matter for the fixed-width wrappers built on top of this method.
+- An empty `bounds` callback throws `"Thread::bounded: bounds callback is
+  empty"`.
+- Restricted to numeric `Series` payloads.
+
+## See Also
+
+- [`Thread::weigh`](weigh.md): a fixed trailing window with an explicit
+  per-position weight, rather than arbitrary custom bounds.
+- [`Thread::ts`](ts.md): the time-series accessor whose fixed-width rolling
+  methods (`rolling()`, `expanding()`, `timed()`, `grouped()`) are built on
+  top of this method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bottom.html">

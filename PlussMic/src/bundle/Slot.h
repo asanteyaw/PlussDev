@@ -9,17 +9,15 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
+#include "kindle/Stream.h"
 #include "pluss/codem/codem.h"
 #include "pluss/coden/coden.h"
 #include "pluss/codeh/codeh.h"
-
-namespace pluss::kindle {
-class Stream;
-}
 
 namespace pluss::bundle {
 
@@ -52,6 +50,8 @@ public:
 
   std::int64_t size() const;
   bool empty() const;
+  std::pair<std::int64_t, std::int64_t> shape() const;
+  std::string ptype() const;
   const std::vector<Value>& values() const;
   const Value& at(std::int64_t i) const;
 
@@ -65,6 +65,28 @@ public:
   Slot transform(const std::function<Value(const Value&)>& fn) const;
   Slot concat(const Slot& other) const;
   std::unordered_map<std::string, std::int64_t> type_counts() const;
+
+  Slot isnull() const;
+  Slot notnull() const;
+  Slot invalid() const;
+  Slot fillnull(double value) const;
+  Slot fillnull(std::string_view value) const;
+  Slot fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
+  }
+  Slot fillnull(const pluss::Timeline& value) const;
+  Slot fillnull(const pluss::TimeIndex& value) const;
+  Slot dropnull() const;
+  Slot distinct(pluss::kindle::DistinctOptions options = {}) const;
+  Slot freq(pluss::kindle::FreqOptions options = {}) const;
+  Slot ndistinct(pluss::kindle::DistinctOptions options = {}) const;
+  Slot cast(pluss::table::ThreadCastTarget target,
+            const pluss::table::ThreadCastOptions& options = {}) const;
+  Slot astype(pluss::codem::ScalarType dtype) const;
+  Slot sum() const;
+  Slot mean() const;
+  Slot min() const;
+  Slot max() const;
 
   // Conversion for bridge paths (throws when slot is not stream-compatible).
   pluss::kindle::Stream to_kindle() const;

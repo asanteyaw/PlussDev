@@ -92,6 +92,14 @@ public:
     this->module_record("self_attn", self_attn_);
     this->module_record("linear1", linear1_);
     this->module_record("linear2", linear2_);
+    // sync_parameter_records_() allocates real (defined) storage for this
+    // layer's own norm1_*/norm2_* and registers each immediately after --
+    // see FusionImpl's identical fix and Module::parameter_record()'s
+    // contract. reset_parameters() (which also re-delegates to the
+    // already-registered self_attn_/linear1_/linear2_'s own
+    // reset_parameters(), each of which is now itself copy_()-based rather
+    // than reassignment-based) only fills in values afterwards, so nothing
+    // here can ever end up untracked no matter how many times it runs.
     sync_parameter_records_();
     reset_parameters();
   }
@@ -122,20 +130,21 @@ public:
             .training = true,
         }) {}
 
+  // Re-randomizes this layer's own norm weights/biases in place, and
+  // re-delegates to self_attn_/linear1_/linear2_'s own reset_parameters()
+  // (also in-place). Never reassigns norm1_weight_/norm2_weight_/etc, so
+  // it's safe to call any number of times after construction.
   void reset_parameters() {
     self_attn_->reset_parameters();
     linear1_->reset_parameters();
     linear2_->reset_parameters();
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm1_weight_ = pluss::ones({options_.d_model}, cfg);
-    norm2_weight_ = pluss::ones({options_.d_model}, cfg);
+    norm1_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm2_weight_.copy_(pluss::ones({options_.d_model}, cfg));
     if (options_.bias) {
-      norm1_bias_ = pluss::zeros({options_.d_model}, cfg);
-      norm2_bias_ = pluss::zeros({options_.d_model}, cfg);
-    } else {
-      norm1_bias_ = Series();
-      norm2_bias_ = Series();
+      norm1_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm2_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
     }
   }
 
@@ -210,9 +219,14 @@ private:
 
   void sync_parameter_records_() {
     this->clear_parameter_records_();
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    norm1_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm2_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm1_weight", norm1_weight_);
     this->parameter_record("norm2_weight", norm2_weight_);
     if (options_.bias) {
+      norm1_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm2_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm1_bias", norm1_bias_);
       this->parameter_record("norm2_bias", norm2_bias_);
     }
@@ -257,6 +271,12 @@ public:
       : Module(options.training), options_(std::move(options)) {
     validate_options_();
     build_layers_();
+    // sync_parameter_records_() allocates real (defined) storage for this
+    // class's own norm_weight_/norm_bias_ (when final_norm) and registers
+    // each immediately after. reset_parameters() re-delegates to every
+    // layer's own reset_parameters() (now copy_()-based, so it can never
+    // untrack an already-module_record()'d layer) and fills norm_weight_/
+    // norm_bias_ afterwards, in place.
     sync_parameter_records_();
     reset_parameters();
   }
@@ -289,18 +309,20 @@ public:
             .training = true,
         }) {}
 
+  // Re-randomizes norm_weight_/norm_bias_ in place (when final_norm), and
+  // re-delegates to every layer's own reset_parameters() (also in-place).
+  // Never reassigns norm_weight_/norm_bias_, so it's safe to call any
+  // number of times after construction.
   void reset_parameters() {
     for (auto& layer : layers_) {
       layer->reset_parameters();
     }
-    if (!options_.final_norm) {
-      norm_weight_ = Series();
-      norm_bias_ = Series();
-      return;
-    }
+    if (!options_.final_norm) return;
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm_weight_ = pluss::ones({options_.d_model}, cfg);
-    norm_bias_ = options_.bias ? pluss::zeros({options_.d_model}, cfg) : Series();
+    norm_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    if (options_.bias) {
+      norm_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+    }
   }
 
   Series forward(const Series& src,
@@ -382,8 +404,11 @@ private:
   void sync_parameter_records_() {
     this->clear_parameter_records_();
     if (!options_.final_norm) return;
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    norm_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm_weight", norm_weight_);
     if (options_.bias) {
+      norm_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm_bias", norm_bias_);
     }
   }
@@ -452,6 +477,9 @@ public:
     this->module_record("cross_attn", cross_attn_);
     this->module_record("linear1", linear1_);
     this->module_record("linear2", linear2_);
+    // sync_parameter_records_() allocates real (defined) storage for this
+    // layer's own norm*_ series and registers each immediately after -- see
+    // TransformerEncoderLayerImpl's identical fix.
     sync_parameter_records_();
     reset_parameters();
   }
@@ -482,6 +510,10 @@ public:
             .training = true,
         }) {}
 
+  // Re-randomizes this layer's own norm weights/biases in place, and
+  // re-delegates to self_attn_/cross_attn_/linear1_/linear2_'s own
+  // reset_parameters() (also in-place). Never reassigns norm1_weight_/etc,
+  // so it's safe to call any number of times after construction.
   void reset_parameters() {
     self_attn_->reset_parameters();
     cross_attn_->reset_parameters();
@@ -489,17 +521,13 @@ public:
     linear2_->reset_parameters();
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm1_weight_ = pluss::ones({options_.d_model}, cfg);
-    norm2_weight_ = pluss::ones({options_.d_model}, cfg);
-    norm3_weight_ = pluss::ones({options_.d_model}, cfg);
+    norm1_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm2_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm3_weight_.copy_(pluss::ones({options_.d_model}, cfg));
     if (options_.bias) {
-      norm1_bias_ = pluss::zeros({options_.d_model}, cfg);
-      norm2_bias_ = pluss::zeros({options_.d_model}, cfg);
-      norm3_bias_ = pluss::zeros({options_.d_model}, cfg);
-    } else {
-      norm1_bias_ = Series();
-      norm2_bias_ = Series();
-      norm3_bias_ = Series();
+      norm1_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm2_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm3_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
     }
   }
 
@@ -591,10 +619,17 @@ private:
 
   void sync_parameter_records_() {
     this->clear_parameter_records_();
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    norm1_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm2_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm3_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm1_weight", norm1_weight_);
     this->parameter_record("norm2_weight", norm2_weight_);
     this->parameter_record("norm3_weight", norm3_weight_);
     if (options_.bias) {
+      norm1_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm2_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm3_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm1_bias", norm1_bias_);
       this->parameter_record("norm2_bias", norm2_bias_);
       this->parameter_record("norm3_bias", norm3_bias_);
@@ -643,22 +678,27 @@ public:
       : Module(options.training), options_(std::move(options)) {
     validate_options_();
     build_layers_();
+    // sync_parameter_records_() allocates real (defined) storage for this
+    // class's own norm_weight_/norm_bias_ (when final_norm) and registers
+    // each immediately after -- see TransformerEncoderImpl's identical fix.
     sync_parameter_records_();
     reset_parameters();
   }
 
+  // Re-randomizes norm_weight_/norm_bias_ in place (when final_norm), and
+  // re-delegates to every layer's own reset_parameters() (also in-place).
+  // Never reassigns norm_weight_/norm_bias_, so it's safe to call any
+  // number of times after construction.
   void reset_parameters() {
     for (auto& layer : layers_) {
       layer->reset_parameters();
     }
-    if (!options_.final_norm) {
-      norm_weight_ = Series();
-      norm_bias_ = Series();
-      return;
-    }
+    if (!options_.final_norm) return;
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm_weight_ = pluss::ones({options_.d_model}, cfg);
-    norm_bias_ = options_.bias ? pluss::zeros({options_.d_model}, cfg) : Series();
+    norm_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    if (options_.bias) {
+      norm_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+    }
   }
 
   Series forward(const Series& tgt,
@@ -726,8 +766,11 @@ private:
   void sync_parameter_records_() {
     this->clear_parameter_records_();
     if (!options_.final_norm) return;
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    norm_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm_weight", norm_weight_);
     if (options_.bias) {
+      norm_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm_bias", norm_bias_);
     }
   }

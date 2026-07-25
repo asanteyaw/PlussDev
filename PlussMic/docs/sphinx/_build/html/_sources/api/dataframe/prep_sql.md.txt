@@ -13,12 +13,32 @@ DataFrame::prep_sql(std::string_view statement, SqlOptions options) const -> Dat
 
 ## What It Does
 
-Binds a SQL statement template — one containing `{param_name}` placeholders — to the
-current frame once, returning a `DataFrameSqlPrepared` object you can `.execute(...)`
-repeatedly with different parameter bindings, without re-typing (or re-parsing) the
-statement text each time. This is the reusable-query counterpart to
-[`sql().execute(statement)`](sql.md), which parses and runs a statement in one shot
-and is a better fit when a query only runs once.
+Stores a SQL statement template — one that may contain `{param_name}` placeholders —
+together with the current frame and `options`, returning a `DataFrameSqlPrepared`
+object you can `.execute(...)` repeatedly with different parameter bindings, without
+re-typing (or re-templating) the statement text each time. This is the reusable-query
+counterpart to [`sql().execute(statement)`](sql.md), which parses and runs a statement
+in one shot and is a better fit when a query only runs once.
+
+```{note} A pure convenience wrapper, nothing more
+`prep_sql(statement)` is exactly equivalent to `sql().prepare(statement)`, and
+`prep_sql(statement, options)` is exactly equivalent to `sql(options).prepare(statement)` —
+both overloads just construct a `DataFrameSqlAccessor` and immediately call
+`.prepare(statement)` on it. There is no behavior here beyond skipping that
+intermediate `.sql()` call; every parameter, option, and gotcha documented on
+[`DataFrameSqlAccessor::prepare`](../../dataframe_sql_accessor_api_reference#prepare)
+and [`DataFrameSqlPrepared::execute`](../../dataframe_sql_prepared_api_reference)
+applies identically here.
+```
+
+```{note}
+`prep_sql()` itself does not parse the statement — no validation happens until the
+returned value's `.execute(...)` is actually called. What it saves you is retyping the
+statement text at each call site, not a parse step: PlussMic's SQL engine already
+caches parsed plans by their exact rendered text (`SqlOptions::enable_plan_cache`,
+on by default), so identical statement text is never re-parsed whether it arrives via
+`prep_sql()` or repeated `sql().execute(...)` calls.
+```
 
 ## Parameters
 
@@ -56,7 +76,7 @@ auto orders = DataFrame({
     {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto stmt = orders.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = orders.prep_sql("SELECT id, sales FROM df WHERE sales > {min_sales}");
 
 auto low_bar = stmt.execute({{"min_sales", 95.0}});
 std::cout << low_bar;
@@ -90,12 +110,12 @@ std::cout << high_bar;
 [1 cs x 2 feat]
 ```
 
-`stmt` is parsed from `statement` only once, at `prep_sql()` time. Each
-`.execute({...})` call just substitutes a new `min_sales` value into that
-already-prepared template and re-runs the `WHERE` filter — case `2`'s row survives
-both times (`120` is greater than both `95` and `110`), while case `0`'s row
-(`sales = 100`) only survives the looser `95` threshold. Both result frames keep the
-original case labels of whichever `orders` rows matched.
+`stmt`'s text is fixed once `prep_sql()` is called — only the bound `min_sales`
+*value* changes between the two `.execute({...})` calls, each of which renders the
+template fresh and re-runs the `WHERE` filter. Case `2`'s row survives both times
+(`120` is greater than both `95` and `110`), while case `0`'s row (`sales = 100`) only
+survives the looser `95` threshold. Both result frames keep the original case labels
+of whichever `orders` rows matched.
 
 ## Notes
 
@@ -103,9 +123,11 @@ original case labels of whichever `orders` rows matched.
   parameter *values* can change between `.execute(...)` calls, not the SQL text.
 - `.execute()` (no arguments) re-runs the statement using only whatever `params`
   were already set in `options` at `prep_sql()` time.
-- Prefer `prep_sql()` over `sql().execute(statement)` specifically when the same
-  query text will run many times with different bindings — the query is parsed once
-  instead of on every call.
+- Prefer `prep_sql()` over `sql().execute(statement)` when the same query *text*
+  needs to be reused across several call sites with different bindings — it saves
+  retyping/re-templating the statement, not a parse step the automatic plan cache
+  wasn't already saving you (see the [`DataFrameSqlPrepared` reference](../../dataframe_sql_prepared_api_reference)
+  for the full explanation).
 
 ## See Also
 

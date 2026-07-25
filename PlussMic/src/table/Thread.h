@@ -43,6 +43,10 @@ Thread& clear_display_labels_(Thread& thread);
 LabelKind label_kind(const Thread& thread);
 Thread with_label_kind(const Thread& thread, LabelKind kind);
 Thread& with_label_kind_(Thread& thread, LabelKind kind);
+Thread tally_count_thread(const Thread& thread,
+                          std::int64_t top_n,
+                          bool dropnull,
+                          std::string_view display_name);
 }
 class ThreadValue;
 class DataFrame;
@@ -426,7 +430,6 @@ public:
                         std::int64_t min_count = 1) const;
   ThreadValue matmul(const Thread& other) const;
   ThreadValue ndistinct(bool dropnull = true) const;
-  Thread freq(std::int64_t top_n = 0, bool dropnull = true) const;
   Thread duplicated(bool keep_first = true, bool keep_last = false) const;
   Thread repeated() const;
 
@@ -987,6 +990,7 @@ class TimeSeriesAccessor {
 
  private:
   const pluss::Series& series_payload_(const char* op) const;
+  pluss::Series masked_series_payload_(const char* op) const;
   Thread base_{};
 };
 

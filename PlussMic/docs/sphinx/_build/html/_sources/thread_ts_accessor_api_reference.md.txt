@@ -1,0 +1,32 @@
+# TimeSeriesAccessor API Reference
+
+This page documents the public time-series accessor returned by `Thread::ts()`.
+
+## Using This Reference
+
+- Use the left sidebar to open one method page at a time.
+- Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.
+- This landing page stays intentionally short so the content panel is not one giant scroll of every method.
+
+## Method Pages
+
+The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+api/thread-ts/diff
+api/thread-ts/lag
+api/thread-ts/lead
+api/thread-ts/log_returns
+api/thread-ts/returns
+```
+
+```{note} in progress
+This accessor has ~26 methods. Pages are being added in batches; the sidebar
+above will grow to cover `rolling`/`timed`/`grouped`/`expanding`/`ewm`,
+`fill_gaps`/`align_to`/`lag_block`/`rolling_block`/`resample`, and the
+axis-aligned arithmetic methods (`add`/`sub`/`mul`/`div`/`eq`/`ne`/`lt`/`le`/
+`gt`/`ge`) as those are completed.
+```

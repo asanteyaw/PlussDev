@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::corr_with
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,41 +7,58 @@
 ## Signature
 
 ```cpp
-Thread::corr_with(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pearson, std::int64_t min_count = 1) -> ThreadValue
+Thread::corr_with(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pearson, std::int64_t min_count = 1) const -> ThreadValue
 ```
 
-Compute one correlation value and return it as a scalar-like thread value.
+## What It Does
+
+Computes the same correlation [`corr()`](corr.md) does, but returns it as a
+scalar `ThreadValue` gated by `min_count` instead of a raw `double` — below
+`min_count` valid pairs, the result is marked *invalid* rather than returning
+`NaN` as a plain, unflagged value. Both threads must be numeric `Series`; case
+labels align the pairing exactly as they do for [`corr()`](corr.md).
+
+```{note} invalid whenever the underlying correlation isn't finite
+Beyond the `min_count` gate, the result is also marked invalid whenever the
+underlying [`corr()`](corr.md) computation itself doesn't come out to a finite
+number — for example, zero variance on either side (every observed value
+tied, under any of `Pearson`/`Spearman`/`KendallTau`) produces a `NaN`
+correlation, and that `NaN` is caught and reflected in
+`.thread().is_valid(0)` rather than silently passing through as a "valid"
+result. You never need to separately guard against a `NaN` hiding behind a
+`true` validity flag — check `.thread().is_valid(0)` and trust it.
+```
 
 ## Parameters
 
-**other**
+**other** (`const Thread&`)
+    The numeric `Series` thread to correlate with.
 
-Right-hand numeric thread.
+**method** (`ThreadCorrMethod`, default `Pearson`)
+    `Pearson`, `Spearman`, or `KendallTau` — same semantics as
+    [`corr()`](corr.md).
 
-**method**
-
-Correlation method to use.
-
-**min_count**
-
-Minimum number of valid paired observations required before a value is returned.
+**min_count** (`std::int64_t`, default `1`)
+    The smallest number of valid pairs still considered valid. Must be `>=
+    1`, or it throws.
 
 ## Returns
 
 `ThreadValue`
-    Scalar-like holder of the computed correlation.
+    A scalar `Float64` (or `Float32` off-CPU) holding the correlation
+    coefficient.
 
 ## Examples
 
-Example 1. Return one correlation result in a scalar-like thread value.
+Example 1. Same computation as `corr()`, wrapped as a `ThreadValue`.
 
 ```cpp
 using namespace pluss::table;
 
 auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
 auto other = Thread(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
-
 auto out = scores.corr_with(other, ThreadCorrMethod::Pearson, 1);
+std::cout << out.to_dbl();
 ```
 
 ### Output
@@ -48,7 +67,70 @@ auto out = scores.corr_with(other, ThreadCorrMethod::Pearson, 1);
 0.943119
 ```
 
+Example 2. Below `min_count` valid pairs, the result is marked invalid.
 
+```cpp
+auto small = Thread(pluss::make_series({1.0, 2.0}));
+auto small_other = Thread(pluss::make_series({3.0, 4.0}));
+auto out2 = small.corr_with(small_other, ThreadCorrMethod::Pearson, 5);
+std::cout << out2.thread().is_valid(0);
+```
+
+### Output
+
+```text
+false
+```
+
+Example 3. Zero variance on the Pearson path is caught by the validity check
+— `is_valid(0)` is `false`, not just a `NaN` value hiding behind `true`.
+
+```cpp
+auto constant = Thread(pluss::make_series({5.0, 5.0, 5.0}));
+auto varying = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+auto out3 = constant.corr_with(varying, ThreadCorrMethod::Pearson, 1);
+std::cout << out3.thread().is_valid(0);
+```
+
+### Output
+
+```text
+false
+```
+
+Example 4. The same zero-variance case under `KendallTau` — the underlying
+rank correlation is `NaN` (every rank on the constant side ties), and that's
+caught too, not just the Pearson path.
+
+```cpp
+auto out4 = constant.corr_with(varying, ThreadCorrMethod::KendallTau, 1);
+std::cout << out4.thread().is_valid(0);
+```
+
+### Output
+
+```text
+false
+```
+
+## Notes
+
+- `min_count` must be `>= 1`, or it throws `"Thread::corr_with: min_count must
+  be >= 1"`.
+- Case-label alignment applies exactly as it does for [`corr()`](corr.md).
+- See the important callout above: validity covers both the `min_count` gate
+  and whether the underlying correlation itself came out finite, across all
+  three methods.
+- Both threads must already share the same platform, or it throws
+  `"Thread::corr_with: operands must share a platform"`.
+- Restricted to numeric `Series` payloads; anything else throws
+  `"Thread::corr_with: expected a real numeric Series Thread"`.
+
+## See Also
+
+- [`Thread::corr`](corr.md): the same computation, returned as a raw `double`
+  with `NaN` on failure instead of a validity-gated `ThreadValue`.
+- [`Thread::covar`](covar.md): the unnormalized counterpart.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="corr.html">

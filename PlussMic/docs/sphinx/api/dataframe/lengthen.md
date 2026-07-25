@@ -136,9 +136,9 @@ known by name ahead of time.
   rows and features rather than melting value columns.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="le.html">
+  <a class="prev-link" href="length.html">
     <span class="label">Previous</span>
-    <span class="title">le</span>
+    <span class="title">length</span>
   </a>
   <a class="next-link" href="load.html">
     <span class="label">Next</span>

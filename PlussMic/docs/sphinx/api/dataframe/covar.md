@@ -115,6 +115,32 @@ value in Example 1's matrix is scaled down by exactly `3/4` here (`1.666... * 0.
 1.25`, and so on) — the same relationship as between a sample variance and a
 population variance anywhere else in the library.
 
+Example 3. Pass `render = true` and let the returned view print itself, with no
+explicit `std::cout` at all.
+
+```cpp
+sample.covar({}, true);
+```
+
+### Output
+
+```text
+=================================================
+     | x              y             z            
+-------------------------------------------------
+x    | 1.666666667    3.333333333   -0.6666666667
+y    | 3.333333333    6.666666667   -1.333333333 
+z    | -0.6666666667  -1.333333333  1.666666667  
+-------------------------------------------------
+[3 cs x 3 feat]
+```
+
+Same matrix as Example 1's default `ddof = 1` result — this bare statement
+differs only in `render`. The temporary `DataFrameView` is destroyed at the end
+of the statement without ever being captured or streamed, and `render = true`
+is what makes that destruction print automatically; with the default `render =
+false`, the same unassigned call would produce no output.
+
 ## Notes
 
 - Non-numeric features never participate and are never padded into the matrix as

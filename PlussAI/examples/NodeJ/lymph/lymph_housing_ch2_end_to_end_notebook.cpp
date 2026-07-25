@@ -330,7 +330,6 @@ int main() {
   //========== Cell 14: Final Model Eval + RMSE CI (Manual) ========
   // Manual CI computation to mirror chapter narrative.
   auto final_workflow = std::move(tuned.best_workflow);
-  final_workflow.learn_(train_prepared, train_y, train_options);
   const Series final_pred = final_workflow.infer(test_prepared);
   const auto final_metrics = final_workflow.assess(test_prepared, test_y, assess_options);
   out.writeln("final test", final_metrics.rmse, final_metrics.r2, final_metrics.mae);

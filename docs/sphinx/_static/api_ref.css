@@ -199,7 +199,8 @@ div.clearer {
   display: none;
 }
 
-#pluss-prev-next {
+#pluss-prev-next ,
+.pluss-inline-prev-next {
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid var(--pluss-border);
   border-radius: 10px;
@@ -213,7 +214,8 @@ div.clearer {
   width: min(100%, var(--pluss-content-max-width));
 }
 
-#pluss-prev-next a {
+#pluss-prev-next a ,
+.pluss-inline-prev-next a {
   background: #f4f8fc;
   border: 1px solid var(--pluss-border);
   border-radius: 8px;
@@ -226,22 +228,26 @@ div.clearer {
   text-decoration: none;
 }
 
-#pluss-prev-next a.prev-link {
+#pluss-prev-next a.prev-link ,
+.pluss-inline-prev-next a.prev-link {
   margin-right: auto;
 }
 
-#pluss-prev-next a.next-link {
+#pluss-prev-next a.next-link ,
+.pluss-inline-prev-next a.next-link {
   margin-left: auto;
   text-align: right;
 }
 
-#pluss-prev-next a .label {
+#pluss-prev-next a .label ,
+.pluss-inline-prev-next a .label {
   color: #4a5e72;
   display: block;
   font-size: 0.78rem;
 }
 
-#pluss-prev-next a .title {
+#pluss-prev-next a .title ,
+.pluss-inline-prev-next a .title {
   display: block;
   font-size: 0.92rem;
   font-weight: 700;
@@ -359,14 +365,245 @@ section.pluss-api-root-hidden {
     width: 100%;
   }
 
-  #pluss-prev-next {
+  #pluss-prev-next ,
+  .pluss-inline-prev-next {
     margin: 0.8rem 0 0;
   }
 
-  #pluss-prev-next a {
+  #pluss-prev-next a ,
+  .pluss-inline-prev-next a {
     flex-basis: 46%;
     max-width: none;
     min-width: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Root landing page ( index.html only, scoped under #pluss-landing ) */
+/* ---------------------------------------------------------------- */
+
+#pluss-landing {
+  margin: -1.35rem -1.7rem -2rem;
+}
+
+#pluss-landing .pluss-hero {
+  background: linear-gradient(135deg, #0d3550 0%, #0a7ca7 100%);
+  border-radius: 8px 8px 0 0;
+  color: #f4f9fc;
+  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(1.4rem, 3vw, 3rem);
+}
+
+#pluss-landing .pluss-hero .kicker {
+  color: #bfe6f5;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+#pluss-landing .pluss-hero h1 {
+  border: none;
+  color: #ffffff;
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  margin: 0.5rem 0 0.6rem;
+}
+
+#pluss-landing .pluss-hero p.tagline {
+  color: #e2f1f8;
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  line-height: 1.55;
+  margin: 0 0 1.4rem;
+  max-width: 62ch;
+}
+
+#pluss-landing .pluss-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+#pluss-landing .pluss-hero-actions a {
+  border-radius: 6px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  padding: 0.62rem 1.1rem;
+  text-decoration: none;
+}
+
+#pluss-landing .pluss-hero-actions a.primary {
+  background: #ffffff;
+  color: #0a4f6e;
+}
+
+#pluss-landing .pluss-hero-actions a.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+}
+
+#pluss-landing .pluss-hero-include {
+  background: rgba(6, 26, 38, 0.35);
+  border-radius: 6px;
+  color: #eaf6fb;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85rem;
+  margin-top: 1.6rem;
+  max-width: fit-content;
+  padding: 0.55rem 0.85rem;
+}
+
+#pluss-landing .pluss-section {
+  padding: clamp(1.6rem, 3vw, 2.4rem) clamp(1.4rem, 3vw, 3rem);
+}
+
+#pluss-landing .pluss-section > h2 {
+  border: none;
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
+  padding: 0;
+}
+
+#pluss-landing .pluss-section > p.section-sub {
+  color: #55677a;
+  margin: 0 0 1.3rem;
+  max-width: 72ch;
+}
+
+#pluss-landing .pluss-package-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+#pluss-landing .pluss-card {
+  background: var(--pluss-panel);
+  border: 1px solid var(--pluss-border);
+  border-radius: 10px;
+  border-top: 3px solid var(--pluss-accent);
+  padding: 1.1rem 1.2rem 1.2rem;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+#pluss-landing .pluss-card:hover {
+  box-shadow: 0 10px 24px rgba(20, 40, 60, 0.1);
+  transform: translateY(-2px);
+}
+
+#pluss-landing .pluss-card .card-name {
+  color: #10334a;
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+#pluss-landing .pluss-card .card-model {
+  color: #7c8a99;
+  display: block;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.78rem;
+  margin-bottom: 0.55rem;
+}
+
+#pluss-landing .pluss-card p.card-desc {
+  color: #3f4f5f;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 0.9rem;
+}
+
+#pluss-landing .pluss-card .card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+#pluss-landing .pluss-card .card-links a {
+  color: var(--pluss-accent);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#pluss-landing .pluss-card .card-links a:hover {
+  text-decoration: underline;
+}
+
+#pluss-landing .pluss-model-diagram {
+  background: #0d1f2c;
+  border-radius: 8px;
+  color: #d9eef7;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.95rem;
+  padding: 1.1rem 1.3rem;
+  overflow-x: auto;
+}
+
+#pluss-landing .pluss-model-list {
+  color: #3f4f5f;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  margin: 1rem 0 0;
+}
+
+#pluss-landing .pluss-model-list code {
+  color: #0a5e80;
+}
+
+#pluss-landing .pluss-start-steps {
+  counter-reset: pluss-step;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#pluss-landing .pluss-start-steps li {
+  background: var(--pluss-panel);
+  border: 1px solid var(--pluss-border);
+  border-radius: 8px;
+  counter-increment: pluss-step;
+  padding: 0.9rem 1rem 0.9rem 2.6rem;
+  position: relative;
+}
+
+#pluss-landing .pluss-start-steps li::before {
+  background: var(--pluss-accent);
+  border-radius: 50%;
+  color: #fff;
+  content: counter(pluss-step);
+  font-size: 0.8rem;
+  font-weight: 700;
+  height: 1.5rem;
+  left: 0.7rem;
+  line-height: 1.5rem;
+  position: absolute;
+  text-align: center;
+  top: 0.85rem;
+  width: 1.5rem;
+}
+
+#pluss-landing .pluss-start-steps li a {
+  color: #10334a;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#pluss-landing .pluss-start-steps li a:hover {
+  text-decoration: underline;
+}
+
+#pluss-landing .pluss-start-steps li p {
+  color: #55677a;
+  font-size: 0.86rem;
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 640px) {
+  #pluss-landing {
+    margin: -0.7rem -0.7rem -1rem;
   }
 }
 

@@ -1,10 +1,14 @@
 pluss::table::Thread Stream::to_thread() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return std::visit(
+  auto out = std::visit(
       [&](const auto& payload) {
         return pluss::table::Thread(payload, impl_ref_().validity_mask_);
       },
       impl_ref_().payload_);
+  if (has_label()) {
+    out = out.label().set(*label());
+  }
+  return out;
 }
 
 pluss::table::Thread Stream::to_thread(std::int64_t start, std::int64_t stop) const {
@@ -37,34 +41,58 @@ Stream Stream::filter(const pluss::Series& bool_mask) const {
   return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.filter(bool_mask); });
 }
 
-Stream Stream::dropna() const {
+Stream Stream::dropnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   const auto source = to_thread();
   const auto out = source.dropnull();
-  if (!has_cases()) return Stream::from_thread(out);
-  const auto cases_out = cases()->filter(source.notnull().as_series());
-  return Stream::from_thread(out, cases_out);
+  if (!has_label()) return Stream::from_thread(out);
+  const auto label_out = label()->filter(source.notnull().as_series());
+  return Stream::from_thread(out, label_out);
 }
 
 Stream Stream::ffill() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [](const pluss::table::Thread& t) { return t.ffill(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.ffill(); });
 }
 
 Stream Stream::bfill() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [](const pluss::table::Thread& t) { return t.bfill(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.bfill(); });
+}
+
+Stream Stream::distinct(DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto out = to_thread().distinct(options.dropnull);
+  if (out.label().has()) {
+    return Stream::from_thread(out, out.label().values());
+  }
+  return Stream::from_thread(out);
+}
+
+Stream Stream::freq(FreqOptions options) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto out = pluss::table::detail::tally_count_thread(
+      to_thread(), options.top, options.dropnull, "freq");
+  if (out.label().has()) {
+    return Stream::from_thread(out, out.label().values());
+  }
+  return Stream::from_thread(out);
+}
+
+Stream Stream::ndistinct(DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_thread(to_thread().ndistinct(options.dropnull).thread());
 }
 
 Stream Stream::cast(pluss::table::ThreadCastTarget target,
                     std::optional<pluss::codem::ScalarType> series_dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.cast(target, series_dtype); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.cast(target, series_dtype); });
 }
 
 Stream Stream::astype(pluss::codem::ScalarType dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.astype(dtype); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.astype(dtype); });
 }
 
 Stream Stream::sum() const {

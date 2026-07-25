@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::tl" href="tl.html" />
@@ -36,18 +36,33 @@
 
           <div class="body" role="main">
             
-  <section id="thread-titlecase">
+  <!-- pluss-hand-authored -->
+<section id="thread-titlecase">
 <h1>Thread::titlecase<a class="headerlink" href="#thread-titlecase" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">titlecase</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">titlecase</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Converts note-backed text values into title case.</p>
+<p>Capitalizes the first letter of every “word” in a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread’s cells and
+lowercases the rest — the classic display-formatting transform for names,
+addresses, or titles typed in all-lowercase or inconsistent casing. Requires the
+thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Word-boundary detection resets on <em>any</em> non-alphanumeric character
+<code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> decides where a new “word” starts the same way Python’s <code class="docutils literal notranslate"><span class="pre">str.title()</span></code>
+does: a word boundary is any position right after a non-alphanumeric character
+(space, hyphen, apostrophe, digit-to-letter transitions — anything that isn’t a
+letter or digit), not just whitespace. This means an apostrophe inside a contraction
+resets the boundary too, so <code class="docutils literal notranslate"><span class="pre">&quot;don't&quot;</span></code> titlecases to <code class="docutils literal notranslate"><span class="pre">&quot;Don'T&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;Don't&quot;</span></code> — see
+Example 2. This is a well-known quirk of this style of word-boundary detection, not
+a bug specific to this implementation.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +71,73 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every cell’s text
+title-cased.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">titlecase</span></code> to the current thread values and inspect the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. The common case: clean, space-separated words title-case exactly as
+expected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">titlecase</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">places</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;accra central market&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east legon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north kaneshie&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">places</span><span class="p">.</span><span class="n">titlecase</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Accra Central Market
+1  East Legon
+2  North Kaneshie
+
+ptype: Note
 </pre></div>
 </div>
+<p>Example 2. The word-boundary quirk in action: apostrophes and hyphens reset the
+“start of a word” detector.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">phrases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;don&#39;t stop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;rock &#39;n&#39; roll&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;co-op bank&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">phrases</span><span class="p">.</span><span class="n">titlecase</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Don&#39;T Stop
+1  Rock &#39;N&#39; Roll
+2  Co-Op Bank
+
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;don't&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;Don'T&quot;</span></code>: the apostrophe is a non-alphanumeric character, so the
+letter right after it (<code class="docutils literal notranslate"><span class="pre">t</span></code>) is treated as the start of a new “word” and capitalized.
+The same thing happens to the <code class="docutils literal notranslate"><span class="pre">n</span></code> between the two apostrophes in <code class="docutils literal notranslate"><span class="pre">&quot;rock</span> <span class="pre">'n'</span> <span class="pre">roll&quot;</span></code>,
+and to the <code class="docutils literal notranslate"><span class="pre">o</span></code> right after the hyphen in <code class="docutils literal notranslate"><span class="pre">&quot;co-op&quot;</span></code>. There is no built-in way to make
+<code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> treat apostrophes or hyphens as internal-to-a-word — post-process the
+result with <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace()</span></code></span></a> for known quirks that matter for a given
+column.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>Word-boundary detection resets on <em>any</em> non-alphanumeric character, not just
+whitespace — see the warning above.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::lower</span></code></span></a> / <a class="reference internal" href="upper.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::upper</span></code></span></a>: whole-cell case
+transforms, unaffected by word boundaries.</p></li>
+<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::replace</span></code></span></a>: a way to patch up specific known quirks in a
+<code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> result.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tally.html">
     <span class="label">Previous</span>
@@ -81,7 +148,6 @@ Value produced by this call.</p>
     <span class="title">tl</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

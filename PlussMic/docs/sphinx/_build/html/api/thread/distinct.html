@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::div" href="div.html" />
@@ -36,43 +36,48 @@
 
           <div class="body" role="main">
             
-  <section id="thread-distinct">
+  <!-- pluss-hand-authored -->
+<section id="thread-distinct">
 <h1>Thread::distinct<a class="headerlink" href="#thread-distinct" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">distinct</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">distinct</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Return distinct values in stable first-seen order.</p>
-<p>Use this when you want the unique observed values themselves, not just the count.</p>
-<p>Unlike a sorting operation, <code class="docutils literal notranslate"><span class="pre">distinct(...)</span></code> preserves the encounter order of the first surviving representatives.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns the distinct values of the thread, one representative per value, in
+<strong>first-seen order</strong> — not sorted. Grouping is done by each value’s string form
+(the same conversion <a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tally()</span></code></span></a> uses), so this works on any payload
+kind, not just <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Unlike a sort-based dedup, the surviving representative
+for each value is always the earliest occurrence, and the relative order of
+distinct values in the output matches the order they first appeared in the
+source thread.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>dropnull</strong></p>
-<p>Whether missing entries should be removed before distinctness is computed.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: ignore null entries,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: keep at most one null entry in the output.</p></li>
-</ul>
-<p>This flag matters when missingness itself is meaningful and you want a single null representative preserved among the distinct values.</p>
+<p><strong>dropnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+- <code class="docutils literal notranslate"><span class="pre">true</span></code> (the default): missing entries are excluded entirely from the
+result.
+- <code class="docutils literal notranslate"><span class="pre">false</span></code>: at most one missing entry is kept, appearing at the position of
+its first occurrence among the survivors.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Thread containing one representative of each distinct value, ordered by first appearance.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">distinct(...)</span></code> is value-returning, not count-returning. Use <code class="docutils literal notranslate"><span class="pre">ndistinct(...)</span></code> when you only need the number of distinct values.</p>
+A new thread holding one representative of each distinct value, in
+first-seen order. Shorter than (or equal in length to) the source thread.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Collect distinct note values in first-seen order.</p>
+<p>Example 1. Collect distinct values in first-seen order.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})).</span><span class="n">distinct</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">distinct</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -80,9 +85,56 @@ Thread containing one representative of each distinct value, ordered by first ap
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Accra
 1  Tema
 2  Kumasi
+
 ptype: Note
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>’s repeat at position <code class="docutils literal notranslate"><span class="pre">2</span></code> is dropped, but the survivors keep the order
+they were first seen in — <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> before <code class="docutils literal notranslate"><span class="pre">&quot;Kumasi&quot;</span></code>, not alphabetical order.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code> keeps a single representative missing entry.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_gap</span><span class="p">.</span><span class="n">distinct</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Accra
+1  NULL
+2  Tema
+
+ptype: Note
+</pre></div>
+</div>
+<p>Only one <code class="docutils literal notranslate"><span class="pre">NULL</span></code> survives (from its first occurrence at position <code class="docutils literal notranslate"><span class="pre">1</span></code>), even
+though the source had two missing entries.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Order is first-seen, never sorted — see <a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_values()</span></code></span></a> if
+you want the distinct values in value order instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code> keeps at most one missing entry, not one per occurrence.</p></li>
+<li><p>Grouping is by each value’s string form, so this works across every payload
+kind.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ndistinct</span></code></span></a>: the count of distinct values, without
+the values themselves.</p></li>
+<li><p><a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally</span></code></span></a>: distinct values paired with their occurrence
+counts, sorted by frequency instead of first-seen order.</p></li>
+<li><p><a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::duplicated</span></code></span></a> / <a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::repeated</span></code></span></a>:
+boolean masks over the original thread’s positions, rather than a
+deduplicated thread.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="display_name.html">
     <span class="label">Previous</span>
@@ -93,7 +145,6 @@ ptype: Note
     <span class="title">div</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

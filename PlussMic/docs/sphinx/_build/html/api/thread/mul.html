@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::ncases" href="ncases.html" />
@@ -36,57 +36,112 @@
 
           <div class="body" role="main">
             
-  <section id="thread-mul">
+  <!-- pluss-hand-authored -->
+<section id="thread-mul">
 <h1>Thread::mul<a class="headerlink" href="#thread-mul" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">mul</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">mul</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">mul</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">mul</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This applies arithmetic across the compatible numeric payloads in the current object.</p>
+<p>Elementwise multiplication, following <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s shared mechanics. <code class="docutils literal notranslate"><span class="pre">mul()</span></code>
+has its own payload special case, parallel to <code class="docutils literal notranslate"><span class="pre">add()</span></code>’s <code class="docutils literal notranslate"><span class="pre">Note</span></code>-concatenation
+exception: multiplying a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread by a non-negative integral scalar
+<strong>repeats</strong> each string that many times — <code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;.mul(3.0)</span></code> behaves like Python’s
+<code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;</span> <span class="pre">*</span> <span class="pre">3</span></code>, giving <code class="docutils literal notranslate"><span class="pre">&quot;ababab&quot;</span></code>. This only works for the scalar overload; there is no
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-times-<code class="docutils literal notranslate"><span class="pre">Note</span></code> multiplication.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>The value(s) to multiply by. For a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread, <code class="docutils literal notranslate"><span class="pre">double</span></code> must be a non-negative
+integral value (<code class="docutils literal notranslate"><span class="pre">3.0</span></code>, not <code class="docutils literal notranslate"><span class="pre">3.5</span></code>).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread holding the elementwise product — or, for a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread multiplied
+by a scalar, each string repeated that many times.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">mul</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">}));</span>
+<p>Example 1. Multiply every value by a scalar.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  40
+2  60
+
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Apply <code class="docutils literal notranslate"><span class="pre">mul</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<p>Example 2. Multiply two threads positionally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">boost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">boost</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  80
+2  150
+ptype: Series
 </pre></div>
 </div>
+<p>Example 3. A <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread multiplied by a scalar repeats each string.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ab&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;xy&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_repeat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">3.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_repeat</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  ababab
+1  xyxyxy
+2  qqq
+
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;</span></code> repeated <code class="docutils literal notranslate"><span class="pre">3</span></code> times is <code class="docutils literal notranslate"><span class="pre">&quot;ababab&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;q&quot;</span></code> repeated <code class="docutils literal notranslate"><span class="pre">3</span></code> times is <code class="docutils literal notranslate"><span class="pre">&quot;qqq&quot;</span></code>. Passing
+a non-integral or negative scalar (like <code class="docutils literal notranslate"><span class="pre">2.5</span></code> or <code class="docutils literal notranslate"><span class="pre">-1.0</span></code>) throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::mul(double):</span> <span class="pre">Note</span> <span class="pre">repetition</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">non-negative</span> <span class="pre">integral</span> <span class="pre">scalar&quot;</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> for the family-wide mechanics: positional matching, the
+length-mismatch throw, and how display labels carry through.</p></li>
+<li><p>Note repetition only exists on the scalar overload — there is no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-thread
+equivalent of <code class="docutils literal notranslate"><span class="pre">mul(const</span> <span class="pre">Thread&amp;)</span></code>; multiplying two <code class="docutils literal notranslate"><span class="pre">Note</span></code> threads throws.</p></li>
+<li><p><a class="reference internal" href="rmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rmul()</span></code></span></a> produces identical results to <code class="docutils literal notranslate"><span class="pre">mul()</span></code> in every case, including
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> repetition — multiplication is commutative for numbers, and the repetition
+special case doesn’t check operand order at all.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rmul</span></code></span></a>: the reflected form, identical in every case.</p></li>
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::add</span></code></span></a>: the canonical reference for this family’s shared
+mechanics.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month.html">
     <span class="label">Previous</span>
@@ -97,7 +152,6 @@ Value produced by this call.</p>
     <span class="title">ncases</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

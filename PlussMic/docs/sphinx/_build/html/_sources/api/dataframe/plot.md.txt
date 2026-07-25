@@ -22,6 +22,12 @@ the `PlussPl` plotting library, which owns its own reference documentation (rend
 backends, themes, saving to PNG/SVG, and so on). This page previews entry into the
 accessor; it does not re-document `Studio` or every chart kind.
 
+Every one of the accessor's 23 chart methods has its own dedicated, example-rich
+reference page — start at the
+[DataFramePlotAccessor API Reference](../../dataframe_plot_api_reference) and use its
+left sidebar to jump straight to any method (`line`, `bar`, `scatter`, `hist`, `box`,
+`heatmap`, `auto_plot`, and more).
+
 ## Parameters
 
 **options** (`const DataFramePlotOptions&`, optional)

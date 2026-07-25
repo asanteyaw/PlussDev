@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::filter" href="filter.html" />
@@ -36,98 +36,129 @@
 
           <div class="body" role="main">
             
-  <section id="thread-fillnull">
+  <!-- pluss-hand-authored -->
+<section id="thread-fillnull">
 <h1>Thread::fillnull_<a class="headerlink" href="#thread-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
+<p>The mutating counterpart to <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>: fills <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells with
+<code class="docutils literal notranslate"><span class="pre">value</span></code> and updates <code class="docutils literal notranslate"><span class="pre">*this</span></code> in place, returning a reference to it, instead of
+returning a new <code class="docutils literal notranslate"><span class="pre">Thread</span></code>. Copy-on-write applies — if this thread’s storage is shared
+with another <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (see <a class="reference internal" href="shares_payload_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shares_payload_with()</span></code></span></a>), the
+mutation clones the storage first, so the other thread is unaffected.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only the double overload is genuinely in-place
+The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload mutates the underlying <code class="docutils literal notranslate"><span class="pre">Series</span></code> storage directly through the
+copy-on-write path. The <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> overloads are
+implemented as <code class="docutils literal notranslate"><span class="pre">*this</span> <span class="pre">=</span> <span class="pre">fillnull(value);</span></code> — they call the functional
+<a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a> and reassign the result to <code class="docutils literal notranslate"><span class="pre">*this</span></code>. The end result and
+copy-on-write behavior are the same either way; only the internal mechanism differs.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>value</strong>
-Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
+Same as <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a> — the replacement for <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells,
+selecting the overload (and required payload kind) by its C++ type.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread&amp;</span></code>
-Value produced by this call.</p>
+A reference to <code class="docutils literal notranslate"><span class="pre">*this</span></code>, after the fill.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">fillnull_</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">value</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
+<p>Example 1. Fill in place; the return value is a reference to the same object.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="kr">thread</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
+<span class="n">readings</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  0
+2  30
+
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Apply <code class="docutils literal notranslate"><span class="pre">fillnull_</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">value</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T11:00:00Z&quot;</span><span class="p">}));</span>
+<p>Example 2. Copy-on-write: mutating a copy leaves the original thread untouched.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">original</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">original</span><span class="p">;</span>
 
-<span class="kr">thread</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">));</span>
+<span class="n">copy</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">99.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">original</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">copy</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1
+1  NULL
+
+ptype: Series
+0  1
+1  99
+
+ptype: Series
 </pre></div>
 </div>
-<p>Example 3. Apply <code class="docutils literal notranslate"><span class="pre">fillnull_</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">value</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T11:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-05T15:30:00Z&quot;</span><span class="p">}));</span>
-
-<span class="kr">thread</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">));</span>
+<p><code class="docutils literal notranslate"><span class="pre">copy</span></code> and <code class="docutils literal notranslate"><span class="pre">original</span></code> shared storage right up until the mutating call; <code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code>
+detached <code class="docutils literal notranslate"><span class="pre">copy</span></code>’s storage before writing, so <code class="docutils literal notranslate"><span class="pre">original</span></code> is unaffected.</p>
+<p>Example 3. Payload-kind mismatches throw, same as the functional form.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">notes</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
-</pre></div>
-</div>
-<p>Example 4. Apply <code class="docutils literal notranslate"><span class="pre">fillnull_</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">value</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="kr">thread</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::fillnull_(double) is only valid for Series payload
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
-</pre></div>
-</div>
-<p>Example 5. Apply <code class="docutils literal notranslate"><span class="pre">fillnull_</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">value</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
-
-<span class="kr">thread</span><span class="p">.</span><span class="n">fillnull_</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Copy-on-write: mutating a thread that shares storage with another detaches it
+first, leaving the other thread untouched. See Example 2 and
+<a class="reference internal" href="shares_payload_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shares_payload_with()</span></code></span></a>.</p></li>
+<li><p>Only the <code class="docutils literal notranslate"><span class="pre">double</span></code> overload mutates storage directly; the others reassign <code class="docutils literal notranslate"><span class="pre">*this</span></code>
+via the functional <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>. See the note above.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload’s error message includes the underscore:
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull_(double)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code> — a detail that
+differs from the functional form’s own message for the same overload.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fillnull</span></code></span></a>: the functional (non-mutating) form.</p></li>
+<li><p><a class="reference internal" href="shares_payload_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::shares_payload_with</span></code></span></a>: check storage sharing
+directly.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fillnull.html">
     <span class="label">Previous</span>
@@ -138,7 +169,6 @@ Value produced by this call.</p>
     <span class="title">filter</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

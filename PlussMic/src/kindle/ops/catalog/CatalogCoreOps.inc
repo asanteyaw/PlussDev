@@ -161,7 +161,7 @@ Catalog Catalog::select(const std::vector<std::string>& field_names) const {
   out.reserve(names.size());
   for (const auto& n : names) {
     PLUSS_CHECK(has(n), "Catalog::select: unknown key '" + n + "'");
-    out.emplace_back(n, stream(n));
+    out.emplace_back(n, at(n));
   }
   return Catalog(std::move(out));
 }
@@ -246,7 +246,7 @@ Catalog Catalog::sort_by(const std::vector<std::string>& fields,
   key_streams.reserve(names.size());
   for (const auto& n : names) {
     PLUSS_CHECK(has(n), "Catalog::sort_by: unknown key '" + n + "'");
-    key_streams.push_back(stream(n));
+    key_streams.push_back(at(n));
   }
   const auto idx = sort_indices_for_keys(key_streams, ascending);
 
@@ -267,7 +267,7 @@ std::unordered_map<std::string, Catalog> Catalog::group_by(std::string_view key_
   PLUSS_CHECK(!key.empty(), "Catalog::group_by: key field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::group_by: unknown key '" + key + "'");
 
-  const auto key_stream = stream(key);
+  const auto key_stream = at(key);
   const auto key_note = key_stream.to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
   const auto n = key_stream.size();
 
@@ -376,13 +376,36 @@ Catalog Catalog::fillnull(const pluss::TimeIndex& value, std::initializer_list<s
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::dropna(std::initializer_list<std::string_view> keys) const {
+Catalog Catalog::dropnull(std::initializer_list<std::string_view> keys) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);
   if (!key_set.empty()) {
     for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::dropna: unknown key '" + k + "'");
+      PLUSS_CHECK(has(k), "Catalog::dropnull: unknown key '" + k + "'");
     }
+  }
+
+  const auto n = nrecords();
+  std::vector<bool> keep(static_cast<std::size_t>(n), true);
+  bool saw_selected = false;
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
+    if (!selected) continue;
+    saw_selected = true;
+    const auto valid = impl_ref_().streams_[i].to_thread().notnull().as_series().to_vec<bool>();
+    PLUSS_CHECK(static_cast<std::int64_t>(valid.size()) == n,
+                "Catalog::dropnull: selected key produced invalid null mask length");
+    for (std::int64_t r = 0; r < n; ++r) {
+      keep[static_cast<std::size_t>(r)] = keep[static_cast<std::size_t>(r)] && valid[static_cast<std::size_t>(r)];
+    }
+  }
+  if (!saw_selected) return *this;
+
+  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto* p = reinterpret_cast<bool*>(mask.raw_data());
+  for (std::int64_t r = 0; r < n; ++r) {
+    p[r] = keep[static_cast<std::size_t>(r)];
   }
 
   std::vector<std::pair<std::string, Stream>> out;
@@ -390,8 +413,7 @@ Catalog Catalog::dropna(std::initializer_list<std::string_view> keys) const {
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     const auto& key = impl_ref_().keys_[i];
     const auto& stream = impl_ref_().streams_[i];
-    const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.dropna() : stream);
+    out.emplace_back(key, stream.filter(mask));
   }
   return Catalog(std::move(out));
 }
@@ -476,6 +498,26 @@ Catalog Catalog::notnull(std::initializer_list<std::string_view> keys) const {
   return Catalog(std::move(out));
 }
 
+Catalog Catalog::invalid(std::initializer_list<std::string_view> keys) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  if (!key_set.empty()) {
+    for (const auto& k : key_set) {
+      PLUSS_CHECK(has(k), "Catalog::invalid: unknown key '" + k + "'");
+    }
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
+    out.emplace_back(key, selected ? stream.invalid() : stream);
+  }
+  return Catalog(std::move(out));
+}
+
 Catalog Catalog::cast(std::initializer_list<std::string_view> keys,
                       pluss::table::ThreadCastTarget target,
                       const pluss::table::ThreadCastOptions& options) const {
@@ -506,28 +548,129 @@ Catalog Catalog::astype(std::initializer_list<std::string_view> keys,
 
 Stream Catalog::sum(std::string_view field) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return stream(field).sum();
+  return at(field).sum();
 }
 
 Stream Catalog::mean(std::string_view field) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return stream(field).mean();
+  return at(field).mean();
 }
 
 Stream Catalog::min(std::string_view field) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return stream(field).min();
+  return at(field).min();
 }
 
 Stream Catalog::max(std::string_view field) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return stream(field).max();
+  return at(field).max();
+}
+
+Stream Catalog::distinct(std::string_view key, DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  return at(key).distinct(options);
+}
+
+Catalog Catalog::distinct(DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].distinct(options));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::distinct(std::initializer_list<std::string_view> keys, DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  PLUSS_CHECK(!key_set.empty(), "Catalog::distinct(keys): keys cannot be empty; use distinct() for all keys");
+  for (const auto& key : key_set) {
+    PLUSS_CHECK(has(key), "Catalog::distinct: unknown key '" + key + "'");
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.find(key) != key_set.end();
+    out.emplace_back(key, selected ? stream.distinct(options) : stream);
+  }
+  return Catalog(std::move(out));
+}
+
+Stream Catalog::freq(std::string_view key, FreqOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  return at(key).freq(options);
+}
+
+Catalog Catalog::freq(FreqOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].freq(options));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::freq(std::initializer_list<std::string_view> keys,
+                      FreqOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  PLUSS_CHECK(!key_set.empty(), "Catalog::freq(keys): keys cannot be empty; use freq() for all keys");
+  for (const auto& key : key_set) {
+    PLUSS_CHECK(has(key), "Catalog::freq: unknown key '" + key + "'");
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.find(key) != key_set.end();
+    out.emplace_back(key, selected ? stream.freq(options) : stream);
+  }
+  return Catalog(std::move(out));
+}
+
+Stream Catalog::ndistinct(std::string_view key, DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  return at(key).ndistinct(options);
+}
+
+Catalog Catalog::ndistinct(DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].ndistinct(options));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  PLUSS_CHECK(!key_set.empty(), "Catalog::ndistinct(keys): keys cannot be empty; use ndistinct() for all keys");
+  for (const auto& key : key_set) {
+    PLUSS_CHECK(has(key), "Catalog::ndistinct: unknown key '" + key + "'");
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.find(key) != key_set.end();
+    out.emplace_back(key, selected ? stream.ndistinct(options) : stream);
+  }
+  return Catalog(std::move(out));
 }
 
 std::int64_t Catalog::count() const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  if (empty()) return 0;
-  return tabelize().ncases();
+  return nrecords();
 }
 
 Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_view how) const {
@@ -562,7 +705,7 @@ Catalog& Catalog::apply_(std::string_view field, const std::function<Stream(cons
   PLUSS_CHECK(static_cast<bool>(func), "Catalog::apply_: func is empty");
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::apply_: field cannot be empty");
-  const auto src = stream(key);
+  const auto src = at(key);
   const auto dst = func(src);
   PLUSS_CHECK(dst.defined(), "Catalog::apply_: function returned undefined stream");
   PLUSS_CHECK(dst.size() == src.size(),

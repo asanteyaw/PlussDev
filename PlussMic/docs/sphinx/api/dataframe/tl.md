@@ -23,9 +23,11 @@ timestamp feature(s) first, then calling `.tl()`:
 `df.features({"ordered_at"}).tl().year()`, not `df.tl()` directly on a frame that
 still has numeric or text columns.
 
-This page previews the accessor's most common entry points. Each accessor method
-gets its own dedicated reference page under the `DataFrameTimelineAccessor` API
-reference.
+This page previews the accessor's most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+[DataFrameTimelineAccessor API Reference](../../dataframe_timeline_accessor_api_reference)
+and use its left sidebar to jump straight to any method (`year`, `month`, `weekday`,
+`floor`, `tz_convert`, and more).
 
 ## Parameters
 

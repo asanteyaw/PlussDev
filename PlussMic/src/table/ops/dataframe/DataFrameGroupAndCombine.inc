@@ -509,8 +509,8 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
       continue;
     }
 
-    const auto case_key = case_valid ? thread_scalar_string_at(case_vals, r) : std::string("NA");
-    const auto feat_key = feat_valid ? thread_scalar_string_at(feat_vals, r) : std::string("NA");
+    const auto case_key = case_valid ? thread_scalar_string_at(case_vals, r) : std::string("NULL");
+    const auto feat_key = feat_valid ? thread_scalar_string_at(feat_vals, r) : std::string("NULL");
     const auto row_idx = ensure_case(case_key);
     const auto col_idx = ensure_feature(feat_key);
     auto& agg = grid[row_idx][col_idx];
@@ -686,37 +686,61 @@ DataFrameView DataFrame::count_by(std::string_view feature_name,
                                   bool dropnull,
                                   bool render) const {
   auto grouped = group({feature_name}, {GroupSpec{"count", "", GroupOp::Count}}, dropnull, false);
-  const auto keys_note = grouped.features(feature_name).as_note();
+  const auto key_column = grouped.features(feature_name);
+  const auto keys_note = key_column.as_note();
   const auto counts = grouped.features("count").as_series().to_vec<std::int64_t>();
+  const auto key_valid = key_column.has_validity_mask()
+      ? key_column.validity_mask()->to_vec<bool>()
+      : std::vector<bool>(static_cast<std::size_t>(grouped.ncases()), true);
 
-  std::vector<std::pair<std::string, std::int64_t>> rows;
+  struct CountByRow {
+    std::string key;
+    bool valid;
+    std::int64_t count;
+  };
+  std::vector<CountByRow> rows;
   rows.reserve(static_cast<std::size_t>(grouped.ncases()));
   for (std::int64_t i = 0; i < grouped.ncases(); ++i) {
-    rows.emplace_back(
+    rows.push_back(CountByRow{
         std::string(keys_note.at(i)),
-        counts[static_cast<std::size_t>(i)]);
+        key_valid[static_cast<std::size_t>(i)],
+        counts[static_cast<std::size_t>(i)]});
   }
-  std::sort(rows.begin(), rows.end(), [](const auto& a, const auto& b) {
-    if (a.second != b.second) {
-      return a.second > b.second;
+  std::sort(rows.begin(), rows.end(), [](const CountByRow& a, const CountByRow& b) {
+    if (a.count != b.count) {
+      return a.count > b.count;
     }
-    return a.first < b.first;
+    // A missing key's row is not a real value to alphabetize against; keep it
+    // sorted after every real value at the same count, consistent with NULL
+    // sorting last everywhere else in the table API.
+    if (a.valid != b.valid) {
+      return a.valid;
+    }
+    return a.key < b.key;
   });
   if (top_n > 0 && static_cast<std::size_t>(top_n) < rows.size()) {
     rows.resize(static_cast<std::size_t>(top_n));
   }
 
   std::vector<std::string> keys;
+  std::vector<bool> valid;
   std::vector<std::int64_t> vals;
   keys.reserve(rows.size());
+  valid.reserve(rows.size());
   vals.reserve(rows.size());
-  for (const auto& [k, c] : rows) {
-    keys.push_back(k);
-    vals.push_back(c);
+  for (const auto& row : rows) {
+    keys.push_back(row.key);
+    valid.push_back(row.valid);
+    vals.push_back(row.count);
+  }
+
+  auto key_thread = make_note_thread(keys);
+  if (std::any_of(valid.begin(), valid.end(), [](bool v) { return !v; })) {
+    key_thread = key_thread.with_validity_mask(bool_mask_from_values(valid));
   }
 
   auto out = DataFrame({
-      {owned_name(feature_name), make_note_thread(keys)},
+      {owned_name(feature_name), std::move(key_thread)},
       {"count", make_i64_thread(vals)},
   });
   return DataFrameView(std::move(out), render, "count_by", title());

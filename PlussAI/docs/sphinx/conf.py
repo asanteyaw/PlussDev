@@ -1,6 +1,6 @@
 import importlib.util
 
-project = 'PlussAI NodeJ + Lymph API Docs'
+project = 'PlussAI'
 author = 'Pluss Contributors'
 
 extensions = [

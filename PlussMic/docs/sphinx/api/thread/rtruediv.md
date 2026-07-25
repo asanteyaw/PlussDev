@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rtruediv
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,61 @@
 ## Signatures
 
 ```cpp
-Thread::rtruediv(const Thread& other) -> Thread
-
-Thread::rtruediv(double other) -> Thread
+Thread::rtruediv(double other) const -> Thread
+Thread::rtruediv(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected form of [`truediv()`](truediv.md) — computes `other / (*this)` with
+both operands promoted to floating point first, the same guarantee `truediv()`
+makes in the forward direction.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+Same shape as [`truediv()`](truediv.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Float64` thread holding `other / (*this)`, elementwise.
 
 ## Examples
 
-Example 1. Apply `rtruediv` to the current thread using explicit `other` arguments.
+Example 1. Divide a scalar by every value.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rtruediv(other);
+auto prices = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto out = prices.rtruediv(4.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
-```
-Example 2. Apply `rtruediv` to the current thread using explicit `other` arguments.
+0  0.4
+1  0.2
+2  0.1333333333
 
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.rtruediv(10.0);
+ptype: Series
 ```
 
-### Output
+Matches [`prices.rdiv(4.0)`](rdiv.md) exactly for this `Float64` data.
 
-```text
-[10.0, 20.0, 30.0]
-```
+## Notes
 
+- See [`rdiv()`](rdiv.md) for a second example against another thread — the two
+  methods agree in every case shown in this reference, differing only in their
+  type-promotion guarantee for non-`Float64` source data.
+
+## See Also
+
+- [`Thread::truediv`](truediv.md): the forward form.
+- [`Thread::rdiv`](rdiv.md): the more permissive reflected counterpart.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rsub.html">

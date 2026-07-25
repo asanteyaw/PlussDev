@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::info" href="info.html" />
@@ -36,44 +36,205 @@
 
           <div class="body" role="main">
             
-  <section id="thread-indicate">
+  <!-- pluss-hand-authored -->
+<section id="thread-indicate">
 <h1>Thread::indicate<a class="headerlink" href="#thread-indicate" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">indicate</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">indicate</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">,</span>
+<span class="w">                 </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a boolean indicator thread showing which entries satisfy the requested predicate.</p>
+<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread on <code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, collects every distinct
+non-empty token seen anywhere in the thread, and produces one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> column per
+distinct token (“level”) — the classic one-hot / multi-label indicator (“dummy
+variable”) encoding, for a text thread that holds delimiter-separated tags,
+categories, or labels rather than a single value per cell. Requires the thread to be
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Column <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> for a row if <code class="docutils literal notranslate"><span class="pre">level</span></code> is one of that
+row’s tokens, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+<p>Levels are collected into a <code class="docutils literal notranslate"><span class="pre">std::set&lt;std::string&gt;</span></code>, so the output columns always
+appear in <strong>sorted (alphabetical) order</strong> — not first-seen order, and not any order
+tied to the input data’s row sequence.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>indicate() never attaches a validity mask — invalid rows are just all-false, not NULL
+Unlike every other method in this family, <code class="docutils literal notranslate"><span class="pre">indicate()</span></code>’s output columns carry <strong>no
+validity mask at all</strong>. A row that was invalid on input doesn’t show <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the
+indicator columns — it shows <code class="docutils literal notranslate"><span class="pre">false</span></code> in every one of them, exactly the same as a row
+that’s genuinely valid but happens to match none of the levels. There is no way to
+tell “this row is invalid” apart from “this row matched nothing” by looking at
+<code class="docutils literal notranslate"><span class="pre">indicate()</span></code>’s output alone. See Example 1.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>An invalid row’s hidden text can still create a phantom output column
+The set of levels is collected from <strong>every row’s underlying text</strong>, including rows
+marked invalid — the delimiter split that builds the level set runs over the whole
+thread before any validity check happens. An invalid cell whose hidden underlying
+text contains a token no valid row ever uses still produces its own indicator column,
+one that’s <code class="docutils literal notranslate"><span class="pre">false</span></code> for every row in the entire result (since no valid row can ever
+match it, and the invalid row itself is skipped when indicators are actually
+computed). See Example 2 — this is the same category of surprise documented on
+<a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>’s single-delimiter overload.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>delimiter</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>prefix</strong>
-Text prefix inserted ahead of the existing label or value.</p>
+<p><strong>delimiter</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code>)
+The literal text to split each cell on before collecting tokens. Must not be
+empty — <code class="docutils literal notranslate"><span class="pre">indicate(&quot;&quot;)</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::indicate:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
+<p><strong>prefix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)
+Text prepended to each level to form its column name — with the default empty
+prefix, a column is named exactly after the level text itself (e.g. a <code class="docutils literal notranslate"><span class="pre">&quot;red&quot;</span></code>
+token produces a column literally named <code class="docutils literal notranslate"><span class="pre">red</span></code>).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> feature per distinct non-empty token seen in the
+thread, sorted alphabetically by token text, named <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. The default <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code> delimiter, and the all-false-for-invalid-rows behavior
+from the danger box above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">indicate</span><span class="p">(</span><span class="s">&quot;demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;demo&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;red|blue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blue|green&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tagged</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">indicate</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  red|blue
+1  blue|green
+2  red
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | blue   green  red  
+--------------------------
+0    | true   false  true 
+1    | true   true   false
+2    | false  false  true 
+3    | false  false  false
+--------------------------
+[4 cs x 3 feat]
 </pre></div>
 </div>
+<p>Three distinct tokens appear across the valid rows — <code class="docutils literal notranslate"><span class="pre">&quot;blue&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;green&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;red&quot;</span></code> —
+in alphabetical column order (not the order they first appear in the data). Row 3 was
+invalid on input; notice it shows <code class="docutils literal notranslate"><span class="pre">false</span></code> in every column, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — indistinguishable,
+from this table alone, from a valid row that simply matched none of the levels.</p>
+<p>Example 2. A custom delimiter and prefix, and the phantom-column effect from the
+warning above: row 3’s hidden invalid text introduces a level no valid row ever uses.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">langs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;python, rust&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;python, go&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;just-one-word&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mars&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">langs</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">langs</span><span class="p">.</span><span class="n">indicate</span><span class="p">(</span><span class="s">&quot;, &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;know_&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-before-row-3-is-invalid-its-underlying-text-is-invisible-here">
+<h3>Output (before — row 3 is invalid, its underlying text is invisible here)<a class="headerlink" href="#output-before-row-3-is-invalid-its-underlying-text-is-invisible-here" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  python, rust
+1  python, go
+2  just-one-word
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================================================================
+     | know_go  know_just-one-word  know_mars  know_python  know_rust
+---------------------------------------------------------------------
+0    | false    false               false      true         true     
+1    | true     false               false      true         false    
+2    | false    true                false      false        false    
+3    | false    false               false      false        false    
+---------------------------------------------------------------------
+[4 cs x 5 feat]
+</pre></div>
+</div>
+<p>Row 3’s hidden text is <code class="docutils literal notranslate"><span class="pre">&quot;mars&quot;</span></code> — a level none of the three valid rows ever mention.
+It still produces a <code class="docutils literal notranslate"><span class="pre">know_mars</span></code> column, one that reads <code class="docutils literal notranslate"><span class="pre">false</span></code> for every single row
+in the table: no valid row can match it (they never say <code class="docutils literal notranslate"><span class="pre">&quot;mars&quot;</span></code>), and row 3 itself is
+skipped when indicators are computed (since it’s invalid), so the column simply
+exists as inert padding.</p>
+<p>Example 3. An empty delimiter throws immediately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">indicate</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::indicate: delimiter cannot be empty
+</pre></div>
+</div>
+<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">indicate</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::indicate: expected Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Output columns are sorted alphabetically by token text, not by first-appearance
+order.</p></li>
+<li><p>No validity mask is attached to the result at all — invalid input rows show
+<code class="docutils literal notranslate"><span class="pre">false</span></code> everywhere, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. See the danger box above.</p></li>
+<li><p>The level set is collected from every row’s raw text regardless of validity, so an
+invalid row can introduce an all-false phantom column. See the warning above and
+Example 2.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">delimiter</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::indicate:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::split</span></code></span></a>: the same underlying delimiter-split mechanic,
+producing positional columns instead of one-hot level columns — and sharing the
+same invalid-row-inflates-output quirk on its single-delimiter overload.</p></li>
+<li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::has</span></code></span></a>: test for a single specific substring instead of
+enumerating every distinct delimited token.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
@@ -84,7 +245,6 @@ Value produced by this call.</p>
     <span class="title">info</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

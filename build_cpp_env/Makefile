@@ -648,6 +648,19 @@ plussai_minimax_multiblock_constraints_demo/fast:
 .PHONY : plussai_minimax_multiblock_constraints_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_nodeb_textcat_mvp
+
+# Build rule for target.
+plussai_nodeb_textcat_mvp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodeb_textcat_mvp
+.PHONY : plussai_nodeb_textcat_mvp
+
+# fast build rule for target.
+plussai_nodeb_textcat_mvp/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_textcat_mvp.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_textcat_mvp.dir/build
+.PHONY : plussai_nodeb_textcat_mvp/fast
+
+#=============================================================================
 # Target rules for targets named plussai_bike_sharing_end_to_end
 
 # Build rule for target.
@@ -1426,6 +1439,97 @@ nn_training_parity_test: cmake_check_build_system
 nn_training_parity_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build
 .PHONY : nn_training_parity_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_linguistics_test
+
+# Build rule for target.
+nodeb_linguistics_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_linguistics_test
+.PHONY : nodeb_linguistics_test
+
+# fast build rule for target.
+nodeb_linguistics_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build
+.PHONY : nodeb_linguistics_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_syntax_test
+
+# Build rule for target.
+nodeb_syntax_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_syntax_test
+.PHONY : nodeb_syntax_test
+
+# fast build rule for target.
+nodeb_syntax_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build
+.PHONY : nodeb_syntax_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_tokenizer_test
+
+# Build rule for target.
+nodeb_tokenizer_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_tokenizer_test
+.PHONY : nodeb_tokenizer_test
+
+# fast build rule for target.
+nodeb_tokenizer_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build
+.PHONY : nodeb_tokenizer_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_trainable_test
+
+# Build rule for target.
+nodeb_trainable_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_trainable_test
+.PHONY : nodeb_trainable_test
+
+# fast build rule for target.
+nodeb_trainable_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build
+.PHONY : nodeb_trainable_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_vectorize_test
+
+# Build rule for target.
+nodeb_vectorize_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_vectorize_test
+.PHONY : nodeb_vectorize_test
+
+# fast build rule for target.
+nodeb_vectorize_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build
+.PHONY : nodeb_vectorize_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_vocab_test
+
+# Build rule for target.
+nodeb_vocab_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_vocab_test
+.PHONY : nodeb_vocab_test
+
+# fast build rule for target.
+nodeb_vocab_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build
+.PHONY : nodeb_vocab_test/fast
+
+#=============================================================================
+# Target rules for targets named nodeb_workflow_test
+
+# Build rule for target.
+nodeb_workflow_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodeb_workflow_test
+.PHONY : nodeb_workflow_test
+
+# fast build rule for target.
+nodeb_workflow_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build
+.PHONY : nodeb_workflow_test/fast
 
 #=============================================================================
 # Target rules for targets named nodej_balance_test
@@ -5132,6 +5236,294 @@ plussmic_table_gap_benchmark/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build
 .PHONY : plussmic_table_gap_benchmark/fast
 
+PlussAI/NodeB/core/doc_types.o: PlussAI/NodeB/core/doc_types.cpp.o
+.PHONY : PlussAI/NodeB/core/doc_types.o
+
+# target to build an object file
+PlussAI/NodeB/core/doc_types.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/core/doc_types.cpp.o
+.PHONY : PlussAI/NodeB/core/doc_types.cpp.o
+
+PlussAI/NodeB/core/doc_types.i: PlussAI/NodeB/core/doc_types.cpp.i
+.PHONY : PlussAI/NodeB/core/doc_types.i
+
+# target to preprocess a source file
+PlussAI/NodeB/core/doc_types.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/core/doc_types.cpp.i
+.PHONY : PlussAI/NodeB/core/doc_types.cpp.i
+
+PlussAI/NodeB/core/doc_types.s: PlussAI/NodeB/core/doc_types.cpp.s
+.PHONY : PlussAI/NodeB/core/doc_types.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/core/doc_types.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/core/doc_types.cpp.s
+.PHONY : PlussAI/NodeB/core/doc_types.cpp.s
+
+PlussAI/NodeB/eval/metrics.o: PlussAI/NodeB/eval/metrics.cpp.o
+.PHONY : PlussAI/NodeB/eval/metrics.o
+
+# target to build an object file
+PlussAI/NodeB/eval/metrics.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/eval/metrics.cpp.o
+.PHONY : PlussAI/NodeB/eval/metrics.cpp.o
+
+PlussAI/NodeB/eval/metrics.i: PlussAI/NodeB/eval/metrics.cpp.i
+.PHONY : PlussAI/NodeB/eval/metrics.i
+
+# target to preprocess a source file
+PlussAI/NodeB/eval/metrics.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/eval/metrics.cpp.i
+.PHONY : PlussAI/NodeB/eval/metrics.cpp.i
+
+PlussAI/NodeB/eval/metrics.s: PlussAI/NodeB/eval/metrics.cpp.s
+.PHONY : PlussAI/NodeB/eval/metrics.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/eval/metrics.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/eval/metrics.cpp.s
+.PHONY : PlussAI/NodeB/eval/metrics.cpp.s
+
+PlussAI/NodeB/pipeline/workflow.o: PlussAI/NodeB/pipeline/workflow.cpp.o
+.PHONY : PlussAI/NodeB/pipeline/workflow.o
+
+# target to build an object file
+PlussAI/NodeB/pipeline/workflow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/pipeline/workflow.cpp.o
+.PHONY : PlussAI/NodeB/pipeline/workflow.cpp.o
+
+PlussAI/NodeB/pipeline/workflow.i: PlussAI/NodeB/pipeline/workflow.cpp.i
+.PHONY : PlussAI/NodeB/pipeline/workflow.i
+
+# target to preprocess a source file
+PlussAI/NodeB/pipeline/workflow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/pipeline/workflow.cpp.i
+.PHONY : PlussAI/NodeB/pipeline/workflow.cpp.i
+
+PlussAI/NodeB/pipeline/workflow.s: PlussAI/NodeB/pipeline/workflow.cpp.s
+.PHONY : PlussAI/NodeB/pipeline/workflow.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/pipeline/workflow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/pipeline/workflow.cpp.s
+.PHONY : PlussAI/NodeB/pipeline/workflow.cpp.s
+
+PlussAI/NodeB/tasks/lemmatizer/lemmatizer.o: PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.o
+.PHONY : PlussAI/NodeB/tasks/lemmatizer/lemmatizer.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.o
+.PHONY : PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.o
+
+PlussAI/NodeB/tasks/lemmatizer/lemmatizer.i: PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.i
+.PHONY : PlussAI/NodeB/tasks/lemmatizer/lemmatizer.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.i
+.PHONY : PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.i
+
+PlussAI/NodeB/tasks/lemmatizer/lemmatizer.s: PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.s
+.PHONY : PlussAI/NodeB/tasks/lemmatizer/lemmatizer.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.s
+.PHONY : PlussAI/NodeB/tasks/lemmatizer/lemmatizer.cpp.s
+
+PlussAI/NodeB/tasks/matcher/matcher.o: PlussAI/NodeB/tasks/matcher/matcher.cpp.o
+.PHONY : PlussAI/NodeB/tasks/matcher/matcher.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/matcher/matcher.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/matcher/matcher.cpp.o
+.PHONY : PlussAI/NodeB/tasks/matcher/matcher.cpp.o
+
+PlussAI/NodeB/tasks/matcher/matcher.i: PlussAI/NodeB/tasks/matcher/matcher.cpp.i
+.PHONY : PlussAI/NodeB/tasks/matcher/matcher.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/matcher/matcher.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/matcher/matcher.cpp.i
+.PHONY : PlussAI/NodeB/tasks/matcher/matcher.cpp.i
+
+PlussAI/NodeB/tasks/matcher/matcher.s: PlussAI/NodeB/tasks/matcher/matcher.cpp.s
+.PHONY : PlussAI/NodeB/tasks/matcher/matcher.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/matcher/matcher.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/matcher/matcher.cpp.s
+.PHONY : PlussAI/NodeB/tasks/matcher/matcher.cpp.s
+
+PlussAI/NodeB/tasks/ner/ner.o: PlussAI/NodeB/tasks/ner/ner.cpp.o
+.PHONY : PlussAI/NodeB/tasks/ner/ner.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/ner/ner.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/ner/ner.cpp.o
+.PHONY : PlussAI/NodeB/tasks/ner/ner.cpp.o
+
+PlussAI/NodeB/tasks/ner/ner.i: PlussAI/NodeB/tasks/ner/ner.cpp.i
+.PHONY : PlussAI/NodeB/tasks/ner/ner.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/ner/ner.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/ner/ner.cpp.i
+.PHONY : PlussAI/NodeB/tasks/ner/ner.cpp.i
+
+PlussAI/NodeB/tasks/ner/ner.s: PlussAI/NodeB/tasks/ner/ner.cpp.s
+.PHONY : PlussAI/NodeB/tasks/ner/ner.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/ner/ner.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/ner/ner.cpp.s
+.PHONY : PlussAI/NodeB/tasks/ner/ner.cpp.s
+
+PlussAI/NodeB/tasks/sentencizer/sentencizer.o: PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.o
+.PHONY : PlussAI/NodeB/tasks/sentencizer/sentencizer.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.o
+.PHONY : PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.o
+
+PlussAI/NodeB/tasks/sentencizer/sentencizer.i: PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.i
+.PHONY : PlussAI/NodeB/tasks/sentencizer/sentencizer.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.i
+.PHONY : PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.i
+
+PlussAI/NodeB/tasks/sentencizer/sentencizer.s: PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.s
+.PHONY : PlussAI/NodeB/tasks/sentencizer/sentencizer.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.s
+.PHONY : PlussAI/NodeB/tasks/sentencizer/sentencizer.cpp.s
+
+PlussAI/NodeB/tasks/syntax/syntax.o: PlussAI/NodeB/tasks/syntax/syntax.cpp.o
+.PHONY : PlussAI/NodeB/tasks/syntax/syntax.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/syntax/syntax.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/syntax/syntax.cpp.o
+.PHONY : PlussAI/NodeB/tasks/syntax/syntax.cpp.o
+
+PlussAI/NodeB/tasks/syntax/syntax.i: PlussAI/NodeB/tasks/syntax/syntax.cpp.i
+.PHONY : PlussAI/NodeB/tasks/syntax/syntax.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/syntax/syntax.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/syntax/syntax.cpp.i
+.PHONY : PlussAI/NodeB/tasks/syntax/syntax.cpp.i
+
+PlussAI/NodeB/tasks/syntax/syntax.s: PlussAI/NodeB/tasks/syntax/syntax.cpp.s
+.PHONY : PlussAI/NodeB/tasks/syntax/syntax.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/syntax/syntax.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/syntax/syntax.cpp.s
+.PHONY : PlussAI/NodeB/tasks/syntax/syntax.cpp.s
+
+PlussAI/NodeB/tasks/tagger/tagger.o: PlussAI/NodeB/tasks/tagger/tagger.cpp.o
+.PHONY : PlussAI/NodeB/tasks/tagger/tagger.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/tagger/tagger.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/tagger/tagger.cpp.o
+.PHONY : PlussAI/NodeB/tasks/tagger/tagger.cpp.o
+
+PlussAI/NodeB/tasks/tagger/tagger.i: PlussAI/NodeB/tasks/tagger/tagger.cpp.i
+.PHONY : PlussAI/NodeB/tasks/tagger/tagger.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/tagger/tagger.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/tagger/tagger.cpp.i
+.PHONY : PlussAI/NodeB/tasks/tagger/tagger.cpp.i
+
+PlussAI/NodeB/tasks/tagger/tagger.s: PlussAI/NodeB/tasks/tagger/tagger.cpp.s
+.PHONY : PlussAI/NodeB/tasks/tagger/tagger.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/tagger/tagger.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/tagger/tagger.cpp.s
+.PHONY : PlussAI/NodeB/tasks/tagger/tagger.cpp.s
+
+PlussAI/NodeB/tasks/textcat/textcat.o: PlussAI/NodeB/tasks/textcat/textcat.cpp.o
+.PHONY : PlussAI/NodeB/tasks/textcat/textcat.o
+
+# target to build an object file
+PlussAI/NodeB/tasks/textcat/textcat.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/textcat/textcat.cpp.o
+.PHONY : PlussAI/NodeB/tasks/textcat/textcat.cpp.o
+
+PlussAI/NodeB/tasks/textcat/textcat.i: PlussAI/NodeB/tasks/textcat/textcat.cpp.i
+.PHONY : PlussAI/NodeB/tasks/textcat/textcat.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tasks/textcat/textcat.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/textcat/textcat.cpp.i
+.PHONY : PlussAI/NodeB/tasks/textcat/textcat.cpp.i
+
+PlussAI/NodeB/tasks/textcat/textcat.s: PlussAI/NodeB/tasks/textcat/textcat.cpp.s
+.PHONY : PlussAI/NodeB/tasks/textcat/textcat.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tasks/textcat/textcat.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tasks/textcat/textcat.cpp.s
+.PHONY : PlussAI/NodeB/tasks/textcat/textcat.cpp.s
+
+PlussAI/NodeB/tokenize/rule_tokenizer.o: PlussAI/NodeB/tokenize/rule_tokenizer.cpp.o
+.PHONY : PlussAI/NodeB/tokenize/rule_tokenizer.o
+
+# target to build an object file
+PlussAI/NodeB/tokenize/rule_tokenizer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tokenize/rule_tokenizer.cpp.o
+.PHONY : PlussAI/NodeB/tokenize/rule_tokenizer.cpp.o
+
+PlussAI/NodeB/tokenize/rule_tokenizer.i: PlussAI/NodeB/tokenize/rule_tokenizer.cpp.i
+.PHONY : PlussAI/NodeB/tokenize/rule_tokenizer.i
+
+# target to preprocess a source file
+PlussAI/NodeB/tokenize/rule_tokenizer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tokenize/rule_tokenizer.cpp.i
+.PHONY : PlussAI/NodeB/tokenize/rule_tokenizer.cpp.i
+
+PlussAI/NodeB/tokenize/rule_tokenizer.s: PlussAI/NodeB/tokenize/rule_tokenizer.cpp.s
+.PHONY : PlussAI/NodeB/tokenize/rule_tokenizer.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/tokenize/rule_tokenizer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/tokenize/rule_tokenizer.cpp.s
+.PHONY : PlussAI/NodeB/tokenize/rule_tokenizer.cpp.s
+
+PlussAI/NodeB/vectorize/vectorize.o: PlussAI/NodeB/vectorize/vectorize.cpp.o
+.PHONY : PlussAI/NodeB/vectorize/vectorize.o
+
+# target to build an object file
+PlussAI/NodeB/vectorize/vectorize.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/vectorize/vectorize.cpp.o
+.PHONY : PlussAI/NodeB/vectorize/vectorize.cpp.o
+
+PlussAI/NodeB/vectorize/vectorize.i: PlussAI/NodeB/vectorize/vectorize.cpp.i
+.PHONY : PlussAI/NodeB/vectorize/vectorize.i
+
+# target to preprocess a source file
+PlussAI/NodeB/vectorize/vectorize.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/vectorize/vectorize.cpp.i
+.PHONY : PlussAI/NodeB/vectorize/vectorize.cpp.i
+
+PlussAI/NodeB/vectorize/vectorize.s: PlussAI/NodeB/vectorize/vectorize.cpp.s
+.PHONY : PlussAI/NodeB/vectorize/vectorize.s
+
+# target to generate assembly for a file
+PlussAI/NodeB/vectorize/vectorize.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeB/vectorize/vectorize.cpp.s
+.PHONY : PlussAI/NodeB/vectorize/vectorize.cpp.s
+
 PlussAI/NodeJ/balance/balance.o: PlussAI/NodeJ/balance/balance.cpp.o
 .PHONY : PlussAI/NodeJ/balance/balance.o
 
@@ -7710,6 +8102,13 @@ help:
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
+	@echo "... nodeb_linguistics_test"
+	@echo "... nodeb_syntax_test"
+	@echo "... nodeb_tokenizer_test"
+	@echo "... nodeb_trainable_test"
+	@echo "... nodeb_vectorize_test"
+	@echo "... nodeb_vocab_test"
+	@echo "... nodeb_workflow_test"
 	@echo "... nodej_balance_test"
 	@echo "... nodej_bayes_kernel_test"
 	@echo "... nodej_cv_tune_test"
@@ -7765,6 +8164,7 @@ help:
 	@echo "... plussai_nn_schedule_demo"
 	@echo "... plussai_nn_sp500_lstm_end_to_end_minimal_demo"
 	@echo "... plussai_nn_transformer_demo"
+	@echo "... plussai_nodeb_textcat_mvp"
 	@echo "... plussai_nodej_cv_tune_demo"
 	@echo "... plussai_nodej_dataframe_bridge_demo"
 	@echo "... plussai_nodej_end_to_end_hour_workflow_showcase"
@@ -7991,6 +8391,42 @@ help:
 	@echo "... ts_vecm_catch2"
 	@echo "... ts_vecm_test"
 	@echo "... ts_vol_catch2"
+	@echo "... PlussAI/NodeB/core/doc_types.o"
+	@echo "... PlussAI/NodeB/core/doc_types.i"
+	@echo "... PlussAI/NodeB/core/doc_types.s"
+	@echo "... PlussAI/NodeB/eval/metrics.o"
+	@echo "... PlussAI/NodeB/eval/metrics.i"
+	@echo "... PlussAI/NodeB/eval/metrics.s"
+	@echo "... PlussAI/NodeB/pipeline/workflow.o"
+	@echo "... PlussAI/NodeB/pipeline/workflow.i"
+	@echo "... PlussAI/NodeB/pipeline/workflow.s"
+	@echo "... PlussAI/NodeB/tasks/lemmatizer/lemmatizer.o"
+	@echo "... PlussAI/NodeB/tasks/lemmatizer/lemmatizer.i"
+	@echo "... PlussAI/NodeB/tasks/lemmatizer/lemmatizer.s"
+	@echo "... PlussAI/NodeB/tasks/matcher/matcher.o"
+	@echo "... PlussAI/NodeB/tasks/matcher/matcher.i"
+	@echo "... PlussAI/NodeB/tasks/matcher/matcher.s"
+	@echo "... PlussAI/NodeB/tasks/ner/ner.o"
+	@echo "... PlussAI/NodeB/tasks/ner/ner.i"
+	@echo "... PlussAI/NodeB/tasks/ner/ner.s"
+	@echo "... PlussAI/NodeB/tasks/sentencizer/sentencizer.o"
+	@echo "... PlussAI/NodeB/tasks/sentencizer/sentencizer.i"
+	@echo "... PlussAI/NodeB/tasks/sentencizer/sentencizer.s"
+	@echo "... PlussAI/NodeB/tasks/syntax/syntax.o"
+	@echo "... PlussAI/NodeB/tasks/syntax/syntax.i"
+	@echo "... PlussAI/NodeB/tasks/syntax/syntax.s"
+	@echo "... PlussAI/NodeB/tasks/tagger/tagger.o"
+	@echo "... PlussAI/NodeB/tasks/tagger/tagger.i"
+	@echo "... PlussAI/NodeB/tasks/tagger/tagger.s"
+	@echo "... PlussAI/NodeB/tasks/textcat/textcat.o"
+	@echo "... PlussAI/NodeB/tasks/textcat/textcat.i"
+	@echo "... PlussAI/NodeB/tasks/textcat/textcat.s"
+	@echo "... PlussAI/NodeB/tokenize/rule_tokenizer.o"
+	@echo "... PlussAI/NodeB/tokenize/rule_tokenizer.i"
+	@echo "... PlussAI/NodeB/tokenize/rule_tokenizer.s"
+	@echo "... PlussAI/NodeB/vectorize/vectorize.o"
+	@echo "... PlussAI/NodeB/vectorize/vectorize.i"
+	@echo "... PlussAI/NodeB/vectorize/vectorize.s"
 	@echo "... PlussAI/NodeJ/balance/balance.o"
 	@echo "... PlussAI/NodeJ/balance/balance.i"
 	@echo "... PlussAI/NodeJ/balance/balance.s"

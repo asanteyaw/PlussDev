@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 
 #include "MSharp/IntrusivePtr.h"
 #include "table/Thread.h"
@@ -30,6 +31,15 @@ enum class StreamKind : std::uint8_t {
   Note = 1,
   Timeline = 2,
   TimeIndex = 3,
+};
+
+struct DistinctOptions {
+  bool dropnull{true};
+};
+
+struct FreqOptions {
+  std::int64_t top{0};
+  bool dropnull{true};
 };
 
 class Stream {
@@ -59,12 +69,17 @@ public:
   bool defined() const noexcept;
   bool unique() const noexcept;
   std::int64_t size() const;
+  std::int64_t nrecords() const;
+  bool empty() const;
+  std::pair<std::int64_t, std::int64_t> shape() const;
   StreamKind kind() const;
+  std::string ptype() const;
   std::string dtype() const;
 
   // Stream-native missing/predicate helpers (delegates to Thread).
   Stream isnull() const;
   Stream notnull() const;
+  Stream invalid() const;
 
   // Stream-native transforms (delegates to Thread where applicable).
   Stream fillnull(double value) const;
@@ -79,12 +94,12 @@ public:
   Stream log() const;
   Stream exp() const;
 
-  bool has_cases() const;
-  const std::optional<pluss::table::Thread>& cases() const;
-  Stream with_cases(const pluss::table::Thread& cases) const;
-  Stream& with_cases_(const pluss::table::Thread& cases);
-  Stream clear_cases() const;
-  Stream& clear_cases_();
+  bool has_label() const;
+  const std::optional<pluss::table::Thread>& label() const;
+  Stream with_label(const pluss::table::Thread& label) const;
+  Stream& with_label_(const pluss::table::Thread& label);
+  Stream clear_label() const;
+  Stream& clear_label_();
 
   // Free-form metadata attached to the stream (extensible control surface).
   bool has_meta(std::string_view key) const;
@@ -106,9 +121,12 @@ public:
   Stream slice(std::int64_t start, std::int64_t stop) const;
   Stream take(std::span<const std::int64_t> indices) const;
   Stream filter(const pluss::Series& bool_mask) const;
-  Stream dropna() const;
+  Stream dropnull() const;
   Stream ffill() const;
   Stream bfill() const;
+  Stream distinct(DistinctOptions options = {}) const;
+  Stream freq(FreqOptions options = {}) const;
+  Stream ndistinct(DistinctOptions options = {}) const;
 
   // Type conversion.
   Stream cast(pluss::table::ThreadCastTarget target,

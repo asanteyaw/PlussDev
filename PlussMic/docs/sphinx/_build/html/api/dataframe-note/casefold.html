@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::chars" href="chars.html" />
@@ -36,18 +36,41 @@
 
           <div class="body" role="main">
             
-  <section id="dataframenoteaccessor-casefold">
+  <!-- pluss-hand-authored -->
+<section id="dataframenoteaccessor-casefold">
 <h1>DataFrameNoteAccessor::casefold<a class="headerlink" href="#dataframenoteaccessor-casefold" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">casefold</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">casefold</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Produces a case-insensitive-comparison form of every selected text feature’s
+cells — conceptually similar to <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>, but intended
+specifically as a normalization step <em>before equality comparison</em>, not as a
+display transform. The distinction matters in full Unicode case handling:
+true Unicode case folding can differ from a simple lowercase mapping for
+certain characters (the canonical example is German <code class="docutils literal notranslate"><span class="pre">ß</span></code>, which case-folds to
+<code class="docutils literal notranslate"><span class="pre">ss</span></code> rather than lowercasing to itself) — <code class="docutils literal notranslate"><span class="pre">casefold()</span></code> is the method that’s
+supposed to get that right, where <code class="docutils literal notranslate"><span class="pre">lower()</span></code> is not.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This build’s actual behavior
+<code class="docutils literal notranslate"><span class="pre">casefold()</span></code>’s Unicode-aware folding (handling cases like <code class="docutils literal notranslate"><span class="pre">ß</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">ss</span></code>) is
+only active when this build links the optional Unicode backend (GNU
+libunistring). Without it, <code class="docutils literal notranslate"><span class="pre">casefold()</span></code> falls back to being <strong>functionally
+identical to <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a></strong> — same output, same ASCII-only
+guarantees. On plain ASCII input, <code class="docutils literal notranslate"><span class="pre">casefold()</span></code> and <code class="docutils literal notranslate"><span class="pre">lower()</span></code> always produce
+the same result regardless of build configuration, since ASCII case mapping
+has no folding-vs-lowering distinction to begin with. Confirm your build’s
+Unicode support before relying on the two methods actually diverging.</p>
+</div>
+<p>Like every method on this accessor, <code class="docutils literal notranslate"><span class="pre">casefold()</span></code> applies to <strong>every feature
+the accessor was built with</strong> in one call — see <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a> for
+the shared mechanic and how null cells pass through unaffected.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,34 +79,125 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with every selected feature’s text case-folded.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<p>Example 1. Case-fold a mixed-case text feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">casefold</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">roles_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;role&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;MEMBER&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Guest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Admin&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">roles_a</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">folded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">casefold</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">folded</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+     | role  
+-------------
+0    | MEMBER
+1    | Guest 
+2    | Admin 
+-------------
+[3 cs x 1 feat]
 </pre></div>
 </div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+     | role  
+-------------
+0    | member
+1    | guest 
+2    | admin 
+-------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>On this plain-ASCII input, the result is identical to what
+<code class="docutils literal notranslate"><span class="pre">roles_a.note().lower()</span></code> would produce.</p>
+<p>Example 2. The actual motivating use case: normalize two differently-cased
+frames before comparing them, instead of comparing the raw text directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">roles_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;role&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;member&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;GUEST&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;admin&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">raw_eq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">roles_b</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">raw_eq</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">folded_eq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">casefold</span><span class="p">().</span><span class="n">eq</span><span class="p">(</span><span class="n">roles_b</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">casefold</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">folded_eq</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-raw-eq">
+<h3>Output (raw eq)<a class="headerlink" href="#output-raw-eq" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | role 
+------------
+0    | false
+1    | false
+2    | false
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-casefolded-eq">
+<h3>Output (casefolded eq)<a class="headerlink" href="#output-casefolded-eq" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | role
+-----------
+0    | true
+1    | true
+2    | true
+-----------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">roles_a</span></code> and <code class="docutils literal notranslate"><span class="pre">roles_b</span></code> hold the same three role names, just typed with
+different casing conventions (<code class="docutils literal notranslate"><span class="pre">&quot;MEMBER&quot;</span></code> vs. <code class="docutils literal notranslate"><span class="pre">&quot;member&quot;</span></code>, and so on) — a
+direct <code class="docutils literal notranslate"><span class="pre">eq()</span></code> on the raw text reports every row as different. Case-folding
+both sides first makes the comparison casing-insensitive, correctly reporting
+all three rows as equal.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Applies to every feature the accessor was built with, in one call — see
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>’s Notes for the mechanics shared by every method on
+this accessor.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>Reach for <code class="docutils literal notranslate"><span class="pre">casefold()</span></code>, not <code class="docutils literal notranslate"><span class="pre">lower()</span></code>, whenever the goal is a
+case-insensitive <em>comparison</em> — even though the two currently produce
+identical output on ASCII text in every build, <code class="docutils literal notranslate"><span class="pre">casefold()</span></code> states the
+intent explicitly and is the one that picks up full Unicode folding
+automatically if this build’s Unicode backend changes.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::lower</span></code></span></a>: the plain lowercase display
+transform this method is easy to confuse with.</p></li>
+<li><p><a class="reference internal" href="../dataframe/eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::eq</span></code></span></a>: the comparison this method is
+usually a normalization step for.</p></li>
+<li><p><a class="reference internal" href="titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::titlecase</span></code></span></a>: a display-oriented case
+transform, not a comparison-oriented one.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="chars.html">
     <span class="label">Next</span>
     <span class="title">chars</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

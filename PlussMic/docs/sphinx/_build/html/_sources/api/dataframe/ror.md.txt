@@ -49,8 +49,8 @@ auto left = DataFrame({
 }, pluss::make_note({"p", "q", "r"}));
 
 auto right = DataFrame({
-    {"a", pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
-    {"b", pluss::make_series({false, true, true}, pluss::ScalarType::Bool)},
+    {"a", pluss::make_series({false, false, false}, pluss::ScalarType::Bool)},
+    {"b", pluss::make_series({false, false, true}, pluss::ScalarType::Bool)},
 }, pluss::make_note({"x", "y", "z"}));
 
 auto out = left.ror(right);
@@ -60,18 +60,40 @@ std::cout << out;
 ### Output
 
 ```text
-=================
-     | a     b   
------------------
-p    | true  true
-q    | true  true
-r    | true  true
------------------
+===================
+     | a      b    
+-------------------
+p    | true   true 
+q    | false  true 
+r    | true   true 
+-------------------
 [3 cs x 2 feat]
 ```
 
 The values match [`left.lor(right)`](lor.md) exactly, and the case labels are `left`'s
 own (`p, q, r`) — `right`'s labels (`x, y, z`) never appear in the result.
+
+Example 2. OR against a single shared `Thread`, applied identically to every feature —
+same result as [`left.lor(mask)`](lor.md).
+
+```cpp
+auto mask = Thread(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_thread = left.ror(mask);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+===================
+     | a     b    
+-------------------
+p    | true  true 
+q    | true  true 
+r    | true  false
+-------------------
+[3 cs x 2 feat]
+```
 
 ## Notes
 

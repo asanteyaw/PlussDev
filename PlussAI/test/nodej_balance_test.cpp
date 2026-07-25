@@ -189,13 +189,26 @@ bool run_nodej_balance_checks(std::ostream* err = nullptr) {
   blend_target.kind = BalanceTargetKind::Equalize;
   blend_target.growth = BalanceGrowthKind::BlendNeighbors;
   blend_target.neighbors = 1;
+  auto labels_only_blend_or = plan_balance(blend_y, blend_target, RandomState{.seed = 23, .deterministic = true});
+  if (labels_only_blend_or.ok() || labels_only_blend_or.status().code != StatusCode::InvalidArgument) {
+    if (err) *err << "labels-only BlendNeighbors planning should reject instead of falling back to replacement\n";
+    return false;
+  }
   auto blend_plan_or = plan_balance(blend_batch, blend_target, RandomState{.seed = 23, .deterministic = true});
   if (!blend_plan_or.ok()) {
     if (err) *err << "batch-aware plan_balance should support BlendNeighbors growth\n";
     return false;
   }
-  if (!blend_plan_or.value().uses_synthesis || blend_plan_or.value().synthetic_base_indices.numel() != 1) {
+  if (!blend_plan_or.value().uses_synthesis || blend_plan_or.value().uses_replacement ||
+      blend_plan_or.value().synthetic_base_indices.numel() != 1) {
     if (err) *err << "BlendNeighbors should describe synthetic row instructions for minority growth\n";
+    return false;
+  }
+  const auto lymph_blend_plan =
+      pluss::ai::lymph::plan_balance(blend_batch, blend_target, RandomState{.seed = 23, .deterministic = true});
+  if (!lymph_blend_plan.uses_synthesis || lymph_blend_plan.uses_replacement ||
+      lymph_blend_plan.synthetic_base_indices.numel() != 1) {
+    if (err) *err << "lymph BlendNeighbors metadata should match NodeJ synthesis/replacement semantics\n";
     return false;
   }
   auto blend_batch_or = balance_rows(blend_batch, blend_target, RandomState{.seed = 23, .deterministic = true});

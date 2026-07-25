@@ -93,6 +93,113 @@ s3   | false  false
 `s2` is the only case that clears the `85` threshold on both features: `90 > 85` and
 `88 > 85` are both `true`, while every `84` and the `72` fall at or below it.
 
+Example 2. Passing `strict = false` reproduces [`ge()`](ge.md) exactly.
+
+```cpp
+auto out_ge_style = scores.gt(84.0, false);
+std::cout << out_ge_style;
+```
+
+### Output
+
+```text
+===================
+      | quiz  final
+-------------------
+s1    | true  true 
+s2    | true  true 
+s3    | true  false
+-------------------
+[3 cs x 2 feat]
+```
+
+With `strict = false`, `84 > 84` (which would be `false` under the default) now
+reports `true` for every case where the value equals `84`, since `84 >= 84` holds —
+`scores.ge(84.0)` would produce this identical result.
+
+Example 3. Broadcast one text value against a `Note`-kind feature — lexicographic
+comparison, same ordering `std::string` itself uses.
+
+```cpp
+auto names = DataFrame({
+    {"name", pluss::make_note({"Ada", "Bola", "Ada"})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_names = names.gt("Ada");
+std::cout << out_names;
+```
+
+### Output
+
+```text
+=============
+      | name 
+-------------
+s1    | false
+s2    | true 
+s3    | false
+-------------
+[3 cs x 1 feat]
+```
+
+Only `"Bola"` sorts strictly after `"Ada"` — the two `"Ada"` cases fail the strict
+relation against themselves.
+
+Example 4. Compare two frames cell by cell once they share the same structure.
+
+```cpp
+auto changed = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 83.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_frames = scores.gt(changed);
+std::cout << out_frames;
+```
+
+### Output
+
+```text
+====================
+      | quiz   final
+--------------------
+s1    | false  false
+s2    | false  false
+s3    | true   false
+--------------------
+[3 cs x 2 feat]
+```
+
+Exactly one `true` cell — `s3`'s `quiz` (`84 > 83`) — since every other cell in
+`changed` is *equal* to `scores`, not strictly less; compare this against
+[`scores.ge(changed)`](ge.md) on the identical two frames, where all of those equal
+cells report `true` instead.
+
+Example 5. Compare against a `Thread` with one value per feature — `quiz` checked
+against `84`, `final` checked against `88`.
+
+```cpp
+auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto out_thread = scores.gt(thresholds);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+====================
+      | quiz   final
+--------------------
+s1    | false  false
+s2    | true   false
+s3    | false  false
+--------------------
+[3 cs x 2 feat]
+```
+
+`quiz > 84` holds only at `s2` (`90`); `final > 88` never holds, since no `final`
+value exceeds `88`.
+
 ## Notes
 
 - `ge()` has no independent implementation — it is always `gt(other, false)` under the

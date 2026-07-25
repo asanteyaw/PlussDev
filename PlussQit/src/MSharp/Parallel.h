@@ -46,6 +46,26 @@ class ParallelRuntime final {
       return;
     }
 
+    // Serializes every top-level call into this runtime: only one run()
+    // call may be "in flight" (from setup through worker completion) at a
+    // time, across all calling threads. Without this, begin_/end_/grain_/
+    // num_blocks_/fn_ below are plain (non-atomic) shared state -- written
+    // under mu_ only during setup, but read by run_blocks_() afterward
+    // *without* holding mu_, by both this call's own thread (below) and
+    // every persistent worker thread. A second run() call's setup can
+    // overwrite that state while the first call's workers are still
+    // reading it, corrupting in-flight block ranges (observed as
+    // out-of-bounds reads inside gather/scatter kernels when two threads
+    // called parallel_for around the same time -- see NodeJ Tree/Ensemble
+    // training, which fans out concurrent std::async workers that each
+    // gather rows). A recursive_mutex, not a plain one: if a callback
+    // invoked via run_blocks_() on *this* thread itself calls
+    // parallel_for() again, that nested call must not self-deadlock.
+    // Calls from worker threads never reach here at all -- parallel_for()
+    // short-circuits to a direct, non-parallel call whenever
+    // g_in_parallel_worker is true.
+    std::lock_guard<std::recursive_mutex> call_lock(call_mu_);
+
     {
       std::lock_guard<std::mutex> lock(mu_);
       begin_ = begin;
@@ -103,6 +123,7 @@ class ParallelRuntime final {
     g_in_parallel_worker = false;
   }
 
+  std::recursive_mutex call_mu_;
   std::mutex mu_;
   std::condition_variable cv_start_;
   std::condition_variable cv_done_;

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::view
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,45 +7,99 @@
 ## Signature
 
 ```cpp
-Thread::view(std::int64_t start, std::int64_t stop, bool render = false) -> ThreadView
+Thread::view(std::int64_t start, std::int64_t stop, bool render = false) const -> ThreadView
 ```
 
 ## What It Does
 
-Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.
+Returns an arbitrary `[start, stop)` positional window as a `ThreadView` — the
+general form [`head()`](head.md)/[`tail()`](tail.md) are anchored special cases of.
+Delegates directly to [`slice()`](slice.md) internally, so it shares that method's
+Python-style negative-index and clamping behavior: `start`/`stop` support negative
+indices (counted from the end), both are clamped into `[0, size()]`, and a `stop`
+that ends up before `start` produces an empty (not erroring) result.
 
 ## Parameters
 
-**start**
-    Inclusive starting position of the slice.
+**start** (`std::int64_t`)
+    Inclusive starting position. Negative values count from the end.
 
-**stop**
-    Exclusive ending position of the slice.
+**stop** (`std::int64_t`)
+    Exclusive ending position. Negative values count from the end.
 
-**render**
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
+**render** (`bool`, default `false`)
+    See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
+    only.
 
 ## Returns
 
 `ThreadView`
-    Value produced by this call.
+    A view over positions `[start, stop)`, clamped into range.
 
 ## Examples
 
-Example 1. Choose whether the returned object should auto-render in display contexts.
+Example 1. A plain forward window.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.view(0, 2, true);
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto out = scores.view(1, 3);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  20
+1  30
+
+ptype: Series
 ```
 
+Example 2. Negative indices count from the end, same as Python slicing.
+
+```cpp
+auto out2 = scores.view(-3, -1);
+std::cout << out2;
+```
+
+### Output
+
+```text
+0  30
+1  40
+
+ptype: Series
+```
+
+Example 3. Out-of-range bounds clamp; a `stop` before `start` yields an empty
+result rather than an error.
+
+```cpp
+auto out3 = scores.view(3, 1);
+std::cout << out3;
+```
+
+### Output
+
+```text
+ptype: Series
+```
+
+## Notes
+
+- Delegates to [`slice()`](slice.md) — shares its negative-index and clamping
+  semantics exactly.
+- Never throws for out-of-range or inverted bounds; an inverted `[start, stop)`
+  just produces an empty view.
+
+## See Also
+
+- [`Thread::head`](head.md) / [`Thread::tail`](tail.md): anchored special cases of
+  this method.
+- [`Thread::slice`](slice.md): the plain-`Thread`-returning method this delegates
+  to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="var.html">

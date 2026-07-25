@@ -806,6 +806,85 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     }
   }
 
+  {
+    namespace lymph = pluss::ai::lymph;
+    const Series x_series = pluss::make_series(
+        std::vector<double>{-2.0, -1.0, 0.0, 1.0, 2.0, 3.0},
+        {6},
+        f64());
+    const Series y = pluss::make_series(
+        std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0},
+        {6},
+        f64());
+    const pluss::table::DataFrame x({
+        {"x", pluss::table::Thread(x_series)},
+    });
+
+    std::vector<lymph::selection::Candidate> candidates;
+    candidates.emplace_back(
+        "linear",
+        lymph::Workflow{
+            .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{
+                .objective = LinearObjective::LeastSquares,
+                .regularization = RegularizationKind::None,
+                .fit_intercept = true,
+            }),
+        });
+    candidates.emplace_back(
+        "ridge",
+        lymph::Workflow{
+            .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{
+                .objective = LinearObjective::LeastSquares,
+                .regularization = RegularizationKind::L2,
+                .regularization_strength = 10.0,
+                .fit_intercept = true,
+            }),
+        });
+
+    lymph::CrossValidationOptions cv{};
+    cv.plan = CVPlanKind::CrossVal;
+    cv.folds = 3;
+    cv.shuffle = false;
+    cv.max_parallel = 2;
+    lymph::AssessOptions assess{};
+    assess.metrics = {MetricKind::Rmse};
+
+    auto tuned = lymph::selection::tune(
+        std::move(candidates),
+        x,
+        y,
+        cv,
+        TrainOptions{},
+        assess,
+        MetricKind::Rmse,
+        TuneObjectivePolicy::Minimize,
+        lymph::selection::FitOptions{.fit_top = 5});
+    if (!tuned.best_workflow.trained() || !tuned.best().trained()) {
+      if (err) *err << "lymph selection::tune should return a fitted best workflow\n";
+      return false;
+    }
+    if (tuned.fitted.size() != tuned.report.trials.size() || tuned.fitted.empty() || !tuned.fitted[0].trained()) {
+      if (err) *err << "lymph selection::tune should fit requested top-k workflows in ranked order\n";
+      return false;
+    }
+    auto top2 = tuned.topk(2);
+    if (top2.size() != 2 || !top2[0].get().trained() || !top2[1].get().trained()) {
+      if (err) *err << "lymph selection::TuneResult::topk should expose fitted ranked workflows\n";
+      return false;
+    }
+    if (tuned.report.objective_rank.size() != tuned.report.trials.size()
+        || tuned.report.ranked_indices.size() != tuned.report.trials.size()
+        || tuned.report.objective_rank[static_cast<std::size_t>(tuned.report.best_index)] != 1) {
+      if (err) *err << "lymph selection::tune should return ranked trial metadata\n";
+      return false;
+    }
+    const Series pred = tuned.best_workflow.infer(x);
+    if (!pred.defined() || pred.numel() != y.numel()) {
+      if (err) *err << "fitted lymph best workflow should infer without a second learn_ call\n";
+      return false;
+    }
+  }
+
   return true;
 }
 

@@ -129,6 +129,7 @@ struct StoreOptions {
   std::string manifest{"manifest.csv"};
   std::string schema{"schema.csv"};
   std::string graph{"graph.csv"};
+  std::string views{"views.csv"};
   std::string tables{"tables"};
 };
 
@@ -184,6 +185,9 @@ public:
   Nexus flow(const std::function<Nexus(const Nexus&)>& fn) const;
 
   DataFrame summary() const;
+  DataFrame profile() const;
+  DataFrame scan() const;
+  DataFrame deduce(double min_confidence = 0.5) const;
 
   bool has_table_meta(std::string_view key) const;
   std::optional<TableMeta> table_meta(std::string_view key) const;
@@ -228,10 +232,19 @@ public:
   DataFrame audit(std::string_view name) const;
 
   DataFrame join(std::string_view left, std::string_view right, const JoinSpec& spec) const;
+  DataFrame neighbors(std::string_view table) const;
+  DataFrame pull(std::string_view root,
+                 std::initializer_list<std::string_view> fields) const;
   JoinPath path(std::string_view from, std::string_view to) const;
   JoinPlan plan(const JoinPath& path, JoinHow how = JoinHow::Left) const;
   JoinPlan plan(std::string_view from, std::string_view to, JoinHow how = JoinHow::Left) const;
   DataFrame materialize(const JoinPlan& plan) const;
+  bool has_store(std::string_view name) const;
+  std::optional<JoinPlan> store(std::string_view name) const;
+  Nexus store(std::string_view name, const JoinPlan& plan) const;
+  Nexus& store_(std::string_view name, const JoinPlan& plan);
+  DataFrame run(std::string_view name) const;
+  DataFrame run(std::string_view name, const JoinPlan& plan) const;
   NexusQuery from(std::string_view table) const;
 
   DataFrame schema() const;

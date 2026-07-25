@@ -56,7 +56,7 @@ int main() {
   auto score_se = df.features("score").se(ErrorTarget::Mean, StatisticOptions{.ddof = 1, .min_count = 2});
   auto score_mode = df.features("score").mode();
   auto score_rank = df.features("score").rank(RankTieRule::Dense, RankNullRule::Keep);
-  auto score_freq = df.features("score").freq(0, true);
+  auto score_tally = df.features("score").tally(0, true, false);
   auto score_distinct = df.features("score").distinct();
   auto score_ndistinct = df.features("score").ndistinct();
   auto score_duplicates = df.features("score").repeated();
@@ -118,10 +118,10 @@ int main() {
       StatisticOptions{.ddof = 1, .min_count = 1},
       WindowClosure::Right);
 
-  auto cleaned_labels = df.note("label").casefold();
-  auto label_lengths_df = df.note("label").length();
-  auto label_tokens_df = df.note("label").split("-");
-  auto label_indicators_df = df.note("label").indicate("|");
+  auto cleaned_labels = df.features({"label"}).note().casefold();
+  auto label_lengths_df = df.features({"label"}).note().length();
+  auto label_tokens_df = df.features({"label"}).note().split("-");
+  auto label_indicators_df = df.features({"label"}).note().indicate("|");
 
   auto mapped_scores = df.map(
       [](const ThreadValue& value) {
@@ -146,7 +146,7 @@ int main() {
       });
   auto flowed = df.flow(
       [](const DataFrame& value) {
-        return value.note("label").upper();
+        return value.features({"label"}).note().upper();
       });
 
   auto df_nulls_dropped = df.dropnull({"score", "label"}, true);
@@ -178,7 +178,7 @@ int main() {
   auto atlas_flowed = atlas.flow(
       [](const Atlas& value) {
         return value.map_frames([](const DataFrame& frame) {
-          return frame.note("label").upper();
+          return frame.features({"label"}).note().upper();
         });
       });
 
@@ -190,7 +190,7 @@ int main() {
   std::cout << "score_se=" << score_se << "\n";
   std::cout << "score_mode cases=" << score_mode.size() << "\n";
   std::cout << "score_rank cases=" << score_rank.size() << "\n";
-  std::cout << "score_freq cases=" << score_freq.size() << "\n";
+  std::cout << "score_tally cases=" << score_tally.ncases() << "\n";
   std::cout << "score_distinct cases=" << score_distinct.size() << "\n";
   std::cout << "score_ndistinct=" << score_ndistinct << "\n";
   std::cout << "score_duplicates cases=" << score_duplicates.size() << "\n";

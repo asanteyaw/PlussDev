@@ -23,6 +23,27 @@ std::int64_t Slot::size() const {
 
 bool Slot::empty() const { return size() == 0; }
 
+std::pair<std::int64_t, std::int64_t> Slot::shape() const {
+  return {size(), 1};
+}
+
+std::string Slot::ptype() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (values().empty()) {
+    return "Empty";
+  }
+  std::optional<std::string> first;
+  for (const auto& value : values()) {
+    const auto name = value_type_name(value);
+    if (!first.has_value()) {
+      first = name;
+    } else if (*first != name) {
+      return "Mixed";
+    }
+  }
+  return *first;
+}
+
 const std::vector<Slot::Value>& Slot::values() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   return impl_ref_().values_;
@@ -122,6 +143,153 @@ std::unordered_map<std::string, std::int64_t> Slot::type_counts() const {
   return out;
 }
 
+Slot Slot::isnull() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  try {
+    return Slot::from_kindle(to_kindle().isnull());
+  } catch (const std::exception&) {
+    std::vector<Value> out;
+    out.reserve(values().size());
+    for (const auto& value : values()) {
+      out.push_back(bool_slot_value(slot_value_isnull(value)));
+    }
+    return Slot(std::move(out));
+  }
+}
+
+Slot Slot::notnull() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  try {
+    return Slot::from_kindle(to_kindle().notnull());
+  } catch (const std::exception&) {
+    std::vector<Value> out;
+    out.reserve(values().size());
+    for (const auto& value : values()) {
+      out.push_back(bool_slot_value(!slot_value_isnull(value)));
+    }
+    return Slot(std::move(out));
+  }
+}
+
+Slot Slot::invalid() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  try {
+    return Slot::from_kindle(to_kindle().invalid());
+  } catch (const std::exception&) {
+    std::vector<Value> out;
+    out.reserve(values().size());
+    for (const auto& value : values()) {
+      out.push_back(bool_slot_value(slot_value_invalid(value)));
+    }
+    return Slot(std::move(out));
+  }
+}
+
+Slot Slot::fillnull(double value) const {
+  return fill_slot_nulls(
+      *this,
+      pluss::table::ThreadCastTarget::Series,
+      "Slot::fillnull(double)",
+      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_series(); },
+      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Series, value, {}, nullptr, nullptr));
+}
+
+Slot Slot::fillnull(std::string_view value) const {
+  return fill_slot_nulls(
+      *this,
+      pluss::table::ThreadCastTarget::Note,
+      "Slot::fillnull(string)",
+      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_note(); },
+      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Note, 0.0, value, nullptr, nullptr));
+}
+
+Slot Slot::fillnull(const pluss::Timeline& value) const {
+  return fill_slot_nulls(
+      *this,
+      pluss::table::ThreadCastTarget::Timeline,
+      "Slot::fillnull(Timeline)",
+      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_timeline(); },
+      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Timeline, 0.0, {}, &value, nullptr));
+}
+
+Slot Slot::fillnull(const pluss::TimeIndex& value) const {
+  return fill_slot_nulls(
+      *this,
+      pluss::table::ThreadCastTarget::TimeIndex,
+      "Slot::fillnull(TimeIndex)",
+      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_timeindex(); },
+      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::TimeIndex, 0.0, {}, nullptr, &value));
+}
+
+Slot Slot::dropnull() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  try {
+    return Slot::from_kindle(to_kindle().dropnull());
+  } catch (const std::exception&) {
+    std::vector<Value> out;
+    out.reserve(values().size());
+    for (const auto& value : values()) {
+      const bool missing = slot_value_isnull(value);
+      if (!missing) out.push_back(value);
+    }
+    return Slot(std::move(out));
+  }
+}
+
+Slot Slot::distinct(pluss::kindle::DistinctOptions options) const {
+  return Slot::from_kindle(to_kindle().distinct(options));
+}
+
+Slot Slot::freq(pluss::kindle::FreqOptions options) const {
+  return Slot::from_kindle(to_kindle().freq(options));
+}
+
+Slot Slot::ndistinct(pluss::kindle::DistinctOptions options) const {
+  return Slot::from_kindle(to_kindle().ndistinct(options));
+}
+
+Slot Slot::cast(pluss::table::ThreadCastTarget target,
+                const pluss::table::ThreadCastOptions& options) const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (target == pluss::table::ThreadCastTarget::Note) {
+    std::vector<Value> out;
+    out.reserve(values().size());
+    for (const auto& value : values()) out.push_back(slot_value_to_note(value));
+    return Slot(std::move(out));
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    if (std::holds_alternative<std::monostate>(value)) {
+      out.push_back(std::monostate{});
+      continue;
+    }
+    out.push_back(slot_value_from_thread_payload(thread_from_slot_value(value).cast(target, options)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::astype(pluss::codem::ScalarType dtype) const {
+  return cast(pluss::table::ThreadCastTarget::Series,
+              pluss::table::ThreadCastOptions{.series_dtype = dtype});
+}
+
+Slot Slot::sum() const {
+  return Slot::from_kindle(to_kindle().sum());
+}
+
+Slot Slot::mean() const {
+  return Slot::from_kindle(to_kindle().mean());
+}
+
+Slot Slot::min() const {
+  return Slot::from_kindle(to_kindle().min());
+}
+
+Slot Slot::max() const {
+  return Slot::from_kindle(to_kindle().max());
+}
+
 pluss::kindle::Stream Slot::to_kindle() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (empty()) return pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{}));
@@ -208,7 +376,7 @@ pluss::kindle::Stream Slot::to_kindle() const {
     return pluss::kindle::Stream(pluss::make_timeindex(ticks, false));
   }
 
-  PLUSS_FAIL("Slot::to_kindle: heterogeneous slot is not stream-compatible");
+  throw pluss::Error("Slot::to_kindle: heterogeneous slot is not stream-compatible");
 }
 
 pluss::kindle::Stream Slot::kindelize() const {

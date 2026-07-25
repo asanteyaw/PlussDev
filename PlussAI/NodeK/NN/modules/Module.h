@@ -346,8 +346,40 @@ public:
   }
 
 protected:
+  // Registers `series` as a trainable parameter and turns on gradient
+  // tracking, atomically, in this one call -- there is no window where the
+  // parameter is registered but not yet tracked. This requires `series` to
+  // already be a *defined* Series (real storage/shape, values don't matter
+  // yet) at the call site.
+  //
+  // The contract this enforces, modeled on libtorch's
+  // torch::nn::Module::register_parameter (which takes the tensor by value
+  // and returns a reference into its own storage, so there is no way to
+  // register something before it exists): allocate real storage for a
+  // parameter *before* registering it (e.g. `weight_ = Series::empty(shape,
+  // dtype, platform);`), register it once via this method, and do any
+  // (possibly repeated) value initialization afterwards with an in-place op
+  // (`weight_.uniform_(...)`, `weight_.copy_(...)`) that mutates the
+  // existing storage rather than reassigning the member -- reassignment
+  // (`weight_ = uniform_(...)`) replaces the whole Series, including its
+  // tracks_slope_ flag, and would silently untrack an already-registered
+  // parameter the moment reset_parameters() is next called.
+  //
+  // A module that violates this (registers before allocating) fails loudly
+  // here, at construction time, instead of silently training with dead
+  // gradients -- see PlussAI/Ice/ICE_BLUEPRINT.md for the incident this
+  // replaced (a class that got the order backwards trained without error
+  // but never learned anything).
   Series& parameter_record(std::string name, Series& series) {
-    if (series.defined()) series.tracks_slope_(true);
+    PLUSS_CHECK(
+        series.defined(),
+        "pluss::ai::nn::Module::parameter_record: parameter '" + name +
+            "' must be a defined Series before registration -- allocate its "
+            "storage first (e.g. Series::empty(shape, dtype, platform)), "
+            "register it, then fill in values afterwards with an in-place op "
+            "inside reset_parameters(). Registering an undefined Series and "
+            "assigning it a real value later silently leaves it untracked.");
+    series.tracks_slope_(true);
     params_.push_back(ParameterRef{std::move(name), &series});
     return series;
   }

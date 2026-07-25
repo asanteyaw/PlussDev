@@ -622,40 +622,17 @@ DataFrame DataFrame::flow(
   return result;
 }
 
-DataFrameNoteAccessor DataFrame::note(std::string_view feature) const {
-  std::vector<std::string> selected{owned_name(feature)};
-  return DataFrameNoteAccessor(*this, std::move(selected));
-}
-
-DataFrameNoteAccessor DataFrame::note(
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
+DataFrameNoteAccessor DataFrame::note() const {
   std::vector<std::string> selected;
   const auto& src = impl_ref_();
-  if (features.size() == 0) {
-    selected.reserve(src.names_.size());
-    for (std::size_t i = 0; i < src.names_.size(); ++i) {
-      PLUSS_CHECK(src.columns_[i].kind() == ThreadKind::Note,
-                  "DataFrame::note: no features supplied; current frame contains non-Note feature '" +
-                      src.names_[i] + "'. Select text feature(s) first, e.g. df.features({\"name\"}).note()");
-      selected.push_back(src.names_[i]);
-    }
-    PLUSS_CHECK(!selected.empty(), "DataFrame::note: current frame has no Note features");
-    return DataFrameNoteAccessor(*this, std::move(selected));
+  selected.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    PLUSS_CHECK(src.columns_[i].kind() == ThreadKind::Note,
+                "DataFrame::note: current frame contains non-Note feature '" +
+                    src.names_[i] + "'. Select text feature(s) first, e.g. df.features({\"name\"}).note()");
+    selected.push_back(src.names_[i]);
   }
-
-  selected.reserve(features.size());
-  std::unordered_set<std::string> seen;
-  seen.reserve(features.size());
-  for (const auto feature : features) {
-    const auto name = owned_name(feature);
-    PLUSS_CHECK(!name.empty(), "DataFrame::note: feature name cannot be empty");
-    const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::note: unknown feature '" + name + "'");
-    PLUSS_CHECK(src.columns_[it->second].kind() == ThreadKind::Note,
-                "DataFrame::note: feature '" + name + "' is not Note");
-    PLUSS_CHECK(seen.insert(name).second, "DataFrame::note: duplicate feature '" + name + "'");
-    selected.push_back(name);
-  }
+  PLUSS_CHECK(!selected.empty(), "DataFrame::note: current frame has no Note features");
   return DataFrameNoteAccessor(*this, std::move(selected));
 }
 
@@ -874,29 +851,9 @@ DataFrame DataFrameNoteAccessor::replace(std::string_view from,
                                   "DataFrame::note().replace");
 }
 
-DataFrameTimelineAccessor DataFrame::tl(std::string_view feature) const {
-  const auto single = std::array<std::string_view, 1>{feature};
-  return tl(pluss::msharp::RangeView::Of<std::string_view>(
-      std::span<const std::string_view>(single.data(), single.size())));
-}
-
-DataFrameTimelineAccessor DataFrame::tl(std::initializer_list<std::string_view> features) const {
-  return tl(pluss::msharp::RangeView::Of<std::string_view>(features));
-}
-
-DataFrameTimelineAccessor DataFrame::tl(const std::vector<std::string>& features) const {
-  std::vector<std::string_view> views;
-  views.reserve(features.size());
-  for (const auto& name : features) {
-    views.emplace_back(name);
-  }
-  return tl(pluss::msharp::RangeView::Of<std::string_view>(
-      std::span<const std::string_view>(views.data(), views.size())));
-}
-
-DataFrameTimelineAccessor DataFrame::tl(pluss::msharp::RangeView::Of<std::string_view> features) const {
+DataFrameTimelineAccessor DataFrame::tl() const {
   const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::tl");
+  const auto indices = resolve_time_feature_indices_(src, {}, "DataFrame::tl");
   std::vector<std::string> selected;
   selected.reserve(indices.size());
   for (const auto idx : indices) {

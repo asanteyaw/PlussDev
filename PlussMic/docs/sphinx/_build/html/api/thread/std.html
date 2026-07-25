@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::strip" href="strip.html" />
@@ -36,58 +36,132 @@
 
           <div class="body" role="main">
             
-  <section id="thread-std">
+  <!-- pluss-hand-authored -->
+<section id="thread-std">
 <h1>Thread::std<a class="headerlink" href="#thread-std" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">unbiased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">unbiased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the standard deviation of a numeric thread.</p>
+<p>Returns the standard deviation of every observed (non-missing) value in a
+numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread — the square root of <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>’s result, with
+the exact same overload split and failure-mode difference:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">std(unbiased)</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default) computes the sample
+standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> divisor underneath); <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">false</span></code> computes
+the population standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span></code> divisor). An empty thread, or one
+where every entry is missing, <strong>throws</strong>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">std(options)</span></code></strong>: takes a <code class="docutils literal notranslate"><span class="pre">StatisticOptions{ddof,</span> <span class="pre">min_count}</span></code>. Instead of
+throwing on an insufficient sample, this overload returns a result marked
+<em>invalid</em> (see the important caveat below) when the observed count is below
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code>.</p></li>
+</ul>
+<p>See <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code>’s note on printing a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code></span></a> — every example
+below uses <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code> for a clean number, and the note there also covers the
+“invalid <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> still prints a number” trap that Example 4 below runs
+into.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>unbiased</strong>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>unbiased</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+<code class="docutils literal notranslate"><span class="pre">true</span></code>: sample standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> divisor underneath). <code class="docutils literal notranslate"><span class="pre">false</span></code>:
+population standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span></code> divisor underneath).</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">ddof</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the divisor underneath is <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">ddof</span></code>. <code class="docutils literal notranslate"><span class="pre">min_count</span></code>
+(default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the smallest observed count still considered valid; below
+it, the result is marked invalid rather than thrown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
-Value produced by this call.</p>
+A scalar <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) holding the standard deviation.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute <code class="docutils literal notranslate"><span class="pre">std</span></code> and inspect the resulting summary value or summary object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Sample standard deviation (the default).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">std</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>20.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2.58199
 </pre></div>
 </div>
-<p>Example 2. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<p>Example 2. Population standard deviation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>20.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2.23607
 </pre></div>
 </div>
+<p>Example 3. The <code class="docutils literal notranslate"><span class="pre">unbiased</span></code>-form throws on an empty (all-missing) selection.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">all_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">all_missing</span><span class="p">.</span><span class="n">std</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::std on an empty (all-null) selection
+</pre></div>
+</div>
+<p>Example 4. The <code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code>-form returns an invalid result below
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code>, rather than throwing — check <code class="docutils literal notranslate"><span class="pre">.thread().is_valid(0)</span></code>, not the
+number itself.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">StatisticOptions</span><span class="p">{.</span><span class="n">ddof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Missing entries are excluded before computing, in both overloads.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">unbiased</span></code>-form throws on an empty/all-missing selection; the
+<code class="docutils literal notranslate"><span class="pre">options</span></code>-form returns an invalid result below <code class="docutils literal notranslate"><span class="pre">min_count</span></code> instead of
+throwing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> (the <code class="docutils literal notranslate"><span class="pre">options</span></code>-form’s default) matches <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">true</span></code>; <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> matches <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">false</span></code>.</p></li>
+<li><p>Restricted to <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::std</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::var</span></code></span></a>: the variance this method takes the square root of.</p></li>
+<li><p><a class="reference internal" href="se.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::se</span></code></span></a>: the standard error of the mean, a related but
+distinct spread measure.</p></li>
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::describe</span></code></span></a>: reports <code class="docutils literal notranslate"><span class="pre">std</span></code> as part of a wider numeric
+summary.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="starts.html">
     <span class="label">Previous</span>
@@ -98,7 +172,6 @@ Value produced by this call.</p>
     <span class="title">strip</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

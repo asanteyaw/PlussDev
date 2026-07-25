@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rfloordiv
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,81 @@
 ## Signatures
 
 ```cpp
-Thread::rfloordiv(const Thread& other) -> Thread
-
-Thread::rfloordiv(double other) -> Thread
+Thread::rfloordiv(double other) const -> Thread
+Thread::rfloordiv(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected form of [`floordiv()`](floordiv.md) — computes
+`floor(other / (*this))` instead of `floor((*this) / other)`.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+Same shape as [`floordiv()`](floordiv.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new thread holding `floor(other / (*this))`, elementwise.
 
 ## Examples
 
-Example 1. Apply `rfloordiv` to the current thread using explicit `other` arguments.
+Example 1. Floor-divide a scalar by every value.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rfloordiv(other);
+auto amounts = Thread(pluss::make_series({17.0, 26.0, 33.0}));
+auto out = amounts.rfloordiv(100.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  5
+1  3
+2  3
+ptype: Series
 ```
-Example 2. Apply `rfloordiv` to the current thread using explicit `other` arguments.
+
+`floor(100 / 17) = floor(5.88) = 5`; `floor(100 / 26) = floor(3.84) = 3`;
+`floor(100 / 33) = floor(3.03) = 3` — how many whole `amounts`-worth fit into a
+budget of `100`, the opposite framing from [`amounts.floordiv(...)`](floordiv.md).
+
+Example 2. Reflected against another thread.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.rfloordiv(10.0);
+auto multiples = Thread(pluss::make_series({50.0, 80.0, 90.0}));
+auto out_pair = amounts.rfloordiv(multiples);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  2
+1  3
+2  2
+ptype: Series
 ```
 
+`amounts.rfloordiv(multiples)` computes exactly what `multiples.floordiv(amounts)`
+would: `floor(50 / 17) = 2`, `floor(80 / 26) = 3`, `floor(90 / 33) = 2`.
+
+## Notes
+
+- `amounts.rfloordiv(x)` always equals `floor(x / amounts)` — the mirror image of
+  [`floordiv()`](floordiv.md).
+- See [`rmod()`](rmod.md) for the complementary reflected remainder.
+
+## See Also
+
+- [`Thread::floordiv`](floordiv.md): the forward form.
+- [`Thread::rmod`](rmod.md): the complementary reflected remainder operator.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="replace.html">

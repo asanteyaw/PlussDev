@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::defined
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,14 +7,24 @@
 ## Signature
 
 ```cpp
-Thread::defined() -> bool
+Thread::defined() const noexcept -> bool
 ```
 
-Report whether the thread currently owns a usable backing payload.
+## What It Does
 
-This is the object-level integrity check for `Thread` itself.
+Reports whether the `Thread` object currently owns a usable backing payload at all —
+an object-level integrity check, not a data-level one. A default-constructed
+`Thread()` is undefined: it has no `Series`, `Note`, `Timeline`, or `TimeIndex`
+payload behind it, and calling almost any other method on it throws. This is a
+different question from "does this thread have missing values" — a fully defined
+thread can still hold `NULL` cells; see [`isnull()`](isnull.md) for that question.
 
-It tells you whether the thread object exists as a real typed vector container, not whether every entry is non-missing.
+```{important} Almost every other method requires defined() == true
+Calling `size()`, `kind()`, `dtype()`, or any transform/reduction on an undefined
+thread throws `"Thread: undefined handle"`. `defined()` itself is one of the very
+few methods safe to call unconditionally — it never throws, regardless of whether
+the thread is defined.
+```
 
 ## Parameters
 
@@ -21,22 +33,19 @@ It tells you whether the thread object exists as a real typed vector container, 
 ## Returns
 
 `bool`
-    `true` when the thread object is defined and can participate in ordinary thread operations.
-
-## Notes
-
-`defined()` is about object validity. Use `isnull()`, `notnull()`, `dropnull()`, or payload-aware validity checks when your question is about missing entries inside the thread.
+    `true` when the thread owns a backing payload and can participate in ordinary
+    operations; `false` for a default-constructed or moved-from `Thread`.
 
 ## Examples
 
-Example 1. Check whether a thread object is defined.
+Example 1. A thread built from real data is defined.
 
 ```cpp
 using namespace pluss::table;
 
 auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
 auto out = scores.defined();
+std::cout << std::boolalpha << out;
 ```
 
 ### Output
@@ -45,7 +54,50 @@ auto out = scores.defined();
 true
 ```
 
+Example 2. A default-constructed thread is not defined.
 
+```cpp
+auto empty_handle = Thread();
+auto out2 = empty_handle.defined();
+std::cout << std::boolalpha << out2;
+```
+
+### Output
+
+```text
+false
+```
+
+Example 3. Calling another method on an undefined thread throws.
+
+```cpp
+try {
+  auto bad = empty_handle.size();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread: undefined handle
+```
+
+## Notes
+
+- `defined()` never throws, even on an undefined thread — it's the safe way to check
+  before calling anything else.
+- Object-level validity only: says nothing about whether individual cells are
+  `NULL`. Use [`isnull()`](isnull.md) / [`notnull()`](notnull.md) for that.
+- A moved-from `Thread` (via `std::move`) is also left undefined.
+
+## See Also
+
+- [`Thread::isnull`](isnull.md) / [`Thread::notnull`](notnull.md): per-cell validity,
+  as opposed to this method's whole-object validity.
+- [`Thread::shares_payload_with`](shares_payload_with.md): a related object-identity
+  check, comparing two defined threads' underlying storage.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="day.html">

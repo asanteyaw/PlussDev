@@ -1,6 +1,5 @@
 bool DataFrame::defined() const noexcept { return static_cast<bool>(impl_); }
 bool DataFrame::unique() const noexcept { return impl_.unique(); }
-std::int64_t DataFrame::height() const { return ncases(); }
 
 const detail::DataFrameImpl& DataFrame::impl_ref_() const {
   PLUSS_CHECK(defined(), "DataFrame: undefined handle");
@@ -39,6 +38,16 @@ std::int64_t DataFrame::nfeatures() const { return static_cast<std::int64_t>(imp
 std::pair<std::int64_t, std::int64_t> DataFrame::shape() const {
   return {ncases(), nfeatures()};
 }
+// height()/width() are convenience aliases for ncases()/nfeatures() (equivalently,
+// shape().first/shape().second): height is the number of cases (rows), width is the
+// number of features (columns) — the same convention used by shape().
+std::int64_t DataFrame::height() const { return ncases(); }
+std::int64_t DataFrame::width() const { return nfeatures(); }
+// length() is the total cell count: width() * height() (equivalently
+// nfeatures() * ncases()) — not to be confused with
+// DataFrameNoteAccessor::length(), the unrelated per-cell text-length accessor
+// reached via .note().length().
+std::int64_t DataFrame::length() const { return width() * height(); }
 
 DataFrame::DTypes::DTypes(std::vector<Entry> entries) : entries_(std::move(entries)) {}
 
@@ -206,7 +215,7 @@ std::size_t level_index_(const detail::DataFrameImpl& src, std::string_view leve
 std::string case_tuple_key_(const detail::CaseAxis& axis, std::int64_t row) {
   std::string key;
   for (const auto& level : axis.levels) {
-    key += level.values.is_valid(row) ? thread_scalar_string_at(level.values, row) : std::string("NA");
+    key += level.values.is_valid(row) ? thread_scalar_string_at(level.values, row) : std::string("NULL");
     key.append("\x1E", 1);
   }
   return key;
@@ -224,7 +233,7 @@ std::vector<std::string> composite_case_labels_(const detail::CaseAxis& axis,
         label.append(separator.data(), separator.size());
       }
       const auto& values = axis.levels[i].values;
-      label += values.is_valid(row) ? thread_scalar_string_at(values, row) : std::string("NA");
+      label += values.is_valid(row) ? thread_scalar_string_at(values, row) : std::string("NULL");
     }
     labels.push_back(std::move(label));
   }
@@ -313,13 +322,13 @@ detail::CaseAxis filter_case_axis_(const detail::CaseAxis& axis, const pluss::Se
   return out;
 }
 
-std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const DataFrame::CaseSelector& selector) {
+std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const DataFrame::Case& selector) {
   std::vector<std::int64_t> indices;
   switch (selector.kind) {
-    case DataFrame::CaseSelector::Kind::PositionScalar:
+    case DataFrame::Case::Kind::PositionScalar:
       indices.push_back(normalize_row_index(selector.first, frame.ncases()));
       return indices;
-    case DataFrame::CaseSelector::Kind::PositionSlice: {
+    case DataFrame::Case::Kind::PositionSlice: {
       const auto [start, stop] = normalize_slice(selector.first, selector.second, frame.ncases());
       indices.reserve(static_cast<std::size_t>(stop - start));
       for (std::int64_t i = start; i < stop; ++i) {
@@ -327,30 +336,30 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
       }
       return indices;
     }
-    case DataFrame::CaseSelector::Kind::PositionList:
+    case DataFrame::Case::Kind::PositionList:
       indices.reserve(selector.positions.size());
       for (const auto row : selector.positions) {
         indices.push_back(normalize_row_index(row, frame.ncases()));
       }
       return indices;
-    case DataFrame::CaseSelector::Kind::Mask:
+    case DataFrame::Case::Kind::Mask:
       PLUSS_FAIL("resolve_case_positions_: mask selectors must be handled by DataFrame::case_study directly");
-    case DataFrame::CaseSelector::Kind::LabelScalar:
-    case DataFrame::CaseSelector::Kind::LabelList:
-    case DataFrame::CaseSelector::Kind::LabelSlice:
+    case DataFrame::Case::Kind::LabelScalar:
+    case DataFrame::Case::Kind::LabelList:
+    case DataFrame::Case::Kind::LabelSlice:
       break;
   }
 
   const auto lookup = build_case_lookup_(frame);
-  if (selector.kind == DataFrame::CaseSelector::Kind::LabelScalar) {
-    const auto& key = selector.labels.front();
+  if (selector.kind == DataFrame::Case::Kind::LabelScalar) {
+    const auto& key = selector.label_values.front();
     const auto it = lookup.find(key);
     PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'");
     return it->second;
   }
 
-  if (selector.kind == DataFrame::CaseSelector::Kind::LabelList) {
-    for (const auto& key : selector.labels) {
+  if (selector.kind == DataFrame::Case::Kind::LabelList) {
+    for (const auto& key : selector.label_values) {
       const auto it = lookup.find(key);
       PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'");
       indices.insert(indices.end(), it->second.begin(), it->second.end());
@@ -358,8 +367,8 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
     return indices;
   }
 
-  const auto& start_key = selector.labels.at(0);
-  const auto& stop_key = selector.labels.at(1);
+  const auto& start_key = selector.label_values.at(0);
+  const auto& stop_key = selector.label_values.at(1);
   const auto start_it = lookup.find(start_key);
   const auto stop_it = lookup.find(stop_key);
   PLUSS_CHECK(start_it != lookup.end(), "DataFrame::case_study: case label not found '" + start_key + "'");
@@ -376,17 +385,17 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
   return indices;
 }
 
-std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, const DataFrame::FeatureSelector& selector) {
+std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, const DataFrame::Feat& selector) {
   std::vector<std::size_t> indices;
   switch (selector.kind) {
-    case DataFrame::FeatureSelector::Kind::All:
+    case DataFrame::Feat::Kind::All:
       indices.resize(static_cast<std::size_t>(frame.nfeatures()));
       std::iota(indices.begin(), indices.end(), static_cast<std::size_t>(0));
       return indices;
-    case DataFrame::FeatureSelector::Kind::PositionScalar:
+    case DataFrame::Feat::Kind::PositionScalar:
       indices.push_back(static_cast<std::size_t>(normalize_row_index(selector.first, frame.nfeatures())));
       return indices;
-    case DataFrame::FeatureSelector::Kind::PositionSlice: {
+    case DataFrame::Feat::Kind::PositionSlice: {
       const auto [start, stop] = normalize_slice(selector.first, selector.second, frame.nfeatures());
       indices.reserve(static_cast<std::size_t>(stop - start));
       for (std::int64_t i = start; i < stop; ++i) {
@@ -394,15 +403,15 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
       }
       return indices;
     }
-    case DataFrame::FeatureSelector::Kind::PositionList:
+    case DataFrame::Feat::Kind::PositionList:
       indices.reserve(selector.positions.size());
       for (const auto pos : selector.positions) {
         indices.push_back(static_cast<std::size_t>(normalize_row_index(pos, frame.nfeatures())));
       }
       return indices;
-    case DataFrame::FeatureSelector::Kind::NameScalar:
-    case DataFrame::FeatureSelector::Kind::NameList:
-    case DataFrame::FeatureSelector::Kind::NameSlice:
+    case DataFrame::Feat::Kind::NameScalar:
+    case DataFrame::Feat::Kind::NameList:
+    case DataFrame::Feat::Kind::NameSlice:
       break;
   }
 
@@ -413,17 +422,17 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
     by_name.emplace(names[i], i);
   }
 
-  if (selector.kind == DataFrame::FeatureSelector::Kind::NameScalar) {
-    const auto& key = selector.names.front();
+  if (selector.kind == DataFrame::Feat::Kind::NameScalar) {
+    const auto& key = selector.name_values.front();
     const auto it = by_name.find(key);
     PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'");
     indices.push_back(it->second);
     return indices;
   }
 
-  if (selector.kind == DataFrame::FeatureSelector::Kind::NameList) {
-    indices.reserve(selector.names.size());
-    for (const auto& key : selector.names) {
+  if (selector.kind == DataFrame::Feat::Kind::NameList) {
+    indices.reserve(selector.name_values.size());
+    for (const auto& key : selector.name_values) {
       const auto it = by_name.find(key);
       PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'");
       indices.push_back(it->second);
@@ -431,8 +440,8 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
     return indices;
   }
 
-  const auto& start_key = selector.names.at(0);
-  const auto& stop_key = selector.names.at(1);
+  const auto& start_key = selector.name_values.at(0);
+  const auto& stop_key = selector.name_values.at(1);
   const auto start_it = by_name.find(start_key);
   const auto stop_it = by_name.find(stop_key);
   PLUSS_CHECK(start_it != by_name.end(), "DataFrame::case_study: unknown feature '" + start_key + "'");
@@ -714,7 +723,7 @@ Thread DataFrameLabelAccessor::distinct(bool dropnull) const {
 }
 
 Thread DataFrameLabelAccessor::freq(std::int64_t top_n, bool dropnull) const {
-  return frame_.label().values().freq(top_n, dropnull);
+  return detail::tally_count_thread(frame_.label().values(), top_n, dropnull, "freq");
 }
 
 Thread DataFrameLabelAccessor::has(double value) const {
@@ -762,7 +771,7 @@ DataFrame DataFrameLabelAccessor::cast(ThreadCastTarget target, const ThreadCast
   for (auto& level : axis.levels) {
     level.values = level.values.cast(target, options);
   }
-  Thread labels = axis.defined() ? make_note_thread(composite_case_labels_(axis, src.nrows_))
+  Thread labels = axis.defined() ? make_note_thread(composite_case_labels_(axis, src.nrows_, axis.separator))
                                  : default_cases(src.nrows_);
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, src.columns_, std::move(labels), src.title_, std::move(axis)));
@@ -916,8 +925,8 @@ DataFrame DataFrameLabelAccessor::levels() const {
   return DataFrame(std::move(columns));
 }
 
-DataFrame DataFrame::case_study(const CaseSelector& rows) const {
-  return case_study(rows, all_features());
+DataFrame DataFrame::case_study(const Case& rows) const {
+  return case_study(rows, Feat::all());
 }
 
 DataFrame DataFrame::case_study(const CasePick& pick) const {
@@ -955,7 +964,7 @@ DataFrame DataFrame::case_study(const CasePick& pick) const {
     bool match = true;
     for (std::size_t i = 0; i < level_indices.size(); ++i) {
       const auto& column = src.case_axis_.levels[level_indices[i]].values;
-      const auto observed = column.is_valid(row) ? thread_scalar_string_at(column, row) : std::string("NA");
+      const auto observed = column.is_valid(row) ? thread_scalar_string_at(column, row) : std::string("NULL");
       if (observed != values[i]) {
         match = false;
         break;
@@ -979,8 +988,8 @@ DataFrame DataFrame::case_study(const CasePick& pick) const {
   return out;
 }
 
-DataFrame DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& selected_features) const {
-  if (rows.kind == CaseSelector::Kind::Mask) {
+DataFrame DataFrame::case_study(const Case& rows, const Feat& selected_features) const {
+  if (rows.kind == Case::Kind::Mask) {
     auto filtered = filter(rows.mask);
     return project_feature_positions_(filtered, resolve_feature_positions_(filtered, selected_features));
   }
@@ -989,202 +998,202 @@ DataFrame DataFrame::case_study(const CaseSelector& rows, const FeatureSelector&
   return project_feature_positions_(out, resolve_feature_positions_(out, selected_features));
 }
 
-DataFrame::CaseSelector pos(std::int64_t row) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::PositionScalar;
+DataFrame::Case DataFrame::Case::at(std::int64_t row) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::PositionScalar;
   out.first = row;
   return out;
 }
 
-DataFrame::CaseSelector pos(std::int64_t start, std::int64_t stop) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::PositionSlice;
+DataFrame::Case DataFrame::Case::slice(std::int64_t start, std::int64_t stop) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::PositionSlice;
   out.first = start;
   out.second = stop;
   return out;
 }
 
-DataFrame::CaseSelector pos(std::initializer_list<std::int64_t> rows) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::PositionList;
+DataFrame::Case DataFrame::Case::take(std::initializer_list<std::int64_t> rows) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::PositionList;
   out.positions.assign(rows.begin(), rows.end());
   return out;
 }
 
-DataFrame::CaseSelector pos(pluss::RangeView<std::int64_t> rows) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::PositionList;
+DataFrame::Case DataFrame::Case::take(pluss::RangeView<std::int64_t> rows) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::PositionList;
   out.positions.assign(rows.begin(), rows.end());
   return out;
 }
 
-DataFrame::CaseSelector label(std::string_view value) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelScalar;
-  out.labels.emplace_back(value);
+DataFrame::Case DataFrame::Case::label(std::string_view value) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelScalar;
+  out.label_values.emplace_back(value);
   return out;
 }
 
-DataFrame::CaseSelector label(const char* value) {
+DataFrame::Case DataFrame::Case::label(const char* value) {
   return label(std::string_view{value != nullptr ? value : ""});
 }
 
-DataFrame::CaseSelector label(std::int64_t value) {
+DataFrame::Case DataFrame::Case::label(std::int64_t value) {
   return label(fmt::format("{}", value));
 }
 
-DataFrame::CaseSelector label(double value) {
+DataFrame::Case DataFrame::Case::label(double value) {
   return label(fmt::format("{:.12g}", value));
 }
 
-DataFrame::CaseSelector labels(std::initializer_list<std::string_view> values) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelList;
-  out.labels.reserve(values.size());
+DataFrame::Case DataFrame::Case::labels(std::initializer_list<std::string_view> values) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelList;
+  out.label_values.reserve(values.size());
   for (const auto value : values) {
-    out.labels.emplace_back(value);
+    out.label_values.emplace_back(value);
   }
   return out;
 }
 
-DataFrame::CaseSelector labels(pluss::RangeView<std::string_view> values) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelList;
-  out.labels.reserve(values.size());
+DataFrame::Case DataFrame::Case::labels(pluss::RangeView<std::string_view> values) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelList;
+  out.label_values.reserve(values.size());
   for (const auto value : values) {
-    out.labels.emplace_back(value);
+    out.label_values.emplace_back(value);
   }
   return out;
 }
 
-DataFrame::CaseSelector labels(std::initializer_list<std::int64_t> values) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelList;
-  out.labels.reserve(values.size());
+DataFrame::Case DataFrame::Case::labels(std::initializer_list<std::int64_t> values) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelList;
+  out.label_values.reserve(values.size());
   for (const auto value : values) {
-    out.labels.push_back(fmt::format("{}", value));
+    out.label_values.push_back(fmt::format("{}", value));
   }
   return out;
 }
 
-DataFrame::CaseSelector labels(pluss::RangeView<std::int64_t> values) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelList;
-  out.labels.reserve(values.size());
+DataFrame::Case DataFrame::Case::labels(pluss::RangeView<std::int64_t> values) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelList;
+  out.label_values.reserve(values.size());
   for (const auto value : values) {
-    out.labels.push_back(fmt::format("{}", value));
+    out.label_values.push_back(fmt::format("{}", value));
   }
   return out;
 }
 
-DataFrame::CaseSelector labels(const Thread& values) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelList;
-  out.labels = selector_labels_from_thread_(values, "labels(Thread)");
+DataFrame::Case DataFrame::Case::labels(const Thread& values) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelList;
+  out.label_values = selector_labels_from_thread_(values, "labels(Thread)");
   return out;
 }
 
-DataFrame::CaseSelector label_range(std::string_view start, std::string_view stop) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::LabelSlice;
-  out.labels.emplace_back(start);
-  out.labels.emplace_back(stop);
+DataFrame::Case DataFrame::Case::span(std::string_view start, std::string_view stop) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::LabelSlice;
+  out.label_values.emplace_back(start);
+  out.label_values.emplace_back(stop);
   return out;
 }
 
-DataFrame::CaseSelector label_range(std::int64_t start, std::int64_t stop) {
-  return label_range(fmt::format("{}", start), fmt::format("{}", stop));
+DataFrame::Case DataFrame::Case::span(std::int64_t start, std::int64_t stop) {
+  return span(fmt::format("{}", start), fmt::format("{}", stop));
 }
 
-DataFrame::CaseSelector label_range(double start, double stop) {
-  return label_range(fmt::format("{:.12g}", start), fmt::format("{:.12g}", stop));
+DataFrame::Case DataFrame::Case::span(double start, double stop) {
+  return span(fmt::format("{:.12g}", start), fmt::format("{:.12g}", stop));
 }
 
-DataFrame::CaseSelector label_range(const Thread& start, const Thread& stop) {
-  return label_range(selector_label_from_scalar_thread_(start, "label_range(start)"),
-                     selector_label_from_scalar_thread_(stop, "label_range(stop)"));
+DataFrame::Case DataFrame::Case::span(const Thread& start, const Thread& stop) {
+  return span(selector_label_from_scalar_thread_(start, "Case::span(start)"),
+              selector_label_from_scalar_thread_(stop, "Case::span(stop)"));
 }
 
-DataFrame::CaseSelector mask(const Thread& values) {
-  DataFrame::CaseSelector out;
-  out.kind = DataFrame::CaseSelector::Kind::Mask;
+DataFrame::Case DataFrame::Case::where(const Thread& values) {
+  DataFrame::Case out;
+  out.kind = DataFrame::Case::Kind::Mask;
   out.mask = values;
   return out;
 }
 
-DataFrame::CaseSelector mask(const pluss::Series& values) {
-  return mask(Thread(values));
+DataFrame::Case DataFrame::Case::where(const pluss::Series& values) {
+  return where(Thread(values));
 }
 
-DataFrame::FeatureSelector all_features() {
+DataFrame::Feat DataFrame::Feat::all() {
   return {};
 }
 
-DataFrame::FeatureSelector feature(std::string_view name) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::NameScalar;
-  out.names.emplace_back(name);
+DataFrame::Feat DataFrame::Feat::name(std::string_view value) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::NameScalar;
+  out.name_values.emplace_back(value);
   return out;
 }
 
-DataFrame::FeatureSelector feature(const char* name) {
-  return feature(std::string_view{name != nullptr ? name : ""});
+DataFrame::Feat DataFrame::Feat::name(const char* value) {
+  return name(std::string_view{value != nullptr ? value : ""});
 }
 
-DataFrame::FeatureSelector feature(std::int64_t position) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::PositionScalar;
+DataFrame::Feat DataFrame::Feat::at(std::int64_t position) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::PositionScalar;
   out.first = position;
   return out;
 }
 
-DataFrame::FeatureSelector features(std::initializer_list<std::string_view> names) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::NameList;
-  out.names.reserve(names.size());
-  for (const auto name : names) {
-    out.names.emplace_back(name);
+DataFrame::Feat DataFrame::Feat::names(std::initializer_list<std::string_view> values) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::NameList;
+  out.name_values.reserve(values.size());
+  for (const auto value : values) {
+    out.name_values.emplace_back(value);
   }
   return out;
 }
 
-DataFrame::FeatureSelector features(pluss::RangeView<std::string_view> names) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::NameList;
-  out.names.reserve(names.size());
-  for (const auto name : names) {
-    out.names.emplace_back(name);
+DataFrame::Feat DataFrame::Feat::names(pluss::RangeView<std::string_view> values) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::NameList;
+  out.name_values.reserve(values.size());
+  for (const auto value : values) {
+    out.name_values.emplace_back(value);
   }
   return out;
 }
 
-DataFrame::FeatureSelector features(std::initializer_list<std::int64_t> positions) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::PositionList;
+DataFrame::Feat DataFrame::Feat::take(std::initializer_list<std::int64_t> positions) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::PositionList;
   out.positions.assign(positions.begin(), positions.end());
   return out;
 }
 
-DataFrame::FeatureSelector features(pluss::RangeView<std::int64_t> positions) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::PositionList;
+DataFrame::Feat DataFrame::Feat::take(pluss::RangeView<std::int64_t> positions) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::PositionList;
   out.positions.assign(positions.begin(), positions.end());
   return out;
 }
 
-DataFrame::FeatureSelector features(std::int64_t start, std::int64_t stop) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::PositionSlice;
+DataFrame::Feat DataFrame::Feat::slice(std::int64_t start, std::int64_t stop) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::PositionSlice;
   out.first = start;
   out.second = stop;
   return out;
 }
 
-DataFrame::FeatureSelector feature_range(std::string_view start, std::string_view stop) {
-  DataFrame::FeatureSelector out;
-  out.kind = DataFrame::FeatureSelector::Kind::NameSlice;
-  out.names.emplace_back(start);
-  out.names.emplace_back(stop);
+DataFrame::Feat DataFrame::Feat::span(std::string_view start, std::string_view stop) {
+  DataFrame::Feat out;
+  out.kind = DataFrame::Feat::Kind::NameSlice;
+  out.name_values.emplace_back(start);
+  out.name_values.emplace_back(stop);
   return out;
 }
 
@@ -1258,11 +1267,11 @@ ColumnRef DataFrame::feature_ref(std::string_view name) const {
 }
 
 DataFrame DataFrame::features(std::initializer_list<std::string_view> names) {
-  return select(names);
+  return project_names_(names);
 }
 
 DataFrame DataFrame::features(std::initializer_list<std::string_view> names) const {
-  return select(names);
+  return project_names_(names);
 }
 
 DataFrame DataFrame::features(std::initializer_list<const char*> names) {
@@ -1271,7 +1280,7 @@ DataFrame DataFrame::features(std::initializer_list<const char*> names) {
   for (const auto* name : names) {
     views.emplace_back(name != nullptr ? name : "");
   }
-  return select(pluss::msharp::RangeView::Of<std::string_view>(views));
+  return project_names_(pluss::msharp::RangeView::Of<std::string_view>(views));
 }
 
 DataFrame DataFrame::features(std::initializer_list<const char*> names) const {
@@ -1280,26 +1289,26 @@ DataFrame DataFrame::features(std::initializer_list<const char*> names) const {
   for (const auto* name : names) {
     views.emplace_back(name != nullptr ? name : "");
   }
-  return select(pluss::msharp::RangeView::Of<std::string_view>(views));
+  return project_names_(pluss::msharp::RangeView::Of<std::string_view>(views));
 }
 
 DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) {
-  return select(names);
+  return project_names_(names);
 }
 
 DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) const {
-  return select(names);
+  return project_names_(names);
 }
 
 DataFrame DataFrame::features(StackArray<std::string_view> names) {
-  return select(pluss::msharp::RangeView::Of<std::string_view>(names.data().values));
+  return project_names_(pluss::msharp::RangeView::Of<std::string_view>(names.data().values));
 }
 
 DataFrame DataFrame::features(StackArray<std::string_view> names) const {
-  return select(pluss::msharp::RangeView::Of<std::string_view>(names.data().values));
+  return project_names_(pluss::msharp::RangeView::Of<std::string_view>(names.data().values));
 }
 
-DataFrame DataFrame::select(pluss::msharp::RangeView::Of<std::string_view> names) const {
+DataFrame DataFrame::project_names_(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto picked = normalize_name_list(names);
   const auto& src = impl_ref_();
 
@@ -1310,12 +1319,88 @@ DataFrame DataFrame::select(pluss::msharp::RangeView::Of<std::string_view> names
 
   for (const auto& n : picked) {
     const auto it = src.name_to_idx_.find(n);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::select: unknown column '" + n + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::features: unknown column '" + n + "'");
     out_names.push_back(n);
     out_cols.push_back(src.columns_[it->second]);
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
+}
+
+namespace {
+
+bool same_flat_cases_for_select_(const Thread& lhs, const Thread& rhs) {
+  if (lhs.size() != rhs.size() || lhs.dtype() != rhs.dtype()) {
+    return false;
+  }
+  for (std::int64_t row = 0; row < lhs.size(); ++row) {
+    if (lhs.is_valid(row) != rhs.is_valid(row)) {
+      return false;
+    }
+    if (lhs.is_valid(row) && thread_scalar_string_at(lhs, row) != thread_scalar_string_at(rhs, row)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool same_case_axis_for_select_(const detail::CaseAxis& lhs, const detail::CaseAxis& rhs) {
+  if (lhs.levels.size() != rhs.levels.size()) {
+    return false;
+  }
+  for (std::size_t i = 0; i < lhs.levels.size(); ++i) {
+    if (lhs.levels[i].name != rhs.levels[i].name) {
+      return false;
+    }
+    if (!same_flat_cases_for_select_(lhs.levels[i].values, rhs.levels[i].values)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+} // namespace
+
+DataFrame DataFrame::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                            pluss::msharp::RangeView::Of<DataFrame> choices,
+                            const DataFrame& default_value) {
+  PLUSS_CHECK(!conditions.empty(), "DataFrame::select: at least one condition is required");
+  PLUSS_CHECK(conditions.size() == choices.size(),
+              "DataFrame::select: condition/choice count mismatch");
+  PLUSS_CHECK(default_value.defined(), "DataFrame::select: default value is undefined");
+
+  const auto& seed = default_value.impl_ref_();
+  for (const auto& choice : choices) {
+    PLUSS_CHECK(choice.defined(), "DataFrame::select: choice is undefined");
+    PLUSS_CHECK(choice.ncases() == default_value.ncases(),
+                "DataFrame::select: all choices must match default case count");
+    PLUSS_CHECK(choice.nfeatures() == default_value.nfeatures(),
+                "DataFrame::select: all choices must match default feature count");
+    PLUSS_CHECK(choice.features() == default_value.features(),
+                "DataFrame::select: all choices must match default feature order");
+    PLUSS_CHECK(same_flat_cases_for_select_(choice.case_labels_(), default_value.case_labels_()),
+                "DataFrame::select: all choices must match default case labels");
+    PLUSS_CHECK(same_case_axis_for_select_(choice.impl_ref_().case_axis_, seed.case_axis_),
+                "DataFrame::select: all choices must match default structured case metadata");
+  }
+
+  std::vector<Thread> out_cols;
+  out_cols.reserve(seed.names_.size());
+  std::vector<Thread> branch_cols;
+  branch_cols.reserve(choices.size());
+  for (const auto& name : seed.names_) {
+    branch_cols.clear();
+    for (const auto& choice : choices) {
+      branch_cols.push_back(choice.features(name));
+    }
+    out_cols.push_back(Thread::select(
+        conditions,
+        pluss::msharp::RangeView::Of<Thread>(std::span<const Thread>(branch_cols.data(), branch_cols.size())),
+        default_value.features(name)));
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      seed.names_, std::move(out_cols), seed.cases_, seed.title_, seed.case_axis_));
 }
 
 DataFrame DataFrame::select_like(std::string_view needle, bool case_sensitive) const {
@@ -1702,7 +1787,7 @@ DataFrame DataFrame::reorder(pluss::RangeView<ReorderSpec> specs) const {
   for (const auto& name : ordered) {
     views.push_back(name);
   }
-  return select(pluss::msharp::RangeView::Of<std::string_view>(
+  return features(pluss::msharp::RangeView::Of<std::string_view>(
       std::span<const std::string_view>(views.data(), views.size())));
 }
 
@@ -1963,6 +2048,7 @@ DataFrame DataFrame::set_caselbl(const SetLabelOptions& options) const {
   for (const auto& name : names) {
     axis.levels.push_back({name, features(name)});
   }
+  axis.separator = std::string(options.separator);
 
   if (options.verify) {
     std::unordered_set<std::string> keys;
@@ -2008,7 +2094,9 @@ DataFrame DataFrame::set_caselbl(const SetLabelOptions& options) const {
 
 DataFrame DataFrame::reset_caselbl(std::string case_feature) const {
   ResetLabelOptions options;
-  options.names.push_back(std::move(case_feature));
+  if (!case_feature.empty()) {
+    options.names.push_back(std::move(case_feature));
+  }
   return reset_caselbl(options);
 }
 
@@ -2079,6 +2167,7 @@ DataFrame DataFrame::order_caselbls(pluss::msharp::RangeView::Of<std::string_vie
               "DataFrame::order_caselbls: expected every case level exactly once");
   detail::CaseAxis axis;
   axis.levels.reserve(names.size());
+  axis.separator = src.case_axis_.separator;
   std::unordered_set<std::string> seen;
   for (const auto name_sv : names) {
     const auto name = owned_name(name_sv);
@@ -2086,7 +2175,7 @@ DataFrame DataFrame::order_caselbls(pluss::msharp::RangeView::Of<std::string_vie
                 "DataFrame::order_caselbls: duplicate case label '" + name + "'");
     axis.levels.push_back(src.case_axis_.levels[level_index_(src, name, "DataFrame::order_caselbls")]);
   }
-  auto labels = make_note_thread(composite_case_labels_(axis, src.nrows_));
+  auto labels = make_note_thread(composite_case_labels_(axis, src.nrows_, axis.separator));
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, src.columns_, std::move(labels), src.title_, std::move(axis)));
 }
@@ -2102,12 +2191,13 @@ DataFrame DataFrame::drop_caselbls(pluss::msharp::RangeView::Of<std::string_view
     drop.insert(name);
   }
   detail::CaseAxis axis;
+  axis.separator = src.case_axis_.separator;
   for (const auto& level : src.case_axis_.levels) {
     if (!drop.contains(level.name)) {
       axis.levels.push_back(level);
     }
   }
-  Thread out_cases = axis.defined() ? make_note_thread(composite_case_labels_(axis, src.nrows_))
+  Thread out_cases = axis.defined() ? make_note_thread(composite_case_labels_(axis, src.nrows_, axis.separator))
                                     : default_cases(src.nrows_);
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, src.columns_, std::move(out_cases), src.title_, std::move(axis)));
@@ -2729,6 +2819,81 @@ CategoryEncoding DataFrame::factor(
       std::move(code_thread),
       std::move(levels),
       ordered};
+}
+
+DataFrame DataFrame::encode(
+    const std::string_view feature,
+    const EncodeMode mode,
+    const EncodeOptions& options) const {
+  const auto& src = impl_ref_();
+  const auto key = owned_name(feature);
+  const auto it = src.name_to_idx_.find(key);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::encode: unknown feature '" + key + "'");
+  const auto index = it->second;
+
+  if (mode == EncodeMode::Ordinal) {
+    const auto factored = factor(feature, options.ordered, options.sort_levels);
+    auto out_cols = src.columns_;
+    out_cols[index] = factored.codes;
+    return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+        src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
+  }
+
+  PLUSS_CHECK(mode == EncodeMode::OneHot, "DataFrame::encode: unknown EncodeMode");
+
+  const auto& source = src.columns_[index];
+  auto levels = source.dropnull().distinct(false);
+  if (options.sort_levels) {
+    levels = levels.sort_values(true, true);
+  }
+
+  const auto level_parts = unify_key_parts(levels);
+  const auto source_parts = unify_key_parts(source);
+  const auto n = source.size();
+  const auto valid = source.has_validity_mask()
+      ? source.validity_mask()->to_vec<bool>()
+      : std::vector<bool>(static_cast<std::size_t>(n), true);
+  const bool any_invalid = std::any_of(valid.begin(), valid.end(), [](bool v) { return !v; });
+
+  const auto level_count = static_cast<std::int64_t>(level_parts.size());
+  const std::int64_t start_level = (options.drop_first && level_count > 0) ? 1 : 0;
+  const auto prefix = options.prefix.empty() ? (key + "_") : options.prefix;
+
+  std::vector<std::pair<std::string, Thread>> indicator_columns;
+  indicator_columns.reserve(static_cast<std::size_t>(level_count - start_level));
+  for (std::int64_t lvl = start_level; lvl < level_count; ++lvl) {
+    const auto& level_key = level_parts[static_cast<std::size_t>(lvl)];
+    std::vector<bool> flags(static_cast<std::size_t>(n), false);
+    for (std::int64_t row = 0; row < n; ++row) {
+      const auto r = static_cast<std::size_t>(row);
+      if (valid[r] && source_parts[r] == level_key) {
+        flags[r] = true;
+      }
+    }
+    Thread indicator_thread(bool_series_from_keep(flags));
+    if (any_invalid) {
+      indicator_thread = indicator_thread.with_validity_mask(bool_series_from_keep(valid));
+    }
+    indicator_columns.emplace_back(prefix + level_key, std::move(indicator_thread));
+  }
+
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(src.names_.size() - 1 + indicator_columns.size());
+  out_cols.reserve(src.names_.size() - 1 + indicator_columns.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    if (i == index) {
+      for (auto& entry : indicator_columns) {
+        out_names.push_back(std::move(entry.first));
+        out_cols.push_back(std::move(entry.second));
+      }
+      continue;
+    }
+    out_names.push_back(src.names_[i]);
+    out_cols.push_back(src.columns_[i]);
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
 Thread CategoryEncoding::decode() const {

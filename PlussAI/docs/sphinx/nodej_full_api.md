@@ -1,6 +1,6 @@
 # NodeJ Full API Reference
 
-NodeJ method-centric reference generated from public headers.
+NodeJ method-centric reference, organized around the public API surface.
 Each page follows **API Signature -> Inputs -> Output -> Options -> Examples (with expected outputs)**.
 Options/enums are documented under the methods that consume them.
 

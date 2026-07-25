@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::pad" href="pad.html" />
@@ -36,48 +36,164 @@
 
           <div class="body" role="main">
             
-  <section id="dataframenoteaccessor-normalize">
+  <!-- pluss-hand-authored -->
+<section id="dataframenoteaccessor-normalize">
 <h1>DataFrameNoteAccessor::normalize<a class="headerlink" href="#dataframenoteaccessor-normalize" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFC</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFC</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Applies Unicode text normalization to every selected feature’s cells,
+choosing one of the four standard Unicode Normalization Forms via <code class="docutils literal notranslate"><span class="pre">form</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">UnicodeForm</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">NFC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">   </span><span class="c1">// Canonical Decomposition, followed by Canonical Composition</span>
+<span class="w">  </span><span class="n">NFD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">   </span><span class="c1">// Canonical Decomposition</span>
+<span class="w">  </span><span class="n">NFKC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">  </span><span class="c1">// Compatibility Decomposition, followed by Canonical Composition</span>
+<span class="w">  </span><span class="n">NFKD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">  </span><span class="c1">// Compatibility Decomposition</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Normalization matters for text that might contain the same visible
+character represented in more than one way — most commonly, a precomposed
+accented letter (<code class="docutils literal notranslate"><span class="pre">é</span></code> as a single codepoint) versus a base letter plus a
+combining mark (<code class="docutils literal notranslate"><span class="pre">e</span></code> + a combining acute accent, two codepoints that render
+identically). Two byte-for-byte-different strings can look identical and
+still compare unequal with a plain <a class="reference internal" href="../dataframe/eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>; running
+both through the same normalization form first makes such comparisons
+consistent.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Requires the optional Unicode backend (GNU libunistring) for anything beyond plain ASCII
+<code class="docutils literal notranslate"><span class="pre">normalize()</span></code>’s real behavior depends entirely on whether this build links
+libunistring:</p>
+<ul class="simple">
+<li><p><strong>With the backend</strong>: all four forms are fully implemented via the
+standard <code class="docutils literal notranslate"><span class="pre">uninorm_normalize</span></code> routine, correctly handling precomposed and
+decomposed Unicode text.</p></li>
+<li><p><strong>Without the backend</strong>: <code class="docutils literal notranslate"><span class="pre">normalize()</span></code> still accepts pure-ASCII input —
+and, since plain ASCII has no combining marks, ligatures, or
+compatibility characters to normalize in the first place, every form
+behaves as an identity transform and returns the input unchanged (see
+Example 1). But any <strong>non-ASCII</strong> input throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Note::normalize:</span> <span class="pre">non-ASCII</span> <span class="pre">text</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">Unicode</span> <span class="pre">backend&quot;</span></code> — there is
+no partial or best-effort fallback for non-ASCII text.</p></li>
+</ul>
+<p>Confirm this build’s Unicode support before relying on <code class="docutils literal notranslate"><span class="pre">normalize()</span></code> for
+any text that might contain non-ASCII characters.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>form</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+<p><strong>form</strong> (<code class="docutils literal notranslate"><span class="pre">UnicodeForm</span></code>, default <code class="docutils literal notranslate"><span class="pre">UnicodeForm::NFC</span></code>)
+Which normalization form to apply: <code class="docutils literal notranslate"><span class="pre">NFC</span></code>, <code class="docutils literal notranslate"><span class="pre">NFD</span></code>, <code class="docutils literal notranslate"><span class="pre">NFKC</span></code>, or <code class="docutils literal notranslate"><span class="pre">NFKD</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with every selected feature’s text normalized to the
+requested form.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<p>Example 1. Plain ASCII text under the default form (<code class="docutils literal notranslate"><span class="pre">NFC</span></code>) — a no-op,
+since ASCII has nothing to normalize, and this behavior holds regardless
+of whether this build links the Unicode backend.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">normalize</span><span class="p">({});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">titles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;Hello World&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ASCII text only&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">titles</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<section id="output-before-identical-to-output-after">
+<h3>Output (before, identical to output after)<a class="headerlink" href="#output-before-identical-to-output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================
+     | title          
+----------------------
+0    | Hello World    
+1    | ASCII text only
+2    | NULL           
+----------------------
+[3 cs x 1 feat]
 </pre></div>
 </div>
+<p>The output is byte-for-byte identical to the input: <code class="docutils literal notranslate"><span class="pre">NFC</span></code> (like every
+other form, on ASCII) has nothing to canonicalize when there are no
+combining marks or compatibility characters present. The invalid third row
+stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, same as every other method on this accessor.</p>
+<p>Example 2. Explicitly requesting each of the four forms on the same ASCII
+input — all four produce the identical result, since the distinctions
+between NFC/NFD/NFKC/NFKD only matter for text containing decomposable or
+compatibility characters, none of which plain ASCII has.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">nfc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFC</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nfd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFD</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nfkc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFKC</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nfkd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFKD</span><span class="p">);</span>
+<span class="c1">// nfc, nfd, nfkc, and nfkd are all identical to titles here.</span>
+</pre></div>
+</div>
+<p>Example 3. Non-ASCII input without the Unicode backend throws — shown here
+as the documented failure mode rather than a specific transformed value,
+since the exact behavior depends on this build’s optional dependency (see
+the important callout above).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">accented</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;word&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;caf</span><span class="se">\xC3\xA9</span><span class="s">&quot;</span><span class="p">}))},</span><span class="w">  </span><span class="c1">// &quot;café&quot;</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accented</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="output-build-without-the-unicode-backend">
+<h3>Output (build without the Unicode backend)<a class="headerlink" href="#output-build-without-the-unicode-backend" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note::normalize: non-ASCII text requires a Unicode backend
+</pre></div>
+</div>
+<p>A build with libunistring linked would instead perform genuine Unicode
+normalization on this input rather than throwing — but the exact
+byte-level output in that case isn’t asserted here, since it depends on a
+build-time optional dependency rather than anything guaranteed by the
+public API alone.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>All four <code class="docutils literal notranslate"><span class="pre">UnicodeForm</span></code> values are identity transforms on pure ASCII
+text, with or without the Unicode backend.</p></li>
+<li><p>Non-ASCII input throws outright when this build lacks libunistring —
+there is no partial fallback. See the important callout above.</p></li>
+<li><p>Applies to every feature the accessor was built with, in one call — see
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>’s Notes for the mechanics shared by every method on
+this accessor.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::casefold</span></code></span></a>: a related
+build-dependent Unicode operation, with the same libunistring caveat.</p></li>
+<li><p><a class="reference internal" href="../dataframe/eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::eq</span></code></span></a>: the comparison operation
+normalization is usually a preprocessing step for.</p></li>
+<li><p><a class="reference internal" href="encode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::encode</span></code></span></a>: byte-level encodings, unlike
+<code class="docutils literal notranslate"><span class="pre">normalize()</span></code>’s codepoint-level text transform.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="matches.html">
     <span class="label">Previous</span>
@@ -88,7 +204,6 @@ Value produced by this call.</p>
     <span class="title">pad</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

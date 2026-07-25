@@ -220,7 +220,7 @@ Thread null_singleton_like(const Thread& reference) {
 }
 
 std::string axis_value_key(const Thread& values, std::int64_t row) {
-  return values.is_valid(row) ? case_label_from_axis(values, row) : std::string("NA");
+  return values.is_valid(row) ? case_label_from_axis(values, row) : std::string("NULL");
 }
 
 } // namespace
@@ -255,7 +255,7 @@ DataFrameView DataFrame::transpose(bool render) const {
     values.reserve(static_cast<std::size_t>(cols));
     for (std::int64_t c = 0; c < cols; ++c) {
       if (!src_columns[static_cast<std::size_t>(c)].is_valid(r)) {
-        values.emplace_back("NA");
+        values.emplace_back("NULL");
       } else {
         values.emplace_back(src_notes[static_cast<std::size_t>(c)].at(r));
       }

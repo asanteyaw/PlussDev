@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::gt
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,85 +7,103 @@
 ## Signatures
 
 ```cpp
-Thread::gt(const char* other) -> Thread
-
-Thread::gt(const Thread& other) -> Thread
-
-Thread::gt(double other) -> Thread
-
-Thread::gt(std::string_view other) -> Thread
+Thread::gt(double other) const -> Thread
+Thread::gt(std::string_view other) const -> Thread
+Thread::gt(const char* other) const -> Thread
+Thread::gt(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+Elementwise "greater than", the mirror image of [`lt()`](lt.md), following
+[`eq()`](eq.md)'s shared overload shape and positional matching. Like `lt()`, the
+string overload stringifies numeric values before comparing lexicographically — see
+[`lt()`](lt.md) for a concrete example of why that can disagree with numeric
+ordering.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double`, `std::string_view`, or `const Thread&`)
+
+Same shape as [`eq()`](eq.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    "greater than" result.
 
 ## Examples
 
-Example 1. Apply `gt` to the current thread using explicit `other` arguments.
+Example 1. Compare every value against a scalar.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.gt("demo");
+auto scores = Thread(pluss::make_series({72.0, 85.0, 91.0}));
+auto out = scores.gt(85.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  false
+2  true
+
+ptype: Series
 ```
-Example 2. Apply `gt` to the current thread using explicit `other` arguments.
+
+The exact negation of [`scores.le(85.0)`](le.md)'s `true, true, false`.
+
+Example 2. Compare two threads positionally.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
-
-auto out = thread.gt(other);
+auto targets = Thread(pluss::make_series({72.0, 80.0, 95.0}));
+auto out_pair = scores.gt(targets);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  false
+
+ptype: Series
 ```
-Example 3. Apply `gt` to the current thread using explicit `other` arguments.
+
+Example 3. String comparison on a `Note` thread.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.gt(10.0);
+auto names = Thread(pluss::make_note({"Ada", "Bola", "Chen"}));
+auto out_names = names.gt("Bola");
+std::cout << out_names;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
-```
-Example 4. Apply `gt` to the current thread using explicit `other` arguments.
+0  false
+1  false
+2  true
 
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.gt("demo");
+ptype: Series
 ```
 
-### Output
+## Notes
 
-```text
-[10.0, 20.0, 30.0]
-```
+- See [`eq()`](eq.md) for the family-wide mechanics.
+- `gt(x)` is always the exact logical negation of `le(x)` for the same argument —
+  there is no `NULL`-handling subtlety that would break that relationship here.
 
+## See Also
+
+- [`Thread::ge`](ge.md): the inclusive form.
+- [`Thread::lt`](lt.md): the opposite direction, including the lexicographic gotcha
+  that also applies to `gt()`'s string overload.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ge.html">

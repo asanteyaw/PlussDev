@@ -1079,12 +1079,15 @@ ThreadValue Thread::corr_with(
       valid.to(pluss::codem::ScalarType::Int64).sum().item<std::int64_t>();
   auto value = pluss::Series::zeros(
       {1}, thread_compute_type_(as_series()), as_series().platform());
+  bool has_value = false;
   if (count >= min_count) {
+    const auto corr_value = corr(other, method);
+    has_value = std::isfinite(corr_value);
     value = pluss::Series::full(
-        {1}, corr(other, method), thread_compute_type_(as_series()),
+        {1}, corr_value, thread_compute_type_(as_series()),
         as_series().platform());
   }
-  return ThreadValue(scalar_thread_(value, count >= min_count));
+  return ThreadValue(scalar_thread_(value, has_value));
 }
 
 ThreadValue Thread::matmul(const Thread& other) const {
@@ -2024,13 +2027,13 @@ Thread Thread::encode(std::string_view encoding) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::encode: expected Note payload");
   if (encoding == "base64") {
-    return Thread(as_note().base64_encode(), validity_mask());
+    return Thread(pluss::coden::ops_internal::base64_encode(as_note()), validity_mask());
   }
   if (encoding == "hex") {
-    return Thread(as_note().hex_encode(), validity_mask());
+    return Thread(pluss::coden::ops_internal::hex_encode(as_note()), validity_mask());
   }
   if (encoding == "url") {
-    return Thread(as_note().url_encode(), validity_mask());
+    return Thread(pluss::coden::ops_internal::url_encode(as_note()), validity_mask());
   }
   PLUSS_FAIL(
       "Thread::encode: encoding must be base64, hex, or url");

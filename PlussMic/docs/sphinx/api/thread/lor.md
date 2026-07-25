@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::lor
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,40 +7,66 @@
 ## Signature
 
 ```cpp
-Thread::lor(const Thread& other) -> Thread
+Thread::lor(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Elementwise logical OR, following [`land()`](land.md)'s shared mechanics: single
+overload, `Bool`-only requirement, positional matching, and display labels carried
+from `*this`.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+
+A `Bool`-typed `Series` thread, the same length as `*this`.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    logical OR.
 
 ## Examples
 
-Example 1. Apply `lor` to the current thread using explicit `other` arguments.
+Example 1. OR two boolean threads.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.lor(other);
+auto left = Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool));
+auto right = Thread(pluss::make_series({false, false, true}, pluss::ScalarType::Bool));
+
+auto out = left.lor(right);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  true
+1  false
+2  true
+
+ptype: Series
 ```
 
+Position `1` is the only one where OR reports `false` — the only position where
+**both** operands are `false` at once.
+
+## Notes
+
+- See [`land()`](land.md) for the family-wide mechanics: the `Bool`-only
+  requirement, positional matching, and the length-mismatch/non-`Bool` throws.
+- See [`ror()`](ror.md) for how its reflected form's display-label behavior differs
+  from `lor()`, the same way [`rand()`](rand.md) differs from `land()`.
+
+## See Also
+
+- [`Thread::ror`](ror.md): the reflected form.
+- [`Thread::land`](land.md): the canonical reference for this family's shared
+  mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log.html">

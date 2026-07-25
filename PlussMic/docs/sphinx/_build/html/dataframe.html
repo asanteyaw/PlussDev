@@ -13,8 +13,8 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="_static/layout.js?v=e3ea884b"></script>
+    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Kindle Model Guide" href="kindle.html" />
@@ -462,7 +462,7 @@ right frame should patch matching cells/features.</p>
 </section>
 <section id="sql-and-io">
 <h2>SQL And IO<a class="headerlink" href="#sql-and-io" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;SELECT city, sales FROM self ORDER BY sales DESC&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT city, sales FROM df ORDER BY sales DESC&quot;</span><span class="p">);</span>
 
 <span class="n">result</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;path/to/output.csv&quot;</span><span class="p">);</span>
 <span class="n">result</span><span class="p">.</span><span class="n">save_excel</span><span class="p">(</span><span class="s">&quot;path/to/output.xlsx&quot;</span><span class="p">);</span>

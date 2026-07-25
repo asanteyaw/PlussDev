@@ -1,4 +1,4 @@
-project = 'PlussQit User Docs'
+project = 'Pluss'
 author = 'PlussMa Contributors'
 
 extensions = [
@@ -28,5 +28,5 @@ myst_url_schemes = ("http", "https", "mailto", "ftp", "file")
 
 latex_engine = 'pdflatex'
 latex_documents = [
-    ('index', 'plussqit_user_docs.tex', 'PlussQit User Documentation', 'PlussMa Contributors', 'manual'),
+    ('index', 'pluss_documentation.tex', 'Pluss Documentation', 'PlussMa Contributors', 'manual'),
 ]

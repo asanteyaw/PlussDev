@@ -487,6 +487,104 @@ nn_training_parity_test/fast:
 .PHONY : nn_training_parity_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule
+
+# Convenience name for target.
+nodeb_linguistics_test: PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule
+.PHONY : nodeb_linguistics_test
+
+# fast build rule for target.
+nodeb_linguistics_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build
+.PHONY : nodeb_linguistics_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule
+
+# Convenience name for target.
+nodeb_syntax_test: PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule
+.PHONY : nodeb_syntax_test
+
+# fast build rule for target.
+nodeb_syntax_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build
+.PHONY : nodeb_syntax_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/rule
+
+# Convenience name for target.
+nodeb_tokenizer_test: PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/rule
+.PHONY : nodeb_tokenizer_test
+
+# fast build rule for target.
+nodeb_tokenizer_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build
+.PHONY : nodeb_tokenizer_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/rule
+
+# Convenience name for target.
+nodeb_trainable_test: PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/rule
+.PHONY : nodeb_trainable_test
+
+# fast build rule for target.
+nodeb_trainable_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build
+.PHONY : nodeb_trainable_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/rule
+
+# Convenience name for target.
+nodeb_vectorize_test: PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/rule
+.PHONY : nodeb_vectorize_test
+
+# fast build rule for target.
+nodeb_vectorize_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build
+.PHONY : nodeb_vectorize_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/rule
+
+# Convenience name for target.
+nodeb_vocab_test: PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/rule
+.PHONY : nodeb_vocab_test
+
+# fast build rule for target.
+nodeb_vocab_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build
+.PHONY : nodeb_vocab_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/rule
+
+# Convenience name for target.
+nodeb_workflow_test: PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/rule
+.PHONY : nodeb_workflow_test
+
+# fast build rule for target.
+nodeb_workflow_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build
+.PHONY : nodeb_workflow_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule
@@ -1270,6 +1368,174 @@ nn_training_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/nn_training_parity_test.cpp.s
 .PHONY : nn_training_parity_test.cpp.s
 
+nodeb_linguistics_test.o: nodeb_linguistics_test.cpp.o
+.PHONY : nodeb_linguistics_test.o
+
+# target to build an object file
+nodeb_linguistics_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/nodeb_linguistics_test.cpp.o
+.PHONY : nodeb_linguistics_test.cpp.o
+
+nodeb_linguistics_test.i: nodeb_linguistics_test.cpp.i
+.PHONY : nodeb_linguistics_test.i
+
+# target to preprocess a source file
+nodeb_linguistics_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/nodeb_linguistics_test.cpp.i
+.PHONY : nodeb_linguistics_test.cpp.i
+
+nodeb_linguistics_test.s: nodeb_linguistics_test.cpp.s
+.PHONY : nodeb_linguistics_test.s
+
+# target to generate assembly for a file
+nodeb_linguistics_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/nodeb_linguistics_test.cpp.s
+.PHONY : nodeb_linguistics_test.cpp.s
+
+nodeb_syntax_test.o: nodeb_syntax_test.cpp.o
+.PHONY : nodeb_syntax_test.o
+
+# target to build an object file
+nodeb_syntax_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/nodeb_syntax_test.cpp.o
+.PHONY : nodeb_syntax_test.cpp.o
+
+nodeb_syntax_test.i: nodeb_syntax_test.cpp.i
+.PHONY : nodeb_syntax_test.i
+
+# target to preprocess a source file
+nodeb_syntax_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/nodeb_syntax_test.cpp.i
+.PHONY : nodeb_syntax_test.cpp.i
+
+nodeb_syntax_test.s: nodeb_syntax_test.cpp.s
+.PHONY : nodeb_syntax_test.s
+
+# target to generate assembly for a file
+nodeb_syntax_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/nodeb_syntax_test.cpp.s
+.PHONY : nodeb_syntax_test.cpp.s
+
+nodeb_tokenizer_test.o: nodeb_tokenizer_test.cpp.o
+.PHONY : nodeb_tokenizer_test.o
+
+# target to build an object file
+nodeb_tokenizer_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/nodeb_tokenizer_test.cpp.o
+.PHONY : nodeb_tokenizer_test.cpp.o
+
+nodeb_tokenizer_test.i: nodeb_tokenizer_test.cpp.i
+.PHONY : nodeb_tokenizer_test.i
+
+# target to preprocess a source file
+nodeb_tokenizer_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/nodeb_tokenizer_test.cpp.i
+.PHONY : nodeb_tokenizer_test.cpp.i
+
+nodeb_tokenizer_test.s: nodeb_tokenizer_test.cpp.s
+.PHONY : nodeb_tokenizer_test.s
+
+# target to generate assembly for a file
+nodeb_tokenizer_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/nodeb_tokenizer_test.cpp.s
+.PHONY : nodeb_tokenizer_test.cpp.s
+
+nodeb_trainable_test.o: nodeb_trainable_test.cpp.o
+.PHONY : nodeb_trainable_test.o
+
+# target to build an object file
+nodeb_trainable_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/nodeb_trainable_test.cpp.o
+.PHONY : nodeb_trainable_test.cpp.o
+
+nodeb_trainable_test.i: nodeb_trainable_test.cpp.i
+.PHONY : nodeb_trainable_test.i
+
+# target to preprocess a source file
+nodeb_trainable_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/nodeb_trainable_test.cpp.i
+.PHONY : nodeb_trainable_test.cpp.i
+
+nodeb_trainable_test.s: nodeb_trainable_test.cpp.s
+.PHONY : nodeb_trainable_test.s
+
+# target to generate assembly for a file
+nodeb_trainable_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_trainable_test.dir/nodeb_trainable_test.cpp.s
+.PHONY : nodeb_trainable_test.cpp.s
+
+nodeb_vectorize_test.o: nodeb_vectorize_test.cpp.o
+.PHONY : nodeb_vectorize_test.o
+
+# target to build an object file
+nodeb_vectorize_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/nodeb_vectorize_test.cpp.o
+.PHONY : nodeb_vectorize_test.cpp.o
+
+nodeb_vectorize_test.i: nodeb_vectorize_test.cpp.i
+.PHONY : nodeb_vectorize_test.i
+
+# target to preprocess a source file
+nodeb_vectorize_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/nodeb_vectorize_test.cpp.i
+.PHONY : nodeb_vectorize_test.cpp.i
+
+nodeb_vectorize_test.s: nodeb_vectorize_test.cpp.s
+.PHONY : nodeb_vectorize_test.s
+
+# target to generate assembly for a file
+nodeb_vectorize_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vectorize_test.dir/nodeb_vectorize_test.cpp.s
+.PHONY : nodeb_vectorize_test.cpp.s
+
+nodeb_vocab_test.o: nodeb_vocab_test.cpp.o
+.PHONY : nodeb_vocab_test.o
+
+# target to build an object file
+nodeb_vocab_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/nodeb_vocab_test.cpp.o
+.PHONY : nodeb_vocab_test.cpp.o
+
+nodeb_vocab_test.i: nodeb_vocab_test.cpp.i
+.PHONY : nodeb_vocab_test.i
+
+# target to preprocess a source file
+nodeb_vocab_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/nodeb_vocab_test.cpp.i
+.PHONY : nodeb_vocab_test.cpp.i
+
+nodeb_vocab_test.s: nodeb_vocab_test.cpp.s
+.PHONY : nodeb_vocab_test.s
+
+# target to generate assembly for a file
+nodeb_vocab_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_vocab_test.dir/nodeb_vocab_test.cpp.s
+.PHONY : nodeb_vocab_test.cpp.s
+
+nodeb_workflow_test.o: nodeb_workflow_test.cpp.o
+.PHONY : nodeb_workflow_test.o
+
+# target to build an object file
+nodeb_workflow_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/nodeb_workflow_test.cpp.o
+.PHONY : nodeb_workflow_test.cpp.o
+
+nodeb_workflow_test.i: nodeb_workflow_test.cpp.i
+.PHONY : nodeb_workflow_test.i
+
+# target to preprocess a source file
+nodeb_workflow_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/nodeb_workflow_test.cpp.i
+.PHONY : nodeb_workflow_test.cpp.i
+
+nodeb_workflow_test.s: nodeb_workflow_test.cpp.s
+.PHONY : nodeb_workflow_test.s
+
+# target to generate assembly for a file
+nodeb_workflow_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_workflow_test.dir/nodeb_workflow_test.cpp.s
+.PHONY : nodeb_workflow_test.cpp.s
+
 nodej_balance_test.o: nodej_balance_test.cpp.o
 .PHONY : nodej_balance_test.o
 
@@ -1786,6 +2052,13 @@ help:
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
+	@echo "... nodeb_linguistics_test"
+	@echo "... nodeb_syntax_test"
+	@echo "... nodeb_tokenizer_test"
+	@echo "... nodeb_trainable_test"
+	@echo "... nodeb_vectorize_test"
+	@echo "... nodeb_vocab_test"
+	@echo "... nodeb_workflow_test"
 	@echo "... nodej_balance_test"
 	@echo "... nodej_bayes_kernel_test"
 	@echo "... nodej_cv_tune_test"
@@ -1869,6 +2142,27 @@ help:
 	@echo "... nn_training_parity_test.o"
 	@echo "... nn_training_parity_test.i"
 	@echo "... nn_training_parity_test.s"
+	@echo "... nodeb_linguistics_test.o"
+	@echo "... nodeb_linguistics_test.i"
+	@echo "... nodeb_linguistics_test.s"
+	@echo "... nodeb_syntax_test.o"
+	@echo "... nodeb_syntax_test.i"
+	@echo "... nodeb_syntax_test.s"
+	@echo "... nodeb_tokenizer_test.o"
+	@echo "... nodeb_tokenizer_test.i"
+	@echo "... nodeb_tokenizer_test.s"
+	@echo "... nodeb_trainable_test.o"
+	@echo "... nodeb_trainable_test.i"
+	@echo "... nodeb_trainable_test.s"
+	@echo "... nodeb_vectorize_test.o"
+	@echo "... nodeb_vectorize_test.i"
+	@echo "... nodeb_vectorize_test.s"
+	@echo "... nodeb_vocab_test.o"
+	@echo "... nodeb_vocab_test.i"
+	@echo "... nodeb_vocab_test.s"
+	@echo "... nodeb_workflow_test.o"
+	@echo "... nodeb_workflow_test.i"
+	@echo "... nodeb_workflow_test.s"
 	@echo "... nodej_balance_test.o"
 	@echo "... nodej_balance_test.i"
 	@echo "... nodej_balance_test.s"

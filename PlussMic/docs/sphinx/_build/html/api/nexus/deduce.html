@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Nexus::deduce &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nexus::defined" href="defined.html" />
+    <link rel="prev" title="Nexus::apply_all" href="apply_all.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="nexus-deduce">
+<h1>Nexus::deduce<a class="headerlink" href="#nexus-deduce" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_api_reference.html"><span class="doc std std-doc">Back to Nexus API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">deduce</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">min_confidence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Scans the workspace for plausible relationship candidates and returns them as an
+advisory <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">deduce()</span></code> does not create relationships, mutate the workspace, or validate that
+the suggested joins are semantically correct for your domain. Its job is narrower:
+surface “these two tables share a feature name that looks structurally joinable”
+signals so you can inspect them before you declare anything with the relationship
+APIs.</p>
+<p>The current implementation scores candidates from four pieces of evidence:</p>
+<ul class="simple">
+<li><p>shared feature name: base score <code class="docutils literal notranslate"><span class="pre">0.35</span></code></p></li>
+<li><p>left feature is unique: <code class="docutils literal notranslate"><span class="pre">+0.20</span></code></p></li>
+<li><p>right feature is unique: <code class="docutils literal notranslate"><span class="pre">+0.20</span></code></p></li>
+<li><p>left feature is declared as a single-column key: <code class="docutils literal notranslate"><span class="pre">+0.125</span></code></p></li>
+<li><p>right feature is declared as a single-column key: <code class="docutils literal notranslate"><span class="pre">+0.125</span></code></p></li>
+</ul>
+<p>The result is capped at <code class="docutils literal notranslate"><span class="pre">1.0</span></code>. Composite key declarations do <strong>not</strong> count toward
+the declared-key bonus here; the implementation only treats exact one-column key
+declarations as evidence for <code class="docutils literal notranslate"><span class="pre">deduce()</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>deduce() is name-and-key-structure driven
+In the current implementation, <code class="docutils literal notranslate"><span class="pre">deduce()</span></code> does not compare actual value overlap
+between the two columns. It reasons from shared feature names, uniqueness, and
+declared one-column keys.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>min_confidence</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>, default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>)</p>
+<p>Minimum score a candidate row must reach before it is included in the output.</p>
+<ul class="simple">
+<li><p>Must be in the closed interval <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">1.0]</span></code>.</p></li>
+<li><p>Lower thresholds admit weaker suggestions.</p></li>
+<li><p>Higher thresholds filter the result down to only the strongest structural
+matches.</p></li>
+<li><p>Values outside <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">1.0]</span></code> throw immediately.</p></li>
+</ul>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per surviving candidate relationship.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>The output frame has these columns:
+
+- `name`: a stable suggestion label in the shape `left_right_feature`
+- `left`, `right`: the participating table names
+- `left_key`, `right_key`: the shared feature name on each side
+- `cardinality`: the inferred cardinality from the two uniqueness flags
+- `left_unique`, `right_unique`: whether each side is unique by that feature
+- `left_declared`, `right_declared`: whether each side declares that feature
+  as a one-column primary or candidate key
+- `confidence`: the computed score
+- `basis`: a compact explanation string showing which evidence contributed
+</pre></div>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default-threshold deduction returns every candidate at or above <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p>
+<p>The fixture below is intentionally small but slightly noisy: <code class="docutils literal notranslate"><span class="pre">loan</span></code> and <code class="docutils literal notranslate"><span class="pre">trans</span></code>
+share both <code class="docutils literal notranslate"><span class="pre">account_id</span></code> and <code class="docutils literal notranslate"><span class="pre">amount</span></code>, so <code class="docutils literal notranslate"><span class="pre">deduce()</span></code> emits two separate suggestions
+for that pair. This is an important behavior to understand. The result is not
+“one row per table pair”; it is “one row per plausible shared feature”.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">loan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;loan_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">account</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;district_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;segment&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;retail&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;retail&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;vip&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">trans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;trans_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1001.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1002.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1003.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">loan_meta</span><span class="p">{};</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">grain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;loan&quot;</span><span class="p">;</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;loan_id&quot;</span><span class="p">};</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">candidate_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;loan_id&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;loan_id&quot;</span><span class="p">}};</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">time_field</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;loan_id&quot;</span><span class="p">;</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">case_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CaseLabelPolicy</span><span class="o">::</span><span class="n">Structured</span><span class="p">;</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;core.loan&quot;</span><span class="p">;</span>
+<span class="n">loan_meta</span><span class="p">.</span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;loan book&quot;</span><span class="p">;</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">account_meta</span><span class="p">{};</span>
+<span class="n">account_meta</span><span class="p">.</span><span class="n">grain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">;</span>
+<span class="n">account_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">};</span>
+<span class="n">account_meta</span><span class="p">.</span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;core.account&quot;</span><span class="p">;</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">loan_account</span><span class="p">{};</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;loan_account&quot;</span><span class="p">;</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;loan&quot;</span><span class="p">;</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">;</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;account_id&quot;</span><span class="p">}};</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">ManyToOne</span><span class="p">;</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">confidence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.95</span><span class="p">;</span>
+<span class="n">loan_account</span><span class="p">.</span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipValidationStatus</span><span class="o">::</span><span class="n">Declared</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;loan&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">loan</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">account</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;trans&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">trans</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">meta</span><span class="p">(</span><span class="s">&quot;loan&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">loan_meta</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="n">meta</span><span class="p">(</span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">account_meta</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="n">links</span><span class="p">({</span><span class="n">loan_account</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">deduced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">deduce</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">nfeatures</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">ncases</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="n">as_note</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;left&quot;</span><span class="p">).</span><span class="n">as_note</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;right&quot;</span><span class="p">).</span><span class="n">as_note</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;left_key&quot;</span><span class="p">).</span><span class="n">as_note</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;confidence&quot;</span><span class="p">).</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()[</span><span class="n">idx</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">deduced</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;basis&quot;</span><span class="p">).</span><span class="n">as_note</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>4 12
+loan_account_account_id loan account account_id 0.875 shared_name+left_unique+right_unique+right_declared
+loan_trans_account_id loan trans account_id 0.55 shared_name+left_unique
+loan_trans_amount loan trans amount 0.75 shared_name+left_unique+right_unique
+account_trans_account_id account trans account_id 0.675 shared_name+left_unique+left_declared
+</pre></div>
+</div>
+<p>Example 2. Raising <code class="docutils literal notranslate"><span class="pre">min_confidence</span></code> filters out weaker structural guesses.</p>
+<p>At <code class="docutils literal notranslate"><span class="pre">0.9</span></code>, the same fixture yields no candidates at all. That does not mean the
+workspace is unjoinable; it only means none of the suggestions reached that
+stricter score cutoff.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">deduce</span><span class="p">(</span><span class="mf">0.9</span><span class="p">).</span><span class="n">ncases</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+<p>Example 3. Threshold validation is strict.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">nx</span><span class="p">.</span><span class="n">deduce</span><span class="p">(</span><span class="mf">-0.1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">nx</span><span class="p">.</span><span class="n">deduce</span><span class="p">(</span><span class="mf">1.1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::deduce: min_confidence must be in [0, 1]
+Nexus::deduce: min_confidence must be in [0, 1]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">deduce()</span></code> is non-mutating and purely advisory.</p></li>
+<li><p>One table pair can produce multiple rows when several shared feature names look
+structurally plausible.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">name</span></code> column is feature-specific, so those multi-row pair suggestions stay
+distinguishable.</p></li>
+<li><p>Only the default call path <code class="docutils literal notranslate"><span class="pre">deduce()</span></code> / <code class="docutils literal notranslate"><span class="pre">deduce(0.5)</span></code> is cached in the current
+implementation. Non-default thresholds recompute.</p></li>
+<li><p>Existing declared relationships do not suppress suggestions. <code class="docutils literal notranslate"><span class="pre">deduce()</span></code> is about
+plausible structure, not “only relationships not already present”.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="scan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::scan</span></code></span></a>: inspect declared relationships and their computed
+validation status.</p></li>
+<li><p><a class="reference internal" href="profile.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::profile</span></code></span></a>: inspect per-table declared-key health.</p></li>
+<li><p><a class="reference internal" href="summary.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::summary</span></code></span></a>: get the compact table inventory without any
+relationship inference.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="apply_all.html">
+    <span class="label">Previous</span>
+    <span class="title">apply_all</span>
+  </a>
+  <a class="next-link" href="defined.html">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
+      <li>Previous: <a href="apply_all.html" title="previous chapter">Nexus::apply_all</a></li>
+      <li>Next: <a href="defined.html" title="next chapter">Nexus::defined</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/nexus/deduce.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

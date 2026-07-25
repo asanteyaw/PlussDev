@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::has" href="has.html" />
@@ -120,6 +120,101 @@ s3   | false  false
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">s2</span></code> is the only case that clears the <code class="docutils literal notranslate"><span class="pre">85</span></code> threshold on both features: <code class="docutils literal notranslate"><span class="pre">90</span> <span class="pre">&gt;</span> <span class="pre">85</span></code> and
 <code class="docutils literal notranslate"><span class="pre">88</span> <span class="pre">&gt;</span> <span class="pre">85</span></code> are both <code class="docutils literal notranslate"><span class="pre">true</span></code>, while every <code class="docutils literal notranslate"><span class="pre">84</span></code> and the <code class="docutils literal notranslate"><span class="pre">72</span></code> fall at or below it.</p>
+<p>Example 2. Passing <code class="docutils literal notranslate"><span class="pre">strict</span> <span class="pre">=</span> <span class="pre">false</span></code> reproduces <a class="reference internal" href="ge.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ge()</span></code></span></a> exactly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out_ge_style</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_ge_style</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+      | quiz  final
+-------------------
+s1    | true  true 
+s2    | true  true 
+s3    | true  false
+-------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">strict</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">84</span> <span class="pre">&gt;</span> <span class="pre">84</span></code> (which would be <code class="docutils literal notranslate"><span class="pre">false</span></code> under the default) now
+reports <code class="docutils literal notranslate"><span class="pre">true</span></code> for every case where the value equals <code class="docutils literal notranslate"><span class="pre">84</span></code>, since <code class="docutils literal notranslate"><span class="pre">84</span> <span class="pre">&gt;=</span> <span class="pre">84</span></code> holds —
+<code class="docutils literal notranslate"><span class="pre">scores.ge(84.0)</span></code> would produce this identical result.</p>
+<p>Example 3. Broadcast one text value against a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind feature — lexicographic
+comparison, same ordering <code class="docutils literal notranslate"><span class="pre">std::string</span></code> itself uses.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="s">&quot;Ada&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_names</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+      | name 
+-------------
+s1    | false
+s2    | true 
+s3    | false
+-------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>Only <code class="docutils literal notranslate"><span class="pre">&quot;Bola&quot;</span></code> sorts strictly after <code class="docutils literal notranslate"><span class="pre">&quot;Ada&quot;</span></code> — the two <code class="docutils literal notranslate"><span class="pre">&quot;Ada&quot;</span></code> cases fail the strict
+relation against themselves.</p>
+<p>Example 4. Compare two frames cell by cell once they share the same structure.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">83.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">72.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out_frames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="n">changed</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_frames</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+      | quiz   final
+--------------------
+s1    | false  false
+s2    | false  false
+s3    | true   false
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Exactly one <code class="docutils literal notranslate"><span class="pre">true</span></code> cell — <code class="docutils literal notranslate"><span class="pre">s3</span></code>’s <code class="docutils literal notranslate"><span class="pre">quiz</span></code> (<code class="docutils literal notranslate"><span class="pre">84</span> <span class="pre">&gt;</span> <span class="pre">83</span></code>) — since every other cell in
+<code class="docutils literal notranslate"><span class="pre">changed</span></code> is <em>equal</em> to <code class="docutils literal notranslate"><span class="pre">scores</span></code>, not strictly less; compare this against
+<a class="reference internal" href="ge.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scores.ge(changed)</span></code></span></a> on the identical two frames, where all of those equal
+cells report <code class="docutils literal notranslate"><span class="pre">true</span></code> instead.</p>
+<p>Example 5. Compare against a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with one value per feature — <code class="docutils literal notranslate"><span class="pre">quiz</span></code> checked
+against <code class="docutils literal notranslate"><span class="pre">84</span></code>, <code class="docutils literal notranslate"><span class="pre">final</span></code> checked against <code class="docutils literal notranslate"><span class="pre">88</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">thresholds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="n">thresholds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+      | quiz   final
+--------------------
+s1    | false  false
+s2    | true   false
+s3    | false  false
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">quiz</span> <span class="pre">&gt;</span> <span class="pre">84</span></code> holds only at <code class="docutils literal notranslate"><span class="pre">s2</span></code> (<code class="docutils literal notranslate"><span class="pre">90</span></code>); <code class="docutils literal notranslate"><span class="pre">final</span> <span class="pre">&gt;</span> <span class="pre">88</span></code> never holds, since no <code class="docutils literal notranslate"><span class="pre">final</span></code>
+value exceeds <code class="docutils literal notranslate"><span class="pre">88</span></code>.</p>
 </section>
 </section>
 <section id="notes">

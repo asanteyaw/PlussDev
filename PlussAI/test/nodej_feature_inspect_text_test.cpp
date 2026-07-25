@@ -17,6 +17,8 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::ai::nodej::AssessOptions;
 using pluss::ai::nodej::FeatureBatch;
+using pluss::ai::nodej::HashMapOptions;
+using pluss::ai::nodej::HashMapper;
 using pluss::ai::nodej::LabeledBatch;
 using pluss::ai::nodej::LexiconMapper;
 using pluss::ai::nodej::LexiconMapOptions;
@@ -209,6 +211,73 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     }
     if (tfidf_sparse_or.value().rows != 2 || tfidf_sparse_or.value().cols <= 0) {
       if (err) *err << "LexiconMapper map_tfidf_sparse should provide sparse shape metadata\n";
+      return false;
+    }
+
+    LexiconMapper ngram_mapper(LexiconMapOptions{
+        .lowercase = true,
+        .max_features = 16,
+        .min_document_frequency = 1,
+        .binary = false,
+        .min_ngram = 1,
+        .max_ngram = 2,
+    });
+    if (!ngram_mapper.learn({"new york city", "new york state"}).ok()) {
+      if (err) *err << "LexiconMapper should learn unigram+bigram vocabularies\n";
+      return false;
+    }
+    const auto& ngram_vocab = ngram_mapper.vocabulary();
+    if (std::find(ngram_vocab.begin(), ngram_vocab.end(), "new york") == ngram_vocab.end()) {
+      if (err) *err << "LexiconMapper vocabulary should include generated bigrams\n";
+      return false;
+    }
+
+    LexiconMapper technical_mapper(LexiconMapOptions{
+        .lowercase = true,
+        .max_features = 16,
+        .min_document_frequency = 1,
+        .binary = false,
+    });
+    const auto technical_status =
+        technical_mapper.learn({"C++ compiler", "C# tooling", "email help@pluss.dev", "visit https://pluss.dev/docs"});
+    if (!technical_status.ok()) {
+      if (err) *err << "LexiconMapper should learn technical tokens through the shared Note tokenizer\n";
+      return false;
+    }
+    const auto& vocab = technical_mapper.vocabulary();
+    const auto has_token = [&](const std::string& token) {
+      return std::find(vocab.begin(), vocab.end(), token) != vocab.end();
+    };
+    if (!has_token("c++") || !has_token("c#") ||
+        !has_token("help@pluss.dev") || !has_token("https://pluss.dev/docs")) {
+      if (err) *err << "LexiconMapper vocabulary should preserve C++, C#, emails, and URLs as full tokens\n";
+      return false;
+    }
+
+    HashMapper hasher(HashMapOptions{
+        .lowercase = true,
+        .n_features = 32,
+        .binary = false,
+        .alternate_sign = false,
+        .min_ngram = 1,
+        .max_ngram = 2,
+    });
+    auto hashed_dense_or = hasher.map_dense({"new york city", "new york state"});
+    if (!hashed_dense_or.ok()) {
+      if (err) *err << "HashMapper map_dense should succeed\n";
+      return false;
+    }
+    if (hashed_dense_or.value().sample_count() != 2 || hashed_dense_or.value().feature_count() != 32) {
+      if (err) *err << "HashMapper dense output should respect the configured feature width\n";
+      return false;
+    }
+    auto hashed_sparse_or = hasher.map_sparse({"new york city", "new york state"});
+    if (!hashed_sparse_or.ok()) {
+      if (err) *err << "HashMapper map_sparse should succeed\n";
+      return false;
+    }
+    if (hashed_sparse_or.value().rows != 2 || hashed_sparse_or.value().cols != 32) {
+      if (err) *err << "HashMapper sparse output should expose the configured feature width\n";
       return false;
     }
   }

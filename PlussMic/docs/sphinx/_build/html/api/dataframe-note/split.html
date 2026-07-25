@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::starts" href="starts.html" />
@@ -36,76 +36,293 @@
 
           <div class="body" role="main">
             
-  <section id="dataframenoteaccessor-split">
+  <!-- pluss-hand-authored -->
+<section id="dataframenoteaccessor-split">
 <h1>DataFrameNoteAccessor::split<a class="headerlink" href="#dataframenoteaccessor-split" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;part&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;part&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
-<span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span>
+<span class="w">                              </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Splits every cell of the <strong>single selected text feature</strong> on a delimiter,
+expanding the result into one output column per split position — column
+<code class="docutils literal notranslate"><span class="pre">part_0</span></code> (or <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>) holds each row’s first piece, <code class="docutils literal notranslate"><span class="pre">part_1</span></code> its
+second, and so on, the same column-expansion shape <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>
+and <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> use. There are two overloads with different
+delimiter semantics:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code></strong>: always a literal substring split
+(never regex), with an optional <code class="docutils literal notranslate"><span class="pre">limit</span></code> on how many splits to perform
+and a customizable column-name <code class="docutils literal notranslate"><span class="pre">prefix</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">split(pattern,</span> <span class="pre">options)</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">pattern</span></code> is literal or regex depending on
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code>; <code class="docutils literal notranslate"><span class="pre">options.limit</span></code> caps the split count and
+<code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> names the columns (both fields of the same
+<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> struct used throughout this accessor).</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>split() requires exactly one selected feature
+Like <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>, <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>, <a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partition()</span></code></span></a>,
+and <a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">indicate()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">split()</span></code> operates on exactly one column —
+calling it through a multi-feature accessor throws
+<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::note().split</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>.</p>
+</div>
+<p>Both overloads produce ragged results the same way <code class="docutils literal notranslate"><span class="pre">findall()</span></code> does: a row
+with fewer pieces than the widest row is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the extra columns, and
+<code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the number of splits performed (a split of <code class="docutils literal notranslate"><span class="pre">&quot;a/b/c&quot;</span></code> with
+<code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">1</span></code> yields two pieces, <code class="docutils literal notranslate"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;b/c&quot;]</span></code> — the remainder after the
+capped split stays joined, it isn’t dropped).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The two overloads compute the output column count differently for invalid rows
+The single-delimiter overload (<code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code>) determines
+the output column count from <strong>every</strong> row’s underlying text — including
+rows the caller marked invalid — because it works from a raw, validity-unaware
+split computed once over the whole column. A constructed-invalid cell whose
+underlying stored text happens to contain many delimiters can inflate the
+column count even though that row shows <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in every one of them. The
+<code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload does not have this quirk: it only computes
+each row’s split (and therefore only contributes to the column count) for
+rows that are actually valid. See Example 4 for a side-by-side
+demonstration with identical data under both overloads.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>delimiter</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>limit</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>prefix</strong>
-Text prefix inserted ahead of the existing label or value.</p>
-<p><strong>pattern</strong>
-Pattern string used for matching or extraction.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>delimiter</strong> / <strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The literal delimiter (first overload) or literal/regex pattern (second
+overload, depending on <code class="docutils literal notranslate"><span class="pre">options.regex</span></code>) to split on. An empty delimiter
+throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
+<p><strong>limit</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, first overload, default <code class="docutils literal notranslate"><span class="pre">-1</span></code>)
+Maximum number of splits to perform (producing at most <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">+</span> <span class="pre">1</span></code>
+pieces); <code class="docutils literal notranslate"><span class="pre">-1</span></code> means unlimited.</p>
+<p><strong>prefix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, first overload, default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>)
+Base name for the output columns: <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_1</span></code>, …</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code>, second overload)
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">pattern</span></code> as regex.
+<code class="docutils literal notranslate"><span class="pre">options.limit</span></code> (default <code class="docutils literal notranslate"><span class="pre">-1</span></code>): cap the number of splits.
+<code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>): base name for output columns.
+<code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> is <strong>not</strong> used by <code class="docutils literal notranslate"><span class="pre">split()</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with the selected column replaced by <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_1</span></code>, … columns (as many as the widest split needs), keeping
+every other feature and the original row labels. Rows with fewer
+pieces are <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the extra columns.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<p>Example 1. A plain literal split with no limit — the default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>
+prefix, and a row with no delimiter at all.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;a/b/c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x/y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;solo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">paths</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | path 
+------------
+0    | a/b/c
+1    | x/y  
+2    | solo 
+3    | NULL 
+------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+     | part_0  part_1  part_2
+-----------------------------
+0    | a       b       c     
+1    | x       y       NULL  
+2    | solo    NULL    NULL  
+3    | NULL    NULL    NULL  
+-----------------------------
+[4 cs x 3 feat]
 </pre></div>
 </div>
-<p>Example 2. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TEMA &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chair&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<p>Row 0’s three-way split drives the output to three columns; row 1’s
+two-piece split leaves <code class="docutils literal notranslate"><span class="pre">part_2</span></code> <code class="docutils literal notranslate"><span class="pre">NULL</span></code>; row 2 has no <code class="docutils literal notranslate"><span class="pre">/</span></code> at all, so its
+entire original text lands in <code class="docutils literal notranslate"><span class="pre">part_0</span></code> and the rest is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the number of splits — the remainder after the
+limit is reached stays joined together in the last column, not dropped.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | part_0  part_1
+---------------------
+0    | a       b/c   
+1    | x       y     
+2    | solo    NULL  
+3    | NULL    NULL  
+---------------------
+[4 cs x 2 feat]
 </pre></div>
 </div>
+<p>With <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">1</span></code>, row 0’s <code class="docutils literal notranslate"><span class="pre">&quot;a/b/c&quot;</span></code> splits only once, into <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code> and the
+still-joined <code class="docutils literal notranslate"><span class="pre">&quot;b/c&quot;</span></code> — not three separate pieces. Row 1 (<code class="docutils literal notranslate"><span class="pre">&quot;x/y&quot;</span></code>) only had
+one delimiter anyway, so it’s unaffected by the cap.</p>
+<p>Example 3. The second overload: a regex pattern (splitting on a comma with
+optional surrounding whitespace) and a custom column prefix.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;a, b,c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x , y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;single&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rows</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rows</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;csv&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span>
+<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\s*,\s*</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;field&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (before)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+     | csv   
+-------------
+0    | a, b,c
+1    | x , y 
+2    | single
+3    | NULL  
+-------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================
+     | field_0  field_1  field_2
+--------------------------------
+0    | a        b        c      
+1    | x        y        NULL   
+2    | single   NULL     NULL   
+3    | NULL     NULL     NULL   
+--------------------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+<p>The regex <code class="docutils literal notranslate"><span class="pre">\s*,\s*</span></code> treats the comma plus any surrounding spaces as a
+single delimiter, so <code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">,</span> <span class="pre">y&quot;</span></code> splits cleanly into <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code> (no
+leftover spaces). The <code class="docutils literal notranslate"><span class="pre">options.prefix</span> <span class="pre">=</span> <span class="pre">&quot;field&quot;</span></code> renames the output columns
+from <code class="docutils literal notranslate"><span class="pre">part_N</span></code> to <code class="docutils literal notranslate"><span class="pre">field_N</span></code>.</p>
+<p>Example 4. The overload difference from the warning above, made concrete:
+identical data, but the single-delimiter overload’s column count is
+inflated by an invalid row’s underlying text, while the <code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload ignores that row entirely.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a/b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1/2/3/4&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mixed</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">via_overload1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_overload1</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">via_overload2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">TextOptions</span><span class="p">{});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_overload2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-before-row-2-is-invalid-its-underlying-text-is-invisible-here">
+<h3>Output (before — row 2 is invalid, its underlying text is invisible here)<a class="headerlink" href="#output-before-row-2-is-invalid-its-underlying-text-is-invisible-here" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | path
+-----------
+0    | a/b 
+1    | x   
+2    | NULL
+-----------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-split-first-overload">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">split(&quot;/&quot;)</span></code>, first overload)<a class="headerlink" href="#output-split-first-overload" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================================
+     | part_0  part_1  part_2  part_3
+-------------------------------------
+0    | a       b       NULL    NULL  
+1    | x       NULL    NULL    NULL  
+2    | NULL    NULL    NULL    NULL  
+-------------------------------------
+[3 cs x 4 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-split-textoptions-second-overload">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">split(&quot;/&quot;,</span> <span class="pre">TextOptions{})</span></code>, second overload)<a class="headerlink" href="#output-split-textoptions-second-overload" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | part_0  part_1
+---------------------
+0    | a       b     
+1    | x       NULL  
+2    | NULL    NULL  
+---------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Row 2 was constructed invalid with the underlying text <code class="docutils literal notranslate"><span class="pre">&quot;1/2/3/4&quot;</span></code> — four
+pieces’ worth of delimiters, even though the cell displays as <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and
+was never meant to contribute real data. The first overload’s column count
+(4) is driven by that invisible text; the second overload’s column count
+(2) is driven only by the two genuinely valid rows, exactly what a reader
+would expect from looking at the printed <code class="docutils literal notranslate"><span class="pre">path</span></code> column alone.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the accessor to be built from exactly <strong>one</strong> feature.</p></li>
+<li><p>An empty delimiter/pattern throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the <em>number of splits</em>, not the <em>number of output columns</em>
+directly — the capped remainder stays joined in the last piece (Example 2).</p></li>
+<li><p>The two overloads compute the output width differently for invalid
+rows — see the warning above and Example 4.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> has no effect on <code class="docutils literal notranslate"><span class="pre">split()</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::partition</span></code></span></a>: a related but
+simpler split — always exactly 3 columns, first-occurrence-only, empty
+string (not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>) for a missing separator.</p></li>
+<li><p><a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::findall</span></code></span></a> / <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>:
+other single-feature, column-expanding methods on this accessor.</p></li>
+<li><p><a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::indicate</span></code></span></a>: another method that
+honors <code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> for its output columns.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rstrip.html">
     <span class="label">Previous</span>
@@ -116,7 +333,6 @@ Value produced by this call.</p>
     <span class="title">starts</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

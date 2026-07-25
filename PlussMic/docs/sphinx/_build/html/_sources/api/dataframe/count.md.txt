@@ -68,6 +68,25 @@ and `discount` each have exactly one missing observation — case `5` and case `
 respectively, the same two cells [`mean()`](mean.md) and [`std()`](std.md) exclude from
 their statistics — so each counts only five.
 
+`Axis::Case` is the default, so passing it explicitly changes nothing:
+
+```cpp
+auto counts_explicit = orders.count(Axis::Case);
+std::cout << counts_explicit;
+```
+
+### Output
+
+```text
+  order_id  6
+     units  6
+unit_price  5
+  discount  5
+ptype: Series
+```
+
+Byte-for-byte the same result as the bare `orders.count()` call above.
+
 Example 2. Count non-missing features per case with `Axis::Feature`.
 
 ```cpp

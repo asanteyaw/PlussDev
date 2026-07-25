@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::rmul" href="rmul.html" />
@@ -36,57 +36,90 @@
 
           <div class="body" role="main">
             
-  <section id="thread-rmod">
+  <!-- pluss-hand-authored -->
+<section id="thread-rmod">
 <h1>Thread::rmod<a class="headerlink" href="#thread-rmod" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">rmod</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">rmod</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">rmod</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">rmod</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This applies arithmetic across the compatible numeric payloads in the current object.</p>
+<p>The reflected form of <a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mod()</span></code></span></a> — computes <code class="docutils literal notranslate"><span class="pre">other</span> <span class="pre">%</span> <span class="pre">(*this)</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">(*this)</span> <span class="pre">%</span> <span class="pre">other</span></code>. Same positive-operands-only caveat as <code class="docutils literal notranslate"><span class="pre">mod()</span></code> applies: the
+underlying remainder algorithm’s negative-operand convention isn’t verified in this
+repository.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>Same shape as <a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mod()</span></code></span></a>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread holding <code class="docutils literal notranslate"><span class="pre">other</span> <span class="pre">%</span> <span class="pre">(*this)</span></code>, elementwise.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">rmod</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">}));</span>
+<p>Example 1. Remainder of a scalar against every value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">rmod</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">17.0</span><span class="p">,</span><span class="w"> </span><span class="mf">26.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">rmod</span><span class="p">(</span><span class="mf">200.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  13
+1  18
+2  2
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Apply <code class="docutils literal notranslate"><span class="pre">rmod</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">other</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">rmod</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<p><code class="docutils literal notranslate"><span class="pre">200</span> <span class="pre">=</span> <span class="pre">17*11</span> <span class="pre">+</span> <span class="pre">13</span></code>, <code class="docutils literal notranslate"><span class="pre">200</span> <span class="pre">=</span> <span class="pre">26*7</span> <span class="pre">+</span> <span class="pre">18</span></code>, <code class="docutils literal notranslate"><span class="pre">200</span> <span class="pre">=</span> <span class="pre">33*6</span> <span class="pre">+</span> <span class="pre">2</span></code> — the opposite framing from
+<a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">amounts.mod(...)</span></code></span></a>, where <code class="docutils literal notranslate"><span class="pre">amounts</span></code> supplied the dividends.</p>
+<p>Example 2. Reflected against another thread.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">multiples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">rmod</span><span class="p">(</span><span class="n">multiples</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  16
+1  2
+2  24
+ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">amounts.rmod(multiples)</span></code> computes exactly what <code class="docutils literal notranslate"><span class="pre">multiples.mod(amounts)</span></code> would:
+<code class="docutils literal notranslate"><span class="pre">50</span> <span class="pre">%</span> <span class="pre">17</span> <span class="pre">=</span> <span class="pre">16</span></code>, <code class="docutils literal notranslate"><span class="pre">80</span> <span class="pre">%</span> <span class="pre">26</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">90</span> <span class="pre">%</span> <span class="pre">33</span> <span class="pre">=</span> <span class="pre">24</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">amounts.rmod(x)</span></code> always equals <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">%</span> <span class="pre">amounts</span></code> — the mirror image of
+<a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mod()</span></code></span></a>.</p></li>
+<li><p>If the scalar or <code class="docutils literal notranslate"><span class="pre">other</span></code> value at a position is smaller than the corresponding
+value in <code class="docutils literal notranslate"><span class="pre">*this</span></code>, the remainder is just that smaller value itself (dividing <code class="docutils literal notranslate"><span class="pre">0</span></code>
+whole times) — for example, <code class="docutils literal notranslate"><span class="pre">amounts.rmod(5.0)</span></code> would give <code class="docutils literal notranslate"><span class="pre">5,</span> <span class="pre">5,</span> <span class="pre">5</span></code> here, since
+<code class="docutils literal notranslate"><span class="pre">5</span></code> is smaller than every value in <code class="docutils literal notranslate"><span class="pre">amounts</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::mod</span></code></span></a>: the forward form.</p></li>
+<li><p><a class="reference internal" href="rfloordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rfloordiv</span></code></span></a>: the complementary reflected quotient.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rfloordiv.html">
     <span class="label">Previous</span>
@@ -97,7 +130,6 @@ Value produced by this call.</p>
     <span class="title">rmul</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

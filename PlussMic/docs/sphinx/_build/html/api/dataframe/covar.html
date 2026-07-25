@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::csmax" href="csmax.html" />
@@ -141,6 +141,28 @@ z    | -0.5  -1    1.25
 <p>With four paired observations, <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> divides by <code class="docutils literal notranslate"><span class="pre">4</span></code> instead of <code class="docutils literal notranslate"><span class="pre">3</span></code>, so every
 value in Example 1’s matrix is scaled down by exactly <code class="docutils literal notranslate"><span class="pre">3/4</span></code> here (<code class="docutils literal notranslate"><span class="pre">1.666...</span> <span class="pre">*</span> <span class="pre">0.75</span> <span class="pre">=</span> <span class="pre">1.25</span></code>, and so on) — the same relationship as between a sample variance and a
 population variance anywhere else in the library.</p>
+<p>Example 3. Pass <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">true</span></code> and let the returned view print itself, with no
+explicit <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> at all.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">sample</span><span class="p">.</span><span class="n">covar</span><span class="p">({},</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================================================
+     | x              y             z            
+-------------------------------------------------
+x    | 1.666666667    3.333333333   -0.6666666667
+y    | 3.333333333    6.666666667   -1.333333333 
+z    | -0.6666666667  -1.333333333  1.666666667  
+-------------------------------------------------
+[3 cs x 3 feat]
+</pre></div>
+</div>
+<p>Same matrix as Example 1’s default <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> result — this bare statement
+differs only in <code class="docutils literal notranslate"><span class="pre">render</span></code>. The temporary <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code> is destroyed at the end
+of the statement without ever being captured or streamed, and <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">true</span></code>
+is what makes that destruction print automatically; with the default <code class="docutils literal notranslate"><span class="pre">render</span> <span class="pre">=</span> <span class="pre">false</span></code>, the same unassigned call would produce no output.</p>
 </section>
 </section>
 <section id="notes">

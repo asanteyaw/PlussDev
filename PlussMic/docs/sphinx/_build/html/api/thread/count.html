@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::covar" href="covar.html" />
@@ -36,43 +36,57 @@
 
           <div class="body" role="main">
             
-  <section id="thread-count">
+  <!-- pluss-hand-authored -->
+<section id="thread-count">
 <h1>Thread::count<a class="headerlink" href="#thread-count" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">count_true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">count_true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
 </pre></div>
 </div>
-<p>Count entries in the current thread.</p>
-<p>For ordinary numeric, text, or temporal payloads, <code class="docutils literal notranslate"><span class="pre">count(true)</span></code> is the non-missing count. For boolean series, <code class="docutils literal notranslate"><span class="pre">count(true)</span></code> and <code class="docutils literal notranslate"><span class="pre">count(false)</span></code> let you count each truth state explicitly.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Counts entries in the thread — but exactly <em>what</em> it counts depends on the
+payload’s dtype:</p>
+<ul class="simple">
+<li><p><strong>Non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payload</strong> (any numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>):
+<code class="docutils literal notranslate"><span class="pre">count()</span></code> returns the number of <strong>non-missing entries</strong>. <code class="docutils literal notranslate"><span class="pre">count_true</span></code> must
+stay <code class="docutils literal notranslate"><span class="pre">true</span></code> for these payloads — passing <code class="docutils literal notranslate"><span class="pre">false</span></code> throws, since “count the
+falses” has no meaning outside a boolean payload.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload</strong>: <code class="docutils literal notranslate"><span class="pre">count_true</span></code> switches what gets counted —
+<code class="docutils literal notranslate"><span class="pre">count(true)</span></code> (the default) counts <code class="docutils literal notranslate"><span class="pre">true</span></code> values, <code class="docutils literal notranslate"><span class="pre">count(false)</span></code> counts
+<code class="docutils literal notranslate"><span class="pre">false</span></code> values. This is a genuinely different computation from the non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code>
+case, not just a filter on top of it: it counts by truth value, not by
+missingness.</p></li>
+</ul>
+<p>See <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code>’s note on printing a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code></span></a> — every example
+below uses <code class="docutils literal notranslate"><span class="pre">.to_int()</span></code> to extract a clean integer instead of streaming the
+<code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> directly.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>count_true</strong></p>
-<p>Boolean target to count on boolean series payloads.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: count <code class="docutils literal notranslate"><span class="pre">true</span></code> values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: count <code class="docutils literal notranslate"><span class="pre">false</span></code> values.</p></li>
-</ul>
+<p><strong>count_true</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+For a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>: which truth value to count. For every other payload:
+must stay <code class="docutils literal notranslate"><span class="pre">true</span></code> (the non-missing count); <code class="docutils literal notranslate"><span class="pre">false</span></code> throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
-Scalar-like count result.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">count(false)</span></code> is mainly useful for boolean series payloads.</p>
+A scalar <code class="docutils literal notranslate"><span class="pre">Int64</span></code> count.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Count how many <code class="docutils literal notranslate"><span class="pre">true</span></code> values appear in a boolean series.</p>
+<p>Example 1. On a non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payload, <code class="docutils literal notranslate"><span class="pre">count()</span></code> is the non-missing count.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">count</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">to_int</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
@@ -80,20 +94,59 @@ Scalar-like count result.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
 </pre></div>
 </div>
-<p>Example 2. Count how many <code class="docutils literal notranslate"><span class="pre">false</span></code> values appear in a boolean series.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<p>One entry (position <code class="docutils literal notranslate"><span class="pre">1</span></code>) is missing, so the non-missing count is <code class="docutils literal notranslate"><span class="pre">3</span></code>, not the
+total length <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p>
+<p>Example 2. On a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">count_true</span></code> picks which truth value to tally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">trues</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">falses</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trues: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">trues</span><span class="p">.</span><span class="n">to_int</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, falses: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">falses</span><span class="p">.</span><span class="n">to_int</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>trues: 3, falses: 1
 </pre></div>
 </div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">count(false)</span></code> on a non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payload throws — <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own guard
+catches it before delegating further, for <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> kinds.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::count(false) is only valid for Bool Series payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>For non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payloads, <code class="docutils literal notranslate"><span class="pre">count()</span></code> is always the non-missing count — a
+thread with no validity mask reports its full <code class="docutils literal notranslate"><span class="pre">size()</span></code>.</p></li>
+<li><p>For a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> specifically, <code class="docutils literal notranslate"><span class="pre">count_true</span></code> switches between counting
+<code class="docutils literal notranslate"><span class="pre">true</span></code>s and counting <code class="docutils literal notranslate"><span class="pre">false</span></code>s — a fundamentally different question from
+missingness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">count(false)</span></code> on any non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payload throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::count(false)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Bool</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::size</span></code></span></a>: the thread’s total length, missing or not.</p></li>
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::isnull</span></code></span></a> / <a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::notnull</span></code></span></a>: inspect
+missingness position by position instead of a single count.</p></li>
+<li><p><a class="reference internal" href="any.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::any</span></code></span></a> / <a class="reference internal" href="all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::all</span></code></span></a>: other <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-only scalar
+reductions.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="corr_with.html">
     <span class="label">Previous</span>
@@ -104,7 +157,6 @@ Scalar-like count result.</p>
     <span class="title">covar</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::map" href="map.html" />
@@ -102,6 +102,29 @@ r    | true   true
 <p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> (<code class="docutils literal notranslate"><span class="pre">left</span></code>’s <code class="docutils literal notranslate"><span class="pre">a=true</span></code> against <code class="docutils literal notranslate"><span class="pre">right</span></code>’s <code class="docutils literal notranslate"><span class="pre">a=true</span></code>) agrees, so XOR reports
 <code class="docutils literal notranslate"><span class="pre">false</span></code>; position <code class="docutils literal notranslate"><span class="pre">1</span></code> (<code class="docutils literal notranslate"><span class="pre">left</span></code>’s <code class="docutils literal notranslate"><span class="pre">a=false</span></code> against <code class="docutils literal notranslate"><span class="pre">right</span></code>’s <code class="docutils literal notranslate"><span class="pre">a=true</span></code>) disagrees, so XOR
 reports <code class="docutils literal notranslate"><span class="pre">true</span></code> — and so on for <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+<p>Example 2. XOR a frame against a single shared <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, applied identically to every
+feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">lxor</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | a     b    
+-------------------
+p    | true  true 
+q    | true  false
+r    | true  false
+-------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>The same three-value <code class="docutils literal notranslate"><span class="pre">mask</span></code> is combined against <strong>both</strong> <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> at matching
+positions — there is no way to supply a different mask per feature in one call,
+unlike <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p>
 </section>
 </section>
 <section id="notes">

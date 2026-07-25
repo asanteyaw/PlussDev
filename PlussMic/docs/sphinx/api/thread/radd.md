@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::radd
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,98 @@
 ## Signatures
 
 ```cpp
-Thread::radd(const Thread& other) -> Thread
-
-Thread::radd(double other) -> Thread
+Thread::radd(double other) const -> Thread
+Thread::radd(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected form of [`add()`](add.md). For numbers, addition is commutative, so
+`radd()` and `add()` produce identical results in every observable way. The
+distinction only matters for `Note` (string) threads, where `add()` means
+concatenation and concatenation order depends on which operand comes first —
+`radd()` reverses that order.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+Same shape as [`add()`](add.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    For numbers, identical to what `add()` would produce for the same arguments. For
+    two `Note` threads, the concatenation with the operand order reversed.
 
 ## Examples
 
-Example 1. Apply `radd` to the current thread using explicit `other` arguments.
+Example 1. For a scalar, `radd()` and `add()` agree exactly.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.radd(other);
+auto prices = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto out = prices.radd(5.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  15
+1  25
+2  35
+
+ptype: Series
 ```
-Example 2. Apply `radd` to the current thread using explicit `other` arguments.
+
+Same values as [`prices.add(5.0)`](add.md) — addition doesn't care about order.
+
+Example 2. For `Note` threads, `radd()` concatenates in the opposite order from
+`add()`.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto prefix = Thread(pluss::make_note({"north-", "south-", "east-"}));
+auto base_name = Thread(pluss::make_note({"store", "hub", "depot"}));
 
-auto out = thread.radd(10.0);
+auto forward = prefix.add(base_name);
+auto reflected = prefix.radd(base_name);
+std::cout << forward << "\n" << reflected;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  north-store
+1  south-hub
+2  east-depot
+
+ptype: Note
+0  storenorth-
+1  hubsouth-
+2  depoteast-
+
+ptype: Note
 ```
 
+`prefix.add(base_name)` puts `prefix`'s text first at each position;
+`prefix.radd(base_name)` is equivalent to `base_name.add(prefix)` — `base_name`'s
+text comes first instead.
+
+## Notes
+
+- For numeric threads, `radd()` exists purely for API symmetry with the rest of the
+  reflected family (`rsub`, `rmul`, and so on) — there is no behavioral reason to
+  prefer it over `add()`.
+- See [`add()`](add.md) for the shared mechanics every arithmetic method in this
+  family follows: positional matching, the length-mismatch throw, and the
+  `Note`-concatenation special case.
+
+## See Also
+
+- [`Thread::add`](add.md): the forward form, and the canonical reference for this
+  whole arithmetic family's shared mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="put.html">

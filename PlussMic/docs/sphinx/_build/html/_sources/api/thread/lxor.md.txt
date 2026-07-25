@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::lxor
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,40 +7,66 @@
 ## Signature
 
 ```cpp
-Thread::lxor(const Thread& other) -> Thread
+Thread::lxor(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Elementwise logical XOR, following [`land()`](land.md)'s shared mechanics: single
+overload, `Bool`-only requirement, positional matching, and display labels carried
+from `*this`. Unlike AND/OR, XOR reports `true` exactly where the two operands
+**disagree**.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+
+A `Bool`-typed `Series` thread, the same length as `*this`.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    logical XOR.
 
 ## Examples
 
-Example 1. Apply `lxor` to the current thread using explicit `other` arguments.
+Example 1. XOR two boolean threads.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.lxor(other);
+auto left = Thread(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto right = Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool));
+
+auto out = left.lxor(right);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  true
+
+ptype: Series
 ```
 
+Position `0` (`true` vs `true`) agrees, so XOR reports `false`; positions `1` and `2`
+disagree, so XOR reports `true`.
+
+## Notes
+
+- See [`land()`](land.md) for the family-wide mechanics.
+- See [`rxor()`](rxor.md) for how its reflected form's display-label behavior
+  differs, the same way [`rand()`](rand.md) differs from `land()`.
+
+## See Also
+
+- [`Thread::rxor`](rxor.md): the reflected form.
+- [`Thread::land`](land.md): the canonical reference for this family's shared
+  mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lt.html">

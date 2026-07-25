@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::fillnull" href="fillnull.html" />
@@ -36,42 +36,149 @@
 
           <div class="body" role="main">
             
-  <section id="thread-ffill">
+  <!-- pluss-hand-authored -->
+<section id="thread-ffill">
 <h1>Thread::ffill<a class="headerlink" href="#thread-ffill" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">ffill</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">ffill</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
+<p>Forward-fills missing entries by propagating the last observed value ahead of
+each gap. Scanning left to right, whenever an entry is missing and the entry
+immediately before it is (or has just become) valid, it copies that value
+forward — so a run of several consecutive missing entries fills entirely from
+the single valid value preceding the run, not independently per position.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>what counts as “missing” here
+For a floating-point <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">ffill()</span></code> treats a plain <code class="docutils literal notranslate"><span class="pre">NaN</span></code> value as missing
+even with no validity mask present — it doesn’t require an explicit mask entry,
+unlike <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>/<a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dropnull()</span></code></span></a>, which look at the
+mask only. This is intentional: fill methods exist to patch numeric gaps, and
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> is the natural in-band hole marker for floating-point data. If a validity
+mask is also present, both signals combine — an entry is treated as missing if
+either the mask marks it invalid or (for floats) it’s <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps how many consecutive missing positions get filled from a single
+valid anchor; positions beyond the cap stay missing. A <strong>leading</strong> run of missing
+entries (nothing valid appears before it) never gets filled, no matter the limit
+— there’s no earlier value to borrow. Works across every payload kind (<code class="docutils literal notranslate"><span class="pre">Series</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — the latter delegates through its underlying
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>limit</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+<p><strong>limit</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">-1</span></code>)
+Maximum number of consecutive missing positions to fill per run, counted from
+the valid anchor forward. <code class="docutils literal notranslate"><span class="pre">-1</span></code> means unlimited (fill the entire run). Must be
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>, or it throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread with eligible missing positions filled. If the thread had no
+validity mask and nothing was missing, the original thread is returned
+unchanged. <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">==</span> <span class="pre">0</span></code> is also a no-op.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">ffill</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">limit</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Forward-fill every eligible missing position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">ffill</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="mf">10.0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span>
+<span class="w">    </span><span class="mf">40.0</span><span class="p">,</span>
+<span class="w">    </span><span class="mf">50.0</span><span class="p">,</span>
+<span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">ffill</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  10
+2  10
+3  40
+4  50
+
+ptype: Series
 </pre></div>
 </div>
+<p>Both missing positions borrow from the single valid value at position <code class="docutils literal notranslate"><span class="pre">0</span></code> — the
+run fills as a block, not by looking two steps back independently.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">1</span></code> caps the fill to one position per run; the rest of the run
+stays missing.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">ffill</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  10
+2  NULL
+3  40
+4  50
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. A leading missing run is never filled — there’s nothing before it to
+borrow from.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">leading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span>
+<span class="w">    </span><span class="mf">30.0</span><span class="p">,</span>
+<span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leading</span><span class="p">.</span><span class="n">ffill</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  NULL
+2  30
+
+ptype: Series
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> counts positions filled from the anchor forward per run — it resets at
+every naturally valid entry, not per call.</p></li>
+<li><p>A leading missing run (nothing valid precedes it) always stays missing,
+regardless of <code class="docutils literal notranslate"><span class="pre">limit</span></code>.</p></li>
+<li><p>For floating-point <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">NaN</span></code> counts as missing even without an explicit
+validity mask — see the note above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> must be <code class="docutils literal notranslate"><span class="pre">-1</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>; anything else throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::ffill:</span> <span class="pre">limit</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">-1</span> <span class="pre">or</span> <span class="pre">&gt;=</span> <span class="pre">0&quot;</span></code>.</p></li>
+<li><p>Works on every payload kind, including <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> (via its underlying
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="bfill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::bfill</span></code></span></a>: propagate the <em>next</em> observed value backward
+instead.</p></li>
+<li><p><a class="reference internal" href="interp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::interp</span></code></span></a>: fill numeric gaps by linear interpolation rather
+than copying an edge value.</p></li>
+<li><p><a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fillnull</span></code></span></a>: fill every missing entry with one fixed
+value.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="extract.html">
     <span class="label">Previous</span>
@@ -82,7 +189,6 @@ Value produced by this call.</p>
     <span class="title">fillnull</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

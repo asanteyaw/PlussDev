@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::shift
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,39 +7,131 @@
 ## Signature
 
 ```cpp
-Thread::shift(std::int64_t periods = 1) -> Thread
+Thread::shift(std::int64_t periods = 1) const -> Thread
 ```
 
 ## What It Does
 
-This is part of the time-aware surface and expects timeline or time-index semantics.
+Shifts every value forward (`periods > 0`) or backward (`periods < 0`) by
+`periods` positions, keeping the thread the same length — positions that shift in
+from beyond either edge become `NULL`, and values shifted past the opposite edge
+are dropped entirely (not wrapped around). `periods = 0` (or an empty thread) is a
+no-op, returning `*this` unchanged.
 
 ## Parameters
 
-**periods**
-    Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.
+**periods** (`std::int64_t`, default `1`)
+    Number of positions to shift. Positive shifts values to later positions
+    (introducing `NULL`s at the start); negative shifts values to earlier positions
+    (introducing `NULL`s at the end).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new thread, same length as `*this`, with values shifted and the vacated
+    positions set to `NULL`.
 
 ## Examples
 
-Example 1. Apply `shift` to the current thread using explicit `periods` arguments.
+Example 1. A positive shift moves values later; the leading positions become
+`NULL`.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.shift(2);
+auto readings = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto out = readings.shift(1);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  NULL
+1  10
+2  20
+3  30
+
+ptype: Series
 ```
 
+`40.0` (the last value) is dropped entirely — shifted past the end, not wrapped
+back to the front.
+
+Example 2. A negative shift moves values earlier; the trailing positions become
+`NULL`.
+
+```cpp
+auto out2 = readings.shift(-2);
+std::cout << out2;
+```
+
+### Output
+
+```text
+0  30
+1  40
+2  NULL
+3  NULL
+
+ptype: Series
+```
+
+Example 3. `periods = 0` is a no-op.
+
+```cpp
+auto out3 = readings.shift(0);
+std::cout << out3;
+```
+
+### Output
+
+```text
+0  10
+1  20
+2  30
+3  40
+
+ptype: Series
+```
+
+Example 4. A cell that was already `NULL` before the shift stays `NULL` after
+moving to its new position.
+
+```cpp
+auto with_null = Thread(pluss::make_series({1.0, 2.0, 3.0}),
+    pluss::make_series(std::vector<bool>{true, false, true}));
+auto out4 = with_null.shift(1);
+std::cout << out4;
+```
+
+### Output
+
+```text
+0  NULL
+1  1
+2  NULL
+
+ptype: Series
+```
+
+Row `2`'s `NULL` comes from row `1`'s already-`NULL` value moving into that
+position, not from the shift itself vacating it.
+
+## Notes
+
+- Values shifted past either edge are dropped, not wrapped around.
+- Vacated positions (and any already-`NULL` positions that moved) are `NULL` in
+  the result.
+- `periods = 0`, or shifting an empty thread, returns `*this` unchanged.
+- Works on every payload kind, not just `Series`.
+
+## See Also
+
+- [`Thread::ffill`](ffill.md) / [`Thread::bfill`](bfill.md): fill the `NULL`s a
+  shift introduces, if that's the goal instead.
+- [`Thread::slice`](slice.md) / [`Thread::take`](take.md): drop or reorder entries
+  without introducing `NULL`s.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="shares_payload_with.html">

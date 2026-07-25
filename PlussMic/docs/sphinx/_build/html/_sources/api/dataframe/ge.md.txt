@@ -87,6 +87,90 @@ Every `quiz` value is at least `84`, so that feature is all `true`. `final` fail
 at `s3`, where `72 < 84` — the one cell that does not clear the threshold, strict or
 not.
 
+Example 2. Broadcast one text value against a `Note`-kind feature — lexicographic
+comparison, same ordering `std::string` itself uses.
+
+```cpp
+auto names = DataFrame({
+    {"name", pluss::make_note({"Ada", "Bola", "Ada"})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_names = names.ge("Bola");
+std::cout << out_names;
+```
+
+### Output
+
+```text
+=============
+      | name 
+-------------
+s1    | false
+s2    | true 
+s3    | false
+-------------
+[3 cs x 1 feat]
+```
+
+Only `"Bola"` itself clears the `"Bola"` threshold; `"Ada"` sorts before it
+lexicographically, so both `"Ada"` cases report `false`.
+
+Example 3. Compare two frames cell by cell once they share the same structure.
+
+```cpp
+auto changed = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 83.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_frames = scores.ge(changed);
+std::cout << out_frames;
+```
+
+### Output
+
+```text
+===================
+      | quiz  final
+-------------------
+s1    | true  true 
+s2    | true  true 
+s3    | true  true 
+-------------------
+[3 cs x 2 feat]
+```
+
+Every cell is `true` here — `changed` only differs from `scores` at `s3`'s `quiz`
+(`83` vs. `84`), and `scores`'s `84` is still `>=` `changed`'s `83` there. Contrast
+this with [`scores.gt(changed)`](gt.md) on the identical two frames: strict `>` turns
+every one of these equal cells to `false`, leaving only that one genuinely-larger cell
+`true`.
+
+Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+against `84`, `final` checked against `88`.
+
+```cpp
+auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto out_thread = scores.ge(thresholds);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+===================
+      | quiz  final
+-------------------
+s1    | true  false
+s2    | true  true 
+s3    | true  false
+-------------------
+[3 cs x 2 feat]
+```
+
+`quiz >= 84` holds everywhere; `final >= 88` holds only at `s2`, the sole `final`
+value that reaches `88`.
+
 ## Notes
 
 - `ge()` always delegates to [`gt(other, false)`](gt.md); there is no separate code

@@ -139,6 +139,123 @@ everywhere (it never had that feature) and `NULL` for `score` at `d` (it never h
 that case); `matched.right` mirrors this the other way around. Only case `b`, present
 on both sides, has real values from both frames after matching.
 
+Example 2. `FrameMatchRule::Common` on both axes — keep only what's shared, dropping
+everything unique to either side.
+
+```cpp
+auto common = left.match(right, {.cases = FrameMatchRule::Common,
+                                  .features = FrameMatchRule::Common});
+std::cout << common.left;
+std::cout << common.right;
+```
+
+### Output (common.left)
+
+```text
+============
+     | score
+------------
+b    | 92   
+------------
+[1 cs x 1 feat]
+```
+
+### Output (common.right)
+
+```text
+============
+     | score
+------------
+b    | 10   
+------------
+[1 cs x 1 feat]
+```
+
+Only case `b` (the one label present on both sides) and `score` (the one feature name
+present on both sides) survive — `bonus` and cases `a`, `c`, `d` are dropped entirely
+rather than padded with `NULL`. Contrast this with Example 1's `Unite`, which keeps
+everything and pads the gaps instead.
+
+Example 3. Mixed rules — `KeepLeft` cases with `Common` features. The two axes don't
+have to use the same rule.
+
+```cpp
+auto mixed = left.match(right, {.cases = FrameMatchRule::KeepLeft,
+                                 .features = FrameMatchRule::Common});
+std::cout << mixed.left;
+std::cout << mixed.right;
+```
+
+### Output (mixed.left)
+
+```text
+============
+     | score
+------------
+a    | 88   
+b    | 92   
+c    | 79   
+------------
+[3 cs x 1 feat]
+```
+
+### Output (mixed.right)
+
+```text
+============
+     | score
+------------
+a    | NULL 
+b    | 10   
+c    | NULL 
+------------
+[3 cs x 1 feat]
+```
+
+`KeepLeft` forces the case axis to be exactly `left`'s own cases (`a, b, c`) —
+`right`'s only-case `d` never appears, and `mixed.right` gets `NULL` at `a` and `c`
+since `right` never had those labels. `Common` on the feature axis drops `bonus`
+from both sides, since it isn't shared.
+
+Example 4. `FrameMatchRule::KeepRight` on both axes — the mirror image of `KeepLeft`,
+forcing both the case and feature axes to exactly match `right`'s.
+
+```cpp
+auto keep_right = left.match(right, {.cases = FrameMatchRule::KeepRight,
+                                      .features = FrameMatchRule::KeepRight});
+std::cout << keep_right.left;
+std::cout << keep_right.right;
+```
+
+### Output (keep_right.left)
+
+```text
+===================
+     | score  bonus
+-------------------
+b    | 92     NULL 
+d    | NULL   NULL 
+-------------------
+[2 cs x 2 feat]
+```
+
+### Output (keep_right.right)
+
+```text
+===================
+     | score  bonus
+-------------------
+b    | 10     5    
+d    | 20     8    
+-------------------
+[2 cs x 2 feat]
+```
+
+The case axis is now exactly `right`'s (`b, d`, dropping `left`'s only-case `a`), and
+the feature axis is exactly `right`'s (`score, bonus`) — since `left` never had a
+`bonus` feature at all, `keep_right.left` shows `NULL` for `bonus` on every case, not
+just the unmatched ones.
+
 ## Notes
 
 - Matching is by **label**, not position — two frames with cases in a different order
@@ -149,6 +266,12 @@ on both sides, has real values from both frames after matching.
 - A repeated case label (the same label more than once, on either side) is paired by
   occurrence order by default (`RepeatedCaseRule::PairInOrder`); pass
   `RepeatedCaseRule::Reject` to throw instead of silently pairing by position.
+- `cases` and `features` are independent settings — mixing rules (e.g. `KeepLeft`
+  cases with `Common` features, Example 3) is perfectly valid, and each axis's rule
+  only affects that axis.
+- `Unite` and `KeepLeft`/`KeepRight` always produce output at least as large as their
+  reference side, padding gaps with `NULL`; `Common` is the only rule that can shrink
+  the result, since it drops anything not shared by both sides instead of padding it.
 
 ## See Also
 

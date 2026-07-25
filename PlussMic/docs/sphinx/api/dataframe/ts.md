@@ -26,6 +26,12 @@ grouped/panel time-series operations), and an `anchor`, letting the accessor's w
 and resampling methods reason about actual elapsed time rather than plain row
 position. Omitting `options` is equivalent to a default-constructed `TsOptions{}`.
 
+This page previews the accessor's most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+[DataFrameTsAccessor API Reference](../../dataframe_ts_accessor_api_reference) and
+use its left sidebar to jump straight to any method (`lag`, `diff`, `rolling`,
+`expanding`, `ewm`, and more).
+
 ## Parameters
 
 **options** (`const TsOptions&`, optional)

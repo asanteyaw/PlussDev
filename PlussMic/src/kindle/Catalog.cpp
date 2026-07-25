@@ -153,7 +153,7 @@ std::int64_t resolve_anchor_idx(const std::vector<std::string>& keys,
   if (policy.anchor.has_value()) {
     return find_anchor_idx(keys, *policy.anchor, "Catalog::tabelize");
   }
-  if (policy.align == AlignPolicy::Right) {
+  if (policy.align == Align::Right) {
     return static_cast<std::int64_t>(keys.size() - 1);
   }
   return 0;
@@ -180,9 +180,9 @@ std::optional<pluss::Series> optional_mask_from_valid(const std::vector<bool>& v
   return mask;
 }
 
-std::vector<std::string> case_labels_from_stream(const Stream& stream) {
-  PLUSS_CHECK(stream.has_cases(), "Catalog::tabelize(by_case_label): stream has no case labels");
-  auto as_note = stream.cases()->cast(pluss::table::ThreadCastTarget::Note).as_note();
+std::vector<std::string> labels_from_stream(const Stream& stream) {
+  PLUSS_CHECK(stream.has_label(), "Catalog::tabelize(by_label): stream has no labels");
+  auto as_note = stream.label()->cast(pluss::table::ThreadCastTarget::Note).as_note();
   std::vector<std::string> labels;
   labels.reserve(static_cast<std::size_t>(stream.size()));
   for (std::int64_t i = 0; i < stream.size(); ++i) {
@@ -197,7 +197,7 @@ std::unordered_map<std::string, std::int64_t> make_unique_label_to_idx(const std
   for (std::size_t i = 0; i < labels.size(); ++i) {
     const auto [it, inserted] = out.emplace(labels[i], static_cast<std::int64_t>(i));
     PLUSS_CHECK(inserted,
-                "Catalog::tabelize(by_case_label): duplicate case labels are not supported");
+                "Catalog::tabelize(by_label): duplicate labels are not supported");
     (void)it;
   }
   return out;
@@ -213,7 +213,7 @@ std::vector<std::int64_t> positional_mapping(std::int64_t stream_size, std::int6
 
 std::int64_t positional_target_len(const std::vector<Stream>& streams,
                                    std::int64_t anchor_idx,
-                                   AlignPolicy align) {
+                                   Align align) {
   if (streams.empty()) return 0;
   std::int64_t min_len = std::numeric_limits<std::int64_t>::max();
   std::int64_t max_len = 0;
@@ -222,16 +222,16 @@ std::int64_t positional_target_len(const std::vector<Stream>& streams,
     max_len = std::max(max_len, s.size());
   }
   switch (align) {
-    case AlignPolicy::Strict:
+    case Align::Strict:
       PLUSS_CHECK(min_len == max_len,
                   "Catalog::tabelize(strict): stream lengths differ; use inner/outer/left/right");
       return min_len;
-    case AlignPolicy::Inner:
+    case Align::Inner:
       return min_len;
-    case AlignPolicy::Outer:
+    case Align::Outer:
       return max_len;
-    case AlignPolicy::Left:
-    case AlignPolicy::Right:
+    case Align::Left:
+    case Align::Right:
       return streams[static_cast<std::size_t>(anchor_idx)].size();
   }
   return min_len;
@@ -306,9 +306,130 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
   return apply_fill_policy(std::move(out), stream.kind(), policy);
 }
 
-std::string unique_case_feature_name(std::string base, const std::unordered_set<std::string>& taken) {
+struct AlignmentPlan {
+  AlignBy effective_align_by{AlignBy::Pos};
+  std::int64_t target_len{0};
+  pluss::table::Thread label_axis{};
+  std::vector<std::vector<std::int64_t>> source_index_by_stream{};
+};
+
+AlignmentPlan build_alignment_plan(const std::vector<std::string>& keys,
+                                   const std::vector<Stream>& streams,
+                                   const TabelizePolicy& policy) {
+  AlignmentPlan plan;
+  if (streams.empty()) return plan;
+
+  const auto anchor_idx = resolve_anchor_idx(keys, policy);
+  plan.effective_align_by = policy.align_by;
+  if (plan.effective_align_by == AlignBy::Label) {
+    const bool all_have_labels =
+        std::all_of(streams.begin(), streams.end(), [](const Stream& s) { return s.has_label(); });
+    if (!all_have_labels) {
+      plan.effective_align_by = AlignBy::Pos; // explicit fallback: unlabeled streams cannot label-align
+    }
+  }
+
+  plan.source_index_by_stream.reserve(streams.size());
+  std::vector<std::string> target_labels;
+
+  if (plan.effective_align_by == AlignBy::Pos) {
+    plan.target_len = positional_target_len(streams, anchor_idx, policy.align);
+    for (const auto& s : streams) {
+      plan.source_index_by_stream.push_back(positional_mapping(s.size(), plan.target_len));
+    }
+
+    std::vector<std::int64_t> idx(static_cast<std::size_t>(plan.target_len));
+    for (std::int64_t i = 0; i < plan.target_len; ++i) idx[static_cast<std::size_t>(i)] = i;
+    plan.label_axis = pluss::table::Thread(pluss::make_series(idx, {plan.target_len}));
+    return plan;
+  }
+
+  std::vector<std::vector<std::string>> labels;
+  labels.reserve(streams.size());
+  std::vector<std::unordered_map<std::string, std::int64_t>> label_to_idx;
+  label_to_idx.reserve(streams.size());
+  for (const auto& s : streams) {
+    labels.push_back(labels_from_stream(s));
+    label_to_idx.push_back(make_unique_label_to_idx(labels.back()));
+  }
+
+  const auto& anchor_labels = labels[static_cast<std::size_t>(anchor_idx)];
+  switch (policy.align) {
+    case Align::Strict: {
+      for (const auto& label_set : labels) {
+        PLUSS_CHECK(label_set == anchor_labels,
+                    "Catalog::tabelize(strict, label): label order mismatch");
+      }
+      target_labels = anchor_labels;
+      break;
+    }
+    case Align::Inner: {
+      for (const auto& lbl : anchor_labels) {
+        bool in_all = true;
+        for (const auto& lut : label_to_idx) {
+          in_all = in_all && (lut.find(lbl) != lut.end());
+        }
+        if (in_all) target_labels.push_back(lbl);
+      }
+      break;
+    }
+    case Align::Left:
+    case Align::Right: {
+      target_labels = anchor_labels;
+      break;
+    }
+    case Align::Outer: {
+      std::unordered_set<std::string> seen;
+      target_labels.reserve(anchor_labels.size() * 2);
+      for (const auto& lbl : anchor_labels) {
+        seen.insert(lbl);
+        target_labels.push_back(lbl);
+      }
+      for (const auto& label_set : labels) {
+        for (const auto& lbl : label_set) {
+          if (seen.insert(lbl).second) target_labels.push_back(lbl);
+        }
+      }
+      break;
+    }
+  }
+
+  plan.target_len = static_cast<std::int64_t>(target_labels.size());
+  for (const auto& lut : label_to_idx) {
+    std::vector<std::int64_t> map(static_cast<std::size_t>(plan.target_len), -1);
+    for (std::int64_t i = 0; i < plan.target_len; ++i) {
+      const auto it = lut.find(target_labels[static_cast<std::size_t>(i)]);
+      if (it != lut.end()) map[static_cast<std::size_t>(i)] = it->second;
+    }
+    plan.source_index_by_stream.push_back(std::move(map));
+  }
+
+  const auto anchor = static_cast<std::size_t>(anchor_idx);
+  const auto anchor_label_to_idx = make_unique_label_to_idx(labels_from_stream(streams[anchor]));
+  std::vector<std::int64_t> anchor_label_indices;
+  anchor_label_indices.reserve(target_labels.size());
+  bool all_labels_in_anchor = true;
+  for (const auto& label : target_labels) {
+    const auto it = anchor_label_to_idx.find(label);
+    if (it == anchor_label_to_idx.end()) {
+      all_labels_in_anchor = false;
+      break;
+    }
+    anchor_label_indices.push_back(it->second);
+  }
+
+  if (all_labels_in_anchor) {
+    plan.label_axis = streams[anchor].label()->take(anchor_label_indices);
+  } else {
+    plan.label_axis = pluss::table::Thread(
+        pluss::make_note(target_labels, {plan.target_len}));
+  }
+  return plan;
+}
+
+std::string unique_label_feature_name(std::string base, const std::unordered_set<std::string>& taken) {
   if (taken.find(base) == taken.end()) return base;
-  std::string candidate = base + "_case";
+  std::string candidate = base + "_label";
   std::int64_t suffix = 1;
   while (taken.find(candidate) != taken.end()) {
     candidate = fmt::format("{}_{}", base, suffix++);
@@ -325,26 +446,26 @@ Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
   }
 
   std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(raw.features.size() + (policy.materialize_case_stream ? 1u : 0u));
+  out.reserve(raw.features.size() + (policy.materialize_label ? 1u : 0u));
   std::unordered_set<std::string> names;
   names.reserve(raw.features.size() * 2);
 
   for (const auto& col : raw.features) {
     auto feature = pluss::table::detail::infer_thread_from_raw_csv_column(col, infer_options);
 
-    std::optional<pluss::table::Thread> stream_cases = std::nullopt;
-    if (policy.attach_cases_to_streams && case_axis.has_value() && case_axis->size() == feature.size()) {
-      stream_cases = case_axis;
+    std::optional<pluss::table::Thread> stream_label = std::nullopt;
+    if (policy.attach_labels && case_axis.has_value() && case_axis->size() == feature.size()) {
+      stream_label = case_axis;
     }
 
     names.insert(col.name);
-    out.emplace_back(col.name, Stream::from_thread(feature, std::move(stream_cases)));
+    out.emplace_back(col.name, Stream::from_thread(feature, std::move(stream_label)));
   }
 
-  if (policy.materialize_case_stream && case_axis.has_value()) {
-    PLUSS_CHECK(names.find(policy.case_stream_name) == names.end(),
-                "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
-    out.emplace_back(policy.case_stream_name, Stream::from_thread(*case_axis));
+  if (policy.materialize_label && case_axis.has_value()) {
+    PLUSS_CHECK(names.find(policy.label_key) == names.end(),
+                "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
+    out.emplace_back(policy.label_key, Stream::from_thread(*case_axis));
   }
 
   return Catalog(std::move(out));
@@ -352,23 +473,23 @@ Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
 
 Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy& policy = {}) {
   std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(batch.features.size() + (policy.materialize_case_stream ? 1u : 0u));
+  out.reserve(batch.features.size() + (policy.materialize_label ? 1u : 0u));
 
   const auto case_axis = batch.cases;
   std::unordered_set<std::string> names;
   names.reserve(batch.features.size() * 2);
   for (auto& [name, feature] : batch.features) {
-    auto s = policy.attach_cases_to_streams
+    auto s = policy.attach_labels
         ? Stream::from_thread(feature, case_axis)
         : Stream::from_thread(feature);
     names.insert(name);
     out.emplace_back(std::move(name), std::move(s));
   }
 
-  if (policy.materialize_case_stream && case_axis.has_value()) {
-    PLUSS_CHECK(names.find(policy.case_stream_name) == names.end(),
-                "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
-    out.emplace_back(policy.case_stream_name, Stream::from_thread(*case_axis));
+  if (policy.materialize_label && case_axis.has_value()) {
+    PLUSS_CHECK(names.find(policy.label_key) == names.end(),
+                "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
+    out.emplace_back(policy.label_key, Stream::from_thread(*case_axis));
   }
 
   return Catalog(std::move(out));

@@ -104,6 +104,49 @@ At `q1` and `q2`, `cost` is smaller than `sales`; at `q3`, `sales` (`90`) drops 
 `cost` (`95`). The result now has one entry per case, labeled by the source frame's
 case labels.
 
+Example 3. `skipnull = false`: a single missing value anywhere in a feature
+poisons that feature's whole result to `NULL`, even though the same feature
+still finds a perfectly good minimum among its non-null cells under the
+default `skipnull = true`.
+
+```cpp
+auto regions2 = DataFrame({
+    {"sales", pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0})},
+    {"cost",  pluss::make_series({60.0, 80.0, 95.0})},
+}, pluss::make_note({"q1", "q2", "q3"}));
+
+auto trough_skip = regions2.csmin(Axis::Case, true);
+std::cout << trough_skip;
+
+auto trough_no_skip = regions2.csmin(Axis::Case, false);
+std::cout << trough_no_skip;
+```
+
+### Output (skipnull = true, the default)
+
+```text
+sales  q3
+ cost  q1
+ptype: Note
+```
+
+### Output (skipnull = false)
+
+```text
+sales  NULL
+ cost  q1
+ptype: Note
+```
+
+`sales` is missing at `q2`; with `skipnull = true`, the search simply ignores
+that cell and finds the minimum (`90`) among what's left, at `q3`. With
+`skipnull = false`, the presence of any missing value anywhere in `sales`
+invalidates the whole result for that feature — `sales` comes back `NULL`
+outright, even though a perfectly good minimum among the non-null values still
+exists. `cost` has no missing values at all, so it reports `q1` identically
+under both settings. This same call also demonstrates `Axis::Case` passed
+explicitly, rather than relying on it being the default.
+
 ## Notes
 
 - `csmin()` always returns label strings, never the numeric minimum itself — reach for

@@ -949,10 +949,9 @@ int main(int argc, char** argv) {
     }
 
     //========== final model ========
-    // This section trains the selected best workflow on train split,
-    // evaluates on untouched holdout, and saves/loads for reproducibility.
+    // This section evaluates the fitted best workflow returned by tune,
+    // then saves/loads for reproducibility.
     auto final_workflow = std::move(tuned_final.best_workflow);
-    final_workflow.learn_(train_x, train_y, train_options);
 
     const auto final_metrics = final_workflow.assess(test_x, test_y, assess_options);
     std::cout << "\n========== final holdout metrics ========\n";

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::rank" href="rank.html" />
@@ -53,7 +53,9 @@
 <code class="docutils literal notranslate"><span class="pre">frame.rand(other)</span></code> is indistinguishable from <code class="docutils literal notranslate"><span class="pre">frame.land(other)</span></code> in every observable
 respect — same cell values, and (for the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> overload) the same case labels
 and title, both drawn from <code class="docutils literal notranslate"><span class="pre">frame</span></code> itself, exactly as <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> documents.</p>
-<p>```{note} Previously, the DataFrame overload inherited case labels from <code class="docutils literal notranslate"><span class="pre">other</span></code>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Previously, the DataFrame overload inherited case labels from other
 An earlier revision of <code class="docutils literal notranslate"><span class="pre">rand(const</span> <span class="pre">DataFrame&amp;)</span></code> computed the reflection as
 <code class="docutils literal notranslate"><span class="pre">other.land(*this)</span></code>, which meant the result’s case labels and title came from
 <code class="docutils literal notranslate"><span class="pre">other</span></code> instead of from the frame the method was called on — a real, verified quirk
@@ -63,43 +65,41 @@ order internally), so the result’s structure always comes from <code class="do
 <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> and every other method in this family. If you’re working against
 an older build where this fix isn’t present, verify which behavior you’re actually
 seeing before relying on either.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-## Parameters
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code> — identical shape requirements to
+<a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a>: same feature names in order and same case count for the
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> overload; one boolean thread matching <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> for the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame holding the logical AND of each cell against the corresponding <code class="docutils literal notranslate"><span class="pre">other</span></code>
+value, with case labels and title drawn from the frame <code class="docutils literal notranslate"><span class="pre">rand()</span></code> was called on —
+identical in every respect to what <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> would produce for the same
+arguments.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">rand()</span></code> and <code class="docutils literal notranslate"><span class="pre">land()</span></code> produce identical results, values and case labels
+both.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-**other**
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">)},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">)},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r&quot;</span><span class="p">}));</span>
 
-`const DataFrame&amp;` or `const Thread&amp;` — identical shape requirements to
-[`land()`](land.md): same feature names in order and same case count for the
-`DataFrame` overload; one boolean thread matching `ncases()` for the `Thread` overload.
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">)},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">)},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}));</span>
 
-## Returns
-
-`DataFrame`
-    A new frame holding the logical AND of each cell against the corresponding `other`
-    value, with case labels and title drawn from the frame `rand()` was called on —
-    identical in every respect to what [`land()`](land.md) would produce for the same
-    arguments.
-
-## Examples
-
-Example 1. `rand()` and `land()` produce identical results, values and case labels
-both.
-
-```cpp
-using namespace pluss::table;
-
-auto left = DataFrame({
-    {&quot;a&quot;, pluss::make_series({true, false, true}, pluss::ScalarType::Bool)},
-    {&quot;b&quot;, pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
-}, pluss::make_note({&quot;p&quot;, &quot;q&quot;, &quot;r&quot;}));
-
-auto right = DataFrame({
-    {&quot;a&quot;, pluss::make_series({true, true, false}, pluss::ScalarType::Bool)},
-    {&quot;b&quot;, pluss::make_series({false, true, true}, pluss::ScalarType::Bool)},
-}, pluss::make_note({&quot;x&quot;, &quot;y&quot;, &quot;z&quot;}));
-
-auto forward = left.land(right);
-std::cout &lt;&lt; forward;
+<span class="k">auto</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">land</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">forward</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output-land">

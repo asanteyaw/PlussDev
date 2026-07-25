@@ -199,6 +199,32 @@ RelationshipValidationStatus parse_relationship_status(std::string_view text) {
   PLUSS_FAIL("Nexus::load: unsupported relationship status '" + std::string(text) + "'");
 }
 
+JoinHow parse_join_how(std::string_view text) {
+  const auto value = lower_trimmed(text);
+  if (value.empty() || value == "inner") {
+    return JoinHow::Inner;
+  }
+  if (value == "left") {
+    return JoinHow::Left;
+  }
+  if (value == "right") {
+    return JoinHow::Right;
+  }
+  if (value == "outer") {
+    return JoinHow::Outer;
+  }
+  if (value == "cross") {
+    return JoinHow::Cross;
+  }
+  if (value == "left_only") {
+    return JoinHow::LeftOnly;
+  }
+  if (value == "right_only") {
+    return JoinHow::RightOnly;
+  }
+  PLUSS_FAIL("Nexus::load: unsupported join kind '" + std::string(text) + "'");
+}
+
 std::string optional_text(const std::optional<std::string>& value) {
   return value.value_or("");
 }
@@ -309,6 +335,35 @@ std::string relationship_fingerprint_text(const Relationship& rel) {
   return out;
 }
 
+std::string join_plan_fingerprint_text(const std::string& name, const JoinPlan& plan) {
+  std::string out = name;
+  out += "|";
+  out += plan.root_table;
+  out += "|";
+  out += plan.result_name;
+  for (const auto& step : plan.steps) {
+    out += "|";
+    out += step.left_table;
+    out += ">";
+    out += step.right_table;
+    out += "|";
+    out += join_how_token(step.spec.how);
+    out += "|";
+    out += encode_relationship_keys(step.spec.keys);
+    out += "|";
+    out += step.spec.right_suffix;
+    out += "|";
+    out += step.spec.relationship_name.value_or("");
+    out += "|";
+    out += step.spec.validate.has_value()
+        ? relationship_cardinality_string(*step.spec.validate)
+        : "";
+    out += "|";
+    out += step.spec.result_name.value_or("");
+  }
+  return out;
+}
+
 std::string workspace_fingerprint_text(const detail::NexusImpl& src) {
   std::string out;
   for (std::size_t i = 0; i < src.keys_.size(); ++i) {
@@ -324,6 +379,17 @@ std::string workspace_fingerprint_text(const detail::NexusImpl& src) {
   out += "--\n";
   for (const auto& rel : src.relationships_) {
     out += relationship_fingerprint_text(rel);
+    out.push_back('\n');
+  }
+  out += "--views--\n";
+  std::vector<std::string> view_names;
+  view_names.reserve(src.saved_views_.size());
+  for (const auto& [name, _] : src.saved_views_) {
+    view_names.push_back(name);
+  }
+  std::sort(view_names.begin(), view_names.end());
+  for (const auto& name : view_names) {
+    out += join_plan_fingerprint_text(name, src.saved_views_.at(name));
     out.push_back('\n');
   }
   return out;
@@ -550,6 +616,78 @@ void Nexus::save(std::string_view directory, const StoreOptions& options) const 
 
   schema().save_csv((root / options.schema).string());
   graph().save_csv((root / options.graph).string());
+  {
+    std::vector<std::string> view_names;
+    std::vector<std::int64_t> step_indices;
+    std::vector<std::string> roots;
+    std::vector<std::string> results;
+    std::vector<std::string> lefts;
+    std::vector<std::string> rights;
+    std::vector<std::string> hows;
+    std::vector<std::string> keys;
+    std::vector<std::string> suffixes;
+    std::vector<std::string> validates;
+    std::vector<std::string> relationships;
+    std::vector<std::string> step_results;
+
+    std::vector<std::string> ordered;
+    ordered.reserve(src.saved_views_.size());
+    for (const auto& [name, _] : src.saved_views_) {
+      ordered.push_back(name);
+    }
+    std::sort(ordered.begin(), ordered.end());
+
+    for (const auto& name : ordered) {
+      const auto& plan = src.saved_views_.at(name);
+      if (plan.steps.empty()) {
+        view_names.push_back(name);
+        step_indices.push_back(-1);
+        roots.push_back(plan.root_table);
+        results.push_back(plan.result_name);
+        lefts.emplace_back();
+        rights.emplace_back();
+        hows.emplace_back();
+        keys.emplace_back();
+        suffixes.emplace_back();
+        validates.emplace_back();
+        relationships.emplace_back();
+        step_results.emplace_back();
+        continue;
+      }
+      for (std::size_t i = 0; i < plan.steps.size(); ++i) {
+        const auto& step = plan.steps[i];
+        view_names.push_back(name);
+        step_indices.push_back(static_cast<std::int64_t>(i));
+        roots.push_back(plan.root_table);
+        results.push_back(plan.result_name);
+        lefts.push_back(step.left_table);
+        rights.push_back(step.right_table);
+        hows.push_back(join_how_token(step.spec.how));
+        keys.push_back(encode_relationship_keys(step.spec.keys));
+        suffixes.push_back(step.spec.right_suffix);
+        validates.push_back(step.spec.validate.has_value()
+            ? relationship_cardinality_string(*step.spec.validate)
+            : "");
+        relationships.push_back(step.spec.relationship_name.value_or(""));
+        step_results.push_back(step.spec.result_name.value_or(""));
+      }
+    }
+
+    DataFrame({
+        {"view", Thread(pluss::make_note(view_names))},
+        {"step", Thread(pluss::make_series(step_indices))},
+        {"root", Thread(pluss::make_note(roots))},
+        {"result", Thread(pluss::make_note(results))},
+        {"left", Thread(pluss::make_note(lefts))},
+        {"right", Thread(pluss::make_note(rights))},
+        {"how", Thread(pluss::make_note(hows))},
+        {"keys", Thread(pluss::make_note(keys))},
+        {"right_suffix", Thread(pluss::make_note(suffixes))},
+        {"validate", Thread(pluss::make_note(validates))},
+        {"relationship", Thread(pluss::make_note(relationships))},
+        {"step_result", Thread(pluss::make_note(step_results))},
+    }).save_csv((root / options.views).string());
+  }
   DataFrame({
       {"kind", Thread(pluss::make_note(std::vector<std::string>{kind}))},
       {"fingerprint", Thread(pluss::make_note(std::vector<std::string>{fingerprint()}))},
@@ -558,6 +696,7 @@ void Nexus::save(std::string_view directory, const StoreOptions& options) const 
       {"tables", Thread(pluss::make_note(std::vector<std::string>{options.tables}))},
       {"schema", Thread(pluss::make_note(std::vector<std::string>{options.schema}))},
       {"graph", Thread(pluss::make_note(std::vector<std::string>{options.graph}))},
+      {"views", Thread(pluss::make_note(std::vector<std::string>{options.views}))},
   }).save_csv((root / options.manifest).string());
 }
 
@@ -570,6 +709,7 @@ Nexus Nexus::load(std::string_view directory, const StoreOptions& options) {
   const auto tables_dir = note_cell(manifest, "tables", 0);
   const auto schema_file = note_cell(manifest, "schema", 0);
   const auto graph_file = note_cell(manifest, "graph", 0);
+  const auto views_file = manifest.get("views").has_value() ? note_cell(manifest, "views", 0) : "";
 
   const auto schema_frame = load_snapshot_csv((root / schema_file).string());
   const auto graph_frame = load_snapshot_csv((root / graph_file).string());
@@ -621,6 +761,43 @@ Nexus Nexus::load(std::string_view directory, const StoreOptions& options) {
   if (!rels.empty()) {
     for (const auto& rel : rels) {
       nx = nx.links(rel);
+    }
+  }
+
+  if (!views_file.empty() && std::filesystem::exists(root / views_file)) {
+    const auto views_frame = load_snapshot_csv((root / views_file).string());
+    std::unordered_map<std::string, JoinPlan> plans;
+    std::vector<std::string> order;
+    for (std::int64_t i = 0; i < views_frame.ncases(); ++i) {
+      const auto name = note_cell(views_frame, "view", i);
+      auto [it, inserted] = plans.emplace(name, JoinPlan{});
+      if (inserted) {
+        order.push_back(name);
+        it->second.root_table = note_cell(views_frame, "root", i);
+        it->second.result_name = note_cell(views_frame, "result", i);
+      }
+      const auto step_index = int_cell(views_frame, "step", i);
+      if (step_index < 0) {
+        continue;
+      }
+      JoinSpec spec;
+      spec.how = parse_join_how(note_cell(views_frame, "how", i));
+      spec.keys = decode_relationship_keys(note_cell(views_frame, "keys", i));
+      spec.right_suffix = note_cell(views_frame, "right_suffix", i);
+      spec.relationship_name = parse_optional_text(note_cell(views_frame, "relationship", i));
+      const auto validate_text = note_cell(views_frame, "validate", i);
+      if (!validate_text.empty()) {
+        spec.validate = parse_relationship_cardinality(validate_text);
+      }
+      spec.result_name = parse_optional_text(note_cell(views_frame, "step_result", i));
+      it->second.steps.push_back(JoinPlanStep{
+          .left_table = note_cell(views_frame, "left", i),
+          .right_table = note_cell(views_frame, "right", i),
+          .spec = std::move(spec),
+      });
+    }
+    for (const auto& name : order) {
+      nx = nx.store(name, plans.at(name));
     }
   }
   return nx;

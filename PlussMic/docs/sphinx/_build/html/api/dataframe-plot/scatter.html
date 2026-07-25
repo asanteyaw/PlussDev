@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFramePlotAccessor::scatter &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFramePlotAccessor::scatter_matrix" href="scatter_matrix.html" />
+    <link rel="prev" title="DataFramePlotAccessor::radviz" href="radviz.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframeplotaccessor-scatter">
+<h1>DataFramePlotAccessor::scatter<a class="headerlink" href="#dataframeplotaccessor-scatter" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hue_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hue_feature</span><span class="p">,</span>
+<span class="w">                                </span><span class="k">const</span><span class="w"> </span><span class="n">ScatterPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws one point per row at <code class="docutils literal notranslate"><span class="pre">(x_feature,</span> <span class="pre">y_feature)</span></code>, optionally split into separate,
+distinctly colored/labeled point groups by a categorical <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code>. Unlike
+<a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>/<a class="reference internal" href="step.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step()</span></code></span></a>/<a class="reference internal" href="area.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">area()</span></code></span></a>/<a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bar()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>
+takes <strong>both x and y as required, plain (non-optional) arguments</strong> — there is no “fall back
+to the frame’s row labels” behavior here, since a scatter plot needs two independent
+numeric axes, not one axis plus a case index.</p>
+<p>See <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for the <code class="docutils literal notranslate"><span class="pre">Studio</span></code>-return / no-<code class="docutils literal notranslate"><span class="pre">cout</span></code> mechanics shared by this whole
+accessor.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>hue_feature has its own default-resolution and a stricter type requirement
+<code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> resolves the same way <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> does elsewhere on this accessor: an
+explicit argument wins, otherwise <code class="docutils literal notranslate"><span class="pre">options.default_hue_feature</span></code> (set via
+<code class="docutils literal notranslate"><span class="pre">df.plot(options)</span></code>) is used if present, otherwise there’s no hue at all and every point is
+drawn as one plain trace. Unlike <code class="docutils literal notranslate"><span class="pre">andrews_curves()</span></code>/<code class="docutils literal notranslate"><span class="pre">parallel()</span></code>/<code class="docutils literal notranslate"><span class="pre">radviz()</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">class_feature</span></code> (which accepts any feature and converts it to text), a resolved
+<code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> here <strong>must</strong> already be Note-, Timeline-, or TimeIndex-kind — a plain
+numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> hue feature throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot().scatter:</span> <span class="pre">hue</span> <span class="pre">feature</span> <span class="pre">'&lt;name&gt;'</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">note-like</span> <span class="pre">or</span> <span class="pre">time-like&quot;</span></code>. If you want to color by a numeric value, bucket or cast it to
+text first (e.g. with <code class="docutils literal notranslate"><span class="pre">bucketize()</span></code> or <code class="docutils literal notranslate"><span class="pre">note()</span></code>-family conversions).</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>x_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, required)
+The feature for the horizontal axis. Always numeric-plotted (see <code class="docutils literal notranslate"><span class="pre">require_plot_size</span></code>
+validation) — not resolved from <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> the way other chart methods’
+optional <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> is.</p>
+<p><strong>y_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, required)
+The feature for the vertical axis.</p>
+<p><strong>hue_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Optional categorical feature to split points into separate colored/labeled groups. See
+the important callout above for its resolution and type requirements.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">ScatterPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">alpha{0.92};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">line_width{1.1};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">line_width</span></code> here affects marker outline stroke width rather than a connecting line,
+since scatter points aren’t connected.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane: a single point trace with no hue, or one point trace per
+distinct hue value (each its own color, with a legend) when <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> resolves to
+something.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Plain scatter, no hue.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">students</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">71.0</span><span class="p">,</span><span class="w"> </span><span class="mf">82.0</span><span class="p">,</span><span class="w"> </span><span class="mf">93.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">85.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">92.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;cohort&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Morning&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Evening&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Morning&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Evening&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Morning&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;scores.svg&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Every row becomes one point at <code class="docutils literal notranslate"><span class="pre">(midterm,</span> <span class="pre">final)</span></code>; no legend is shown since there’s no hue.</p>
+<p>Example 2. With a categorical hue feature: points split into one trace per distinct cohort
+value, each its own color.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cohort&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Two traces are drawn — <code class="docutils literal notranslate"><span class="pre">&quot;Morning&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Evening&quot;</span></code> — in the order those values first appear
+in the data (row 0 is <code class="docutils literal notranslate"><span class="pre">&quot;Morning&quot;</span></code>, so it becomes the first group; row 1 introduces
+<code class="docutils literal notranslate"><span class="pre">&quot;Evening&quot;</span></code> as the second), <strong>not</strong> sorted alphabetically. A legend labeled with each
+cohort value is shown automatically.</p>
+<p>Example 3. A shared <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code>, set once on the accessor and reused across
+calls, mirroring <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> pattern.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">default_hue_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;cohort&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">);</span><span class="w">                 </span><span class="c1">// hue defaults to &quot;cohort&quot;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">);</span><span class="w">   </span><span class="c1">// std::nullopt explicitly suppresses hue</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">chart1</span></code> picks up <code class="docutils literal notranslate"><span class="pre">&quot;cohort&quot;</span></code> from the accessor-level default without repeating it.
+<code class="docutils literal notranslate"><span class="pre">chart2</span></code> demonstrates that passing <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> explicitly, rather than simply omitting
+the argument, also resolves through <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code> resolution the same way — to
+truly force “no hue regardless of the accessor default,” a caller would need to build a
+separate accessor without <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code> set.</p>
+<p>Example 4. The type-requirement throw: a purely numeric hue feature is rejected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::plot().scatter: hue feature &#39;final&#39; must be note-like or time-like
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;final&quot;</span></code> is a plain numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not Note/Timeline/TimeIndex-kind, so it fails the
+hue type check even though it’s a perfectly valid <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>/<code class="docutils literal notranslate"><span class="pre">y_feature</span></code>.</p>
+<p>Example 5. An explicit <code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterPlotOptions</span><span class="w"> </span><span class="n">scatter_options</span><span class="p">;</span>
+<span class="n">scatter_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.6</span><span class="p">;</span>
+<span class="n">scatter_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.5</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cohort&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scatter_options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;scores.png&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x_feature</span></code>/<code class="docutils literal notranslate"><span class="pre">y_feature</span></code> are required, non-optional arguments — there is no row-label
+fallback the way <code class="docutils literal notranslate"><span class="pre">line()</span></code>/<code class="docutils literal notranslate"><span class="pre">bar()</span></code>/etc. have for a single axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> resolves through <code class="docutils literal notranslate"><span class="pre">options.default_hue_feature</span></code> the same way <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>
+resolves through <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> elsewhere, but a resolved hue feature must be
+Note-, Timeline-, or TimeIndex-kind or the call throws — see the important callout above.</p></li>
+<li><p>Hue groups are ordered by first appearance in the data, not sorted.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>: the canonical explanation of this accessor’s
+shared mechanics.</p></li>
+<li><p><a class="reference internal" href="scatter_matrix.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::scatter_matrix</span></code></span></a>: every pairwise combination
+of several numeric features at once, instead of one chosen x/y pair.</p></li>
+<li><p><a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::bar</span></code></span></a>: a single numeric feature against a shared axis,
+drawn as bars rather than points.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="radviz.html">
+    <span class="label">Previous</span>
+    <span class="title">radviz</span>
+  </a>
+  <a class="next-link" href="scatter_matrix.html">
+    <span class="label">Next</span>
+    <span class="title">scatter_matrix</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="radviz.html" title="previous chapter">DataFramePlotAccessor::radviz</a></li>
+      <li>Next: <a href="scatter_matrix.html" title="next chapter">DataFramePlotAccessor::scatter_matrix</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-plot/scatter.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

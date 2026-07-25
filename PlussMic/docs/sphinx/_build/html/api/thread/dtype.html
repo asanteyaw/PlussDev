@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::duplicated" href="duplicated.html" />
@@ -36,17 +36,23 @@
 
           <div class="body" role="main">
             
-  <section id="thread-dtype">
+  <!-- pluss-hand-authored -->
+<section id="thread-dtype">
 <h1>Thread::dtype<a class="headerlink" href="#thread-dtype" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">dtype</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">dtype</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
 </pre></div>
 </div>
-<p>Return the concrete dtype name used by the underlying thread payload.</p>
-<p>This is the concrete readout, not the higher-level payload-family summary used by <code class="docutils literal notranslate"><span class="pre">Thread::ptype()</span></code> and <code class="docutils literal notranslate"><span class="pre">DataFrame::ptypes()</span></code>.</p>
-<p>Use it when you care about concrete storage/readout detail rather than only the broad payload family.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns the concrete dtype name of the underlying payload — one level more specific
+than <a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a>’s broad family name. For a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread this is
+the scalar type’s own name (<code class="docutils literal notranslate"><span class="pre">&quot;float64&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, and so on); for <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+it’s <code class="docutils literal notranslate"><span class="pre">&quot;utf8&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;bytes&quot;</span></code>, for byte-string payloads); for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
+it’s <code class="docutils literal notranslate"><span class="pre">&quot;datetime64[ns,</span> <span class="pre">&lt;tz&gt;]&quot;</span></code>, including the timezone.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -55,32 +61,55 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Concrete dtype name such as <code class="docutils literal notranslate"><span class="pre">float64</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">utf8</span></code>, or <code class="docutils literal notranslate"><span class="pre">datetime64[ns,</span> <span class="pre">UTC]</span></code>.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="ptype.html"><code>Thread::ptype</code></a>: inspect the broader payload family.</p></li>
-<li><p><a href="../dataframe/dtypes.html"><code>DataFrame::dtypes</code></a>: inspect concrete feature dtypes across an entire frame.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">dtype()</span></code> is most informative after parsing or casting numeric data, when you need to confirm whether the thread is currently carrying <code class="docutils literal notranslate"><span class="pre">float64</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, or another scalar representation.</p>
+The concrete dtype name, formatted per payload kind as described above.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect the scalar dtype of a numeric thread.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> across the payload kinds — note how it differs from
+<a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a>, which would report <code class="docutils literal notranslate"><span class="pre">&quot;Series&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;Note&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code> for
+the same threads.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})).</span><span class="n">dtype</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">numeric</span><span class="p">.</span><span class="n">dtype</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">text</span><span class="p">.</span><span class="n">dtype</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">dtype</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>float64
+utf8
+datetime64[ns, UTC]
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">dates</span></code> was built from a UTC-suffixed (<code class="docutils literal notranslate"><span class="pre">Z</span></code>) timestamp string, so its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
+carries the <code class="docutils literal notranslate"><span class="pre">UTC</span></code> timezone — <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> includes it directly in the string, unlike
+<code class="docutils literal notranslate"><span class="pre">ptype()</span></code>, which would just say <code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code> regardless of timezone.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind threads report their scalar type by name (<code class="docutils literal notranslate"><span class="pre">&quot;float64&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, etc.) — the same names <code class="docutils literal notranslate"><span class="pre">DataFrame::dtypes()</span></code> reports per feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads report <code class="docutils literal notranslate"><span class="pre">&quot;utf8&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;bytes&quot;</span></code> for a byte-string payload).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind threads report <code class="docutils literal notranslate"><span class="pre">&quot;datetime64[ns,</span> <span class="pre">&lt;tz&gt;]&quot;</span></code>, including the
+timezone.</p></li>
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> on an undefined thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ptype</span></code></span></a>: the broader payload family, without concrete storage
+detail.</p></li>
+<li><p><a class="reference internal" href="../dataframe/dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::dtypes</span></code></span></a>: the same concrete-dtype summary
+across every feature of an entire frame.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dropnull.html">
     <span class="label">Previous</span>
@@ -91,7 +120,6 @@ Concrete dtype name such as <code class="docutils literal notranslate"><span cla
     <span class="title">duplicated</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

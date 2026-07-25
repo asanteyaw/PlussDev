@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::se" href="se.html" />
@@ -36,48 +36,162 @@
 
           <div class="body" role="main">
             
-  <section id="thread-scan">
+  <!-- pluss-hand-authored -->
+<section id="thread-scan">
 <h1>Thread::scan<a class="headerlink" href="#thread-scan" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">scan</span><span class="p">(</span><span class="n">ScanStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skip_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">scan</span><span class="p">(</span><span class="n">ScanStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skip_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a cumulative statistic such as running sum, product, min, or max down the thread.</p>
+<p>Computes a <strong>running</strong> (cumulative) statistic down the thread — the value at
+each position reflects every observed entry up to and including it, not just
+that position alone. <a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum()</span></code></span></a>, <a class="reference internal" href="cumprod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumprod()</span></code></span></a>,
+<a class="reference internal" href="cummin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cummin()</span></code></span></a>, and <a class="reference internal" href="cummax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cummax()</span></code></span></a> are thin wrappers around
+this method for each <code class="docutils literal notranslate"><span class="pre">ScanStatistic</span></code>; this page documents the shared mechanics
+all four rely on. Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; every other kind or
+dtype throws.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>the throw message always says “Thread::scan”
+<code class="docutils literal notranslate"><span class="pre">cumsum()</span></code>/<code class="docutils literal notranslate"><span class="pre">cumprod()</span></code>/<code class="docutils literal notranslate"><span class="pre">cummin()</span></code>/<code class="docutils literal notranslate"><span class="pre">cummax()</span></code> each delegate straight to
+<code class="docutils literal notranslate"><span class="pre">scan(...)</span></code>, passing the literal string <code class="docutils literal notranslate"><span class="pre">&quot;Thread::scan&quot;</span></code> as the error context —
+so calling any of the four wrapper methods on a non-numeric thread throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::scan:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Thread&quot;</span></code>, not a message naming
+the specific method you actually called.</p>
+</div>
+<p>Internally, missing entries are first replaced with the operation’s
+<strong>identity element</strong> before the running computation runs — <code class="docutils literal notranslate"><span class="pre">0</span></code> for <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>
+for <code class="docutils literal notranslate"><span class="pre">Product</span></code>, <code class="docutils literal notranslate"><span class="pre">+∞</span></code> for <code class="docutils literal notranslate"><span class="pre">Minimum</span></code>, <code class="docutils literal notranslate"><span class="pre">-∞</span></code> for <code class="docutils literal notranslate"><span class="pre">Maximum</span></code> — so a missing entry
+never resets or corrupts the running value for the positions after it. What
+happens to <em>that position’s own</em> output value is then controlled separately by
+<code class="docutils literal notranslate"><span class="pre">skip_nulls</span></code>:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code></strong> (the default): each output position’s validity
+mirrors its <em>own</em> input position — a position that was missing in the input
+stays missing in the output, but the running computation for every
+<strong>later</strong> position still correctly includes whatever value came before it
+(accumulated through the identity-substituted missing spot).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code></strong>: once any position is missing, <strong>every position
+after it</strong> becomes missing too — the missing entry “poisons” the running
+computation forward, even though the identity-substituted arithmetic
+underneath is still technically well-defined. This matches the common
+spreadsheet/pandas convention that a running total is undefined once a gap
+appears in the input, unless you explicitly ask to skip past it.</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>statistic</strong>
-Supported values:
-- <code class="docutils literal notranslate"><span class="pre">Sum</span></code>: Compute a cumulative sum down the feature.
-- <code class="docutils literal notranslate"><span class="pre">Product</span></code>: Compute a cumulative product down the feature.
-- <code class="docutils literal notranslate"><span class="pre">Minimum</span></code>: Compute the running minimum down the feature.
-- <code class="docutils literal notranslate"><span class="pre">Maximum</span></code>: Compute the running maximum down the feature.</p>
-<p><strong>skip_nulls</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, a null output remains null only at that case and later cumulative values resume; when <code class="docutils literal notranslate"><span class="pre">false</span></code>, every output after the first null is null.</p>
+<p><strong>statistic</strong> (<code class="docutils literal notranslate"><span class="pre">ScanStatistic</span></code>)
+Which running computation to perform: <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Product</span></code>, <code class="docutils literal notranslate"><span class="pre">Minimum</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">Maximum</span></code>.</p>
+<p><strong>skip_nulls</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+<code class="docutils literal notranslate"><span class="pre">true</span></code>: a missing input position stays missing in the output, but later
+positions’ running values are unaffected. <code class="docutils literal notranslate"><span class="pre">false</span></code>: a missing input
+position makes every subsequent output position missing too.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A thread the same length as the source, holding the running statistic at
+each position.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">scan</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">statistic,</span> <span class="pre">skip_nulls</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Running sum with <code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default) — the missing
+position stays missing, but the run continues correctly underneath it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">scan</span><span class="p">({},</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">scan</span><span class="p">(</span><span class="n">ScanStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  NULL
+2  40
+3  80
+
+ptype: Series
 </pre></div>
 </div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">1</span></code> (missing) is hidden as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, but position <code class="docutils literal notranslate"><span class="pre">2</span></code>’s running sum is
+<code class="docutils literal notranslate"><span class="pre">40</span></code> (<code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">+</span> <span class="pre">30</span></code>, correctly skipping the missing <code class="docutils literal notranslate"><span class="pre">20.0</span></code>), and position <code class="docutils literal notranslate"><span class="pre">3</span></code>’s is
+<code class="docutils literal notranslate"><span class="pre">80</span></code> (<code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">+</span> <span class="pre">30</span> <span class="pre">+</span> <span class="pre">40</span></code>) — the gap doesn’t reset or break the running total for
+what follows.</p>
+<p>Example 2. The same input with <code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code> — the missing position
+poisons every position after it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">scan</span><span class="p">(</span><span class="n">ScanStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  NULL
+2  NULL
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">1</span></code> is still <code class="docutils literal notranslate"><span class="pre">NULL</span></code> (there was nothing to sum there), but now
+positions <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> are also <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — even though their underlying running
+totals are the same <code class="docutils literal notranslate"><span class="pre">40</span></code>/<code class="docutils literal notranslate"><span class="pre">80</span></code> computed in Example 1, <code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code>
+suppresses them because a gap appeared earlier in the run.</p>
+<p>Example 3. Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads — the throw message always
+reads <code class="docutils literal notranslate"><span class="pre">&quot;Thread::scan&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">scan</span><span class="p">(</span><span class="n">ScanStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::scan: expected a real numeric Series Thread
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Missing entries are substituted with the operation’s identity element before
+the running computation runs, so later positions’ values are always
+arithmetically correct underneath — <code class="docutils literal notranslate"><span class="pre">skip_nulls</span></code> only controls which
+positions are <em>displayed</em> as missing, not what gets computed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code> propagates missingness forward from the first gap
+onward, matching the common “undefined once a gap appears” convention.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::scan:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Thread&quot;</span></code> — this exact message,
+regardless of whether you call <code class="docutils literal notranslate"><span class="pre">scan()</span></code> directly or through <code class="docutils literal notranslate"><span class="pre">cumsum()</span></code>
+/<code class="docutils literal notranslate"><span class="pre">cumprod()</span></code>/<code class="docutils literal notranslate"><span class="pre">cummin()</span></code>/<code class="docutils literal notranslate"><span class="pre">cummax()</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cumsum</span></code></span></a>, <a class="reference internal" href="cumprod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cumprod</span></code></span></a>,
+<a class="reference internal" href="cummin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cummin</span></code></span></a>, <a class="reference internal" href="cummax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cummax</span></code></span></a>: the four
+fixed-statistic wrappers around this method.</p></li>
+<li><p><a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code></span></a>, <a class="reference internal" href="prod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::prod</span></code></span></a>, <a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::min</span></code></span></a>,
+<a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::max</span></code></span></a>: the single-final-value counterparts, rather than a
+running value at every position.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sample.html">
     <span class="label">Previous</span>
@@ -88,7 +202,6 @@ Value produced by this call.</p>
     <span class="title">se</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

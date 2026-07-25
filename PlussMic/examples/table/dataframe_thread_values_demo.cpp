@@ -88,8 +88,12 @@ int main() {
   std::cout << "features(\"event_time\").as_timeindex().resample_count(\"H\", 6):\n";
   std::cout << pluss::print_series(bins) << "\n";
 
-  std::cout << "df.ts({\"load_mw\", \"speed_mph\"}).resample(\"event_time\", \"6H\").mean():\n";
-  ts_idx.ts({"load_mw", "speed_mph"}).resample("event_time", "6H").mean().show();
+  std::cout << "features({\"load_mw\", \"speed_mph\"}).ts({.axis = features(\"event_time\")}).resample(\"6H\").mean():\n";
+  ts_idx.features({"load_mw", "speed_mph"})
+      .ts(pluss::table::TsOptions{.axis = ts_idx.features("event_time")})
+      .resample("6H")
+      .mean()
+      .show();
 
   std::cout << "\n=== manual Note/DataFrame demo ===\n";
   auto txt = make_note_df();

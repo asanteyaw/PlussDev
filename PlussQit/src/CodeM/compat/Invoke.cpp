@@ -1063,7 +1063,19 @@ static Series& copy_dispatch_inplace_(Series& self, const Series& other) {
       if (sens.platform() != root_before.platform()) sens = sens.to(root_before.platform());
       if (sens.scalar_type() != root_before.scalar_type()) sens = sens.to(root_before.scalar_type());
 
-      if (track_root) {
+      if (track_root && (root_parent_snapshot.defined() || track_src)) {
+        // Masking (zeroing the overwritten region out of root_before's own
+        // sensitivity) is only correct when there's an actual destination to
+        // redirect that region's gradient to: earlier graph history
+        // (root_parent_snapshot) or a tracked copy_ source (src_user). If
+        // neither applies -- e.g. a freshly allocated leaf parameter
+        // one-time-initialized via `weight_.copy_(untracked_init_values)`,
+        // the established pattern across NodeK modules (Conv, Embedding,
+        // MultiheadAttention, Transformer*) -- there is nowhere for the
+        // masked-out gradient to go, so masking would silently discard real
+        // sensitivity accumulated later from normal downstream use of
+        // root_before. In that case root_before must keep behaving as a
+        // plain leaf: leave its accumulated sensitivity untouched.
         Series g_root = sens.clone();
         Series g_view = alias_view_on_(g_root, self_before);
         const Series zeros =
@@ -1072,8 +1084,9 @@ static Series& copy_dispatch_inplace_(Series& self, const Series& other) {
         if (root_parent_snapshot.defined()) {
           series_tape::accumulate_sensitivity(root_parent_snapshot, g_root);
         } else {
-          // Leaf root: avoid self-cycle double counting by replacing the
-          // current sensitivity with masked pre-copy sensitivity.
+          // Leaf root with a tracked copy_ source: avoid self-cycle double
+          // counting by replacing the current sensitivity with masked
+          // pre-copy sensitivity.
           series_tape::clear_sensitivity(root_before);
           series_tape::accumulate_sensitivity(root_before, g_root);
         }
@@ -5758,7 +5771,21 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (st < 0) st += dsz;
       st = std::clamp<std::int64_t>(st, 0, dsz);
       if (op == "narrow") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
-      if (op == "narrow_copy") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st)).clone();
+      // select_range() already routes through gather(), which registers a
+      // proper backward (scatter-add back into a zero-padded input shape)
+      // -- the same machinery index_select()/narrow()/slice() ride on, and
+      // it already returns an independent, freshly-materialized buffer (the
+      // native gather kernels never alias the source), so narrow_copy()'s
+      // storage-independence contract holds without an extra copy. The
+      // trailing .clone() that used to sit here was silently detaching the
+      // result from the autograd graph (Series::clone() doesn't register a
+      // backward, unlike its sibling Series::contiguous()), which meant
+      // gradients could never reach a parameter through a narrow_copy() —
+      // confirmed via a real training loop where this made every parameter
+      // upstream of a narrow_copy() call report zero gradient throughout
+      // training. See PlussAI/Ice/ICE_BLUEPRINT.md's TFT section for the
+      // original repro.
+      if (op == "narrow_copy") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
       if (op == "slice") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
       if (op == "select") {
         // Route through the core Series::select implementation so reverse-mode

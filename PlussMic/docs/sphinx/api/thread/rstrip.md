@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rstrip
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,54 +7,62 @@
 ## Signatures
 
 ```cpp
-Thread::rstrip() -> Thread
-
-Thread::rstrip(std::string_view chars) -> Thread
+Thread::rstrip() const -> Thread
+Thread::rstrip(std::string_view chars) const -> Thread
 ```
 
 ## What It Does
 
-Trims only the right edge of note-backed text values. Use it when trailing markers should be removed without touching the left side.
+The right-only half of [`strip()`](strip.md): trims characters from the **end** of
+a `Note` thread's cells, leaving the leading edge untouched. Same two policies as
+`strip()` (whitespace by default, character-set membership with `chars`).
 
 ## Parameters
 
-**chars**
-    Characters to trim from the edge of each text value.
+**chars** (`std::string_view`, `chars`-overload only)
+
+The set of characters to strip from each cell's right edge only.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Note`-kind thread, same length as `*this`, with each cell's trailing
+    text trimmed.
 
 ## Examples
 
-Example 1. Apply `rstrip` to the current thread values and inspect the result.
+Example 1. Strip a trailing marker character, leaving the leading end untouched.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+using namespace pluss::table;
 
-auto out = thread.rstrip();
+auto ids = Thread(pluss::make_note({"#203930", "##7788", "4455##"}));
+auto out = ids.rstrip("#");
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-["Accra", "Tema", "Kumasi"]
-```
-Example 2. Apply `rstrip` to the current thread using explicit `chars` arguments.
+0  #203930
+1  ##7788
+2  4455
 
-```cpp
-auto thread = pluss::table::Thread(pluss::make_note({"#203930", "##7788", "4455##"}));
-
-auto out = thread.rstrip("#");
+ptype: Note
 ```
 
-### Output
+Rows `0` and `1`'s leading `#` characters are untouched — only trailing `#`
+characters are peeled off.
 
-```text
-["#203930", "##7788", "4455"]
-```
+## Notes
 
+- See [`strip()`](strip.md) for the full explanation of the default-whitespace vs.
+  `chars`-set-membership policies, and the non-`Note` throw.
+
+## See Also
+
+- [`Thread::lstrip`](lstrip.md): the mirror image, trimming the leading end only.
+- [`Thread::strip`](strip.md): both ends at once.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rpow.html">

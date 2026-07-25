@@ -14,12 +14,12 @@ namespace {
 
 pluss::table::DataFrame catalog_to_io_frame(const Catalog& catalog) {
   TabelizePolicy policy;
-  policy.align = AlignPolicy::Outer;
-  policy.index_mode = IndexMode::Positional;
+  policy.align = Align::Outer;
+  policy.align_by = AlignBy::Pos;
   policy.fill = FillPolicy::Null;
   policy.dtype = DTypePolicy::BestEffort;
   policy.collision = CollisionPolicy::Suffix;
-  policy.include_case_feature = false;
+  policy.include_label_feature = false;
   return catalog.tabelize(policy);
 }
 

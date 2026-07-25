@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::prod" href="prod.html" />
@@ -49,12 +49,33 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Binds a SQL statement template — one containing <code class="docutils literal notranslate"><span class="pre">{param_name}</span></code> placeholders — to the
-current frame once, returning a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code> object you can <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code>
-repeatedly with different parameter bindings, without re-typing (or re-parsing) the
-statement text each time. This is the reusable-query counterpart to
-<a class="reference internal" href="sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code></span></a>, which parses and runs a statement in one shot
-and is a better fit when a query only runs once.</p>
+<p>Stores a SQL statement template — one that may contain <code class="docutils literal notranslate"><span class="pre">{param_name}</span></code> placeholders —
+together with the current frame and <code class="docutils literal notranslate"><span class="pre">options</span></code>, returning a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code>
+object you can <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> repeatedly with different parameter bindings, without
+re-typing (or re-templating) the statement text each time. This is the reusable-query
+counterpart to <a class="reference internal" href="sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code></span></a>, which parses and runs a statement
+in one shot and is a better fit when a query only runs once.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A pure convenience wrapper, nothing more
+<code class="docutils literal notranslate"><span class="pre">prep_sql(statement)</span></code> is exactly equivalent to <code class="docutils literal notranslate"><span class="pre">sql().prepare(statement)</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">prep_sql(statement,</span> <span class="pre">options)</span></code> is exactly equivalent to <code class="docutils literal notranslate"><span class="pre">sql(options).prepare(statement)</span></code> —
+both overloads just construct a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlAccessor</span></code> and immediately call
+<code class="docutils literal notranslate"><span class="pre">.prepare(statement)</span></code> on it. There is no behavior here beyond skipping that
+intermediate <code class="docutils literal notranslate"><span class="pre">.sql()</span></code> call; every parameter, option, and gotcha documented on
+<a class="reference internal" href="#../../dataframe_sql_accessor_api_reference#prepare"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">DataFrameSqlAccessor::prepare</span></code></span></a>
+and <a class="reference internal" href="../../dataframe_sql_prepared_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared::execute</span></code></span></a>
+applies identically here.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> itself does not parse the statement — no validation happens until the
+returned value’s <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> is actually called. What it saves you is retyping the
+statement text at each call site, not a parse step: PlussMic’s SQL engine already
+caches parsed plans by their exact rendered text (<code class="docutils literal notranslate"><span class="pre">SqlOptions::enable_plan_cache</span></code>,
+on by default), so identical statement text is never re-parsed whether it arrives via
+<code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> or repeated <code class="docutils literal notranslate"><span class="pre">sql().execute(...)</span></code> calls.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -87,7 +108,7 @@ different parameter bindings.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM df WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">low_bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;min_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">low_bar</span><span class="p">;</span>
@@ -119,12 +140,12 @@ different parameter bindings.</p>
 [1 cs x 2 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">stmt</span></code> is parsed from <code class="docutils literal notranslate"><span class="pre">statement</span></code> only once, at <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> time. Each
-<code class="docutils literal notranslate"><span class="pre">.execute({...})</span></code> call just substitutes a new <code class="docutils literal notranslate"><span class="pre">min_sales</span></code> value into that
-already-prepared template and re-runs the <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> filter — case <code class="docutils literal notranslate"><span class="pre">2</span></code>’s row survives
-both times (<code class="docutils literal notranslate"><span class="pre">120</span></code> is greater than both <code class="docutils literal notranslate"><span class="pre">95</span></code> and <code class="docutils literal notranslate"><span class="pre">110</span></code>), while case <code class="docutils literal notranslate"><span class="pre">0</span></code>’s row
-(<code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">=</span> <span class="pre">100</span></code>) only survives the looser <code class="docutils literal notranslate"><span class="pre">95</span></code> threshold. Both result frames keep the
-original case labels of whichever <code class="docutils literal notranslate"><span class="pre">orders</span></code> rows matched.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stmt</span></code>’s text is fixed once <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> is called — only the bound <code class="docutils literal notranslate"><span class="pre">min_sales</span></code>
+<em>value</em> changes between the two <code class="docutils literal notranslate"><span class="pre">.execute({...})</span></code> calls, each of which renders the
+template fresh and re-runs the <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> filter. Case <code class="docutils literal notranslate"><span class="pre">2</span></code>’s row survives both times
+(<code class="docutils literal notranslate"><span class="pre">120</span></code> is greater than both <code class="docutils literal notranslate"><span class="pre">95</span></code> and <code class="docutils literal notranslate"><span class="pre">110</span></code>), while case <code class="docutils literal notranslate"><span class="pre">0</span></code>’s row (<code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">=</span> <span class="pre">100</span></code>) only
+survives the looser <code class="docutils literal notranslate"><span class="pre">95</span></code> threshold. Both result frames keep the original case labels
+of whichever <code class="docutils literal notranslate"><span class="pre">orders</span></code> rows matched.</p>
 </section>
 </section>
 <section id="notes">
@@ -134,9 +155,11 @@ original case labels of whichever <code class="docutils literal notranslate"><sp
 parameter <em>values</em> can change between <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> calls, not the SQL text.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.execute()</span></code> (no arguments) re-runs the statement using only whatever <code class="docutils literal notranslate"><span class="pre">params</span></code>
 were already set in <code class="docutils literal notranslate"><span class="pre">options</span></code> at <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> time.</p></li>
-<li><p>Prefer <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> over <code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code> specifically when the same
-query text will run many times with different bindings — the query is parsed once
-instead of on every call.</p></li>
+<li><p>Prefer <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> over <code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code> when the same query <em>text</em>
+needs to be reused across several call sites with different bindings — it saves
+retyping/re-templating the statement, not a parse step the automatic plan cache
+wasn’t already saving you (see the <a class="reference internal" href="../../dataframe_sql_prepared_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code> reference</span></a>
+for the full explanation).</p></li>
 </ul>
 </section>
 <section id="see-also">

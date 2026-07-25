@@ -86,6 +86,7 @@ api/dataframe/group_by
 api/dataframe/gt
 api/dataframe/has
 api/dataframe/head
+api/dataframe/height
 api/dataframe/info
 api/dataframe/info_string
 api/dataframe/insert
@@ -98,6 +99,7 @@ api/dataframe/kurtosis
 api/dataframe/label
 api/dataframe/land
 api/dataframe/le
+api/dataframe/length
 api/dataframe/lengthen
 api/dataframe/load
 api/dataframe/load_csv
@@ -205,4 +207,5 @@ api/dataframe/update
 api/dataframe/var
 api/dataframe/view
 api/dataframe/where
+api/dataframe/width
 ```

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::month" href="month.html" />
@@ -36,42 +36,176 @@
 
           <div class="body" role="main">
             
-  <section id="thread-mode">
+  <!-- pluss-hand-authored -->
+<section id="thread-mode">
 <h1>Thread::mode<a class="headerlink" href="#thread-mode" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">mode</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">mode</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the most frequently observed value in the thread.</p>
+<p>Returns every value tied for the <strong>most frequently observed</strong> in the thread —
+not just one. If several values are equally the most common, <code class="docutils literal notranslate"><span class="pre">mode()</span></code> returns
+all of them, in ascending order (alphabetical for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, chronological for
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), rather than picking one arbitrarily. Works on numeric
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> payloads.</p>
+<p><code class="docutils literal notranslate"><span class="pre">drop_nulls</span></code> controls whether missing entries can compete for “most frequent”
+at all:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">true</span></code></strong> (the default): missing entries never become part of the result,
+no matter how many there are — only real, observed values compete.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">false</span></code></strong>: missing entries compete on equal footing with real values. If
+“missing” turns out to be the single most frequent “value,” a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entry
+is included in the result (appended after every tied real-value mode).</p></li>
+</ul>
+<p>Throws if there are no values to consider at all (an empty thread, or one that
+is entirely missing while <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code>).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>drop_nulls</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, missing values do not participate while the most-frequent value is selected.</p>
+<p><strong>drop_nulls</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+<code class="docutils literal notranslate"><span class="pre">true</span></code>: missing entries are excluded from mode candidacy entirely.
+<code class="docutils literal notranslate"><span class="pre">false</span></code>: missing entries compete for “most frequent” like any other value.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread holding every value tied for most frequent, in ascending
+order. Length <code class="docutils literal notranslate"><span class="pre">1</span></code> if there’s a single mode, longer if there’s a tie.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">mode</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">drop_nulls</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. A single, unambiguous mode.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">mode</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+
+ptype: Series
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">20.0</span></code> occurs three times, more than any other value.</p>
+<p>Example 2. A tie returns every tied value, in ascending order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tied</span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  20
+
+ptype: Series
+</pre></div>
+</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">10.0</span></code> and <code class="docutils literal notranslate"><span class="pre">20.0</span></code> occur twice; <code class="docutils literal notranslate"><span class="pre">30.0</span></code> occurs once and doesn’t qualify.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default) excludes missing entries from
+candidacy, even when they’re the single most common “value” in the thread.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mostly_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mostly_missing</span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+
+ptype: Series
+</pre></div>
+</div>
+<p>Three of the five entries are missing — more than any real value’s count — but
+they’re excluded from competing at all, so <code class="docutils literal notranslate"><span class="pre">10.0</span></code> (observed twice) wins.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code> lets missing entries win, appearing as a
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> entry in the result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mostly_missing</span><span class="p">.</span><span class="n">mode</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Now missing (three occurrences) beats <code class="docutils literal notranslate"><span class="pre">10.0</span></code>’s two, so the sole mode is
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads work the same way, alphabetically ordered on
+ties.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cherry&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out5</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  apple
+
+ptype: Note
+</pre></div>
+</div>
+<p>Example 6. No values at all throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::mode: no values
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Returns every tied value, not just one — length <code class="docutils literal notranslate"><span class="pre">1</span></code> only when there’s a
+single unambiguous mode.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code>, missing entries never compete, regardless of how
+frequent they are.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code>, a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entry appears in the result (after every
+tied real-value mode) if missing is itself the single most frequent
+“value.”</p></li>
+<li><p>Throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::mode:</span> <span class="pre">no</span> <span class="pre">values&quot;</span></code> for an empty thread, or one with nothing
+left to consider.</p></li>
+<li><p>For a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload, restricted to numeric dtypes — a non-numeric
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::mode:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Thread&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally</span></code></span></a>: the full frequency breakdown this method’s
+“most frequent” answer is drawn from.</p></li>
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::describe</span></code></span></a>: for <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads, reports the
+single most frequent value (<code class="docutils literal notranslate"><span class="pre">top</span></code>) and its count (<code class="docutils literal notranslate"><span class="pre">freq</span></code>) — <code class="docutils literal notranslate"><span class="pre">mode()</span></code> returns
+every tied top value, <code class="docutils literal notranslate"><span class="pre">describe()</span></code> only the first alphabetically.</p></li>
+<li><p><a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::median</span></code></span></a>: the middle value, a different measure of
+central tendency for numeric data.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mod.html">
     <span class="label">Previous</span>
@@ -82,7 +216,6 @@ Value produced by this call.</p>
     <span class="title">month</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

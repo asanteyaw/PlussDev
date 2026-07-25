@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::cummax" href="cummax.html" />
@@ -130,6 +130,46 @@ ptype: Note
 <p>At <code class="docutils literal notranslate"><span class="pre">q1</span></code> and <code class="docutils literal notranslate"><span class="pre">q2</span></code>, <code class="docutils literal notranslate"><span class="pre">cost</span></code> is smaller than <code class="docutils literal notranslate"><span class="pre">sales</span></code>; at <code class="docutils literal notranslate"><span class="pre">q3</span></code>, <code class="docutils literal notranslate"><span class="pre">sales</span></code> (<code class="docutils literal notranslate"><span class="pre">90</span></code>) drops below
 <code class="docutils literal notranslate"><span class="pre">cost</span></code> (<code class="docutils literal notranslate"><span class="pre">95</span></code>). The result now has one entry per case, labeled by the source frame’s
 case labels.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code>: a single missing value anywhere in a feature
+poisons that feature’s whole result to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, even though the same feature
+still finds a perfectly good minimum among its non-null cells under the
+default <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">true</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">regions2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">90.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;cost&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">trough_skip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">regions2</span><span class="p">.</span><span class="n">csmin</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">trough_skip</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">trough_no_skip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">regions2</span><span class="p">.</span><span class="n">csmin</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">trough_no_skip</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-skipnull-true-the-default">
+<h3>Output (skipnull = true, the default)<a class="headerlink" href="#output-skipnull-true-the-default" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sales  q3
+ cost  q1
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output-skipnull-false">
+<h3>Output (skipnull = false)<a class="headerlink" href="#output-skipnull-false" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sales  NULL
+ cost  q1
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">sales</span></code> is missing at <code class="docutils literal notranslate"><span class="pre">q2</span></code>; with <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">true</span></code>, the search simply ignores
+that cell and finds the minimum (<code class="docutils literal notranslate"><span class="pre">90</span></code>) among what’s left, at <code class="docutils literal notranslate"><span class="pre">q3</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code>, the presence of any missing value anywhere in <code class="docutils literal notranslate"><span class="pre">sales</span></code>
+invalidates the whole result for that feature — <code class="docutils literal notranslate"><span class="pre">sales</span></code> comes back <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+outright, even though a perfectly good minimum among the non-null values still
+exists. <code class="docutils literal notranslate"><span class="pre">cost</span></code> has no missing values at all, so it reports <code class="docutils literal notranslate"><span class="pre">q1</span></code> identically
+under both settings. This same call also demonstrates <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> passed
+explicitly, rather than relying on it being the default.</p>
 </section>
 </section>
 <section id="notes">

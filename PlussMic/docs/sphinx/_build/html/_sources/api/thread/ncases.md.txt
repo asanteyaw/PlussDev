@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::ncases
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +7,15 @@
 ## Signature
 
 ```cpp
-Thread::ncases() -> std::int64_t
+Thread::ncases() const -> std::int64_t
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+An exact alias for [`size()`](size.md) — returns the same element count, under the
+"cases" terminology used consistently across `DataFrame::ncases()`. There is no
+behavioral difference between the two; `ncases()` exists purely so code working with
+both `Thread` and `DataFrame` can use the same method name for "how many rows."
 
 ## Parameters
 
@@ -19,24 +24,34 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `std::int64_t`
-    Integer count, size, or positional result.
+    The element count — identical to `size()`.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. `ncases()` and `size()` always agree.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.ncases();
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+std::cout << scores.ncases() << " " << scores.size();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+4 4
 ```
 
+## Notes
+
+- Literally `return size();` internally — no separate logic.
+- Exists for naming symmetry with `DataFrame::ncases()`.
+
+## See Also
+
+- [`Thread::size`](size.md): the method `ncases()` delegates to.
+- [`Thread::shape`](shape.md): the pair form, `{ncases(), 1}`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mul.html">

@@ -47,7 +47,7 @@ nlp.save("models/en_core_nodeb.bin");
 
 ```text
 PlussAI/NodeB/
-  core/            # Doc, Span, Token, Vocab, StringStore, hashes, registry base
+  core/            # Doc, Span, Token, Lexicon, TextPool, hashes, registry base
   tokenize/        # Rule tokenizer, regex tokenizer, language exceptions
   linguistics/     # Morphology, POS schema, lemmatization, sentence boundaries
   vocab/           # Lexeme store, vectors table, term frequencies
@@ -55,7 +55,7 @@ PlussAI/NodeB/
   pipeline/        # Workflow runtime, stage graph, execution state
   tasks/
     tagger/        # POS/morph tagger
-    parser/        # dependency parser
+    syntax/        # dependency-style syntax linker
     ner/           # named-entity recognizer
     textcat/       # single/multi-label text classification
     matcher/       # rule matcher, phrase matcher
@@ -88,8 +88,8 @@ PlussAI/NodeB/
 
 ## 6.1 Core objects
 
-- spaCy `Doc/Token/Span/Vocab` -> NodeB `Doc/Token/Span/Vocab` with typed option structs
-- spaCy string store -> NodeB deterministic hash store in `core/`
+- spaCy `Doc/Token/Span/Vocab` inspired the need for shared lexical state, but NodeB exposes Pluss-native `Doc/Token/Span/Lexicon`
+- spaCy string interning informed NodeB's `TextPool` design in `core/`
 
 ## 6.2 Pipeline runtime
 
@@ -98,7 +98,7 @@ PlussAI/NodeB/
 
 ## 6.3 Components
 
-- tokenizer, tagger, parser, ner, textcat, sentencizer, lemmatizer, matcher
+- tokenizer, tagger, syntax, ner, textcat, sentencizer, lemmatizer, matcher
 - first tranche prioritizes: tokenizer + sentencizer + lemmatizer + textcat
 
 ## 6.4 Training/evaluation
@@ -149,6 +149,69 @@ PlussAI/NodeB/
 - Plugin registry for custom stages
 - Multilingual assets and locale packs
 - Rigorous parity/perf tests and docs completion
+
+## 8.1 Near-Parity Ten-Tranche Plan
+
+### Phase 1/10 (Core lexical substrate)
+
+- `Lexicon`, deterministic `TextPool`, and `Lexeme` ownership in `core/`
+- token morphology/shape cached once at tokenization time
+- lower-level `CodeN` token-analysis helpers so NodeB delegates downward
+
+### Phase 2/10 (Morphology and linguistic attributes)
+
+- explicit morphology tables and normalized feature schema
+- richer lemma/POS/normalized-surface attribute surfaces on `Token` and `Lexeme`
+- document-level attribute inspection and diagnostics
+
+### Phase 3/10 (Syntax baseline)
+
+- dependency-style syntax baseline
+- dependency labels, heads, children, subtree helpers
+- syntax-aware sentence and noun-chunk behaviors
+
+### Phase 4/10 (Trainable POS and NER)
+
+- move tagger/ner from heuristics to trainable stages
+- proper span/entity metrics and artifact persistence
+- backend contracts that can target NodeJ first, then NodeK
+  - current NodeJ-first baseline: compact learned lexical/phrase memory with save/load
+
+### Phase 5/10 (Vectorizers and text statistics)
+
+- ngrams, hashing, tf-idf, vocabulary stats, document vectors
+- direct `Series`/NodeJ bridge for classical NLP features
+- batch-oriented text feature extraction
+
+### Phase 6/10 (Embeddings and sequence runtime)
+
+- NodeK sequence batching, masks, embeddings, and encoder contracts
+- reusable sequence runtime for text heads
+- deterministic inference/training paths
+
+### Phase 7/10 (Deep task heads)
+
+- transformer/BiLSTM-style heads for textcat, tagger, ner
+- distillation/quantization-aware interfaces
+- model-selection hooks across NodeJ and NodeK
+
+### Phase 8/10 (Multilingual assets)
+
+- language packs, tokenizer exceptions, morphology resources
+- locale-aware sentencizer/tokenizer behavior
+- workflow-level language/model selection
+
+### Phase 9/10 (Extensibility and packaging)
+
+- stage registry/plugin system
+- model packaging, metadata schema, compatibility policy
+- deployment-oriented artifact boundaries
+
+### Phase 10/10 (Parity hardening)
+
+- rigorous parity suites against reference NLP behaviors
+- performance harnesses and regression tests
+- production docs, cookbook, migration map, and full examples
 
 ## 9. Quality Gates
 

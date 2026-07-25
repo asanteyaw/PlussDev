@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::kurtosis" href="kurtosis.html" />
@@ -36,18 +36,27 @@
 
           <div class="body" role="main">
             
-  <section id="thread-kind">
+  <!-- pluss-hand-authored -->
+<section id="thread-kind">
 <h1>Thread::kind<a class="headerlink" href="#thread-kind" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadKind</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadKind</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns which payload kind this thread currently stores, such as Series, Note, Timeline, or TimeIndex.</p>
+<p>Returns the <code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code> enum value identifying which payload family a thread
+currently stores: <code class="docutils literal notranslate"><span class="pre">Series</span></code> (numeric/bool), <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text), <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>. This is the typed enum form; <a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a> returns the same
+information as a human-readable string (<code class="docutils literal notranslate"><span class="pre">&quot;Series&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Note&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;TimeIndex&quot;</span></code>) — use <code class="docutils literal notranslate"><span class="pre">kind()</span></code> for <code class="docutils literal notranslate"><span class="pre">switch</span></code>/comparison logic in C++ and <code class="docutils literal notranslate"><span class="pre">ptype()</span></code> when
+you just want to display or print the family name.</p>
+<p>Every payload-kind-specific method (the string family, the temporal accessors, and
+so on) checks <code class="docutils literal notranslate"><span class="pre">kind()</span></code> internally and throws when it doesn’t match — this is the
+same check surfaced as, for example, <code class="docutils literal notranslate"><span class="pre">&quot;Thread::upper:</span> <span class="pre">expected</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +65,63 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code>
-Value produced by this call.</p>
+One of <code class="docutils literal notranslate"><span class="pre">ThreadKind::Series</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadKind::Note</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadKind::Timeline</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ThreadKind::TimeIndex</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect the <code class="docutils literal notranslate"><span class="pre">kind</span></code> property of the current object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">kind()</span></code> reflects the constructor used, regardless of the actual values
+stored.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">numeric</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ThreadKind</span><span class="o">::</span><span class="n">Series</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">text</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ThreadKind</span><span class="o">::</span><span class="n">Note</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">dates</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ThreadKind</span><span class="o">::</span><span class="n">Timeline</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+1
+1
 </pre></div>
 </div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">kind()</span></code> drives the exact “wrong payload” throw every kind-specific
+method raises.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numeric</span><span class="p">.</span><span class="n">upper</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::upper: expected Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">kind()</span></code> on an undefined thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+<li><p>Every method restricted to one payload family checks <code class="docutils literal notranslate"><span class="pre">kind()</span></code> first and throws a
+method-specific message when it doesn’t match.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ptype</span></code></span></a>: the same information as a display string.</p></li>
+<li><p><a class="reference internal" href="dtype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::dtype</span></code></span></a>: the more specific concrete storage dtype within a
+kind (e.g. which <code class="docutils literal notranslate"><span class="pre">Series</span></code> scalar type).</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnull.html">
     <span class="label">Previous</span>
@@ -81,7 +132,6 @@ Value produced by this call.</p>
     <span class="title">kurtosis</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

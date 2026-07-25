@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::csmax" href="csmax.html" />
@@ -36,37 +36,58 @@
 
           <div class="body" role="main">
             
-  <section id="thread-covar">
+  <!-- pluss-hand-authored -->
+<section id="thread-covar">
 <h1>Thread::covar<a class="headerlink" href="#thread-covar" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">covar</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">covar</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
 </pre></div>
 </div>
-<p>Compute the covariance between two numeric threads.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes the covariance between this thread and <code class="docutils literal notranslate"><span class="pre">other</span></code>, as a scalar
+<code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> — the unnormalized counterpart to <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a> (<code class="docutils literal notranslate"><span class="pre">corr()</span></code>
+is covariance divided by the product of the two standard deviations). Both
+threads must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>. If either thread carries explicit case
+labels, the two are aligned by matching label first — see
+<a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code>’s important callout</span></a> on how much this can change the
+result. <code class="docutils literal notranslate"><span class="pre">ddof</span></code> (in <code class="docutils literal notranslate"><span class="pre">options</span></code>) controls the divisor, exactly like
+<a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code> overload: <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> (the default)
+gives the sample covariance (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> divisor); <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> gives the
+population covariance (<code class="docutils literal notranslate"><span class="pre">n</span></code> divisor). Below <code class="docutils literal notranslate"><span class="pre">min_count</span></code> valid pairs, the result
+is marked <em>invalid</em> rather than thrown — see
+<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code>’s note</span></a> on checking <code class="docutils literal notranslate"><span class="pre">.thread().is_valid(0)</span></code> rather than
+trusting the printed number in that case.</p>
+<p>Unlike <code class="docutils literal notranslate"><span class="pre">corr()</span></code>, this method requires both threads to already share the same
+platform (CPU/CUDA/MPS) — there’s no automatic host-side conversion here.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong></p>
-<p>Right-hand numeric thread.</p>
-<p><strong>options</strong></p>
-<p>Statistic policy options such as denominator correction and minimum valid pair count.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)
+The numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread to compute covariance with.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+<code class="docutils literal notranslate"><span class="pre">ddof</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the divisor is <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">ddof</span></code> over the valid pairs.
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the smallest number of valid pairs still
+considered valid; below it (and always below <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">+</span> <span class="pre">1</span></code>), the result is
+marked invalid.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
-Scalar-like covariance result.</p>
+A scalar <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) holding the covariance.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute covariance between two numeric threads.</p>
+<p>Example 1. Sample covariance (the default) between two related threads.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.0</span><span class="p">}));</span>
-
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">covar</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
@@ -74,6 +95,56 @@ Scalar-like covariance result.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>216.667
 </pre></div>
 </div>
+<p>Example 2. Population covariance — <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> instead of the default <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">covar</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="p">{.</span><span class="n">ddof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>162.5
+</pre></div>
+</div>
+<p>Example 3. Below <code class="docutils literal notranslate"><span class="pre">min_count</span></code> valid pairs, the result is marked invalid rather
+than thrown.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">small_other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">covar</span><span class="p">(</span><span class="n">small_other</span><span class="p">,</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="p">{.</span><span class="n">ddof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>If either thread carries explicit case labels, pairing is by matching
+label — see <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code>’s callout</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> (the default) gives the sample covariance; <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> gives the
+population covariance.</p></li>
+<li><p>Below <code class="docutils literal notranslate"><span class="pre">min_count</span></code> valid pairs, the result is marked invalid rather than
+thrown.</p></li>
+<li><p>Both threads must already share the same platform, or it throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::covar:</span> <span class="pre">operands</span> <span class="pre">must</span> <span class="pre">share</span> <span class="pre">a</span> <span class="pre">platform&quot;</span></code> — unlike <code class="docutils literal notranslate"><span class="pre">corr()</span></code>, this
+method doesn’t convert to a common host representation first.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::covar:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Thread&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::corr</span></code></span></a>: the normalized counterpart — a value in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> instead of covariance’s unbounded scale.</p></li>
+<li><p><a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::var</span></code></span></a>: the special case of <code class="docutils literal notranslate"><span class="pre">covar()</span></code> with <code class="docutils literal notranslate"><span class="pre">other</span></code> equal to
+the thread itself.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="count.html">
     <span class="label">Previous</span>
@@ -84,7 +155,6 @@ Scalar-like covariance result.</p>
     <span class="title">csmax</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

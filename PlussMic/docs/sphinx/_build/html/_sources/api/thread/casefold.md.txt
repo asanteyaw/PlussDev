@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::casefold
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +7,27 @@
 ## Signature
 
 ```cpp
-Thread::casefold() -> Thread
+Thread::casefold() const -> Thread
 ```
 
-Apply full case folding to every note-backed text value in the thread.
+## What It Does
 
-Use this when you want normalization for case-insensitive comparison, matching, or grouping.
+Produces a case-insensitive-comparison form of a `Note` (string) thread's text —
+conceptually similar to [`lower()`](lower.md), but intended specifically as a
+normalization step **before equality comparison**, not as a display transform. True
+Unicode case folding can differ from a simple lowercase mapping for certain
+characters (the canonical example is German `ß`, which case-folds to `ss` rather
+than lowercasing to itself).
+
+```{important} This build's actual behavior
+`casefold()`'s Unicode-aware folding is only active when this build links the
+optional Unicode backend (GNU libunistring). Without it, `casefold()` falls back to
+being functionally identical to [`lower()`](lower.md). On plain ASCII input, the two
+always produce the same result regardless of build configuration.
+```
+
+Requires the thread to be `Note`-kind — calling it on a numeric or other kind of
+thread throws.
 
 ## Parameters
 
@@ -19,34 +36,67 @@ Use this when you want normalization for case-insensitive comparison, matching, 
 ## Returns
 
 `Thread`
-    Note-backed thread with folded text values.
-
-## Notes
-
-`casefold()` is stronger than simple lowercase conversion. It is the text-normalization route to prefer before equality checks or membership checks that should ignore case.
+    A new `Note`-kind thread, same length as `*this`, holding the case-folded text.
 
 ## Examples
 
-Example 1. Normalize text values for case-insensitive downstream work.
+Example 1. Case-fold mixed-case text.
 
 ```cpp
 using namespace pluss::table;
 
-auto names = Thread(pluss::make_note({"Ada", "BOLA", "cHeN"}));
-
-auto out = names.casefold();
+auto roles = Thread(pluss::make_note({"MEMBER", "Guest", "Admin"}));
+auto out = roles.casefold();
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-0  ada
-1  bola
-2  chen
+0  member
+1  guest
+2  admin
+
 ptype: Note
 ```
 
+On this plain-ASCII input, identical to what [`roles.lower()`](lower.md) would
+produce.
 
+Example 2. Calling it on a non-`Note` thread throws.
+
+```cpp
+auto numbers = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+try {
+  auto bad = numbers.casefold();
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+Thread::casefold: expected Note payload
+```
+
+## Notes
+
+- A null cell on input stays null on output.
+- Reach for `casefold()`, not `lower()`, whenever the goal is a case-insensitive
+  *comparison* — even though the two produce identical output on ASCII text in every
+  build, `casefold()` states the intent explicitly and picks up full Unicode folding
+  automatically if this build's Unicode support changes.
+- See [`DataFrameNoteAccessor::casefold`](../dataframe-note/casefold.md) for the
+  multi-feature counterpart and a worked comparison example.
+
+## See Also
+
+- [`Thread::lower`](lower.md): the plain lowercase display transform this method is
+  easy to confuse with.
+- [`Thread::eq`](eq.md): the comparison this method is usually a normalization step
+  for.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bucketize.html">

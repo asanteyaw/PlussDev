@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rand
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,40 +7,88 @@
 ## Signature
 
 ```cpp
-Thread::rand(const Thread& other) -> Thread
+Thread::rand(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+The reflected form of [`land()`](land.md). Logical AND is commutative, so `rand()`
+and `land()` always compute the **same boolean values**. The display labels on the
+result are a different story:
+
+```{important} rand()'s result labels come from other, not from *this
+Unlike the arithmetic family (where `radd()` reuses `add()`'s exact metadata rules)
+and unlike `DataFrame::rand()` (which always carries labels from the object it was
+called on, matching `land()` exactly), `Thread::rand()` is implemented as
+`land()` with the two operands swapped internally — which means the display labels
+on `rand()`'s result come from **`other`**, not from `*this`. This is a real,
+observable difference from `land()`, not just an API-symmetry alias.
+```
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+
+Same shape as [`land()`](land.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new `Bool`-typed thread holding the same values [`land()`](land.md) would
+    produce for the same arguments — but with display labels carried from `other`
+    instead of from `*this`.
 
 ## Examples
 
-Example 1. Apply `rand` to the current thread using explicit `other` arguments.
+Example 1. Same values as `land()`, but the row labels come from the other side.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rand(other);
+auto left = Thread(pluss::make_series({true, false, true}, pluss::ScalarType::Bool))
+                .label().set(Thread(pluss::make_note({"p", "q", "r"})));
+auto right = Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))
+                 .label().set(Thread(pluss::make_note({"x", "y", "z"})));
+
+auto forward = left.land(right);
+auto reflected = left.rand(right);
+std::cout << forward << "\n" << reflected;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+p  true
+q  false
+r  false
+
+ptype: Series
+x  true
+y  false
+z  false
+
+ptype: Series
 ```
 
+The boolean values are identical in both outputs (`true, false, false`) — only the
+row labels differ: `land()` shows `left`'s labels (`p, q, r`), `rand()` shows
+`right`'s (`x, y, z`), because internally `left.rand(right)` computes
+`right`-AND-`left` with `right` supplying the metadata.
+
+## Notes
+
+- If neither thread has display labels set, this distinction is invisible — both
+  methods fall back to the same default `0, 1, 2, ...` row index either way.
+- This label-carry difference is specific to `Thread`; the equivalent
+  [`DataFrame::rand`](../dataframe/rand.md) was fixed in an earlier revision to
+  always carry metadata from `*this`, matching `land()` exactly. `Thread::rand()`
+  has no such fix — treat this page's behavior as the current, verified source
+  truth rather than assuming symmetry with the `DataFrame` version.
+
+## See Also
+
+- [`Thread::land`](land.md): the forward form, and the canonical reference for this
+  family's shared mechanics.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="radd.html">

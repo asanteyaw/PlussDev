@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::var" href="var.html" />
@@ -36,18 +36,34 @@
 
           <div class="body" role="main">
             
-  <section id="thread-value">
+  <!-- pluss-hand-authored -->
+<section id="thread-value">
 <h1>Thread::value<a class="headerlink" href="#thread-value" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">value</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">value</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
+<p>Wraps <code class="docutils literal notranslate"><span class="pre">*this</span></code> in a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> — a lightweight box around a whole <code class="docutils literal notranslate"><span class="pre">Thread</span></code> that
+adds typed scalar-extraction helpers (<code class="docutils literal notranslate"><span class="pre">to_dbl()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_int()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_str()</span></code>, <code class="docutils literal notranslate"><span class="pre">host()</span></code>)
+and implicit conversions to the underlying payload types (<code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>). <code class="docutils literal notranslate"><span class="pre">value()</span></code> itself does <strong>not</strong>
+reduce or require a single-element thread — it wraps the thread as-is, at whatever
+length it already has. The reduction methods (<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>, <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>,
+<a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a>, and the rest) also return <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>, typically already
+length-1 after their own reduction; <code class="docutils literal notranslate"><span class="pre">value()</span></code> is the direct way to get the same box
+type around a thread you already have, without any reduction step.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Scalar accessors require exactly one element
+<code class="docutils literal notranslate"><span class="pre">to_dbl()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_int()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_str()</span></code>, and <code class="docutils literal notranslate"><span class="pre">host()</span></code> all check that the wrapped thread has
+<code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">==</span> <span class="pre">1</span></code>, throwing <code class="docutils literal notranslate"><span class="pre">&quot;ThreadValue::host:</span> <span class="pre">Thread</span> <span class="pre">payload</span> <span class="pre">must</span> <span class="pre">contain</span> <span class="pre">exactly</span> <span class="pre">one</span> <span class="pre">value&quot;</span></code> otherwise. Calling <code class="docutils literal notranslate"><span class="pre">.value()</span></code> on a multi-element thread is legal; calling
+<code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code> on the result of that isn’t. See Example 3.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +72,74 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
-Value produced by this call.</p>
+A box around <code class="docutils literal notranslate"><span class="pre">*this</span></code>, same length and kind as the source thread.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute <code class="docutils literal notranslate"><span class="pre">value</span></code> and inspect the scalar-like thread result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Wrap a single-element thread and pull out its scalar value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">single</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">42.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">boxed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">single</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">boxed</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>10.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>42
 </pre></div>
 </div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">value()</span></code> works on <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads too, via <code class="docutils literal notranslate"><span class="pre">to_str()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="p">.</span><span class="n">value</span><span class="p">().</span><span class="n">to_str</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Accra
+</pre></div>
+</div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">value()</span></code> on a multi-element thread succeeds — the scalar accessors are
+what enforce the single-element requirement, not <code class="docutils literal notranslate"><span class="pre">value()</span></code> itself.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">boxed_many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">many</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">boxed_many</span><span class="p">.</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">boxed_many</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">boxed_many</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true Series
+ThreadValue::host: Thread payload must contain exactly one value
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">value()</span></code> never reduces or validates length — it’s a plain wrapper.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_dbl()</span></code> / <code class="docutils literal notranslate"><span class="pre">to_int()</span></code> / <code class="docutils literal notranslate"><span class="pre">to_str()</span></code> / <code class="docutils literal notranslate"><span class="pre">host()</span></code> all require the wrapped thread to
+have exactly one element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> also converts implicitly back to <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> / <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> /
+<code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> / <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>, matching the wrapped thread’s <code class="docutils literal notranslate"><span class="pre">kind()</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code></span></a> / <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::mean</span></code></span></a>: reductions that return a
+<code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> already narrowed to a single element.</p></li>
+<li><p><a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::kind</span></code></span></a>: the payload kind a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>’s scalar accessor
+dispatches on internally.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="upper.html">
     <span class="label">Previous</span>
@@ -81,7 +150,6 @@ Value produced by this call.</p>
     <span class="title">var</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

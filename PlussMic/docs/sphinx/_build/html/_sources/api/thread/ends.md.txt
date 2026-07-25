@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::ends
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,43 +7,40 @@
 ## Signature
 
 ```cpp
-Thread::ends(std::string_view suffix) -> Thread
+Thread::ends(std::string_view suffix) const -> Thread
 ```
 
-Check whether each note value ends with the supplied suffix.
+## What It Does
 
-`ends(...)` is the note-thread suffix test. Use it when you are building filename filters, extension masks, code-family checks, or any text workflow where the tail of the string matters.
+Checks a `Note` (string) thread's cells for a literal, case-sensitive suffix match,
+replacing each cell with a `Bool` — `true` where the cell's text ends with
+`suffix`, `false` where it doesn't. The mirror image of [`starts()`](starts.md):
+same single-overload, no-options shape, anchored at the end instead of the
+beginning. Requires the thread to be `Note`-kind.
 
 ## Parameters
 
-**suffix**
+**suffix** (`std::string_view`)
 
-Literal trailing text to test for at the end of each note value.
+The literal text to check for at the end of each cell. An empty suffix matches every
+non-null cell.
 
 ## Returns
 
 `Thread`
-    Boolean-style thread marking which note values end with the supplied suffix.
-
-## See Also
-
-- <a href="starts.html"><code>Thread::starts</code></a>: prefix-based companion check.
-- <a href="matches.html"><code>Thread::matches</code></a>: regex-oriented matching instead of literal suffix checks.
-
-## Notes
-
-`ends(...)` is note-only. It is intended for textual payloads.
+    A new `Bool`-typed `Series` thread, same length as `*this`, holding the
+    elementwise suffix check.
 
 ## Examples
 
-Example 1. Build a suffix mask for filename-like values.
+Example 1. Check a filenames thread for a literal, case-sensitive suffix.
 
 ```cpp
 using namespace pluss::table;
 
-auto names = Thread(pluss::make_note({"Ada.csv", "Bola.txt", "Chen.csv"}));
-
-auto out = names.ends(".csv");
+auto files = Thread(pluss::make_note({"report.pdf", "notes.PDF", "summary.docx"}));
+auto out = files.ends(".pdf");
+std::cout << out;
 ```
 
 ### Output
@@ -49,11 +48,48 @@ auto out = names.ends(".csv");
 ```text
 0  true
 1  false
-2  true
+2  false
+
 ptype: Series
 ```
 
+Row `1` (`"notes.PDF"`) doesn't match — the uppercase `".PDF"` extension doesn't
+match lowercase `".pdf"` under a case-sensitive comparison.
 
+Example 2. Case-insensitive suffix matching by normalizing first.
+
+```cpp
+auto out2 = files.lower().ends(".pdf");
+std::cout << out2;
+```
+
+### Output
+
+```text
+0  true
+1  true
+2  false
+
+ptype: Series
+```
+
+Lowercasing first folds `"notes.PDF"` down to `"notes.pdf"`, so row `1` now matches
+too — `ends()` itself never gained a case-insensitivity option; the normalization
+happens entirely in the `lower()` step ahead of it.
+
+## Notes
+
+- Case-sensitive, literal comparison only — no regex mode. See Example 2 for the
+  normalize-then-check pattern that works around this.
+- Changes the thread's payload kind from `Note` to `Series` (`Bool`).
+- A null cell on input stays null on output.
+
+## See Also
+
+- [`Thread::starts`](starts.md): the same check anchored at the start instead of
+  the end.
+- [`Thread::lower`](lower.md) / [`Thread::casefold`](casefold.md): normalize case
+  ahead of a case-insensitive suffix check.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="encode.html">

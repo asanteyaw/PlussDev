@@ -762,7 +762,7 @@ void test_timeline_epoch_days_surface() {
       {"when", Thread(timeline)},
       {"value", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
   });
-  const auto frame_days = frame.tl("when").epoch(pluss::table::TimeUnit::Days);
+  const auto frame_days = frame.features({"when"}).tl().epoch(pluss::table::TimeUnit::Days);
   expect(frame_days.features("when").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
          "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Thread::tl()");
@@ -950,7 +950,7 @@ void test_timeline_span_surface() {
       {"end", ends},
   });
   const auto frame_months =
-      frame.tl("start").span(frame.features("end"), complete_months);
+      frame.features({"start"}).tl().span(frame.features("end"), complete_months);
   expect(frame_months.features("start").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
          "DataFrame::tl().span should delegate through Thread::tl().span");

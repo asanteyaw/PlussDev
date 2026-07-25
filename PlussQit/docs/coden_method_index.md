@@ -1,16 +1,13 @@
 # CodeN text API method index
 
 This document indexes the **Chord** (scalar text) and **Note** (tensor-of-text) APIs.
-The signatures below match the generated decl headers in `src/CodeN/generated/`.
 
 ---
 
 # Chord method index
 
-Total methods: **384**
-
-This file is generated from the public surface of CodeN and is meant as a **navigation index**.
-Semantics are described at a high level; see the corresponding header for exact signatures.
+This is a **navigation index**: semantics are described at a high level here, with exact
+signatures left to the per-method reference pages.
 
 ## TeX / LaTeX (157)
 
@@ -393,10 +390,8 @@ Semantics are described at a high level; see the corresponding header for exact 
 
 # Note method index
 
-Total methods: **425**
-
-This file is generated from the public surface of CodeN and is meant as a **navigation index**.
-Semantics are described at a high level; see the corresponding header for exact signatures.
+This is a **navigation index**: semantics are described at a high level here, with exact
+signatures left to the per-method reference pages.
 
 ## TeX / LaTeX (152)
 

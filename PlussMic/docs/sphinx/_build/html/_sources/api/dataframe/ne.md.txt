@@ -80,6 +80,88 @@ Every cell here is the exact opposite of what [`scores.eq(84.0)`](eq.md) would r
 — `ne()` and `eq()` always partition the same cells into complementary `true`/`false`
 sets, except where either side is missing (`NULL` stays `NULL` under both).
 
+Example 2. Broadcast one text value against a `Note`-kind feature.
+
+```cpp
+auto names = DataFrame({
+    {"name", pluss::make_note({"Ada", "Bola", "Ada"})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_names = names.ne("Bola");
+std::cout << out_names;
+```
+
+### Output
+
+```text
+=============
+      | name 
+-------------
+s1    | true 
+s2    | false
+s3    | true 
+-------------
+[3 cs x 1 feat]
+```
+
+Only `s2`'s `"Bola"` matches the compared value, so it's the sole `false` — everything
+else differs and reports `true`.
+
+Example 3. Compare two frames cell by cell — only `s3`'s `quiz` value actually
+differs.
+
+```cpp
+auto changed = DataFrame({
+    {"quiz",  pluss::make_series({84.0, 90.0, 83.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out_frames = scores.ne(changed);
+std::cout << out_frames;
+```
+
+### Output
+
+```text
+====================
+      | quiz   final
+--------------------
+s1    | false  false
+s2    | false  false
+s3    | true   false
+--------------------
+[3 cs x 2 feat]
+```
+
+Exactly one `true` cell — `s3`'s `quiz` (`84` vs. `83`) — the complement of what
+[`scores.eq(changed)`](eq.md) reports for the same two frames.
+
+Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+against `84`, `final` checked against `88`.
+
+```cpp
+auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto out_thread = scores.ne(thresholds);
+std::cout << out_thread;
+```
+
+### Output
+
+```text
+====================
+      | quiz   final
+--------------------
+s1    | false  true 
+s2    | true   false
+s3    | false  true 
+--------------------
+[3 cs x 2 feat]
+```
+
+Each feature is checked against its own threshold, independently per column, exactly
+as [`eq()`](eq.md)'s matching example does — every cell here is that example's logical
+complement.
+
 ## Notes
 
 - `ne()` is the logical negation of [`eq()`](eq.md), cell for cell, with the one

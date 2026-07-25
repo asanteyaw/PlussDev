@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Thread::rsub
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,55 +7,84 @@
 ## Signatures
 
 ```cpp
-Thread::rsub(const Thread& other) -> Thread
-
-Thread::rsub(double other) -> Thread
+Thread::rsub(double other) const -> Thread
+Thread::rsub(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+The reflected form of [`sub()`](sub.md). Since subtraction is **not** commutative,
+`rsub()` genuinely differs from `sub()` — it computes `other - (*this)` instead of
+`(*this) - other`.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`double` or `const Thread&`)
+
+Same shape as [`sub()`](sub.md).
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A new thread holding `other - (*this)`, elementwise.
 
 ## Examples
 
-Example 1. Apply `rsub` to the current thread using explicit `other` arguments.
+Example 1. Subtract every value from a scalar.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+using namespace pluss::table;
 
-auto out = thread.rsub(other);
+auto prices = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto out = prices.rsub(5.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  -5
+1  -15
+2  -25
+
+ptype: Series
 ```
-Example 2. Apply `rsub` to the current thread using explicit `other` arguments.
+
+`5 - 10`, `5 - 20`, `5 - 30` — the scalar comes first this time, the opposite of
+[`prices.sub(5.0)`](sub.md), which would give `5, 15, 25`.
+
+Example 2. Reflected against another thread — equivalent to calling `sub()` with the
+operands swapped.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.rsub(10.0);
+auto boost = Thread(pluss::make_series({2.0, 4.0, 5.0}));
+auto out_pair = prices.rsub(boost);
+std::cout << out_pair;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  -8
+1  -16
+2  -25
+
+ptype: Series
 ```
 
+`prices.rsub(boost)` computes exactly what `boost.sub(prices)` would: `2 - 10`,
+`4 - 20`, `5 - 30`.
+
+## Notes
+
+- `prices.rsub(x)` always equals `x - prices` (or, for the `Thread` overload,
+  `boost.sub(prices)`) — the mirror image of [`sub()`](sub.md), not a synonym for it.
+- See [`add()`](add.md) for the family-wide shared mechanics (positional matching,
+  length-mismatch throw).
+
+## See Also
+
+- [`Thread::sub`](sub.md): the forward form.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rstrip.html">
