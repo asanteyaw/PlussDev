@@ -125,6 +125,22 @@ std::string fit_line(std::string line, std::int64_t width) {
   return line;
 }
 
+std::vector<std::string> split_display_token_(std::string_view text,
+                                              char separator = '\x1F') {
+  std::vector<std::string> parts;
+  std::size_t start = 0;
+  while (start <= text.size()) {
+    const auto stop = text.find(separator, start);
+    if (stop == std::string_view::npos) {
+      parts.emplace_back(text.substr(start));
+      break;
+    }
+    parts.emplace_back(text.substr(start, stop - start));
+    start = stop + 1;
+  }
+  return parts;
+}
+
 std::string scalar_at(const pluss::Series& s, std::int64_t row) {
   const auto st = s.scalar_type();
   const auto* base = s.raw_data();
@@ -725,7 +741,90 @@ std::string render_thread_series_like_(const Thread& thread,
     labels = display_thread(detail::display_labels(thread));
   }
 
+  std::vector<std::string> structured_headers;
+  if (labels.has_value() && labels->named()) {
+    structured_headers = split_display_token_(labels->name());
+    if (structured_headers.size() <= 1) {
+      structured_headers.clear();
+    }
+  }
+
   const auto row_plan = build_row_plan(values.size(), options);
+  if (!structured_headers.empty()) {
+    std::vector<std::vector<std::string>> rows;
+    rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
+
+    auto push_row = [&](std::int64_t ridx) {
+      auto parts = split_display_token_(thread_value_at(*labels, ridx));
+      parts.resize(structured_headers.size());
+      parts.push_back(thread_value_at(values, ridx));
+      rows.push_back(std::move(parts));
+    };
+
+    for (const auto ridx : row_plan.head) {
+      push_row(ridx);
+    }
+    if (row_plan.ellipsis) {
+      std::vector<std::string> row(structured_headers.size() + 1, "...");
+      rows.push_back(std::move(row));
+    }
+    for (const auto ridx : row_plan.tail) {
+      push_row(ridx);
+    }
+
+    std::vector<std::int64_t> widths(structured_headers.size() + 1, 1);
+    for (std::size_t col = 0; col < structured_headers.size(); ++col) {
+      widths[col] = std::max<std::int64_t>(1, static_cast<std::int64_t>(structured_headers[col].size()));
+    }
+    for (const auto& row : rows) {
+      for (std::size_t col = 0; col < row.size(); ++col) {
+        widths[col] = std::max<std::int64_t>(widths[col], static_cast<std::int64_t>(row[col].size()));
+      }
+    }
+
+    std::string out;
+    std::string header;
+    for (std::size_t col = 0; col < structured_headers.size(); ++col) {
+      if (col > 0) {
+        header += "  ";
+      }
+      header += right_pad(structured_headers[col], widths[col]);
+    }
+    if (!header.empty()) {
+      out += fit_line(header, terminal_width);
+      if (!rows.empty()) {
+        out.push_back('\n');
+      }
+    }
+
+    for (std::size_t r = 0; r < rows.size(); ++r) {
+      std::string line;
+      for (std::size_t col = 0; col < structured_headers.size(); ++col) {
+        if (col > 0) {
+          line += "  ";
+        }
+        line += right_pad(rows[r][col], widths[col]);
+      }
+      if (!line.empty()) {
+        line += "  ";
+      }
+      line += left_pad(rows[r].back(), widths.back());
+      out += fit_line(line, terminal_width);
+      if (r + 1 < rows.size()) {
+        out.push_back('\n');
+      }
+    }
+    if (!out.empty()) {
+      out.push_back('\n');
+    }
+    if (thread.named()) {
+      out += fmt::format("Name: {}, ptype: {}", thread.name(), dtype_footer);
+    } else {
+      out += fmt::format("ptype: {}", dtype_footer);
+    }
+    return out;
+  }
+
   std::vector<std::pair<std::string, std::string>> rows;
   rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
 
@@ -763,8 +862,8 @@ std::string render_thread_series_like_(const Thread& thread,
   if (!out.empty()) {
     out.push_back('\n');
   }
-  if (thread.has_display_name()) {
-    out += fmt::format("Name: {}, ptype: {}", thread.display_name(), dtype_footer);
+  if (thread.named()) {
+    out += fmt::format("Name: {}, ptype: {}", thread.name(), dtype_footer);
   } else {
     out += fmt::format("ptype: {}", dtype_footer);
   }
@@ -1760,7 +1859,7 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 std::string render_html(const Thread& thread, const DisplayOptions& options) {
-  const auto title = document_title_(thread.has_display_name() ? thread.display_name() : "Thread", options);
+  const auto title = document_title_(thread.named() ? thread.name() : "Thread", options);
   const auto subtitle = fmt::format("{} cases, dtype {}", thread.size(), thread.dtype());
   return render_html_pre_(title, subtitle, render(thread, options), options);
 }

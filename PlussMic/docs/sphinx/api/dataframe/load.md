@@ -12,6 +12,7 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
 static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options) -> DataFrame
 static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats = {}, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error) -> DataFrame
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::RangeView<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error) -> DataFrame
 ```
 
 ## What It Does
@@ -58,7 +59,8 @@ values — each format's own loader (for example [`load_json()`](load_json.md)'s
 
 A typed CSV-parsing options struct, for the `"csv"`/`"txt"`/`"text"` source types only.
 
-**sep**, **ncases**, **usefeats**, **case_col**, **on_bad_lines**
+**sep**, **ncases**, **usefeats** (`std::vector<std::string>` or
+`pluss::RangeView<std::string_view>`), **case_col**, **on_bad_lines**
 
 Same meaning as the equivalent [`load_csv()`](load_csv.md) positional parameters, for
 the `"csv"`/`"txt"`/`"text"` source types only.

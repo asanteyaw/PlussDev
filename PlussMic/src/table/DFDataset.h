@@ -45,7 +45,7 @@ public:
 private:
   static pluss::Series cast_column_(const DataFrame& df, std::string_view feature, const DFDatasetOptions& options) {
     PLUSS_CHECK(df.get(feature).has_value(), "pluss::DFDataset: missing feature '" + std::string(feature) + "'");
-    auto out = df.features(feature).cast(ThreadCastTarget::Series).as_series();
+    auto out = df.features(feature).cast().series().as_series();
     if (options.platform.has_value() || options.dtype.has_value()) {
       const auto platform = options.platform.value_or(out.platform());
       const auto dtype = options.dtype.value_or(out.scalar_type());

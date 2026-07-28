@@ -16,6 +16,9 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Thread` exposes a nested accessor with its own method pages and sidebar:
 
+- `nt()` -> [`ThreadNoteAccessor`](thread_note_accessor_api_reference.md)
+- `tl()` -> [`ThreadTimelineAccessor`](thread_timeline_accessor_api_reference.md)
+- `label()` -> [`ThreadLabelAccessor`](thread_label_accessor_api_reference.md)
 - `ts()` -> [`TimeSeriesAccessor`](thread_ts_accessor_api_reference.md)
 
 ```{toctree}
@@ -27,6 +30,7 @@ api/thread/add
 api/thread/align
 api/thread/all
 api/thread/any
+api/thread/arrange
 api/thread/append
 api/thread/as_note
 api/thread/as_series
@@ -120,7 +124,7 @@ api/thread/ncases
 api/thread/ndistinct
 api/thread/ne
 api/thread/normalize
-api/thread/note
+api/thread/nt
 api/thread/notnull
 api/thread/numeric_binary
 api/thread/pad
@@ -158,7 +162,6 @@ api/thread/shuffle
 api/thread/size
 api/thread/skew
 api/thread/slice
-api/thread/sort_values
 api/thread/split
 api/thread/starts
 api/thread/std
@@ -167,7 +170,7 @@ api/thread/sub
 api/thread/sum
 api/thread/tail
 api/thread/take
-api/thread/tally
+api/thread/freq
 api/thread/titlecase
 api/thread/tl
 api/thread/to_note_weekday

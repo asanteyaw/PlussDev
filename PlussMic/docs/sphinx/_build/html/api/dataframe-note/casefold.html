@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -91,7 +91,7 @@ A new frame with every selected feature’s text case-folded.</p>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">roles_a</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">folded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">casefold</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">folded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">casefold</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">folded</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -121,7 +121,7 @@ A new frame with every selected feature’s text case-folded.</p>
 </pre></div>
 </div>
 <p>On this plain-ASCII input, the result is identical to what
-<code class="docutils literal notranslate"><span class="pre">roles_a.note().lower()</span></code> would produce.</p>
+<code class="docutils literal notranslate"><span class="pre">roles_a.nt().lower()</span></code> would produce.</p>
 <p>Example 2. The actual motivating use case: normalize two differently-cased
 frames before comparing them, instead of comparing the raw text directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">roles_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -131,7 +131,7 @@ frames before comparing them, instead of comparing the raw text directly.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">raw_eq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">roles_b</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">raw_eq</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">folded_eq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">casefold</span><span class="p">().</span><span class="n">eq</span><span class="p">(</span><span class="n">roles_b</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">casefold</span><span class="p">());</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">folded_eq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles_a</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">casefold</span><span class="p">().</span><span class="n">eq</span><span class="p">(</span><span class="n">roles_b</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">casefold</span><span class="p">());</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">folded_eq</span><span class="p">;</span>
 </pre></div>
 </div>

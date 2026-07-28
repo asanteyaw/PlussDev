@@ -48,8 +48,10 @@ int main() {
   std::cout << "HEAD\n" << sales.head(2, false).to_string() << "\n\n";
   std::cout << "HEIGHT\n" << sales.height() << "\n\n";
   std::cout << "IAT\n";
-  std::cout << "sales.iat(1, 3): " << sales.iat(1, 3) << "\n";
-  std::cout << "sales.iat(2, 0): " << sales.iat(2, 0) << "\n\n";
+  std::cout << "sales.case_study(Case::at(1), Feat::at(3)):\n"
+            << sales.case_study(DataFrame::Case::at(1), DataFrame::Feat::at(3)).to_string() << "\n";
+  std::cout << "sales.case_study(Case::at(2), Feat::at(0)):\n"
+            << sales.case_study(DataFrame::Case::at(2), DataFrame::Feat::at(0)).to_string() << "\n\n";
 
   std::cout << "INFO_STRING\n" << sales.info_string() << "\n\n";
 
@@ -71,18 +73,18 @@ int main() {
   for (const auto& key : catalog.keys()) {
     std::cout << key << "\n";
   }
-  std::cout << "\nKINDELIZE_STREAM\n" << catalog.stream("city").head(2).to_string() << "\n\n";
+  std::cout << "\nKINDELIZE_STREAM\n" << catalog.at("city").head(2).to_string() << "\n\n";
 
   KindelizePolicy policy;
-  policy.materialize_case_stream = true;
-  policy.case_stream_name = "row_id";
+  policy.materialize_label = true;
+  policy.label_key = "row_id";
   const auto catalog_with_cases = sales.kindelize(policy);
   std::cout << "KINDELIZE_WITH_POLICY_KEYS\n";
   for (const auto& key : catalog_with_cases.keys()) {
     std::cout << key << "\n";
   }
   std::cout << "\nKINDELIZE_WITH_POLICY_STREAM\n"
-            << catalog_with_cases.stream("row_id").head(3).to_string() << "\n";
+            << catalog_with_cases.at("row_id").head(3).to_string() << "\n";
 
   return 0;
 }

@@ -155,7 +155,7 @@ than a statistically fair split.
 
 ## See Also
 
-- [`DataFrame::sort_values`](sort_values.md): reorder rows by value, rather than
+- [`DataFrame::arrange`](arrange.md): reorder rows by value, rather than
   annotating each row with its rank in place.
 - [`DataFrame::percentiles`](percentiles.md): a related but distinct question — the
   value at a given percentile, rather than a value's own rank.

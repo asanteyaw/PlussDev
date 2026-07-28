@@ -15,7 +15,7 @@ auto raw = DataFrame::load_csv("input.csv", {
 auto clean = raw
     .fillnull(0.0)
     .dropnull({"id"}, true)
-    .sort_values({"id"});
+    .arrange({"id"});
 
 clean.describe();
 clean.save_csv("outputs/clean.csv");
@@ -54,22 +54,20 @@ auto features = df
 ## Grouped report
 
 ```cpp
-df.group_by(
-    {"sector"},
-    {
-        {"n", "price", DataFrame::GroupOp::Count},
-        {"avg_price", "price", DataFrame::GroupOp::Mean},
-        {"max_volume", "volume", DataFrame::GroupOp::Max},
-    },
-    true,
-    true);
+df.group({.dropnull = true, .sort = true})
+  .by({"sector"})
+  .agg({
+      {"n", "price", DataFrame::GroupOp::Count},
+      {"avg_price", "price", DataFrame::GroupOp::Mean},
+      {"max_volume", "volume", DataFrame::GroupOp::Max},
+  });
 ```
 
 ## Top-N report
 
 ```cpp
 auto top = df
-    .sort_values({"revenue"}, false)
+    .arrange({"revenue"}, false)
     .head(25, false);
 
 top.save_csv("outputs/top_revenue.csv");
@@ -95,7 +93,7 @@ auto cleaned = df.transform({
 ## Time-series features
 
 ```cpp
-auto sorted = df.sort_values({"date"});
+auto sorted = df.arrange({"date"});
 auto engineered = sorted.assign({
     {"return_1", [](const DataFrame& frame) {
       return frame.features("close").ts().returns(1);
@@ -157,11 +155,9 @@ auto back = registry.to_kindle().tabelize();
 ```cpp
 auto clean = df.fillnull(0.0);
 auto summary = clean.describe();
-auto grouped = clean.group_by(
-    {"group"},
-    {{"mean_value", "value", DataFrame::GroupOp::Mean}},
-    true,
-    false);
+auto grouped = clean.group({.dropnull = true})
+    .by({"group"})
+    .agg({{"mean_value", "value", DataFrame::GroupOp::Mean}});
 
 clean.save_csv("outputs/clean.csv");
 summary.save_csv("outputs/summary.csv");

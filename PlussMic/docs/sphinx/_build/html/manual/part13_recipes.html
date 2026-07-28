@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../_static/api_nav.js?v=f0e02664"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -51,7 +51,7 @@ names and options.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span>
 <span class="w">    </span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">dropnull</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">});</span>
+<span class="w">    </span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">});</span>
 
 <span class="n">clean</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span>
 <span class="n">clean</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;outputs/clean.csv&quot;</span><span class="p">);</span>
@@ -90,22 +90,20 @@ names and options.</p>
 </section>
 <section id="grouped-report">
 <h2>Grouped report<a class="headerlink" href="#grouped-report" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sector&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;n&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;avg_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;max_volume&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Max</span><span class="p">},</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">true</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="w">  </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;sector&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">.</span><span class="n">agg</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;n&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;avg_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;max_volume&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Max</span><span class="p">},</span>
+<span class="w">  </span><span class="p">});</span>
 </pre></div>
 </div>
 </section>
 <section id="top-n-report">
 <h2>Top-N report<a class="headerlink" href="#top-n-report" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span>
-<span class="w">    </span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="s">&quot;revenue&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="s">&quot;revenue&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 
 <span class="n">top</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;outputs/top_revenue.csv&quot;</span><span class="p">);</span>
@@ -131,7 +129,7 @@ names and options.</p>
 </section>
 <section id="time-series-features">
 <h2>Time-series features<a class="headerlink" href="#time-series-features" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">engineered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">assign</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;return_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -193,11 +191,9 @@ names and options.</p>
 <h2>Save a report bundle<a class="headerlink" href="#save-a-report-bundle" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;group&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;mean_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}},</span>
-<span class="w">    </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;group&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">agg</span><span class="p">({{</span><span class="s">&quot;mean_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}});</span>
 
 <span class="n">clean</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;outputs/clean.csv&quot;</span><span class="p">);</span>
 <span class="n">summary</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;outputs/summary.csv&quot;</span><span class="p">);</span>

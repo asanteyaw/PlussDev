@@ -29,7 +29,7 @@ which overload you call:
 
 Every method on `DataFrameNoteAccessor` — `strip()` included — applies to
 **every feature the accessor was built with**, not just one. When reached the
-ordinary way, through [`DataFrame::note()`](../dataframe/note.md), that means
+ordinary way, through [`DataFrame::nt()`](../dataframe/nt.md), that means
 every feature on the (already all-`Note`) frame the accessor was constructed
 from. A cell that is already null on the underlying `Thread` stays null;
 `strip()` never turns a missing cell into an empty string or vice versa.
@@ -37,7 +37,7 @@ from. A cell that is already null on the underlying `Thread` stays null;
 ```{tip} A second way to reach the accessor: construct it directly
 `DataFrameNoteAccessor`'s constructor — `DataFrameNoteAccessor(DataFrame
 frame, std::vector<std::string> features)` — is public. Besides the usual
-`frame.features({"city"}).note()` route (which requires the *entire* frame
+`frame.features({"city"}).nt()` route (which requires the *entire* frame
 to already be `Note`-kind), you can construct the accessor directly with an
 explicit feature list against a frame that still has other, non-text columns
 mixed in — see Example 3. Every other accessor method inherits this same
@@ -74,7 +74,7 @@ auto catalog = DataFrame({
         " Wireless Mouse ", "USB-C Cable\t", "  Mechanical Keyboard", "Clearance Bin"}))},
 }, Thread(pluss::make_note({"p1", "p2", "p3", "p4"})));
 
-auto out = catalog.note().strip();
+auto out = catalog.nt().strip();
 std::cout << out;
 ```
 
@@ -92,7 +92,7 @@ p4   | NULL      Clearance Bin
 [4 cs x 2 feat]
 ```
 
-`catalog` is already entirely `Note`-kind (`sku` and `name`), so `catalog.note()`
+`catalog` is already entirely `Note`-kind (`sku` and `name`), so `catalog.nt()`
 works directly with no `.features()` narrowing needed. Both columns are
 stripped in the same call: `sku`'s leading spaces, a trailing newline, a
 leading tab, and trailing spaces are all removed, and `name`'s leading/trailing
@@ -112,7 +112,7 @@ auto codes = DataFrame({
 });
 std::cout << codes;
 
-auto stripped = codes.note().strip("[]()");
+auto stripped = codes.nt().strip("[]()");
 std::cout << stripped;
 ```
 
@@ -150,7 +150,7 @@ reaches `S` or `1`. Row `2` (`"SKU-1003"`) has no bracket characters on either
 edge at all, so it's returned unchanged.
 
 Example 3. Construct the accessor directly against a mixed frame, selecting
-just one text feature — bypassing `note()`'s "every column must already be
+just one text feature — bypassing `nt()`'s "every column must already be
 `Note`" requirement entirely — then see the same direct construction throw
 when the named feature doesn't exist.
 
@@ -191,10 +191,10 @@ try {
 ### Output
 
 ```text
-DataFrame::note().strip: unknown feature 'price'
+DataFrame::nt().strip: unknown feature 'price'
 ```
 
-`mixed.note()` directly would have thrown immediately, since `mixed` still has
+`mixed.nt()` directly would have thrown immediately, since `mixed` still has
 a `Series` feature (`id`). Constructing `DataFrameNoteAccessor(mixed,
 {"city"})` explicitly sidesteps that check: only `city` is touched, `id`
 passes through completely untouched, and the frame never needs to be narrowed
@@ -210,7 +210,7 @@ validation.
   for the one-sided versions of everything shown here.
 - Every accessor method — not just `strip()` — applies to every feature the
   accessor was built with, whether that's "every `Note` feature on the frame"
-  (via `.note()`) or an explicit subset (via direct construction, Example 3).
+  (via `.nt()`) or an explicit subset (via direct construction, Example 3).
 - A null cell on input stays null on output; `strip()` never fabricates or
   discards nullity.
 
@@ -218,7 +218,7 @@ validation.
 
 - [`DataFrameNoteAccessor::lstrip`](lstrip.md) / [`DataFrameNoteAccessor::rstrip`](rstrip.md):
   the one-sided equivalents.
-- [`DataFrame::note`](../dataframe/note.md): the usual entry point into this
+- [`DataFrame::nt`](../dataframe/nt.md): the usual entry point into this
   accessor, and the `features()`-first pattern this page's Example 3
   deliberately bypasses.
 - [`DataFrameNoteAccessor::pad`](pad.md): the inverse operation — add

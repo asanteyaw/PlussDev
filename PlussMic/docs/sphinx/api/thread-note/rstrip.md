@@ -1,0 +1,83 @@
+<!-- pluss-hand-authored -->
+
+# ThreadNoteAccessor::rstrip
+
+[Back to ThreadNoteAccessor API Reference](../../thread_note_accessor_api_reference)
+
+## Signatures
+
+```cpp
+ThreadNoteAccessor::rstrip() const -> Thread
+ThreadNoteAccessor::rstrip(std::string_view chars) const -> Thread
+```
+
+## What It Does
+
+The right-only half of [`strip()`](strip.md): trims characters from the **end**
+of the bound thread's cells, leaving the leading edge untouched. A direct
+forward to [`Thread::rstrip()`](../thread/rstrip.md). Same two policies as
+`strip()` (whitespace by default, character-set membership with `chars`).
+
+## Parameters
+
+**chars** (`std::string_view`, `chars`-overload only)
+
+The set of characters to strip from each cell's right edge only.
+
+## Returns
+
+`Thread`
+    A new `Note`-kind thread, same length as the bound thread, with each cell's
+    trailing text trimmed.
+
+## Examples
+
+Example 1. Strip a trailing marker character, leaving the leading end
+untouched.
+
+```cpp
+using namespace pluss::table;
+
+auto ids = Thread(pluss::make_note({"#203930", "##7788", "4455##"}));
+auto out = ids.nt().rstrip("#");
+std::cout << out;
+```
+
+### Output
+
+```text
+0  #203930
+1  ##7788
+2  4455
+
+ptype: Note
+```
+
+Rows `0` and `1`'s leading `#` characters are untouched — only trailing `#`
+characters are peeled off.
+
+## Notes
+
+- `ThreadNoteAccessor::rstrip()` is a one-line forward to
+  [`Thread::rstrip()`](../thread/rstrip.md) — identical behavior and throws.
+- See [`strip()`](strip.md) for the full explanation of the default-whitespace
+  vs. `chars`-set-membership policies, and the non-`Note` throw.
+
+## See Also
+
+- [`Thread::rstrip`](../thread/rstrip.md): the direct, non-accessor form this
+  method forwards to.
+- [`ThreadNoteAccessor::lstrip`](lstrip.md): the mirror image, trimming the
+  leading end only.
+- [`ThreadNoteAccessor::strip`](strip.md): both ends at once.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="replace.html">
+    <span class="label">Previous</span>
+    <span class="title">replace</span>
+  </a>
+  <a class="next-link" href="split.html">
+    <span class="label">Next</span>
+    <span class="title">split</span>
+  </a>
+</div>

@@ -81,7 +81,7 @@ ptype: Series
 - [`Thread::bottom`](bottom.md): the smallest-values counterpart.
 - [`Thread::head`](head.md) / [`Thread::tail`](tail.md): positional (not
   value-sorted) previews, with the same clamping convention.
-- [`Thread::sort_values`](sort_values.md): the full sort this method takes a
+- [`Thread::arrange`](arrange.md): the full sort this method takes a
   prefix of.
 
 <div class="pluss-inline-prev-next">

@@ -1675,13 +1675,13 @@ Thread note_has_(const Thread& source,
                  std::string_view needle,
                  const TextOptions& options) {
   PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "Thread::note().has: expected Note payload");
+              "Thread::nt().has: expected Note payload");
   if (options.regex) {
     if (options.case_sensitive) {
-      (void)compile_regex_(needle, "Thread::note().has");
+      (void)compile_regex_(needle, "Thread::nt().has");
       return note_bool_result_(source, source.as_note().regex_search(needle));
     }
-    const auto expression = compile_regex_(needle, options, "Thread::note().has");
+    const auto expression = compile_regex_(needle, options, "Thread::nt().has");
     std::vector<std::uint8_t> values;
     values.reserve(static_cast<std::size_t>(source.size()));
     for (std::int64_t row = 0; row < source.size(); ++row) {
@@ -1709,10 +1709,10 @@ Thread note_count_(const Thread& source,
                    std::string_view pattern,
                    const TextOptions& options) {
   PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "Thread::note().count: expected Note payload");
+              "Thread::nt().count: expected Note payload");
   std::optional<std::regex> expression;
   if (options.regex) {
-    expression = compile_regex_(pattern, options, "Thread::note().count");
+    expression = compile_regex_(pattern, options, "Thread::nt().count");
   }
   auto output = pluss::Series::empty(
       {source.size()}, pluss::codem::ScalarType::Int64);
@@ -1732,10 +1732,10 @@ DataFrame note_findall_(const Thread& source,
                         std::string_view pattern,
                         const TextOptions& options) {
   PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "Thread::note().findall: expected Note payload");
+              "Thread::nt().findall: expected Note payload");
   std::optional<std::regex> expression;
   if (options.regex) {
-    expression = compile_regex_(pattern, options, "Thread::note().findall");
+    expression = compile_regex_(pattern, options, "Thread::nt().findall");
   }
   std::vector<std::vector<std::string>> rows;
   rows.reserve(static_cast<std::size_t>(source.size()));
@@ -2108,7 +2108,7 @@ DataFrame Thread::indicate(std::string_view delimiter,
   return DataFrame(std::move(output));
 }
 
-ThreadNoteAccessor Thread::note() const {
+ThreadNoteAccessor Thread::nt() const {
   return ThreadNoteAccessor(*this);
 }
 
@@ -2223,8 +2223,8 @@ Thread tl_series_(const Thread& base, const pluss::Series& values, std::string_v
   if (detail::has_display_labels(base)) {
     out = detail::with_display_labels(out, detail::display_labels(base));
   }
-  if (base.has_display_name()) {
-    out = out.with_display_name(base.display_name());
+  if (base.named()) {
+    out = out.name(base.name());
   }
   return out;
 }
@@ -2276,19 +2276,24 @@ Thread tl_span_series_(
   if (values.numel() == base.size() && detail::has_display_labels(base)) {
     out = detail::with_display_labels(out, detail::display_labels(base));
   }
-  if (base.has_display_name()) {
-    out = out.with_display_name(base.display_name());
+  if (base.named()) {
+    out = out.name(base.name());
   }
   return out;
 }
 
 Thread tl_note_(const Thread& base, const pluss::Note& values, std::string_view where) {
-  auto out = Thread(values, tl_validity_(base, where));
+  std::vector<std::string> owned;
+  owned.reserve(static_cast<std::size_t>(values.numel()));
+  for (std::int64_t i = 0; i < values.numel(); ++i) {
+    owned.push_back(std::string(values.at(i)));
+  }
+  auto out = Thread(make_utf8_note(owned), tl_validity_(base, where));
   if (detail::has_display_labels(base)) {
     out = detail::with_display_labels(out, detail::display_labels(base));
   }
-  if (base.has_display_name()) {
-    out = out.with_display_name(base.display_name());
+  if (base.named()) {
+    out = out.name(base.name());
   }
   return out;
 }
@@ -2300,8 +2305,18 @@ Thread tl_temporal_(const Thread& base, const pluss::Timeline& values) {
   if (detail::has_display_labels(base)) {
     out = detail::with_display_labels(out, detail::display_labels(base));
   }
-  if (base.has_display_name()) {
-    out = out.with_display_name(base.display_name());
+  if (base.named()) {
+    out = out.name(base.name());
+  }
+  return out;
+}
+
+Thread tl_with_meta_(const Thread& base, Thread out) {
+  if (detail::has_display_labels(base)) {
+    out = detail::with_display_labels(out, detail::display_labels(base));
+  }
+  if (base.named()) {
+    out = out.name(base.name());
   }
   return out;
 }
@@ -2320,11 +2335,12 @@ ThreadTimelineAccessor::ThreadTimelineAccessor(Thread base)
 }
 
 Thread ThreadTimelineAccessor::isnat() const {
-  return Thread(tl_payload_(base_, "Thread::tl().isnat").isnat(), base_.validity_mask());
+  return tl_with_meta_(
+      base_, Thread(tl_payload_(base_, "Thread::tl().isnat").isnat(), base_.validity_mask()));
 }
 
 Thread ThreadTimelineAccessor::valid() const {
-  return Thread(tl_validity_(base_, "Thread::tl().valid"));
+  return tl_with_meta_(base_, Thread(tl_validity_(base_, "Thread::tl().valid")));
 }
 
 Thread ThreadTimelineAccessor::year() const {
@@ -2401,7 +2417,7 @@ Thread ThreadTimelineAccessor::iso() const {
 }
 
 Thread ThreadTimelineAccessor::epoch(TimeUnit unit) const {
-  const auto& t = tl_payload_(base_, "Thread::tl().epoch");
+  const auto t = tl_payload_(base_, "Thread::tl().epoch");
   switch (unit) {
     case TimeUnit::Nanos:
       return tl_series_(base_, t.epoch_nanos(), "Thread::tl().epoch");
@@ -2425,8 +2441,8 @@ Thread ThreadTimelineAccessor::epoch(TimeUnit unit) const {
 Thread ThreadTimelineAccessor::span(
     const Thread& other,
     const TimelineSpanOptions& options) const {
-  const auto& left = tl_payload_(base_, "Thread::tl().span");
-  const auto& right = tl_payload_(other, "Thread::tl().span");
+  const auto left = tl_payload_(base_, "Thread::tl().span");
+  const auto right = tl_payload_(other, "Thread::tl().span");
   return tl_span_series_(
       base_,
       other,
@@ -2510,8 +2526,8 @@ Thread ThreadTimelineAccessor::index(bool require_sorted) const {
   if (detail::has_display_labels(base_)) {
     out = detail::with_display_labels(out, detail::display_labels(base_));
   }
-  if (base_.has_display_name()) {
-    out = out.with_display_name(base_.display_name());
+  if (base_.named()) {
+    out = out.name(base_.name());
   }
   return out;
 }

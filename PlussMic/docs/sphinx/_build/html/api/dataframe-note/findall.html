@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -64,10 +64,10 @@ Unlike most methods on this accessor, <code class="docutils literal notranslate"
 <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>, <a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partition()</span></code></span></a>, and <a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">indicate()</span></code></span></a>)
 operates on exactly one column, not “every feature the accessor was built
 with.” Calling it through an accessor built from more than one feature — e.g.
-<code class="docutils literal notranslate"><span class="pre">df.features({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;}).note().findall(...)</span></code> — throws
-<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::note().findall</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>. Build the accessor with
+<code class="docutils literal notranslate"><span class="pre">df.features({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;}).nt().findall(...)</span></code> — throws
+<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::nt().findall</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>. Build the accessor with
 a single feature name for these methods:
-<code class="docutils literal notranslate"><span class="pre">df.features({&quot;city&quot;}).note().findall(...)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">df.features({&quot;city&quot;}).nt().findall(...)</span></code>.</p>
 </div>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
@@ -120,10 +120,10 @@ cell into one match per character.</p>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">samples</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">samples</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">samples</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">samples</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">samples</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -185,7 +185,7 @@ producing a ragged, NULL-padded result.</p>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\d+</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\d+</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -223,7 +223,7 @@ all) and row 3 (invalid) are <code class="docutils literal notranslate"><span cl
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">options.limit</span></code> caps matches per row — and since the widest row
 determines the column count, it also caps how many <code class="docutils literal notranslate"><span class="pre">match_N</span></code> columns
 appear at all.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;text&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span>
 <span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\d+</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
 </pre></div>

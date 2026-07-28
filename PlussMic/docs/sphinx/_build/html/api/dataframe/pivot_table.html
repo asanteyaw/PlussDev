@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -58,8 +58,8 @@
 <code class="docutils literal notranslate"><span class="pre">case_feature</span></code> per output row, one distinct value of <code class="docutils literal notranslate"><span class="pre">feature_feature</span></code> per output
 column, and each cell holding <code class="docutils literal notranslate"><span class="pre">op</span></code> applied to every <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> observation that
 shares that row’s and column’s key values.</p>
-<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> is closely related to <a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by()</span></code></span></a> — both aggregate
-<code class="docutils literal notranslate"><span class="pre">value_feature</span></code> per key combination — but <code class="docutils literal notranslate"><span class="pre">group_by()</span></code> keeps every key as its own row
+<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> is closely related to <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a> — both aggregate
+<code class="docutils literal notranslate"><span class="pre">value_feature</span></code> per key combination — but <code class="docutils literal notranslate"><span class="pre">group()</span></code> keeps every key as its own row
 feature (a “long” result), while <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> spreads one key out across columns (a
 “wide” result). Reach for <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> specifically when you want that
 row/column cross-tabulation shape, for example to visualize or export a summary as a
@@ -75,12 +75,12 @@ matrix.</p>
 <p>Feature whose values are aggregated into each pivoted cell.</p>
 <p><strong>op</strong> (<code class="docutils literal notranslate"><span class="pre">GroupOp</span></code>, default <code class="docutils literal notranslate"><span class="pre">GroupOp::Mean</span></code>)</p>
 <p>The aggregation applied within each <code class="docutils literal notranslate"><span class="pre">(case_feature,</span> <span class="pre">feature_feature)</span></code> cell — the same
-operation set as <a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">GroupSpec::op</span></code>:</p>
+operation set as <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">GroupSpec::op</span></code>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">GroupOp::Count</span></code>: the number of observations in the cell, including any that are
 themselves null. Use this to answer “how many orders fell in this combination” rather
 than to summarize <code class="docutils literal notranslate"><span class="pre">value_feature</span></code>’s magnitude at all.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GroupOp::Nunique</span></code>: the number of <em>distinct</em> <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> values in the cell.
+<li><p><code class="docutils literal notranslate"><span class="pre">GroupOp::Ndistinct</span></code>: the number of <em>distinct</em> <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> values in the cell.
 Useful when <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> is closer to a category or an ID than a quantity — for
 example, counting how many distinct <code class="docutils literal notranslate"><span class="pre">product</span></code> values a customer bought per city rather
 than summing an amount.</p></li>
@@ -218,13 +218,13 @@ your data.</p></li>
 resulting cell — this is exactly the scenario <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> exists for, as opposed to
 a plain reshape that would need every key pair to be unique already.</p></li>
 <li><p>For a result that keeps every key as its own row feature instead of spreading one key
-into columns, use <a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by()</span></code></span></a> directly.</p></li>
+into columns, use <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a> directly.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by</span></code></span></a>: the long-format sibling of this reshape.</p></li>
+<li><p><a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a>: the long-format sibling of this reshape.</p></li>
 <li><p><a class="reference internal" href="pivot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::pivot</span></code></span></a>: reshape without aggregation, for data that is already
 one row per <code class="docutils literal notranslate"><span class="pre">(case_feature,</span> <span class="pre">feature_feature)</span></code> pair.</p></li>
 <li><p><a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::fillnull</span></code></span></a>: replace the <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells this method leaves for

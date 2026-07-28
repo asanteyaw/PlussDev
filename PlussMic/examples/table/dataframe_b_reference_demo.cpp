@@ -85,10 +85,10 @@ int main() {
             << metrics.bucketize({0.0, 20.0, 40.0, 60.0}).to_string() << "\n\n";
 
   std::cout << "BUCKETIZE_ONE\n"
-            << metrics.bucketize("sales", {0.0, 20.0, 40.0, 60.0}, {10, 20, 30}).to_string() << "\n\n";
+            << metrics.features({"sales"}).bucketize({0.0, 20.0, 40.0, 60.0}, {10, 20, 30}).to_string() << "\n\n";
 
   std::cout << "BUCKETIZE_SUBSET\n"
-            << metrics.bucketize(pair_features, {0.0, 25.0, 50.0, 75.0}, {1, 2, 3}).to_string() << "\n";
+            << metrics.features(pair_features).bucketize({0.0, 25.0, 50.0, 75.0}, {1, 2, 3}).to_string() << "\n";
 
   return 0;
 }

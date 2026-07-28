@@ -206,6 +206,286 @@ plussai_nodeb_textcat_mvp/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_textcat_mvp.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_textcat_mvp.dir/build
 .PHONY : plussai_nodeb_textcat_mvp/fast
 
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_linguistics_overview_demo: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/rule
+.PHONY : plussai_nodeb_linguistics_overview_demo
+
+# fast build rule for target.
+plussai_nodeb_linguistics_overview_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/build
+.PHONY : plussai_nodeb_linguistics_overview_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_sentiment_end_to_end: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/rule
+.PHONY : plussai_nodeb_sentiment_end_to_end
+
+# fast build rule for target.
+plussai_nodeb_sentiment_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/build
+.PHONY : plussai_nodeb_sentiment_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_tagger_sequence_end_to_end: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/rule
+.PHONY : plussai_nodeb_tagger_sequence_end_to_end
+
+# fast build rule for target.
+plussai_nodeb_tagger_sequence_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/build
+.PHONY : plussai_nodeb_tagger_sequence_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_ner_end_to_end: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/rule
+.PHONY : plussai_nodeb_ner_end_to_end
+
+# fast build rule for target.
+plussai_nodeb_ner_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/build
+.PHONY : plussai_nodeb_ner_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_embed_end_to_end: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/rule
+.PHONY : plussai_nodeb_embed_end_to_end
+
+# fast build rule for target.
+plussai_nodeb_embed_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/build
+.PHONY : plussai_nodeb_embed_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_contextual_generation_end_to_end: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/rule
+.PHONY : plussai_nodeb_contextual_generation_end_to_end
+
+# fast build rule for target.
+plussai_nodeb_contextual_generation_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/build
+.PHONY : plussai_nodeb_contextual_generation_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_vectorize_end_to_end: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/rule
+.PHONY : plussai_nodeb_vectorize_end_to_end
+
+# fast build rule for target.
+plussai_nodeb_vectorize_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/build
+.PHONY : plussai_nodeb_vectorize_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_full_nlp_workflow_demo: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/rule
+.PHONY : plussai_nodeb_full_nlp_workflow_demo
+
+# fast build rule for target.
+plussai_nodeb_full_nlp_workflow_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build
+.PHONY : plussai_nodeb_full_nlp_workflow_demo/fast
+
+nodeb_contextual_generation_end_to_end.o: nodeb_contextual_generation_end_to_end.cpp.o
+.PHONY : nodeb_contextual_generation_end_to_end.o
+
+# target to build an object file
+nodeb_contextual_generation_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/nodeb_contextual_generation_end_to_end.cpp.o
+.PHONY : nodeb_contextual_generation_end_to_end.cpp.o
+
+nodeb_contextual_generation_end_to_end.i: nodeb_contextual_generation_end_to_end.cpp.i
+.PHONY : nodeb_contextual_generation_end_to_end.i
+
+# target to preprocess a source file
+nodeb_contextual_generation_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/nodeb_contextual_generation_end_to_end.cpp.i
+.PHONY : nodeb_contextual_generation_end_to_end.cpp.i
+
+nodeb_contextual_generation_end_to_end.s: nodeb_contextual_generation_end_to_end.cpp.s
+.PHONY : nodeb_contextual_generation_end_to_end.s
+
+# target to generate assembly for a file
+nodeb_contextual_generation_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/nodeb_contextual_generation_end_to_end.cpp.s
+.PHONY : nodeb_contextual_generation_end_to_end.cpp.s
+
+nodeb_embed_end_to_end.o: nodeb_embed_end_to_end.cpp.o
+.PHONY : nodeb_embed_end_to_end.o
+
+# target to build an object file
+nodeb_embed_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/nodeb_embed_end_to_end.cpp.o
+.PHONY : nodeb_embed_end_to_end.cpp.o
+
+nodeb_embed_end_to_end.i: nodeb_embed_end_to_end.cpp.i
+.PHONY : nodeb_embed_end_to_end.i
+
+# target to preprocess a source file
+nodeb_embed_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/nodeb_embed_end_to_end.cpp.i
+.PHONY : nodeb_embed_end_to_end.cpp.i
+
+nodeb_embed_end_to_end.s: nodeb_embed_end_to_end.cpp.s
+.PHONY : nodeb_embed_end_to_end.s
+
+# target to generate assembly for a file
+nodeb_embed_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_end_to_end.dir/nodeb_embed_end_to_end.cpp.s
+.PHONY : nodeb_embed_end_to_end.cpp.s
+
+nodeb_full_nlp_workflow_demo.o: nodeb_full_nlp_workflow_demo.cpp.o
+.PHONY : nodeb_full_nlp_workflow_demo.o
+
+# target to build an object file
+nodeb_full_nlp_workflow_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/nodeb_full_nlp_workflow_demo.cpp.o
+.PHONY : nodeb_full_nlp_workflow_demo.cpp.o
+
+nodeb_full_nlp_workflow_demo.i: nodeb_full_nlp_workflow_demo.cpp.i
+.PHONY : nodeb_full_nlp_workflow_demo.i
+
+# target to preprocess a source file
+nodeb_full_nlp_workflow_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/nodeb_full_nlp_workflow_demo.cpp.i
+.PHONY : nodeb_full_nlp_workflow_demo.cpp.i
+
+nodeb_full_nlp_workflow_demo.s: nodeb_full_nlp_workflow_demo.cpp.s
+.PHONY : nodeb_full_nlp_workflow_demo.s
+
+# target to generate assembly for a file
+nodeb_full_nlp_workflow_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/nodeb_full_nlp_workflow_demo.cpp.s
+.PHONY : nodeb_full_nlp_workflow_demo.cpp.s
+
+nodeb_linguistics_overview_demo.o: nodeb_linguistics_overview_demo.cpp.o
+.PHONY : nodeb_linguistics_overview_demo.o
+
+# target to build an object file
+nodeb_linguistics_overview_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/nodeb_linguistics_overview_demo.cpp.o
+.PHONY : nodeb_linguistics_overview_demo.cpp.o
+
+nodeb_linguistics_overview_demo.i: nodeb_linguistics_overview_demo.cpp.i
+.PHONY : nodeb_linguistics_overview_demo.i
+
+# target to preprocess a source file
+nodeb_linguistics_overview_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/nodeb_linguistics_overview_demo.cpp.i
+.PHONY : nodeb_linguistics_overview_demo.cpp.i
+
+nodeb_linguistics_overview_demo.s: nodeb_linguistics_overview_demo.cpp.s
+.PHONY : nodeb_linguistics_overview_demo.s
+
+# target to generate assembly for a file
+nodeb_linguistics_overview_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_linguistics_overview_demo.dir/nodeb_linguistics_overview_demo.cpp.s
+.PHONY : nodeb_linguistics_overview_demo.cpp.s
+
+nodeb_ner_end_to_end.o: nodeb_ner_end_to_end.cpp.o
+.PHONY : nodeb_ner_end_to_end.o
+
+# target to build an object file
+nodeb_ner_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/nodeb_ner_end_to_end.cpp.o
+.PHONY : nodeb_ner_end_to_end.cpp.o
+
+nodeb_ner_end_to_end.i: nodeb_ner_end_to_end.cpp.i
+.PHONY : nodeb_ner_end_to_end.i
+
+# target to preprocess a source file
+nodeb_ner_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/nodeb_ner_end_to_end.cpp.i
+.PHONY : nodeb_ner_end_to_end.cpp.i
+
+nodeb_ner_end_to_end.s: nodeb_ner_end_to_end.cpp.s
+.PHONY : nodeb_ner_end_to_end.s
+
+# target to generate assembly for a file
+nodeb_ner_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_ner_end_to_end.dir/nodeb_ner_end_to_end.cpp.s
+.PHONY : nodeb_ner_end_to_end.cpp.s
+
+nodeb_sentiment_end_to_end.o: nodeb_sentiment_end_to_end.cpp.o
+.PHONY : nodeb_sentiment_end_to_end.o
+
+# target to build an object file
+nodeb_sentiment_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/nodeb_sentiment_end_to_end.cpp.o
+.PHONY : nodeb_sentiment_end_to_end.cpp.o
+
+nodeb_sentiment_end_to_end.i: nodeb_sentiment_end_to_end.cpp.i
+.PHONY : nodeb_sentiment_end_to_end.i
+
+# target to preprocess a source file
+nodeb_sentiment_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/nodeb_sentiment_end_to_end.cpp.i
+.PHONY : nodeb_sentiment_end_to_end.cpp.i
+
+nodeb_sentiment_end_to_end.s: nodeb_sentiment_end_to_end.cpp.s
+.PHONY : nodeb_sentiment_end_to_end.s
+
+# target to generate assembly for a file
+nodeb_sentiment_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_sentiment_end_to_end.dir/nodeb_sentiment_end_to_end.cpp.s
+.PHONY : nodeb_sentiment_end_to_end.cpp.s
+
+nodeb_tagger_sequence_end_to_end.o: nodeb_tagger_sequence_end_to_end.cpp.o
+.PHONY : nodeb_tagger_sequence_end_to_end.o
+
+# target to build an object file
+nodeb_tagger_sequence_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/nodeb_tagger_sequence_end_to_end.cpp.o
+.PHONY : nodeb_tagger_sequence_end_to_end.cpp.o
+
+nodeb_tagger_sequence_end_to_end.i: nodeb_tagger_sequence_end_to_end.cpp.i
+.PHONY : nodeb_tagger_sequence_end_to_end.i
+
+# target to preprocess a source file
+nodeb_tagger_sequence_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/nodeb_tagger_sequence_end_to_end.cpp.i
+.PHONY : nodeb_tagger_sequence_end_to_end.cpp.i
+
+nodeb_tagger_sequence_end_to_end.s: nodeb_tagger_sequence_end_to_end.cpp.s
+.PHONY : nodeb_tagger_sequence_end_to_end.s
+
+# target to generate assembly for a file
+nodeb_tagger_sequence_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/nodeb_tagger_sequence_end_to_end.cpp.s
+.PHONY : nodeb_tagger_sequence_end_to_end.cpp.s
+
 nodeb_textcat_mvp.o: nodeb_textcat_mvp.cpp.o
 .PHONY : nodeb_textcat_mvp.o
 
@@ -230,6 +510,30 @@ nodeb_textcat_mvp.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_textcat_mvp.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_textcat_mvp.dir/nodeb_textcat_mvp.cpp.s
 .PHONY : nodeb_textcat_mvp.cpp.s
 
+nodeb_vectorize_end_to_end.o: nodeb_vectorize_end_to_end.cpp.o
+.PHONY : nodeb_vectorize_end_to_end.o
+
+# target to build an object file
+nodeb_vectorize_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/nodeb_vectorize_end_to_end.cpp.o
+.PHONY : nodeb_vectorize_end_to_end.cpp.o
+
+nodeb_vectorize_end_to_end.i: nodeb_vectorize_end_to_end.cpp.i
+.PHONY : nodeb_vectorize_end_to_end.i
+
+# target to preprocess a source file
+nodeb_vectorize_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/nodeb_vectorize_end_to_end.cpp.i
+.PHONY : nodeb_vectorize_end_to_end.cpp.i
+
+nodeb_vectorize_end_to_end.s: nodeb_vectorize_end_to_end.cpp.s
+.PHONY : nodeb_vectorize_end_to_end.s
+
+# target to generate assembly for a file
+nodeb_vectorize_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_vectorize_end_to_end.dir/nodeb_vectorize_end_to_end.cpp.s
+.PHONY : nodeb_vectorize_end_to_end.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -245,10 +549,42 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussai_nodeb_contextual_generation_end_to_end"
+	@echo "... plussai_nodeb_embed_end_to_end"
+	@echo "... plussai_nodeb_full_nlp_workflow_demo"
+	@echo "... plussai_nodeb_linguistics_overview_demo"
+	@echo "... plussai_nodeb_ner_end_to_end"
+	@echo "... plussai_nodeb_sentiment_end_to_end"
+	@echo "... plussai_nodeb_tagger_sequence_end_to_end"
 	@echo "... plussai_nodeb_textcat_mvp"
+	@echo "... plussai_nodeb_vectorize_end_to_end"
+	@echo "... nodeb_contextual_generation_end_to_end.o"
+	@echo "... nodeb_contextual_generation_end_to_end.i"
+	@echo "... nodeb_contextual_generation_end_to_end.s"
+	@echo "... nodeb_embed_end_to_end.o"
+	@echo "... nodeb_embed_end_to_end.i"
+	@echo "... nodeb_embed_end_to_end.s"
+	@echo "... nodeb_full_nlp_workflow_demo.o"
+	@echo "... nodeb_full_nlp_workflow_demo.i"
+	@echo "... nodeb_full_nlp_workflow_demo.s"
+	@echo "... nodeb_linguistics_overview_demo.o"
+	@echo "... nodeb_linguistics_overview_demo.i"
+	@echo "... nodeb_linguistics_overview_demo.s"
+	@echo "... nodeb_ner_end_to_end.o"
+	@echo "... nodeb_ner_end_to_end.i"
+	@echo "... nodeb_ner_end_to_end.s"
+	@echo "... nodeb_sentiment_end_to_end.o"
+	@echo "... nodeb_sentiment_end_to_end.i"
+	@echo "... nodeb_sentiment_end_to_end.s"
+	@echo "... nodeb_tagger_sequence_end_to_end.o"
+	@echo "... nodeb_tagger_sequence_end_to_end.i"
+	@echo "... nodeb_tagger_sequence_end_to_end.s"
 	@echo "... nodeb_textcat_mvp.o"
 	@echo "... nodeb_textcat_mvp.i"
 	@echo "... nodeb_textcat_mvp.s"
+	@echo "... nodeb_vectorize_end_to_end.o"
+	@echo "... nodeb_vectorize_end_to_end.i"
+	@echo "... nodeb_vectorize_end_to_end.s"
 .PHONY : help
 
 

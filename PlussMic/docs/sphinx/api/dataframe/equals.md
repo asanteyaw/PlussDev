@@ -42,7 +42,7 @@ No alignment happens before either check: `equals()` does not try to reorder fea
 or match case labels first the way [`add()`](add.md) or [`eq()`](eq.md) can with
 `AlignOptions` — the two frames are compared exactly as supplied. If you need to
 compare two frames that carry the same data in a different feature or case order, use
-[`reorder()`](reorder.md)/[`sort_values()`](sort_values.md) (or the alignment-aware
+[`reorder()`](reorder.md)/[`arrange()`](arrange.md) (or the alignment-aware
 [`eq()`](eq.md)) first.
 
 ## Parameters

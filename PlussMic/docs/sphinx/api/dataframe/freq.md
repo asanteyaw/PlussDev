@@ -4,198 +4,152 @@
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-DataFrame::freq(pluss::RangeView<std::string_view> features = {}, std::int64_t top_n = 0, bool dropnull = true) const -> Thread
+DataFrame::freq() const -> Thread
+DataFrame::freq(FreqOptions options) const -> Thread
 ```
 
 ## What It Does
 
-Counts how often each distinct value (or, with several features, each distinct
-*combination* of values) occurs, and returns the counts as a `Thread` labeled by the
-value itself — sorted most-frequent first, ties broken alphabetically by the value's
-own text. With exactly one feature named, this delegates straight to that feature's
-own [`Thread::tally()`](../thread/tally.md), reshaped into this labeled-`Thread`
-form. With zero or several features, it builds a
-`"|"`-joined composite key per row from the selected features' string representations
-and counts occurrences of that composite key instead.
+Counts distinct rows of the current frame and returns the result as a `Thread`.
+This is the features-first value-count surface:
 
-This is a values-first counting tool: it answers "what are the most common cities in
-this column" or "what are the most common (city, product) combinations," rather than
-"how many rows/features does this frame have" (see [`ndistinct()`](ndistinct.md) for a
-plain distinct-count instead of a per-value breakdown).
+```cpp
+df.features({"default", "is_adult"}).freq();
+df.features({"default", "is_adult"}).freq({
+    .kind = DataFrame::FreqKind::Prop,
+    .dropnull = false,
+});
+```
+
+The selected frame defines the grouping columns. `freq()` no longer accepts a
+feature selector itself.
+
+For multi-feature counts, the result carries structured case labels and prints like a
+stacked index instead of packing keys into a pipe-joined string.
 
 ## Parameters
 
-**features** (`pluss::RangeView<std::string_view>`, default `{}`)
+**options** (`FreqOptions`, optional)
 
-Which feature(s) define the value being counted:
+**options.kind** (`FreqKind`, default `FreqKind::Count`)
 
-- Empty (the default): every feature on the frame participates in the composite key.
-- One name: delegates to that feature's own frequency count.
-- Several names: counts distinct combinations across exactly those features, joined
-  with `"|"` into one composite key per row.
+Selects the output measure:
 
-**top_n** (`std::int64_t`, default `0`)
+- `DataFrame::FreqKind::Count`: raw counts
+- `DataFrame::FreqKind::Prop`: counts divided by the total
 
-Keep only the `top_n` most frequent entries after sorting. `0` (the default) keeps
-every distinct value or combination observed.
+**options.dropnull** (`bool`, default `true`)
 
-**dropnull** (`bool`, default `true`)
+When `true`, any row with a missing grouping value is excluded. When `false`,
+missing grouping values participate as `NULL`.
 
-- `true` (the default): a row where any selected feature is missing is excluded from
-  the count entirely.
-- `false`: a missing selected feature contributes the literal placeholder `"NULL"` to
-  that row's key instead of being dropped — only the missing feature's own part of the
-  key is affected; every other, still-present feature in the same row keeps its real
-  value.
+**options.sort** (`bool`, default `true`)
+
+When `true`, rows are ordered by frequency. When `false`, the grouped result stays
+in first-seen order.
+
+**options.ascending** (`bool`, default `false`)
+
+Only used when `sort = true`. `false` gives the usual largest-first ordering.
+
+**options.top** (`std::int64_t`, default `0`)
+
+Keeps only the first `top` rows after ordering. `0` keeps every group.
 
 ## Returns
 
 `Thread`
-    One `Int64` entry per distinct value (or combination), labeled by that value's (or
-    joined combination's) string form, named `"freq"`, sorted by count descending and
-    then alphabetically by label ascending on ties.
+    A frequency series named `count` or `prop`.
+
+- With one grouping feature, labels are the distinct values of that feature.
+- With several grouping features, labels are structured and render as separate
+  index columns.
 
 ## Examples
 
-Example 1. Count the most frequent values in a single feature.
+Example 1. Count distinct combinations of two grouping features.
 
 ```cpp
 using namespace pluss::table;
 
-auto orders = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Accra", "Tema"}))},
+auto df = DataFrame({
+    {"default",  Thread(pluss::make_note({"yes", "yes", "yes", "no", "yes", "no"}))},
+    {"is_adult", Thread(pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
 });
-std::cout << orders;
-```
 
-### Output
-
-```text
-=============
-     | city  
--------------
-0    | Accra 
-1    | Tema  
-2    | Accra 
-3    | Kumasi
-4    | Accra 
-5    | Tema  
--------------
-[6 cs x 1 feat]
-```
-
-```cpp
-auto counts = orders.freq();
+auto counts = df.features({"default", "is_adult"}).freq();
 std::cout << counts;
 ```
 
 ### Output
 
 ```text
- Accra  3
-  Tema  2
-Kumasi  1
-Name: freq, ptype: Series
+default  is_adult
+yes      true        3
+no       true        1
+yes      false       1
+no       false       1
+Name: count, ptype: Series
 ```
 
-`Accra` is the most frequent city (`3` occurrences), `Tema` next (`2`), `Kumasi` least
-(`1`) — sorted strictly by count, with no ties to break here.
-
-Example 2. Count distinct combinations across two features at once.
+Example 2. Use `FreqKind::Prop` to get proportions instead of raw counts.
 
 ```cpp
-auto sales = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Accra"}))},
-    {"product", Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Phone", "Phone"}))},
+auto prop = df.features({"default", "is_adult"}).freq({
+    .kind = DataFrame::FreqKind::Prop,
+});
+std::cout << prop;
+```
+
+### Output
+
+```text
+default  is_adult
+yes      true        0.5
+no       true        0.1666666667
+yes      false       0.1666666667
+no       false       0.1666666667
+Name: prop, ptype: Series
+```
+
+Example 3. Keep missing grouping values instead of dropping them, and skip sorting.
+
+```cpp
+auto keep_null = DataFrame({
+    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema"}))},
+    {"zone", Thread(pluss::make_note({"West", "", "North"}),
+                    pluss::make_series(std::vector<bool>{true, false, true}, pluss::ScalarType::Bool))},
 });
 
-auto combo_counts = sales.freq({"city", "product"});
-std::cout << combo_counts;
-```
-
-### Output
-
-```text
-Accra|Laptop  2
-  Tema|Phone  2
- Accra|Phone  1
-Name: freq, ptype: Series
-```
-
-`(Accra, Laptop)` and `(Tema, Phone)` both occur twice; with the count tied at `2`, the
-alphabetically earlier composite key (`"Accra|Laptop"` before `"Tema|Phone"`) sorts
-first. `(Accra, Phone)`, occurring once, sorts last.
-
-Example 3. Keep missing values in the count instead of dropping their rows.
-
-```cpp
-auto with_gap = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Tema"}))},
-    {"product", Thread(pluss::make_note({"Laptop", "", "Phone"}),
-                       pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
-    {"region",  Thread(pluss::make_note({"South", "South", "North"}))},
+auto out = keep_null.features({"city", "zone"}).freq({
+    .dropnull = false,
+    .sort = false,
 });
-std::cout << with_gap;
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-=============================
-     | city   product  region
------------------------------
-0    | Accra  Laptop   South 
-1    | Accra  NULL     South 
-2    | Tema   Phone    North 
------------------------------
-[3 cs x 3 feat]
+city   zone
+Accra  West    1
+Accra  NULL    1
+Tema   North   1
+Name: count, ptype: Series
 ```
-
-```cpp
-auto gap_counts = with_gap.freq({"city", "product", "region"}, 0, /*dropnull=*/false);
-std::cout << gap_counts;
-```
-
-### Output
-
-```text
-Accra|Laptop|South  1
-  Accra|NULL|South  1
-  Tema|Phone|North  1
-Name: freq, ptype: Series
-```
-
-Row `1`'s `product` is missing, so its key contribution becomes `"NULL"` — but `region`
-at row `1`, a perfectly present value (`"South"`), keeps reading as `"South"` in the
-composite key rather than also being swallowed into `"NULL"`. Each selected feature's
-contribution to the composite key is decided independently, so one missing feature
-never affects any other feature's part of the same row's key.
 
 ## Notes
 
-- With one feature named, `freq()` is exactly that feature's own frequency count (see
-  [`Thread::tally()`](../thread/tally.md)); the multi-feature composite-key behavior
-  described above only applies when zero or several feature names are given.
-- Sorting is always most-frequent first; ties are broken by ascending alphabetical
-  order of the value (or composite key) itself, never by first-appearance order.
-- `top_n = 0` (the default) keeps every distinct value or combination; a positive
-  `top_n` truncates the result *after* sorting, so it always keeps the most frequent
-  entries, never an arbitrary sample.
-- Every missing-value placeholder throughout this reference — here, in
-  [`duplicated()`](duplicated.md), and elsewhere — reads as the literal text `"NULL"`,
-  matching the `NULL` convention used for missing cells in a rendered frame.
+- `DataFrame::FreqKind` is the frequency measure enum used by `FreqOptions`.
+- `DataFrame::FreqOptions` is the public options struct for `freq()`.
 
 ## See Also
 
-- [`DataFrame::ndistinct`](ndistinct.md): a plain distinct-value *count*, without the
-  per-value frequency breakdown.
-- [`DataFrame::duplicated`](duplicated.md): flag individual duplicate *rows* instead of
-  counting distinct values.
-- [`DataFrame::isnull`](isnull.md): inspect missingness directly, useful before
-  deciding whether `dropnull = false`'s composite-key behavior matters for your data.
+- [`DataFrame::tally`](tally.md)
+- [`Thread::freq`](../thread/freq.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

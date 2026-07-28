@@ -14,16 +14,9 @@ DataFrame& DataFrame::set_(pluss::RangeView<std::string_view> names, pluss::Rang
 
 ## What It Does
 
-The in-place counterpart to [`set()`](set.md)'s plain two-argument overloads:
-creates or overwrites the named feature(s), mutating `*this` directly and returning
-a reference to it, instead of returning a new frame. Every parameter is identical in
-meaning to `set()`'s corresponding overload — see that page for the full breakdown;
-this page only covers what differs about mutating in place.
-
-Note this is a **third** way to write "assign in place" in this API, alongside
-[`set()`](set.md)'s own `df.set(name) = value` `LetSlot` builder style — both mutate
-`*this`, they just read differently at the call site. Pick whichever reads better;
-neither is more "correct" than the other.
+Creates or overwrites the named feature(s), mutating `*this` directly and returning
+a reference to it. This is the direct in-place form when you do not want the
+assignment-target style from [`set()`](set.md).
 
 ## Parameters
 
@@ -76,9 +69,7 @@ std::cout << orders;
 [3 cs x 3 feat]
 ```
 
-`orders` itself has `sales` zeroed out — `set_()` mutated it directly, unlike
-[`set()`](set.md)'s plain overload, which would have left `orders` unchanged and
-returned a new frame instead.
+`orders` itself has `sales` zeroed out — `set_()` mutated it directly.
 
 Example 2. Create a brand-new feature in place via the multi-name overload.
 
@@ -103,13 +94,11 @@ std::cout << orders;
 ```
 
 `"profit"` didn't previously exist on `orders`, so it's appended as a new feature —
-`set_()` can both create and overwrite in the same call, exactly like `set()`'s
-plain overload.
+`set_()` can both create and overwrite in the same call.
 
 ## Notes
 
-- `set_()` mutates and returns `*this` by reference; it never allocates a new
-  `DataFrame` the way `set()`'s plain overload does.
+- `set_()` mutates and returns `*this` by reference.
 - Any other `DataFrame` value that shares the same underlying columns (via a prior
   copy) does not see this mutation — `pluss::table::DataFrame`'s copies are
   value-like, not aliased references to shared state.
@@ -119,8 +108,8 @@ plain overload.
 
 ## See Also
 
-- [`DataFrame::set`](set.md): the non-mutating counterpart, plus the `LetSlot`
-  builder style for in-place assignment via `operator=`.
+- [`DataFrame::set`](set.md): the assignment-target builder style for in-place
+  assignment via `operator=`.
 - [`DataFrame::assign`](assign.md): derive new features from expressions evaluated
   against the frame, rather than assigning pre-built `Thread`s.
 

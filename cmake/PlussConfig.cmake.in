@@ -7,12 +7,21 @@ set(_pluss_targets_content "")
 if(EXISTS "${_pluss_targets_file}")
   file(READ "${_pluss_targets_file}" _pluss_targets_content)
 endif()
+set(_pluss_qit_targets_file "${CMAKE_CURRENT_LIST_DIR}/../PlussQit/PlussQitTargets.cmake")
+set(_pluss_qit_targets_content "")
+if(EXISTS "${_pluss_qit_targets_file}")
+  file(READ "${_pluss_qit_targets_file}" _pluss_qit_targets_content)
+endif()
+set(_pluss_export_content "${_pluss_targets_content}\n${_pluss_qit_targets_content}")
 
-string(FIND "${_pluss_targets_content}" "Arrow::arrow" _pluss_needs_arrow)
-string(FIND "${_pluss_targets_content}" "Parquet::parquet" _pluss_needs_parquet)
-string(FIND "${_pluss_targets_content}" "CURL::libcurl" _pluss_needs_curl)
-string(FIND "${_pluss_targets_content}" "X11::X11" _pluss_needs_x11)
-string(FIND "${_pluss_targets_content}" "Freetype::Freetype" _pluss_needs_freetype)
+string(FIND "${_pluss_export_content}" "Arrow::arrow" _pluss_needs_arrow)
+string(FIND "${_pluss_export_content}" "Parquet::parquet" _pluss_needs_parquet)
+string(FIND "${_pluss_export_content}" "CURL::libcurl" _pluss_needs_curl)
+string(FIND "${_pluss_export_content}" "X11::X11" _pluss_needs_x11)
+string(FIND "${_pluss_export_content}" "Freetype::Freetype" _pluss_needs_freetype)
+string(FIND "${_pluss_export_content}" "fmt::fmt" _pluss_needs_fmt)
+string(FIND "${_pluss_export_content}" "torch_library" _pluss_needs_torch_library)
+string(FIND "${_pluss_export_content}" "torch;" _pluss_needs_torch_target)
 
 if(NOT _pluss_needs_arrow EQUAL -1)
   find_dependency(Arrow CONFIG QUIET)
@@ -48,6 +57,14 @@ if(NOT _pluss_needs_freetype EQUAL -1)
   find_dependency(Freetype)
 endif()
 
+if(NOT _pluss_needs_fmt EQUAL -1)
+  find_dependency(fmt CONFIG QUIET)
+endif()
+
+if(NOT _pluss_needs_torch_library EQUAL -1 OR NOT _pluss_needs_torch_target EQUAL -1)
+  find_dependency(Torch QUIET)
+endif()
+
 if(NOT _pluss_needs_arrow EQUAL -1 AND NOT TARGET Arrow::arrow AND NOT TARGET Arrow::arrow_shared)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
@@ -69,6 +86,24 @@ if(NOT _pluss_needs_curl EQUAL -1 AND NOT TARGET CURL::libcurl)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
       "Pluss SDK requires libcurl for URL loading support, but CURL::libcurl was not found. "
       "Install libcurl (or build Pluss SDK with bundled curl enabled) and retry.")
+  return()
+endif()
+
+if(NOT _pluss_needs_fmt EQUAL -1 AND NOT TARGET fmt::fmt)
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+      "Pluss SDK was built with fmt-enabled public headers, but fmt::fmt was not found. "
+      "Install fmt and add its prefix to CMAKE_PREFIX_PATH, or restage the SDK with PLUSSQIT_USE_FMT=OFF.")
+  return()
+endif()
+
+if((NOT _pluss_needs_torch_library EQUAL -1 OR NOT _pluss_needs_torch_target EQUAL -1)
+   AND (NOT TARGET torch OR NOT TARGET torch_library))
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+      "Pluss SDK was built with LibTorch-enabled CodeM exports, but Torch CMake targets were not found. "
+      "Install LibTorch (or use your torch Python environment) and add Torch_DIR/CMAKE_PREFIX_PATH, "
+      "or restage the SDK with PLUSS_ENABLE_TORCH=OFF.")
   return()
 endif()
 

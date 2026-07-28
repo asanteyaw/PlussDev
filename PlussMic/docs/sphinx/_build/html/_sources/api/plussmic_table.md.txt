@@ -32,8 +32,13 @@ The helper/reference pages below stay in this same branch so the sidebar remains
 ../dataframe_timeline_accessor_api_reference
 ../dataframe_label_accessor_api_reference
 ../dataframe_feataxis_accessor_api_reference
+../dataframe_cast_accessor_api_reference
+../dataframe_group_accessor_api_reference
 ../dataframe_ts_accessor_api_reference
 ../dataframe_ts_window_accessor_api_reference
 ../dataframe_ts_resampler_api_reference
 ../thread_ts_accessor_api_reference
+../thread_note_accessor_api_reference
+../thread_timeline_accessor_api_reference
+../thread_label_accessor_api_reference
 ```

@@ -1,0 +1,237 @@
+<!-- pluss-hand-authored -->
+
+# TimeSeriesAccessor::ewm
+
+[Back to TimeSeriesAccessor API Reference](../../thread_ts_accessor_api_reference)
+
+## Signature
+
+```cpp
+TimeSeriesAccessor::ewm(double alpha, WindowStatistic statistic = WindowStatistic::Mean, bool adjusted = true, bool bias_corrected = true, std::int64_t min_count = 1, bool ignore_nulls = false) const -> Thread
+```
+
+## What It Does
+
+Computes an **exponentially-weighted moving statistic**: each position's output
+weighs every position seen so far, with more recent positions weighted more
+heavily by a factor of `alpha` (`0 < alpha <= 1`) — the whole thread contributes,
+never just a fixed window, but older values fade out geometrically. Only `Mean`,
+`Var`, and `Std` are supported.
+
+`adjusted` selects between two well-known EWM conventions:
+
+- **`true`** (the default): normalizes by the sum of the decay weights seen so
+  far, which slightly discounts the very earliest positions relative to the
+  classic recursive formula. Supports missing entries directly.
+- **`false`**: the classic recursive form,
+  `y_t = alpha * x_t + (1 - alpha) * y_{t-1}` (with `y_0 = x_0`). **Requires the
+  source thread to carry no validity mask at all** — not just no actual missing
+  values within one; a thread that happens to carry an all-valid mask still
+  fails this check. Pass `adjusted = true` (the default) if there's any chance
+  the source carries a mask.
+
+`ignore_nulls` (only meaningful when `adjusted = true` and there are missing
+entries) controls how a gap affects the *decay* applied to later positions:
+
+- **`false`** (the default): a missing position still consumes a full decay
+  step — later positions are weighted as if the gap were a real elapsed step in
+  time.
+- **`true`**: a missing position is skipped entirely for decay purposes — the
+  next real observation is weighted as if it immediately followed the last real
+  one, with no gap.
+
+Unlike [`rolling()`](rolling.md)/[`diff()`](diff.md)/[`lag()`](lag.md), a
+position whose *own* source value is missing does **not** come back `NULL` here
+— it's simply skipped from contributing new information, and the output at that
+position carries forward the smoothed estimate from whatever came before. Only
+positions before `min_count` real observations have been seen are `NULL`.
+
+## Parameters
+
+**alpha** (`double`)
+    The smoothing factor, in `(0, 1]`. Closer to `1` weights recent positions
+    much more heavily; closer to `0` decays more slowly.
+
+**statistic** (`WindowStatistic`, default `Mean`)
+    `Mean`, `Var`, or `Std`.
+
+**adjusted** (`bool`, default `true`)
+    `true`: normalized form, supports missing entries. `false`: classic
+    recursive form, requires a non-nullable source thread.
+
+**bias_corrected** (`bool`, default `true`)
+    For `Var`/`Std` only: whether to apply a bias correction to the exponentially
+    weighted variance (analogous to `ddof = 1` for an ordinary sample variance).
+
+**min_count** (`std::int64_t`, default `1`)
+    The smallest number of real observations seen so far still considered valid.
+
+**ignore_nulls** (`bool`, default `false`)
+    Only relevant with `adjusted = true`: whether a gap consumes a decay step
+    (`false`) or is skipped entirely for decay purposes (`true`).
+
+## Returns
+
+`Thread`
+    A new thread, same length as the bound source, holding the exponentially-
+    weighted statistic at each position.
+
+## Examples
+
+Example 1. An exponentially-weighted mean, `adjusted = true` (the default).
+
+```cpp
+using namespace pluss::table;
+
+auto values = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto out = values.ts().ewm(0.5);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  10
+1  16.66666667
+2  24.28571429
+
+ptype: Series
+```
+
+Position `1` weighs `10` and `20` by `(1 - alpha)` and `1` respectively
+(normalized): `(10*1 + 20*2) / (1 + 2) = 50/3 ≈ 16.667`. Position `2` continues
+the same geometric weighting over all three values.
+
+Example 2. The same data with `adjusted = false` — the classic recursive
+formula gives a different (and simpler) result.
+
+```cpp
+auto out2 = values.ts().ewm(0.5, WindowStatistic::Mean, false);
+std::cout << out2;
+```
+
+### Output
+
+```text
+0  10
+1  15
+2  22.5
+
+ptype: Series
+```
+
+`y0 = x0 = 10`; `y1 = 0.5*20 + 0.5*10 = 15`; `y2 = 0.5*30 + 0.5*15 = 22.5` — each
+step blends the new value with the *previous smoothed output*, rather than
+re-normalizing against every raw value seen so far the way `adjusted = true`
+does.
+
+Example 3. `ignore_nulls` changes how a gap affects the decay applied to later
+positions.
+
+```cpp
+auto with_gap = Thread(
+    pluss::make_series({10.0, 20.0, 30.0}),
+    pluss::make_series(std::vector<bool>{true, false, true})
+);
+
+auto counts_gap = with_gap.ts().ewm(0.5);
+auto skips_gap = with_gap.ts().ewm(0.5, WindowStatistic::Mean, true, true, 1, true);
+std::cout << counts_gap;
+std::cout << skips_gap;
+```
+
+### Output
+
+```text
+0  10
+1  10
+2  26
+
+ptype: Series
+0  10
+1  10
+2  23.33333333
+
+ptype: Series
+```
+
+Position `1` (the masked-missing `20.0`) carries forward `10` in both cases —
+its own value never surfaces, but it also isn't `NULL`. Position `2` differs:
+with the default `ignore_nulls = false`, the gap at position `1` still counts as
+an elapsed decay step, so `30.0` is weighted as if two steps had passed since
+`10.0` (`26`). With `ignore_nulls = true`, the gap is skipped entirely for decay
+purposes, so `30.0` is weighted as if it immediately followed `10.0`
+(`23.333`).
+
+Example 4. `Var`, with the default `bias_corrected = true` — position `0` needs
+at least 2 real observations to bias-correct at all, regardless of `min_count`.
+
+```cpp
+auto out3 = values.ts().ewm(0.5, WindowStatistic::Var);
+std::cout << out3;
+```
+
+### Output
+
+```text
+0  NULL
+1  50
+2  92.85714286
+
+ptype: Series
+```
+
+Position `0` has only one observation — a bias-corrected variance needs at
+least two, so it's `NULL` even though `min_count = 1` alone would have allowed
+it.
+
+Example 5. `adjusted = false` with a nullable source thread throws.
+
+```cpp
+try {
+  auto bad = with_gap.ts().ewm(0.5, WindowStatistic::Mean, false);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread::decay(adjusted=false): nullable input requires adjusted=true
+```
+
+## Notes
+
+- Only `Mean`, `Var`, and `Std` are supported; anything else throws
+  `"Thread::decay: only Mean, Var, and Std are supported"`.
+- `alpha` must be in `(0, 1]`, or it throws
+  `"Thread::decay: alpha must be in (0, 1]"`.
+- A position whose own value is missing is *not* `NULL` in the output — it
+  carries forward the smoothed estimate from prior real observations. Only
+  positions before `min_count` real observations have accumulated are `NULL`.
+  See Example 3.
+- `adjusted = false` requires the source thread to carry no validity mask at
+  all (not just no missing values within one) — pass `adjusted = true` (the
+  default) if the source might carry a mask. See Example 5.
+- `bias_corrected` (for `Var`/`Std`) effectively requires at least 2 real
+  observations, independent of `min_count` — see Example 4.
+
+## See Also
+
+- [`TimeSeriesAccessor::expanding`](expanding.md): an alternative "everything
+  seen so far" statistic that weights every observation equally instead of
+  decaying older ones.
+- [`TimeSeriesAccessor::rolling`](rolling.md): a fixed-width alternative, rather
+  than a decaying weight over the whole thread.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="eq.html">
+    <span class="label">Previous</span>
+    <span class="title">eq</span>
+  </a>
+  <a class="next-link" href="expanding.html">
+    <span class="label">Next</span>
+    <span class="title">expanding</span>
+  </a>
+</div>

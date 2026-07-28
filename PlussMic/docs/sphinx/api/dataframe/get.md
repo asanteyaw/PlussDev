@@ -107,8 +107,8 @@ default, skip the column, report a schema mismatch, and so on).
     <span class="label">Previous</span>
     <span class="title">ge</span>
   </a>
-  <a class="next-link" href="group_by.html">
+  <a class="next-link" href="group.html">
     <span class="label">Next</span>
-    <span class="title">group_by</span>
+    <span class="title">group</span>
   </a>
 </div>

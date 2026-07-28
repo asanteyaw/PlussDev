@@ -13,6 +13,7 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ops/DataFrameReshape.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/ops/DataFrameAxisMatch.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlot.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/plot/ThreadPlot.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/detail/Plot3DConfig.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/sql/DataFrameSql.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/AtlasPlot.cpp

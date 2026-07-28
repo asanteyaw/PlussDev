@@ -57,7 +57,7 @@ auto roles_a = DataFrame({
 });
 std::cout << roles_a;
 
-auto folded = roles_a.note().casefold();
+auto folded = roles_a.nt().casefold();
 std::cout << folded;
 ```
 
@@ -88,7 +88,7 @@ std::cout << folded;
 ```
 
 On this plain-ASCII input, the result is identical to what
-`roles_a.note().lower()` would produce.
+`roles_a.nt().lower()` would produce.
 
 Example 2. The actual motivating use case: normalize two differently-cased
 frames before comparing them, instead of comparing the raw text directly.
@@ -101,7 +101,7 @@ auto roles_b = DataFrame({
 auto raw_eq = roles_a.eq(roles_b);
 std::cout << raw_eq;
 
-auto folded_eq = roles_a.note().casefold().eq(roles_b.note().casefold());
+auto folded_eq = roles_a.nt().casefold().eq(roles_b.nt().casefold());
 std::cout << folded_eq;
 ```
 

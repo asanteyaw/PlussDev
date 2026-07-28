@@ -45,14 +45,15 @@ int main() {
                   .rename("mnth", "month")
                   .rename("cnt", "total_count")
                   .rename("hr", "hour")
-                  .rename("yr", "year")
-                  .cast_timeline({"datetime"})
-                  .cast_series(
-                      {"rec_id", "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday",
-                       "weather_condition", "temp", "atemp", "humidity", "windspeed", "casual", "registered",
-                       "total_count"},
-                      pluss::ScalarType::Float64)
-                  .cast_note({"season", "is_holiday", "weather_condition", "is_workingday"});
+                  .rename("yr", "year");
+  bike.set("datetime") = bike.features("datetime").cast().timeline();
+  bike = bike.features(
+      {"rec_id", "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday",
+       "weather_condition", "temp", "atemp", "humidity", "windspeed", "casual", "registered",
+       "total_count"})
+             .astype(pluss::ScalarType::Float64);
+  bike.set({"season", "is_holiday", "weather_condition", "is_workingday"}) =
+      bike.features({"season", "is_holiday", "weather_condition", "is_workingday"}).cast().note();
 
   std::cout << "[Cell 1] dataset shape: (" << bike.ncases() << ", " << bike.nfeatures() << ")\n";
   bike.head(8);
@@ -78,7 +79,7 @@ int main() {
   auto model = bike.features(
                     {"temp", "humidity", "windspeed", "hour", "weekday", "month", "year",
                      "season", "is_holiday", "weather_condition", "is_workingday", "total_count"})
-                   .dropna();
+                   .dropnull();
   const auto split = lymph::holdout_split(model,
                                           lymph::HoldoutSplitOptions{
                                               .test_size = 0.33,
@@ -118,10 +119,10 @@ int main() {
     ohe.features({cat_name});
     const auto train_hot = ohe.learn_map(train.features({cat_name}));
     const auto test_hot = ohe.map(test.features({cat_name}));
-    const auto hot_names = train_hot.series_features().features();
+    const auto hot_names = train_hot.feataxis().series().features();
     for (const auto& hot_name : hot_names) {
-      train_x_frame = train_x_frame.set_features(hot_name, train_hot.features(hot_name));
-      test_x_frame = test_x_frame.set_features(hot_name, test_hot.features(hot_name));
+      train_x_frame.set(hot_name) = train_hot.features(hot_name);
+      test_x_frame.set(hot_name) = test_hot.features(hot_name);
       predictor_names.push_back(hot_name);
     }
   }

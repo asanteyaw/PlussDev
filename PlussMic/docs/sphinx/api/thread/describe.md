@@ -160,7 +160,7 @@ Thread::describe supports numeric Series and Note payloads
 
 - [`DataFrame::describe`](../dataframe/describe.md): the same summary computed
   for every numeric feature of a frame at once.
-- [`Thread::tally`](tally.md): the full frequency table this method's `Note`-kind
+- [`Thread::freq`](freq.md): the full frequency table this method's `Note`-kind
   `top`/`freq` are drawn from.
 - [`Thread::mean`](mean.md), [`Thread::std`](std.md),
   [`Thread::percentiles`](percentiles.md): compute one specific numeric statistic

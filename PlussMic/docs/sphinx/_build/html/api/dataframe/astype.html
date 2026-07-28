@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,66 +37,72 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0e9e783a333d -->
 <section id="dataframe-astype">
 <h1>DataFrame::astype<a class="headerlink" href="#dataframe-astype" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_dtypes</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="w"> </span><span class="n">dtype</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="w"> </span><span class="n">dtype</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_dtypes</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">astype</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_dtypes</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Casts one or more existing features to new scalar dtypes — the typed conversion surface
-for turning imported or computed columns into the representation later code actually
-needs — normalizing a
-column that arrived as <code class="docutils literal notranslate"><span class="pre">float64</span></code> but is really integer counts, converting a 0/1 numeric
-flag into a proper boolean before it’s used in filtering, or tightening precision once a
-computation is done and the extra headroom is no longer needed.</p>
-<p>Two shapes are offered depending on whether every selected feature shares one target
-dtype or each needs its own:</p>
+<p>Casts feature(s) to new scalar dtypes — the typed conversion surface for turning
+imported or computed columns into the representation later code actually needs —
+normalizing a column that arrived as <code class="docutils literal notranslate"><span class="pre">float64</span></code> but is really integer counts,
+converting a 0/1 numeric flag into a proper boolean before it’s used in filtering, or
+tightening precision once a computation is done and the extra headroom is no longer
+needed.</p>
+<p>Two shapes are offered depending on whether every feature on the current frame shares
+one target dtype or each needs its own:</p>
 <ul class="simple">
-<li><p><strong>Shared-dtype overload</strong> (<code class="docutils literal notranslate"><span class="pre">features</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype</span></code>): cast a list of feature names to the
-same dtype in one call — the common case when several columns arrived with the same
-wrong type.</p></li>
+<li><p><strong>Shared-dtype overload</strong> (<code class="docutils literal notranslate"><span class="pre">dtype</span></code> alone): cast <strong>every</strong> feature currently on the
+frame to the same target dtype in one call. <code class="docutils literal notranslate"><span class="pre">astype()</span></code> carries no feature selector
+of its own — narrow to the specific column(s) first with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> when only some columns should change:
+<code class="docutils literal notranslate"><span class="pre">raw.features({&quot;passed&quot;}).astype(pluss::ScalarType::Bool)</span></code>.</p></li>
 <li><p><strong>Mapping overload</strong> (<code class="docutils literal notranslate"><span class="pre">feature_dtypes</span></code>, a list or initializer-list of
-<code class="docutils literal notranslate"><span class="pre">(feature_name,</span> <span class="pre">dtype)</span></code> pairs): cast each selected feature to its own dtype, when the
-targets differ feature by feature.</p></li>
+<code class="docutils literal notranslate"><span class="pre">(feature_name,</span> <span class="pre">dtype)</span></code> pairs): cast named features on the <em>current</em> frame to their
+own dtype, when the targets differ feature by feature — this overload still names
+features explicitly, since it needs a distinct dtype per name.</p></li>
 </ul>
-<p>Either way, <code class="docutils literal notranslate"><span class="pre">astype()</span></code> returns a new frame; features not mentioned in the request pass
-through completely unchanged.</p>
+<p>Either way, <code class="docutils literal notranslate"><span class="pre">astype()</span></code> returns a new frame; for the shared-dtype overload, that new
+frame contains only whatever features were on the current (possibly narrowed) frame
+when you called it — see the Notes below for recombining a narrowed cast back into
+the full original frame.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>)</p>
-<p>Feature names to cast when every one of them should land on the same target <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.
-Features not listed are left unchanged.</p>
 <p><strong>dtype</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::ScalarType</span></code>)</p>
-<p>Shared target scalar dtype for the feature-list overload. Common choices include
-<code class="docutils literal notranslate"><span class="pre">pluss::ScalarType::Bool</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::ScalarType::Int64</span></code>, and <code class="docutils literal notranslate"><span class="pre">pluss::ScalarType::Float64</span></code>.
-Pick the narrowest dtype that still matches what downstream code plans to do with the
-column — casting to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> too early can throw away information a later filter still
-needed as a raw number, for instance.</p>
+<p>Shared target scalar dtype applied to every feature on the current frame. Common
+choices include <code class="docutils literal notranslate"><span class="pre">pluss::ScalarType::Bool</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::ScalarType::Int64</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">pluss::ScalarType::Float64</span></code>. Pick the narrowest dtype that still matches what
+downstream code plans to do with the column — casting to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> too early can throw
+away information a later filter still needed as a raw number, for instance.</p>
 <p><strong>feature_dtypes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::pair&lt;std::string_view,</span> <span class="pre">pluss::ScalarType&gt;&gt;</span></code> /
 <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::pair&lt;std::string_view,</span> <span class="pre">pluss::ScalarType&gt;&gt;</span></code>)</p>
 <p>A collection of <code class="docutils literal notranslate"><span class="pre">(feature_name,</span> <span class="pre">dtype)</span></code> pairs for mixed casting, one target dtype per
-listed feature. Use this overload once the shared-dtype overload is no longer expressive
-enough — for example casting an ID column to <code class="docutils literal notranslate"><span class="pre">Int64</span></code> while casting a flag column to
-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> in the same call.</p>
+named feature. Use this overload once the shared-dtype overload is no longer
+expressive enough — for example casting an ID column to <code class="docutils literal notranslate"><span class="pre">Int64</span></code> while casting a flag
+column to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> in the same call. Features not named here are left unchanged.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-A new frame with the requested feature casts applied. Features not mentioned in the
-cast request are preserved unchanged, including their original dtype.</p>
+A new frame with the requested feature casts applied. Under the mapping overload,
+features not named in <code class="docutils literal notranslate"><span class="pre">feature_dtypes</span></code> are preserved unchanged, including their
+original dtype. Under the shared-dtype overload, the result contains exactly the
+features that were present on the (possibly <code class="docutils literal notranslate"><span class="pre">features()</span></code>-narrowed) frame the call
+was made on.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Cast one selected feature to a shared target dtype.</p>
+<p>Example 1. Cast one selected feature to a shared target dtype by narrowing with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first, then merge the cast column back into the full
+frame with <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -104,12 +110,32 @@ cast request are preserved unchanged, including their original dtype.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;passed&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">})},</span>
 <span class="p">}).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;raw&quot;</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">astype</span><span class="p">({</span><span class="s">&quot;passed&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">passed_bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;passed&quot;</span><span class="p">}).</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">passed_bool</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-the-narrowed-cast-only-result">
+<h3>Output (the narrowed, cast-only result)<a class="headerlink" href="#output-the-narrowed-cast-only-result" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | passed
+------------
+0    | true  
+1    | false 
+2    | true  
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">passed_bool</span></code> only has the one narrowed feature — <code class="docutils literal notranslate"><span class="pre">student_id</span></code> isn’t part of the
+result at all, since <code class="docutils literal notranslate"><span class="pre">.features({&quot;passed&quot;})</span></code> projected it out before <code class="docutils literal notranslate"><span class="pre">astype()</span></code> ever
+ran.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">passed_bool</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+</section>
+<section id="output-merged-back-into-the-full-frame">
+<h3>Output (merged back into the full frame)<a class="headerlink" href="#output-merged-back-into-the-full-frame" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
      | student_id  passed
 -------------------------
@@ -124,7 +150,9 @@ cast request are preserved unchanged, including their original dtype.</p>
 loaded from CSV or a database export where booleans have no native representation.
 Casting it to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> here makes its intent explicit and lets later code branch on it
 directly (<code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(row[&quot;passed&quot;])</span></code>) instead of comparing against <code class="docutils literal notranslate"><span class="pre">1.0</span></code> every time.
-<code class="docutils literal notranslate"><span class="pre">student_id</span></code> was not listed, so it keeps its original <code class="docutils literal notranslate"><span class="pre">float64</span></code> dtype untouched.</p>
+<a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> refreshes just <code class="docutils literal notranslate"><span class="pre">passed</span></code> on <code class="docutils literal notranslate"><span class="pre">raw</span></code> — <code class="docutils literal notranslate"><span class="pre">update()</span></code> never introduces
+a feature that wasn’t already on the target frame, and <code class="docutils literal notranslate"><span class="pre">student_id</span></code> was never part of
+<code class="docutils literal notranslate"><span class="pre">passed_bool</span></code> to begin with, so it stays exactly as it was.</p>
 <p>Example 2. Cast several features to different dtypes in one call.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
@@ -141,8 +169,8 @@ directly (<code class="docutils literal notranslate"><span class="pre">if</span>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
      | student_id  passed
 -------------------------
@@ -157,9 +185,10 @@ directly (<code class="docutils literal notranslate"><span class="pre">if</span>
 to <code class="docutils literal notranslate"><span class="pre">Int64</span></code> (its values were always whole numbers; there was no reason to keep floating
 storage), and <code class="docutils literal notranslate"><span class="pre">passed</span></code> moves to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> as before. The mapping overload applies both
 casts atomically in one call, rather than requiring two chained <code class="docutils literal notranslate"><span class="pre">astype()</span></code> calls.</p>
-<p>Example 3. Name a feature that doesn’t exist on the frame, to see it throw.</p>
+<p>Example 3. Name a feature that doesn’t exist on the frame, to see <code class="docutils literal notranslate"><span class="pre">features()</span></code> throw
+before <code class="docutils literal notranslate"><span class="pre">astype()</span></code> is ever reached.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">astype</span><span class="p">({</span><span class="s">&quot;not_a_column&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;not_a_column&quot;</span><span class="p">}).</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -167,23 +196,29 @@ casts atomically in one call, rather than requiring two chained <code class="doc
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::cast: unknown feature &#39;not_a_column&#39;
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::features: unknown column &#39;not_a_column&#39;
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">raw</span></code> only has <code class="docutils literal notranslate"><span class="pre">student_id</span></code> and <code class="docutils literal notranslate"><span class="pre">passed</span></code> — <code class="docutils literal notranslate"><span class="pre">astype()</span></code> delegates to
-<a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a> internally, which rejects an unknown target feature name
-rather than silently skipping it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">raw</span></code> only has <code class="docutils literal notranslate"><span class="pre">student_id</span></code> and <code class="docutils literal notranslate"><span class="pre">passed</span></code> — the failure comes from
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> itself, rejecting the unknown name before <code class="docutils literal notranslate"><span class="pre">astype()</span></code> gets
+a chance to run at all.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Use the feature-list overload (<code class="docutils literal notranslate"><span class="pre">astype({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;},</span> <span class="pre">dtype)</span></code>) when several features
-should land on the same target dtype; use the mapping overload
-(<code class="docutils literal notranslate"><span class="pre">astype({{&quot;a&quot;,</span> <span class="pre">dtype_a},</span> <span class="pre">{&quot;b&quot;,</span> <span class="pre">dtype_b}})</span></code>) when each feature needs its own.</p></li>
+<li><p>Use the shared-dtype overload (<code class="docutils literal notranslate"><span class="pre">astype(dtype)</span></code>) — narrowed to the target feature(s)
+with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first — when several features should land on the
+same target dtype; use the mapping overload
+(<code class="docutils literal notranslate"><span class="pre">astype({{&quot;a&quot;,</span> <span class="pre">dtype_a},</span> <span class="pre">{&quot;b&quot;,</span> <span class="pre">dtype_b}})</span></code>) directly on the full frame when each
+feature needs its own dtype.</p></li>
 <li><p>This method returns a new frame; it does not mutate the current <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> in place.</p></li>
+<li><p>The shared-dtype overload has no feature selector of its own and always casts
+<em>every</em> feature on the current frame — the result of a <code class="docutils literal notranslate"><span class="pre">features()</span></code>-narrowed call
+contains only the narrowed feature(s). Recombine with <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> (as in
+Example 1) if the untouched features need to survive alongside the cast.</p></li>
 <li><p>Casting does not validate that the conversion is lossless — casting a <code class="docutils literal notranslate"><span class="pre">Float64</span></code> column
 with fractional values to <code class="docutils literal notranslate"><span class="pre">Int64</span></code> truncates, the same way a <code class="docutils literal notranslate"><span class="pre">static_cast&lt;int&gt;</span></code> would.
 Confirm the source values are already integral before casting for cleanliness rather
@@ -201,6 +236,10 @@ existing payload family, not the family itself. <code class="docutils literal no
 <li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cast</span></code></span></a>: the broader casting route — change a feature’s payload
 family (<code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/etc.), not just its scalar dtype within the current family.</p></li>
 <li><p><a class="reference internal" href="../thread/astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::astype</span></code></span></a>: cast one thread directly outside a frame.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature(s) the
+shared-dtype overload should cast.</p></li>
+<li><p><a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::update</span></code></span></a>: merge a narrowed, cast-only result back into the
+full original frame.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="assign.html">

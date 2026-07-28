@@ -17,7 +17,7 @@ group, returning a compact three-column summary (`group_feature`,
 `"mean_" + value_feature`, `count`) sorted by mean descending, ties broken
 alphabetically by group key. This is a focused convenience for the single most common
 group-and-summarize question — "what's the average X per Y" — without building a full
-[`group_by()`](group_by.md) pipeline for it. [`count_by()`](count_by.md) is the
+[`group()`](group.md) pipeline for it. [`count_by()`](count_by.md) is the
 sibling convenience for counting rows per group instead of averaging a value.
 
 ## Parameters
@@ -149,7 +149,7 @@ showing a mean computed from a single, potentially unrepresentative value.
 ## See Also
 
 - [`DataFrame::count_by`](count_by.md): the row-counting sibling of this method.
-- [`DataFrame::group_by`](group_by.md): the general-purpose grouping primitive, for
+- [`DataFrame::group`](group.md): the general-purpose grouping primitive, for
   summaries this convenience doesn't cover (multiple aggregates, multiple group
   keys).
 - [`DataFrame::mean`](mean.md): the ungrouped, whole-frame mean.

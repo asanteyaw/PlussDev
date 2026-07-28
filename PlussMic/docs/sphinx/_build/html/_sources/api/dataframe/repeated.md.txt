@@ -7,25 +7,27 @@
 ## Signature
 
 ```cpp
-DataFrame::repeated(pluss::RangeView<std::string_view> features = {}) const -> Thread
+DataFrame::repeated() const -> Thread
 ```
 
 ## What It Does
 
 Flags **every** row that belongs to a group sharing the same composite key across
-`features` — including that group's very first occurrence, not just the ones after
-it. This is exactly [`duplicated(features, false, false)`](duplicated.md) with its
-display name changed to `"repeated"`: `repeated()` is what you reach for when you
-want "is this row part of a repeated group at all," rather than "is this row a
-duplicate follower of an earlier one" (which is what `duplicated()`'s default
-`keep_first = true` answers instead).
+every feature currently on the frame — including that group's very first occurrence,
+not just the ones after it. This is exactly
+[`duplicated(false, false)`](duplicated.md) with its display name changed to
+`"repeated"`: `repeated()` is what you reach for when you want "is this row part of a
+repeated group at all," rather than "is this row a duplicate follower of an earlier
+one" (which is what `duplicated()`'s default `keep_first = true` answers instead).
+
+`repeated()` carries no feature selector of its own: it always compares whole rows
+across every feature on the current frame, so narrow first with
+[`features()`](features.md) — `roster.features({"student"}).repeated()` — when only
+some features should form the composite key.
 
 ## Parameters
 
-**features** (`pluss::RangeView<std::string_view>`, default `{}`)
-
-Which features form the composite key that defines a "group." Leave empty (the
-default) to compare whole rows across every feature.
+`None`
 
 ## Returns
 
@@ -63,7 +65,7 @@ std::cout << roster;
 ```
 
 ```cpp
-auto groups = roster.repeated({"student"});
+auto groups = roster.features({"student"}).repeated();
 std::cout << groups;
 ```
 
@@ -86,7 +88,7 @@ Example 2. Compare against `duplicated()`'s default follower-only semantics on t
 same data.
 
 ```cpp
-auto followers = roster.duplicated({"student"});
+auto followers = roster.features({"student"}).duplicated();
 std::cout << followers;
 ```
 
@@ -110,13 +112,14 @@ methods answer genuinely different questions: "which rows are extras I could dro
 
 ## Notes
 
-- `repeated()` is literally `duplicated(features, /*keep_first=*/false,
-  /*keep_last=*/false)` under a different display name — it never has its own
-  separate keep-policy parameters.
-- A missing value in every selected feature is itself a valid "value" for grouping
-  purposes — two rows that are both missing on every selected feature count as
+- `repeated()` is literally `duplicated(/*keep_first=*/false, /*keep_last=*/false)`
+  under a different display name — it never has its own separate keep-policy
+  parameters.
+- A missing value in every feature on the current frame is itself a valid "value" for
+  grouping purposes — two rows that are both missing on every feature count as
   sharing a key, same as [`duplicated()`](duplicated.md).
-- Every selected feature name must exist on the frame; an unknown name throws.
+- `repeated()` has no feature selector of its own — narrow with
+  [`features()`](features.md) first to compare on a subset of columns.
 
 ## See Also
 
@@ -126,6 +129,8 @@ methods answer genuinely different questions: "which rows are extras I could dro
   instead of just flagging them.
 - [`DataFrame::freq`](freq.md): counts *how many times* each composite key occurs,
   rather than flagging individual rows.
+- [`DataFrame::features`](features.md): narrow the frame to the feature(s) that
+  define a "group" before calling `repeated()`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="reorder.html">

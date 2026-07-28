@@ -25,7 +25,7 @@ are the columns, and where is data missing?*
 Unlike [`describe()`](describe.md), which summarizes the **values** of numeric features
 (mean, spread, quantiles), `info()` summarizes the **structure** of the whole frame,
 including non-numeric columns. Reach for `info()` first when you inspect a frame you did
-not build yourself — after `load_csv`, `load_excel`, a `join`, or a `group_by` — and use
+not build yourself — after `load_csv`, `load_excel`, a `join`, or a grouped `agg()` result — and use
 `describe()` once you already know the shape is what you expect and want to look at the
 numbers themselves.
 

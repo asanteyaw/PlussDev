@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
     //========== schema normalization ========
     // This section makes feature names explicit and consistent for the ML workflow.
-    auto frame = raw.rename_features({
+    auto frame = raw.rename({
         {"dteday", "date"},
         {"holiday", "is_holiday"},
         {"workingday", "is_workingday"},
@@ -78,29 +78,32 @@ int main(int argc, char** argv) {
     const Series month_centered_sq = month_centered.square();
     const Series weather_sq = s_weather.square();
 
-    frame = frame.set_features("temp_sq", Thread(temp_sq));
-    frame = frame.set_features("atemp_sq", Thread(atemp_sq));
-    frame = frame.set_features("humidity_sq", Thread(humidity_sq));
-    frame = frame.set_features("windspeed_sq", Thread(windspeed_sq));
-    frame = frame.set_features("temp_humidity_interaction", Thread(temp_humidity_interaction));
-    frame = frame.set_features("temp_windspeed_interaction", Thread(temp_windspeed_interaction));
-    frame = frame.set_features("atemp_humidity_interaction", Thread(atemp_humidity_interaction));
-    frame = frame.set_features("atemp_windspeed_interaction", Thread(atemp_windspeed_interaction));
-    frame = frame.set_features("temp_minus_atemp", Thread(temp_minus_atemp));
-    frame = frame.set_features("hour_centered", Thread(hour_centered));
-    frame = frame.set_features("hour_centered_sq", Thread(hour_centered_sq));
-    frame = frame.set_features("month_centered", Thread(month_centered));
-    frame = frame.set_features("month_centered_sq", Thread(month_centered_sq));
-    frame = frame.set_features("weather_sq", Thread(weather_sq));
+    frame.set("temp_sq") = Thread(temp_sq);
+    frame.set("atemp_sq") = Thread(atemp_sq);
+    frame.set("humidity_sq") = Thread(humidity_sq);
+    frame.set("windspeed_sq") = Thread(windspeed_sq);
+    frame.set("temp_humidity_interaction") = Thread(temp_humidity_interaction);
+    frame.set("temp_windspeed_interaction") = Thread(temp_windspeed_interaction);
+    frame.set("atemp_humidity_interaction") = Thread(atemp_humidity_interaction);
+    frame.set("atemp_windspeed_interaction") = Thread(atemp_windspeed_interaction);
+    frame.set("temp_minus_atemp") = Thread(temp_minus_atemp);
+    frame.set("hour_centered") = Thread(hour_centered);
+    frame.set("hour_centered_sq") = Thread(hour_centered_sq);
+    frame.set("month_centered") = Thread(month_centered);
+    frame.set("month_centered_sq") = Thread(month_centered_sq);
+    frame.set("weather_sq") = Thread(weather_sq);
 
     //========== missingness diagnostics ========
     // This section checks NA patterns before preprocessing to verify data quality.
-    const DataFrame missing_binary = frame.isna({
+    const DataFrame missing_binary = frame.isnull({
         "temp", "atemp", "humidity", "windspeed", "total_count",
         "temp_sq", "atemp_sq", "humidity_sq", "windspeed_sq",
     });
-    const DataFrame missing_rate = missing_binary.mean(false);
-    missing_rate.save_csv((out_dir / "missing_rate.csv").string());
+    const auto missing_rate = missing_binary.mean(pluss::table::Axis::Case, false);
+    const DataFrame missing_rate_table(
+        {{"missing_rate", missing_rate}},
+        Thread(pluss::make_note(missing_binary.features())));
+    missing_rate_table.save_csv((out_dir / "missing_rate.csv").string());
 
     //========== exploratory data analysis (EDA) ========
     // This section computes descriptive statistics and correlation matrix,
@@ -139,10 +142,30 @@ int main(int argc, char** argv) {
         .headline("Demand vs hour")
         .save_pdf((out_dir / "eda_scatter_hour_target.pdf").string());
 
-    const DataFrame hour_mean = frame.mean_by("hour", "total_count", 0, 1, true, false);
-    const DataFrame weather_mean = frame.mean_by("weather_condition", "total_count", 0, 1, true, false);
-    const DataFrame month_mean = frame.mean_by("month", "total_count", 0, 1, true, false);
-    const DataFrame weekday_mean = frame.mean_by("weekday", "total_count", 0, 1, true, false);
+    const DataFrame hour_mean = frame.group({.dropnull = true})
+                                    .by({"hour"})
+                                    .agg({
+                                        {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+                                        {"count", "total_count", DataFrame::GroupOp::Count},
+                                    });
+    const DataFrame weather_mean = frame.group({.dropnull = true})
+                                       .by({"weather_condition"})
+                                       .agg({
+                                           {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+                                           {"count", "total_count", DataFrame::GroupOp::Count},
+                                       });
+    const DataFrame month_mean = frame.group({.dropnull = true})
+                                     .by({"month"})
+                                     .agg({
+                                         {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+                                         {"count", "total_count", DataFrame::GroupOp::Count},
+                                     });
+    const DataFrame weekday_mean = frame.group({.dropnull = true})
+                                       .by({"weekday"})
+                                       .agg({
+                                           {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+                                           {"count", "total_count", DataFrame::GroupOp::Count},
+                                       });
 
     hour_mean.save_csv((out_dir / "eda_hour_mean_total_count.csv").string());
     weather_mean.save_csv((out_dir / "eda_weather_mean_total_count.csv").string());
@@ -569,14 +592,11 @@ int main(int argc, char** argv) {
         MetricKind::Rmse,
         TuneObjectivePolicy::Minimize);
 
-    std::vector<std::size_t> broad_order(broad_tune.report.trials.size());
-    std::iota(broad_order.begin(), broad_order.end(), static_cast<std::size_t>(0));
-    std::sort(
-        broad_order.begin(),
-        broad_order.end(),
-        [&](std::size_t a, std::size_t b) {
-          return broad_tune.report.trials[a].objective < broad_tune.report.trials[b].objective;
-        });
+    std::vector<std::size_t> broad_order;
+    broad_order.reserve(broad_tune.report.ranked_indices.size());
+    for (const auto index : broad_tune.report.ranked_indices) {
+      broad_order.push_back(static_cast<std::size_t>(index));
+    }
 
     std::cout << "\n========== broad cv ranking (rmse, lower is better) ========\n";
     for (std::size_t rank = 0; rank < broad_order.size(); ++rank) {
@@ -927,14 +947,11 @@ int main(int argc, char** argv) {
         MetricKind::Rmse,
         TuneObjectivePolicy::Minimize);
 
-    std::vector<std::size_t> tuned_order(tuned_final.report.trials.size());
-    std::iota(tuned_order.begin(), tuned_order.end(), static_cast<std::size_t>(0));
-    std::sort(
-        tuned_order.begin(),
-        tuned_order.end(),
-        [&](std::size_t a, std::size_t b) {
-          return tuned_final.report.trials[a].objective < tuned_final.report.trials[b].objective;
-        });
+    std::vector<std::size_t> tuned_order;
+    tuned_order.reserve(tuned_final.report.ranked_indices.size());
+    for (const auto index : tuned_final.report.ranked_indices) {
+      tuned_order.push_back(static_cast<std::size_t>(index));
+    }
 
     std::cout << "\n========== tuned cv ranking (rmse, lower is better) ========\n";
     for (std::size_t rank = 0; rank < tuned_order.size(); ++rank) {
@@ -1008,7 +1025,12 @@ int main(int argc, char** argv) {
         .headline("Absolute error distribution (final model)")
         .save_pdf((out_dir / "final_abs_error_hist.pdf").string());
 
-    const DataFrame hour_error = pred_frame.mean_by("y_true", "abs_error", 0, 1, true, false);
+    const DataFrame hour_error = pred_frame.group({.dropnull = true})
+                                     .by({"y_true"})
+                                     .agg({
+                                         {"mean_abs_error", "abs_error", DataFrame::GroupOp::Mean},
+                                         {"count", "abs_error", DataFrame::GroupOp::Count},
+                                     });
     hour_error.save_csv((out_dir / "final_abs_error_by_y_true.csv").string());
 
     //========== run summary ========

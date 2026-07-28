@@ -48,7 +48,8 @@ int main() {
                      .transpose(0, 1)
                      .to(pluss::pCPU, ScalarType::Float32);
   const auto y = df.features("y")
-                     .cast(pluss::table::ThreadCastTarget::Series)
+                     .cast()
+                     .series()
                      .as_series()
                      .to(pluss::pCPU, ScalarType::Float32)
                      .gt(0.5)

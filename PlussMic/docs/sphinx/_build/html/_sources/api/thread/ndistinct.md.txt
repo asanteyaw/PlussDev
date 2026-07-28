@@ -86,7 +86,7 @@ Two entries are missing, but they still only add `1` to the total (`"Accra"`,
 
 - [`Thread::distinct`](distinct.md): the distinct values themselves, in
   first-seen order.
-- [`Thread::tally`](tally.md): a full per-value frequency breakdown instead of
+- [`Thread::freq`](freq.md): a full per-value frequency breakdown instead of
   a single count.
 
 <div class="pluss-inline-prev-next">

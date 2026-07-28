@@ -31,12 +31,12 @@ See [`line()`](line.md) for the shared `Studio`-return / no-`cout` mechanics and
 is specific to `surface()`.
 
 ```{important} op is more restricted here than DataFrame::GroupOp's own ten values
-`op` is typed as `DataFrame::GroupOp` (`Count`, `Nunique`, `Sum`, `Mean`, `Median`, `Min`,
+`op` is typed as `DataFrame::GroupOp` (`Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`,
 `Max`, `Std`, `Var`, `Mode`), but `pivot_table()` itself only implements seven of those:
-`Count`, `Nunique`, `Sum`, `Mean`, `Median`, `Min`, and `Max`. Passing `Std`, `Var`, or
+`Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`, and `Max`. Passing `Std`, `Var`, or
 `Mode` compiles fine but throws at call time: `"DataFrame::pivot_table: unsupported
 aggregation op"`. For any of the seven supported numeric aggregations (everything except
-`Count`/`Nunique`), `z_feature` must already be a numeric `Series` — a non-numeric
+`Count`/`Ndistinct`), `z_feature` must already be a numeric `Series` — a non-numeric
 `z_feature` throws `"DataFrame::pivot_table: numeric aggregations require a numeric Series
 value feature"`.
 ```
@@ -191,7 +191,7 @@ auto chart = readings.plot3d().surface("hour", "depth_m", "temp_c", DataFrame::G
 
 - Only 7 of `DataFrame::GroupOp`'s 10 values are supported (`Std`/`Var`/`Mode` throw) — see
   the important callout above.
-- Numeric aggregations (everything but `Count`/`Nunique`) require `z_feature` to already be
+- Numeric aggregations (everything but `Count`/`Ndistinct`) require `z_feature` to already be
   a numeric `Series`.
 - x/y grid coordinates are parsed-as-number-or-positional-fallback — see the note above.
 - Rows with an invalid `x_feature`/`y_feature` are dropped; missing `(x, y)` cells fill to

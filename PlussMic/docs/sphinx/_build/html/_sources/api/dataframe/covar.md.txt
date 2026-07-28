@@ -160,9 +160,9 @@ false`, the same unassigned call would produce no output.
   and standard deviation this matrix's diagonal generalizes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="count_by.html">
+  <a class="prev-link" href="count.html">
     <span class="label">Previous</span>
-    <span class="title">count_by</span>
+    <span class="title">count</span>
   </a>
   <a class="next-link" href="csmax.html">
     <span class="label">Next</span>

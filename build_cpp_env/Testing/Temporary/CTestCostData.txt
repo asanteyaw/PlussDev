@@ -1918,4 +1918,12 @@ plussmic_table_dataframe_plot_api 3 2.23931
 plussmic_table_ts_accessor 7 7.10983
 plussmic_table_axis_match 6 9.88071
 plussmic_table_statistics_window 4 12.5764
+ice_model_test 6 13.5543
+nn_grad_mode_test 1 0.410274
+ice_dataset_test 3 0.130162
+ice_tft_test 6 42.8273
+ice_time_series_dataset_test 3 0.236736
+ice_coach_test 4 0.162016
+ice_source_test 2 0.375138
+ice_callback_test 1 37.455
 ---

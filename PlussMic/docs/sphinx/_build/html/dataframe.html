@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/api_nav.js?v=f0e02664"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -45,7 +45,7 @@ Use it when you want:</p>
 <ul class="simple">
 <li><p>named features with mixed typed columns</p></li>
 <li><p>a case axis that can be numeric, note-based, timeline-based, or time-index based</p></li>
-<li><p>table verbs such as <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">assign</span></code>, <code class="docutils literal notranslate"><span class="pre">group_by</span></code>, <code class="docutils literal notranslate"><span class="pre">pivot_table</span></code>, <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull</span></code>, and <code class="docutils literal notranslate"><span class="pre">describe</span></code></p></li>
+<li><p>table verbs such as <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">assign</span></code>, <code class="docutils literal notranslate"><span class="pre">group</span></code>, <code class="docutils literal notranslate"><span class="pre">pivot_table</span></code>, <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull</span></code>, and <code class="docutils literal notranslate"><span class="pre">describe</span></code></p></li>
 <li><p>import/export across CSV, TXT, JSON, Excel, and Parquet</p></li>
 </ul>
 </section>
@@ -206,7 +206,7 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 
 <span class="k">auto</span><span class="w"> </span><span class="n">queried</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;sales &gt; 95&quot;</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">top3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">top</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
 </pre></div>
@@ -266,19 +266,17 @@ one-to-many, or many-to-one.</p>
 <section id="grouped-reductions">
 <h2>Grouped Reductions<a class="headerlink" href="#grouped-reductions" title="Link to this heading">¶</a></h2>
 <p>One call can compute several named reductions:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;average&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;volatility&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Std</span><span class="p">},</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">false</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">})</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">agg</span><span class="p">({</span>
+<span class="w">                      </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
+<span class="w">                      </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
+<span class="w">                      </span><span class="p">{</span><span class="s">&quot;average&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
+<span class="w">                      </span><span class="p">{</span><span class="s">&quot;volatility&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Std</span><span class="p">},</span>
+<span class="w">                  </span><span class="p">});</span>
 </pre></div>
 </div>
-<p>Supported grouped operations are <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Nunique</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
+<p>Supported grouped operations are <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, and <code class="docutils literal notranslate"><span class="pre">Var</span></code>. Numeric reductions use Series scatter operations and
 stay on the payload platform. Group keys retain their original Thread type and
 first-seen order.</p>
@@ -341,11 +339,9 @@ cannot represent several streamed batches.</p>
 </section>
 <section id="grouping-pivoting-and-summaries">
 <h2>Grouping, Pivoting, And Summaries<a class="headerlink" href="#grouping-pivoting-and-summaries" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;avg_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}},</span>
-<span class="w">    </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">false</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">agg</span><span class="p">({{</span><span class="s">&quot;avg_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">pivoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;city&quot;</span><span class="p">,</span>

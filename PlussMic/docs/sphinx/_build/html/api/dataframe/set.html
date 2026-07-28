@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -42,51 +42,33 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// In-place assignment helpers (&quot;df.set(name) = value&quot; syntax) — mutate *this</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlot</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlot</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlot</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlots</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlots</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlots</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">LetSlots</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span>
-
-<span class="c1">// Plain functional overloads — return a new frame, *this untouched</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Adds a new feature or replaces an existing one’s values, in two distinct styles:</p>
-<ul class="simple">
-<li><p><strong>The <code class="docutils literal notranslate"><span class="pre">df.set(name)</span> <span class="pre">=</span> <span class="pre">value</span></code> builder style</strong> (the no-<code class="docutils literal notranslate"><span class="pre">value</span></code>-argument overloads):
-<code class="docutils literal notranslate"><span class="pre">set(name)</span></code> returns a lightweight <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code> proxy bound to <code class="docutils literal notranslate"><span class="pre">*this</span></code>; assigning a
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or even a
-single-feature <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> to that proxy <strong>mutates the calling frame in place</strong> —
-creating <code class="docutils literal notranslate"><span class="pre">name</span></code> if it doesn’t already exist, or overwriting it if it does.
+<p>Adds a new feature or replaces an existing one’s values through assignment-target
+helpers. <code class="docutils literal notranslate"><span class="pre">set(name)</span></code> returns a lightweight <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code> proxy bound to <code class="docutils literal notranslate"><span class="pre">*this</span></code>;
+assigning a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>,
+or a single-feature <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> to that proxy mutates the calling frame in place.
 <code class="docutils literal notranslate"><span class="pre">set({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;})</span> <span class="pre">=</span> <span class="pre">{...}</span></code> is the same idea for several features assigned together
-in one batch (at most one reindex pass, rather than one per feature). A
-<code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> right-hand side broadcasts a single scalar to every row.</p></li>
-<li><p><strong>The plain two-argument overloads</strong> (<code class="docutils literal notranslate"><span class="pre">set(name,</span> <span class="pre">value)</span></code> / <code class="docutils literal notranslate"><span class="pre">set(names,</span> <span class="pre">values)</span></code>):
-ordinary, non-mutating functions that return a <strong>new</strong> frame with <code class="docutils literal notranslate"><span class="pre">name</span></code>
-created or replaced, leaving <code class="docutils literal notranslate"><span class="pre">*this</span></code> untouched — the same convention as
-every other non-<code class="docutils literal notranslate"><span class="pre">_</span></code>-suffixed method in this reference.</p></li>
-</ul>
-<p><a class="reference internal" href="set_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_(name,</span> <span class="pre">value)</span></code></span></a> is the mutating counterpart to the plain two-argument
-overloads specifically — a third way to write “mutate in place” alongside the
-<code class="docutils literal notranslate"><span class="pre">LetSlot</span></code>/<code class="docutils literal notranslate"><span class="pre">LetSlots</span></code> builder style described above.</p>
+in one batch. A <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> right-hand side broadcasts a single scalar to every row.</p>
+<p><a class="reference internal" href="set_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_(name,</span> <span class="pre">value)</span></code></span></a> is the direct one-line in-place counterpart when you
+do not want assignment syntax at the call site.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>name</strong> / <strong>names</strong></p>
 <p>The feature name (or names) to create or overwrite.</p>
 <p><strong>value</strong> / <strong>values</strong></p>
-<p>The replacement data. For the builder style, anything assignable to a <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code>
-(<code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or a
-single-feature <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>); for the plain overloads, a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (or a matching range
-of <code class="docutils literal notranslate"><span class="pre">Thread</span></code>s for the multi-name overload).</p>
+<p>The replacement data: anything assignable to a <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code> (<code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or a single-feature <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>).</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">AlignOptions&amp;</span></code>, optional)</p>
 <p>Controls how a right-hand <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is aligned to the frame’s case axis when it
 doesn’t already match exactly.</p>
@@ -96,9 +78,6 @@ doesn’t already match exactly.</p>
 <p><code class="docutils literal notranslate"><span class="pre">LetSlot</span></code> / <code class="docutils literal notranslate"><span class="pre">LetSlots</span></code>
 A proxy bound to <code class="docutils literal notranslate"><span class="pre">*this</span></code>; assigning to it performs the mutation and creates or
 overwrites the named feature(s) in place.</p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-(Plain two-argument overloads) A new frame with the named feature(s) created or
-replaced.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -153,17 +132,10 @@ into <code class="docutils literal notranslate"><span class="pre">orders</span><
 </div>
 <p>Both <code class="docutils literal notranslate"><span class="pre">&quot;cost&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;region&quot;</span></code> are added to <code class="docutils literal notranslate"><span class="pre">orders</span></code> in one call, matched to their
 names positionally against the right-hand <code class="docutils literal notranslate"><span class="pre">{...}</span></code> list.</p>
-<p>Example 3. The plain, non-mutating overload: overwrite an existing feature’s values
-without touching the source frame.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">fresh_start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">rebased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fresh_start</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">})));</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rebased</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fresh_start</span><span class="p">;</span>
+<p>Example 3. Overwrite an existing feature from a derived single-feature frame.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rebased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">}).</span><span class="n">div</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<span class="n">orders</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rebased</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -172,31 +144,22 @@ without touching the source frame.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
      | id    sales  city  
 --------------------------
-0    | 1     0      Accra 
-1    | 2     0      Tema  
-2    | 3     0      Kumasi
---------------------------
-[3 cs x 3 feat]
-==========================
-     | id    sales  city  
---------------------------
-0    | 1     100    Accra 
-1    | 2     120    Tema  
-2    | 3     90     Kumasi
+0    | 1     10     Accra 
+1    | 2     12     Tema  
+2    | 3     9      Kumasi
 --------------------------
 [3 cs x 3 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">rebased</span></code> has <code class="docutils literal notranslate"><span class="pre">sales</span></code> zeroed out, but this two-argument, non-<code class="docutils literal notranslate"><span class="pre">_</span></code>-suffixed overload
-never touches <code class="docutils literal notranslate"><span class="pre">fresh_start</span></code> — it prints exactly as it was constructed.</p>
+<p>Because the right-hand side has exactly one feature, <code class="docutils literal notranslate"><span class="pre">set(&quot;sales&quot;)</span> <span class="pre">=</span> <span class="pre">rebased</span></code>
+replaces the existing <code class="docutils literal notranslate"><span class="pre">sales</span></code> column directly.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code>/<code class="docutils literal notranslate"><span class="pre">LetSlots</span></code>-returning overloads (no <code class="docutils literal notranslate"><span class="pre">value</span></code> argument) are the only
-<code class="docutils literal notranslate"><span class="pre">set(...)</span></code> calls that mutate <code class="docutils literal notranslate"><span class="pre">*this</span></code>; every overload that takes <code class="docutils literal notranslate"><span class="pre">value</span></code>/<code class="docutils literal notranslate"><span class="pre">values</span></code>
-directly as an argument is a plain, non-mutating function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set(...)</span></code> is assignment-target only. To mutate in one call without <code class="docutils literal notranslate"><span class="pre">=</span></code>, use
+<a class="reference internal" href="set_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_()</span></code></span></a>.</p></li>
 <li><p>Assigning a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> to a <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code> broadcasts a single scalar to every row —
 useful for <code class="docutils literal notranslate"><span class="pre">df.set(&quot;flag&quot;)</span> <span class="pre">=</span> <span class="pre">ThreadValue(true)</span></code>-style constant columns.</p></li>
 <li><p>Batch-assigning with <code class="docutils literal notranslate"><span class="pre">set({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;})</span> <span class="pre">=</span> <span class="pre">{...}</span></code> performs at most one schema
@@ -207,8 +170,8 @@ single-name assignments when setting many features at once.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="set_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::set_</span></code></span></a>: the mutating counterpart to this page’s plain
-two-argument overloads.</p></li>
+<li><p><a class="reference internal" href="set_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::set_</span></code></span></a>: the direct one-line in-place counterpart to this
+page’s assignment-target form.</p></li>
 <li><p><a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::assign</span></code></span></a>: derive new features from expressions evaluated
 against the frame itself, rather than assigning pre-built <code class="docutils literal notranslate"><span class="pre">Thread</span></code>s.</p></li>
 <li><p><a class="reference internal" href="insert.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::insert</span></code></span></a>, <a class="reference internal" href="place.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::place</span></code></span></a>: position a new

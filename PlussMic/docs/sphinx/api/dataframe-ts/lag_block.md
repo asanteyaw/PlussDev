@@ -87,8 +87,8 @@ case `0`'s `10`, and case `3` shows case `1`'s `20`.
     <span class="label">Previous</span>
     <span class="title">lag</span>
   </a>
-  <a class="next-link" href="lead.html">
+  <a class="next-link" href="le.html">
     <span class="label">Next</span>
-    <span class="title">lead</span>
+    <span class="title">le</span>
   </a>
 </div>

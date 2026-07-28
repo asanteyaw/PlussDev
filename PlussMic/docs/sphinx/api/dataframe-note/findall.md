@@ -27,10 +27,10 @@ Unlike most methods on this accessor, `findall()` (like [`extract()`](extract.md
 [`split()`](split.md), [`partition()`](partition.md), and [`indicate()`](indicate.md))
 operates on exactly one column, not "every feature the accessor was built
 with." Calling it through an accessor built from more than one feature — e.g.
-`df.features({"a", "b"}).note().findall(...)` — throws
-`"DataFrame::note().findall requires one feature"`. Build the accessor with
+`df.features({"a", "b"}).nt().findall(...)` — throws
+`"DataFrame::nt().findall requires one feature"`. Build the accessor with
 a single feature name for these methods:
-`df.features({"city"}).note().findall(...)`.
+`df.features({"city"}).nt().findall(...)`.
 ```
 
 ```{danger} The single-argument overload defaults to regex mode, same gotcha as count()
@@ -86,10 +86,10 @@ auto samples = DataFrame({
 });
 std::cout << samples;
 
-auto out1 = samples.features({"text"}).note().findall(".");
+auto out1 = samples.features({"text"}).nt().findall(".");
 std::cout << out1;
 
-auto out2 = samples.features({"text"}).note().findall(".", {.regex = false});
+auto out2 = samples.features({"text"}).nt().findall(".", {.regex = false});
 std::cout << out2;
 ```
 
@@ -155,7 +155,7 @@ auto orders = DataFrame({
 });
 std::cout << orders;
 
-auto out3 = orders.features({"text"}).note().findall(R"(\d+)", {.regex = true});
+auto out3 = orders.features({"text"}).nt().findall(R"(\d+)", {.regex = true});
 std::cout << out3;
 ```
 
@@ -196,7 +196,7 @@ determines the column count, it also caps how many `match_N` columns
 appear at all.
 
 ```cpp
-auto out4 = orders.features({"text"}).note().findall(
+auto out4 = orders.features({"text"}).nt().findall(
     R"(\d+)", {.regex = true, .limit = 2});
 std::cout << out4;
 ```

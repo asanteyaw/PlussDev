@@ -18,7 +18,7 @@ struct NexusPullField {
 
 enum class NexusPullAggregateOp : std::uint8_t {
   Count = 0,
-  Nunique = 1,
+  Ndistinct = 1,
   Sum = 2,
   Mean = 3,
   Min = 4,
@@ -342,9 +342,9 @@ std::optional<NexusPullAggregateSpec> parse_pull_aggregate(std::string_view toke
         .anchor = anchor,
     };
   }
-  if (lower == "nunique") {
+  if (lower == "ndistinct") {
     return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Nunique,
+        .op = NexusPullAggregateOp::Ndistinct,
         .token = std::string(token),
         .anchor = anchor,
     };
@@ -705,8 +705,8 @@ DataFrame::GroupOp pull_group_op(const NexusPullAggregateSpec& aggregate,
   switch (aggregate.op) {
     case NexusPullAggregateOp::Count:
       return GroupOp::Count;
-    case NexusPullAggregateOp::Nunique:
-      return GroupOp::Nunique;
+    case NexusPullAggregateOp::Ndistinct:
+      return GroupOp::Ndistinct;
     case NexusPullAggregateOp::Sum:
       return GroupOp::Sum;
     case NexusPullAggregateOp::Mean:
@@ -763,15 +763,14 @@ Thread materialize_grouped_pull(const DataFrame& root_frame,
                                  "_agg",
                                  "many_to_one");
   if (aggregate.op == NexusPullAggregateOp::Count ||
-      aggregate.op == NexusPullAggregateOp::Nunique) {
+      aggregate.op == NexusPullAggregateOp::Ndistinct) {
     joined = joined.fillnull(0.0, {output_name});
     if (aggregate.window_value.has_value() &&
         aggregate.anchor == NexusPullAggregateSpec::Anchor::Root &&
         root_time_column.has_value()) {
-      joined = joined.put(
-          output_name,
-          root_frame.features(*root_time_column).isnull(),
-          pluss::null);
+      joined.set(output_name) =
+          joined.features(output_name)
+              .put(root_frame.features(*root_time_column).isnull(), pluss::null);
     }
   }
   return joined.features(output_name);
@@ -799,8 +798,8 @@ Thread aggregate_pull_field(const DataFrame& root_frame,
   if (aggregate.window_value.has_value()) {
     PLUSS_CHECK(child_time_column.has_value(),
                 std::string(where) + ": window aggregate requires a declared time field");
-    PLUSS_CHECK(aggregate.op != NexusPullAggregateOp::Nunique,
-                std::string(where) + ": nunique windows are not supported yet");
+    PLUSS_CHECK(aggregate.op != NexusPullAggregateOp::Ndistinct,
+                std::string(where) + ": ndistinct windows are not supported yet");
     const auto duration = std::to_string(*aggregate.window_value) + *aggregate.window_unit;
     TsOptions ts_options{
         .axis = expanded.features(std::string(*child_time_column)),
@@ -831,8 +830,8 @@ Thread aggregate_pull_field(const DataFrame& root_frame,
       case NexusPullAggregateOp::Max:
         grouped = windowed.max(value_column);
         break;
-      case NexusPullAggregateOp::Nunique:
-        PLUSS_FAIL(std::string(where) + ": nunique windows are not supported yet");
+      case NexusPullAggregateOp::Ndistinct:
+        PLUSS_FAIL(std::string(where) + ": ndistinct windows are not supported yet");
     }
 
     std::string grouped_value_feature;
@@ -851,11 +850,9 @@ Thread aggregate_pull_field(const DataFrame& root_frame,
         root_frame, root_keys, grouped, output_name, aggregate, root_time_column);
   }
 
-  const auto grouped = working.group_by(
-      pluss::msharp::RangeView::Of<std::string_view>(root_key_views),
-      pluss::msharp::RangeView::Of<DataFrame::GroupSpec>(specs),
-      true,
-      false);
+  const auto grouped = working.group({.dropnull = true})
+                           .by(pluss::msharp::RangeView::Of<std::string_view>(root_key_views))
+                           .agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec>(specs));
   return materialize_grouped_pull(
       root_frame, root_keys, grouped, output_name, aggregate, root_time_column);
 }

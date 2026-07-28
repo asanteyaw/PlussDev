@@ -14,8 +14,8 @@ DataFrameNoteAccessor::lower() const -> DataFrame
 
 Lowercases every character in every selected text feature's cells, returning
 a new frame — the classic normalization step before a case-insensitive
-comparison, a `count_by()`/`group_by()` key that shouldn't be split by
-casing accidents, or a lookup against a canonical lowercase reference list.
+comparison, a `group()` key that shouldn't be split by casing accidents,
+or a lookup against a canonical lowercase reference list.
 
 Like every method on this accessor, `lower()` applies to **every feature the
 accessor was built with** in one call — see [`strip()`](strip.md) for the
@@ -60,7 +60,7 @@ auto orders = DataFrame({
 }, Thread(pluss::make_note({"p1", "p2", "p3"})));
 std::cout << orders;
 
-auto out = orders.note().lower();
+auto out = orders.nt().lower();
 std::cout << out;
 ```
 

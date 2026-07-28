@@ -78,7 +78,7 @@ auto titles = DataFrame({
 });
 std::cout << titles;
 
-auto out1 = titles.note().normalize();
+auto out1 = titles.nt().normalize();
 std::cout << out1;
 ```
 
@@ -106,10 +106,10 @@ between NFC/NFD/NFKC/NFKD only matter for text containing decomposable or
 compatibility characters, none of which plain ASCII has.
 
 ```cpp
-auto nfc = titles.note().normalize(UnicodeForm::NFC);
-auto nfd = titles.note().normalize(UnicodeForm::NFD);
-auto nfkc = titles.note().normalize(UnicodeForm::NFKC);
-auto nfkd = titles.note().normalize(UnicodeForm::NFKD);
+auto nfc = titles.nt().normalize(UnicodeForm::NFC);
+auto nfd = titles.nt().normalize(UnicodeForm::NFD);
+auto nfkc = titles.nt().normalize(UnicodeForm::NFKC);
+auto nfkd = titles.nt().normalize(UnicodeForm::NFKD);
 // nfc, nfd, nfkc, and nfkd are all identical to titles here.
 ```
 
@@ -124,7 +124,7 @@ auto accented = DataFrame({
 });
 
 try {
-  auto out3 = accented.note().normalize();
+  auto out3 = accented.nt().normalize();
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

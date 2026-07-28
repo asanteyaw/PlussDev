@@ -139,7 +139,7 @@ so on) is the reshape to reach for once pairs can repeat.
 
 - [`DataFrame::pivot_table`](pivot_table.md): the aggregating sibling, required once
   `(case_feature, feature_feature)` pairs can repeat.
-- [`DataFrame::group_by`](group_by.md): the long-format equivalent, keeping every key
+- [`DataFrame::group`](group.md): the long-format equivalent, keeping every key
   as its own row feature instead of spreading one key into columns.
 - [`DataFrame::stack`](stack.md): fold pivoted columns back into a long format.
 

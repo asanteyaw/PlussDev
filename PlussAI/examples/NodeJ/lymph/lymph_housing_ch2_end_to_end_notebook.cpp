@@ -64,7 +64,7 @@ int main() {
   //========== Cell 3: EDA + Correlation Snapshot ========
   // Quick, notebook-style checks and one correlation ranking view.
   auto corr_ranked =
-      strat_train_set.series_features().corr().sort_values({"median_house_value"}, false).features({"median_house_value"});
+      strat_train_set.feataxis().series().corr().arrange({"median_house_value"}, false).features({"median_house_value"});
   out.writeln("top correlations with median_house_value");
   corr_ranked.head(10);
   //========== End Cell 3 ========
@@ -90,10 +90,10 @@ int main() {
   const DataFrame test_x_raw = strat_test_set.drop({"median_house_value"});
   const Thread test_y = strat_test_set.features("median_house_value");
 
-  const DataFrame train_num = train_x_raw.series_features();
-  const DataFrame test_num = test_x_raw.series_features();
-  const DataFrame train_cat = train_x_raw.note_features();
-  const DataFrame test_cat = test_x_raw.note_features();
+  const DataFrame train_num = train_x_raw.feataxis().series();
+  const DataFrame test_num = test_x_raw.feataxis().series();
+  const DataFrame train_cat = train_x_raw.feataxis().note();
+  const DataFrame test_cat = test_x_raw.feataxis().note();
   const auto categorical_names = train_cat.features();
   out.writef("numeric feature count={} categorical feature count={}", train_num.nfeatures(), train_cat.nfeatures()).endln();
   if (train_num.nfeatures() == 0) {

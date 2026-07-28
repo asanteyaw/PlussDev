@@ -1,5 +1,4 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 27e22f5399be -->
 
 # DataFrame::any
 
@@ -8,30 +7,26 @@
 ## Signatures
 
 ```cpp
-DataFrame::any(pluss::RangeView<std::string_view> features = {}, bool skipnull = true) const -> Thread
-DataFrame::any(Axis axis, pluss::RangeView<std::string_view> features = {}, bool skipnull = true) const -> Thread
+DataFrame::any(bool skipnull = true) const -> Thread
+DataFrame::any(Axis axis, bool skipnull = true) const -> Thread
 ```
 
 ## What It Does
 
-Reports whether **at least one** value is `true` along the requested axis, over a set
-of `Bool` `Series` features. Every feature it reduces over must already be a `Bool`
-`Series` — `any()` never coerces numbers, `Note`, `Timeline`, or `TimeIndex` columns
-into truthiness the way some languages implicitly do. If `features` is left empty, it
-defaults to *every* column in the frame, so a frame that mixes boolean flags with
-other feature types must pass `features` explicitly to select only the boolean ones.
+Reports whether **at least one** value is `true` along the requested axis, over
+every `Bool` `Series` feature currently on the frame. Every feature it reduces over
+must already be a `Bool` `Series` — `any()` never coerces numbers, `Note`,
+`Timeline`, or `TimeIndex` columns into truthiness the way some languages implicitly
+do. `any()` itself carries no feature selector: it always reduces over the *entire*
+current frame, so a frame that mixes boolean flags with other feature types must be
+narrowed down first with [`features()`](features.md) — `checks.features({"in_stock",
+"paid"}).any()`, not a `features` argument on `any()` itself.
 
 The two overloads differ only in whether you supply an axis: the short overload always
 reduces `Axis::Case` (down each feature's cases); the longer overload lets you choose
 `Axis::Feature` instead (across each row's selected features).
 
 ## Parameters
-
-**features** (`pluss::RangeView<std::string_view>`, default `{}`)
-
-Which `Bool` `Series` features to reduce over. An empty range (the default) selects
-every column in the frame — which only works if every column actually is a `Bool`
-`Series`; otherwise, pass the specific boolean feature names you want.
 
 **axis** (`Axis`, default `Axis::Case` when omitted)
 
@@ -71,7 +66,7 @@ auto checks = DataFrame({
     {"paid",     Thread(pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool))},
 });
 
-auto ever_true = checks.any({"in_stock", "paid"});
+auto ever_true = checks.features({"in_stock", "paid"}).any();
 std::cout << ever_true;
 ```
 
@@ -84,14 +79,15 @@ ptype: Series
 ```
 
 Both flags are `true` in at least one row, so both come back `true`. `order_id` was
-deliberately left out of `features` — passing it would fail, because `any()` requires
-every selected feature to already be a `Bool` `Series`.
+deliberately narrowed out with [`features()`](features.md) first — calling `any()`
+directly on `checks` (all three columns) would fail, because `any()` requires every
+feature on the current frame to already be a `Bool` `Series`.
 
 Example 2. Use `Axis::Feature` to ask, per row, whether *either* flag is set — a
 common "does this case need any attention?" check.
 
 ```cpp
-auto needs_attention = checks.any(Axis::Feature, {"in_stock", "paid"});
+auto needs_attention = checks.features({"in_stock", "paid"}).any(Axis::Feature);
 std::cout << needs_attention;
 ```
 
@@ -121,7 +117,7 @@ auto flags = DataFrame({
 auto lenient = flags.any();
 std::cout << lenient;
 
-auto strict = flags.any({}, false);
+auto strict = flags.any(false);
 std::cout << strict;
 ```
 
@@ -146,8 +142,8 @@ result `NULL`.
 - `any()`'s result is labeled by feature name (`Axis::Case`) or by case index
   (`Axis::Feature`), and prints like a small labeled `Series`, not like a row sliced
   from the source frame.
-- Every selected feature must already be a `Bool` `Series` — pass `features`
-  explicitly whenever the frame contains non-boolean columns.
+- Every feature on the current frame must already be a `Bool` `Series` — narrow with
+  [`features()`](features.md) first whenever the frame contains non-boolean columns.
 - A missing value never makes an `any()` result `true` by itself; it can only make the
   result `NULL` (under `skipnull = false`) or be silently ignored (under
   `skipnull = true`).
@@ -158,6 +154,8 @@ result `NULL`.
   of at least one, sharing the same parameter shape.
 - [`DataFrame::count`](count.md): counts non-missing cells instead of testing
   truthiness.
+- [`DataFrame::features`](features.md): narrow the frame to the boolean feature(s)
+  `any()` should reduce over.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="all.html">

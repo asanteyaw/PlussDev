@@ -17,7 +17,7 @@ struct EmbeddingOptions {
 
 // A plain learned embedding table: one row per category, looked up by
 // index. Promoted out of ice::models::TemporalFusionTransformer's
-// originally-private building blocks (Ice/models/tft/tft_blocks.h) once a
+// originally-private building blocks (Ice/models/ts/tft_blocks.h) once a
 // second consumer needed it -- see ICE_BLUEPRINT.md's centralization note.
 // Follows the same allocate-then-register-then-fill-in-place construction
 // pattern as the engine's other built-in modules (Fusion, Conv, ...):

@@ -21,7 +21,7 @@ The motivation is the same as any non-mutating feature-creation call: instead of
 mutating a frame in a sequence of separate statements
 (`df["total"] = ...; df["passed"] = ...;`), `assign()` lets a chain of feature
 derivations read as a single expression —
-`df.assign({...}).filter(...).sort_values({...})` — which keeps intermediate,
+`df.assign({...}).filter(...).arrange({...})` — which keeps intermediate,
 partially-derived frames out of named variables you would otherwise have to track.
 
 ## Parameters

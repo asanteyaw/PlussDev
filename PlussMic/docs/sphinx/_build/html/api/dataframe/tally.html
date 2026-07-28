@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@
 returning a compact frame with one row per distinct combination plus a <code class="docutils literal notranslate"><span class="pre">&quot;count&quot;</span></code>
 column — sorted by count descending, ties broken alphabetically by the key values
 ascending. This is the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-returning sibling of <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">freq()</span></code>
-packs the key columns into one composite <code class="docutils literal notranslate"><span class="pre">Thread</span></code> label, while <code class="docutils literal notranslate"><span class="pre">tally()</span></code> keeps each
+returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with structured labels, while <code class="docutils literal notranslate"><span class="pre">tally()</span></code> keeps each
 key feature as its own separate output column, which reads more naturally when
 there’s more than one key feature to inspect.</p>
 <p>Every key column in the result is rendered as text (<code class="docutils literal notranslate"><span class="pre">Note</span></code>), regardless of the
@@ -195,13 +195,11 @@ rather than being excluded from the tally.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::freq</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-returning sibling, packing the key into
-one composite label instead of separate columns.</p></li>
+<li><p><a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::freq</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-returning sibling, keeping the grouped
+keys in structured labels instead of separate columns.</p></li>
 <li><p><a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::duplicated</span></code></span></a>, <a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::repeated</span></code></span></a>:
 flag individual rows by the same composite-key convention, rather than counting
 combinations.</p></li>
-<li><p><a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::count_by</span></code></span></a>: count rows grouped by exactly one feature,
-a narrower convenience this method’s single-feature overload also covers.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="take.html">

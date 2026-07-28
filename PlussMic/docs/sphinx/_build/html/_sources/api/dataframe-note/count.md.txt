@@ -89,10 +89,10 @@ auto notes = DataFrame({
 });
 std::cout << notes;
 
-auto out1 = notes.note().count(".");
+auto out1 = notes.nt().count(".");
 std::cout << out1;
 
-auto out2 = notes.note().count(".", {.regex = false});
+auto out2 = notes.nt().count(".", {.regex = false});
 std::cout << out2;
 ```
 
@@ -156,10 +156,10 @@ auto mixed = DataFrame({
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 
-auto out3 = mixed.note().count("ANA", {.case_sensitive = true});
+auto out3 = mixed.nt().count("ANA", {.case_sensitive = true});
 std::cout << out3;
 
-auto out4 = mixed.note().count("ANA", {.case_sensitive = false});
+auto out4 = mixed.nt().count("ANA", {.case_sensitive = false});
 std::cout << out4;
 ```
 
@@ -206,7 +206,7 @@ auto repeats = DataFrame({
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 
-auto out5 = repeats.note().count("a", {.regex = true, .limit = 2});
+auto out5 = repeats.nt().count("a", {.regex = true, .limit = 2});
 std::cout << out5;
 ```
 

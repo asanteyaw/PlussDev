@@ -160,8 +160,8 @@ Comparing each row against itself isn't a meaningful log return, so `periods =
     <span class="label">Previous</span>
     <span class="title">lead</span>
   </a>
-  <a class="next-link" href="mul.html">
+  <a class="next-link" href="lt.html">
     <span class="label">Next</span>
-    <span class="title">mul</span>
+    <span class="title">lt</span>
   </a>
 </div>

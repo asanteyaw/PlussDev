@@ -162,7 +162,7 @@ pluss::Series thread_to_plot_numeric_series(const Thread& t) {
       break;
     }
     case ThreadKind::Note: {
-      numeric_thread = t.cast(ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+      numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
       break;
     }
     default:
@@ -251,7 +251,7 @@ std::vector<std::string> thread_to_plot_labels(const Thread& t, const DataFrameP
   if (t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex) {
     return temporal_thread_to_plot_labels(t, options.datetime_label_view);
   }
-  const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast(ThreadCastTarget::Note);
+  const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast().note();
   std::vector<std::string> out;
   const auto& note = note_like.as_note();
   out.reserve(static_cast<std::size_t>(note.numel()));
@@ -502,7 +502,7 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
 }
 
 pluss::Note thread_to_plot_note(const Thread& t, std::string_view where, std::string_view feature_name) {
-  const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast(ThreadCastTarget::Note);
+  const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast().note();
   PLUSS_CHECK(note_like.kind() == ThreadKind::Note,
               std::string(where) + ": feature '" + std::string(feature_name) + "' cannot be converted to Note");
   return note_like.as_note();
@@ -1107,9 +1107,12 @@ pluss::pl::Studio DataFramePlotAccessor::line(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const LinePlotOptions& options) const {
-  return line(pluss::msharp::RangeView::Of<std::string_view>(std::array<std::string_view, 1>{y_feature}),
-              x_feature,
-              options);
+  const auto value = frame_.features(y_feature);
+  const auto resolved_x = resolve_x_feature(x_feature);
+  if (resolved_x.has_value()) {
+    return value.plot(options_).line(frame_.features(*resolved_x), options);
+  }
+  return value.plot(options_).line(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::line(
@@ -1154,9 +1157,12 @@ pluss::pl::Studio DataFramePlotAccessor::step(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const StepPlotOptions& options) const {
-  return step(pluss::msharp::RangeView::Of<std::string_view>(std::array<std::string_view, 1>{y_feature}),
-              x_feature,
-              options);
+  const auto value = frame_.features(y_feature);
+  const auto resolved_x = resolve_x_feature(x_feature);
+  if (resolved_x.has_value()) {
+    return value.plot(options_).step(frame_.features(*resolved_x), options);
+  }
+  return value.plot(options_).step(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::step(
@@ -1200,9 +1206,12 @@ pluss::pl::Studio DataFramePlotAccessor::area(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const AreaPlotOptions& options) const {
-  return area(pluss::msharp::RangeView::Of<std::string_view>(std::array<std::string_view, 1>{y_feature}),
-              x_feature,
-              options);
+  const auto value = frame_.features(y_feature);
+  const auto resolved_x = resolve_x_feature(x_feature);
+  if (resolved_x.has_value()) {
+    return value.plot(options_).area(frame_.features(*resolved_x), options);
+  }
+  return value.plot(options_).area(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area(
@@ -1331,7 +1340,12 @@ pluss::pl::Studio DataFramePlotAccessor::bar(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const BarPlotOptions& options) const {
-  return impl_bar({y_feature}, x_feature, options);
+  const auto value = frame_.features(y_feature);
+  const auto resolved_x = resolve_x_feature(x_feature);
+  if (resolved_x.has_value()) {
+    return value.plot(options_).bar(frame_.features(*resolved_x), options);
+  }
+  return value.plot(options_).bar(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::bar(
@@ -1574,24 +1588,24 @@ pluss::pl::Studio DataFramePlotAccessor::hist(const HistPlotOptions& options) co
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, const HistPlotOptions& options) const {
-  auto values = thread_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
-  require_plot_size(values, frame_.ncases(), feature);
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, false, &options_);
-  auto& trace = flash::histplot(pane, values, static_cast<int>(std::max<std::int64_t>(1, resolve_bins(options.bins))));
-  trace.label(std::string(feature));
-  style_trace(trace, 0, options.alpha, options.line_width);
-  pane.x_label(std::string(feature)).y_label("count");
-  return fig;
+  return frame_.features(feature).plot(options_).hist(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features,
                                               const HistPlotOptions& options) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().hist");
   if (names.size() == 1) {
-    return hist(names.front(), options);
+    auto values = thread_to_plot_numeric_series(frame_.features(names.front())).reshape({frame_.ncases()});
+    require_plot_size(values, frame_.ncases(), names.front());
+    auto fig = make_studio();
+    apply_figure_options(fig);
+    auto& pane = fig.pane2();
+    setup_pane(pane, false, &options_);
+    auto& trace = flash::histplot(pane, values, static_cast<int>(std::max<std::int64_t>(1, resolve_bins(options.bins))));
+    trace.label(names.front());
+    style_trace(trace, 0, options.alpha, options.line_width);
+    pane.x_label(names.front()).y_label("count");
+    return fig;
   }
 
   const auto resolved_bins = static_cast<int>(std::max<std::int64_t>(1, resolve_bins(options.bins)));
@@ -1622,7 +1636,17 @@ pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::
 pluss::pl::Studio DataFramePlotAccessor::impl_hist(std::string_view feature, std::int64_t bins) const {
   HistPlotOptions options;
   options.bins = bins;
-  return hist(feature, options);
+  auto values = thread_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
+  require_plot_size(values, frame_.ncases(), feature);
+  auto fig = make_studio();
+  apply_figure_options(fig);
+  auto& pane = fig.pane2();
+  setup_pane(pane, false, &options_);
+  auto& trace = flash::histplot(pane, values, static_cast<int>(std::max<std::int64_t>(1, resolve_bins(options.bins))));
+  trace.label(std::string(feature));
+  style_trace(trace, 0, options.alpha, options.line_width);
+  pane.x_label(std::string(feature)).y_label("count");
+  return fig;
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_hist(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1646,7 +1670,7 @@ pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<st
 }
 
 pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, const DensityPlotOptions& options) const {
-  return density(pluss::msharp::RangeView::Of<std::string_view>(std::array<std::string_view, 1>{feature}), options);
+  return frame_.features(feature).plot(options_).density(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1684,7 +1708,11 @@ pluss::pl::Studio DataFramePlotAccessor::pie(
     std::string_view value_feature,
     std::optional<std::string_view> label_feature,
     const PiePlotOptions& options) const {
-  return impl_pie(value_feature, label_feature, options);
+  const auto values = frame_.features(value_feature);
+  if (label_feature.has_value()) {
+    return values.plot(options_).pie(frame_.features(*label_feature), options);
+  }
+  return values.plot(options_).pie(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature,
@@ -2092,7 +2120,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_radviz(
 pluss::pl::Studio DataFramePlotAccessor::lag(
     std::string_view feature,
     const LagPlotOptions& options) const {
-  return impl_lag(feature, options);
+  return frame_.features(feature).plot(options_).lag(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_lag(
@@ -2109,7 +2137,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_lag(
 pluss::pl::Studio DataFramePlotAccessor::act(
     std::string_view feature,
     const ActPlotOptions& options) const {
-  return impl_act(feature, options);
+  return frame_.features(feature).plot(options_).act(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_act(
@@ -2126,7 +2154,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_act(
 pluss::pl::Studio DataFramePlotAccessor::bootstrap(
     std::string_view feature,
     const BootstrapPlotOptions& options) const {
-  return impl_bootstrap(feature, options);
+  return frame_.features(feature).plot(options_).bootstrap(options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_bootstrap(
@@ -2191,10 +2219,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView
   const bool explicit_features = features.size() > 0;
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot");
   if (names.size() == 1) {
-    if (thread_prefers_labeled_axis(frame_.label().values()) && frame_.ncases() <= 16) {
-      return bar(names.front());
-    }
-    return line(names.front());
+    return frame_.features(names.front()).plot(options_).auto_plot();
   }
   if (!explicit_features && names.size() == 2) {
     const auto hue_names = hue_feature_names(frame_);

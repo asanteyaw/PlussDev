@@ -173,8 +173,8 @@ instead.
     <span class="label">Previous</span>
     <span class="title">diff</span>
   </a>
-  <a class="next-link" href="ewm.html">
+  <a class="next-link" href="eq.html">
     <span class="label">Next</span>
-    <span class="title">ewm</span>
+    <span class="title">eq</span>
   </a>
 </div>

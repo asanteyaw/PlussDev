@@ -29,7 +29,7 @@ and not any order tied to the input data's row sequence.
 Like [`split()`](split.md), [`findall()`](findall.md), [`extract()`](extract.md),
 and [`partition()`](partition.md), `indicate()` operates on exactly one
 column — calling it through a multi-feature accessor throws
-`"DataFrame::note().indicate requires one feature"`.
+`"DataFrame::nt().indicate requires one feature"`.
 ```
 
 ```{danger} indicate() never attaches a validity mask — invalid rows are just all-false, not NULL
@@ -88,7 +88,7 @@ auto tagged = DataFrame({
 });
 std::cout << tagged;
 
-auto out1 = tagged.features({"tags"}).note().indicate();
+auto out1 = tagged.features({"tags"}).nt().indicate();
 std::cout << out1;
 ```
 
@@ -138,7 +138,7 @@ auto langs = DataFrame({
 });
 std::cout << langs;
 
-auto out2 = langs.features({"langs"}).note().indicate(", ", "know_");
+auto out2 = langs.features({"langs"}).nt().indicate(", ", "know_");
 std::cout << out2;
 ```
 
@@ -183,7 +183,7 @@ Example 3. An empty delimiter throws immediately.
 
 ```cpp
 try {
-  auto bad = tagged.features({"tags"}).note().indicate("");
+  auto bad = tagged.features({"tags"}).nt().indicate("");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../_static/api_nav.js?v=f0e02664"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -136,7 +136,7 @@ semantics even though both can be represented internally as arrays.</p>
 aligns by a time axis. PlussMic will not sort a frame for you before computing a
 return, lag, rolling mean, or line plot.</p>
 <p>For ordered calculations, sort first:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -963,7 +963,7 @@ return. Resample first when the calendar interval matters.</p>
 </pre></div>
 </div>
 <p>If <code class="docutils literal notranslate"><span class="pre">df</span></code> is not sorted by time, the rolling window follows row order. Sort first:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">});</span>
 </pre></div>
 </div>

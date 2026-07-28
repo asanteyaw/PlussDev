@@ -328,6 +328,7 @@ bool run_from_series_checks(std::ostream* err = nullptr) {
   batch.static_inputs = pluss::randn({4, 3}, cfg, 1ULL);
   batch.encoder_inputs = pluss::randn({4, 6, 2}, cfg, 2ULL);
   batch.decoder_inputs = pluss::randn({4, 3, 2}, cfg, 3ULL);
+  batch.encoder_target = pluss::randn({4, 6}, cfg, 4ULL);
   batch.target = pluss::randn({4, 3}, cfg, 4ULL);
   // static_size/encoder_size/decoder_size deliberately left at 0 -- from_series() should derive them.
 

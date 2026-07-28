@@ -1,6 +1,6 @@
 TsGroup::TsGroup(Thread key) {
   if (key.defined()) {
-    names.push_back(key.has_display_name() ? key.display_name() : std::string("group"));
+    names.push_back(key.named() ? key.name() : std::string("group"));
     keys.push_back(std::move(key));
   }
 }
@@ -107,6 +107,19 @@ Thread require_time_axis_thread_(const Thread& axis, std::string_view where) {
   return axis;
 }
 
+Thread require_timed_axis_thread_(const Thread& axis, std::string_view where) {
+  PLUSS_CHECK(axis.defined(), std::string(where) + ": target axis is undefined");
+  const bool is_temporal =
+      axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex;
+  const bool is_nanos_series =
+      axis.kind() == ThreadKind::Series &&
+      axis.as_series().scalar_type() == pluss::codem::ScalarType::Int64;
+  PLUSS_CHECK(is_temporal || is_nanos_series,
+              std::string(where) +
+                  ": target axis must be Timeline, TimeIndex, or Int64 nanoseconds");
+  return axis;
+}
+
 std::vector<Thread> cpu_group_keys_(const TsGroup& groups) {
   std::vector<Thread> out;
   out.reserve(groups.keys.size());
@@ -136,11 +149,25 @@ std::string ts_group_key_at_(const std::vector<Thread>& cpu_groups, std::int64_t
   return key;
 }
 
+Thread ts_group_thread_(const TsGroup& groups, std::string_view where) {
+  PLUSS_CHECK(groups.defined(), std::string(where) + ": group keys are required");
+  if (groups.keys.size() == 1) {
+    return groups.keys.front();
+  }
+
+  const auto cpu_groups = cpu_group_keys_(groups);
+  std::vector<std::string> values;
+  values.reserve(static_cast<std::size_t>(groups.size()));
+  for (std::int64_t row = 0; row < groups.size(); ++row) {
+    values.push_back(ts_group_key_at_(cpu_groups, row));
+  }
+  return Thread(pluss::make_note(values));
+}
+
 void validate_ts_options_(const DataFrame& frame, const TsOptions& options, std::string_view where) {
   if (options.axis.defined()) {
     PLUSS_CHECK(options.axis.size() == frame.ncases(),
                 std::string(where) + ": axis length must match DataFrame cases");
-    (void)require_time_axis_thread_(options.axis, where);
   }
   if (options.group.defined()) {
     PLUSS_CHECK(options.group.size() == frame.ncases(),
@@ -161,6 +188,13 @@ Thread ts_source_axis_(const DataFrame& frame, const TsOptions& options, std::st
   return frame.label().values();
 }
 
+Thread ts_timed_axis_(const DataFrame& frame, const TsOptions& options, std::string_view where) {
+  if (options.axis.defined()) {
+    return require_timed_axis_thread_(options.axis, where);
+  }
+  return ts_source_axis_(frame, options, where);
+}
+
 pluss::TimeIndex thread_to_timeindex_(const Thread& axis, std::string_view where) {
   PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
               std::string(where) + ": axis must be Timeline or TimeIndex");
@@ -173,105 +207,6 @@ Thread resample_target_axis_(const Thread& source_axis,
   const auto source_ti = thread_to_timeindex_(source_axis, where);
   const auto bins = source_ti.resample_bins(options);
   return Thread(bins.labels);
-}
-
-pluss::Series ts_index_series_(const std::vector<std::int64_t>& values,
-                               pluss::codem::Platform platform) {
-  auto out = pluss::Series::empty(
-      {static_cast<std::int64_t>(values.size())},
-      pluss::codem::ScalarType::Int64,
-      pluss::codem::Platform::CPU);
-  if (!values.empty()) {
-    std::copy(values.begin(), values.end(),
-              reinterpret_cast<std::int64_t*>(out.raw_data()));
-  }
-  return platform == pluss::codem::Platform::CPU ? out : out.to(platform);
-}
-
-Thread grouped_timed_rolling_(const Thread& values,
-                              const Thread& axis,
-                              const TsGroup& groups,
-                              std::string_view duration,
-                              WindowStatistic statistic,
-                              const StatisticOptions& options,
-                              WindowClosure closure,
-                              std::string_view where) {
-  PLUSS_CHECK(values.kind() == ThreadKind::Series && is_numeric_series_type(values.as_series()),
-              std::string(where) + ": values must be numeric Series");
-  PLUSS_CHECK(axis.size() == values.size(),
-              std::string(where) + ": axis length must match values");
-  PLUSS_CHECK(groups.defined(),
-              std::string(where) + ": group keys are required");
-  PLUSS_CHECK(groups.size() == values.size(),
-              std::string(where) + ": group length must match values");
-
-  const auto cpu_groups = cpu_group_keys_(groups);
-
-  std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_group;
-  rows_by_group.reserve(static_cast<std::size_t>(values.size()));
-  for (std::int64_t row = 0; row < values.size(); ++row) {
-    rows_by_group[ts_group_key_at_(cpu_groups, row)].push_back(row);
-  }
-
-  const auto platform = values.as_series().platform();
-  const auto dtype = platform == pluss::codem::Platform::CPU
-                         ? pluss::codem::ScalarType::Float64
-                         : pluss::codem::ScalarType::Float32;
-  auto output = pluss::Series::zeros({values.size()}, dtype, platform);
-  auto output_valid = pluss::Series::zeros(
-      {values.size()}, pluss::codem::ScalarType::Bool, platform);
-
-  for (const auto& [key, rows] : rows_by_group) {
-    (void)key;
-    const auto index = ts_index_series_(rows, platform);
-    const auto result = values.take(rows).ts().rolling(
-        axis.take(rows), duration, statistic, options, closure);
-    output = output.index_copy(0, index, result.as_series().to(dtype));
-    output_valid = output_valid.index_copy(
-        0, index, result.notnull().as_series().to(platform));
-  }
-
-  return Thread(output, output_valid).label().set(axis);
-}
-
-Thread grouped_fixed_rolling_(const Thread& values,
-                              const TsGroup& groups,
-                              std::int64_t window,
-                              WindowStatistic statistic,
-                              const WindowOptions& options,
-                              std::string_view where) {
-  PLUSS_CHECK(values.kind() == ThreadKind::Series && is_numeric_series_type(values.as_series()),
-              std::string(where) + ": values must be numeric Series");
-  PLUSS_CHECK(groups.defined(),
-              std::string(where) + ": group keys are required");
-  PLUSS_CHECK(groups.size() == values.size(),
-              std::string(where) + ": group length must match values");
-
-  const auto cpu_groups = cpu_group_keys_(groups);
-  std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_group;
-  rows_by_group.reserve(static_cast<std::size_t>(values.size()));
-  for (std::int64_t row = 0; row < values.size(); ++row) {
-    rows_by_group[ts_group_key_at_(cpu_groups, row)].push_back(row);
-  }
-
-  const auto platform = values.as_series().platform();
-  const auto dtype = platform == pluss::codem::Platform::CPU
-                         ? pluss::codem::ScalarType::Float64
-                         : pluss::codem::ScalarType::Float32;
-  auto output = pluss::Series::zeros({values.size()}, dtype, platform);
-  auto output_valid = pluss::Series::zeros(
-      {values.size()}, pluss::codem::ScalarType::Bool, platform);
-
-  for (const auto& [key, rows] : rows_by_group) {
-    (void)key;
-    const auto index = ts_index_series_(rows, platform);
-    const auto result = values.take(rows).ts().rolling(window, statistic, options);
-    output = output.index_copy(0, index, result.as_series().to(dtype));
-    output_valid = output_valid.index_copy(
-        0, index, result.notnull().as_series().to(platform));
-  }
-
-  return Thread(output, output_valid).label().set(values.label().values());
 }
 
 DataFrame make_frame_from_columns_(std::vector<std::pair<std::string, Thread>> cols, const Thread& cases) {
@@ -307,6 +242,31 @@ std::string_view resample_op_key_(pluss::subsp::stats::ts::ResampleOp op) {
   PLUSS_FAIL("DataFrameTsAccessor::resample: unsupported ResampleOp");
 }
 
+Thread ts_resample_thread_(const Thread& values,
+                           const Thread& axis,
+                           const pluss::TimeIndex::ResampleOptions& options,
+                           pluss::subsp::stats::ts::ResampleOp op) {
+  const auto resampler = values.ts().resample(axis, options);
+  using ResampleOp = pluss::subsp::stats::ts::ResampleOp;
+  switch (op) {
+    case ResampleOp::Mean:
+      return resampler.mean();
+    case ResampleOp::Sum:
+      return resampler.sum();
+    case ResampleOp::Min:
+      return resampler.min();
+    case ResampleOp::Max:
+      return resampler.max();
+    case ResampleOp::First:
+      return resampler.first();
+    case ResampleOp::Last:
+      return resampler.last();
+    case ResampleOp::Count:
+      return resampler.count();
+  }
+  PLUSS_FAIL("DataFrameTsAccessor::resample: unsupported ResampleOp");
+}
+
 DataFrame ts_binary_frame_(const DataFrame& left,
                            const DataFrame& right,
                            const std::vector<std::string>& features,
@@ -336,6 +296,24 @@ DataFrame ts_binary_frame_(const DataFrame& left,
         break;
       case 3:
         out.emplace_back(name, lhs.ts().div(rhs, left_axis, right_axis, mode));
+        break;
+      case 4:
+        out.emplace_back(name, lhs.ts().eq(rhs, left_axis, right_axis, mode));
+        break;
+      case 5:
+        out.emplace_back(name, lhs.ts().ne(rhs, left_axis, right_axis, mode));
+        break;
+      case 6:
+        out.emplace_back(name, lhs.ts().lt(rhs, left_axis, right_axis, mode));
+        break;
+      case 7:
+        out.emplace_back(name, lhs.ts().le(rhs, left_axis, right_axis, mode));
+        break;
+      case 8:
+        out.emplace_back(name, lhs.ts().gt(rhs, left_axis, right_axis, mode));
+        break;
+      case 9:
+        out.emplace_back(name, lhs.ts().ge(rhs, left_axis, right_axis, mode));
         break;
       default:
         PLUSS_FAIL("DataFrameTsAccessor: unsupported binary operation");
@@ -425,98 +403,6 @@ std::int64_t ts_builder_duration_nanos_(std::string_view raw, std::string_view w
   return value * multiplier;
 }
 
-std::vector<std::string_view> ts_group_key_views_(
-    const std::vector<std::string>& keys) {
-  std::vector<std::string_view> out;
-  out.reserve(keys.size());
-  for (const auto& key : keys) {
-    out.push_back(key);
-  }
-  return out;
-}
-
-enum class TsGroupedWindowAggOp : std::uint8_t {
-  Sum = 0,
-  Mean = 1,
-  Min = 2,
-  Max = 3,
-  Count = 4,
-};
-
-std::string grouped_window_output_name_(TsGroupedWindowAggOp op,
-                                        std::string_view value_feature) {
-  switch (op) {
-    case TsGroupedWindowAggOp::Sum:
-      return "sum_" + std::string(value_feature);
-    case TsGroupedWindowAggOp::Mean:
-      return "mean_" + std::string(value_feature);
-    case TsGroupedWindowAggOp::Min:
-      return "min_" + std::string(value_feature);
-    case TsGroupedWindowAggOp::Max:
-      return "max_" + std::string(value_feature);
-    case TsGroupedWindowAggOp::Count:
-      return "count_" + std::string(value_feature);
-  }
-  PLUSS_FAIL("DataFrameTsWindowAccessor: unsupported grouped window aggregate");
-}
-
-DataFrame::GroupOp grouped_window_group_op_(TsGroupedWindowAggOp op) {
-  switch (op) {
-    case TsGroupedWindowAggOp::Sum:
-      return DataFrame::GroupOp::Sum;
-    case TsGroupedWindowAggOp::Mean:
-      return DataFrame::GroupOp::Mean;
-    case TsGroupedWindowAggOp::Min:
-      return DataFrame::GroupOp::Min;
-    case TsGroupedWindowAggOp::Max:
-      return DataFrame::GroupOp::Max;
-    case TsGroupedWindowAggOp::Count:
-      return DataFrame::GroupOp::Count;
-  }
-  PLUSS_FAIL("DataFrameTsWindowAccessor: unsupported grouped window aggregate");
-}
-
-std::vector<std::string> default_group_names_(std::size_t count) {
-  std::vector<std::string> out;
-  out.reserve(count);
-  for (std::size_t i = 0; i < count; ++i) {
-    out.push_back(count == 1 ? "group" : "group_" + std::to_string(i));
-  }
-  return out;
-}
-
-struct GroupedWindowGroupColumns {
-  DataFrame frame{};
-  std::vector<std::string> internal_names{};
-  std::vector<std::string> public_names{};
-};
-
-GroupedWindowGroupColumns attach_group_columns_(const DataFrame& frame,
-                                                const TsGroup& groups,
-                                                std::vector<std::string> public_names,
-                                                std::string_view where) {
-  PLUSS_CHECK(groups.defined(),
-              std::string(where) + ": group keys are required");
-  PLUSS_CHECK(groups.size() == frame.ncases(),
-              std::string(where) + ": group length must match DataFrame cases");
-  if (public_names.empty()) {
-    public_names = default_group_names_(groups.keys.size());
-  }
-  PLUSS_CHECK(public_names.size() == groups.keys.size(),
-              std::string(where) + ": group names length must match group key count");
-
-  GroupedWindowGroupColumns out;
-  out.frame = frame;
-  out.public_names = std::move(public_names);
-  out.internal_names.reserve(groups.keys.size());
-  for (std::size_t i = 0; i < groups.keys.size(); ++i) {
-    const auto internal = "__ts_group_" + std::to_string(i) + "__";
-    out.frame = out.frame.set(internal, groups.keys[i]);
-    out.internal_names.push_back(internal);
-  }
-  return out;
-}
-
 std::string resolve_grouped_window_value_feature_(
     const DataFrame& frame,
     const std::vector<std::string>& selected,
@@ -543,57 +429,12 @@ std::string resolve_grouped_window_value_feature_(
   return out;
 }
 
-Thread grouped_window_axis_thread_(const Thread& axis,
-                                   std::string_view where) {
-  PLUSS_CHECK(axis.defined(),
-              std::string(where) + ": time axis is undefined");
-  if (axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex) {
-    return axis.tl().epoch(TimeUnit::Nanos).cast(ThreadCastTarget::Series, ScalarType::Float64);
-  }
-  PLUSS_CHECK(axis.kind() == ThreadKind::Series &&
-                  axis.as_series().scalar_type() == ScalarType::Int64,
-              std::string(where) +
-                  ": time axis must be Timeline, TimeIndex, or Int64 epoch-nanos Series");
-  return axis.cast(ThreadCastTarget::Series, ScalarType::Float64);
-}
-
-DataFrame with_grouped_window_axis_(const DataFrame& frame,
-                                    const Thread& axis,
-                                    std::string_view output_feature,
-                                    std::string_view where) {
-  PLUSS_CHECK(axis.size() == frame.ncases(),
-              std::string(where) + ": time axis length must match DataFrame cases");
-  return frame.transform(
-      output_feature,
-      [axis, where_owned = std::string(where)](const DataFrame&) {
-        return grouped_window_axis_thread_(axis, where_owned);
-      });
-}
-
-Thread grouped_window_mask_(const Thread& axis,
-                            const Thread& anchor,
-                            std::int64_t duration_nanos,
-                            WindowClosure closure) {
-  const auto lower = anchor.sub(static_cast<double>(duration_nanos));
-  switch (closure) {
-    case WindowClosure::Right:
-      return axis.gt(lower).land(axis.le(anchor));
-    case WindowClosure::Left:
-      return axis.ge(lower).land(axis.lt(anchor));
-    case WindowClosure::Both:
-      return axis.ge(lower).land(axis.le(anchor));
-    case WindowClosure::Neither:
-      return axis.gt(lower).land(axis.lt(anchor));
-  }
-  PLUSS_FAIL("DataFrameTsWindowAccessor: unsupported closure");
-}
-
 DataFrame grouped_window_aggregate_(const DataFrame& frame,
                                     const std::vector<std::string>& selected_features,
                                     const TsOptions& options,
                                     std::string_view duration,
                                     WindowClosure closure,
-                                    TsGroupedWindowAggOp op,
+                                    detail::TsGroupedWindowAggOp op,
                                     std::string_view value_feature,
                                     std::string_view where) {
   PLUSS_CHECK(options.group.defined(),
@@ -602,60 +443,21 @@ DataFrame grouped_window_aggregate_(const DataFrame& frame,
       frame,
       selected_features,
       value_feature,
-      op != TsGroupedWindowAggOp::Count,
+      op != detail::TsGroupedWindowAggOp::Count,
       where);
   const auto duration_nanos = ts_builder_duration_nanos_(duration, where);
   const auto axis = ts_source_axis_(frame, options, where);
-  auto grouped_frame = attach_group_columns_(
+  const Thread* anchor = options.anchor.defined() ? &options.anchor : nullptr;
+  return detail::grouped_window_aggregate(
       frame,
+      axis,
       options.group,
-      options.group.names,
+      anchor,
+      duration_nanos,
+      closure,
+      value_name,
+      op,
       where);
-  const auto key_views = ts_group_key_views_(grouped_frame.internal_names);
-
-  constexpr std::string_view time_axis_name = "__ts_window_time__";
-  constexpr std::string_view anchor_axis_name = "__ts_window_anchor__";
-  auto working = with_grouped_window_axis_(grouped_frame.frame, axis, time_axis_name, where);
-  if (options.anchor.defined()) {
-    working = with_grouped_window_axis_(working, options.anchor, anchor_axis_name, where);
-  } else {
-    const auto anchors = working.group_by(
-        pluss::msharp::RangeView::Of<std::string_view>(key_views),
-        {DataFrame::GroupSpec{
-            std::string(anchor_axis_name),
-            std::string(time_axis_name),
-            DataFrame::GroupOp::Max,
-        }},
-        true,
-        false);
-    working = working.unify(pluss::msharp::RangeView::Of<std::string_view>(key_views),
-                            anchors,
-                            pluss::msharp::RangeView::Of<std::string_view>(key_views),
-                            "keep_left",
-                            "_anchor",
-                            "many_to_one");
-  }
-
-  const auto mask = grouped_window_mask_(working.features(std::string(time_axis_name)),
-                                         working.features(std::string(anchor_axis_name)),
-                                         duration_nanos,
-                                         closure);
-  const auto filtered = working.filter(mask);
-  const auto output_name = grouped_window_output_name_(op, value_name);
-  DataFrame out = filtered.group_by(pluss::msharp::RangeView::Of<std::string_view>(key_views),
-                                    {DataFrame::GroupSpec{
-                                        output_name,
-                                        value_name,
-                                        grouped_window_group_op_(op),
-                                    }},
-                                    true,
-                                    false);
-  for (std::size_t i = 0; i < grouped_frame.internal_names.size(); ++i) {
-    if (grouped_frame.internal_names[i] != grouped_frame.public_names[i]) {
-      out = out.rename(grouped_frame.internal_names[i], grouped_frame.public_names[i]);
-    }
-  }
-  return out;
 }
 
 } // namespace
@@ -742,15 +544,10 @@ DataFrame DataFrameTsAccessor::rolling(
   for (const auto& name : features_) {
     const auto values = frame_.features(name);
     if (options_.group.defined()) {
-      out.emplace_back(name, grouped_timed_rolling_(
-                                 values,
-                                 axis,
-                                 options_.group,
-                                 duration,
-                                 statistic,
-                                 options,
-                                 closure,
-                                 "DataFrameTsAccessor::rolling"));
+      const auto groups = ts_group_thread_(options_.group, "DataFrameTsAccessor::rolling");
+      out.emplace_back(
+          name,
+          values.ts().rolling(axis, groups, duration, statistic, options, closure));
     } else {
       out.emplace_back(name, values.ts().rolling(axis, duration, statistic, options, closure));
     }
@@ -763,16 +560,15 @@ DataFrame DataFrameTsAccessor::grouped(std::int64_t window,
                                        const WindowOptions& options) const {
   PLUSS_CHECK(options_.group.defined(),
               "DataFrameTsAccessor::grouped: TsOptions.group is required. Use df.features(...).ts({.group = df.features(\"group\")})");
+  const auto groups = ts_group_thread_(options_.group, "DataFrameTsAccessor::grouped");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
   for (const auto& name : features_) {
-    out.emplace_back(name, grouped_fixed_rolling_(
-                               frame_.features(name),
-                               options_.group,
+    out.emplace_back(name, frame_.features(name).ts().grouped(
+                               groups,
                                window,
                                statistic,
-                               options,
-                               "DataFrameTsAccessor::grouped"));
+                               options));
   }
   return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
@@ -871,6 +667,46 @@ DataFrame DataFrameTsAccessor::ewm(
   return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
+DataFrame DataFrameTsAccessor::timed(
+    std::int64_t duration_nanos,
+    TimeWindowStatistic statistic,
+    const StatisticOptions& options,
+    WindowClosure closure) const {
+  PLUSS_CHECK(!options_.group.defined(),
+              "DataFrameTsAccessor::timed: TsOptions.group is not supported; use rolling(duration) for grouped temporal windows");
+  const auto axis = ts_timed_axis_(frame_, options_, "DataFrameTsAccessor::timed");
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  for (const auto& name : features_) {
+    out.emplace_back(
+        name,
+        frame_.features(name).ts().timed(axis, duration_nanos, statistic, options, closure));
+  }
+  return make_frame_from_columns_(std::move(out), axis);
+}
+
+DataFrame DataFrameTsAccessor::timed(
+    const Thread& axis,
+    std::int64_t duration_nanos,
+    TimeWindowStatistic statistic,
+    const StatisticOptions& options,
+    WindowClosure closure) const {
+  PLUSS_CHECK(!options_.group.defined(),
+              "DataFrameTsAccessor::timed: TsOptions.group is not supported; use rolling(duration) for grouped temporal windows");
+  const auto resolved_axis = require_timed_axis_thread_(axis, "DataFrameTsAccessor::timed");
+  PLUSS_CHECK(resolved_axis.size() == frame_.ncases(),
+              "DataFrameTsAccessor::timed: axis length must match DataFrame cases");
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  for (const auto& name : features_) {
+    out.emplace_back(
+        name,
+        frame_.features(name).ts().timed(
+            resolved_axis, duration_nanos, statistic, options, closure));
+  }
+  return make_frame_from_columns_(std::move(out), resolved_axis);
+}
+
 DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods, double epsilon) const {
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
@@ -893,10 +729,15 @@ DataFrame DataFrameTsAccessor::sort(bool ascending, bool nulls_last) const {
   const auto axis = ts_source_axis_(frame_, options_, "DataFrameTsAccessor::sort");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
+  Thread out_cases;
   for (const auto& name : features_) {
-    out.emplace_back(name, frame_.features(name));
+    auto sorted = frame_.features(name).ts().sort(axis, ascending, nulls_last);
+    if (!out_cases.defined()) {
+      out_cases = sorted.label().values();
+    }
+    out.emplace_back(name, sorted.label().reset());
   }
-  return make_frame_from_columns_(std::move(out), axis).label().sort(ascending, nulls_last);
+  return make_frame_from_columns_(std::move(out), out_cases);
 }
 
 DataFrameTsWindowAccessor::DataFrameTsWindowAccessor(
@@ -922,7 +763,7 @@ DataFrame DataFrameTsWindowAccessor::sum(std::string_view value_feature) const {
                                    options_,
                                    duration_,
                                    closure_,
-                                   TsGroupedWindowAggOp::Sum,
+                                   detail::TsGroupedWindowAggOp::Sum,
                                    value_feature,
                                    "DataFrameTsWindowAccessor::sum");
 }
@@ -933,7 +774,7 @@ DataFrame DataFrameTsWindowAccessor::mean(std::string_view value_feature) const 
                                    options_,
                                    duration_,
                                    closure_,
-                                   TsGroupedWindowAggOp::Mean,
+                                   detail::TsGroupedWindowAggOp::Mean,
                                    value_feature,
                                    "DataFrameTsWindowAccessor::mean");
 }
@@ -944,7 +785,7 @@ DataFrame DataFrameTsWindowAccessor::min(std::string_view value_feature) const {
                                    options_,
                                    duration_,
                                    closure_,
-                                   TsGroupedWindowAggOp::Min,
+                                   detail::TsGroupedWindowAggOp::Min,
                                    value_feature,
                                    "DataFrameTsWindowAccessor::min");
 }
@@ -955,7 +796,7 @@ DataFrame DataFrameTsWindowAccessor::max(std::string_view value_feature) const {
                                    options_,
                                    duration_,
                                    closure_,
-                                   TsGroupedWindowAggOp::Max,
+                                   detail::TsGroupedWindowAggOp::Max,
                                    value_feature,
                                    "DataFrameTsWindowAccessor::max");
 }
@@ -966,7 +807,7 @@ DataFrame DataFrameTsWindowAccessor::count(std::string_view value_feature) const
                                    options_,
                                    duration_,
                                    closure_,
-                                   TsGroupedWindowAggOp::Count,
+                                   detail::TsGroupedWindowAggOp::Count,
                                    value_feature,
                                    "DataFrameTsWindowAccessor::count");
 }
@@ -1015,11 +856,11 @@ DataFrame DataFrameTsAccessor::resample(
   out.reserve(features_.size());
   Thread out_cases;
   for (const auto& name : features_) {
-    const auto sampled = frame_.features(name).ts().resample(axis, options, op);
+    auto sampled = ts_resample_thread_(frame_.features(name), axis, options, op);
     if (!out_cases.defined()) {
-      out_cases = sampled.labels;
+      out_cases = sampled.label().values();
     }
-    out.emplace_back(name, sampled.values);
+    out.emplace_back(name, sampled.label().reset());
   }
   return make_frame_from_columns_(std::move(out), out_cases);
 }
@@ -1039,11 +880,11 @@ DataFrame DataFrameTsAccessor::resample(
   out.reserve(features_.size());
   Thread out_cases;
   for (const auto& name : features_) {
-    const auto sampled = frame_.features(name).ts().resample(axis, options, op);
+    auto sampled = ts_resample_thread_(frame_.features(name), axis, options, op);
     if (!out_cases.defined()) {
-      out_cases = sampled.labels;
+      out_cases = sampled.label().values();
     }
-    out.emplace_back(name, sampled.values);
+    out.emplace_back(name, sampled.label().reset());
   }
   return make_frame_from_columns_(std::move(out), out_cases);
 }
@@ -1068,7 +909,7 @@ DataFrame DataFrameTsAccessor::asfreq(
   }
   auto out = resample(time_feature, options, op);
   for (const auto& name : features_) {
-    out.set_(name, Thread(pluss::subsp::stats::ts::fill_gaps(out.features(name).as_series(), fill_mode, constant)));
+    out.set_(name, out.features(name).ts().fill_gaps(fill_mode, constant));
   }
   return out;
 }
@@ -1088,7 +929,7 @@ DataFrame DataFrameTsAccessor::asfreq(
     pluss::subsp::stats::ts::ResampleOp op) const {
   auto out = resample(options, op);
   for (const auto& name : features_) {
-    out.set_(name, Thread(pluss::subsp::stats::ts::fill_gaps(out.features(name).as_series(), fill_mode, constant)));
+    out.set_(name, out.features(name).ts().fill_gaps(fill_mode, constant));
   }
   return out;
 }
@@ -1097,16 +938,11 @@ DataFrame DataFrameTsAccessor::insert_gaps(std::string_view time_feature, std::s
   if (time_feature.empty()) {
     return insert_gaps(freq, step);
   }
-  const auto source_ti = require_time_axis_index_(frame_, time_feature, "DataFrameTsAccessor::insert_gaps");
-  const auto bins = source_ti.resample_bins(freq, step);
-  return align_to(time_feature, Thread(bins.labels), TsAlignMode::Exact);
+  return resample(time_feature, freq, step).asfreq();
 }
 
 DataFrame DataFrameTsAccessor::insert_gaps(std::string_view freq, std::int64_t step) const {
-  const auto source_axis = ts_source_axis_(frame_, options_, "DataFrameTsAccessor::insert_gaps");
-  const auto source_ti = thread_to_timeindex_(source_axis, "DataFrameTsAccessor::insert_gaps");
-  const auto bins = source_ti.resample_bins(freq, step);
-  return align_to(Thread(bins.labels), TsAlignMode::Exact);
+  return resample(freq, step).asfreq();
 }
 
 DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Thread& target_axis, TsAlignMode mode) const {
@@ -1206,69 +1042,68 @@ DataFrame DataFrameTsResampler::asfreq(std::optional<double> fill_value) const {
   const auto source_axis = time_feature_.empty()
                                ? ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::asfreq")
                                : frame_.features(time_feature_);
-  const auto target_axis = time_feature_.empty()
-                               ? resample_target_axis_(source_axis, options_, "DataFrameTsResampler::asfreq")
-                               : resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::asfreq");
-  auto out = time_feature_.empty()
-                 ? DataFrameTsAccessor(frame_, features_, ts_options_).align_to(target_axis, TsAlignMode::Exact)
-                 : DataFrameTsAccessor(frame_, features_, ts_options_).align_to(time_feature_, target_axis, TsAlignMode::Exact);
-  if (!fill_value.has_value()) {
-    return out;
-  }
-  const auto source_ti = thread_to_timeindex_(source_axis, "DataFrameTsResampler::asfreq");
-  const auto target_ti = thread_to_timeindex_(target_axis, "DataFrameTsResampler::asfreq");
-  const auto n_source = source_ti.size();
-  const auto n_target = target_ti.size();
-  Series idx = pluss::full({n_target}, -1.0, ScalarType::Int64);
-  if (n_source > 0 && n_target > 0) {
-    idx = target_ti.join_asof(source_ti, pluss::TimeIndex::AsofDirection::Backward, nullptr, true);
-  }
-  auto exact = pluss::Series::zeros({n_target}, pluss::codem::ScalarType::Bool);
-  if (n_source > 0 && n_target > 0) {
-    const Series valid = idx.ge(0.0);
-    const Series source_ticks = source_ti.timeline().epoch_nanos().reshape({n_source});
-    const Series target_ticks = target_ti.timeline().epoch_nanos().reshape({n_target});
-    const Series safe_idx = idx.to(ScalarType::Float64).clamp(0.0, static_cast<double>(n_source - 1)).to(ScalarType::Int64);
-    const Series gathered_ticks = source_ticks.index_select(0, safe_idx);
-    exact = valid.logical_and(gathered_ticks.eq(target_ticks));
-  }
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  Thread out_cases;
   for (const auto& name : features_) {
-    out.set_(name, Thread(out.features(name).as_series().where(exact.logical_not(), *fill_value)));
+    auto sampled = frame_.features(name).ts().resample(source_axis, options_).asfreq(fill_value);
+    if (!out_cases.defined()) {
+      out_cases = sampled.label().values();
+    }
+    out.emplace_back(name, std::move(sampled));
   }
-  return out;
+  return make_frame_from_columns_(std::move(out), out_cases);
 }
 
 DataFrame DataFrameTsResampler::ffill() const {
-  const auto target_axis = time_feature_.empty()
-                               ? resample_target_axis_(ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::ffill"),
-                                                       options_,
-                                                       "DataFrameTsResampler::ffill")
-                               : resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::ffill");
-  return time_feature_.empty()
-             ? DataFrameTsAccessor(frame_, features_, ts_options_).align_to(target_axis, TsAlignMode::Backward)
-             : DataFrameTsAccessor(frame_, features_, ts_options_).align_to(time_feature_, target_axis, TsAlignMode::Backward);
+  const auto source_axis = time_feature_.empty()
+                               ? ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::ffill")
+                               : frame_.features(time_feature_);
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  Thread out_cases;
+  for (const auto& name : features_) {
+    auto sampled = frame_.features(name).ts().resample(source_axis, options_).ffill();
+    if (!out_cases.defined()) {
+      out_cases = sampled.label().values();
+    }
+    out.emplace_back(name, std::move(sampled));
+  }
+  return make_frame_from_columns_(std::move(out), out_cases);
 }
 
 DataFrame DataFrameTsResampler::bfill() const {
-  const auto target_axis = time_feature_.empty()
-                               ? resample_target_axis_(ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::bfill"),
-                                                       options_,
-                                                       "DataFrameTsResampler::bfill")
-                               : resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::bfill");
-  return time_feature_.empty()
-             ? DataFrameTsAccessor(frame_, features_, ts_options_).align_to(target_axis, TsAlignMode::Forward)
-             : DataFrameTsAccessor(frame_, features_, ts_options_).align_to(time_feature_, target_axis, TsAlignMode::Forward);
+  const auto source_axis = time_feature_.empty()
+                               ? ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::bfill")
+                               : frame_.features(time_feature_);
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  Thread out_cases;
+  for (const auto& name : features_) {
+    auto sampled = frame_.features(name).ts().resample(source_axis, options_).bfill();
+    if (!out_cases.defined()) {
+      out_cases = sampled.label().values();
+    }
+    out.emplace_back(name, std::move(sampled));
+  }
+  return make_frame_from_columns_(std::move(out), out_cases);
 }
 
 DataFrame DataFrameTsResampler::nearest() const {
-  const auto target_axis = time_feature_.empty()
-                               ? resample_target_axis_(ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::nearest"),
-                                                       options_,
-                                                       "DataFrameTsResampler::nearest")
-                               : resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::nearest");
-  return time_feature_.empty()
-             ? DataFrameTsAccessor(frame_, features_, ts_options_).align_to(target_axis, TsAlignMode::Nearest)
-             : DataFrameTsAccessor(frame_, features_, ts_options_).align_to(time_feature_, target_axis, TsAlignMode::Nearest);
+  const auto source_axis = time_feature_.empty()
+                               ? ts_source_axis_(frame_, ts_options_, "DataFrameTsResampler::nearest")
+                               : frame_.features(time_feature_);
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  Thread out_cases;
+  for (const auto& name : features_) {
+    auto sampled = frame_.features(name).ts().resample(source_axis, options_).nearest();
+    if (!out_cases.defined()) {
+      out_cases = sampled.label().values();
+    }
+    out.emplace_back(name, std::move(sampled));
+  }
+  return make_frame_from_columns_(std::move(out), out_cases);
 }
 
 DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature,
@@ -1303,7 +1138,7 @@ DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature,
       break;
   }
   for (const auto& name : features_) {
-    out.set_(name, Thread(pluss::subsp::stats::ts::fill_gaps(out.features(name).as_series(), gap_mode, constant)));
+    out.set_(name, out.features(name).ts().fill_gaps(gap_mode, constant));
   }
   return out;
 }
@@ -1336,7 +1171,7 @@ DataFrame DataFrameTsAccessor::align_to(const Thread& target_axis,
       break;
   }
   for (const auto& name : features_) {
-    out.set_(name, Thread(pluss::subsp::stats::ts::fill_gaps(out.features(name).as_series(), gap_mode, constant)));
+    out.set_(name, out.features(name).ts().fill_gaps(gap_mode, constant));
   }
   return out;
 }
@@ -1357,31 +1192,51 @@ DataFrame DataFrameTsAccessor::div(const DataFrame& other, TsAlignMode mode) con
   return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 3);
 }
 
+DataFrame DataFrameTsAccessor::eq(const DataFrame& other, TsAlignMode mode) const {
+  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 4);
+}
+
+DataFrame DataFrameTsAccessor::ne(const DataFrame& other, TsAlignMode mode) const {
+  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 5);
+}
+
+DataFrame DataFrameTsAccessor::lt(const DataFrame& other, TsAlignMode mode) const {
+  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 6);
+}
+
+DataFrame DataFrameTsAccessor::le(const DataFrame& other, TsAlignMode mode) const {
+  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 7);
+}
+
+DataFrame DataFrameTsAccessor::gt(const DataFrame& other, TsAlignMode mode) const {
+  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 8);
+}
+
+DataFrame DataFrameTsAccessor::ge(const DataFrame& other, TsAlignMode mode) const {
+  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 9);
+}
+
 DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const {
   PLUSS_CHECK(frame_.get(time_feature).has_value(), "DataFrameTsAccessor::calendar: unknown time feature");
   const auto axis = frame_.features(time_feature);
   PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
               "DataFrameTsAccessor::calendar: time feature must be Timeline/TimeIndex");
+  PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::calendar: expected at least one bound feature");
+  const auto calendar = frame_.features(features_.front()).ts().calendar(axis);
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(5);
-  out.emplace_back(feature_suffix_(time_feature, "year"), axis.year());
-  out.emplace_back(feature_suffix_(time_feature, "month"), axis.month());
-  out.emplace_back(feature_suffix_(time_feature, "day"), axis.day());
-  out.emplace_back(feature_suffix_(time_feature, "hour"), axis.hour());
-  out.emplace_back(feature_suffix_(time_feature, "weekday"), axis.to_note_weekday());
+  out.emplace_back(feature_suffix_(time_feature, "year"), calendar.features("axis_year"));
+  out.emplace_back(feature_suffix_(time_feature, "month"), calendar.features("axis_month"));
+  out.emplace_back(feature_suffix_(time_feature, "day"), calendar.features("axis_day"));
+  out.emplace_back(feature_suffix_(time_feature, "hour"), calendar.features("axis_hour"));
+  out.emplace_back(feature_suffix_(time_feature, "weekday"), calendar.features("axis_weekday"));
   return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::calendar() const {
   const auto axis = ts_source_axis_(frame_, options_, "DataFrameTsAccessor::calendar");
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(5);
-  out.emplace_back("axis_year", axis.year());
-  out.emplace_back("axis_month", axis.month());
-  out.emplace_back("axis_day", axis.day());
-  out.emplace_back("axis_hour", axis.hour());
-  out.emplace_back("axis_weekday", axis.to_note_weekday());
-  return make_frame_from_columns_(std::move(out), axis);
+  PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::calendar: expected at least one bound feature");
+  return frame_.features(features_.front()).ts().calendar(axis);
 }
 
 DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) const {

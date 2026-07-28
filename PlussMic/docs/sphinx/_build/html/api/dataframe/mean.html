@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::mean_by" href="mean_by.html" />
+    <link rel="next" title="DataFrame::median" href="median.html" />
     <link rel="prev" title="DataFrame::max" href="max.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -144,18 +144,18 @@ nor silently coerced.</p></li>
 <li><p><a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sum</span></code></span></a>, <a class="reference internal" href="std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::std</span></code></span></a>, <a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::median</span></code></span></a>:
 the other single-statistic feature reductions, sharing the same <code class="docutils literal notranslate"><span class="pre">axis</span></code> / <code class="docutils literal notranslate"><span class="pre">skipnull</span></code>
 shape.</p></li>
-<li><p><a class="reference internal" href="mean_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean_by</span></code></span></a>: the grouped version — one mean per group instead of
-one mean for the whole frame.</p></li>
 <li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: several statistics per feature in one call.</p></li>
+<li><p><a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a>: compute a grouped mean per group instead of one mean
+for the whole frame — <code class="docutils literal notranslate"><span class="pre">.group().by({...}).mean()</span></code> or an explicit <code class="docutils literal notranslate"><span class="pre">.agg({...})</span></code> spec.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="max.html">
     <span class="label">Previous</span>
     <span class="title">max</span>
   </a>
-  <a class="next-link" href="mean_by.html">
+  <a class="next-link" href="median.html">
     <span class="label">Next</span>
-    <span class="title">mean_by</span>
+    <span class="title">median</span>
   </a>
 </div>
 </section>
@@ -210,7 +210,7 @@ one mean for the whole frame.</p></li>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
       <li>Previous: <a href="max.html" title="previous chapter">DataFrame::max</a></li>
-      <li>Next: <a href="mean_by.html" title="next chapter">DataFrame::mean_by</a></li>
+      <li>Next: <a href="median.html" title="next chapter">DataFrame::median</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

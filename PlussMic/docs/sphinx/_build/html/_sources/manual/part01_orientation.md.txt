@@ -116,7 +116,7 @@ Most table operations return a new object:
 
 ```cpp
 auto cleaned = df.fillnull(0.0);
-auto sorted = cleaned.sort_values({"balance"});
+auto sorted = cleaned.arrange({"balance"});
 ```
 
 Mutating operations use a trailing underscore:
@@ -136,7 +136,7 @@ intentionally want to update an owned object.
 3. Select features with `features`.
 4. Filter cases with `query` or `filter`.
 5. Derive features with `assign` or `set`.
-6. Summarize with `aggregate`, `group_by`, `mean`, `corr`, and `tally`.
+6. Summarize with `aggregate`, `group`, `mean`, `corr`, and `tally`.
 7. Save with `save_csv`, `save_excel`, `save_json`, or `save_parquet`.
 
 Everything else in PlussMic builds on those ideas.

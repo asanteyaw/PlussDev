@@ -15,7 +15,7 @@ DataFrame::top(std::string_view feature, std::int64_t n) const -> DataFrame
 
 Returns the `n` rows with the largest values in `feature`, with every other feature
 carried along unchanged — the whole row moves together, not just the sorted column.
-This is exactly `sort_values({feature}, /*ascending=*/false)` followed by
+This is exactly `arrange({feature}, /*ascending=*/false)` followed by
 [`head(n)`](head.md); it exists as a single call for the extremely common
 "give me the top N by X" query.
 
@@ -81,7 +81,7 @@ matter how few rows are requested.
 
 ## Notes
 
-- `top()` is exactly `sort_values({feature}, false).head(n)`; reach for `sort_values()`
+- `top()` is exactly `arrange({feature}, false).head(n)`; reach for `arrange()`
   directly if you need more than one sort key or an ascending mix.
 - A missing value in `feature` sorts to the very end regardless of direction — it can
   only appear in a `top()` result if `n` is large enough to include it.
@@ -92,7 +92,7 @@ matter how few rows are requested.
 
 - [`DataFrame::bottom`](bottom.md): the ascending counterpart, returning the smallest
   `n` rows by `feature`.
-- [`DataFrame::sort_values`](sort_values.md): the general sorting method this is built
+- [`DataFrame::arrange`](arrange.md): the general sorting method this is built
   on, supporting multiple keys and mixed sort directions.
 - [`DataFrame::head`](head.md): the plain positional prefix `top()` applies after
   sorting.

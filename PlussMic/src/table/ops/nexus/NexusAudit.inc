@@ -58,7 +58,8 @@ detail::NexusKeyAuditProfile build_key_audit_profile(const DataFrame& frame,
   profile.missing_rows = profile.total_rows - profile.complete_rows;
   profile.complete_frame = frame.filter(complete_mask);
   profile.duplicate_frame = profile.complete_frame.filter(
-      profile.complete_frame.duplicated(pluss::msharp::RangeView::Of<std::string_view>(key_views), false, false)
+      profile.complete_frame.features(pluss::msharp::RangeView::Of<std::string_view>(key_views))
+          .duplicated(false, false)
           .as_series());
   return profile;
 }

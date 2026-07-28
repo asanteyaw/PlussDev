@@ -90,7 +90,7 @@ auto logs = DataFrame({
 });
 std::cout << logs;
 
-auto out1 = logs.note().has("ERROR");
+auto out1 = logs.nt().has("ERROR");
 std::cout << out1;
 ```
 
@@ -131,10 +131,10 @@ under the case-sensitive default, then matches once `case_sensitive` is set
 to `false`.
 
 ```cpp
-auto out2 = logs.note().has("error");
+auto out2 = logs.nt().has("error");
 std::cout << out2;
 
-auto out3 = logs.note().has("error", {.case_sensitive = false});
+auto out3 = logs.nt().has("error", {.case_sensitive = false});
 std::cout << out3;
 ```
 
@@ -174,7 +174,7 @@ comparing, so row 0 now matches.
 Example 3. Regex mode: search by pattern instead of literal text.
 
 ```cpp
-auto out4 = logs.note().has(R"(\d+)", {.regex = true});
+auto out4 = logs.nt().has(R"(\d+)", {.regex = true});
 std::cout << out4;
 ```
 
@@ -202,7 +202,7 @@ Example 4. Regex mode combined with `case_sensitive = false`: both fields of
 `TextOptions` at once.
 
 ```cpp
-auto out5 = logs.note().has(R"(err\w*)", {.regex = true, .case_sensitive = false});
+auto out5 = logs.nt().has(R"(err\w*)", {.regex = true, .case_sensitive = false});
 std::cout << out5;
 ```
 

@@ -17,7 +17,8 @@ PER_METHOD_CLASSES = {
     'DataFrame', 'Thread',
     'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
     'DataFrameFeatureAxisAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
-    'DataFrameTsWindowAccessor', 'DataFrameTsResampler',
+    'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
+    'TimeSeriesAccessor', 'DataFrameCastAccessor',
 }
 GENERIC_CSV_PATH = "path/to/data.csv"
 GENERIC_XLSX_PATH = "path/to/data.xlsx"
@@ -81,8 +82,8 @@ CLASS_CONFIG = {
         'output': DOCS / 'dataframe_note_accessor_api_reference.md',
         'title': 'DataFrameNoteAccessor API Reference',
         'subtitle': 'Practical DataFrameNoteAccessor API Reference',
-        'intro': 'This page documents the public string-feature accessor returned by `DataFrame::note()`.',
-        'binder': 'note()',
+        'intro': 'This page documents the public string-feature accessor returned by `DataFrame::nt()`.',
+        'binder': 'nt()',
     },
     'DataFrameTimelineAccessor': {
         'header': ROOT / 'PlussMic/src/table/DataFrame.h',
@@ -140,6 +141,22 @@ CLASS_CONFIG = {
         'intro': 'This page documents the public time-based resampling accessor returned by `DataFrame::ts().resample(...)`.',
         'binder': 'ts().resample(...)',
     },
+    'DataFrameCastAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_cast_accessor_api_reference.md',
+        'title': 'DataFrameCastAccessor API Reference',
+        'subtitle': 'Practical DataFrameCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `DataFrame::cast()`.',
+        'binder': 'cast()',
+    },
+    'DataFrameGroupBuilder': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_group_accessor_api_reference.md',
+        'title': 'DataFrameGroupBuilder API Reference',
+        'subtitle': 'Practical DataFrameGroupBuilder API Reference',
+        'intro': 'This page documents the public grouped-workflow surface entered via `DataFrame::group()` -- the `DataFrameGroupBuilder` returned by `group()` itself, and the `DataFrameGrouped` handle returned by its `.by(...)`.',
+        'binder': 'group()',
+    },
     'Thread': {
         'header': ROOT / 'PlussMic/src/table/Thread.h',
         'output': DOCS / 'thread_api_reference.md',
@@ -153,6 +170,14 @@ CLASS_CONFIG = {
         'title': 'ThreadValue API Reference',
         'subtitle': 'Practical ThreadValue API Reference',
         'intro': 'This page documents the public scalar-like `ThreadValue` wrapper returned by thread and column-value accessors.',
+    },
+    'TimeSeriesAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Thread.h',
+        'output': DOCS / 'thread_ts_accessor_api_reference.md',
+        'title': 'TimeSeriesAccessor API Reference',
+        'subtitle': 'Practical TimeSeriesAccessor API Reference',
+        'intro': 'This page documents the public time-series accessor returned by `Thread::ts()`.',
+        'binder': 'ts()',
     },
     'Atlas': {
         'header': ROOT / 'PlussMic/src/table/Atlas.h',
@@ -216,6 +241,9 @@ METHOD_PAGE_DIR = {
     'DataFrameTsAccessor': 'dataframe-ts',
     'DataFrameTsWindowAccessor': 'dataframe-ts-window',
     'DataFrameTsResampler': 'dataframe-ts-resample',
+    'DataFrameGroupBuilder': 'dataframe-group',
+    'TimeSeriesAccessor': 'thread-ts',
+    'DataFrameCastAccessor': 'dataframe-cast',
 }
 
 # Maps a class to the accessor classes it exposes, so their landing pages can
@@ -1099,7 +1127,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'aggregate', 'specs'):
             enum_note('Aggregation specs. Each `SummarySpec` has `output`, `feature`, and `op`.', [
                 ('Count', 'Count observed values in the selected feature.'),
-                ('Nunique', 'Count distinct observed values.'),
+                ('Ndistinct', 'Count distinct observed values.'),
                 ('Sum', 'Compute the numeric sum.'),
                 ('Mean', 'Compute the arithmetic mean.'),
                 ('Median', 'Compute the median.'),
@@ -1109,18 +1137,27 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Var', 'Compute the variance.'),
                 ('Prod', 'Compute the numeric product.'),
             ], heading='`op` supports'),
-        ('DataFrame', 'group_by', 'keys'):
-            'Feature names whose distinct value combinations define the output groups.',
-        ('DataFrame', 'group_by', 'specs'):
+        ('DataFrameGrouped', 'agg', 'specs'):
             enum_note('Grouped aggregation specs. Each `GroupSpec` has `output`, `feature`, and `op`.', [
                 ('Count', 'Count observed values inside each group.'),
-                ('Nunique', 'Count distinct observed values inside each group.'),
+                ('Ndistinct', 'Count distinct observed values inside each group.'),
                 ('Sum', 'Compute the numeric sum inside each group.'),
                 ('Mean', 'Compute the arithmetic mean inside each group.'),
                 ('Min', 'Compute the minimum inside each group.'),
                 ('Max', 'Compute the maximum inside each group.'),
                 ('Std', 'Compute the sample standard deviation inside each group.'),
                 ('Var', 'Compute the sample variance inside each group.'),
+            ], heading='`op` supports'),
+        ('DataFrameGrouped', 'transform', 'specs'):
+            enum_note('Grouped transform specs. Each `GroupSpec` has `output`, `feature`, and `op`.', [
+                ('Count', 'Broadcast each group row count back to the original row space.'),
+                ('Ndistinct', 'Broadcast each group distinct count back to the original row space.'),
+                ('Sum', 'Broadcast each group sum back to the original row space.'),
+                ('Mean', 'Broadcast each group mean back to the original row space.'),
+                ('Min', 'Broadcast each group minimum back to the original row space.'),
+                ('Max', 'Broadcast each group maximum back to the original row space.'),
+                ('Std', 'Broadcast each group sample standard deviation back to the original row space.'),
+                ('Var', 'Broadcast each group sample variance back to the original row space.'),
             ], heading='`op` supports'),
         ('DataFrame', 'corr', 'method'):
             enum_note('Correlation method.', [
@@ -1499,7 +1536,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'SummaryOp':
             enum_note('', [
                 ('Count', 'Count observed values.'),
-                ('Nunique', 'Count distinct observed values.'),
+                ('Ndistinct', 'Count distinct observed values.'),
                 ('Sum', 'Compute the numeric sum.'),
                 ('Mean', 'Compute the arithmetic mean.'),
                 ('Median', 'Compute the median.'),
@@ -1512,7 +1549,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'GroupOp':
             enum_note('', [
                 ('Count', 'Count observed values in each group.'),
-                ('Nunique', 'Count distinct observed values in each group.'),
+                ('Ndistinct', 'Count distinct observed values in each group.'),
                 ('Sum', 'Compute the numeric sum in each group.'),
                 ('Mean', 'Compute the arithmetic mean in each group.'),
                 ('Min', 'Compute the minimum in each group.'),
@@ -1669,7 +1706,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'extend': 'Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.',
             'equals': 'Checks whether two frames have the same structure, labels, and values.',
             'feature_ref': 'Returns a lightweight reference object for one feature so you can inspect metadata or switch into column-oriented operations without materializing a new frame.',
-            'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
+            'group': 'Opens the grouped workspace builder so you can choose keys and then aggregate, transform, or filter by group.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'head': 'Returns the first `n` rows of the frame.',
@@ -1689,7 +1726,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'ncases': 'Returns the number of rows in the current frame.',
             'ndistinct': 'Counts distinct observed values or distinct value-combinations across the selected features.',
             'nfeatures': 'Returns the number of features in the current frame.',
-            'note': 'Opens the note/text surface for the current selected DataFrame. Every selected feature must be Note-backed; select text feature(s) first with `df.features({...}).note()`.',
+            'nt': 'Opens the note/text surface for the current selected DataFrame. Every selected feature must be Note-backed; select text feature(s) first with `df.features({...}).nt()`.',
             'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
             'label().align': 'Reorders rows so their case labels match the supplied `new_label` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
             'label().sort': 'Sorts rows by the current case-label axis rather than by a data feature.',
@@ -1936,7 +1973,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'shares_payload_with': 'Reports whether two threads point at the same underlying payload storage.',
             'slice': 'Returns a contiguous slice `[start, stop)` of the thread.',
             'skew': 'Returns sample skewness of a numeric thread.',
-            'sort_values': 'Reorders thread entries by their values while keeping the payload type unchanged.',
+            'arrange': 'Reorders thread entries by their values while keeping the payload type unchanged.',
             'split': 'Splits note-backed text values into pieces using the requested delimiter or rule.',
             'std': 'Returns the standard deviation of a numeric thread.',
             'starts': 'Checks whether each note-backed text value starts with the requested prefix.',
@@ -2127,7 +2164,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'This applies arithmetic across the compatible numeric payloads in the current object.'
     if name in {'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'compare'}:
         return 'This produces a comparison-style result you can inspect directly or reuse as a mask.'
-    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group_by', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'type_profiles'}:
+    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'type_profiles'}:
         return 'Use this when you want a summary view instead of carrying the full input forward unchanged.'
     if name in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
         return 'This changes the semantic or numeric type so later operations route through the correct implementation path.'
@@ -3589,7 +3626,7 @@ def render_dataframe_a_page(name: str, overloads: list[Method], class_name: str)
                 '',
                 '    `op` supports:',
                 '    - `Count`: count observed values.',
-                '    - `Nunique`: count distinct observed values.',
+                '    - `Ndistinct`: count distinct observed values.',
                 '    - `Sum`: numeric sum.',
                 '    - `Mean`: arithmetic mean.',
                 '    - `Median`: median.',
@@ -3640,7 +3677,7 @@ summary | 8.333333333      1.040833
             ],
             [
                 '- `aggregate(...)` returns a summary view, not grouped rows.',
-                '- `Count` and `Nunique` are valid on non-numeric features; the numeric summary ops expect numeric input.',
+                '- `Count` and `Ndistinct` are valid on non-numeric features; the numeric summary ops expect numeric input.',
             ],
         )
 
@@ -4979,7 +5016,7 @@ city    id  sales
 Accra   1   100.0
 Tema    2   120.0
 Kumasi  3    90.0"""
-        if n in {'group_by'}:
+        if n in {'group'}:
             return DF_GROUP_OUT
         if n in {'count_by', 'tally'}:
             return DF_COUNT_BY_OUT
@@ -6010,7 +6047,7 @@ def note_accessor_base() -> str:
     {\"product\", pluss::table::Thread(pluss::make_note({\"Laptop\", \"desk\", \"Chair\"}))},
     {\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
 });
-auto notes = df.note();"""
+auto notes = df.nt();"""
 
 
 def timeline_accessor_base() -> str:
@@ -6217,8 +6254,8 @@ def example_for(class_name: str, method: Method) -> str:
     sig = method.signature
     # DataFrame
     if class_name == 'DataFrame':
-        if n == 'note':
-            return df_base() + '\n\nauto out = df.features({"city"}).note();'
+        if n == 'nt':
+            return df_base() + '\n\nauto out = df.features({"city"}).nt();'
         if n == 'tl':
             return df_time() + '\n\nauto out = df.features({"ts"}).tl();'
         if n.startswith('load'):
@@ -6555,11 +6592,11 @@ def example_for(class_name: str, method: Method) -> str:
             if 'std::int64_t start, std::int64_t stop' in sig:
                 return df_base() + '\n\nauto preview = df.observe(0, 2, false);\npreview.show();'
             return df_base() + '\n\nauto preview = df.observe(1, false);\npreview.show();'
-        if n in {'sort_values','label().sort','top','bottom','label().repeated','unique_cases','label().align'}:
-            if n == 'sort_values':
+        if n in {'arrange','label().sort','top','bottom','label().repeated','unique_cases','label().align'}:
+            if n == 'arrange':
                 if 'ArrangeSpec' in sig:
-                    return df_base() + '\n\nauto out = df.sort_values({{.feature = "sales", .ascending = false}});'
-                return df_base() + '\n\nauto out = df.sort_values({"sales"}, false, true);'
+                    return df_base() + '\n\nauto out = df.arrange({{.feature = "sales", .ascending = false}});'
+                return df_base() + '\n\nauto out = df.arrange({"sales"}, false, true);'
             if n == 'label().sort':
                 return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Thread(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.label().sort(true, true);'
             if n == 'top':
@@ -6815,11 +6852,17 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.shuffle(7);'
         if n == 'reshuffle':
             return df_base() + '\n\nauto rows = df.reshuffle(0, 7);\nauto cols = df.reshuffle(1, 7);'
-        if n in {'aggregate','group_by','pivot','pivot_table','count_by','mean_by'}:
+        if n in {'aggregate','group','pivot','pivot_table','count_by','mean_by'}:
             if n == 'aggregate':
                 return df_group() + '\n\nauto out = df.aggregate({{"sales_mean", "sales", pluss::table::DataFrame::SummaryOp::Mean}}, false);'
-            if n == 'group_by':
-                return df_group() + '\n\nauto out = df.group_by({"city"}, {{"sales_sum", "sales", pluss::table::DataFrame::GroupOp::Sum}}, true, false);'
+            if n == 'group':
+                return (
+                    df_group()
+                    + '\n\n'
+                    + 'auto out = df.group({.dropnull = true})\n'
+                    + '             .by({"city"})\n'
+                    + '             .agg({{"sales_sum", "sales", pluss::table::DataFrame::GroupOp::Sum}});'
+                )
             if n == 'pivot':
                 return df_group() + '\n\nauto out = df.pivot("city", "product", "sales", true, false);'
             if n == 'pivot_table':
@@ -8098,12 +8141,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '#### Argument Effects',
                 '',
                 '- Small `n` is useful for “lowest few rows” inspection.',
-                '- Larger `n` gives you the full ascending slice without writing `sort_values(...).head(...)` yourself.',
+                '- Larger `n` gives you the full ascending slice without writing `arrange(...).head(...)` yourself.',
                 '',
                 '#### Equivalent Expanded Form',
                 '',
                 '```cpp',
-                'auto out = df.sort_values({pluss::table::DataFrame::ArrangeSpec{"sales", true, true}})',
+                'auto out = df.arrange({pluss::table::DataFrame::ArrangeSpec{"sales", true, true}})',
                 '             .head(5, false);',
                 '```',
                 '',
@@ -8114,12 +8157,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Each `SummarySpec` chooses an output name, a source feature, and a summary operation.',
                 'Use this when you want one-row summary output such as totals, means, mins, maxes, or counts.',
             ])
-        if class_name == 'DataFrame' and n == 'group_by':
+        if class_name == 'DataFrame' and n == 'group':
             return bullets('Execution Model', [
-                '`group_by(...)` factorizes typed key combinations once in stable first-seen order.',
+                '`group(...)` opens a builder and defers execution until `by(...).agg(...)`, `by(...).transform(...)`, or `by(...).filter(...)` is chosen.',
+                'Typed key combinations are factorized once in stable first-seen order and then reused across grouped reductions.',
                 'Count, sum, mean, minimum, maximum, sample standard deviation, and sample variance use vectorized Series scatter reductions.',
                 'Numeric payloads and validity masks stay on their source platform; key hashing and arbitrary-value distinct counting require one bulk host materialization.',
-                'Output key features retain their original Thread kind and dtype.',
             ])
         if class_name == 'DataFrame' and n == 'label().align':
             return bullets('Practical Behavior', [

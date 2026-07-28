@@ -126,7 +126,7 @@ bool thread_prefers_labels(const Thread& t) {
 }
 
 std::vector<std::string> thread_to_labels(const Thread& thread) {
-  const Thread note_like = (thread.kind() == ThreadKind::Note) ? thread : thread.cast(ThreadCastTarget::Note);
+  const Thread note_like = (thread.kind() == ThreadKind::Note) ? thread : thread.cast().note();
   const auto& note = note_like.as_note();
   std::vector<std::string> labels;
   labels.reserve(static_cast<std::size_t>(note.numel()));
@@ -159,7 +159,7 @@ pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, 
       numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     case ThreadKind::Note:
-      numeric_thread = t.cast(ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+      numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
       break;
     default:
       PLUSS_FAIL(std::string(where) + ": feature '" + std::string(feature_name) + "' is not numeric/threadable");

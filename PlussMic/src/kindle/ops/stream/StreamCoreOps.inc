@@ -71,7 +71,7 @@ Stream Stream::distinct(DistinctOptions options) const {
 
 Stream Stream::freq(FreqOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto out = pluss::table::detail::tally_count_thread(
+  const auto out = pluss::table::detail::freq_count_thread(
       to_thread(), options.top, options.dropnull, "freq");
   if (out.label().has()) {
     return Stream::from_thread(out, out.label().values());
@@ -87,7 +87,19 @@ Stream Stream::ndistinct(DistinctOptions options) const {
 Stream Stream::cast(pluss::table::ThreadCastTarget target,
                     std::optional<pluss::codem::ScalarType> series_dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.cast(target, series_dtype); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) {
+    switch (target) {
+      case pluss::table::ThreadCastTarget::Series:
+        return t.cast({.series_dtype = series_dtype}).series();
+      case pluss::table::ThreadCastTarget::Note:
+        return t.cast().note();
+      case pluss::table::ThreadCastTarget::Timeline:
+        return t.cast().timeline();
+      case pluss::table::ThreadCastTarget::TimeIndex:
+        return t.cast().timeindex();
+    }
+    return t;
+  });
 }
 
 Stream Stream::astype(pluss::codem::ScalarType dtype) const {

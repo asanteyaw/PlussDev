@@ -15,7 +15,11 @@ static DataFrame load_excel(std::string_view filepath, std::string_view sheet_na
 static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true) -> DataFrame
 static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true) -> pluss::loader::LoadResult
 static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true) -> pluss::loader::LoadResult
+static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true) -> pluss::loader::LoadResult
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::string_view> sheet_names, bool header = true) -> pluss::loader::LoadResult
 static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true) -> pluss::loader::LoadResult
+static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true) -> pluss::loader::LoadResult
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::int64_t> sheet_indices, bool header = true) -> pluss::loader::LoadResult
 ```
 
 ## What It Does
@@ -51,14 +55,14 @@ The worksheet to load, by zero-based position.
 
 Whether the sheet's first row holds feature names.
 
-**sheet_names** (`const std::vector<std::string>&` / `std::initializer_list<std::string_view>`,
-multi-sheet overload)
+**sheet_names** (`const std::vector<std::string>&` / `std::initializer_list<std::string_view>` /
+`pluss::RangeView<std::string_view>`, multi-sheet overload)
 
 Worksheets to load together, by name. An **empty** list is equivalent to passing
 `nullptr` — both load every sheet in the workbook.
 
-**sheet_indices** (`const std::vector<std::int64_t>&` / `std::initializer_list<std::int64_t>`,
-multi-sheet overload)
+**sheet_indices** (`const std::vector<std::int64_t>&` / `std::initializer_list<std::int64_t>` /
+`pluss::RangeView<std::int64_t>`, multi-sheet overload)
 
 Worksheets to load together, by zero-based position. Same empty-list-means-all-sheets
 behavior as `sheet_names`.

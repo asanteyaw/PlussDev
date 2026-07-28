@@ -77,9 +77,9 @@ case `1` shows case `2`'s `15`, and so on. Case `3` has no successor, so it's
   (a negative `shift` argument corresponds to a lead) outside the `ts()` accessor.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lag_block.html">
+  <a class="prev-link" href="le.html">
     <span class="label">Previous</span>
-    <span class="title">lag_block</span>
+    <span class="title">le</span>
   </a>
   <a class="next-link" href="log_returns.html">
     <span class="label">Next</span>

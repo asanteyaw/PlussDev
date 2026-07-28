@@ -18,7 +18,7 @@ DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool
       out_cols.emplace_back(out_name, make_i64_thread({non_null_count(feature_value)}));
       continue;
     }
-    if (spec.op == SummaryOp::Nunique) {
+    if (spec.op == SummaryOp::Ndistinct) {
       out_cols.emplace_back(out_name, make_i64_thread({distinct_non_null_count(feature_value)}));
       continue;
     }
@@ -37,83 +37,11 @@ DataFrameView DataFrame::aggregate(pluss::msharp::RangeView::Of<SummarySpec> spe
   return DataFrameView(summarize(specs, false), render, "aggregate", title());
 }
 
-double median_from_values_(std::vector<double>& values) {
-  PLUSS_CHECK(!values.empty(), "DataFrame::group median: empty value group");
-  const auto n = values.size();
-  const auto mid = n / 2;
-  std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid), values.end());
-  const auto upper = values[mid];
-  if (n % 2 != 0) {
-    return upper;
-  }
-  std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid - 1), values.end());
-  return (values[mid - 1] + upper) / 2.0;
-}
-
-Thread grouped_mode_thread_(
-    const Thread& values,
-    const std::vector<std::int64_t>& group_ids,
-    const std::vector<bool>& included,
-    std::int64_t group_count) {
-  PLUSS_CHECK(values.kind() == ThreadKind::Note,
-              "DataFrame::group mode: expected Note feature");
-  const auto valid = values.notnull().as_series().to_vec<bool>();
-
-  struct ModeBucket {
-    std::int64_t count{0};
-    std::int64_t first_row{0};
-  };
-
-  const auto host_values = values.as_note().vector();
-  std::vector<std::unordered_map<std::string, ModeBucket>> counts(
-      static_cast<std::size_t>(group_count));
-  for (std::int64_t row = 0; row < values.size(); ++row) {
-    if (!included[static_cast<std::size_t>(row)] ||
-        !valid[static_cast<std::size_t>(row)]) {
-      continue;
-    }
-    const auto group_id = group_ids[static_cast<std::size_t>(row)];
-    if (group_id < 0 || group_id >= group_count) {
-      continue;
-    }
-    auto& bucket =
-        counts[static_cast<std::size_t>(group_id)]
-              [std::string(host_values[static_cast<std::size_t>(row)])];
-    if (bucket.count == 0) {
-      bucket.first_row = row;
-    }
-    ++bucket.count;
-  }
-
-  std::vector<std::string> out_values(static_cast<std::size_t>(group_count));
-  std::vector<bool> out_valid(static_cast<std::size_t>(group_count), false);
-  for (std::int64_t group = 0; group < group_count; ++group) {
-    std::int64_t best_count = 0;
-    std::int64_t best_row = -1;
-    std::string best_value;
-    for (const auto& [value, bucket] : counts[static_cast<std::size_t>(group)]) {
-      if (bucket.count > best_count ||
-          (bucket.count == best_count &&
-           (best_row < 0 || bucket.first_row < best_row))) {
-        best_count = bucket.count;
-        best_row = bucket.first_row;
-        best_value = value;
-      }
-    }
-    if (best_row >= 0) {
-      out_values[static_cast<std::size_t>(group)] = std::move(best_value);
-      out_valid[static_cast<std::size_t>(group)] = true;
-    }
-  }
-  return Thread(
-      pluss::make_note(out_values),
-      bool_mask_from_values(out_valid, pluss::codem::Platform::CPU));
-}
-
 DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
                            pluss::msharp::RangeView::Of<GroupSpec> specs,
                            bool dropnull_keys,
-                           bool render) const {
+                           bool render,
+                           bool sort_groups) const {
   PLUSS_CHECK(keys.size() != 0, "DataFrame::group: at least one key feature is required");
   PLUSS_CHECK(specs.size() != 0, "DataFrame::group: at least one GroupSpec is required");
 
@@ -127,62 +55,14 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
     key_columns.push_back(features(key));
   }
 
-  auto composite_keys = make_unify_keys(key_columns, ncases());
-  std::vector<bool> included(static_cast<std::size_t>(ncases()), true);
-  if (dropnull_keys) {
-    for (const auto& key : key_columns) {
-      if (!key.has_validity_mask()) {
-        continue;
-      }
-      const auto valid = key.validity_mask()->to_vec<bool>();
-      std::transform(
-          included.begin(),
-          included.end(),
-          valid.begin(),
-          included.begin(),
-          std::logical_and<bool>{});
-    }
-  }
+  const auto state = build_group_state_(
+      std::span<const Thread>(key_columns.data(), key_columns.size()),
+      std::span<const std::string>(key_names.data(), key_names.size()),
+      ncases(),
+      ThreadGroupOptions{.dropnull = dropnull_keys, .sort = sort_groups},
+      "DataFrame::group");
 
-  std::vector<std::int64_t> group_ids(static_cast<std::size_t>(ncases()), -1);
-  std::vector<std::int64_t> first_rows;
-  std::unordered_map<std::string, std::size_t> index_by_key;
-  index_by_key.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 8)));
-  for (std::int64_t row = 0; row < ncases(); ++row) {
-    if (!included[static_cast<std::size_t>(row)]) {
-      continue;
-    }
-    const auto [found, inserted] = index_by_key.emplace(
-        composite_keys[static_cast<std::size_t>(row)],
-        first_rows.size());
-    if (inserted) {
-      first_rows.push_back(row);
-    }
-    group_ids[static_cast<std::size_t>(row)] =
-        static_cast<std::int64_t>(found->second);
-  }
-
-  const auto group_count = static_cast<std::int64_t>(first_rows.size());
-  auto group_ids_cpu = pluss::Series::empty(
-      {ncases()},
-      pluss::codem::ScalarType::Int64,
-      pluss::codem::Platform::CPU);
-  if (!group_ids.empty()) {
-    std::memcpy(
-        group_ids_cpu.raw_data(),
-        group_ids.data(),
-        group_ids.size() * sizeof(std::int64_t));
-  }
-  const auto included_cpu =
-      bool_mask_from_values(included, pluss::codem::Platform::CPU);
-
-  std::vector<std::pair<std::string, Thread>> out_cols;
-  out_cols.reserve(key_columns.size() + specs.size());
-  for (std::size_t key = 0; key < key_columns.size(); ++key) {
-    out_cols.emplace_back(
-        key_names[key],
-        key_columns[key].take(first_rows));
-  }
+  auto out_cols = group_key_columns_(state);
 
   std::unordered_set<std::string> out_seen(key_names.begin(), key_names.end());
   out_seen.reserve(key_names.size() + specs.size());
@@ -194,224 +74,46 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
     const auto out_name =
         !spec.output.empty()
             ? spec.output
-            : (spec.op == GroupOp::Count && !has_feature
-                   ? std::string("count")
-                   : fmt::format("{}_{}", spec.feature, group_op_name(spec.op)));
+            : group_value_output_name_(spec.feature, spec.op);
     PLUSS_CHECK(
         out_seen.insert(out_name).second,
         "DataFrame::group: duplicate output feature '" + out_name + "'");
 
-    Thread value_column;
-    if (has_feature) {
-      value_column = features(spec.feature);
-    }
-
-    if (spec.op == GroupOp::Nunique) {
-      const auto parts = unify_key_parts(value_column);
-      const auto valid = value_column.has_validity_mask()
-          ? value_column.validity_mask()->to_vec<bool>()
-          : std::vector<bool>(static_cast<std::size_t>(ncases()), true);
-      std::vector<std::int64_t> counts(
-          static_cast<std::size_t>(group_count),
-          0);
-      std::unordered_set<std::string> observed;
-      observed.reserve(static_cast<std::size_t>(ncases()));
-      for (std::int64_t row = 0; row < ncases(); ++row) {
-        if (!included[static_cast<std::size_t>(row)] ||
-            !valid[static_cast<std::size_t>(row)]) {
-          continue;
-        }
-        std::string key(
-            reinterpret_cast<const char*>(
-                &group_ids[static_cast<std::size_t>(row)]),
-            sizeof(std::int64_t));
-        key.append(parts[static_cast<std::size_t>(row)]);
-        if (observed.insert(std::move(key)).second) {
-          ++counts[static_cast<std::size_t>(
-              group_ids[static_cast<std::size_t>(row)])];
-        }
+    Thread out;
+    if (!has_feature) {
+      PLUSS_CHECK(spec.op == GroupOp::Count,
+                  "DataFrame::group: feature is required for non-count aggregations");
+      out = group_count_thread_(state);
+    } else {
+      const auto value_column = features(spec.feature);
+      switch (spec.op) {
+        case GroupOp::Count:
+          out = group_count_thread_(state, value_column);
+          break;
+        case GroupOp::Ndistinct:
+          out = group_ndistinct_thread_(value_column, state);
+          break;
+        case GroupOp::Mode:
+          out = value_column.kind() == ThreadKind::Note
+              ? group_note_mode_thread_(value_column, state)
+              : group_numeric_thread_(value_column, state, spec.op);
+          break;
+        case GroupOp::Sum:
+        case GroupOp::Mean:
+        case GroupOp::Median:
+        case GroupOp::Min:
+        case GroupOp::Max:
+        case GroupOp::Std:
+        case GroupOp::Var:
+          out = group_numeric_thread_(value_column, state, spec.op);
+          break;
       }
-      out_cols.emplace_back(out_name, make_i64_thread(counts));
-      continue;
     }
-
-    if (spec.op == GroupOp::Mode && value_column.kind() == ThreadKind::Note) {
-      out_cols.emplace_back(
-          out_name,
-          grouped_mode_thread_(value_column, group_ids, included, group_count));
-      continue;
-    }
-
-    pluss::codem::Platform platform = pluss::codem::Platform::CPU;
-    if (has_feature && value_column.kind() == ThreadKind::Series) {
-      platform = value_column.as_series().platform();
-    }
-    auto active = platform == pluss::codem::Platform::CPU
-        ? included_cpu
-        : included_cpu.to(platform);
-    if (has_feature && value_column.has_validity_mask()) {
-      auto valid = *value_column.validity_mask();
-      if (valid.platform() != platform) {
-        valid = valid.to(platform);
-      }
-      active = active.logical_and(valid);
-    }
-    auto ids = platform == pluss::codem::Platform::CPU
-        ? group_ids_cpu
-        : group_ids_cpu.to(platform);
-    ids = ids.masked_select(active);
-
-    const auto compute_dtype =
-        platform == pluss::codem::Platform::CPU
-            ? pluss::codem::ScalarType::Float64
-            : pluss::codem::ScalarType::Float32;
-    auto counts = pluss::Series::zeros(
-        {group_count},
-        compute_dtype,
-        platform);
-    auto ones = pluss::Series::ones(
-        {ids.numel()},
-        compute_dtype,
-        platform);
-    counts = counts.scatter_add(0, ids, ones);
-
-    if (spec.op == GroupOp::Count) {
-      out_cols.emplace_back(
-          out_name,
-          Thread(counts.to(pluss::codem::ScalarType::Int64)));
-      continue;
-    }
-
-    PLUSS_CHECK(
-        value_column.kind() == ThreadKind::Series &&
-            is_numeric_series_type(value_column.as_series()),
-        "DataFrame::group: numeric aggregations require real numeric Series features");
-    auto values = value_column.as_series().to(compute_dtype).masked_select(active);
-    const auto zero_counts = pluss::Series::zeros(
-        {group_count},
-        compute_dtype,
-        platform);
-    const auto any_value = counts.gt(zero_counts);
-
-    pluss::Series result;
-    pluss::Series result_validity = any_value;
-    switch (spec.op) {
-      case GroupOp::Sum:
-        result = values.grouped_sum(ids, group_count);
-        break;
-      case GroupOp::Mean:
-        result = values.grouped_mean(ids, group_count);
-        break;
-      case GroupOp::Median:
-        result = values.grouped_median(ids, group_count);
-        break;
-      case GroupOp::Min:
-        result = values.grouped_min(ids, group_count);
-        break;
-      case GroupOp::Max:
-        result = values.grouped_max(ids, group_count);
-        break;
-      case GroupOp::Mode:
-        result = values.grouped_mode(ids, group_count);
-        break;
-      case GroupOp::Std:
-      case GroupOp::Var: {
-        result = spec.op == GroupOp::Std
-                     ? values.grouped_std(ids, group_count, 1)
-                     : values.grouped_var(ids, group_count, 1);
-        const auto one_counts = pluss::Series::ones(
-            {group_count},
-            compute_dtype,
-            platform);
-        result_validity = counts.gt(one_counts);
-        break;
-      }
-      case GroupOp::Count:
-      case GroupOp::Nunique:
-        PLUSS_FAIL("DataFrame::group: internal aggregation dispatch failure");
-    }
-    out_cols.emplace_back(
-        out_name,
-        Thread(result, result_validity));
+    out_cols.emplace_back(out_name, std::move(out));
   }
 
   (void)render;
   return DataFrame(std::move(out_cols)).title(title());
-}
-
-DataFrameView DataFrame::group_by(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                  pluss::msharp::RangeView::Of<GroupSpec> specs,
-                                  bool dropnull_keys,
-                                  bool render) const {
-  return DataFrameView(group(keys, specs, dropnull_keys, false), render, "group_by", title());
-}
-
-DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
-                                  pluss::msharp::RangeView::Of<GroupSpec> specs,
-                                  bool dropnull_keys,
-                                  bool render) const {
-  return group_by(pluss::msharp::RangeView::Of<std::string_view>(keys),
-                  specs,
-                  dropnull_keys,
-                  render);
-}
-
-DataFrameView DataFrame::group_by(const LabelGroup& keys,
-                                  pluss::msharp::RangeView::Of<GroupSpec> specs,
-                                  bool dropnull_keys,
-                                  bool render) const {
-  PLUSS_CHECK(has_caselbls(), "DataFrame::group_by(LabelGroup): current DataFrame has no case labels");
-  std::vector<std::string> level_names = keys.names;
-  if (!keys.label.empty()) {
-    PLUSS_CHECK(level_names.empty(),
-                "DataFrame::group_by(LabelGroup): use either `label` or `names`, not both");
-    level_names.push_back(keys.label);
-  }
-  PLUSS_CHECK(!level_names.empty(),
-              "DataFrame::group_by(LabelGroup): expected at least one case label");
-
-  auto keyed = *this;
-  std::vector<std::string> temp_names;
-  temp_names.reserve(level_names.size());
-  for (const auto& level_name : level_names) {
-    PLUSS_CHECK(!level_name.empty(),
-                "DataFrame::group_by(LabelGroup): case-label name cannot be empty");
-    auto temp = "__pluss_case_level_" + level_name;
-    std::int64_t suffix = 1;
-    while (keyed.get(temp).has_value()) {
-      temp = fmt::format("__pluss_case_level_{}_{}", level_name, suffix++);
-    }
-    auto level_values = caselbl(level_name);
-    if (detail::has_display_labels(level_values)) {
-      level_values = detail::clear_display_labels(level_values);
-    }
-    if (level_values.has_display_name()) {
-      level_values = level_values.clear_display_name();
-    }
-    set_prepared_feature_(keyed.mut_impl_(), temp, clear_assignment_metadata_(level_values));
-    temp_names.push_back(std::move(temp));
-  }
-
-  std::vector<std::string_view> temp_views;
-  temp_views.reserve(temp_names.size());
-  for (const auto& temp : temp_names) {
-    temp_views.push_back(temp);
-  }
-  auto grouped = keyed.group(
-      pluss::msharp::RangeView::Of<std::string_view>(
-          std::span<const std::string_view>(temp_views.data(), temp_views.size())),
-      specs,
-      dropnull_keys,
-      false);
-
-  std::vector<std::pair<std::string_view, std::string_view>> renames;
-  renames.reserve(level_names.size());
-  for (std::size_t i = 0; i < level_names.size(); ++i) {
-    renames.emplace_back(temp_names[i], level_names[i]);
-  }
-  grouped = grouped.rename(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(
-      std::span<const std::pair<std::string_view, std::string_view>>(renames.data(), renames.size())));
-  return DataFrameView(std::move(grouped), render, "group_by", title());
 }
 
 DataFrameView DataFrame::pivot(std::string_view case_feature,
@@ -434,13 +136,26 @@ DataFrameView DataFrame::pivot(std::string_view case_feature,
   return DataFrameView(static_cast<DataFrame>(out), render, "pivot", title());
 }
 
+double median_from_values_(std::vector<double>& values) {
+  PLUSS_CHECK(!values.empty(), "DataFrame::pivot_table median: empty value group");
+  const auto n = values.size();
+  const auto mid = n / 2;
+  std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid), values.end());
+  const auto upper = values[mid];
+  if (n % 2 != 0) {
+    return upper;
+  }
+  std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid - 1), values.end());
+  return (values[mid - 1] + upper) / 2.0;
+}
+
 DataFrameView DataFrame::pivot_table(std::string_view case_feature,
                                      std::string_view feature_feature,
                                      std::string_view value_feature,
                                      GroupOp op,
                                      bool dropnull_keys,
                                      bool render) const {
-  PLUSS_CHECK(op == GroupOp::Count || op == GroupOp::Nunique || op == GroupOp::Sum || op == GroupOp::Mean ||
+  PLUSS_CHECK(op == GroupOp::Count || op == GroupOp::Ndistinct || op == GroupOp::Sum || op == GroupOp::Mean ||
                   op == GroupOp::Median || op == GroupOp::Min || op == GroupOp::Max,
               "DataFrame::pivot_table: unsupported aggregation op");
 
@@ -448,7 +163,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   const auto feat_col = features(feature_feature);
   const auto value_col = features(value_feature);
 
-  const bool needs_numeric = (op != GroupOp::Count && op != GroupOp::Nunique);
+  const bool needs_numeric = (op != GroupOp::Count && op != GroupOp::Ndistinct);
   if (needs_numeric) {
     PLUSS_CHECK(value_col.kind() == ThreadKind::Series && is_number_series_type(value_col.as_series()),
                 "DataFrame::pivot_table: numeric aggregations require a numeric Series value feature");
@@ -523,7 +238,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
       agg.count += 1;
       continue;
     }
-    if (op == GroupOp::Nunique) {
+    if (op == GroupOp::Ndistinct) {
       agg.uniq.insert(thread_scalar_string_at(value_vals, r));
       continue;
     }
@@ -549,7 +264,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   std::vector<std::pair<std::string, Thread>> out_cols;
   out_cols.reserve(feat_labels.size());
   for (std::size_t c = 0; c < feat_labels.size(); ++c) {
-    if (op == GroupOp::Count || op == GroupOp::Nunique) {
+    if (op == GroupOp::Count || op == GroupOp::Ndistinct) {
       std::vector<std::int64_t> vals;
       vals.reserve(case_labels.size());
       for (std::size_t r = 0; r < case_labels.size(); ++r) {
@@ -679,139 +394,4 @@ Atlas DataFrame::unsqueeze(const Thread& depth_labels) const {
   PLUSS_CHECK(depth_labels.defined(), "DataFrame::unsqueeze: depth labels are undefined");
   PLUSS_CHECK(depth_labels.size() == 1, "DataFrame::unsqueeze: depth labels must have size 1");
   return Atlas({*this}, depth_labels);
-}
-
-DataFrameView DataFrame::count_by(std::string_view feature_name,
-                                  std::int64_t top_n,
-                                  bool dropnull,
-                                  bool render) const {
-  auto grouped = group({feature_name}, {GroupSpec{"count", "", GroupOp::Count}}, dropnull, false);
-  const auto key_column = grouped.features(feature_name);
-  const auto keys_note = key_column.as_note();
-  const auto counts = grouped.features("count").as_series().to_vec<std::int64_t>();
-  const auto key_valid = key_column.has_validity_mask()
-      ? key_column.validity_mask()->to_vec<bool>()
-      : std::vector<bool>(static_cast<std::size_t>(grouped.ncases()), true);
-
-  struct CountByRow {
-    std::string key;
-    bool valid;
-    std::int64_t count;
-  };
-  std::vector<CountByRow> rows;
-  rows.reserve(static_cast<std::size_t>(grouped.ncases()));
-  for (std::int64_t i = 0; i < grouped.ncases(); ++i) {
-    rows.push_back(CountByRow{
-        std::string(keys_note.at(i)),
-        key_valid[static_cast<std::size_t>(i)],
-        counts[static_cast<std::size_t>(i)]});
-  }
-  std::sort(rows.begin(), rows.end(), [](const CountByRow& a, const CountByRow& b) {
-    if (a.count != b.count) {
-      return a.count > b.count;
-    }
-    // A missing key's row is not a real value to alphabetize against; keep it
-    // sorted after every real value at the same count, consistent with NULL
-    // sorting last everywhere else in the table API.
-    if (a.valid != b.valid) {
-      return a.valid;
-    }
-    return a.key < b.key;
-  });
-  if (top_n > 0 && static_cast<std::size_t>(top_n) < rows.size()) {
-    rows.resize(static_cast<std::size_t>(top_n));
-  }
-
-  std::vector<std::string> keys;
-  std::vector<bool> valid;
-  std::vector<std::int64_t> vals;
-  keys.reserve(rows.size());
-  valid.reserve(rows.size());
-  vals.reserve(rows.size());
-  for (const auto& row : rows) {
-    keys.push_back(row.key);
-    valid.push_back(row.valid);
-    vals.push_back(row.count);
-  }
-
-  auto key_thread = make_note_thread(keys);
-  if (std::any_of(valid.begin(), valid.end(), [](bool v) { return !v; })) {
-    key_thread = key_thread.with_validity_mask(bool_mask_from_values(valid));
-  }
-
-  auto out = DataFrame({
-      {owned_name(feature_name), std::move(key_thread)},
-      {"count", make_i64_thread(vals)},
-  });
-  return DataFrameView(std::move(out), render, "count_by", title());
-}
-
-DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
-                                 std::string_view value_feature_name,
-                                 std::int64_t top_n,
-                                 std::int64_t min_count,
-                                 bool dropnull_group,
-                                 bool render) const {
-  PLUSS_CHECK(min_count >= 1, "DataFrame::mean_by: min_count must be >= 1");
-  const auto mean_name = fmt::format("mean_{}", value_feature_name);
-  auto grouped = group(
-      {group_feature_name},
-      {
-          GroupSpec{mean_name, owned_name(value_feature_name), GroupOp::Mean},
-          GroupSpec{"count", owned_name(value_feature_name), GroupOp::Count},
-      },
-      dropnull_group,
-      false);
-
-  struct MeanRow {
-    std::string key;
-    double mean{0.0};
-    std::int64_t count{0};
-  };
-  const auto groups_note = grouped.features(group_feature_name).as_note();
-  const auto grouped_means = grouped.features(mean_name).as_series().to_vec<double>();
-  const auto grouped_counts = grouped.features("count").as_series().to_vec<std::int64_t>();
-
-  std::vector<MeanRow> rows;
-  rows.reserve(static_cast<std::size_t>(grouped.ncases()));
-  for (std::int64_t i = 0; i < grouped.ncases(); ++i) {
-    const auto cnt = grouped_counts[static_cast<std::size_t>(i)];
-    if (cnt < min_count) {
-      continue;
-    }
-    rows.push_back({
-        std::string(groups_note.at(i)),
-        grouped_means[static_cast<std::size_t>(i)],
-        cnt,
-    });
-  }
-
-  std::sort(rows.begin(), rows.end(), [](const MeanRow& a, const MeanRow& b) {
-    if (a.mean != b.mean) {
-      return a.mean > b.mean;
-    }
-    return a.key < b.key;
-  });
-  if (top_n > 0 && static_cast<std::size_t>(top_n) < rows.size()) {
-    rows.resize(static_cast<std::size_t>(top_n));
-  }
-
-  std::vector<std::string> out_groups;
-  std::vector<double> out_means;
-  std::vector<std::int64_t> out_counts;
-  out_groups.reserve(rows.size());
-  out_means.reserve(rows.size());
-  out_counts.reserve(rows.size());
-  for (const auto& row : rows) {
-    out_groups.push_back(row.key);
-    out_means.push_back(row.mean);
-    out_counts.push_back(row.count);
-  }
-
-  auto out = DataFrame({
-      {owned_name(group_feature_name), make_note_thread(out_groups)},
-      {fmt::format("mean_{}", value_feature_name), make_f64_thread(out_means)},
-      {"count", make_i64_thread(out_counts)},
-  });
-  return DataFrameView(std::move(out), render, "mean_by", title());
 }

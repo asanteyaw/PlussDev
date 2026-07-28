@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -85,7 +85,7 @@ A new frame with every selected feature replaced by a <code class="docutils lite
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">files</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;.pdf&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;.pdf&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -122,7 +122,7 @@ lowercase <code class="docutils literal notranslate"><span class="pre">&quot;.pd
 <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> at all. Row 3 was constructed invalid; it stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 <p>Example 2. Case-insensitive suffix matching by normalizing first: chain
 <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a> ahead of <code class="docutils literal notranslate"><span class="pre">ends()</span></code> to catch both <code class="docutils literal notranslate"><span class="pre">&quot;.pdf&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;.PDF&quot;</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">lower</span><span class="p">().</span><span class="n">note</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;.pdf&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">lower</span><span class="p">().</span><span class="n">nt</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;.pdf&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -145,7 +145,7 @@ matches too. <code class="docutils literal notranslate"><span class="pre">ends()
 normalization happens entirely in the <code class="docutils literal notranslate"><span class="pre">lower()</span></code> step ahead of it.</p>
 <p>Example 3. An empty suffix matches every valid cell, regardless of content —
 symmetric with <code class="docutils literal notranslate"><span class="pre">starts(&quot;&quot;)</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">trivial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">trivial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">ends</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">trivial</span><span class="p">;</span>
 </pre></div>
 </div>

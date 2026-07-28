@@ -190,6 +190,27 @@ void test_dataframe_ts_resample_reindex_blocks() {
                        .align_to(Thread(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
   expect(reindexed.ncases() == static_cast<std::int64_t>(target_iso.size()), "reindexed row count mismatch");
 
+  auto timed_daily = df.features({"Adj Close"}).ts(ts_opts).timed(
+      24LL * 60LL * 60LL * 1'000'000'000LL,
+      pluss::table::TimeWindowStatistic::Sum,
+      {},
+      pluss::table::WindowClosure::Right);
+  expect(to_f64(timed_daily.features("Adj Close")) ==
+             std::vector<double>({1.0, 4.0, 5.0, 6.0}),
+         "features(...).ts({.axis}).timed(duration_nanos, ...) should delegate timed windows over the bound temporal axis");
+
+  DataFrame timed_numeric({
+      {"time_nanos", Thread(pluss::make_series(std::vector<std::int64_t>{0, 1, 3, 4}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+  });
+  auto timed_numeric_df = timed_numeric.features({"value"}).ts().timed(
+      timed_numeric.features("time_nanos"),
+      3,
+      pluss::table::TimeWindowStatistic::Mean);
+  expect(to_f64(timed_numeric_df.features("value")) ==
+             std::vector<double>({1.0, 1.5, 2.5, 3.5}),
+         "features(...).ts().timed(axis, duration_nanos, ...) should accept an explicit Int64 nanosecond axis");
+
   auto lag_block = df.features({"Adj Close", "Volume"}).ts().lag_block({1, 2});
   expect(lag_block.nfeatures() == 4, "lag_block should emit feature x lag cartesian output");
 
@@ -248,6 +269,67 @@ void test_dataframe_ts_resample_reindex_blocks() {
              && std::abs(grouped_fixed_multi_values[2] - 10.0) < 1e-12
              && std::abs(grouped_fixed_multi_values[3] - 5.0) < 1e-12,
          "features(...).ts({.group = multi-feature DataFrame}).grouped(window) should roll within composite groups");
+
+  const std::vector<std::string_view> unsorted_iso{
+      "2024-01-03T00:00:00Z",
+      "2024-01-01T00:00:00Z",
+      "2024-01-02T00:00:00Z",
+  };
+  const std::array<std::int64_t, 1> unsorted_shape{static_cast<std::int64_t>(unsorted_iso.size())};
+  const auto unsorted_timeline = pluss::codeh::ops_internal::timeline_from_utf8(
+      std::span<const std::string_view>(unsorted_iso.data(), unsorted_iso.size()),
+      std::span<const std::int64_t>(unsorted_shape.data(), unsorted_shape.size()));
+  DataFrame unsorted({
+      {"date", Thread(unsorted_timeline)},
+      {"value", Thread(pluss::make_series(std::vector<double>{30.0, 10.0, 20.0}))},
+  });
+  const auto sorted_df = unsorted.features({"value"})
+                             .ts({.axis = unsorted.features("date")})
+                             .sort();
+  expect(to_f64(sorted_df.features("value")) == std::vector<double>({10.0, 20.0, 30.0}),
+         "features(...).ts({.axis}).sort() should batch-delegate sorting by the time axis");
+  const auto sorted_df_iso = sorted_df.label().values().tl().iso();
+  expect(sorted_df_iso.as_note().vector() ==
+             std::vector<std::string_view>({
+                 "2024-01-01T00:00:00.000000000+00:00",
+                 "2024-01-02T00:00:00.000000000+00:00",
+                 "2024-01-03T00:00:00.000000000+00:00",
+             }),
+         "features(...).ts({.axis}).sort() should carry the sorted time axis as case labels");
+
+  const auto sorted_thread = unsorted.features("value").ts().sort(unsorted.features("date"));
+  expect(to_f64(sorted_thread) == std::vector<double>({10.0, 20.0, 30.0}),
+         "Thread::ts().sort(axis) should sort values by the supplied time axis");
+  const auto sorted_thread_iso = sorted_thread.label().values().tl().iso();
+  expect(sorted_thread_iso.as_note().vector() ==
+             std::vector<std::string_view>({
+                 "2024-01-01T00:00:00.000000000+00:00",
+                 "2024-01-02T00:00:00.000000000+00:00",
+                 "2024-01-03T00:00:00.000000000+00:00",
+             }),
+         "Thread::ts().sort(axis) should preserve the sorted time axis as labels");
+
+  DataFrame lhs_frame({
+      {"x", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
+  }, Thread(unsorted_timeline));
+  DataFrame rhs_frame({
+      {"x", Thread(pluss::make_series(std::vector<double>{15.0, 20.0, 25.0}))},
+  }, Thread(pluss::codeh::ops_internal::timeline_from_utf8(
+         std::span<const std::string_view>(
+             std::array<std::string_view, 3>{
+                 "2024-01-01T00:00:00Z",
+                 "2024-01-02T00:00:00Z",
+                 "2024-01-03T00:00:00Z",
+             }
+                 .data(),
+             3),
+         std::span<const std::int64_t>(
+             std::array<std::int64_t, 1>{3}.data(),
+             1))));
+  const auto frame_ts_gt = lhs_frame.features({"x"}).ts().gt(rhs_frame);
+  expect(frame_ts_gt.features("x").as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, true}),
+         "features(...).ts().gt(frame) should align on temporal case labels before comparison");
 }
 
 void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
@@ -255,11 +337,7 @@ void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
       {"Date", Thread(pluss::make_series(std::vector<std::int64_t>{19900102, 19900103, 20000229}))},
   });
 
-  const auto out = df.cast({{
-      "Date",
-      ThreadCastTarget::Timeline,
-      ThreadCastOptions{},
-  }});
+  const auto out = df.features({"Date"}).cast().timeline();
   const auto date_thread = out.features("Date");
   expect(date_thread.kind() == ThreadKind::Timeline, "cast(Timeline) should materialize Timeline for YYYYMMDD integers");
 
@@ -285,11 +363,10 @@ void test_dataframe_cast_pair_payload_targets() {
       }))},
   });
 
-  const auto casted = raw.cast({
-      {"id", ThreadCastTarget::Note},
-      {"amount_text", ThreadCastTarget::Series},
-      {"event_text", ThreadCastTarget::Timeline},
-  });
+  auto casted = raw;
+  casted.set("id") = raw.features("id").cast().note();
+  casted.set("amount_text") = raw.features("amount_text").cast().series();
+  casted.set("event_text") = raw.features("event_text").cast().timeline();
 
   expect(casted.features("id").kind() == ThreadKind::Note,
          "cast(pair target): Series -> Note should change payload kind");
@@ -305,7 +382,8 @@ void test_dataframe_cast_pair_payload_targets() {
              std::vector<std::int32_t>({2024, 2024, 2024}),
          "cast(pair target): Timeline values should parse correctly");
 
-  const auto back_to_note = casted.cast({{"event_text", ThreadCastTarget::Note}});
+  auto back_to_note = casted;
+  back_to_note.set("event_text") = casted.features("event_text").cast().note();
   expect(back_to_note.features("event_text").kind() == ThreadKind::Note,
          "cast(pair target): Timeline -> Note should change payload kind");
 }
@@ -317,11 +395,9 @@ void test_selection_first_note_tl_and_ts_time_rolling() {
       {"volume", Thread(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
   });
 
-  auto parsed = raw.cast({{
-      "date_text",
-      ThreadCastTarget::Timeline,
-      ThreadCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null},
-  }}).features({"date_text"});
+  auto parsed = raw.features({"date_text"})
+                    .cast(ThreadCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null})
+                    .timeline();
   expect(parsed.features("date_text").kind() == ThreadKind::Timeline,
          "cast(Timeline) should parse selected text feature into Timeline");
   expect(parsed.features("date_text").is_valid(0), "valid parsed date should stay valid");
@@ -379,21 +455,21 @@ void test_payload_surfaces_reject_wrong_payloads() {
       {"price", Thread(pluss::make_series(std::vector<double>{10.0, 12.0}))},
   });
 
-  expect_throw([&] { (void)df.features("price").note().upper(); },
-               "Thread.note() should reject Series payloads");
+  expect_throw([&] { (void)df.features("price").nt().upper(); },
+               "Thread.nt() should reject Series payloads");
   expect_throw([&] { (void)df.features("name").tl().year(); },
                "Thread.tl() should reject Note payloads");
-  expect_throw([&] { (void)df.features({"price"}).note().upper(); },
-               "DataFrame.features(...).note() should reject non-Note features");
+  expect_throw([&] { (void)df.features({"price"}).nt().upper(); },
+               "DataFrame.features(...).nt() should reject non-Note features");
   expect_throw([&] { (void)df.features({"name"}).tl().year(); },
                "DataFrame.features(...).tl() should reject non-Timeline features");
-  expect_throw([&] { (void)df.note().upper(); },
-               "DataFrame.note() should require an intentional all-Note selection");
+  expect_throw([&] { (void)df.nt().upper(); },
+               "DataFrame.nt() should require an intentional all-Note selection");
   expect_throw([&] { (void)df.tl().year(); },
                "DataFrame.tl() should require an intentional all-Timeline selection");
 
-  expect(df.features("name").note().upper().kind() == ThreadKind::Note,
-         "Thread.note() should still work for Note payloads");
+  expect(df.features("name").nt().upper().kind() == ThreadKind::Note,
+         "Thread.nt() should still work for Note payloads");
   expect(df.features("date").tl().year().kind() == ThreadKind::Series,
          "Thread.tl() should still work for Timeline payloads");
   expect(df.features("date").tl().period("month").tl().day().as_series().to_vec<std::int32_t>()

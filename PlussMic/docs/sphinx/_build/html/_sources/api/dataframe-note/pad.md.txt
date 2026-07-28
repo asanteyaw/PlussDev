@@ -84,9 +84,9 @@ auto codes = DataFrame({
 });
 std::cout << codes;
 
-auto left = codes.note().pad(6, TextAlign::Left, '.');
-auto right = codes.note().pad(6, TextAlign::Right, '.');
-auto center = codes.note().pad(6, TextAlign::Center, '.');
+auto left = codes.nt().pad(6, TextAlign::Left, '.');
+auto right = codes.nt().pad(6, TextAlign::Right, '.');
+auto center = codes.nt().pad(6, TextAlign::Center, '.');
 ```
 
 ### Output (before)
@@ -162,7 +162,7 @@ auto ids = DataFrame({
 });
 std::cout << ids;
 
-auto zero_padded = ids.note().pad(4, TextAlign::Right, '0');
+auto zero_padded = ids.nt().pad(4, TextAlign::Right, '0');
 std::cout << zero_padded;
 ```
 
@@ -202,7 +202,7 @@ Example 3. A cell already at or past the target width is left completely
 unchanged — `pad()` never truncates.
 
 ```cpp
-auto unchanged = codes.note().pad(3, TextAlign::Left, '.');
+auto unchanged = codes.nt().pad(3, TextAlign::Left, '.');
 std::cout << unchanged;
 ```
 
@@ -228,7 +228,7 @@ Example 4. A negative `width` throws immediately.
 
 ```cpp
 try {
-  auto bad = codes.note().pad(-1);
+  auto bad = codes.nt().pad(-1);
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

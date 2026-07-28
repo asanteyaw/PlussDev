@@ -77,7 +77,7 @@ ptype: Series
 ## See Also
 
 - [`Thread::top`](top.md): the largest-values counterpart.
-- [`Thread::sort_values`](sort_values.md): the full sort this method takes a
+- [`Thread::arrange`](arrange.md): the full sort this method takes a
   prefix of.
 
 <div class="pluss-inline-prev-next">

@@ -106,7 +106,7 @@ return, lag, rolling mean, or line plot.
 For ordered calculations, sort first:
 
 ```cpp
-auto sorted = df.sort_values({DataFrame::ArrangeSpec{"date", true, true}});
+auto sorted = df.arrange({DataFrame::ArrangeSpec{"date", true, true}});
 auto returns = sorted.features({"close"}).ts().returns(1);
 ```
 
@@ -808,6 +808,6 @@ auto rolling = df.features({"close"}).ts().rolling(20, pluss::table::WindowStati
 If `df` is not sorted by time, the rolling window follows row order. Sort first:
 
 ```cpp
-auto sorted = df.sort_values({DataFrame::ArrangeSpec{"date", true, true}});
+auto sorted = df.arrange({DataFrame::ArrangeSpec{"date", true, true}});
 auto rolling = sorted.features({"close"}).ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 20});
 ```

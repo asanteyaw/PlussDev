@@ -57,24 +57,24 @@ int main(int argc, char** argv) {
       {"yr", "year"},
   });
 
-  // This batches the timeline cast and the numeric-dtype casts into one DataFrame::cast call.
-  frame = frame.cast({
-      DataFrame::CastSpec{"date", pluss::table::ThreadCastTarget::Timeline, {}},
-      DataFrame::CastSpec{"season", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"year", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"month", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"hour", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"is_holiday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"weekday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"is_workingday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"weather_condition", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"temp", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"atemp", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"humidity", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"windspeed", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"casual", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"registered", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-      DataFrame::CastSpec{"total_count", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+  // Selection belongs on features(); cast stays a pure transform surface.
+  frame.set("date") = frame.features("date").cast().timeline();
+  frame = frame.astype({
+      {"season", ScalarType::Float64},
+      {"year", ScalarType::Float64},
+      {"month", ScalarType::Float64},
+      {"hour", ScalarType::Float64},
+      {"is_holiday", ScalarType::Float64},
+      {"weekday", ScalarType::Float64},
+      {"is_workingday", ScalarType::Float64},
+      {"weather_condition", ScalarType::Float64},
+      {"temp", ScalarType::Float64},
+      {"atemp", ScalarType::Float64},
+      {"humidity", ScalarType::Float64},
+      {"windspeed", ScalarType::Float64},
+      {"casual", ScalarType::Float64},
+      {"registered", ScalarType::Float64},
+      {"total_count", ScalarType::Float64},
   });
 
   //========== feature engineering ========
@@ -158,19 +158,36 @@ int main(int argc, char** argv) {
       .headline("Demand vs hour")
       .save_pdf((out_dir / "eda_scatter_hour_target.pdf").string());
 
-  // mean_by groups on the feature's own labels, so the numeric group keys are cast to Note
-  // (string) form just for these calls; the underlying `frame` used for modelling is untouched.
-  frame.cast({{"hour", pluss::table::ThreadCastTarget::Note}})
-      .mean_by("hour", "total_count", 0, 1, true, false)
+  frame.group({.dropnull = true})
+      .by({"hour"})
+      .agg({
+          {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+          {"count", "total_count", DataFrame::GroupOp::Count},
+      })
       .save_csv((out_dir / "eda_hour_mean_total_count.csv").string());
-  frame.cast({{"weather_condition", pluss::table::ThreadCastTarget::Note}})
-      .mean_by("weather_condition", "total_count", 0, 1, true, false)
+
+  frame.group({.dropnull = true})
+      .by({"weather_condition"})
+      .agg({
+          {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+          {"count", "total_count", DataFrame::GroupOp::Count},
+      })
       .save_csv((out_dir / "eda_weather_mean_total_count.csv").string());
-  frame.cast({{"month", pluss::table::ThreadCastTarget::Note}})
-      .mean_by("month", "total_count", 0, 1, true, false)
+
+  frame.group({.dropnull = true})
+      .by({"month"})
+      .agg({
+          {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+          {"count", "total_count", DataFrame::GroupOp::Count},
+      })
       .save_csv((out_dir / "eda_month_mean_total_count.csv").string());
-  frame.cast({{"weekday", pluss::table::ThreadCastTarget::Note}})
-      .mean_by("weekday", "total_count", 0, 1, true, false)
+
+  frame.group({.dropnull = true})
+      .by({"weekday"})
+      .agg({
+          {"mean_total_count", "total_count", DataFrame::GroupOp::Mean},
+          {"count", "total_count", DataFrame::GroupOp::Count},
+      })
       .save_csv((out_dir / "eda_weekday_mean_total_count.csv").string());
 
   //========== holdout split ========

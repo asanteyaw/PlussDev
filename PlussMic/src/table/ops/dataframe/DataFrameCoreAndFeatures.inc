@@ -46,7 +46,7 @@ std::int64_t DataFrame::width() const { return nfeatures(); }
 // length() is the total cell count: width() * height() (equivalently
 // nfeatures() * ncases()) — not to be confused with
 // DataFrameNoteAccessor::length(), the unrelated per-cell text-length accessor
-// reached via .note().length().
+// reached via .nt().length().
 std::int64_t DataFrame::length() const { return width() * height(); }
 
 DataFrame::DTypes::DTypes(std::vector<Entry> entries) : entries_(std::move(entries)) {}
@@ -163,6 +163,14 @@ DataFrameLabelAccessor DataFrame::label() const {
 
 DataFrameFeatureAxisAccessor DataFrame::feataxis() const {
   return DataFrameFeatureAxisAccessor(*this);
+}
+
+DataFrameCastAccessor DataFrame::cast() const {
+  return DataFrameCastAccessor(*this);
+}
+
+DataFrameCastAccessor DataFrame::cast(const ThreadCastOptions& options) const {
+  return DataFrameCastAccessor(*this, options);
 }
 
 DataFrame DataFrame::caselbl(const Thread& labels) const {
@@ -688,7 +696,7 @@ Thread DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::stri
   const auto labels = frame_.label().values();
   const auto keys = selected_label_keys_(frame_.impl_ref_(), labels, names, "DataFrame::label().duplicated");
   return label_key_mask_(keys, labels, false, keep_first, keep_last, "DataFrame::label().duplicated")
-      .with_display_name("duplicated");
+      .name("duplicated");
 }
 
 Thread DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names,
@@ -700,14 +708,14 @@ Thread DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view
 Thread DataFrameLabelAccessor::duplicated(bool keep_first, bool keep_last) const {
   return frame_.label().values().duplicated(keep_first, keep_last)
       .label().set(frame_.label().values())
-      .with_display_name("duplicated");
+      .name("duplicated");
 }
 
 Thread DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto labels = frame_.label().values();
   const auto keys = selected_label_keys_(frame_.impl_ref_(), labels, names, "DataFrame::label().repeated");
   return label_key_mask_(keys, labels, true, false, false, "DataFrame::label().repeated")
-      .with_display_name("repeated");
+      .name("repeated");
 }
 
 Thread DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> names) const {
@@ -715,27 +723,27 @@ Thread DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> 
 }
 
 Thread DataFrameLabelAccessor::repeated() const {
-  return frame_.label().values().repeated().label().set(frame_.label().values()).with_display_name("repeated");
+  return frame_.label().values().repeated().label().set(frame_.label().values()).name("repeated");
 }
 
 Thread DataFrameLabelAccessor::distinct(bool dropnull) const {
-  return frame_.label().values().distinct(dropnull).with_display_name("distinct");
+  return frame_.label().values().distinct(dropnull).name("distinct");
 }
 
 Thread DataFrameLabelAccessor::freq(std::int64_t top_n, bool dropnull) const {
-  return detail::tally_count_thread(frame_.label().values(), top_n, dropnull, "freq");
+  return detail::freq_count_thread(frame_.label().values(), top_n, dropnull, "freq");
 }
 
 Thread DataFrameLabelAccessor::has(double value) const {
-  return frame_.label().values().has(value).label().set(frame_.label().values()).with_display_name("has");
+  return frame_.label().values().has(value).label().set(frame_.label().values()).name("has");
 }
 
 Thread DataFrameLabelAccessor::has(std::string_view value) const {
-  return frame_.label().values().has(value).label().set(frame_.label().values()).with_display_name("has");
+  return frame_.label().values().has(value).label().set(frame_.label().values()).name("has");
 }
 
 Thread DataFrameLabelAccessor::has(const Thread& values) const {
-  return frame_.label().values().has(values).label().set(frame_.label().values()).with_display_name("has");
+  return frame_.label().values().has(values).label().set(frame_.label().values()).name("has");
 }
 
 Thread DataFrameLabelAccessor::fillnull(double value) const {
@@ -755,31 +763,11 @@ Thread DataFrameLabelAccessor::fillnull(const pluss::TimeIndex& value) const {
 }
 
 Thread DataFrameLabelAccessor::isnull() const {
-  return frame_.label().values().isnull().label().set(frame_.label().values()).with_display_name("isnull");
+  return frame_.label().values().isnull().label().set(frame_.label().values()).name("isnull");
 }
 
 Thread DataFrameLabelAccessor::notnull() const {
-  return frame_.label().values().notnull().label().set(frame_.label().values()).with_display_name("notnull");
-}
-
-DataFrame DataFrameLabelAccessor::cast(ThreadCastTarget target, const ThreadCastOptions& options) const {
-  const auto& src = frame_.impl_ref_();
-  if (!src.case_axis_.defined()) {
-    return frame_.caselbl(frame_.caselbl().cast(target, options));
-  }
-  detail::CaseAxis axis = src.case_axis_;
-  for (auto& level : axis.levels) {
-    level.values = level.values.cast(target, options);
-  }
-  Thread labels = axis.defined() ? make_note_thread(composite_case_labels_(axis, src.nrows_, axis.separator))
-                                 : default_cases(src.nrows_);
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      src.names_, src.columns_, std::move(labels), src.title_, std::move(axis)));
-}
-
-DataFrame DataFrameLabelAccessor::cast(ThreadCastTarget target,
-                                       std::optional<pluss::codem::ScalarType> series_dtype) const {
-  return cast(target, ThreadCastOptions{.series_dtype = series_dtype});
+  return frame_.label().values().notnull().label().set(frame_.label().values()).name("notnull");
 }
 
 DataFrame DataFrameLabelAccessor::map(const std::function<ThreadValue(const ThreadValue&)>& fn) const {
@@ -900,7 +888,7 @@ DataFrame DataFrameLabelAccessor::levels() const {
   const auto& src = frame_.impl_ref_();
   std::vector<std::pair<std::string, Thread>> columns;
   if (!src.case_axis_.defined()) {
-    columns.emplace_back("label", frame_.label().values().distinct(false).cast(ThreadCastTarget::Note));
+    columns.emplace_back("label", frame_.label().values().distinct(false).cast().note());
     return DataFrame(std::move(columns));
   }
   columns.reserve(src.case_axis_.levels.size());
@@ -1250,7 +1238,7 @@ Thread DataFrame::features(std::string_view name) {
   const auto it = src.name_to_idx_.find(feature_name);
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
   return detail::with_display_labels(src.columns_[it->second], src.cases_)
-      .with_display_name(std::move(feature_name));
+      .name(std::move(feature_name));
 }
 
 Thread DataFrame::features(std::string_view name) const {
@@ -1259,7 +1247,7 @@ Thread DataFrame::features(std::string_view name) const {
   const auto it = src.name_to_idx_.find(feature_name);
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
   return detail::with_display_labels(src.columns_[it->second], src.cases_)
-      .with_display_name(std::move(feature_name));
+      .name(std::move(feature_name));
 }
 
 ColumnRef DataFrame::feature_ref(std::string_view name) const {
@@ -1534,6 +1522,79 @@ DataFrame DataFrameFeatureAxisAccessor::prefix(std::string_view prefix) const {
 
 DataFrame DataFrameFeatureAxisAccessor::suffix(std::string_view suffix) const {
   return frame_.add_suffix(suffix);
+}
+
+DataFrameCastAccessor::DataFrameCastAccessor(const DataFrame& frame, ThreadCastOptions options)
+    : frame_(frame), options_(std::move(options)) {}
+
+DataFrame DataFrameCastAccessor::cast_all_(ThreadCastTarget target) const {
+  const auto& names = frame_.features();
+  if (names.empty()) {
+    return frame_;
+  }
+
+  const auto& src = frame_.impl_ref_();
+  std::vector<Thread> out_cols = src.columns_;
+  std::unordered_set<std::string> seen;
+  seen.reserve(names.size());
+
+  for (const auto& name : names) {
+    const auto key = owned_name(name);
+    PLUSS_CHECK(!key.empty(), "DataFrame::cast: feature name cannot be empty");
+    const auto it = src.name_to_idx_.find(key);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'");
+    if (!seen.insert(key).second) {
+      continue;
+    }
+    switch (target) {
+      case ThreadCastTarget::Series:
+        out_cols[it->second] = src.columns_[it->second].cast(options_).series();
+        break;
+      case ThreadCastTarget::Note:
+        out_cols[it->second] = src.columns_[it->second].cast(options_).note();
+        break;
+      case ThreadCastTarget::Timeline:
+        out_cols[it->second] = src.columns_[it->second].cast(options_).timeline();
+        break;
+      case ThreadCastTarget::TimeIndex:
+        out_cols[it->second] = src.columns_[it->second].cast(options_).timeindex();
+        break;
+      default:
+        break;
+    }
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
+}
+
+DataFrame DataFrameCastAccessor::series() const {
+  return cast_all_(ThreadCastTarget::Series);
+}
+
+DataFrame DataFrameCastAccessor::note() const {
+  return cast_all_(ThreadCastTarget::Note);
+}
+
+DataFrame DataFrameCastAccessor::timeline() const {
+  return cast_all_(ThreadCastTarget::Timeline);
+}
+
+DataFrame DataFrameCastAccessor::timeindex() const {
+  return cast_all_(ThreadCastTarget::TimeIndex);
+}
+
+DataFrame DataFrame::astype(pluss::codem::ScalarType dtype) const {
+  const auto& names = features();
+  std::vector<std::string_view> views;
+  views.reserve(names.size());
+  for (const auto& name : names) {
+    views.push_back(name);
+  }
+  return astype(
+      pluss::msharp::RangeView::Of<std::string_view>(
+          std::span<const std::string_view>(views.data(), views.size())),
+      dtype);
 }
 
 DataFrame DataFrame::astype(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1886,16 +1947,6 @@ DataFrame DataFrame::arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) co
   return arrange_impl_frame(*this, std::vector<ArrangeSpec>(specs.begin(), specs.end()));
 }
 
-DataFrame DataFrame::sort_values(pluss::msharp::RangeView::Of<std::string_view> features,
-                                 bool ascending,
-                                 bool nulls_last) const {
-  return arrange(features, ascending, nulls_last);
-}
-
-DataFrame DataFrame::sort_values(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const {
-  return arrange(specs);
-}
-
 DataFrame DataFrame::sort_caselbl(bool ascending, bool nulls_last) const {
   std::vector<std::int64_t> idx(static_cast<std::size_t>(ncases()));
   std::iota(idx.begin(), idx.end(), 0);
@@ -1938,7 +1989,7 @@ DataFrame DataFrame::top(std::string_view feature_name, std::int64_t n) const {
   if (n == 0) {
     return slice(0, 0);
   }
-  return sort_values({ArrangeSpec{owned_name(feature_name), false, true}})
+  return arrange({ArrangeSpec{owned_name(feature_name), false, true}})
       .head(n, false);
 }
 
@@ -1947,7 +1998,7 @@ DataFrame DataFrame::bottom(std::string_view feature_name, std::int64_t n) const
   if (n == 0) {
     return slice(0, 0);
   }
-  return sort_values({ArrangeSpec{owned_name(feature_name), true, true}})
+  return arrange({ArrangeSpec{owned_name(feature_name), true, true}})
       .head(n, false);
 }
 
@@ -2061,7 +2112,7 @@ DataFrame DataFrame::set_caselbl(const SetLabelOptions& options) const {
 
   Thread case_values;
   if (names.size() == 1) {
-    case_values = detail::clear_display_labels(axis.levels.front().values).clear_display_name();
+    case_values = detail::clear_display_labels(axis.levels.front().values).unname();
   } else {
     std::vector<std::string> labels;
     labels.reserve(static_cast<std::size_t>(ncases()));
@@ -2128,8 +2179,8 @@ DataFrame DataFrame::reset_caselbl(const ResetLabelOptions& options) const {
       if (detail::has_display_labels(level_values)) {
         level_values = detail::clear_display_labels(level_values);
       }
-      if (level_values.has_display_name()) {
-        level_values = level_values.clear_display_name();
+      if (level_values.named()) {
+        level_values = level_values.unname();
       }
       set_prepared_feature_(out.mut_impl_(), name, clear_assignment_metadata_(level_values));
     }
@@ -2758,7 +2809,7 @@ CategoryEncoding DataFrame::factor(
   const auto source = features(feature);
   auto levels = source.dropnull().distinct(false);
   if (sort_levels) {
-    levels = levels.sort_values(true, true);
+    levels = levels.arrange(true, true);
   }
 
   const auto level_parts = unify_key_parts(levels);
@@ -2844,7 +2895,7 @@ DataFrame DataFrame::encode(
   const auto& source = src.columns_[index];
   auto levels = source.dropnull().distinct(false);
   if (options.sort_levels) {
-    levels = levels.sort_values(true, true);
+    levels = levels.arrange(true, true);
   }
 
   const auto level_parts = unify_key_parts(levels);
@@ -3006,25 +3057,12 @@ DataFrame DataFrame::set_features(std::string_view name, const Thread& value) co
   return set_features(name, value, AlignOptions{});
 }
 
-DataFrame DataFrame::set(std::string_view name, const Thread& value) const {
-  return set_features(name, value, AlignOptions{});
-}
-
-DataFrame DataFrame::set(std::string_view name, const Thread& value, const AlignOptions& options) const {
-  return set_features(name, value, options);
-}
-
 DataFrame& DataFrame::set_(std::string_view name, const Thread& value) {
   return set_features_(name, value, AlignOptions{});
 }
 
 DataFrame& DataFrame::set_(std::string_view name, const Thread& value, const AlignOptions& options) {
   return set_features_(name, value, options);
-}
-
-DataFrame DataFrame::set(pluss::msharp::RangeView::Of<std::string_view> names,
-                         pluss::msharp::RangeView::Of<Thread> values) const {
-  return set_features(names, values);
 }
 
 DataFrame& DataFrame::set_(pluss::msharp::RangeView::Of<std::string_view> names,

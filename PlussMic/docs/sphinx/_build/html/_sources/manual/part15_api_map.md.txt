@@ -22,7 +22,7 @@ reference; it tells you where to look.
 | Arithmetic | `add`, `sub`, `mul`, `div`, `truediv`, `floordiv`, `mod`, `pow`, reverse variants |
 | Comparison | `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare` |
 | Reductions | `sum`, `mean`, `median`, `min`, `max`, `std`, `var`, `count`, `corr`, `ndistinct` |
-| Grouping | `aggregate`, `group_by`, `count_by`, `mean_by`, `pivot`, `pivot_table` |
+| Grouping | `aggregate`, `group`, `pivot`, `pivot_table` |
 | Time | `tl`, `ts`, `tl().localize`, `tl().tz`, `tl().utc`, `tl().floor`, `tl().ceil`, `tl().round`, `tl().shift`, `ts().resample`, `ts().rolling`, `ts().window`, `ts().weigh`, `ts().bounded` |
 | Combine | `join`, `update`, `combine`, `unify`, `conform` |
 | Plot | `plot`, `plot3d` |
@@ -37,7 +37,7 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | --- | --- |
 | Inspect | `defined`, `size`, `kind`, `dtype`, `info`, `to_string` |
 | Missing | `isnull`, `notnull`, `isnan`, `isfinite`, `fillnull`, `dropnull`, `ffill`, `bfill` |
-| Row operations | `head`, `tail`, `view`, `shift`, `slice`, `take`, `filter`, `sort_values`, `distinct` |
+| Row operations | `head`, `tail`, `view`, `shift`, `slice`, `take`, `filter`, `arrange`, `distinct` |
 | Numeric | `abs`, `clip`, `log`, `exp`, reductions |
 | Text | `lower`, `replace`, `contains` |
 | Time | `year`, `month`, `day`, `hour`, `to_note_weekday`, `ts` |

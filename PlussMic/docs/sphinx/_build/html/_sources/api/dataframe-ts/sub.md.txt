@@ -148,8 +148,8 @@ rather than treating the missing feature as all-`NULL`.
     <span class="label">Previous</span>
     <span class="title">sort</span>
   </a>
-  <a class="next-link" href="weigh.html">
+  <a class="next-link" href="timed.html">
     <span class="label">Next</span>
-    <span class="title">weigh</span>
+    <span class="title">timed</span>
   </a>
 </div>

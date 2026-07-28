@@ -27,6 +27,7 @@ std::recursive_mutex& g_mu = *new std::recursive_mutex();
 std::unordered_map<const SeriesImpl*, TapeState>& g_states =
     *new std::unordered_map<const SeriesImpl*, TapeState>();
 thread_local int g_pause_depth = 0;
+thread_local bool g_grad_mode_enabled = true;
 thread_local ReverseDiagnostics g_reverse_diag{};
 
 const SeriesImpl* key_of_(const Series& s) noexcept {
@@ -146,6 +147,18 @@ std::string captured_at_of_(const std::shared_ptr<SourceLink>& link) {
 PauseRecording::PauseRecording() { ++g_pause_depth; }
 PauseRecording::~PauseRecording() { --g_pause_depth; }
 
+bool grad_mode_enabled() noexcept { return g_grad_mode_enabled; }
+
+void set_grad_mode_enabled(bool enabled) noexcept { g_grad_mode_enabled = enabled; }
+
+AutoGradMode::AutoGradMode(bool enabled) noexcept : previous_(grad_mode_enabled()) {
+  set_grad_mode_enabled(enabled);
+}
+
+AutoGradMode::~AutoGradMode() { set_grad_mode_enabled(previous_); }
+
+NoGradGuard::NoGradGuard() noexcept : guard_(false) {}
+
 void set_reverse_diagnostics(bool enabled, bool check_non_finite) noexcept {
   g_reverse_diag.enabled = enabled;
   g_reverse_diag.check_non_finite = check_non_finite;
@@ -162,7 +175,7 @@ ReverseDiagnosticsScope::~ReverseDiagnosticsScope() {
   set_reverse_diagnostics(previous_.enabled, previous_.check_non_finite);
 }
 
-bool recording_enabled() noexcept { return g_pause_depth == 0; }
+bool recording_enabled() noexcept { return g_pause_depth == 0 && g_grad_mode_enabled; }
 
 bool tracks_slope(const Series& s) {
   std::scoped_lock lk(g_mu);

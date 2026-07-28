@@ -963,7 +963,7 @@ namespace pluss {
         std::forward<Opts>(opts)...);
   }
 
-  inline Series from_buffer(void* data,
+  inline Series from_host(void* data,
                              pluss::msharp::RangeView::Int sizes,
                              std::span<const std::int64_t> strides,
                              BlobDeleter deleter,

@@ -1335,7 +1335,7 @@ If `df` is not sorted by `date`, the line connects points in row order. Sort
 first:
 
 ```cpp
-auto sorted = df.sort_values({DataFrame::ArrangeSpec{"date", true, true}});
+auto sorted = df.arrange({DataFrame::ArrangeSpec{"date", true, true}});
 auto fig = sorted.plot().line("close", "date");
 ```
 
@@ -1365,11 +1365,9 @@ auto fig = sample.plot().scatter("x", "y", "class");
 Or aggregate:
 
 ```cpp
-auto grouped = df.group_by(
-    {"region"},
-    {{"revenue_sum", "revenue", DataFrame::GroupOp::Sum}},
-    true,
-    false);
+auto grouped = df.group()
+    .by({"region"})
+    .agg({{"revenue_sum", "revenue", DataFrame::GroupOp::Sum}});
 
 auto fig = grouped.plot().bar("revenue_sum", "region");
 ```

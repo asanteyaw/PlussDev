@@ -117,7 +117,7 @@ std::string thread_value_at(const pluss::table::Thread& thread, std::int64_t row
       return "NA";
     }
   }
-  const auto note = thread.cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto note = thread.cast().note().as_note();
   return clip_text(note.at(row), max_width);
 }
 
@@ -219,7 +219,7 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
     const auto row = idx[i];
     std::string case_cell;
     if (stream.has_label()) {
-      case_cell = thread_value_at(stream.label()->cast(pluss::table::ThreadCastTarget::Note), row, case_w);
+      case_cell = thread_value_at(stream.label()->cast().note(), row, case_w);
     } else {
       case_cell = std::to_string(row);
     }
@@ -356,7 +356,7 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
 
   std::optional<pluss::table::Thread> label_thread = std::nullopt;
   if (archive.depth_labels().has_value()) {
-    label_thread = archive.depth_labels()->to_thread().cast(pluss::table::ThreadCastTarget::Note);
+    label_thread = archive.depth_labels()->to_thread().cast().note();
   }
 
   for (std::size_t i = 0; i < idx.size(); ++i) {

@@ -215,8 +215,8 @@ fill value, so omitting it throws instead of silently falling back to `0.0`
     <span class="label">Previous</span>
     <span class="title">expanding</span>
   </a>
-  <a class="next-link" href="grouped.html">
+  <a class="next-link" href="ge.html">
     <span class="label">Next</span>
-    <span class="title">grouped</span>
+    <span class="title">ge</span>
   </a>
 </div>

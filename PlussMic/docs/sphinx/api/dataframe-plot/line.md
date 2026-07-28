@@ -129,6 +129,8 @@ evenly spaced categorical positions labeled `"Jan"`..`"Apr"`), producing a singl
 (no-legend, since there's only one y-feature) line trace. `save_svg` is what actually writes
 pixels — nothing above it touches disk.
 
+![Output of Example 1](img/line-1.svg)
+
 Example 2. A shared `default_x_feature` set once on the accessor, used implicitly by
 multiple chart calls.
 
@@ -145,6 +147,18 @@ auto chart3 = plot.line("amount", "cost"); // explicit x_feature="cost" override
 `chart1` and `chart2` both use `"month"` as their x-axis without repeating it. `chart3`
 demonstrates that an explicit `x_feature` argument (here, `"cost"`) always wins over
 `options.default_x_feature`, even when both are present in the same call.
+
+`chart1` (`amount` vs. `month`):
+
+![Output of Example 2, chart1](img/line-2-a.svg)
+
+`chart2` (`cost` vs. `month`):
+
+![Output of Example 2, chart2](img/line-2-b.svg)
+
+`chart3` (`amount` vs. explicit `cost`, overriding the default):
+
+![Output of Example 2, chart3](img/line-2-c.svg)
 
 Example 3. No x-feature at all — falls back to the frame's own row labels.
 
@@ -163,6 +177,8 @@ those row labels: the x-axis renders `"Q1"`..`"Q4"` as categorical positions, an
 title becomes `"case"` (not `"amount"` and not the row-label feature's own name — literally
 the string `"case"`).
 
+![Output of Example 3](img/line-3.svg)
+
 Example 4. Multiple y-features overlaid on one pane, drawn from a brace-init list.
 
 ```cpp
@@ -175,6 +191,8 @@ automatically (labeled `"amount"` and `"cost"`) because more than one y-feature 
 requested. `chart.show()` opens the figure directly instead of writing a file — useful
 during interactive exploration.
 
+![Output of Example 4](img/line-4.svg)
+
 Example 5. The same multi-feature call using a reusable `RangeView` instead of a brace-init
 list — useful when the feature list is built at runtime rather than known at the call site.
 
@@ -186,6 +204,8 @@ chart.save_pdf("monthly_lines.pdf");
 
 Behaves identically to Example 4 — the `RangeView` overload and the `initializer_list`
 overload are the same underlying call, just accepting the y-feature list in different forms.
+
+![Output of Example 5](img/line-5.svg)
 
 Example 6. An explicit `LinePlotOptions`, tuning opacity, stroke width, and y-axis fit.
 
@@ -203,12 +223,16 @@ The line is drawn slightly translucent (`alpha = 0.85`), thicker (`line_width = 
 the y-axis is fit tightly to the data's actual min/max instead of the default padded
 margin. `save_png` additionally takes an explicit DPI for the rasterized output.
 
+![Output of Example 6](img/line-6.svg)
+
 Example 7. Multiple y-features with an explicit options object — the three-argument
 overload works the same way for the list-based forms as it does for the single-feature form.
 
 ```cpp
 auto chart = sales.plot().line({"amount", "cost"}, "month", line_options);
 ```
+
+![Output of Example 7](img/line-7.svg)
 
 ## Notes
 

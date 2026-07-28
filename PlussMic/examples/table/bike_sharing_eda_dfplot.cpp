@@ -98,41 +98,25 @@ template <std::size_t NCodes, std::size_t NLabels>
                 .rename("mnth", "month")
                 .rename("cnt", "total_count")
                 .rename("hr", "hour")
-                .rename("yr", "year")
-                .cast({
-                    DataFrame::CastSpec{"date", pluss::table::ThreadCastTarget::Timeline, {}},
-                    DataFrame::CastSpec{"rec_id", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"season", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"year", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"month", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"hour", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"is_holiday", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"weekday", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"is_workingday", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"weather_condition", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"temp", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"atemp", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"humidity", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"windspeed", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"casual", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"registered", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
-                    DataFrame::CastSpec{"total_count", pluss::table::ThreadCastTarget::Series,
-                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                .rename("yr", "year");
+  df.set("date") = df.features("date").cast().timeline();
+  df = df.astype({
+                    {"rec_id", pluss::codem::ScalarType::Float64},
+                    {"season", pluss::codem::ScalarType::Float64},
+                    {"year", pluss::codem::ScalarType::Float64},
+                    {"month", pluss::codem::ScalarType::Float64},
+                    {"hour", pluss::codem::ScalarType::Float64},
+                    {"is_holiday", pluss::codem::ScalarType::Float64},
+                    {"weekday", pluss::codem::ScalarType::Float64},
+                    {"is_workingday", pluss::codem::ScalarType::Float64},
+                    {"weather_condition", pluss::codem::ScalarType::Float64},
+                    {"temp", pluss::codem::ScalarType::Float64},
+                    {"atemp", pluss::codem::ScalarType::Float64},
+                    {"humidity", pluss::codem::ScalarType::Float64},
+                    {"windspeed", pluss::codem::ScalarType::Float64},
+                    {"casual", pluss::codem::ScalarType::Float64},
+                    {"registered", pluss::codem::ScalarType::Float64},
+                    {"total_count", pluss::codem::ScalarType::Float64},
                 });
 
   static constexpr std::array<double, 4> kSeasonCodes{1.0, 2.0, 3.0, 4.0};
@@ -148,11 +132,11 @@ template <std::size_t NCodes, std::size_t NLabels>
   const auto year_lookup = make_lookup_frame("year", "year_label", kYearCodes, kYearLabels);
   const auto month_lookup = make_lookup_frame("month", "month_name", kMonthCodes, kMonthLabels);
 
-  df = df.stitch_on("season", season_lookup)
-           .stitch_on("weather_condition", weather_lookup)
-           .stitch_on("weekday", weekday_lookup)
-           .stitch_on("year", year_lookup)
-           .stitch_on("month", month_lookup)
+  df = df.unify("season", season_lookup, "season", "keep_left", "_lookup", "many_to_one")
+           .unify("weather_condition", weather_lookup, "weather_condition", "keep_left", "_lookup", "many_to_one")
+           .unify("weekday", weekday_lookup, "weekday", "keep_left", "_lookup", "many_to_one")
+           .unify("year", year_lookup, "year", "keep_left", "_lookup", "many_to_one")
+           .unify("month", month_lookup, "month", "keep_left", "_lookup", "many_to_one")
            .assign({
                DataFrame::DeriveSpec{"is_weekend", [](const DataFrame& frame) {
                                       const auto weekday = frame.features("weekday").as_series();
@@ -248,7 +232,7 @@ std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
 
 std::vector<std::string> thread_as_labels(const pluss::table::Thread& thread) {
   const auto note_like =
-      thread.kind() == pluss::table::ThreadKind::Note ? thread : thread.cast(pluss::table::ThreadCastTarget::Note);
+      thread.kind() == pluss::table::ThreadKind::Note ? thread : thread.cast().note();
   std::vector<std::string> labels;
   const auto note = note_like.as_note();
   labels.reserve(static_cast<std::size_t>(note.numel()));
@@ -481,18 +465,23 @@ int main(int argc, char** argv) {
 
   std::cout << "\n=== Missing values summary (per column) ===\n";
   for (const auto& feature : df.features()) {
-    const auto missing = df.features(feature).isnull().count().to_vec<std::int64_t>();
-    const auto null_count = missing.empty() ? static_cast<std::int64_t>(0) : missing.front();
+    const auto null_count = df.features(feature).isnull().count().as_series().item<std::int64_t>();
     if (null_count > 0) {
       std::cout << feature << ": " << null_count << "\n";
     }
   }
-  if (df.count_null_rows() == 0) {
+  if (df.isnull().any(pluss::table::Axis::Case).sum().to_int() == 0) {
     std::cout << "No missing values detected.\n";
   }
 
   std::cout << "\n=== Value counts (season_name) ===\n";
-  df.count_by("season_name", 0, true, true);
+  const auto season_counts = df.group({.dropnull = true})
+                               .by({"season_name"})
+                               .agg({
+                                   {"count", "", GroupOp::Count},
+                               })
+                               .arrange({"count"}, false);
+  season_counts.head(season_counts.ncases(), true);
 
   const auto hour_line_opts = build_plot_options();
 
@@ -511,8 +500,10 @@ int main(int argc, char** argv) {
   auto fig_03 = make_registered_vs_casual_figure(weekday_registered, weekday_casual);
   save_and_optionally_show(fig_03, cli.out_dir, "03_registered_vs_casual_by_weekday", cli.show);
 
-  auto daily = df.group_by({"date"}, {{"mean_total_count", "total_count", GroupOp::Mean}}, true, false)
-                   .sort_values({"date"}, true, true)
+  auto daily = df.group({.dropnull = true})
+                   .by({"date"})
+                   .agg({{"mean_total_count", "total_count", GroupOp::Mean}})
+                   .arrange({"date"}, true, true)
                    .label().set("date", false);
   auto fig_04 = daily.plot(build_plot_options("date")).line("mean_total_count", "date");
   fig_04.headline("Daily mean bike rentals (from hourly data)");
@@ -529,7 +520,9 @@ int main(int argc, char** argv) {
   fig_06.headline("Total rentals by weather condition");
   save_and_optionally_show(fig_06, cli.out_dir, "06_box_total_by_weather", cli.show);
 
-  auto monthly = df.group_by({"month_name"}, {{"mean_total_count", "total_count", GroupOp::Mean}}, true, false);
+  auto monthly = df.group({.dropnull = true})
+                     .by({"month_name"})
+                     .agg({{"mean_total_count", "total_count", GroupOp::Mean}});
   auto fig_07 = monthly.plot(build_plot_options("month_name")).line("mean_total_count", "month_name");
   fig_07.headline("Monthly mean bike rentals (hourly averaged)");
   save_and_optionally_show(fig_07, cli.out_dir, "07_monthly_mean", cli.show);

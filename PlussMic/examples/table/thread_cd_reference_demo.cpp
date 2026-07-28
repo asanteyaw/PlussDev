@@ -24,7 +24,7 @@ int main() {
   auto scores = Thread(make_series({10.0, 20.0, 30.0, 40.0}));
   auto scores_other = Thread(make_series({10.0, 10.0, 35.0, 45.0}));
   auto with_labels = scores.label().set(Thread(make_note({"a", "b", "c", "d"})));
-  auto with_name = scores.with_display_name("scores");
+  auto with_name = scores.name("scores");
   auto missing = Thread(make_series({
       10.0,
       std::numeric_limits<double>::quiet_NaN(),
@@ -43,7 +43,8 @@ int main() {
 
   print_block("CAST_SERIES_DTYPE",
               Thread(make_note({"1.0", "2.0", "3.0"}))
-                  .cast(ThreadCastTarget::Series, ScalarType::Float64)
+                  .cast({.series_dtype = ScalarType::Float64})
+                  .series()
                   .to_string());
 
   ThreadCastOptions cast_options;
@@ -51,14 +52,15 @@ int main() {
   cast_options.invalid = ParseInvalid::Null;
   print_block("CAST_OPTIONS",
               Thread(make_note({"4.0", "oops", "6.0"}))
-                  .cast(ThreadCastTarget::Series, cast_options)
+                  .cast(cast_options)
+                  .series()
                   .to_string());
 
   print_block("CHARS_RANGE", code_names.chars(0, 1).to_string());
   print_block("CHARS_STEP", code_names.chars(0, std::nullopt, 2).to_string());
 
   print_block("CLEAR_CASES", with_labels.label().reset().to_string());
-  print_block("CLEAR_DISPLAY_NAME", with_name.clear_display_name().to_string());
+  print_block("UNNAME", with_name.unname().to_string());
   print_block("CLIP", scores.clip(15.0, 35.0).to_string());
 
   print_block("COMPARE_SCALAR",
@@ -70,7 +72,7 @@ int main() {
 
   std::cout << "COMPARE_ROWS\n" << duplicated.compare_rows(0, 2, true) << "\n\n";
 
-  print_block("CONTAINS", Thread(names.contains("A")).to_string());
+  print_block("CONTAINS", names.nt().has("A").to_string());
 
   std::cout << "CORR_PEARSON\n" << scores.corr(scores_other, ThreadCorrMethod::Pearson) << "\n\n";
   std::cout << "CORR_SPEARMAN\n" << scores.corr(scores_other, ThreadCorrMethod::Spearman) << "\n\n";
@@ -86,7 +88,7 @@ int main() {
   print_block("DESCRIBE_NOTE", duplicated.describe(false).to_string());
 
   print_block("CASES", with_labels.label().values().to_string());
-  std::cout << "DISPLAY_NAME\n" << with_name.display_name() << "\n\n";
+  std::cout << "NAME\n" << with_name.name() << "\n\n";
 
   print_block("DISTINCT", duplicated.distinct(true).to_string());
   print_block("DROPNULL", missing.dropnull().to_string());

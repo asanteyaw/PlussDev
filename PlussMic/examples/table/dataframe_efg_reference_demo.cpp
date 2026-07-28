@@ -69,14 +69,12 @@ int main() {
   std::cout << "GT\n" << sales.features({"units", "price"}).gt(5.0).to_string() << "\n\n";
 
   std::cout << "GROUP_BY\n";
-  std::cout << sales.group_by(
-      {"region"},
-      {
-          {"total_units", "units", DataFrame::GroupOp::Sum},
-          {"avg_price", "price", DataFrame::GroupOp::Mean},
-      },
-      true,
-      false).to_string() << "\n\n";
+  std::cout << sales.group({.dropnull = true})
+                   .by({"region"})
+                   .agg({
+                       {"total_units", "units", DataFrame::GroupOp::Sum},
+                       {"avg_price", "price", DataFrame::GroupOp::Mean},
+                   }).to_string() << "\n\n";
 
   std::cout << "EVENTS\n" << events.to_string() << "\n\n";
   std::cout << "FLOOR_TIME\n" << events.features({"stamp"}).tl().floor("day").to_string() << "\n";

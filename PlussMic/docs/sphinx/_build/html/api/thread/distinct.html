@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the distinct values of the thread, one representative per value, in
 <strong>first-seen order</strong> — not sorted. Grouping is done by each value’s string form
-(the same conversion <a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tally()</span></code></span></a> uses), so this works on any payload
+(the same conversion <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> uses), so this works on any payload
 kind, not just <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Unlike a sort-based dedup, the surviving representative
 for each value is always the earliest occurrence, and the relative order of
 distinct values in the output matches the order they first appeared in the
@@ -117,7 +117,7 @@ though the source had two missing entries.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Order is first-seen, never sorted — see <a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_values()</span></code></span></a> if
+<li><p>Order is first-seen, never sorted — see <a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange()</span></code></span></a> if
 you want the distinct values in value order instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code> keeps at most one missing entry, not one per occurrence.</p></li>
 <li><p>Grouping is by each value’s string form, so this works across every payload
@@ -129,7 +129,7 @@ kind.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ndistinct</span></code></span></a>: the count of distinct values, without
 the values themselves.</p></li>
-<li><p><a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally</span></code></span></a>: distinct values paired with their occurrence
+<li><p><a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq</span></code></span></a>: distinct values paired with their occurrence
 counts, sorted by frequency instead of first-seen order.</p></li>
 <li><p><a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::duplicated</span></code></span></a> / <a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::repeated</span></code></span></a>:
 boolean masks over the original thread’s positions, rather than a

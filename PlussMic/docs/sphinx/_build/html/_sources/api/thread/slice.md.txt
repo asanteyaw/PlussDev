@@ -104,8 +104,8 @@ ptype: Series
     <span class="label">Previous</span>
     <span class="title">skew</span>
   </a>
-  <a class="next-link" href="sort_values.html">
+  <a class="next-link" href="arrange.html">
     <span class="label">Next</span>
-    <span class="title">sort_values</span>
+    <span class="title">arrange</span>
   </a>
 </div>

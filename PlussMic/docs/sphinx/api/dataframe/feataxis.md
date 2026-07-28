@@ -148,7 +148,7 @@ and `.suffix()` are whole-frame renames, unlike `.like()` / `.match()` / `.serie
 
 - `.like()` and `.match()` operate on **feature names**, not on the text values inside
   `Note` columns — pattern-matching a column's text contents is a job for
-  [`note()`](note.md)'s own text methods instead.
+  [`nt()`](nt.md)'s own text methods instead.
 - `.prefix()` / `.suffix()` rename every feature on the frame unconditionally; there is
   no selective "rename only these columns" mode on this accessor — for that, see
   [`rename()`](rename.md).
@@ -164,7 +164,7 @@ and `.suffix()` are whole-frame renames, unlike `.like()` / `.match()` / `.serie
   feature names instead of a pattern or kind.
 - [`DataFrame::rename`](rename.md): full positional replacement of every feature name,
   when `.prefix()` / `.suffix()` aren't the transform you need.
-- [`DataFrame::note`](note.md): text-value operations on `Note` columns' *contents*,
+- [`DataFrame::nt`](nt.md): text-value operations on `Note` columns' *contents*,
   as opposed to `feataxis()`'s operations on feature *names*.
 
 <div class="pluss-inline-prev-next">

@@ -112,7 +112,7 @@ Thread::duplicated: keep_first and keep_last cannot both be true
 ## Notes
 
 - Grouping is by each value's string form, matching
-  [`distinct()`](distinct.md)/[`tally()`](tally.md); works across every payload
+  [`distinct()`](distinct.md)/[`freq()`](freq.md); works across every payload
   kind.
 - A value occurring only once is never flagged, under either policy.
 - Reports membership only — combine with [`filter()`](filter.md) (or its

@@ -132,6 +132,35 @@ bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t 
          && series_value_is_nan_for_io(t.as_series(), row);
 }
 
+bool series_all_zero_i64_for_io(const pluss::Series& s) {
+  const auto values = s.to_vec<std::int64_t>();
+  return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
+}
+
+pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
+  const auto timeline = (t.kind() == pluss::table::ThreadKind::Timeline)
+                            ? t.as_timeline()
+                            : t.as_timeindex().timeline();
+  const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
+  const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
+                              || !series_all_zero_i64_for_io(timeline.minute())
+                              || !series_all_zero_i64_for_io(timeline.hour());
+  if (!has_clock_time) {
+    return pluss::table::Thread(timeline.to_note_date(), pluss::table::detail::validity_mask(t));
+  }
+  if (!has_subsecond) {
+    return pluss::table::Thread(timeline.to_note_datetime(), pluss::table::detail::validity_mask(t));
+  }
+  return pluss::table::Thread(timeline.to_note_datetime_nano(), pluss::table::detail::validity_mask(t));
+}
+
+pluss::table::Thread thread_for_csv_io(const pluss::table::Thread& t) {
+  if (t.kind() == pluss::table::ThreadKind::Timeline || t.kind() == pluss::table::ThreadKind::TimeIndex) {
+    return temporal_thread_for_io(t);
+  }
+  return t;
+}
+
 bool csv_profile_enabled(const ReadCsvOptions& options) {
   if (options.profile) {
     return true;
@@ -1228,9 +1257,10 @@ void save_csv(const pluss::table::DataFrame& frame,
   std::vector<pluss::table::Thread> cols;
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(frame.features(name));
+    cols.push_back(thread_for_csv_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
+  const auto case_values = include_cases ? thread_for_csv_io(frame.label().values()) : pluss::table::Thread{};
 
   if (options.header) {
     bool first = true;
@@ -1251,7 +1281,7 @@ void save_csv(const pluss::table::DataFrame& frame,
   for (std::int64_t r = 0; r < frame.ncases(); ++r) {
     bool first = true;
     if (include_cases) {
-      out << escape_csv_cell(thread_value_for_csv(frame.label().values(), r, options), options);
+      out << escape_csv_cell(thread_value_for_csv(case_values, r, options), options);
       first = false;
     }
     for (const auto& col : cols) {
@@ -1405,8 +1435,19 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
           target = pluss::table::ThreadCastTarget::TimeIndex;
           break;
       }
-      const auto converted =
-          column.cast(target, impl_->schema_series_types[i]);
+      const auto converted = [&]() {
+        switch (target) {
+          case pluss::table::ThreadCastTarget::Series:
+            return column.cast({.series_dtype = impl_->schema_series_types[i]}).series();
+          case pluss::table::ThreadCastTarget::Note:
+            return column.cast().note();
+          case pluss::table::ThreadCastTarget::Timeline:
+            return column.cast().timeline();
+          case pluss::table::ThreadCastTarget::TimeIndex:
+            return column.cast().timeindex();
+        }
+        return column;
+      }();
       auto lost_observation =
           column.notnull().as_series().logical_and(
               converted.notnull().as_series().logical_not());

@@ -56,7 +56,7 @@ auto catalog = DataFrame({
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 }, Thread(pluss::make_note({"p1", "p2", "p3", "p4"})));
 
-auto out = catalog.note().rstrip();
+auto out = catalog.nt().rstrip();
 std::cout << out;
 ```
 
@@ -87,7 +87,7 @@ auto codes = DataFrame({
     {"code", Thread(pluss::make_note({"[[[SKU-1001", "((SKU-1002", "SKU-1003"}))},
 });
 
-auto out2 = codes.note().rstrip("])");
+auto out2 = codes.nt().rstrip("])");
 std::cout << out2;
 ```
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -111,7 +111,7 @@ punctuation, and a space:</p>
 </pre></div>
 </div>
 <p>Example 1. The default: <code class="docutils literal notranslate"><span class="pre">encode()</span></code> with no argument uses Base64.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">encode</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">encode</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -134,7 +134,7 @@ punctuation, and a space:</p>
 3 — so it encodes to 8 characters with no padding. <code class="docutils literal notranslate"><span class="pre">&quot;a</span> <span class="pre">b/c&quot;</span></code> is 5 bytes, one
 short of a multiple of 3, so it gets a single <code class="docutils literal notranslate"><span class="pre">=</span></code>.</p>
 <p>Example 2. <code class="docutils literal notranslate"><span class="pre">&quot;hex&quot;</span></code>: two lowercase hex digits per input byte.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;hex&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;hex&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -157,7 +157,7 @@ twice as many characters as input bytes, since every byte becomes exactly
 two hex digits.</p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">&quot;url&quot;</span></code>: percent-encode everything outside the unreserved set,
 using uppercase hex digits after the <code class="docutils literal notranslate"><span class="pre">%</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -182,7 +182,7 @@ convention — this is plain RFC 3986 percent-encoding) and its <code class="doc
 <code class="docutils literal notranslate"><span class="pre">%2F</span></code>, both with uppercase hex digits.</p>
 <p>Example 4. An unrecognized <code class="docutils literal notranslate"><span class="pre">encoding</span></code> argument throws immediately.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;base32&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payloads</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;base32&quot;</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>

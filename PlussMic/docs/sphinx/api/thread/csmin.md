@@ -15,7 +15,7 @@ Thread::csmin() const -> ThreadValue
 Returns the **case label** of the row holding the smallest value in the thread
 — not the value itself. `"cs"` stands for case: this is the "which row" answer
 (like `idxmin` elsewhere), scanning every valid entry, comparing by the same
-rule [`sort_values()`](sort_values.md) uses, and returning
+rule [`arrange()`](arrange.md) uses, and returning
 [`caselbl()`](label.md) at the winning row's position. If the thread has no
 explicit case labels, that's the default `0`-based position; if it does (via
 [`label().set(...)`](label.md) or the `caselbl()` mutator), it's that label's
@@ -24,7 +24,7 @@ own value.
 Ties keep the **first** occurrence — if two rows tie for the smallest value,
 the earlier row's label is returned, not the later one. Works on every payload
 kind (comparison is delegated to the same generic row-comparison logic
-`sort_values()` uses). Missing entries are skipped when scanning; an empty
+`arrange()` uses). Missing entries are skipped when scanning; an empty
 thread, or one where every entry is missing, throws.
 
 See [`Thread::sum`'s note on printing a `ThreadValue`](sum.md) — the examples
@@ -147,7 +147,7 @@ Thread::csmin on an all-null Thread
   you want the value itself.
 - Ties keep the first occurrence.
 - Works on every payload kind, since row comparison is delegated to the same
-  logic [`sort_values()`](sort_values.md) uses.
+  logic [`arrange()`](arrange.md) uses.
 - An empty thread throws `"Thread::csmin on an empty Thread"`; a thread with no
   observed values throws `"Thread::csmin on an all-null Thread"`.
 

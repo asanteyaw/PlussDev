@@ -182,7 +182,7 @@ std::optional<pluss::Series> optional_mask_from_valid(const std::vector<bool>& v
 
 std::vector<std::string> labels_from_stream(const Stream& stream) {
   PLUSS_CHECK(stream.has_label(), "Catalog::tabelize(by_label): stream has no labels");
-  auto as_note = stream.label()->cast(pluss::table::ThreadCastTarget::Note).as_note();
+  auto as_note = stream.label()->cast().note().as_note();
   std::vector<std::string> labels;
   labels.reserve(static_cast<std::size_t>(stream.size()));
   for (std::int64_t i = 0; i < stream.size(); ++i) {
@@ -262,7 +262,7 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
                                           const TabelizePolicy& policy) {
   const auto target_len = static_cast<std::int64_t>(source_index.size());
   const auto source = stream.to_thread();
-  const auto source_note = source.cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto source_note = source.cast().note().as_note();
   const auto source_valid = validity_or_all_true(stream);
 
   std::vector<std::string> values(static_cast<std::size_t>(target_len));
@@ -283,21 +283,21 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
   try {
     switch (stream.kind()) {
       case StreamKind::Series:
-        out = out_note.cast(pluss::table::ThreadCastTarget::Series, stream.as_series().scalar_type());
+        out = out_note.cast({.series_dtype = stream.as_series().scalar_type()}).series();
         break;
       case StreamKind::Note:
         out = out_note;
         break;
       case StreamKind::Timeline:
-        out = out_note.cast(pluss::table::ThreadCastTarget::Timeline);
+        out = out_note.cast().timeline();
         break;
       case StreamKind::TimeIndex:
-        out = out_note.cast(pluss::table::ThreadCastTarget::TimeIndex);
+        out = out_note.cast().timeindex();
         break;
     }
   } catch (const std::exception&) {
     if (policy.dtype == DTypePolicy::BestEffort && stream.kind() == StreamKind::Series) {
-      out = out_note.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+      out = out_note.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
     } else {
       throw;
     }

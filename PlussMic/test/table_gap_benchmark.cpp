@@ -57,11 +57,9 @@ int main(int argc, char** argv) {
     sink += result.ncases();
   });
   const auto grouping = elapsed_ms([&] {
-    const auto result = left.group_by(
-        {"key"},
-        {{"x_sum", "x", DataFrame::GroupOp::Sum}},
-        true,
-        false);
+    const auto result = left.group({.dropnull = true})
+                           .by({"key"})
+                           .agg({{"x_sum", "x", DataFrame::GroupOp::Sum}});
     sink += result.ncases();
   });
   const auto unification = elapsed_ms([&] {
@@ -73,11 +71,13 @@ int main(int argc, char** argv) {
     sink += result.ncases();
   });
   const auto windows = elapsed_ms([&] {
-    const auto result = left.moving_mean(128);
+    const auto result = left.ts().rolling(
+        {{"x_roll_mean", "x", pluss::table::ThreadWindowOp::RollingMean, 128, 1}},
+        false);
     sink += result.ncases();
   });
   const auto statistics = elapsed_ms([&] {
-    const auto result = left.covariance();
+    const auto result = left.covar();
     sink += result.ncases();
   });
 

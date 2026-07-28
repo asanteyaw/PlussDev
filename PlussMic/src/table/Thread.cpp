@@ -24,6 +24,8 @@
 #include <variant>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeN/core/OpsInternal.h"
@@ -35,8 +37,10 @@
 namespace pluss::table {
 
 #include "table/ops/thread/ThreadInternals.inc"
+#include "table/ops/shared/GroupInternals.inc"
 #include "table/ops/thread/ThreadAlignment.inc"
 #include "table/ops/thread/ThreadCoreOps.inc"
+#include "table/ops/thread/ThreadGroup.inc"
 #include "table/ops/thread/ThreadAdvancedOps.inc"
 #include "table/ops/thread/ThreadOperatorsAndValue.inc"
 

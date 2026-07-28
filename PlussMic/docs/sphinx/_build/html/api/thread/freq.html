@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=8df6b0f0"></script>
-    <script src="../../_static/layout.js?v=e3ea884b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Thread::fullmatch" href="fullmatch.html" />
-    <link rel="prev" title="Thread::fold" href="fold.html" />
+    <link rel="next" title="Thread::titlecase" href="titlecase.html" />
+    <link rel="prev" title="Thread::take" href="take.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -36,55 +36,128 @@
 
           <div class="body" role="main">
             
-  <section id="thread-freq">
+  <!-- pluss-hand-authored -->
+<section id="thread-freq">
 <h1>Thread::freq<a class="headerlink" href="#thread-freq" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">freq</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<section id="api-signature">
+<h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">freq</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">freq</span><span class="p">(</span><span class="n">options</span><span class="o">:</span><span class="w"> </span><span class="n">ThreadFreqOptions</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Counts the most frequent observed values in the thread.</p>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p>Counts how often each distinct value occurs in one thread and returns a labeled
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code>. The output values are the counts or proportions; the output labels are
+the distinct source values.</p>
+<p>This is the 1D frequency surface. Use <a class="reference internal" href="../dataframe/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::freq</span></code></span></a>
+when you want grouped frequencies across one or more dataframe features.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>top_n</strong>
-Optional cap on how many grouped rows to keep after sorting. Use <code class="docutils literal notranslate"><span class="pre">0</span></code> to keep every group.</p>
-<p><strong>dropnull</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, null grouping keys or null values are excluded where the method supports that policy. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, null participates instead of being removed.</p>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ThreadFreqOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ThreadFreqKind</span><span class="w"> </span><span class="n">kind</span><span class="p">{</span><span class="n">ThreadFreqKind</span><span class="o">::</span><span class="n">Count</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">sort</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">kind</span></code>
+<code class="docutils literal notranslate"><span class="pre">Count</span></code> returns occurrence counts. <code class="docutils literal notranslate"><span class="pre">Prop</span></code> returns normalized proportions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dropnull</span></code>
+When <code class="docutils literal notranslate"><span class="pre">true</span></code>, missing values are excluded. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, missing values are counted
+under the label <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sort</span></code>
+When <code class="docutils literal notranslate"><span class="pre">true</span></code>, results are ordered by frequency. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, first-seen order is
+preserved.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ascending</span></code>
+Only applies when <code class="docutils literal notranslate"><span class="pre">sort=true</span></code>. Sorts from smallest to largest frequency.</p>
+<p><code class="docutils literal notranslate"><span class="pre">top</span></code>
+Keeps only the first <code class="docutils literal notranslate"><span class="pre">top</span></code> rows after ordering. <code class="docutils literal notranslate"><span class="pre">0</span></code> keeps all rows.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+The payload is numeric:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Int64</span></code> when <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">Count</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Float64</span></code> when <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">Prop</span></code></p></li>
+</ul>
+<p>The labels hold the distinct source values.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">freq</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">top_n,</span> <span class="pre">dropnull</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">freq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">freq</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counts</span><span class="p">;</span>
 </pre></div>
-</div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
-</pre></div>
-</div>
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fold.html">
-    <span class="label">Previous</span>
-    <span class="title">fold</span>
-  </a>
-  <a class="next-link" href="fullmatch.html">
-    <span class="label">Next</span>
-    <span class="title">fullmatch</span>
-  </a>
 </div>
 </section>
+<section id="expected-output">
+<h2>Expected output<a class="headerlink" href="#expected-output" title="Link to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Accra    3
+Tema     2
+Name: count, ptype: Series
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">prop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">freq</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThreadFreqKind</span><span class="o">::</span><span class="n">Prop</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">prop</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h2>Expected output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Accra    0.6
+Tema     0.4
+Name: prop, ptype: Series
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_gap</span><span class="p">.</span><span class="n">freq</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h2>Expected output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Accra    1
+NULL     1
+Tema     1
+Name: count, ptype: Series
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dataframe/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::freq</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::distinct</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ndistinct</span></code></span></a></p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="take.html">
+    <span class="label">Previous</span>
+    <span class="title">take</span>
+  </a>
+  <a class="next-link" href="titlecase.html">
+    <span class="label">Next</span>
+    <span class="title">titlecase</span>
+  </a>
+</div>
 </section>
 </section>
 
@@ -136,8 +209,8 @@ Value produced by this call.</p>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
-      <li>Previous: <a href="fold.html" title="previous chapter">Thread::fold</a></li>
-      <li>Next: <a href="fullmatch.html" title="next chapter">Thread::fullmatch</a></li>
+      <li>Previous: <a href="take.html" title="previous chapter">Thread::take</a></li>
+      <li>Next: <a href="titlecase.html" title="next chapter">Thread::titlecase</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

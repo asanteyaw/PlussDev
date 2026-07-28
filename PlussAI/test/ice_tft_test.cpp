@@ -11,7 +11,7 @@
 // (plus small noise) -- a simple function of one static and one known-future
 // input, exactly the kind of relationship TFT's variable selection +
 // static-context machinery exists to combine.
-#include <pluss/ai/ice/models/tft.h>
+#include <pluss/ai/ice/models/ts/temporal_fusion_transformer.h>
 #include <pluss/mic.h>
 #include <pluss/pluss.h>
 
@@ -124,12 +124,12 @@ bool run_ice_tft_checks(std::ostream* err = nullptr) {
   // a 150-epoch/patience-15 budget was empirically found to sometimes stop
   // early with an accurate median but an overconfident (too-narrow)
   // interval, well under 0.4 coverage; 400/40 reliably lands above 0.9.
-  train_options.max_epochs = 400;
+  train_options.execution.max_epochs = 400;
   train_options.batch_size = 64;
   train_options.learning_rate = 1e-2;
-  train_options.val_ratio = 0.15;
-  train_options.early_stopping = true;
-  train_options.patience = 40;
+  train_options.validation.split_ratio = 0.15;
+  train_options.loop_regularization.early_stopping = true;
+  train_options.loop_regularization.patience = 40;
   train_options.seed = 3;
 
   model.learn(train_batch, train_options);
@@ -311,12 +311,12 @@ bool run_ice_tft_categorical_checks(std::ostream* err = nullptr) {
   train_batch.target = train_data.target;
 
   models::TFTTrainOptions train_options{};
-  train_options.max_epochs = 400;
+  train_options.execution.max_epochs = 400;
   train_options.batch_size = 64;
   train_options.learning_rate = 1e-2;
-  train_options.val_ratio = 0.15;
-  train_options.early_stopping = true;
-  train_options.patience = 40;
+  train_options.validation.split_ratio = 0.15;
+  train_options.loop_regularization.early_stopping = true;
+  train_options.loop_regularization.patience = 40;
   train_options.seed = 4;
 
   model.learn(train_batch, train_options);
@@ -398,23 +398,26 @@ bool run_ice_tft_dataset_integration_checks(std::ostream* err = nullptr) {
   const auto train_df = build_panel(kSeries, kStepsPerSeries, /*seed=*/21);
   const auto test_df = build_panel(80, kStepsPerSeries, /*seed=*/97);
 
-  data::TimeSeriesDataSetOptions ds_options{};
-  ds_options.time_idx = "t";
-  ds_options.group_ids = {"series"};
-  ds_options.target = "y";
-  ds_options.variables = {
-      {"level", data::VariableKind::StaticContinuous},
-      {"position", data::VariableKind::KnownContinuous},
-      {"noisy_level", data::VariableKind::ObservedContinuous},
+  data::DataSpec data_spec{};
+  data_spec.layout = data::Layout::Panel;
+  data_spec.time_key = "t";
+  data_spec.group_keys = {"series"};
+  data_spec.target = "y";
+  data_spec.fields = {
+      {"level", data::Role::StaticContinuous},
+      {"position", data::Role::KnownContinuous},
+      {"noisy_level", data::Role::ObservedContinuous},
   };
-  ds_options.encoder_length = kEncoderLength;
-  ds_options.decoder_length = kDecoderLength;
-  ds_options.cfg = float_cfg();
+  data_spec.window = {
+      .lookback = kEncoderLength,
+      .horizon = kDecoderLength,
+  };
+  data_spec.cfg = float_cfg();
 
-  const auto train_dataset = data::TimeSeriesDataSet::from_dataframe(train_df, ds_options);
-  const auto test_dataset = data::TimeSeriesDataSet::from_dataframe(test_df, ds_options, train_dataset);
+  const auto train_dataset = data::DataSet::from_frame(train_df, data_spec);
+  const auto test_dataset = data::DataSet::from_frame(test_df, data_spec, train_dataset);
 
-  auto tft_options = models::TFTOptions::from_dataset(train_dataset);
+  auto tft_options = models::TFTOptions::from_data(train_dataset);
   if (tft_options.static_size != 1 || tft_options.encoder_size != 2 || tft_options.decoder_size != 1) {
     if (err) {
       *err << "TFTOptions::from_dataset produced wrong sizes: static=" << tft_options.static_size
@@ -439,16 +442,17 @@ bool run_ice_tft_dataset_integration_checks(std::ostream* err = nullptr) {
   models::TemporalFusionTransformer model(tft_options);
 
   models::TFTTrainOptions train_options{};
-  train_options.max_epochs = 400;
+  train_options.execution.max_epochs = 400;
   train_options.batch_size = 64;
   train_options.learning_rate = 1e-2;
-  train_options.val_ratio = 0.15;
-  train_options.early_stopping = true;
-  train_options.patience = 40;
+  train_options.validation.split_ratio = 0.15;
+  train_options.loop_regularization.early_stopping = true;
+  train_options.loop_regularization.patience = 40;
   train_options.seed = 3;
 
-  // The new data::TimeSeriesBatch-taking overload -- no TFTBatch wrapping
-  // needed at the call site.
+  // The generic data::Batch-taking overload -- model-side forecasting now
+  // hangs off Ice's generalized dataset surface rather than a
+  // forecast-library-shaped public type.
   model.learn(train_dataset.batch(), train_options);
   if (!model.ready()) {
     if (err) *err << "ice TFT dataset-integration model should report ready() after learn()\n";
@@ -458,7 +462,7 @@ bool run_ice_tft_dataset_integration_checks(std::ostream* err = nullptr) {
   const auto forecast = model.predict(test_dataset.batch());
   const auto qsizes = forecast.quantiles.sizes();
   const Series median = forecast.quantiles.narrow_copy(2, 1, 1).reshape({qsizes[0], kDecoderLength});
-  const Series test_target = test_dataset.batch().target;
+  const Series test_target = test_dataset.batch().target();
   const double mean_abs_error = median.sub(test_target).abs().mean().item<double>();
   if (mean_abs_error > 0.15) {
     if (err) {

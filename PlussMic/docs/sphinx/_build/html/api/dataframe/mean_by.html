@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,7 +53,7 @@ group, returning a compact three-column summary (<code class="docutils literal n
 <code class="docutils literal notranslate"><span class="pre">&quot;mean_&quot;</span> <span class="pre">+</span> <span class="pre">value_feature</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>) sorted by mean descending, ties broken
 alphabetically by group key. This is a focused convenience for the single most common
 group-and-summarize question — “what’s the average X per Y” — without building a full
-<a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by()</span></code></span></a> pipeline for it. <a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count_by()</span></code></span></a> is the
+<a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a> pipeline for it. <a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count_by()</span></code></span></a> is the
 sibling convenience for counting rows per group instead of averaging a value.</p>
 </section>
 <section id="parameters">
@@ -171,7 +171,7 @@ output alone.</p></li>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::count_by</span></code></span></a>: the row-counting sibling of this method.</p></li>
-<li><p><a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by</span></code></span></a>: the general-purpose grouping primitive, for
+<li><p><a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a>: the general-purpose grouping primitive, for
 summaries this convenience doesn’t cover (multiple aggregates, multiple group
 keys).</p></li>
 <li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean</span></code></span></a>: the ungrouped, whole-frame mean.</p></li>

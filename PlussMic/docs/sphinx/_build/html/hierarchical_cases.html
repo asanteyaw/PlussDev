@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/api_nav.js?v=f0e02664"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -54,7 +54,7 @@ look like joined strings, but operations use the structured case-label payloads.
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(position:</span> <span class="pre">int64)</span> <span class="pre">-&gt;</span> <span class="pre">Thread</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::case_study(pick:</span> <span class="pre">CasePick)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().sort(options:</span> <span class="pre">SortLabelOptions)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by(keys:</span> <span class="pre">LabelGroup,</span> <span class="pre">specs:</span> <span class="pre">RangeView&lt;GroupSpec&gt;,</span> <span class="pre">dropnull_keys:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">true,</span> <span class="pre">render:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">false)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameView</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::group().by(keys:</span> <span class="pre">LabelGroup).agg(specs)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().rename(renames:</span> <span class="pre">RangeView&lt;LabelRename&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().order(names:</span> <span class="pre">RangeView&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().drop(names:</span> <span class="pre">RangeView&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
@@ -111,7 +111,7 @@ look like joined strings, but operations use the structured case-label payloads.
 <li><p>A hierarchical case axis is typed. Numeric case labels remain numeric, text case labels remain <code class="docutils literal notranslate"><span class="pre">Note</span></code>, and timeline case labels remain temporal.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">features(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">select(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code>, transforms, and feature reordering preserve case-label metadata.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">case_study(CasePick)</span></code> supports partial-label and full-key lookup.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">group_by(LabelGroup{...})</span></code> groups by case labels without requiring those labels to exist as ordinary features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group().by(LabelGroup{...}).agg(...)</span></code> groups by case labels without requiring those labels to exist as ordinary features.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">unstack(...)</span></code> rejects duplicate output cells. Aggregate first when multiple rows map to the same output cell.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stack(...)</span></code> moves feature names into the case hierarchy and preserves homogeneous typed values.</p></li>
 </ul>
@@ -169,8 +169,8 @@ look like joined strings, but operations use the structured case-label payloads.
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;total_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;n&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
 <span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="p">(</span>
-<span class="w">    </span><span class="n">indexed</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">caselbl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">specs</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">indexed</span><span class="p">.</span><span class="n">group</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">}).</span><span class="n">agg</span><span class="p">(</span><span class="n">specs</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Expected output:</p>

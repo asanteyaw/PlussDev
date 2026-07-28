@@ -374,6 +374,7 @@ bool toggle_body_class(window::HtmlNode& node, const std::string_view class_name
 }
 
 using ExportTable = std::vector<std::vector<std::string>>;
+using ExportTables = std::vector<ExportTable>;
 
 [[nodiscard]] bool contains_tag(const window::HtmlNode& node, const std::string_view tag) {
   if (node.tag == tag) {
@@ -417,7 +418,7 @@ void collect_export_rows(const window::HtmlNode& node, ExportTable& table) {
 
 void collect_export_tables(const window::HtmlNode& node,
                            const bool ancestors_visible,
-                           std::vector<ExportTable>& tables) {
+                           ExportTables& tables) {
   const bool visible =
       ancestors_visible && !has_class(node, "hidden") &&
       (!has_class(node, "atlas-panel") || has_class(node, "active"));
@@ -437,10 +438,42 @@ void collect_export_tables(const window::HtmlNode& node,
   }
 }
 
-[[nodiscard]] std::string delimited_export(const window::HtmlDocument& document,
-                                           const char delimiter) {
-  std::vector<ExportTable> tables;
+[[nodiscard]] ExportTables export_tables_from_document(const window::HtmlDocument& document) {
+  ExportTables tables;
   collect_export_tables(document.root, true, tables);
+  return tables;
+}
+
+[[nodiscard]] ExportTable export_table_from_virtual_model(const VirtualTableModel& model,
+                                                          const std::vector<std::int64_t>* row_order) {
+  ExportTable table;
+  const auto row_count = row_order != nullptr ? static_cast<std::int64_t>(row_order->size()) : model.row_count();
+  const auto column_count = model.column_count();
+  table.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, row_count)) + 1U);
+
+  std::vector<std::string> header;
+  header.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, column_count)) + 1U);
+  header.push_back(model.row_header());
+  for (std::int64_t column = 0; column < column_count; ++column) {
+    header.push_back(model.column_name(column));
+  }
+  table.push_back(std::move(header));
+
+  for (std::int64_t display_row = 0; display_row < row_count; ++display_row) {
+    const auto source_row = row_order != nullptr ? (*row_order)[static_cast<std::size_t>(display_row)] : display_row;
+    std::vector<std::string> row;
+    row.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, column_count)) + 1U);
+    row.push_back(model.row_label(source_row));
+    for (std::int64_t column = 0; column < column_count; ++column) {
+      row.push_back(model.cell(source_row, column).text);
+    }
+    table.push_back(std::move(row));
+  }
+  return table;
+}
+
+[[nodiscard]] std::string delimited_export_tables(const ExportTables& tables,
+                                                  const char delimiter) {
   std::string output;
   for (std::size_t table_index = 0; table_index < tables.size(); ++table_index) {
     if (table_index > 0) {
@@ -477,6 +510,11 @@ void collect_export_tables(const window::HtmlNode& node,
   return output;
 }
 
+[[nodiscard]] std::string delimited_export(const window::HtmlDocument& document,
+                                           const char delimiter) {
+  return delimited_export_tables(export_tables_from_document(document), delimiter);
+}
+
 [[nodiscard]] std::string xml_escape(std::string_view value) {
   std::string output;
   output.reserve(value.size() + 16);
@@ -506,10 +544,8 @@ void collect_export_tables(const window::HtmlNode& node,
   return name;
 }
 
-[[nodiscard]] bool save_xlsx(const window::HtmlDocument& document, const std::string& path) {
+[[nodiscard]] bool save_xlsx_tables(const ExportTables& tables, const std::string& path) {
 #if defined(PLUSSTILS_VIEW_HAVE_LIBZIP) && PLUSSTILS_VIEW_HAVE_LIBZIP
-  std::vector<ExportTable> tables;
-  collect_export_tables(document.root, true, tables);
   if (tables.empty() || path.empty()) {
     return false;
   }
@@ -603,10 +639,14 @@ void collect_export_tables(const window::HtmlNode& node,
   }
   return zip_close(archive) == 0;
 #else
-  (void)document;
+  (void)tables;
   (void)path;
   return false;
 #endif
+}
+
+[[nodiscard]] bool save_xlsx(const window::HtmlDocument& document, const std::string& path) {
+  return save_xlsx_tables(export_tables_from_document(document), path);
 }
 
 [[nodiscard]] bool write_text_file(const std::string& path, const std::string& content) {
@@ -631,6 +671,17 @@ bool export_inhouse_table_xlsx(const std::string& html, const std::string& path)
   }
   const auto document = window::parse_html_document(html, "Pluss table export");
   return contains_tag(document.root, "table") && save_xlsx(document, path);
+}
+
+bool export_inhouse_table_xlsx(std::shared_ptr<const VirtualTableModel> model,
+                               const std::string& path,
+                               const std::vector<std::int64_t>* row_order) {
+  if (model == nullptr || path.empty()) {
+    return false;
+  }
+  ExportTables tables;
+  tables.push_back(export_table_from_virtual_model(*model, row_order));
+  return save_xlsx_tables(tables, path);
 }
 
 bool show_inhouse_html_window(const std::string& title,
@@ -664,7 +715,7 @@ bool show_inhouse_html_window(const std::string& title,
   auto document = window::parse_html_document(payload, title.empty() ? std::string("PlussTilsView") : title);
   window::HtmlRenderConfig render_cfg{};
   render_cfg.draw_top_bar = false;
-  render_cfg.draw_scrollbars = false;
+  render_cfg.draw_scrollbars = true;
   render_cfg.virtual_table_model = virtual_table_model.get();
   window::HtmlRenderStats render_stats{};
   window::HtmlLayoutCache layout_cache;
@@ -683,7 +734,7 @@ bool show_inhouse_html_window(const std::string& title,
       {"PNG image", "png"},
       {"PDF document", "pdf"},
   };
-  if (has_table && virtual_table_model == nullptr) {
+  if (has_table || virtual_table_model != nullptr) {
     save_formats.push_back(window::ShellSaveFormat{"CSV data", "csv"});
     save_formats.push_back(window::ShellSaveFormat{"Tab-delimited text", "txt"});
     save_formats.push_back(window::ShellSaveFormat{"Excel workbook", "xlsx"});
@@ -832,14 +883,20 @@ bool show_inhouse_html_window(const std::string& title,
     if (extension == "pdf") {
       return shell->save_canvas_pdf(presented_canvas, path);
     }
+    const auto export_tables =
+        virtual_table_model != nullptr
+            ? ExportTables{export_table_from_virtual_model(
+                  *virtual_table_model,
+                  virtual_row_order != nullptr ? virtual_row_order.get() : nullptr)}
+            : export_tables_from_document(document);
     if (extension == "csv") {
-      return write_text_file(path, delimited_export(document, ','));
+      return write_text_file(path, delimited_export_tables(export_tables, ','));
     }
     if (extension == "txt") {
-      return write_text_file(path, delimited_export(document, '\t'));
+      return write_text_file(path, delimited_export_tables(export_tables, '\t'));
     }
     if (extension == "xlsx") {
-      return save_xlsx(document, path);
+      return save_xlsx_tables(export_tables, path);
     }
     return false;
   };

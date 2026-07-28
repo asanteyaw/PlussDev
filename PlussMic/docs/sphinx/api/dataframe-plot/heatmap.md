@@ -38,7 +38,7 @@ Two genuinely different modes, chosen by which overload is called:
   rows (one row per case/feature/value triple) into a two-dimensional grid — rows are
   distinct `case_feature` values, columns are distinct `feature_feature` values, and each
   cell is `value_feature` aggregated across the matching rows using `op` (default
-  `DataFrame::GroupOp::Mean`; also accepts `Count`, `Nunique`, `Sum`, `Median`, `Min`,
+  `DataFrame::GroupOp::Mean`; also accepts `Count`, `Ndistinct`, `Sum`, `Median`, `Min`,
   `Max`, `Std`, `Var`, `Mode`). This is the method to reach for when the data isn't already
   laid out as a matrix and needs pivoting first.
 
@@ -68,7 +68,7 @@ combination with no matching rows at all) with `0` before rendering.
     Feature aggregated into each cell.
 
 **op** (`DataFrame::GroupOp`, grouped mode, default `Mean`)
-    The aggregation applied per cell: `Count`, `Nunique`, `Sum`, `Mean`, `Median`, `Min`,
+    The aggregation applied per cell: `Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`,
     `Max`, `Std`, `Var`, or `Mode`.
 
 **options** (`HeatmapPlotOptions`)

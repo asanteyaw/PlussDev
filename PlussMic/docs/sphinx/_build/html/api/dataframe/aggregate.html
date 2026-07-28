@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -68,14 +68,14 @@ column:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">feature</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>): the source column to reduce. Cannot be empty.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">op</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">SummaryOp</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>): the reduction to apply —
-<code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Nunique</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>, <code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, or <code class="docutils literal notranslate"><span class="pre">Prod</span></code>.
-<code class="docutils literal notranslate"><span class="pre">Count</span></code> and <code class="docutils literal notranslate"><span class="pre">Nunique</span></code> accept a feature of any kind (they count non-null values or
+<code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>, <code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, or <code class="docutils literal notranslate"><span class="pre">Prod</span></code>.
+<code class="docutils literal notranslate"><span class="pre">Count</span></code> and <code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code> accept a feature of any kind (they count non-null values or
 distinct non-null values respectively); every other op requires <code class="docutils literal notranslate"><span class="pre">feature</span></code> to be a
 numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> and throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::summarize:</span> <span class="pre">numeric</span> <span class="pre">reductions</span> <span class="pre">require</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">feature&quot;</span></code> otherwise.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">output</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>): the name of the resulting column. Leave it empty to
 auto-generate one as <code class="docutils literal notranslate"><span class="pre">&quot;{feature}_{op_name}&quot;</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">amount_max</span></code> for
-<code class="docutils literal notranslate"><span class="pre">{&quot;&quot;,</span> <span class="pre">&quot;amount&quot;,</span> <span class="pre">SummaryOp::Max}</span></code>) — note the auto-generated name for <code class="docutils literal notranslate"><span class="pre">Nunique</span></code> is
-<code class="docutils literal notranslate"><span class="pre">&quot;{feature}_distinct_count&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;{feature}_nunique&quot;</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">{&quot;&quot;,</span> <span class="pre">&quot;amount&quot;,</span> <span class="pre">SummaryOp::Max}</span></code>) — note the auto-generated name for <code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code> is
+<code class="docutils literal notranslate"><span class="pre">&quot;{feature}_ndistinct&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;{feature}_nunique&quot;</span></code>.</p></li>
 </ul>
 <p>Two specs that resolve to the same output name (whether both explicit or one
 auto-generated) are rejected with <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::summarize:</span> <span class="pre">duplicate</span> <span class="pre">output</span> <span class="pre">name</span> <span class="pre">'&lt;name&gt;'&quot;</span></code> — give every spec a distinct <code class="docutils literal notranslate"><span class="pre">output</span></code>, or vary the auto-generated name by
@@ -207,13 +207,13 @@ would be.</p>
 <ul class="simple">
 <li><p>Duplicate output names (whether explicit or auto-generated) are rejected up front,
 before any reduction runs — give each spec a distinct output name.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Count</span></code>/<code class="docutils literal notranslate"><span class="pre">Nunique</span></code> tolerate any feature kind; every other <code class="docutils literal notranslate"><span class="pre">SummaryOp</span></code> requires a
+<li><p><code class="docutils literal notranslate"><span class="pre">Count</span></code>/<code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code> tolerate any feature kind; every other <code class="docutils literal notranslate"><span class="pre">SummaryOp</span></code> requires a
 numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature and throws otherwise.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Sum</span></code> on an all-null numeric feature (after dropping nulls) returns <code class="docutils literal notranslate"><span class="pre">0</span></code>, and <code class="docutils literal notranslate"><span class="pre">Prod</span></code>
 returns <code class="docutils literal notranslate"><span class="pre">1</span></code> — the identity element for each operation — rather than <code class="docutils literal notranslate"><span class="pre">NaN</span></code>; every
 other op returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code> in that case.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> always collapses to exactly one row; for a per-group breakdown instead
-of a single summary row, use <a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by</span></code></span></a>.</p></li>
+of a single summary row, use <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -221,10 +221,8 @@ of a single summary row, use <a class="reference internal" href="group_by.html">
 <ul class="simple">
 <li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: a fixed, canned set of per-feature statistics,
 computed without hand-writing <code class="docutils literal notranslate"><span class="pre">SummarySpec</span></code>s.</p></li>
-<li><p><a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by</span></code></span></a>: the grouped analogue — one summary row per key
+<li><p><a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a>: the grouped analogue — one summary row per key
 instead of one row for the whole frame.</p></li>
-<li><p><a class="reference internal" href="count_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::count_by</span></code></span></a>: a dedicated frequency-table shortcut for a
-single grouping feature.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="add.html">

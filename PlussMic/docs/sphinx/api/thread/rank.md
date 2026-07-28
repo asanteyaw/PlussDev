@@ -214,7 +214,7 @@ ptype: Series
 
 ## See Also
 
-- [`Thread::sort_values`](sort_values.md): reorder by value directly, rather
+- [`Thread::arrange`](arrange.md): reorder by value directly, rather
   than assigning a rank number in place.
 - [`Thread::percentiles`](percentiles.md): the value at a given fractional
   position, the inverse question to ranking.

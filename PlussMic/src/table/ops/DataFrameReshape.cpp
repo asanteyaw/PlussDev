@@ -190,7 +190,7 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
           return fmt::format("{}", value);
         }
         default:
-          return std::string(axis.cast(ThreadCastTarget::Note).as_note().at(row));
+          return std::string(axis.cast().note().as_note().at(row));
       }
     }
     case ThreadKind::Note:
@@ -237,7 +237,7 @@ DataFrameView DataFrame::transpose(bool render) const {
   std::vector<pluss::Note> src_notes;
   src_notes.reserve(src_columns.size());
   for (const auto& col : src_columns) {
-    src_notes.push_back(col.cast(ThreadCastTarget::Note).as_note());
+    src_notes.push_back(col.cast().note().as_note());
   }
 
   std::unordered_set<std::string> used_names;

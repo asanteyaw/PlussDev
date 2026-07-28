@@ -23,11 +23,9 @@ Current examples include:
 - `describe()`
 - `transpose()`
 - `aggregate()`
-- `group_by()`
+- `group()`
 - `pivot()`
 - `pivot_table()`
-- `count_by()`
-- `mean_by()`
 - `tally()`
 - `resample()`
 - `sum()`
@@ -47,7 +45,7 @@ df.head().show();        // popup if available, else terminal fallback
 df.describe();           // terminal preview
 df.describe().show();    // popup if available, else terminal fallback
 
-df.group_by({"city"}, {{"avg_sales", "sales", pluss::table::DataFrame::GroupOp::Mean}})
+df.group().by({"city"}).agg({{"avg_sales", "sales", pluss::table::DataFrame::GroupOp::Mean}})
   .show();
 ```
 

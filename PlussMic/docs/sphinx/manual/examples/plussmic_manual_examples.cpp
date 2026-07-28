@@ -128,14 +128,12 @@ void example_04_group_and_aggregate() {
   }, false);
   std::cout << summary.to_string() << '\n';
 
-  auto grouped = sales.group_by(
-      {"region"},
-      {
+  auto grouped = sales.group({.dropnull = true})
+      .by({"region"})
+      .agg({
           {"units_sum", "units", DataFrame::GroupOp::Sum},
           {"revenue_mean", "revenue", DataFrame::GroupOp::Mean},
-      },
-      true,
-      false);
+      });
   std::cout << grouped.to_string() << '\n';
 }
 
@@ -242,7 +240,7 @@ void example_10_shape_and_schema() {
   section("10 shape and schema");
   auto sales = sales_frame();
 
-  auto sorted = sales.sort_values({DataFrame::ArrangeSpec{"price", false, true}})
+  auto sorted = sales.arrange({DataFrame::ArrangeSpec{"price", false, true}})
                     .features({"city", "price"});
   std::cout << sorted.to_string() << '\n';
 
@@ -293,7 +291,7 @@ void example_12_thread_missing_and_rows() {
   std::cout << "fillnull:\n" << score.fillnull(99.0).to_string() << '\n';
   std::cout << "dropnull:\n" << score.dropnull().to_string() << '\n';
   std::cout << "shift(2):\n" << score.shift(2).to_string() << '\n';
-  std::cout << "sort asc nulls first:\n" << score.sort_values(true, false).to_string() << '\n';
+  std::cout << "sort asc nulls first:\n" << score.arrange(true, false).to_string() << '\n';
   std::cout << "take 4,1,0:\n" << score.take(std::vector<std::int64_t>{4, 1, 0}).to_string() << '\n';
 }
 
@@ -309,7 +307,7 @@ void example_13_thread_windows_casts_and_ts() {
             << values.window(3, pluss::table::ThreadWindowOp::RollingMean, 2).to_string() << '\n';
   std::cout << "returns:\n" << values.ts().returns(1).to_string() << '\n';
   std::cout << "label cast to float64:\n"
-            << labels.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64).to_string()
+            << labels.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series().to_string()
             << '\n';
   std::cout << "words replace/lower:\n" << words.replace("-", " ").lower().to_string() << '\n';
   std::cout << "words contains north:\n" << Thread(words.lower().contains("north")).to_string() << '\n';

@@ -18,8 +18,8 @@ int main() {
       {"target", pluss::table::Thread(y)},
   });
 
-  const auto numeric = housing.series_features().features();
-  const auto categorical = housing.note_features().features();
+  const auto numeric = housing.feataxis().series().features();
+  const auto categorical = housing.feataxis().note().features();
 
   pluss::ai::nodej::DataFrameBatchOptions data_options{};
   data_options.feature_names = {"median_income", "ocean_proximity", "target"};

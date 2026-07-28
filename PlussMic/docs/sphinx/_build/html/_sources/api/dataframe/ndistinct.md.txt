@@ -7,25 +7,25 @@
 ## Signature
 
 ```cpp
-DataFrame::ndistinct(pluss::RangeView<std::string_view> features = {}, bool dropnull = true) const -> Thread
+DataFrame::ndistinct(bool dropnull = true) const -> Thread
 ```
 
 ## What It Does
 
-Counts each selected feature's own distinct-value count independently, returning one
-`Int64` entry per feature, labeled by feature name. This is a per-feature count, not a
-cross-feature distinct-*combination* count — `ndistinct({"city", "product"})` reports
-how many distinct cities and how many distinct products there are, each on its own,
-never how many distinct `(city, product)` pairs exist. For that, see
-[`freq()`](freq.md) or [`duplicated()`](duplicated.md), which do build a composite key
-across several features together.
+Counts each feature's own distinct-value count independently, returning one `Int64`
+entry per feature currently on the frame, labeled by feature name. This is a
+per-feature count, not a cross-feature distinct-*combination* count —
+`orders.features({"city", "product"}).ndistinct()` reports how many distinct cities
+and how many distinct products there are, each on its own, never how many distinct
+`(city, product)` pairs exist. For that, see [`freq()`](freq.md) or
+[`duplicated()`](duplicated.md), which do build a composite key across several
+features together.
+
+`ndistinct()` carries no feature selector of its own: it always counts over the
+*entire* current frame, so narrow first with [`features()`](features.md) when only
+some features should be counted.
 
 ## Parameters
-
-**features** (`pluss::RangeView<std::string_view>`, default `{}`)
-
-Which features to count. Leave empty (the default) to count every feature on the
-frame.
 
 **dropnull** (`bool`, default `true`)
 
@@ -86,12 +86,13 @@ value). These are two independent, per-feature counts — not a count of distinc
 
 ## Notes
 
-- This is a per-feature count computed independently for each selected feature; it
-  never builds a composite cross-feature key the way [`freq()`](freq.md) and
+- This is a per-feature count computed independently for each feature on the current
+  frame; it never builds a composite cross-feature key the way [`freq()`](freq.md) and
   [`duplicated()`](duplicated.md) do.
 - With `dropnull = false`, a missing value counts as one additional distinct "value"
   for that feature, rather than being excluded from the count.
-- Every selected feature name must exist on the frame; an unknown name throws.
+- `ndistinct()` has no feature selector of its own — use [`features()`](features.md)
+  to narrow the frame first.
 
 ## See Also
 
@@ -101,6 +102,8 @@ value). These are two independent, per-feature counts — not a count of distinc
   composite key, complementary to this method's per-feature count.
 - [`DataFrame::nfeatures`](nfeatures.md), [`DataFrame::ncases`](ncases.md): the plain
   shape counts this method's output is labeled against.
+- [`DataFrame::features`](features.md): narrow the frame to the feature(s)
+  `ndistinct()` should count.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ncases.html">

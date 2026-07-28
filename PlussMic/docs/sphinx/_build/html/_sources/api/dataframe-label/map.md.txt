@@ -124,8 +124,8 @@ throws instead of silently doing nothing.
 
 ## See Also
 
-- [`DataFrameLabelAccessor::cast`](cast.md): change the case labels' payload
-  kind wholesale, rather than transforming values one at a time.
+- [`DataFrameLabelAccessor::values`](values.md): pull the raw label thread if you
+  need to cast or otherwise transform label payloads outside `map(...)`.
 - [`DataFrameLabelAccessor::set`](set.md): the underlying mechanism this method
   applies its result through.
 

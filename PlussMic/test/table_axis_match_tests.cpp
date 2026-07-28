@@ -302,7 +302,7 @@ void test_vectorized_group_reductions() {
   });
   const std::vector<DataFrame::GroupSpec> specs{
       {"n", "", DataFrame::GroupOp::Count},
-      {"distinct", "value", DataFrame::GroupOp::Nunique},
+      {"distinct", "value", DataFrame::GroupOp::Ndistinct},
       {"total", "value", DataFrame::GroupOp::Sum},
       {"average", "value", DataFrame::GroupOp::Mean},
       {"middle", "value", DataFrame::GroupOp::Median},
@@ -314,8 +314,7 @@ void test_vectorized_group_reductions() {
       {"variance", "value", DataFrame::GroupOp::Var},
   };
 
-  const auto grouped = static_cast<DataFrame>(
-      frame.group_by({"group"}, specs, true, false));
+  const auto grouped = frame.group({.dropnull = true}).by({"group"}).agg(specs);
   expect(grouped.ncases() == 2,
          "grouping should produce one case per distinct key");
   expect(grouped.features("group").as_note().vector() ==
@@ -367,6 +366,223 @@ void test_vectorized_group_reductions() {
   expect(pivoted.features("c1").as_series().to_vec<double>() ==
              std::vector<double>({3.0, 5.0}),
          "pivot_table median should aggregate duplicate cells");
+}
+
+void test_group_phase5_contracts() {
+  const auto frame = DataFrame({
+      {"group", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
+      {"label", Thread(pluss::make_note({"x", "y", "z", "z", "w"}))},
+  });
+
+  const auto counted = frame.group().by({"group"}).count();
+  expect(counted.features() ==
+             std::vector<std::string>({"group", "value_count", "label_count"}),
+         "group().by(...).count() should count non-key value features with stable default names");
+  expect(counted.features("value_count").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 3}) &&
+             counted.features("label_count").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({2, 3}),
+         "grouped count convenience should count non-null values per remaining feature");
+
+  const auto rows = frame.features({"group"}).group().by({"group"}).count();
+  expect(rows.features() == std::vector<std::string>({"group", "count"}),
+         "grouped count should fall back to row count when no value features remain");
+  expect(rows.features("count").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 3}),
+         "grouped row-count fallback should count cases per group");
+
+  const auto unnamed = frame.group().by({"group"}).agg({
+      {"", "", DataFrame::GroupOp::Count},
+      {"", "value", DataFrame::GroupOp::Mean},
+      {"", "label", DataFrame::GroupOp::Count},
+  });
+  expect(unnamed.features() ==
+             std::vector<std::string>({"group", "count", "value_mean", "label_count"}),
+         "omitted grouped output names should resolve deterministically");
+  expect(unnamed.features("count").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 3}) &&
+             unnamed.features("value_mean").as_series().to_vec<double>() ==
+                 std::vector<double>({2.0, 4.0}),
+         "omitted grouped output naming should preserve the requested aggregations");
+
+  expect_throw(
+      [&]() {
+        (void)frame.group().by({"group"}).agg({
+            {"", "value", DataFrame::GroupOp::Mean},
+            {"", "value", DataFrame::GroupOp::Mean},
+        });
+      },
+      "duplicate default grouped output names should fail loudly");
+  expect_throw(
+      [&]() {
+        (void)frame.group().by({"group"}).agg({
+            {"count", "", DataFrame::GroupOp::Count},
+            {"", "", DataFrame::GroupOp::Count},
+        });
+      },
+      "explicit and implicit grouped output names should not be allowed to collide");
+}
+
+void test_group_transform_and_filter() {
+  const auto groups = Thread(
+      pluss::make_note({"A", "A", "B", "drop", "B"}),
+      pluss::make_series(std::vector<bool>{true, true, true, false, true}));
+  const auto frame = DataFrame({
+      {"group", groups},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 9.0, 6.0}))},
+      {"label", Thread(pluss::make_note({"x", "y", "z", "skip", "w"}))},
+  });
+
+  const auto value_mean = frame.features("value")
+                              .group({.dropnull = true})
+                              .by(frame.features("group"))
+                              .transform(pluss::table::GroupOp::Mean);
+  expect(value_mean.as_series().to_vec<double>() ==
+             std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}),
+         "ThreadGrouped::transform should broadcast grouped reductions back to row space");
+  expect(pluss::table::detail::validity_mask(value_mean)->to_vec<bool>() ==
+             std::vector<bool>({true, true, true, false, true}),
+         "ThreadGrouped::transform should null out rows excluded by dropnull keys");
+
+  const auto multi_value =
+      frame.features("value")
+          .group({.dropnull = true})
+          .by(frame.features("group"))
+          .transform({
+              {"value_mean", pluss::table::GroupOp::Mean},
+              {"value_count", pluss::table::GroupOp::Count},
+          });
+  expect(multi_value.ncases() == frame.ncases() &&
+             multi_value.features() == std::vector<std::string>({"value_mean", "value_count"}),
+         "ThreadGrouped::transform(specs) should return broadcasted output features only");
+  expect(multi_value.features("value_mean").as_series().to_vec<double>() ==
+             std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}) &&
+             multi_value.features("value_count").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({2, 2, 2, 2, 2}),
+         "ThreadGrouped::transform(specs) should broadcast multiple grouped reductions");
+  expect(pluss::table::detail::validity_mask(multi_value.features("value_count"))->to_vec<bool>() ==
+             std::vector<bool>({true, true, true, false, true}),
+         "ThreadGrouped::transform(specs) should preserve dropped-key nulls");
+
+  const auto transformed = frame.group({.dropnull = true}).by({"group"}).transform({
+      {"value_mean", "value", DataFrame::GroupOp::Mean},
+      {"count", "", DataFrame::GroupOp::Count},
+      {"label_mode", "label", DataFrame::GroupOp::Mode},
+  });
+  expect(transformed.ncases() == frame.ncases() &&
+             transformed.features() == std::vector<std::string>({"value_mean", "count", "label_mode"}),
+         "DataFrameGrouped::transform should return broadcasted output features only");
+  expect(transformed.features("value_mean").as_series().to_vec<double>() ==
+             std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}) &&
+             transformed.features("count").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({2, 2, 2, 2, 2}) &&
+             transformed.features("label_mode").as_note().vector() ==
+                 std::vector<std::string_view>({"x", "x", "z", "x", "z"}),
+         "DataFrameGrouped::transform should broadcast explicit grouped specs");
+  expect(pluss::table::detail::validity_mask(transformed.features("count"))->to_vec<bool>() ==
+             std::vector<bool>({true, true, true, false, true}),
+         "DataFrameGrouped::transform should preserve nulls for dropped key rows");
+
+  const auto keep = frame.group({.dropnull = true})
+                        .by({"group"})
+                        .agg({{"total", "value", DataFrame::GroupOp::Sum}})
+                        .features("total")
+                        .gt(4.0);
+  const auto filtered = frame.group({.dropnull = true}).by({"group"}).filter(keep);
+  expect(filtered.ncases() == 2 &&
+             filtered.features("group").as_note().vector() == std::vector<std::string_view>({"B", "B"}) &&
+             filtered.features("value").as_series().to_vec<double>() == std::vector<double>({2.0, 6.0}),
+         "DataFrameGrouped::filter should keep whole groups selected by a grouped keep mask");
+}
+
+void test_group_phase7_hardening() {
+  const auto key_validity = pluss::make_series(
+      std::vector<bool>{true, true, true, false, true, true});
+  const auto value_validity = pluss::make_series(
+      std::vector<bool>{true, true, true, true, false, true});
+  const auto frame = DataFrame({
+      {"k1", Thread(
+                 pluss::make_note({"b", "a", "b", "drop", "a", "b"}),
+                 key_validity)},
+      {"k2", Thread(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 9, 1, 2}))},
+      {"value", Thread(
+                    pluss::make_series(std::vector<double>{5.0, 1.0, 3.0, 7.0, 9.0, 11.0}),
+                    value_validity)},
+      {"label", Thread(pluss::make_note({"u", "v", "u", "w", "x", "u"}))},
+  });
+
+  const auto first_seen = frame.group({.dropnull = true, .sort = false}).by({"k1", "k2"});
+  const auto stable = first_seen.agg({
+      {"n", "", DataFrame::GroupOp::Count},
+      {"avg", "value", DataFrame::GroupOp::Mean},
+  });
+  expect(stable.features("k1").as_note().vector() ==
+             std::vector<std::string_view>({"b", "a", "b", "a"}) &&
+             stable.features("k2").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({2, 2, 1, 1}),
+         "sort=false should preserve first-seen multi-key order");
+  expect(stable.features("n").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 1, 1, 1}),
+         "row-count grouping should ignore dropped-key rows while retaining valid keyed rows");
+  expect(pluss::table::detail::validity_mask(stable.features("avg"))->to_vec<bool>() ==
+             std::vector<bool>({true, true, true, false}),
+         "numeric grouped results should null groups with no observed values");
+
+  const auto sorted = frame.group({.dropnull = true, .sort = true}).by({"k1", "k2"}).count();
+  expect(sorted.features("k1").as_note().vector() ==
+             std::vector<std::string_view>({"a", "a", "b", "b"}) &&
+             sorted.features("k2").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({1, 2, 1, 2}),
+         "sort=true should produce deterministic sorted multi-key order");
+
+  const auto keep = first_seen.count().features("value_count").gt(1.0);
+  const auto filtered = first_seen.filter(keep);
+  expect(filtered.ncases() == 2 &&
+             filtered.features("k1").as_note().vector() ==
+                 std::vector<std::string_view>({"b", "b"}),
+         "reusing the same grouped handle for count then filter should retain cached grouping semantics");
+
+  const auto all_null = DataFrame({
+      {"group", Thread(
+                    pluss::make_note({"A", "B", "C"}),
+                    pluss::make_series(std::vector<bool>{false, false, false}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+  }).group({.dropnull = true}).by({"group"});
+  const auto empty = all_null.agg({
+      {"n", "", DataFrame::GroupOp::Count},
+      {"total", "value", DataFrame::GroupOp::Sum},
+  });
+  expect(empty.ncases() == 0,
+         "all-null keys with dropnull=true should produce zero output groups");
+  const auto empty_tx = all_null.transform({
+      {"n", "", DataFrame::GroupOp::Count},
+      {"total", "value", DataFrame::GroupOp::Sum},
+  });
+  expect(pluss::table::detail::validity_mask(empty_tx.features("n"))->to_vec<bool>() ==
+             std::vector<bool>({false, false, false}) &&
+             pluss::table::detail::validity_mask(empty_tx.features("total"))->to_vec<bool>() ==
+                 std::vector<bool>({false, false, false}),
+         "all-null keys should broadcast all-invalid grouped transform results");
+  const auto none = all_null.filter(Thread(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
+  expect(none.ncases() == 0,
+         "all-null keys should allow a zero-length keep mask and return no rows");
+
+  std::vector<std::string> ids;
+  ids.reserve(128);
+  std::vector<double> values;
+  values.reserve(128);
+  for (int i = 0; i < 128; ++i) {
+    ids.push_back("g" + std::to_string(i));
+    values.push_back(static_cast<double>(i));
+  }
+  const auto high_cardinality = DataFrame({
+      {"group", Thread(pluss::make_note(ids))},
+      {"value", Thread(pluss::make_series(values))},
+  }).group({.dropnull = true, .sort = false}).by({"group"}).count();
+  expect(high_cardinality.ncases() == 128 &&
+             high_cardinality.features("value_count").as_series().to_vec<std::int64_t>()[127] == 1,
+         "high-cardinality grouping should preserve one output row per distinct key");
 }
 
 void test_lengthen_reshape() {
@@ -457,13 +673,28 @@ void test_hierarchical_case_axis_engine() {
       {"total", "sales", DataFrame::GroupOp::Sum},
       {"n", "", DataFrame::GroupOp::Count},
   };
-  const auto grouped = static_cast<DataFrame>(
-      indexed.group_by(DataFrame::LabelGroup{.label = "region"}, specs));
+  const auto grouped =
+      indexed.group().by(DataFrame::LabelGroup{.label = "region"}).agg(specs);
   expect(grouped.features("region").as_note().vector() ==
              std::vector<std::string_view>({"West", "East"}) &&
              grouped.features("total").as_series().to_vec<double>() ==
                  std::vector<double>({30.0, 70.0}),
-         "group_by(LabelGroup) should group by case levels without requiring key features");
+         "group(...).by(LabelGroup).agg(...) should group by case levels without requiring key features");
+
+  const auto transformed =
+      indexed.group().by(DataFrame::LabelGroup{.label = "region"}).transform({
+          {"region_total", "sales", DataFrame::GroupOp::Sum},
+      });
+  expect(transformed.features("region_total").as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 30.0, 70.0, 70.0}),
+         "group(...).by(LabelGroup).transform(...) should broadcast case-level grouped values");
+
+  const auto keep_east = grouped.features("total").gt(50.0);
+  const auto east_only =
+      indexed.group().by(DataFrame::LabelGroup{.label = "region"}).filter(keep_east);
+  expect(east_only.ncases() == 2 &&
+             east_only.features("sales").as_series().to_vec<double>() == std::vector<double>({30.0, 40.0}),
+         "group(...).by(LabelGroup).filter(...) should keep full label groups");
 
   const auto renamed = indexed.label().rename({{"account", "acct"}});
   expect(renamed.label().names() == std::vector<std::string>({"region", "acct"}),
@@ -958,24 +1189,51 @@ void test_timeline_span_surface() {
 
 } // namespace
 
-int main() {
-  test_union_matching_for_frame_math();
-  test_explicit_common_matching();
-  test_repeated_caselbl_pair_in_order();
-  test_matching_rejects_incompatible_case_types();
-  test_case_aware_horizontal_composition();
-  test_vertical_case_extension();
-  test_unify_modes();
-  test_vectorized_group_reductions();
-  test_lengthen_reshape();
-  test_hierarchical_case_axis_engine();
-  test_stack_unstack_hierarchical_cases();
-  test_transform_axis_surface();
-  test_category_factor();
-  test_streamed_csv_case_batches();
-  test_case_aligned_set_and_reduction_axis_rules();
-  test_align_reindex_equivalent();
-  test_timeline_epoch_days_surface();
-  test_timeline_span_surface();
+int main(int argc, char** argv) {
+  using Test = std::pair<std::string, std::function<void()>>;
+  const std::vector<Test> tests{
+      {"union_matching_for_frame_math", test_union_matching_for_frame_math},
+      {"explicit_common_matching", test_explicit_common_matching},
+      {"repeated_caselbl_pair_in_order", test_repeated_caselbl_pair_in_order},
+      {"matching_rejects_incompatible_case_types", test_matching_rejects_incompatible_case_types},
+      {"case_aware_horizontal_composition", test_case_aware_horizontal_composition},
+      {"vertical_case_extension", test_vertical_case_extension},
+      {"unify_modes", test_unify_modes},
+      {"vectorized_group_reductions", test_vectorized_group_reductions},
+      {"group_phase5_contracts", test_group_phase5_contracts},
+      {"group_transform_and_filter", test_group_transform_and_filter},
+      {"group_phase7_hardening", test_group_phase7_hardening},
+      {"lengthen_reshape", test_lengthen_reshape},
+      {"hierarchical_case_axis_engine", test_hierarchical_case_axis_engine},
+      {"stack_unstack_hierarchical_cases", test_stack_unstack_hierarchical_cases},
+      {"transform_axis_surface", test_transform_axis_surface},
+      {"category_factor", test_category_factor},
+      {"streamed_csv_case_batches", test_streamed_csv_case_batches},
+      {"case_aligned_set_and_reduction_axis_rules", test_case_aligned_set_and_reduction_axis_rules},
+      {"align_reindex_equivalent", test_align_reindex_equivalent},
+      {"timeline_epoch_days_surface", test_timeline_epoch_days_surface},
+      {"timeline_span_surface", test_timeline_span_surface},
+  };
+
+  for (const auto& [name, fn] : tests) {
+    if (argc > 1) {
+      bool selected = false;
+      for (int arg = 1; arg < argc; ++arg) {
+        selected = selected || name == argv[arg];
+      }
+      if (!selected) {
+        continue;
+      }
+    }
+    try {
+      fn();
+    } catch (const std::exception& e) {
+      std::cerr << "[FAIL] " << name << "\n" << e.what() << "\n";
+      return 1;
+    } catch (...) {
+      std::cerr << "[FAIL] " << name << "\nunknown error\n";
+      return 1;
+    }
+  }
   return 0;
 }

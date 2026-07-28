@@ -173,9 +173,9 @@ exceeds the 2-element kernel's own size, so that throws too.
   of a fixed-size weighted kernel.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sub.html">
+  <a class="prev-link" href="timed.html">
     <span class="label">Previous</span>
-    <span class="title">sub</span>
+    <span class="title">timed</span>
   </a>
   <a class="next-link" href="window.html">
     <span class="label">Next</span>

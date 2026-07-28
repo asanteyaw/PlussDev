@@ -123,7 +123,7 @@ value — `"2024-01-02..."` -> `1`, `"2024-02-20..."` -> `2`, `"2024-03-10..."` 
 - [`DataFrame::ts`](ts.md): the accessor for time-series *numeric* operations (lag,
   rolling windows, returns) on ordinary numeric features, distinct from this
   calendar-component accessor.
-- [`DataFrame::note`](note.md): the equivalent dedicated accessor for `Note` text
+- [`DataFrame::nt`](nt.md): the equivalent dedicated accessor for `Note` text
   features, instead of timestamps.
 
 <div class="pluss-inline-prev-next">

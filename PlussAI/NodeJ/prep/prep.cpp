@@ -307,7 +307,7 @@ struct DenseMatrix {
     }
     case pluss::table::ThreadKind::Timeline:
     case pluss::table::ThreadKind::TimeIndex: {
-      const pluss::table::Thread casted = thread.cast(pluss::table::ThreadCastTarget::Series);
+      const pluss::table::Thread casted = thread.cast().series();
       feature = casted.as_series().to(ScalarType::Float64);
       break;
     }

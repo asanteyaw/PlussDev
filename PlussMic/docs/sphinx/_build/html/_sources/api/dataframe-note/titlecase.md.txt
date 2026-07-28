@@ -57,7 +57,7 @@ auto places = DataFrame({
 });
 std::cout << places;
 
-auto out = places.note().titlecase();
+auto out = places.nt().titlecase();
 std::cout << out;
 ```
 
@@ -102,7 +102,7 @@ auto phrases = DataFrame({
 });
 std::cout << phrases;
 
-auto out2 = phrases.note().titlecase();
+auto out2 = phrases.nt().titlecase();
 std::cout << out2;
 ```
 

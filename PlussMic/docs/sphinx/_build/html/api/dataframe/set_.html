@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,15 +50,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>The in-place counterpart to <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>’s plain two-argument overloads:
-creates or overwrites the named feature(s), mutating <code class="docutils literal notranslate"><span class="pre">*this</span></code> directly and returning
-a reference to it, instead of returning a new frame. Every parameter is identical in
-meaning to <code class="docutils literal notranslate"><span class="pre">set()</span></code>’s corresponding overload — see that page for the full breakdown;
-this page only covers what differs about mutating in place.</p>
-<p>Note this is a <strong>third</strong> way to write “assign in place” in this API, alongside
-<a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>’s own <code class="docutils literal notranslate"><span class="pre">df.set(name)</span> <span class="pre">=</span> <span class="pre">value</span></code> <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code> builder style — both mutate
-<code class="docutils literal notranslate"><span class="pre">*this</span></code>, they just read differently at the call site. Pick whichever reads better;
-neither is more “correct” than the other.</p>
+<p>Creates or overwrites the named feature(s), mutating <code class="docutils literal notranslate"><span class="pre">*this</span></code> directly and returning
+a reference to it. This is the direct in-place form when you do not want the
+assignment-target style from <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -103,9 +97,7 @@ A reference to <code class="docutils literal notranslate"><span class="pre">*thi
 [3 cs x 3 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">orders</span></code> itself has <code class="docutils literal notranslate"><span class="pre">sales</span></code> zeroed out — <code class="docutils literal notranslate"><span class="pre">set_()</span></code> mutated it directly, unlike
-<a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>’s plain overload, which would have left <code class="docutils literal notranslate"><span class="pre">orders</span></code> unchanged and
-returned a new frame instead.</p>
+<p><code class="docutils literal notranslate"><span class="pre">orders</span></code> itself has <code class="docutils literal notranslate"><span class="pre">sales</span></code> zeroed out — <code class="docutils literal notranslate"><span class="pre">set_()</span></code> mutated it directly.</p>
 <p>Example 2. Create a brand-new feature in place via the multi-name overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">{</span><span class="s">&quot;profit&quot;</span><span class="p">};</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">values</span><span class="p">{</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))};</span>
@@ -127,15 +119,13 @@ returned a new frame instead.</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;profit&quot;</span></code> didn’t previously exist on <code class="docutils literal notranslate"><span class="pre">orders</span></code>, so it’s appended as a new feature —
-<code class="docutils literal notranslate"><span class="pre">set_()</span></code> can both create and overwrite in the same call, exactly like <code class="docutils literal notranslate"><span class="pre">set()</span></code>’s
-plain overload.</p>
+<code class="docutils literal notranslate"><span class="pre">set_()</span></code> can both create and overwrite in the same call.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">set_()</span></code> mutates and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference; it never allocates a new
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> the way <code class="docutils literal notranslate"><span class="pre">set()</span></code>’s plain overload does.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_()</span></code> mutates and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference.</p></li>
 <li><p>Any other <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> value that shares the same underlying columns (via a prior
 copy) does not see this mutation — <code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span></code>’s copies are
 value-like, not aliased references to shared state.</p></li>
@@ -147,8 +137,8 @@ place but is a distinct code path from <code class="docutils literal notranslate
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::set</span></code></span></a>: the non-mutating counterpart, plus the <code class="docutils literal notranslate"><span class="pre">LetSlot</span></code>
-builder style for in-place assignment via <code class="docutils literal notranslate"><span class="pre">operator=</span></code>.</p></li>
+<li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::set</span></code></span></a>: the assignment-target builder style for in-place
+assignment via <code class="docutils literal notranslate"><span class="pre">operator=</span></code>.</p></li>
 <li><p><a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::assign</span></code></span></a>: derive new features from expressions evaluated
 against the frame, rather than assigning pre-built <code class="docutils literal notranslate"><span class="pre">Thread</span></code>s.</p></li>
 </ul>

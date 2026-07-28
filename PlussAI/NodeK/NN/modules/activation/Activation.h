@@ -94,7 +94,7 @@ struct EluOptions {
 // because it was already validated and is no more complex than a
 // where()-based version.) Promoted out of
 // ice::models::TemporalFusionTransformer's originally-private building
-// blocks (Ice/models/tft/tft_blocks.h) once a second consumer needed it --
+// blocks (Ice/models/ts/tft_blocks.h) once a second consumer needed it --
 // see ICE_BLUEPRINT.md's centralization note.
 class PLUSS_API EluImpl final : public Module {
 public:

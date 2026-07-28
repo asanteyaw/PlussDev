@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -42,103 +42,96 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">CastSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_dtypes</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_dtypes</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadCastTarget</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_targets</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadCastTarget</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">feature_targets</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameCastAccessor</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameCastAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Converts selected features to a different scalar dtype, or to an entirely different
-payload kind (<code class="docutils literal notranslate"><span class="pre">Series</span></code> numeric, <code class="docutils literal notranslate"><span class="pre">Note</span></code> text, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> calendar), while
-leaving every other feature untouched. There are three ways to call it, in order of
-increasing power:</p>
+<p>Enters a dedicated casting accessor bound to the current frame or subframe. <code class="docutils literal notranslate"><span class="pre">cast()</span></code>
+itself does not convert anything yet; it stores shared <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>, and the
+actual conversion happens when you finish the chain with one of the accessor methods:</p>
 <ul class="simple">
-<li><p><strong>dtype-only</strong> (<code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">ScalarType)</span></code> pairs) — the same as <a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">astype()</span></code></span></a>:
-recast a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature to a different concrete scalar type (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Float64</span></code>, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>, and so on) without changing its payload kind.</p></li>
-<li><p><strong>cross-kind</strong> (<code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">ThreadCastTarget)</span></code> pairs) — convert a feature to a different
-payload kind entirely (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), using default
-parse/format behavior.</p></li>
-<li><p><strong>full control</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView&lt;CastSpec&gt;</span></code>) — the same cross-kind conversion, but with
-an explicit <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> per feature: a target <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code>, a date
-<code class="docutils literal notranslate"><span class="pre">format</span></code> string, and an <code class="docutils literal notranslate"><span class="pre">invalid</span></code> policy for unparseable text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">series()</span></code>: cast every bound feature to <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">note()</span></code>: cast every bound feature to <code class="docutils literal notranslate"><span class="pre">Note</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeline()</span></code>: cast every bound feature to <code class="docutils literal notranslate"><span class="pre">Timeline</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeindex()</span></code>: cast every bound feature to <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code></p></li>
 </ul>
-<p>When two entries in one call target the same feature name, only the first is applied
-and every subsequent one is silently skipped — not an error, just a quiet no-op for
-the duplicate.</p>
+<p>This is meant to be the ergonomic public surface for the common pattern “I already
+selected the columns I care about; now cast all of them the same way”:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">opened</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;birth_date&quot;</span><span class="p">})</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">cast</span><span class="p">({.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%Y-%m-%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">})</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">timeline</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>That is the public casting contract for dataframe features.</p>
+<p>Every method on the accessor has its own dedicated page — start at the
+<a class="reference internal" href="../../dataframe_cast_accessor_api_reference.html"><span class="doc std std-doc">DataFrameCastAccessor API Reference</span></a>
+and use its left sidebar to jump straight to <code class="docutils literal notranslate"><span class="pre">series</span></code>, <code class="docutils literal notranslate"><span class="pre">note</span></code>, <code class="docutils literal notranslate"><span class="pre">timeline</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">timeindex</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;CastSpec&gt;</span></code>)</p>
-<p><code class="docutils literal notranslate"><span class="pre">CastSpec{feature,</span> <span class="pre">target,</span> <span class="pre">options}</span></code>: <code class="docutils literal notranslate"><span class="pre">feature</span></code> is the column to convert (must exist;
-throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::cast:</span> <span class="pre">unknown</span> <span class="pre">feature</span> <span class="pre">'&lt;name&gt;'&quot;</span></code> otherwise), <code class="docutils literal notranslate"><span class="pre">target</span></code>
-(<code class="docutils literal notranslate"><span class="pre">ThreadCastTarget</span></code>, default <code class="docutils literal notranslate"><span class="pre">Series</span></code>) is the destination payload kind, and <code class="docutils literal notranslate"><span class="pre">options</span></code>
-(<code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>) carries:</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">ThreadCastOptions&amp;</span></code>, overload)</p>
+<p>Shared cast controls for every feature currently bound on the frame:</p>
 <ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">series_dtype</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;ScalarType&gt;</span></code>): when casting <em>to</em> <code class="docutils literal notranslate"><span class="pre">Series</span></code>, the
-concrete numeric type to land on (defaults to <code class="docutils literal notranslate"><span class="pre">Float64</span></code> when converting from
-<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> text or ticks, or left unchanged when the source is
-already <code class="docutils literal notranslate"><span class="pre">Series</span></code>).</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">format</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>): an explicit date-format string, consulted only when
-casting <code class="docutils literal notranslate"><span class="pre">Note</span></code> text to <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">invalid</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">ParseInvalid</span></code>, default <code class="docutils literal notranslate"><span class="pre">Raise</span></code>): what happens to a <code class="docutils literal notranslate"><span class="pre">Note</span></code> value that
-fails to parse as a date under <code class="docutils literal notranslate"><span class="pre">format</span></code> — <code class="docutils literal notranslate"><span class="pre">Raise</span></code> throws, <code class="docutils literal notranslate"><span class="pre">Null</span></code> produces a <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
-cell instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">series_dtype</span></code>: target numeric <code class="docutils literal notranslate"><span class="pre">ScalarType</span></code> when the target is <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">format</span></code>: date/time parse pattern for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> targets</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">invalid</span></code>: <code class="docutils literal notranslate"><span class="pre">ParseInvalid::Raise</span></code> or <code class="docutils literal notranslate"><span class="pre">ParseInvalid::Null</span></code> for unparseable date text</p></li>
 </ul>
-<p><strong>feature_dtypes</strong> (pairs of <code class="docutils literal notranslate"><span class="pre">(std::string_view,</span> <span class="pre">ScalarType)</span></code>)</p>
-<p>Recast named <code class="docutils literal notranslate"><span class="pre">Series</span></code> features to a different scalar dtype, exactly like
-<a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">astype()</span></code></span></a>.</p>
-<p><strong>feature_targets</strong> (pairs of <code class="docutils literal notranslate"><span class="pre">(std::string_view,</span> <span class="pre">ThreadCastTarget)</span></code>)</p>
-<p>Convert named features to a different payload kind using default <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>
-(<code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> unset, no format string, <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">Raise</span></code>).</p>
+<p>The zero-argument overload is shorthand for default <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions{}</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-A new frame with the requested features cast; every untargeted feature is
-preserved unchanged.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrameCastAccessor</span></code>
+A lightweight accessor bound to the current frame. Each accessor method returns
+a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>; the source frame is never mutated.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Widen an <code class="docutils literal notranslate"><span class="pre">Int64</span></code>-looking numeric feature to <code class="docutils literal notranslate"><span class="pre">Float64</span></code> using the plain
-dtype-pair overload.</p>
+<p>Example 1. Cast two selected text date columns together without repeating their names
+inside <code class="docutils literal notranslate"><span class="pre">CastSpec</span></code>s.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">students</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ama&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kofi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Efua&quot;</span><span class="p">}))},</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;opened_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-01 08:00:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bad-date&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;closed_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-02 09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03 10:45:00&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">cast</span><span class="p">({{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">}});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">temporal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;opened_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;closed_at&quot;</span><span class="p">}).</span><span class="n">cast</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">timeline</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">temporal</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
-     | id    name
------------------
-0    | 1     Ama 
-1    | 2     Kofi
-2    | 3     Efua
------------------
-[3 cs x 2 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================
+     | opened_at            closed_at   
+----------------------------------------
+0    | 2024-01-01 08:00:00  2024-01-02 09:30:00
+1    | NULL                 2024-01-03 10:45:00
+----------------------------------------
+[2 cs x 2 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">id</span></code>’s values look the same, but it is now backed by <code class="docutils literal notranslate"><span class="pre">Float64</span></code> rather than <code class="docutils literal notranslate"><span class="pre">Int64</span></code> —
-useful before an operation that requires floating-point arithmetic (fractional
-division, for instance) on a column that started out as whole numbers.</p>
-<p>Example 2. Parse a <code class="docutils literal notranslate"><span class="pre">Note</span></code> column of numeric-looking strings into a real <code class="docutils literal notranslate"><span class="pre">Series</span></code>,
-letting an unparseable entry become <code class="docutils literal notranslate"><span class="pre">NULL</span></code> instead of failing the whole call.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;120&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;85.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N/A&quot;</span><span class="p">}))},</span>
+<p>Both selected features are cast with one shared <code class="docutils literal notranslate"><span class="pre">format</span></code> and one shared
+<code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">Null</span></code> policy. <code class="docutils literal notranslate"><span class="pre">city</span></code> is untouched because it was never part of the
+selected subframe.</p>
+<p>Example 2. Parse one selected text column into numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">numeric</span><span class="p">;</span>
+<span class="n">numeric</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;10.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;oops&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">cast</span><span class="p">({{</span><span class="s">&quot;amount_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;amount_text&quot;</span><span class="p">}).</span><span class="n">cast</span><span class="p">(</span><span class="n">numeric</span><span class="p">).</span><span class="n">series</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parsed</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -148,139 +141,38 @@ letting an unparseable entry become <code class="docutils literal notranslate"><
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
      | amount_text
 ------------------
-0    | 120        
-1    | 85.5       
-2    | NULL       
+0    | 10.5       
+1    | NULL       
 ------------------
-[3 cs x 1 feat]
-</pre></div>
-</div>
-<p>With no explicit <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code>, a <code class="docutils literal notranslate"><span class="pre">Note</span></code> → <code class="docutils literal notranslate"><span class="pre">Series</span></code> cast defaults to <code class="docutils literal notranslate"><span class="pre">Float64</span></code>.
-<code class="docutils literal notranslate"><span class="pre">&quot;N/A&quot;</span></code> doesn’t parse as a number, so it silently becomes <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — this particular
-<code class="docutils literal notranslate"><span class="pre">Note</span></code> → <code class="docutils literal notranslate"><span class="pre">Series</span></code> path never throws on an unparseable value, unlike the <code class="docutils literal notranslate"><span class="pre">Note</span></code> →
-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> path, whose behavior depends on the <code class="docutils literal notranslate"><span class="pre">invalid</span></code> option.</p>
-<p>Example 3. Cast to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> via a full <code class="docutils literal notranslate"><span class="pre">CastSpec</span></code>, and see which text tokens
-<code class="docutils literal notranslate"><span class="pre">parse_bool_like</span></code> actually recognizes.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="w"> </span><span class="n">to_bool</span><span class="p">;</span>
-<span class="n">to_bool</span><span class="p">.</span><span class="n">feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;flag_text&quot;</span><span class="p">;</span>
-<span class="n">to_bool</span><span class="p">.</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
-<span class="n">to_bool</span><span class="p">.</span><span class="n">options</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;flag_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;true&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;maybe&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flags</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span><span class="n">to_bool</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================
-     | flag_text
-----------------
-0    | true     
-1    | false    
-2    | NULL     
-----------------
-[3 cs x 1 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code> (also <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;yes&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;no&quot;</span></code>, case-insensitively) parse
-cleanly; <code class="docutils literal notranslate"><span class="pre">&quot;maybe&quot;</span></code> matches none of them, so it becomes <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rather than raising.</p>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">Note</span></code> → <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> with an explicit <code class="docutils literal notranslate"><span class="pre">format</span></code>: an unparseable value
-raises by default, but <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">Null</span></code> turns that into a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell instead.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;date_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;not-a-date&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="w"> </span><span class="n">to_date</span><span class="p">;</span>
-<span class="n">to_date</span><span class="p">.</span><span class="n">feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;date_text&quot;</span><span class="p">;</span>
-<span class="n">to_date</span><span class="p">.</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">;</span>
-<span class="n">to_date</span><span class="p">.</span><span class="n">options</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%Y-%m-%d&quot;</span><span class="p">;</span>
-
-<span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span><span class="n">to_date</span><span class="p">});</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="w"> </span><span class="n">to_date_null</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">to_date</span><span class="p">;</span>
-<span class="n">to_date_null</span><span class="p">.</span><span class="n">options</span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span><span class="n">to_date_null</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="output-default-invalid-raise">
-<h3>Output (default invalid = Raise)<a class="headerlink" href="#output-default-invalid-raise" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::cast(Timeline): could not parse datetime value &#39;not-a-date&#39;
-</pre></div>
-</div>
-</section>
-<section id="output-invalid-null">
-<h3>Output (invalid = Null)<a class="headerlink" href="#output-invalid-null" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
-     | date_text 
------------------
-0    | 2024-01-01
-1    | NULL      
------------------
 [2 cs x 1 feat]
 </pre></div>
 </div>
-<p>With the default <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">ParseInvalid::Raise</span></code>, hitting <code class="docutils literal notranslate"><span class="pre">&quot;not-a-date&quot;</span></code>
-against the <code class="docutils literal notranslate"><span class="pre">&quot;%Y-%m-%d&quot;</span></code> pattern throws immediately. Setting <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">ParseInvalid::Null</span></code> on an otherwise-identical spec instead lets the whole
-cast complete, turning just the unparseable row into <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — the opposite
-of <code class="docutils literal notranslate"><span class="pre">Note</span></code> → <code class="docutils literal notranslate"><span class="pre">Series</span></code>’s always-`NULL, never-raise behavior shown in Example 2.</p>
-<p>Example 5. Name a feature that doesn’t exist, to see the call throw.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">cast</span><span class="p">({{</span><span class="s">&quot;not_a_column&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">}});</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::cast: unknown feature &#39;not_a_column&#39;
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">students</span></code> only has <code class="docutils literal notranslate"><span class="pre">id</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code> — every <code class="docutils literal notranslate"><span class="pre">cast()</span></code> overload validates every
-named feature up front, before any conversion runs.</p>
+<p>Only the selected <code class="docutils literal notranslate"><span class="pre">amount_text</span></code> feature is cast. <code class="docutils literal notranslate"><span class="pre">&quot;oops&quot;</span></code> fails numeric parsing and
+becomes <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, matching the normal <code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">-&gt;</span> <span class="pre">Series</span></code> conversion path.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>A duplicate feature name across multiple entries in one <code class="docutils literal notranslate"><span class="pre">cast()</span></code> call is not an
-error — only the first entry for that name is applied, and later ones are silently
-ignored.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span></code> → <code class="docutils literal notranslate"><span class="pre">Series</span></code> never raises on unparseable text; it always produces <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
-instead. <code class="docutils literal notranslate"><span class="pre">Note</span></code> → <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is the opposite: it raises by default
-(<code class="docutils literal notranslate"><span class="pre">ParseInvalid::Raise</span></code>) unless you set <code class="docutils literal notranslate"><span class="pre">options.invalid</span> <span class="pre">=</span> <span class="pre">ParseInvalid::Null</span></code>.</p></li>
-<li><p>Casting a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> to <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> auto-detects whether the values look like
-an integer-encoded <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> calendar date (every valid value in the range
-<code class="docutils literal notranslate"><span class="pre">10000101</span></code>–<code class="docutils literal notranslate"><span class="pre">99991231</span></code>) or like raw epoch-nanosecond ticks, and interprets the whole
-column accordingly — it does not support a mixed column.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_dtypes</span></code> and <code class="docutils literal notranslate"><span class="pre">astype()</span></code>’s equivalent overload are literally the same
-function under a different name — pick whichever reads better at the call site.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cast()</span></code> does not select columns. Selection belongs on <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features(names)</span></code></span></a>.</p></li>
+<li><p>If you need to preserve the full frame while replacing only one or more casted
+columns, compose <code class="docutils literal notranslate"><span class="pre">features(...).cast()</span></code> with <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set(...)</span></code></span></a>.</p></li>
+<li><p>The accessor applies one shared <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> bundle to every currently bound
+feature.</p></li>
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">cast()</span></code> on a zero-feature frame is valid; the accessor methods simply
+return the same zero-feature frame.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::astype</span></code></span></a>: the dtype-only alias for <code class="docutils literal notranslate"><span class="pre">cast()</span></code>’s
-<code class="docutils literal notranslate"><span class="pre">feature_dtypes</span></code> overload.</p></li>
-<li><p><a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::invalid</span></code></span></a>: find cells that failed validation, separate from
-the parse-failure <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s a cast can introduce.</p></li>
-<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: extract a single already-cast column as a
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> for further inspection.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: the most natural way to scope which columns
+the cast accessor should operate on.</p></li>
+<li><p><a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::astype</span></code></span></a>: the dtype-only shorthand when the target is
+definitely <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p><a class="reference internal" href="../dataframe-label/values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::values</span></code></span></a>: pull the case-label
+thread when you need to cast labels explicitly and then reattach them with
+<a class="reference internal" href="../dataframe-label/set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set(...)</span></code></span></a>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="case_study.html">

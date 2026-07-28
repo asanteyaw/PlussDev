@@ -19,7 +19,7 @@ Use this surface instead of root-level `caselbl*` methods. The label accessor ke
 - `df.label().rename(...)`, `names(...)`, `order(...)`, `swap(...)`, and `drop(...)` edit structured label metadata.
 - `df.label().distinct(...)`, `freq(...)`, `duplicated(...)`, `repeated(...)`, `drop({.duplicated=true})`, and `drop({.repeated=true})` provide distinct/duplicate/repeated label utilities.
 - `df.label().has(...)`, `isnull()`, `notnull()`, and `fillnull(...)` provide label membership and missingness utilities.
-- `df.label().cast(...)`, `map(...)`, `take(...)`, and `slice(...)` transform or inspect label values.
+- `df.label().map(...)`, `take(...)`, and `slice(...)` transform or inspect label values.
 - `df.label().monotonic(...)`, `depth()`, `codes()`, and `levels()` expose sortedness and MultiIndex-style internals.
 """
 

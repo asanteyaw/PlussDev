@@ -1,5 +1,4 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: cf5b11fecad9 -->
 
 # DataFrame::corr
 
@@ -11,19 +10,21 @@
 DataFrame::corr(bool render = false) const -> DataFrameView
 
 DataFrame::corr(CorrMethod method, bool render = false) const -> DataFrameView
-
-DataFrame::corr(pluss::RangeView<std::string_view> features, bool render = false) const -> DataFrameView
-
-DataFrame::corr(pluss::RangeView<std::string_view> features, CorrMethod method, bool render = false) const -> DataFrameView
 ```
 
 ## What It Does
 
-Computes a correlation matrix across the frame's numeric features and returns it as a
-square `DataFrameView`: one row and one column per participating feature, with cell
-`(i, j)` holding the correlation between feature `i` and feature `j`. The diagonal is
-always `1` (every feature correlates perfectly with itself), and the matrix is symmetric
-— `corr(i, j) == corr(j, i)`.
+Computes a correlation matrix across every numeric feature currently on the frame and
+returns it as a square `DataFrameView`: one row and one column per participating
+feature, with cell `(i, j)` holding the correlation between feature `i` and feature
+`j`. The diagonal is always `1` (every feature correlates perfectly with itself), and
+the matrix is symmetric — `corr(i, j) == corr(j, i)`.
+
+`corr()` carries no feature selector of its own: it always correlates every numeric
+feature on the current frame. On a wide frame, where the full matrix would be large
+and mostly uninteresting, narrow to the columns you actually care about first with
+[`features()`](features.md) — `corr_base.features({"x", "z"}).corr()` — rather than
+computing the full N×N matrix and slicing it down afterward.
 
 `corr()` is naturally the next step after [`describe()`](describe.md): `describe()` tells
 you what each feature looks like in isolation, `corr()` tells you how features move
@@ -52,13 +53,6 @@ The correlation statistic to compute:
 - `KendallTau`: rank-concordance correlation — another rank-based measure, generally
   more robust than Spearman on small samples at the cost of being more expensive to
   compute.
-
-**features** (`pluss::RangeView<std::string_view>`, optional)
-
-An explicit feature subset to correlate. Leave this out to let PlussMic infer every
-numeric feature on the frame automatically; pass a subset when you only care about the
-relationships among a handful of columns (especially useful on a wide frame, where the
-full matrix would be large and mostly uninteresting).
 
 ## Returns
 
@@ -130,10 +124,11 @@ clean points does not exercise. On real data with heavier tails or a non-linear-
 monotonic relationship, expect Pearson and Spearman to disagree, sometimes
 substantially.
 
-Example 3. Restrict the correlation matrix to an explicit feature subset.
+Example 3. Restrict the correlation matrix to an explicit feature subset by narrowing
+with [`features()`](features.md) first.
 
 ```cpp
-auto out = corr_base.corr({"x", "z"}, false);
+auto out = corr_base.features({"x", "z"}).corr(false);
 std::cout << out;
 ```
 
@@ -149,14 +144,14 @@ z    | -0.4   1
 [2 cs x 2 feat]
 ```
 
-Passing `features` is not just a display convenience — on a frame with many numeric
-columns, computing the full N×N matrix and then slicing it down is wasted work compared
-to naming the handful of columns you actually want compared.
+Narrowing with `features()` first is not just a display convenience — on a frame with
+many numeric columns, computing the full N×N matrix and then slicing it down is wasted
+work compared to naming the handful of columns you actually want compared.
 
 Example 4. Combine an explicit subset with a non-default method.
 
 ```cpp
-auto out = corr_base.corr({"x", "z"}, DataFrame::CorrMethod::KendallTau, false);
+auto out = corr_base.features({"x", "z"}).corr(DataFrame::CorrMethod::KendallTau, false);
 std::cout << out;
 ```
 
@@ -207,10 +202,10 @@ would produce no output.
 
 ## Notes
 
-- Non-numeric features are ignored even when they exist on the source frame — there is
-  no need to drop `Note` or `Timeline` columns manually before calling `corr()`.
-- When you pass `features`, only that subset participates in the matrix, and only those
-  columns need to be numeric.
+- Non-numeric features are ignored even when they exist on the current frame — there
+  is no need to drop `Note` or `Timeline` columns manually before calling `corr()`.
+- When you narrow with [`features()`](features.md) first, only that subset
+  participates in the matrix, and only those columns need to be numeric.
 - All three methods report values in `[-1, 1]`; `1` and `-1` indicate a perfect
   monotonic (Spearman/Kendall) or linear (Pearson) relationship, and `0` indicates none.
 
@@ -222,6 +217,8 @@ would produce no output.
   matrix.
 - [`DataFrame::describe`](describe.md): per-feature statistics, typically checked before
   moving on to cross-feature correlation.
+- [`DataFrame::features`](features.md): narrow the frame to the feature subset
+  `corr()` should compute over.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="copy.html">

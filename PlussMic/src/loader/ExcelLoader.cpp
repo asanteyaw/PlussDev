@@ -88,6 +88,35 @@ bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t 
          && series_value_is_nan_for_io(t.as_series(), row);
 }
 
+bool series_all_zero_i64_for_io(const pluss::Series& s) {
+  const auto values = s.to_vec<std::int64_t>();
+  return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
+}
+
+pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
+  const auto timeline = (t.kind() == pluss::table::ThreadKind::Timeline)
+                            ? t.as_timeline()
+                            : t.as_timeindex().timeline();
+  const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
+  const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
+                              || !series_all_zero_i64_for_io(timeline.minute())
+                              || !series_all_zero_i64_for_io(timeline.hour());
+  if (!has_clock_time) {
+    return pluss::table::Thread(timeline.to_note_date(), pluss::table::detail::validity_mask(t));
+  }
+  if (!has_subsecond) {
+    return pluss::table::Thread(timeline.to_note_datetime(), pluss::table::detail::validity_mask(t));
+  }
+  return pluss::table::Thread(timeline.to_note_datetime_nano(), pluss::table::detail::validity_mask(t));
+}
+
+pluss::table::Thread thread_for_excel_io(const pluss::table::Thread& t) {
+  if (t.kind() == pluss::table::ThreadKind::Timeline || t.kind() == pluss::table::ThreadKind::TimeIndex) {
+    return temporal_thread_for_io(t);
+  }
+  return t;
+}
+
 std::string xml_escape(std::string_view input) {
   std::string out;
   out.reserve(input.size() + 16);
@@ -1066,9 +1095,10 @@ void save_excel(const pluss::table::DataFrame& frame,
   std::vector<pluss::table::Thread> cols;
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(frame.features(name));
+    cols.push_back(thread_for_excel_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
+  const auto case_values = include_cases ? thread_for_excel_io(frame.label().values()) : pluss::table::Thread{};
 
   std::string sheet_xml;
   sheet_xml += R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
@@ -1098,7 +1128,7 @@ void save_excel(const pluss::table::DataFrame& frame,
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {
-      row.push_back(thread_value_for_excel(frame.label().values(), r, options.null_rep));
+      row.push_back(thread_value_for_excel(case_values, r, options.null_rep));
     }
     for (const auto& c : cols) {
       row.push_back(thread_value_for_excel(c, r, options.null_rep));

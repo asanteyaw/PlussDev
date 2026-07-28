@@ -15,7 +15,7 @@ DataFrame::count_by(std::string_view feature, std::int64_t top_n = 0, bool dropn
 Builds a frequency table for a single feature: one row per distinct value of
 `feature`, paired with how many cases carry that value, sorted from most frequent to
 least frequent (ties broken alphabetically by the value itself). It is a dedicated
-shortcut for the single most common [`group_by`](group_by.md) query — "how many of
+shortcut for the single most common [`group`](group.md) query — "how many of
 each?" — without hand-writing a `GroupSpec` for a plain count.
 
 ## Parameters
@@ -203,7 +203,7 @@ output.
 
 - The sort is always count-descending, value-ascending-on-ties — there is no
   parameter to reverse either ordering; pipe the result through
-  [`sort_values`](sort_values.md) afterward if you need a different order. A
+  [`arrange`](arrange.md) afterward if you need a different order. A
   missing key is never alphabetized against real values for tie-breaking; it
   always sorts after every real value tied with it on count.
 - `dropnull = false` gives a missing `feature` value its own group in the count,
@@ -213,7 +213,7 @@ output.
 
 ## See Also
 
-- [`DataFrame::group_by`](group_by.md): the general grouped-aggregation surface
+- [`DataFrame::group`](group.md): the general grouped-aggregation surface
   `count_by()` is a convenience shortcut for.
 - [`DataFrame::bucketize`](bucketize.md): often used just before `count_by()`, to
   tally how many cases fell into each engineered band.

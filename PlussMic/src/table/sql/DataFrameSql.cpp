@@ -1101,7 +1101,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
     if (iequals(order_feature, "case") && !out.get("case").has_value()) {
       out = out.label().sort(spec.order->ascending, spec.order->nulls_last);
     } else {
-      out = out.sort_values({
+      out = out.arrange({
           DataFrame::ArrangeSpec{order_feature, spec.order->ascending, spec.order->nulls_last},
       });
     }

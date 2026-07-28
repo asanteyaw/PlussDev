@@ -25,8 +25,8 @@ takes apart the *first* match into its named or numbered pieces.
 Like [`findall()`](findall.md), [`split()`](split.md), [`partition()`](partition.md),
 and [`indicate()`](indicate.md), `extract()` operates on exactly one
 column. Calling it through an accessor built from more than one feature
-throws `"DataFrame::note().extract requires one feature"`. Build the
-accessor from a single feature: `df.features({"code"}).note().extract(...)`.
+throws `"DataFrame::nt().extract requires one feature"`. Build the
+accessor from a single feature: `df.features({"code"}).nt().extract(...)`.
 ```
 
 `pattern` must contain at least one capture group — `extract("no groups
@@ -85,7 +85,7 @@ auto codes = DataFrame({
 });
 std::cout << codes;
 
-auto out1 = codes.features({"code"}).note().extract(R"(([A-Z]+)-(\d+))");
+auto out1 = codes.features({"code"}).nt().extract(R"(([A-Z]+)-(\d+))");
 std::cout << out1;
 ```
 
@@ -125,7 +125,7 @@ Example 2. The same extraction with custom column names, plus a case where
 a group is *part of a successful match* but individually captures nothing.
 
 ```cpp
-auto out2 = codes.features({"code"}).note().extract(
+auto out2 = codes.features({"code"}).nt().extract(
     R"(([A-Z]+)-(\d+))", {"prefix", "number"});
 std::cout << out2;
 
@@ -134,7 +134,7 @@ auto partial = DataFrame({
         {"ID-4521", "ID-", "REF99", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
-auto out3 = partial.features({"code"}).note().extract(R"(([A-Z]+)-?(\d+)?)");
+auto out3 = partial.features({"code"}).nt().extract(R"(([A-Z]+)-?(\d+)?)");
 std::cout << out3;
 ```
 
@@ -177,13 +177,13 @@ Example 3. Two throwing cases: a pattern with no capture group, and a
 
 ```cpp
 try {
-  auto no_groups = codes.features({"code"}).note().extract("[A-Z]+");
+  auto no_groups = codes.features({"code"}).nt().extract("[A-Z]+");
 } catch (const std::exception& e) {
   std::cout << e.what() << "\n";
 }
 
 try {
-  auto bad_names = codes.features({"code"}).note().extract(
+  auto bad_names = codes.features({"code"}).nt().extract(
       R"(([A-Z]+)-(\d+))", {"only_one_name"});
 } catch (const std::exception& e) {
   std::cout << e.what();

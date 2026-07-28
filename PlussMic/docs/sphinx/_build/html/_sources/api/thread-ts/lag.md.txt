@@ -146,6 +146,8 @@ TimeSeriesAccessor::lag: source must be Series
 ## See Also
 
 - [`TimeSeriesAccessor::lead`](lead.md): the mirror-image shift.
+- [`TimeSeriesAccessor::lag_block`](lag_block.md): computing several lags of the
+  same thread at once, each as its own `DataFrame` column.
 - [`Thread::shift`](../thread/shift.md): the equivalent top-level operation outside the
   `ts()` accessor.
 

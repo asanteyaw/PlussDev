@@ -218,9 +218,9 @@ Example 1.
   chainable accessor this method's no-`op` overloads return.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mul.html">
+  <a class="prev-link" href="ne.html">
     <span class="label">Previous</span>
-    <span class="title">mul</span>
+    <span class="title">ne</span>
   </a>
   <a class="next-link" href="returns.html">
     <span class="label">Next</span>

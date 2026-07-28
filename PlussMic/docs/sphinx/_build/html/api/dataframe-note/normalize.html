@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -112,7 +112,7 @@ of whether this build links the Unicode backend.</p>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">titles</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -136,10 +136,10 @@ stays <code class="docutils literal notranslate"><span class="pre">NULL</span></
 input — all four produce the identical result, since the distinctions
 between NFC/NFD/NFKC/NFKD only matter for text containing decomposable or
 compatibility characters, none of which plain ASCII has.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">nfc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFC</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">nfd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFD</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">nfkc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFKC</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">nfkd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFKD</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">nfc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFC</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nfd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFD</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nfkc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFKC</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nfkd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">titles</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">UnicodeForm</span><span class="o">::</span><span class="n">NFKD</span><span class="p">);</span>
 <span class="c1">// nfc, nfd, nfkc, and nfkd are all identical to titles here.</span>
 </pre></div>
 </div>
@@ -152,7 +152,7 @@ the important callout above).</p>
 <span class="p">});</span>
 
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accented</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accented</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>

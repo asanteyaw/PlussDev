@@ -175,7 +175,7 @@ Thread::mode: no values
 
 ## See Also
 
-- [`Thread::tally`](tally.md): the full frequency breakdown this method's
+- [`Thread::freq`](freq.md): the full frequency breakdown this method's
   "most frequent" answer is drawn from.
 - [`Thread::describe`](describe.md): for `Note`-kind threads, reports the
   single most frequent value (`top`) and its count (`freq`) — `mode()` returns

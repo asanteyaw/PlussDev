@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,31 +36,35 @@
 
           <div class="body" role="main">
             
-  <section id="thread-label">
+  <!-- pluss-hand-authored -->
+<section id="thread-label">
 <h1>Thread::label<a class="headerlink" href="#thread-label" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">label</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadLabelAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">label</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadLabelAccessor</span>
 </pre></div>
 </div>
-<p>Return the Thread label machinery for inspecting and manipulating 1D case labels.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Thread::label()</span></code> is the 1D foundation for label handling. DataFrame label machinery is built above this because a DataFrame case axis is itself a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
-<p>Use this surface for new code instead of reaching for lower-level case-label helpers directly:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().values()</span></code> returns the current label values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().has()</span></code> reports whether the thread is defined and can expose labels.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().set(labels)</span></code> returns a copy with explicit labels attached.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().range()</span></code> returns a copy with explicit <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> labels materialized.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().reset()</span></code> returns a copy with explicit labels cleared.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().align(target,</span> <span class="pre">options)</span></code> delegates to Thread alignment.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().unite(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">diff(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">symdiff(...)</span></code> provide Index-style set operations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().find(targets)</span></code> returns exact-match positions and <code class="docutils literal notranslate"><span class="pre">-1</span></code> for missing targets.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().pos(value)</span></code> returns all matching positions for one label and throws when absent.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().slice(start,</span> <span class="pre">stop)</span></code> returns an inclusive label-value slice.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().fillnull(...)</span></code> returns a copy whose labels have missing values filled.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thread.label().isnull()</span></code> and <code class="docutils literal notranslate"><span class="pre">thread.label().notnull()</span></code> inspect label missingness.</p></li>
-</ul>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Enters the dedicated accessor for this thread’s <strong>case-label axis</strong> — the per-row
+index every thread carries, independently of its own payload kind. <code class="docutils literal notranslate"><span class="pre">label()</span></code> itself
+does nothing but bind the accessor to the current thread; the accessor exposes
+inspection (<code class="docutils literal notranslate"><span class="pre">.values()</span></code>, <code class="docutils literal notranslate"><span class="pre">.has()</span></code>), promoting an explicit label thread and clearing it
+back to the default (<code class="docutils literal notranslate"><span class="pre">.set()</span></code>, <code class="docutils literal notranslate"><span class="pre">.range()</span></code>, <code class="docutils literal notranslate"><span class="pre">.reset()</span></code>), alignment (<code class="docutils literal notranslate"><span class="pre">.align()</span></code>),
+Index-style set operations between two label threads (<code class="docutils literal notranslate"><span class="pre">.unite()</span></code>, <code class="docutils literal notranslate"><span class="pre">.intersect()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.diff()</span></code>, <code class="docutils literal notranslate"><span class="pre">.symdiff()</span></code>), positional lookup (<code class="docutils literal notranslate"><span class="pre">.find()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pos()</span></code>, <code class="docutils literal notranslate"><span class="pre">.slice()</span></code>), and
+missing-label handling (<code class="docutils literal notranslate"><span class="pre">.fillnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">.isnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">.notnull()</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">Thread::label()</span></code> is the 1D foundation this machinery is built on — a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s
+own case-label axis is itself a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, and <a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label()</span></code></span></a>
+adds frame-specific concerns (multi-level names, ordering, renaming, dropping,
+<code class="docutils literal notranslate"><span class="pre">codes()</span></code>/<code class="docutils literal notranslate"><span class="pre">levels()</span></code>) on top of this same 1D surface.</p>
+<p>This page previews the accessor’s most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+<a class="reference internal" href="../../thread_label_accessor_api_reference.html"><span class="doc std std-doc">ThreadLabelAccessor API Reference</span></a> and use
+its left sidebar to jump straight to any method (<code class="docutils literal notranslate"><span class="pre">values</span></code>, <code class="docutils literal notranslate"><span class="pre">set</span></code>, <code class="docutils literal notranslate"><span class="pre">reset</span></code>, <code class="docutils literal notranslate"><span class="pre">unite</span></code>,
+<code class="docutils literal notranslate"><span class="pre">find</span></code>, <code class="docutils literal notranslate"><span class="pre">pos</span></code>, and more).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -69,171 +73,89 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadLabelAccessor</span></code>
-Lightweight 1D label accessor bound to the source thread.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">label().values()</span></code> returns default range labels when the thread has no explicit labels, matching the Pluss hybrid alignment model.</p>
-<p><code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">label().range()</span></code>, <code class="docutils literal notranslate"><span class="pre">label().reset()</span></code>, <code class="docutils literal notranslate"><span class="pre">label().align(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">label().fillnull(...)</span></code> are non-mutating. They return new <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values.</p>
-<p>DataFrame <code class="docutils literal notranslate"><span class="pre">label().values()</span></code> returns the frame’s case-label thread. Thread <code class="docutils literal notranslate"><span class="pre">label()</span></code> is where 1D relabeling and 1D label alignment live.</p>
-<p>Set operations preserve label payload dtype when the two label vectors are compatible: same Series dtype stays unchanged, mixed numeric Series labels upcast to <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, Note labels stay Note, and Timeline/TimeIndex labels stay temporal. Incompatible mixed label payloads fall back to Note labels through comparable string keys.</p>
+A lightweight accessor bound to this thread. Methods that inspect labels return a
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> or <code class="docutils literal notranslate"><span class="pre">bool</span></code>; methods that transform the label axis return a new <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.
+The source thread is never mutated.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect default range labels.</p>
+<p>Example 1. A thread with no explicit labels reports default <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> range labels,
+and <code class="docutils literal notranslate"><span class="pre">.has()</span></code> correctly reports there’s nothing explicit set.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labels</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">has_explicit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">has</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">has_explicit</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out:
-0
-1
-2
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  0
+1  1
+2  2
+
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Attach custom labels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p>Example 2. Attach explicit labels, then confirm <code class="docutils literal notranslate"><span class="pre">.has()</span></code> now reports <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">values</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">has</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out:
-Ada
-Bo
-Cy
-</pre></div>
-</div>
-<p>Example 3. Materialize explicit range labels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Ada
+1  Bo
+2  Cy
 
-<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">range</span><span class="p">();</span>
+ptype: Note
 </pre></div>
 </div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.set(...)</span></code> is non-mutating — it returns a copy with the new labels attached.
+<code class="docutils literal notranslate"><span class="pre">.reset()</span></code> clears them back to the default <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> range (and <code class="docutils literal notranslate"><span class="pre">.has()</span></code> then reports
+<code class="docutils literal notranslate"><span class="pre">false</span></code> again).</p>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out.label().values():
-0
-1
-2
-</pre></div>
-</div>
-<p>Example 4. Reset explicit labels back to default range labels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">})));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">reset</span><span class="p">().</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
-</pre></div>
-</div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out:
-0
-1
-2
-</pre></div>
-</div>
-<p>Example 5. Align one thread to a target label order.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Bo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">})));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">align</span><span class="p">(</span>
-<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Missing&quot;</span><span class="p">})),</span>
-<span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Caselbl</span><span class="p">});</span>
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.values()</span></code> returns the explicit label thread if one is set, otherwise the default
+<code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> range labels — matching the Pluss hybrid alignment model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.has()</span></code> reports whether <strong>explicit</strong> labels are set (<code class="docutils literal notranslate"><span class="pre">false</span></code> for the default range
+labels), not merely whether the thread itself is defined.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.set()</span></code>, <code class="docutils literal notranslate"><span class="pre">.range()</span></code>, <code class="docutils literal notranslate"><span class="pre">.reset()</span></code>, <code class="docutils literal notranslate"><span class="pre">.align()</span></code>, and <code class="docutils literal notranslate"><span class="pre">.fillnull()</span></code> are non-mutating —
+each returns a new <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().values()</span></code> returns the frame’s case-label thread as a whole;
+<code class="docutils literal notranslate"><span class="pre">Thread::label()</span></code> is where 1D relabeling and 1D label alignment actually live —
+the frame-level accessor delegates to this one under the hood.</p></li>
+</ul>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out:
-20
-10
-NULL
-</pre></div>
-</div>
-<p>Example 6. Inspect and fill missing labels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">})));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">isnull</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">fillnull</span><span class="p">(</span><span class="s">&quot;Missing&quot;</span><span class="p">).</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
-</pre></div>
-</div>
-</section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>missing:
-Ada      false
-NULL     true
-Cy       false
-
-filled:
-Ada
-Missing
-Cy
-</pre></div>
-</div>
-<p>Example 7. Use Index-style set operations.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">}));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">united</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">unite</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">common</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">intersect</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">only_left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">diff</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">exclusive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">symdiff</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>united:    [b, a, c, d]
-common:    [b, a]
-only_left: [c]
-exclusive: [c, d]
-</pre></div>
-</div>
-<p>Example 8. Find positions and locate duplicate labels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">})));</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">find</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;missing&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">x_positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">pos</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>positions:
-y        1
-missing -1
-
-x_positions:
-0
-2
-</pre></div>
-</div>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::nt</span></code></span></a>, <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tl</span></code></span></a>: the dedicated accessors for a
+thread’s own <em>payload</em>, as opposed to its case-label axis.</p></li>
+<li><p><a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: the frame-level counterpart, which adds
+multi-level naming, ordering, and codes/levels machinery on top of this 1D surface.</p></li>
+<li><p><a class="reference internal" href="append.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::append</span></code></span></a>: case-label handling during concatenation depends
+directly on <code class="docutils literal notranslate"><span class="pre">.label().has()</span></code>’s corrected semantics — both operands must agree on
+whether they carry explicit labels, or it throws.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kurtosis.html">
     <span class="label">Previous</span>
@@ -244,7 +166,6 @@ x_positions:
     <span class="title">land</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -18,7 +18,7 @@ Counts how many rows share each distinct combination of values across `features`
 returning a compact frame with one row per distinct combination plus a `"count"`
 column — sorted by count descending, ties broken alphabetically by the key values
 ascending. This is the `DataFrame`-returning sibling of [`freq()`](freq.md): `freq()`
-packs the key columns into one composite `Thread` label, while `tally()` keeps each
+returns a `Thread` with structured labels, while `tally()` keeps each
 key feature as its own separate output column, which reads more naturally when
 there's more than one key feature to inspect.
 
@@ -172,13 +172,11 @@ character) on the stringified value, not a numeric comparison — `"1"` is less 
 
 ## See Also
 
-- [`DataFrame::freq`](freq.md): the `Thread`-returning sibling, packing the key into
-  one composite label instead of separate columns.
+- [`DataFrame::freq`](freq.md): the `Thread`-returning sibling, keeping the grouped
+  keys in structured labels instead of separate columns.
 - [`DataFrame::duplicated`](duplicated.md), [`DataFrame::repeated`](repeated.md):
   flag individual rows by the same composite-key convention, rather than counting
   combinations.
-- [`DataFrame::count_by`](count_by.md): count rows grouped by exactly one feature,
-  a narrower convenience this method's single-feature overload also covers.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="take.html">

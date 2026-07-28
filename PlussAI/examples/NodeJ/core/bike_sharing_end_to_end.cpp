@@ -44,25 +44,25 @@ int main(int argc, char** argv) {
                      .rename("mnth", "month")
                      .rename("cnt", "total_count")
                      .rename("hr", "hour")
-                     .rename("yr", "year")
-                     .cast({
-                         DataFrame::CastSpec{"date", pluss::table::ThreadCastTarget::Timeline, {}},
-                         DataFrame::CastSpec{"rec_id", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"season", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"year", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"month", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"hour", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"is_holiday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"weekday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"is_workingday", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"weather_condition", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"temp", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"atemp", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"humidity", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"windspeed", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"casual", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"registered", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
-                         DataFrame::CastSpec{"total_count", pluss::table::ThreadCastTarget::Series, {.series_dtype = ScalarType::Float64}},
+                     .rename("yr", "year");
+  frame.set("date") = frame.features("date").cast().timeline();
+  frame = frame.astype({
+                         {"rec_id", ScalarType::Float64},
+                         {"season", ScalarType::Float64},
+                         {"year", ScalarType::Float64},
+                         {"month", ScalarType::Float64},
+                         {"hour", ScalarType::Float64},
+                         {"is_holiday", ScalarType::Float64},
+                         {"weekday", ScalarType::Float64},
+                         {"is_workingday", ScalarType::Float64},
+                         {"weather_condition", ScalarType::Float64},
+                         {"temp", ScalarType::Float64},
+                         {"atemp", ScalarType::Float64},
+                         {"humidity", ScalarType::Float64},
+                         {"windspeed", ScalarType::Float64},
+                         {"casual", ScalarType::Float64},
+                         {"registered", ScalarType::Float64},
+                         {"total_count", ScalarType::Float64},
                      });
 
     frame.plot()

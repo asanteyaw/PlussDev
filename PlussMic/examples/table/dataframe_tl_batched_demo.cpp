@@ -47,12 +47,10 @@ int main() {
       {"revenue", "sales"},
       {"cost", "expense"},
   });
-  auto parsed_dates = renamed_many.cast({
-      DataFrame::CastSpec{
-          "event_date_text",
-          ThreadCastTarget::Timeline,
-          ThreadCastOptions{.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}},
-  }).features({"event_date_text"});
+  auto parsed_dates = renamed_many
+                          .features({"event_date_text"})
+                          .cast(ThreadCastOptions{.format = "%Y-%m-%d", .invalid = ParseInvalid::Null})
+                          .timeline();
   std::cout << "Note surface parsing text dates into Timeline with invalid-as-null\n"
             << parsed_dates.head(4) << "\n";
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -74,7 +74,7 @@ and a customizable column-name <code class="docutils literal notranslate"><span 
 Like <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>, <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>, <a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partition()</span></code></span></a>,
 and <a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">indicate()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">split()</span></code> operates on exactly one column —
 calling it through a multi-feature accessor throws
-<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::note().split</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::nt().split</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>.</p>
 </div>
 <p>Both overloads produce ragged results the same way <code class="docutils literal notranslate"><span class="pre">findall()</span></code> does: a row
 with fewer pieces than the widest row is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the extra columns, and
@@ -134,7 +134,7 @@ prefix, and a row with no delimiter at all.</p>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">paths</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -170,7 +170,7 @@ two-piece split leaves <code class="docutils literal notranslate"><span class="p
 entire original text lands in <code class="docutils literal notranslate"><span class="pre">part_0</span></code> and the rest is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 <p>Example 2. <code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the number of splits — the remainder after the
 limit is reached stays joined together in the last column, not dropped.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -200,7 +200,7 @@ optional surrounding whitespace) and a custom column prefix.</p>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rows</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rows</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;csv&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rows</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;csv&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">split</span><span class="p">(</span>
 <span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\s*,\s*</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;field&quot;</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
 </pre></div>
@@ -246,10 +246,10 @@ inflated by an invalid row’s underlying text, while the <code class="docutils 
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mixed</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">via_overload1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">via_overload1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_overload1</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">via_overload2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">TextOptions</span><span class="p">{});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">via_overload2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;path&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">TextOptions</span><span class="p">{});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_overload2</span><span class="p">;</span>
 </pre></div>
 </div>

@@ -52,7 +52,7 @@ auto files = DataFrame({
 });
 std::cout << files;
 
-auto out = files.note().ends(".pdf");
+auto out = files.nt().ends(".pdf");
 std::cout << out;
 ```
 
@@ -93,7 +93,7 @@ Example 2. Case-insensitive suffix matching by normalizing first: chain
 [`lower()`](lower.md) ahead of `ends()` to catch both `".pdf"` and `".PDF"`.
 
 ```cpp
-auto out2 = files.note().lower().note().ends(".pdf");
+auto out2 = files.nt().lower().nt().ends(".pdf");
 std::cout << out2;
 ```
 
@@ -119,7 +119,7 @@ Example 3. An empty suffix matches every valid cell, regardless of content —
 symmetric with `starts("")`.
 
 ```cpp
-auto trivial = files.note().ends("");
+auto trivial = files.nt().ends("");
 std::cout << trivial;
 ```
 

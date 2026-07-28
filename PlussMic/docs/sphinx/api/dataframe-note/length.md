@@ -47,7 +47,7 @@ auto cities = DataFrame({
 });
 std::cout << cities;
 
-auto out = cities.note().length();
+auto out = cities.nt().length();
 std::cout << out;
 ```
 
@@ -88,7 +88,7 @@ auto labels = DataFrame({
     {"label", Thread(pluss::make_note({"Price: \xE2\x82\xAC""50", "Cost: $20", "Fee: \xC2\xA3""5"}))},
 });
 
-auto out2 = labels.note().length();
+auto out2 = labels.nt().length();
 std::cout << out2;
 ```
 

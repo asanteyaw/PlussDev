@@ -375,13 +375,13 @@ regression suite pass unchanged.
 
 #### `ice::models::TemporalFusionTransformer` — done
 
-The first non-NLP `ice::models::` entry (`PlussAI/Ice/models/tft/`, public header
-`pluss/ai/ice/models/tft.h`): multi-horizon quantile forecasting per Lim et al.'s TFT architecture
+The first non-NLP `ice::models::` entry (`PlussAI/Ice/models/ts/`, public header
+`pluss/ai/ice/models/ts/temporal_fusion_transformer.h`): multi-horizon quantile forecasting per Lim et al.'s TFT architecture
 (variable selection networks, gated residual networks throughout, an LSTM encoder/decoder seeded
 from a static-covariate context, interpretable causal self-attention, quantile/pinball output). An
 original implementation — every building block (`elu`, `LayerNorm`, `GatedResidualNetwork`,
 `GatedAddNorm`, `VariableSelectionNetwork`, `quantile_loss`) was written from the published,
-well-known formulas, not ported from any reference codebase; `Ice/models/tft/tft_blocks.h` documents
+well-known formulas, not ported from any reference codebase; `Ice/models/ts/tft_blocks.h` documents
 each formula and which engine primitives it's built from.
 
 **Remaining deliberate scope cut** (documented in `tft.h`/`tft_blocks.h`, not silently assumed): one
@@ -398,7 +398,7 @@ convenience both carry over unchanged.
 not listed stays continuous, matching the original numeric-only behavior exactly. Categorical
 values still live in the same `TFTBatch` tensors as continuous ones, as the integer category code
 stored as a float; no new tensor field. `VariableSelectionNetwork` gained a new `Embedding`
-building block (`Ice/models/tft/tft_blocks.h` — a plain learned `[cardinality, hidden_size]` table,
+building block (`Ice/models/ts/tft_blocks.h` — a plain learned `[cardinality, hidden_size]` table,
 looked up via `index_select`, built with the same allocate-then-register-then-`copy_()` pattern as
 the engine's own `nn::` modules) and now dispatches each variable slot to either its small
 per-variable GRN (continuous) or an `Embedding` (categorical), both producing a `[...,
@@ -463,7 +463,7 @@ NodeK/CodeM, not worked around in ice:**
    `.clone()` on top, and `Series::clone()` (unlike its sibling `Series::contiguous()`) never
    registers a backward at all. **Fixed at the source**: dropped the redundant `.clone()` from
    `narrow_copy`'s dispatch — `select_range()` alone already satisfies `narrow_copy`'s
-   storage-independence contract, so nothing else changes. Once fixed, `Ice/models/tft/tft_blocks.h`'s
+   storage-independence contract, so nothing else changes. Once fixed, `Ice/models/ts/tft_blocks.h`'s
    `index_range()` workaround (an `index_select()`-based reimplementation of narrowing) became pure
    redundancy and was removed — every call site reverted to plain `.narrow_copy(...)`, rebuilt and
    retested (`ice_tft_test` still passes). Verified against the same 31-binary suite.
@@ -496,7 +496,7 @@ separately keep `TFTOptions::static_size/encoder_size/decoder_size/*_categorical
 whatever that produced. `pluss::ai::ice::data::TimeSeriesDataSet`
 (`include/pluss/ai/ice/data/time_series_dataset.h`, `Ice/data/time_series_dataset.cpp`) replaces
 that hand-rolled step — and, deliberately, is **not TFT-specific**: it lives outside
-`Ice/models/tft/`, in its own `ice::data` module, so a second future forecasting model can reuse it
+`Ice/models/ts/`, in its own `ice::data` module, so a second future forecasting model can reuse it
 without depending on TFT at all. `TFTBatch` now has an `explicit` constructor from
 `data::TimeSeriesBatch`, and `TemporalFusionTransformer::learn()`/`predict()`/`assess()` gained
 overloads taking a `data::TimeSeriesBatch` directly; `TFTOptions::CategoricalVariable` is a type

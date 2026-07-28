@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/api_nav.js?v=a5407de1"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -60,11 +60,9 @@ Those are the table-rendering methods.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">describe()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">aggregate()</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">group_by()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pivot()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">count_by()</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mean_by()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tally()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">resample()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sum()</span></code></p></li>
@@ -82,7 +80,7 @@ Those are the table-rendering methods.</p>
 <span class="n">df</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span><span class="w">           </span><span class="c1">// terminal preview</span>
 <span class="n">df</span><span class="p">.</span><span class="n">describe</span><span class="p">().</span><span class="n">show</span><span class="p">();</span><span class="w">    </span><span class="c1">// popup if available, else terminal fallback</span>
 
-<span class="n">df</span><span class="p">.</span><span class="n">group_by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;avg_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}})</span>
+<span class="n">df</span><span class="p">.</span><span class="n">group</span><span class="p">().</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">agg</span><span class="p">({{</span><span class="s">&quot;avg_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}})</span>
 <span class="w">  </span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>

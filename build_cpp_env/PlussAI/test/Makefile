@@ -347,6 +347,174 @@ fusion_route_test/fast:
 .PHONY : fusion_route_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/rule
+
+# Convenience name for target.
+ice_action_value_agent_test: PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/rule
+.PHONY : ice_action_value_agent_test
+
+# fast build rule for target.
+ice_action_value_agent_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/build.make PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/build
+.PHONY : ice_action_value_agent_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/rule
+
+# Convenience name for target.
+ice_autoregressive_forecaster_test: PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/rule
+.PHONY : ice_autoregressive_forecaster_test
+
+# fast build rule for target.
+ice_autoregressive_forecaster_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/build.make PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/build
+.PHONY : ice_autoregressive_forecaster_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_callback_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_callback_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_callback_test.dir/rule
+
+# Convenience name for target.
+ice_callback_test: PlussAI/test/CMakeFiles/ice_callback_test.dir/rule
+.PHONY : ice_callback_test
+
+# fast build rule for target.
+ice_callback_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_callback_test.dir/build.make PlussAI/test/CMakeFiles/ice_callback_test.dir/build
+.PHONY : ice_callback_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_coach_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_coach_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_coach_test.dir/rule
+
+# Convenience name for target.
+ice_coach_test: PlussAI/test/CMakeFiles/ice_coach_test.dir/rule
+.PHONY : ice_coach_test
+
+# fast build rule for target.
+ice_coach_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_coach_test.dir/build.make PlussAI/test/CMakeFiles/ice_coach_test.dir/build
+.PHONY : ice_coach_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_dataset_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_dataset_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_dataset_test.dir/rule
+
+# Convenience name for target.
+ice_dataset_test: PlussAI/test/CMakeFiles/ice_dataset_test.dir/rule
+.PHONY : ice_dataset_test
+
+# fast build rule for target.
+ice_dataset_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_dataset_test.dir/build
+.PHONY : ice_dataset_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_model_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_model_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_model_test.dir/rule
+
+# Convenience name for target.
+ice_model_test: PlussAI/test/CMakeFiles/ice_model_test.dir/rule
+.PHONY : ice_model_test
+
+# fast build rule for target.
+ice_model_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_model_test.dir/build.make PlussAI/test/CMakeFiles/ice_model_test.dir/build
+.PHONY : ice_model_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_phase78_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_phase78_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_phase78_test.dir/rule
+
+# Convenience name for target.
+ice_phase78_test: PlussAI/test/CMakeFiles/ice_phase78_test.dir/rule
+.PHONY : ice_phase78_test
+
+# fast build rule for target.
+ice_phase78_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase78_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase78_test.dir/build
+.PHONY : ice_phase78_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_phase9_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_phase9_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_phase9_test.dir/rule
+
+# Convenience name for target.
+ice_phase9_test: PlussAI/test/CMakeFiles/ice_phase9_test.dir/rule
+.PHONY : ice_phase9_test
+
+# fast build rule for target.
+ice_phase9_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase9_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase9_test.dir/build
+.PHONY : ice_phase9_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_source_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_source_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_source_test.dir/rule
+
+# Convenience name for target.
+ice_source_test: PlussAI/test/CMakeFiles/ice_source_test.dir/rule
+.PHONY : ice_source_test
+
+# fast build rule for target.
+ice_source_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_source_test.dir/build.make PlussAI/test/CMakeFiles/ice_source_test.dir/build
+.PHONY : ice_source_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_text_judge_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_text_judge_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_text_judge_test.dir/rule
+
+# Convenience name for target.
+ice_text_judge_test: PlussAI/test/CMakeFiles/ice_text_judge_test.dir/rule
+.PHONY : ice_text_judge_test
+
+# fast build rule for target.
+ice_text_judge_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_text_judge_test.dir/build.make PlussAI/test/CMakeFiles/ice_text_judge_test.dir/build
+.PHONY : ice_text_judge_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_tft_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_tft_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_tft_test.dir/rule
+
+# Convenience name for target.
+ice_tft_test: PlussAI/test/CMakeFiles/ice_tft_test.dir/rule
+.PHONY : ice_tft_test
+
+# fast build rule for target.
+ice_tft_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_tft_test.dir/build.make PlussAI/test/CMakeFiles/ice_tft_test.dir/build
+.PHONY : ice_tft_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/rule
+
+# Convenience name for target.
+ice_time_series_dataset_test: PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/rule
+.PHONY : ice_time_series_dataset_test
+
+# fast build rule for target.
+ice_time_series_dataset_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/build
+.PHONY : ice_time_series_dataset_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
@@ -387,6 +555,34 @@ nn_dropout_parity_test: PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/rule
 nn_dropout_parity_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build
 .PHONY : nn_dropout_parity_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/rule
+
+# Convenience name for target.
+nn_elu_layernorm_embedding_test: PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/rule
+.PHONY : nn_elu_layernorm_embedding_test
+
+# fast build rule for target.
+nn_elu_layernorm_embedding_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/build.make PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/build
+.PHONY : nn_elu_layernorm_embedding_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/rule
+
+# Convenience name for target.
+nn_grad_mode_test: PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/rule
+.PHONY : nn_grad_mode_test
+
+# fast build rule for target.
+nn_grad_mode_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/build.make PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/build
+.PHONY : nn_grad_mode_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nn_loss_test.dir/rule:
@@ -487,6 +683,62 @@ nn_training_parity_test/fast:
 .PHONY : nn_training_parity_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/rule
+
+# Convenience name for target.
+nodeb_contextual_embed_test: PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/rule
+.PHONY : nodeb_contextual_embed_test
+
+# fast build rule for target.
+nodeb_contextual_embed_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/build
+.PHONY : nodeb_contextual_embed_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/rule
+
+# Convenience name for target.
+nodeb_deep_heads_test: PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/rule
+.PHONY : nodeb_deep_heads_test
+
+# fast build rule for target.
+nodeb_deep_heads_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/build
+.PHONY : nodeb_deep_heads_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_embed_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_embed_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_embed_test.dir/rule
+
+# Convenience name for target.
+nodeb_embed_test: PlussAI/test/CMakeFiles/nodeb_embed_test.dir/rule
+.PHONY : nodeb_embed_test
+
+# fast build rule for target.
+nodeb_embed_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_embed_test.dir/build
+.PHONY : nodeb_embed_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_io_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_io_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_io_test.dir/rule
+
+# Convenience name for target.
+nodeb_io_test: PlussAI/test/CMakeFiles/nodeb_io_test.dir/rule
+.PHONY : nodeb_io_test
+
+# fast build rule for target.
+nodeb_io_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_io_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_io_test.dir/build
+.PHONY : nodeb_io_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/rule
@@ -501,6 +753,62 @@ nodeb_linguistics_test/fast:
 .PHONY : nodeb_linguistics_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/rule
+
+# Convenience name for target.
+nodeb_multilingual_test: PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/rule
+.PHONY : nodeb_multilingual_test
+
+# fast build rule for target.
+nodeb_multilingual_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/build
+.PHONY : nodeb_multilingual_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/rule
+
+# Convenience name for target.
+nodeb_ner_sequence_test: PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/rule
+.PHONY : nodeb_ner_sequence_test
+
+# fast build rule for target.
+nodeb_ner_sequence_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/build
+.PHONY : nodeb_ner_sequence_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_registry_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_registry_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_registry_test.dir/rule
+
+# Convenience name for target.
+nodeb_registry_test: PlussAI/test/CMakeFiles/nodeb_registry_test.dir/rule
+.PHONY : nodeb_registry_test
+
+# fast build rule for target.
+nodeb_registry_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_registry_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_registry_test.dir/build
+.PHONY : nodeb_registry_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/rule
+
+# Convenience name for target.
+nodeb_sequence_runtime_test: PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/rule
+.PHONY : nodeb_sequence_runtime_test
+
+# fast build rule for target.
+nodeb_sequence_runtime_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/build
+.PHONY : nodeb_sequence_runtime_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule
@@ -513,6 +821,34 @@ nodeb_syntax_test: PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/rule
 nodeb_syntax_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build
 .PHONY : nodeb_syntax_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/rule
+
+# Convenience name for target.
+nodeb_tagger_sequence_test: PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/rule
+.PHONY : nodeb_tagger_sequence_test
+
+# fast build rule for target.
+nodeb_tagger_sequence_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/build
+.PHONY : nodeb_tagger_sequence_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/rule
+
+# Convenience name for target.
+nodeb_textcat_test: PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/rule
+.PHONY : nodeb_textcat_test
+
+# fast build rule for target.
+nodeb_textcat_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/build
+.PHONY : nodeb_textcat_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodeb_tokenizer_test.dir/rule:
@@ -1128,6 +1464,294 @@ fusion_route_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/fusion_route_test.cpp.s
 .PHONY : fusion_route_test.cpp.s
 
+ice_action_value_agent_test.o: ice_action_value_agent_test.cpp.o
+.PHONY : ice_action_value_agent_test.o
+
+# target to build an object file
+ice_action_value_agent_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/build.make PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/ice_action_value_agent_test.cpp.o
+.PHONY : ice_action_value_agent_test.cpp.o
+
+ice_action_value_agent_test.i: ice_action_value_agent_test.cpp.i
+.PHONY : ice_action_value_agent_test.i
+
+# target to preprocess a source file
+ice_action_value_agent_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/build.make PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/ice_action_value_agent_test.cpp.i
+.PHONY : ice_action_value_agent_test.cpp.i
+
+ice_action_value_agent_test.s: ice_action_value_agent_test.cpp.s
+.PHONY : ice_action_value_agent_test.s
+
+# target to generate assembly for a file
+ice_action_value_agent_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/build.make PlussAI/test/CMakeFiles/ice_action_value_agent_test.dir/ice_action_value_agent_test.cpp.s
+.PHONY : ice_action_value_agent_test.cpp.s
+
+ice_autoregressive_forecaster_test.o: ice_autoregressive_forecaster_test.cpp.o
+.PHONY : ice_autoregressive_forecaster_test.o
+
+# target to build an object file
+ice_autoregressive_forecaster_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/build.make PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/ice_autoregressive_forecaster_test.cpp.o
+.PHONY : ice_autoregressive_forecaster_test.cpp.o
+
+ice_autoregressive_forecaster_test.i: ice_autoregressive_forecaster_test.cpp.i
+.PHONY : ice_autoregressive_forecaster_test.i
+
+# target to preprocess a source file
+ice_autoregressive_forecaster_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/build.make PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/ice_autoregressive_forecaster_test.cpp.i
+.PHONY : ice_autoregressive_forecaster_test.cpp.i
+
+ice_autoregressive_forecaster_test.s: ice_autoregressive_forecaster_test.cpp.s
+.PHONY : ice_autoregressive_forecaster_test.s
+
+# target to generate assembly for a file
+ice_autoregressive_forecaster_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/build.make PlussAI/test/CMakeFiles/ice_autoregressive_forecaster_test.dir/ice_autoregressive_forecaster_test.cpp.s
+.PHONY : ice_autoregressive_forecaster_test.cpp.s
+
+ice_callback_test.o: ice_callback_test.cpp.o
+.PHONY : ice_callback_test.o
+
+# target to build an object file
+ice_callback_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_callback_test.dir/build.make PlussAI/test/CMakeFiles/ice_callback_test.dir/ice_callback_test.cpp.o
+.PHONY : ice_callback_test.cpp.o
+
+ice_callback_test.i: ice_callback_test.cpp.i
+.PHONY : ice_callback_test.i
+
+# target to preprocess a source file
+ice_callback_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_callback_test.dir/build.make PlussAI/test/CMakeFiles/ice_callback_test.dir/ice_callback_test.cpp.i
+.PHONY : ice_callback_test.cpp.i
+
+ice_callback_test.s: ice_callback_test.cpp.s
+.PHONY : ice_callback_test.s
+
+# target to generate assembly for a file
+ice_callback_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_callback_test.dir/build.make PlussAI/test/CMakeFiles/ice_callback_test.dir/ice_callback_test.cpp.s
+.PHONY : ice_callback_test.cpp.s
+
+ice_coach_test.o: ice_coach_test.cpp.o
+.PHONY : ice_coach_test.o
+
+# target to build an object file
+ice_coach_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_coach_test.dir/build.make PlussAI/test/CMakeFiles/ice_coach_test.dir/ice_coach_test.cpp.o
+.PHONY : ice_coach_test.cpp.o
+
+ice_coach_test.i: ice_coach_test.cpp.i
+.PHONY : ice_coach_test.i
+
+# target to preprocess a source file
+ice_coach_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_coach_test.dir/build.make PlussAI/test/CMakeFiles/ice_coach_test.dir/ice_coach_test.cpp.i
+.PHONY : ice_coach_test.cpp.i
+
+ice_coach_test.s: ice_coach_test.cpp.s
+.PHONY : ice_coach_test.s
+
+# target to generate assembly for a file
+ice_coach_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_coach_test.dir/build.make PlussAI/test/CMakeFiles/ice_coach_test.dir/ice_coach_test.cpp.s
+.PHONY : ice_coach_test.cpp.s
+
+ice_dataset_test.o: ice_dataset_test.cpp.o
+.PHONY : ice_dataset_test.o
+
+# target to build an object file
+ice_dataset_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_dataset_test.dir/ice_dataset_test.cpp.o
+.PHONY : ice_dataset_test.cpp.o
+
+ice_dataset_test.i: ice_dataset_test.cpp.i
+.PHONY : ice_dataset_test.i
+
+# target to preprocess a source file
+ice_dataset_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_dataset_test.dir/ice_dataset_test.cpp.i
+.PHONY : ice_dataset_test.cpp.i
+
+ice_dataset_test.s: ice_dataset_test.cpp.s
+.PHONY : ice_dataset_test.s
+
+# target to generate assembly for a file
+ice_dataset_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_dataset_test.dir/ice_dataset_test.cpp.s
+.PHONY : ice_dataset_test.cpp.s
+
+ice_model_test.o: ice_model_test.cpp.o
+.PHONY : ice_model_test.o
+
+# target to build an object file
+ice_model_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_model_test.dir/build.make PlussAI/test/CMakeFiles/ice_model_test.dir/ice_model_test.cpp.o
+.PHONY : ice_model_test.cpp.o
+
+ice_model_test.i: ice_model_test.cpp.i
+.PHONY : ice_model_test.i
+
+# target to preprocess a source file
+ice_model_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_model_test.dir/build.make PlussAI/test/CMakeFiles/ice_model_test.dir/ice_model_test.cpp.i
+.PHONY : ice_model_test.cpp.i
+
+ice_model_test.s: ice_model_test.cpp.s
+.PHONY : ice_model_test.s
+
+# target to generate assembly for a file
+ice_model_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_model_test.dir/build.make PlussAI/test/CMakeFiles/ice_model_test.dir/ice_model_test.cpp.s
+.PHONY : ice_model_test.cpp.s
+
+ice_phase78_test.o: ice_phase78_test.cpp.o
+.PHONY : ice_phase78_test.o
+
+# target to build an object file
+ice_phase78_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase78_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase78_test.dir/ice_phase78_test.cpp.o
+.PHONY : ice_phase78_test.cpp.o
+
+ice_phase78_test.i: ice_phase78_test.cpp.i
+.PHONY : ice_phase78_test.i
+
+# target to preprocess a source file
+ice_phase78_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase78_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase78_test.dir/ice_phase78_test.cpp.i
+.PHONY : ice_phase78_test.cpp.i
+
+ice_phase78_test.s: ice_phase78_test.cpp.s
+.PHONY : ice_phase78_test.s
+
+# target to generate assembly for a file
+ice_phase78_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase78_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase78_test.dir/ice_phase78_test.cpp.s
+.PHONY : ice_phase78_test.cpp.s
+
+ice_phase9_test.o: ice_phase9_test.cpp.o
+.PHONY : ice_phase9_test.o
+
+# target to build an object file
+ice_phase9_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase9_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase9_test.dir/ice_phase9_test.cpp.o
+.PHONY : ice_phase9_test.cpp.o
+
+ice_phase9_test.i: ice_phase9_test.cpp.i
+.PHONY : ice_phase9_test.i
+
+# target to preprocess a source file
+ice_phase9_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase9_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase9_test.dir/ice_phase9_test.cpp.i
+.PHONY : ice_phase9_test.cpp.i
+
+ice_phase9_test.s: ice_phase9_test.cpp.s
+.PHONY : ice_phase9_test.s
+
+# target to generate assembly for a file
+ice_phase9_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_phase9_test.dir/build.make PlussAI/test/CMakeFiles/ice_phase9_test.dir/ice_phase9_test.cpp.s
+.PHONY : ice_phase9_test.cpp.s
+
+ice_source_test.o: ice_source_test.cpp.o
+.PHONY : ice_source_test.o
+
+# target to build an object file
+ice_source_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_source_test.dir/build.make PlussAI/test/CMakeFiles/ice_source_test.dir/ice_source_test.cpp.o
+.PHONY : ice_source_test.cpp.o
+
+ice_source_test.i: ice_source_test.cpp.i
+.PHONY : ice_source_test.i
+
+# target to preprocess a source file
+ice_source_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_source_test.dir/build.make PlussAI/test/CMakeFiles/ice_source_test.dir/ice_source_test.cpp.i
+.PHONY : ice_source_test.cpp.i
+
+ice_source_test.s: ice_source_test.cpp.s
+.PHONY : ice_source_test.s
+
+# target to generate assembly for a file
+ice_source_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_source_test.dir/build.make PlussAI/test/CMakeFiles/ice_source_test.dir/ice_source_test.cpp.s
+.PHONY : ice_source_test.cpp.s
+
+ice_text_judge_test.o: ice_text_judge_test.cpp.o
+.PHONY : ice_text_judge_test.o
+
+# target to build an object file
+ice_text_judge_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_text_judge_test.dir/build.make PlussAI/test/CMakeFiles/ice_text_judge_test.dir/ice_text_judge_test.cpp.o
+.PHONY : ice_text_judge_test.cpp.o
+
+ice_text_judge_test.i: ice_text_judge_test.cpp.i
+.PHONY : ice_text_judge_test.i
+
+# target to preprocess a source file
+ice_text_judge_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_text_judge_test.dir/build.make PlussAI/test/CMakeFiles/ice_text_judge_test.dir/ice_text_judge_test.cpp.i
+.PHONY : ice_text_judge_test.cpp.i
+
+ice_text_judge_test.s: ice_text_judge_test.cpp.s
+.PHONY : ice_text_judge_test.s
+
+# target to generate assembly for a file
+ice_text_judge_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_text_judge_test.dir/build.make PlussAI/test/CMakeFiles/ice_text_judge_test.dir/ice_text_judge_test.cpp.s
+.PHONY : ice_text_judge_test.cpp.s
+
+ice_tft_test.o: ice_tft_test.cpp.o
+.PHONY : ice_tft_test.o
+
+# target to build an object file
+ice_tft_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_tft_test.dir/build.make PlussAI/test/CMakeFiles/ice_tft_test.dir/ice_tft_test.cpp.o
+.PHONY : ice_tft_test.cpp.o
+
+ice_tft_test.i: ice_tft_test.cpp.i
+.PHONY : ice_tft_test.i
+
+# target to preprocess a source file
+ice_tft_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_tft_test.dir/build.make PlussAI/test/CMakeFiles/ice_tft_test.dir/ice_tft_test.cpp.i
+.PHONY : ice_tft_test.cpp.i
+
+ice_tft_test.s: ice_tft_test.cpp.s
+.PHONY : ice_tft_test.s
+
+# target to generate assembly for a file
+ice_tft_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_tft_test.dir/build.make PlussAI/test/CMakeFiles/ice_tft_test.dir/ice_tft_test.cpp.s
+.PHONY : ice_tft_test.cpp.s
+
+ice_time_series_dataset_test.o: ice_time_series_dataset_test.cpp.o
+.PHONY : ice_time_series_dataset_test.o
+
+# target to build an object file
+ice_time_series_dataset_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/ice_time_series_dataset_test.cpp.o
+.PHONY : ice_time_series_dataset_test.cpp.o
+
+ice_time_series_dataset_test.i: ice_time_series_dataset_test.cpp.i
+.PHONY : ice_time_series_dataset_test.i
+
+# target to preprocess a source file
+ice_time_series_dataset_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/ice_time_series_dataset_test.cpp.i
+.PHONY : ice_time_series_dataset_test.cpp.i
+
+ice_time_series_dataset_test.s: ice_time_series_dataset_test.cpp.s
+.PHONY : ice_time_series_dataset_test.s
+
+# target to generate assembly for a file
+ice_time_series_dataset_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/ice_time_series_dataset_test.cpp.s
+.PHONY : ice_time_series_dataset_test.cpp.s
+
 lymph_metrics_test.o: lymph_metrics_test.cpp.o
 .PHONY : lymph_metrics_test.o
 
@@ -1199,6 +1823,54 @@ nn_dropout_parity_test.s: nn_dropout_parity_test.cpp.s
 nn_dropout_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/nn_dropout_parity_test.cpp.s
 .PHONY : nn_dropout_parity_test.cpp.s
+
+nn_elu_layernorm_embedding_test.o: nn_elu_layernorm_embedding_test.cpp.o
+.PHONY : nn_elu_layernorm_embedding_test.o
+
+# target to build an object file
+nn_elu_layernorm_embedding_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/build.make PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/nn_elu_layernorm_embedding_test.cpp.o
+.PHONY : nn_elu_layernorm_embedding_test.cpp.o
+
+nn_elu_layernorm_embedding_test.i: nn_elu_layernorm_embedding_test.cpp.i
+.PHONY : nn_elu_layernorm_embedding_test.i
+
+# target to preprocess a source file
+nn_elu_layernorm_embedding_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/build.make PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/nn_elu_layernorm_embedding_test.cpp.i
+.PHONY : nn_elu_layernorm_embedding_test.cpp.i
+
+nn_elu_layernorm_embedding_test.s: nn_elu_layernorm_embedding_test.cpp.s
+.PHONY : nn_elu_layernorm_embedding_test.s
+
+# target to generate assembly for a file
+nn_elu_layernorm_embedding_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/build.make PlussAI/test/CMakeFiles/nn_elu_layernorm_embedding_test.dir/nn_elu_layernorm_embedding_test.cpp.s
+.PHONY : nn_elu_layernorm_embedding_test.cpp.s
+
+nn_grad_mode_test.o: nn_grad_mode_test.cpp.o
+.PHONY : nn_grad_mode_test.o
+
+# target to build an object file
+nn_grad_mode_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/build.make PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/nn_grad_mode_test.cpp.o
+.PHONY : nn_grad_mode_test.cpp.o
+
+nn_grad_mode_test.i: nn_grad_mode_test.cpp.i
+.PHONY : nn_grad_mode_test.i
+
+# target to preprocess a source file
+nn_grad_mode_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/build.make PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/nn_grad_mode_test.cpp.i
+.PHONY : nn_grad_mode_test.cpp.i
+
+nn_grad_mode_test.s: nn_grad_mode_test.cpp.s
+.PHONY : nn_grad_mode_test.s
+
+# target to generate assembly for a file
+nn_grad_mode_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/build.make PlussAI/test/CMakeFiles/nn_grad_mode_test.dir/nn_grad_mode_test.cpp.s
+.PHONY : nn_grad_mode_test.cpp.s
 
 nn_loss_test.o: nn_loss_test.cpp.o
 .PHONY : nn_loss_test.o
@@ -1368,6 +2040,102 @@ nn_training_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/nn_training_parity_test.cpp.s
 .PHONY : nn_training_parity_test.cpp.s
 
+nodeb_contextual_embed_test.o: nodeb_contextual_embed_test.cpp.o
+.PHONY : nodeb_contextual_embed_test.o
+
+# target to build an object file
+nodeb_contextual_embed_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/nodeb_contextual_embed_test.cpp.o
+.PHONY : nodeb_contextual_embed_test.cpp.o
+
+nodeb_contextual_embed_test.i: nodeb_contextual_embed_test.cpp.i
+.PHONY : nodeb_contextual_embed_test.i
+
+# target to preprocess a source file
+nodeb_contextual_embed_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/nodeb_contextual_embed_test.cpp.i
+.PHONY : nodeb_contextual_embed_test.cpp.i
+
+nodeb_contextual_embed_test.s: nodeb_contextual_embed_test.cpp.s
+.PHONY : nodeb_contextual_embed_test.s
+
+# target to generate assembly for a file
+nodeb_contextual_embed_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_contextual_embed_test.dir/nodeb_contextual_embed_test.cpp.s
+.PHONY : nodeb_contextual_embed_test.cpp.s
+
+nodeb_deep_heads_test.o: nodeb_deep_heads_test.cpp.o
+.PHONY : nodeb_deep_heads_test.o
+
+# target to build an object file
+nodeb_deep_heads_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/nodeb_deep_heads_test.cpp.o
+.PHONY : nodeb_deep_heads_test.cpp.o
+
+nodeb_deep_heads_test.i: nodeb_deep_heads_test.cpp.i
+.PHONY : nodeb_deep_heads_test.i
+
+# target to preprocess a source file
+nodeb_deep_heads_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/nodeb_deep_heads_test.cpp.i
+.PHONY : nodeb_deep_heads_test.cpp.i
+
+nodeb_deep_heads_test.s: nodeb_deep_heads_test.cpp.s
+.PHONY : nodeb_deep_heads_test.s
+
+# target to generate assembly for a file
+nodeb_deep_heads_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_deep_heads_test.dir/nodeb_deep_heads_test.cpp.s
+.PHONY : nodeb_deep_heads_test.cpp.s
+
+nodeb_embed_test.o: nodeb_embed_test.cpp.o
+.PHONY : nodeb_embed_test.o
+
+# target to build an object file
+nodeb_embed_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_embed_test.dir/nodeb_embed_test.cpp.o
+.PHONY : nodeb_embed_test.cpp.o
+
+nodeb_embed_test.i: nodeb_embed_test.cpp.i
+.PHONY : nodeb_embed_test.i
+
+# target to preprocess a source file
+nodeb_embed_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_embed_test.dir/nodeb_embed_test.cpp.i
+.PHONY : nodeb_embed_test.cpp.i
+
+nodeb_embed_test.s: nodeb_embed_test.cpp.s
+.PHONY : nodeb_embed_test.s
+
+# target to generate assembly for a file
+nodeb_embed_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_embed_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_embed_test.dir/nodeb_embed_test.cpp.s
+.PHONY : nodeb_embed_test.cpp.s
+
+nodeb_io_test.o: nodeb_io_test.cpp.o
+.PHONY : nodeb_io_test.o
+
+# target to build an object file
+nodeb_io_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_io_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_io_test.dir/nodeb_io_test.cpp.o
+.PHONY : nodeb_io_test.cpp.o
+
+nodeb_io_test.i: nodeb_io_test.cpp.i
+.PHONY : nodeb_io_test.i
+
+# target to preprocess a source file
+nodeb_io_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_io_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_io_test.dir/nodeb_io_test.cpp.i
+.PHONY : nodeb_io_test.cpp.i
+
+nodeb_io_test.s: nodeb_io_test.cpp.s
+.PHONY : nodeb_io_test.s
+
+# target to generate assembly for a file
+nodeb_io_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_io_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_io_test.dir/nodeb_io_test.cpp.s
+.PHONY : nodeb_io_test.cpp.s
+
 nodeb_linguistics_test.o: nodeb_linguistics_test.cpp.o
 .PHONY : nodeb_linguistics_test.o
 
@@ -1392,6 +2160,102 @@ nodeb_linguistics_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_linguistics_test.dir/nodeb_linguistics_test.cpp.s
 .PHONY : nodeb_linguistics_test.cpp.s
 
+nodeb_multilingual_test.o: nodeb_multilingual_test.cpp.o
+.PHONY : nodeb_multilingual_test.o
+
+# target to build an object file
+nodeb_multilingual_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/nodeb_multilingual_test.cpp.o
+.PHONY : nodeb_multilingual_test.cpp.o
+
+nodeb_multilingual_test.i: nodeb_multilingual_test.cpp.i
+.PHONY : nodeb_multilingual_test.i
+
+# target to preprocess a source file
+nodeb_multilingual_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/nodeb_multilingual_test.cpp.i
+.PHONY : nodeb_multilingual_test.cpp.i
+
+nodeb_multilingual_test.s: nodeb_multilingual_test.cpp.s
+.PHONY : nodeb_multilingual_test.s
+
+# target to generate assembly for a file
+nodeb_multilingual_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_multilingual_test.dir/nodeb_multilingual_test.cpp.s
+.PHONY : nodeb_multilingual_test.cpp.s
+
+nodeb_ner_sequence_test.o: nodeb_ner_sequence_test.cpp.o
+.PHONY : nodeb_ner_sequence_test.o
+
+# target to build an object file
+nodeb_ner_sequence_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/nodeb_ner_sequence_test.cpp.o
+.PHONY : nodeb_ner_sequence_test.cpp.o
+
+nodeb_ner_sequence_test.i: nodeb_ner_sequence_test.cpp.i
+.PHONY : nodeb_ner_sequence_test.i
+
+# target to preprocess a source file
+nodeb_ner_sequence_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/nodeb_ner_sequence_test.cpp.i
+.PHONY : nodeb_ner_sequence_test.cpp.i
+
+nodeb_ner_sequence_test.s: nodeb_ner_sequence_test.cpp.s
+.PHONY : nodeb_ner_sequence_test.s
+
+# target to generate assembly for a file
+nodeb_ner_sequence_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_ner_sequence_test.dir/nodeb_ner_sequence_test.cpp.s
+.PHONY : nodeb_ner_sequence_test.cpp.s
+
+nodeb_registry_test.o: nodeb_registry_test.cpp.o
+.PHONY : nodeb_registry_test.o
+
+# target to build an object file
+nodeb_registry_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_registry_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_registry_test.dir/nodeb_registry_test.cpp.o
+.PHONY : nodeb_registry_test.cpp.o
+
+nodeb_registry_test.i: nodeb_registry_test.cpp.i
+.PHONY : nodeb_registry_test.i
+
+# target to preprocess a source file
+nodeb_registry_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_registry_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_registry_test.dir/nodeb_registry_test.cpp.i
+.PHONY : nodeb_registry_test.cpp.i
+
+nodeb_registry_test.s: nodeb_registry_test.cpp.s
+.PHONY : nodeb_registry_test.s
+
+# target to generate assembly for a file
+nodeb_registry_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_registry_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_registry_test.dir/nodeb_registry_test.cpp.s
+.PHONY : nodeb_registry_test.cpp.s
+
+nodeb_sequence_runtime_test.o: nodeb_sequence_runtime_test.cpp.o
+.PHONY : nodeb_sequence_runtime_test.o
+
+# target to build an object file
+nodeb_sequence_runtime_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/nodeb_sequence_runtime_test.cpp.o
+.PHONY : nodeb_sequence_runtime_test.cpp.o
+
+nodeb_sequence_runtime_test.i: nodeb_sequence_runtime_test.cpp.i
+.PHONY : nodeb_sequence_runtime_test.i
+
+# target to preprocess a source file
+nodeb_sequence_runtime_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/nodeb_sequence_runtime_test.cpp.i
+.PHONY : nodeb_sequence_runtime_test.cpp.i
+
+nodeb_sequence_runtime_test.s: nodeb_sequence_runtime_test.cpp.s
+.PHONY : nodeb_sequence_runtime_test.s
+
+# target to generate assembly for a file
+nodeb_sequence_runtime_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_sequence_runtime_test.dir/nodeb_sequence_runtime_test.cpp.s
+.PHONY : nodeb_sequence_runtime_test.cpp.s
+
 nodeb_syntax_test.o: nodeb_syntax_test.cpp.o
 .PHONY : nodeb_syntax_test.o
 
@@ -1415,6 +2279,54 @@ nodeb_syntax_test.s: nodeb_syntax_test.cpp.s
 nodeb_syntax_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_syntax_test.dir/nodeb_syntax_test.cpp.s
 .PHONY : nodeb_syntax_test.cpp.s
+
+nodeb_tagger_sequence_test.o: nodeb_tagger_sequence_test.cpp.o
+.PHONY : nodeb_tagger_sequence_test.o
+
+# target to build an object file
+nodeb_tagger_sequence_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/nodeb_tagger_sequence_test.cpp.o
+.PHONY : nodeb_tagger_sequence_test.cpp.o
+
+nodeb_tagger_sequence_test.i: nodeb_tagger_sequence_test.cpp.i
+.PHONY : nodeb_tagger_sequence_test.i
+
+# target to preprocess a source file
+nodeb_tagger_sequence_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/nodeb_tagger_sequence_test.cpp.i
+.PHONY : nodeb_tagger_sequence_test.cpp.i
+
+nodeb_tagger_sequence_test.s: nodeb_tagger_sequence_test.cpp.s
+.PHONY : nodeb_tagger_sequence_test.s
+
+# target to generate assembly for a file
+nodeb_tagger_sequence_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_tagger_sequence_test.dir/nodeb_tagger_sequence_test.cpp.s
+.PHONY : nodeb_tagger_sequence_test.cpp.s
+
+nodeb_textcat_test.o: nodeb_textcat_test.cpp.o
+.PHONY : nodeb_textcat_test.o
+
+# target to build an object file
+nodeb_textcat_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/nodeb_textcat_test.cpp.o
+.PHONY : nodeb_textcat_test.cpp.o
+
+nodeb_textcat_test.i: nodeb_textcat_test.cpp.i
+.PHONY : nodeb_textcat_test.i
+
+# target to preprocess a source file
+nodeb_textcat_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/nodeb_textcat_test.cpp.i
+.PHONY : nodeb_textcat_test.cpp.i
+
+nodeb_textcat_test.s: nodeb_textcat_test.cpp.s
+.PHONY : nodeb_textcat_test.s
+
+# target to generate assembly for a file
+nodeb_textcat_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/build.make PlussAI/test/CMakeFiles/nodeb_textcat_test.dir/nodeb_textcat_test.cpp.s
+.PHONY : nodeb_textcat_test.cpp.s
 
 nodeb_tokenizer_test.o: nodeb_tokenizer_test.cpp.o
 .PHONY : nodeb_tokenizer_test.o
@@ -2042,9 +2954,23 @@ help:
 	@echo "... cudnn_strict_route_test"
 	@echo "... cudnn_transformer_rigorous_test"
 	@echo "... fusion_route_test"
+	@echo "... ice_action_value_agent_test"
+	@echo "... ice_autoregressive_forecaster_test"
+	@echo "... ice_callback_test"
+	@echo "... ice_coach_test"
+	@echo "... ice_dataset_test"
+	@echo "... ice_model_test"
+	@echo "... ice_phase78_test"
+	@echo "... ice_phase9_test"
+	@echo "... ice_source_test"
+	@echo "... ice_text_judge_test"
+	@echo "... ice_tft_test"
+	@echo "... ice_time_series_dataset_test"
 	@echo "... lymph_metrics_test"
 	@echo "... module_snapshot_test"
 	@echo "... nn_dropout_parity_test"
+	@echo "... nn_elu_layernorm_embedding_test"
+	@echo "... nn_grad_mode_test"
 	@echo "... nn_loss_test"
 	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
@@ -2052,8 +2978,18 @@ help:
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
+	@echo "... nodeb_contextual_embed_test"
+	@echo "... nodeb_deep_heads_test"
+	@echo "... nodeb_embed_test"
+	@echo "... nodeb_io_test"
 	@echo "... nodeb_linguistics_test"
+	@echo "... nodeb_multilingual_test"
+	@echo "... nodeb_ner_sequence_test"
+	@echo "... nodeb_registry_test"
+	@echo "... nodeb_sequence_runtime_test"
 	@echo "... nodeb_syntax_test"
+	@echo "... nodeb_tagger_sequence_test"
+	@echo "... nodeb_textcat_test"
 	@echo "... nodeb_tokenizer_test"
 	@echo "... nodeb_trainable_test"
 	@echo "... nodeb_vectorize_test"
@@ -2112,6 +3048,42 @@ help:
 	@echo "... fusion_route_test.o"
 	@echo "... fusion_route_test.i"
 	@echo "... fusion_route_test.s"
+	@echo "... ice_action_value_agent_test.o"
+	@echo "... ice_action_value_agent_test.i"
+	@echo "... ice_action_value_agent_test.s"
+	@echo "... ice_autoregressive_forecaster_test.o"
+	@echo "... ice_autoregressive_forecaster_test.i"
+	@echo "... ice_autoregressive_forecaster_test.s"
+	@echo "... ice_callback_test.o"
+	@echo "... ice_callback_test.i"
+	@echo "... ice_callback_test.s"
+	@echo "... ice_coach_test.o"
+	@echo "... ice_coach_test.i"
+	@echo "... ice_coach_test.s"
+	@echo "... ice_dataset_test.o"
+	@echo "... ice_dataset_test.i"
+	@echo "... ice_dataset_test.s"
+	@echo "... ice_model_test.o"
+	@echo "... ice_model_test.i"
+	@echo "... ice_model_test.s"
+	@echo "... ice_phase78_test.o"
+	@echo "... ice_phase78_test.i"
+	@echo "... ice_phase78_test.s"
+	@echo "... ice_phase9_test.o"
+	@echo "... ice_phase9_test.i"
+	@echo "... ice_phase9_test.s"
+	@echo "... ice_source_test.o"
+	@echo "... ice_source_test.i"
+	@echo "... ice_source_test.s"
+	@echo "... ice_text_judge_test.o"
+	@echo "... ice_text_judge_test.i"
+	@echo "... ice_text_judge_test.s"
+	@echo "... ice_tft_test.o"
+	@echo "... ice_tft_test.i"
+	@echo "... ice_tft_test.s"
+	@echo "... ice_time_series_dataset_test.o"
+	@echo "... ice_time_series_dataset_test.i"
+	@echo "... ice_time_series_dataset_test.s"
 	@echo "... lymph_metrics_test.o"
 	@echo "... lymph_metrics_test.i"
 	@echo "... lymph_metrics_test.s"
@@ -2121,6 +3093,12 @@ help:
 	@echo "... nn_dropout_parity_test.o"
 	@echo "... nn_dropout_parity_test.i"
 	@echo "... nn_dropout_parity_test.s"
+	@echo "... nn_elu_layernorm_embedding_test.o"
+	@echo "... nn_elu_layernorm_embedding_test.i"
+	@echo "... nn_elu_layernorm_embedding_test.s"
+	@echo "... nn_grad_mode_test.o"
+	@echo "... nn_grad_mode_test.i"
+	@echo "... nn_grad_mode_test.s"
 	@echo "... nn_loss_test.o"
 	@echo "... nn_loss_test.i"
 	@echo "... nn_loss_test.s"
@@ -2142,12 +3120,42 @@ help:
 	@echo "... nn_training_parity_test.o"
 	@echo "... nn_training_parity_test.i"
 	@echo "... nn_training_parity_test.s"
+	@echo "... nodeb_contextual_embed_test.o"
+	@echo "... nodeb_contextual_embed_test.i"
+	@echo "... nodeb_contextual_embed_test.s"
+	@echo "... nodeb_deep_heads_test.o"
+	@echo "... nodeb_deep_heads_test.i"
+	@echo "... nodeb_deep_heads_test.s"
+	@echo "... nodeb_embed_test.o"
+	@echo "... nodeb_embed_test.i"
+	@echo "... nodeb_embed_test.s"
+	@echo "... nodeb_io_test.o"
+	@echo "... nodeb_io_test.i"
+	@echo "... nodeb_io_test.s"
 	@echo "... nodeb_linguistics_test.o"
 	@echo "... nodeb_linguistics_test.i"
 	@echo "... nodeb_linguistics_test.s"
+	@echo "... nodeb_multilingual_test.o"
+	@echo "... nodeb_multilingual_test.i"
+	@echo "... nodeb_multilingual_test.s"
+	@echo "... nodeb_ner_sequence_test.o"
+	@echo "... nodeb_ner_sequence_test.i"
+	@echo "... nodeb_ner_sequence_test.s"
+	@echo "... nodeb_registry_test.o"
+	@echo "... nodeb_registry_test.i"
+	@echo "... nodeb_registry_test.s"
+	@echo "... nodeb_sequence_runtime_test.o"
+	@echo "... nodeb_sequence_runtime_test.i"
+	@echo "... nodeb_sequence_runtime_test.s"
 	@echo "... nodeb_syntax_test.o"
 	@echo "... nodeb_syntax_test.i"
 	@echo "... nodeb_syntax_test.s"
+	@echo "... nodeb_tagger_sequence_test.o"
+	@echo "... nodeb_tagger_sequence_test.i"
+	@echo "... nodeb_tagger_sequence_test.s"
+	@echo "... nodeb_textcat_test.o"
+	@echo "... nodeb_textcat_test.i"
+	@echo "... nodeb_textcat_test.s"
 	@echo "... nodeb_tokenizer_test.o"
 	@echo "... nodeb_tokenizer_test.i"
 	@echo "... nodeb_tokenizer_test.s"

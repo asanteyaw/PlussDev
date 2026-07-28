@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -42,25 +42,26 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ndistinct</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ndistinct</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Counts each selected feature’s own distinct-value count independently, returning one
-<code class="docutils literal notranslate"><span class="pre">Int64</span></code> entry per feature, labeled by feature name. This is a per-feature count, not a
-cross-feature distinct-<em>combination</em> count — <code class="docutils literal notranslate"><span class="pre">ndistinct({&quot;city&quot;,</span> <span class="pre">&quot;product&quot;})</span></code> reports
-how many distinct cities and how many distinct products there are, each on its own,
-never how many distinct <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code> pairs exist. For that, see
-<a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> or <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>, which do build a composite key
-across several features together.</p>
+<p>Counts each feature’s own distinct-value count independently, returning one <code class="docutils literal notranslate"><span class="pre">Int64</span></code>
+entry per feature currently on the frame, labeled by feature name. This is a
+per-feature count, not a cross-feature distinct-<em>combination</em> count —
+<code class="docutils literal notranslate"><span class="pre">orders.features({&quot;city&quot;,</span> <span class="pre">&quot;product&quot;}).ndistinct()</span></code> reports how many distinct cities
+and how many distinct products there are, each on its own, never how many distinct
+<code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code> pairs exist. For that, see <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> or
+<a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>, which do build a composite key across several
+features together.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code> carries no feature selector of its own: it always counts over the
+<em>entire</em> current frame, so narrow first with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> when only
+some features should be counted.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
-<p>Which features to count. Leave empty (the default) to count every feature on the
-frame.</p>
 <p><strong>dropnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
 <p>Whether a missing value counts as its own distinct “value” (<code class="docutils literal notranslate"><span class="pre">false</span></code>) or is excluded
 from the distinct count entirely (<code class="docutils literal notranslate"><span class="pre">true</span></code>, the default).</p>
@@ -117,12 +118,13 @@ value). These are two independent, per-feature counts — not a count of distinc
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>This is a per-feature count computed independently for each selected feature; it
-never builds a composite cross-feature key the way <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> and
+<li><p>This is a per-feature count computed independently for each feature on the current
+frame; it never builds a composite cross-feature key the way <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> and
 <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a> do.</p></li>
 <li><p>With <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code>, a missing value counts as one additional distinct “value”
 for that feature, rather than being excluded from the count.</p></li>
-<li><p>Every selected feature name must exist on the frame; an unknown name throws.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code> has no feature selector of its own — use <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a>
+to narrow the frame first.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -134,6 +136,8 @@ combination), rather than just the number of distinct values.</p></li>
 composite key, complementary to this method’s per-feature count.</p></li>
 <li><p><a class="reference internal" href="nfeatures.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::nfeatures</span></code></span></a>, <a class="reference internal" href="ncases.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ncases</span></code></span></a>: the plain
 shape counts this method’s output is labeled against.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature(s)
+<code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code> should count.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ncases.html">

@@ -62,7 +62,7 @@ Both `"Accra"` occurrences (positions `0`, `2`) and both `"Tema"` occurrences
 ## Notes
 
 - Grouping is by each value's string form, matching
-  [`distinct()`](distinct.md)/[`duplicated()`](duplicated.md)/[`tally()`](tally.md);
+  [`distinct()`](distinct.md)/[`duplicated()`](duplicated.md)/[`freq()`](freq.md);
   works across every payload kind.
 - Marks the whole repeated group, unlike `duplicated()`, which leaves one
   designated survivor per group unmarked.

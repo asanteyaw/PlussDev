@@ -2,6 +2,9 @@ file(GLOB_RECURSE AI_ICE_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/core/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/io/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/models/ts/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/models/nlp/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/models/rl/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/models/*.cpp
 )
 

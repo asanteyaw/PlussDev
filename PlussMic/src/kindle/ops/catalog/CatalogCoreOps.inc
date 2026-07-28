@@ -268,7 +268,7 @@ std::unordered_map<std::string, Catalog> Catalog::group_by(std::string_view key_
   PLUSS_CHECK(has(key), "Catalog::group_by: unknown key '" + key + "'");
 
   const auto key_stream = at(key);
-  const auto key_note = key_stream.to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto key_note = key_stream.to_thread().cast().note().as_note();
   const auto n = key_stream.size();
 
   std::unordered_map<std::string, std::vector<std::int64_t>> row_groups;

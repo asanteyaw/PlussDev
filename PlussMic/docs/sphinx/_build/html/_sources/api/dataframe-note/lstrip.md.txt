@@ -28,7 +28,7 @@ completely untouched. Same two policies as `strip()`:
 
 Everything else about how the accessor applies an operation — to every
 selected feature in one call, leaving null cells null, and reachable either
-through [`DataFrame::note()`](../dataframe/note.md) or by constructing
+through [`DataFrame::nt()`](../dataframe/nt.md) or by constructing
 `DataFrameNoteAccessor` directly against a mixed frame — is identical to
 [`strip()`](strip.md); see that page for the full explanation and worked
 examples of both.
@@ -59,7 +59,7 @@ auto catalog = DataFrame({
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 }, Thread(pluss::make_note({"p1", "p2", "p3", "p4"})));
 
-auto out = catalog.note().lstrip();
+auto out = catalog.nt().lstrip();
 std::cout << out;
 ```
 
@@ -92,7 +92,7 @@ auto codes = DataFrame({
     {"code", Thread(pluss::make_note({"[[[SKU-1001]]]", "((SKU-1002))", "SKU-1003"}))},
 });
 
-auto out2 = codes.note().lstrip("[(");
+auto out2 = codes.nt().lstrip("[(");
 std::cout << out2;
 ```
 

@@ -144,12 +144,12 @@ rather than treating the missing feature as all-`NULL`.
   this method's alignment step is built from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="log_returns.html">
+  <a class="prev-link" href="lt.html">
     <span class="label">Previous</span>
-    <span class="title">log_returns</span>
+    <span class="title">lt</span>
   </a>
-  <a class="next-link" href="resample.html">
+  <a class="next-link" href="ne.html">
     <span class="label">Next</span>
-    <span class="title">resample</span>
+    <span class="title">ne</span>
   </a>
 </div>

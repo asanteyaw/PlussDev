@@ -23,8 +23,8 @@ Reshapes long-format data into a wide summary table: one distinct value of
 column, and each cell holding `op` applied to every `value_feature` observation that
 shares that row's and column's key values.
 
-`pivot_table()` is closely related to [`group_by()`](group_by.md) — both aggregate
-`value_feature` per key combination — but `group_by()` keeps every key as its own row
+`pivot_table()` is closely related to [`group()`](group.md) — both aggregate
+`value_feature` per key combination — but `group()` keeps every key as its own row
 feature (a "long" result), while `pivot_table()` spreads one key out across columns (a
 "wide" result). Reach for `pivot_table()` specifically when you want that
 row/column cross-tabulation shape, for example to visualize or export a summary as a
@@ -47,12 +47,12 @@ Feature whose values are aggregated into each pivoted cell.
 **op** (`GroupOp`, default `GroupOp::Mean`)
 
 The aggregation applied within each `(case_feature, feature_feature)` cell — the same
-operation set as [`group_by()`](group_by.md)'s `GroupSpec::op`:
+operation set as [`group()`](group.md)'s `GroupSpec::op`:
 
 - `GroupOp::Count`: the number of observations in the cell, including any that are
   themselves null. Use this to answer "how many orders fell in this combination" rather
   than to summarize `value_feature`'s magnitude at all.
-- `GroupOp::Nunique`: the number of *distinct* `value_feature` values in the cell.
+- `GroupOp::Ndistinct`: the number of *distinct* `value_feature` values in the cell.
   Useful when `value_feature` is closer to a category or an ID than a quantity — for
   example, counting how many distinct `product` values a customer bought per city rather
   than summing an amount.
@@ -202,11 +202,11 @@ group (an "unassigned" bucket, for example).
   resulting cell — this is exactly the scenario `pivot_table()` exists for, as opposed to
   a plain reshape that would need every key pair to be unique already.
 - For a result that keeps every key as its own row feature instead of spreading one key
-  into columns, use [`group_by()`](group_by.md) directly.
+  into columns, use [`group()`](group.md) directly.
 
 ## See Also
 
-- [`DataFrame::group_by`](group_by.md): the long-format sibling of this reshape.
+- [`DataFrame::group`](group.md): the long-format sibling of this reshape.
 - [`DataFrame::pivot`](pivot.md): reshape without aggregation, for data that is already
   one row per `(case_feature, feature_feature)` pair.
 - [`DataFrame::fillnull`](fillnull.md): replace the `NULL` cells this method leaves for

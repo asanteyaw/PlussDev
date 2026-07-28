@@ -102,7 +102,7 @@ missing values, are unaffected either way.
 - Non-numeric features never appear in the result; text and time features are not
   compared as an error, they are simply absent from the returned `Thread`.
 - `min()` reports the smallest *value*, not the case it came from — pair it with
-  [`sort_values()`](sort_values.md) or a boolean mask built from
+  [`arrange()`](arrange.md) or a boolean mask built from
   [`filter()`](filter.md) if you also need the row that produced it.
 
 ## See Also

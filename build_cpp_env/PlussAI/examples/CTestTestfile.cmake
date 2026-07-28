@@ -7,3 +7,4 @@
 subdirs("NodeB")
 subdirs("NodeJ")
 subdirs("NodeK")
+subdirs("Ice")

@@ -219,9 +219,9 @@ value exceeds `88`.
   operand shapes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="group_by.html">
+  <a class="prev-link" href="group.html">
     <span class="label">Previous</span>
-    <span class="title">group_by</span>
+    <span class="title">group</span>
   </a>
   <a class="next-link" href="has.html">
     <span class="label">Next</span>

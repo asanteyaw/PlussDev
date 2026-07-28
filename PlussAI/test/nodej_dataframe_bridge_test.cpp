@@ -51,7 +51,7 @@ DataFrame make_mixed_frame() {
           1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
       {6},
       Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-  const Thread ts = Thread(epoch_nanos).cast(pluss::table::ThreadCastTarget::Timeline);
+  const Thread ts = Thread(epoch_nanos).cast().timeline();
   const Series y = x0.mul(0.75).add(2.0);
 
   return DataFrame({

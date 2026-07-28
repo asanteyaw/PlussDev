@@ -1,6 +1,6 @@
 # DataFrameNoteAccessor API Reference
 
-This page documents the public string-feature accessor returned by `DataFrame::note()`.
+This page documents the public string-feature accessor returned by `DataFrame::nt()`.
 
 ## Using This Reference
 

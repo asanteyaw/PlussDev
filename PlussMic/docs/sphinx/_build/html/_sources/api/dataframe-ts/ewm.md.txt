@@ -296,9 +296,9 @@ rejected rather than silently falling back to one of them.
   caller-supplied weight kernel instead of a geometric decay.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="div.html">
+  <a class="prev-link" href="eq.html">
     <span class="label">Previous</span>
-    <span class="title">div</span>
+    <span class="title">eq</span>
   </a>
   <a class="next-link" href="expanding.html">
     <span class="label">Next</span>

@@ -586,10 +586,10 @@ Thread aligned_compare_(const Thread& left,
 
   if ((lk == ThreadKind::Timeline || lk == ThreadKind::TimeIndex) &&
       (rk == ThreadKind::Timeline || rk == ThreadKind::TimeIndex)) {
-    const auto& lt = lk == ThreadKind::Timeline ? lhs.as_timeline()
-                                                : lhs.as_timeindex().timeline();
-    const auto& rt = rk == ThreadKind::Timeline ? rhs.as_timeline()
-                                                : rhs.as_timeindex().timeline();
+    const auto lt = lk == ThreadKind::Timeline ? lhs.as_timeline()
+                                               : lhs.as_timeindex().timeline();
+    const auto rt = rk == ThreadKind::Timeline ? rhs.as_timeline()
+                                               : rhs.as_timeindex().timeline();
     return carry_case_labels_for_alignment_(
         Thread(apply_compare_timeline_timeline(lt, rt, op),
                combine_validity_masks(lhs, rhs)),

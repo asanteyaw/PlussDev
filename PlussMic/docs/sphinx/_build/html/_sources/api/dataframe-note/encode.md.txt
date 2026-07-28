@@ -78,7 +78,7 @@ std::cout << payloads;
 Example 1. The default: `encode()` with no argument uses Base64.
 
 ```cpp
-auto out1 = payloads.note().encode();
+auto out1 = payloads.nt().encode();
 std::cout << out1;
 ```
 
@@ -104,7 +104,7 @@ short of a multiple of 3, so it gets a single `=`.
 Example 2. `"hex"`: two lowercase hex digits per input byte.
 
 ```cpp
-auto out2 = payloads.note().encode("hex");
+auto out2 = payloads.nt().encode("hex");
 std::cout << out2;
 ```
 
@@ -130,7 +130,7 @@ Example 3. `"url"`: percent-encode everything outside the unreserved set,
 using uppercase hex digits after the `%`.
 
 ```cpp
-auto out3 = payloads.note().encode("url");
+auto out3 = payloads.nt().encode("url");
 std::cout << out3;
 ```
 
@@ -158,7 +158,7 @@ Example 4. An unrecognized `encoding` argument throws immediately.
 
 ```cpp
 try {
-  auto bad = payloads.note().encode("base32");
+  auto bad = payloads.nt().encode("base32");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

@@ -18,8 +18,8 @@ number of individual scalar cells across the whole frame, not a row or column
 count on its own; a `10`-row, `4`-feature frame has a `length()` of `40`.
 
 ```{note} Not to be confused with DataFrameNoteAccessor::length()
-`.note().length()` is an entirely different method on a different class: a
-per-cell text-length accessor reached through the [`note()`](note.md) accessor,
+`.nt().length()` is an entirely different method on a different class: a
+per-cell text-length accessor reached through the [`nt()`](nt.md) accessor,
 returning one integer per case for a given text feature. `DataFrame::length()`
 (this page) is a single whole-frame scalar with no accessor involved.
 ```
@@ -66,7 +66,7 @@ confirm both), so `length()` reports `6 * 4 = 24` total cells — the same value
 - `length() == width() * height() == nfeatures() * ncases()` always; there is no
   separate stored count, it is computed fresh from the two dimensions each call.
 - Not related to [`DataFrameNoteAccessor::length()`](../dataframe-note/length.md)
-  (reached via `.note().length()`), which reports a per-case text length for one
+  (reached via `.nt().length()`), which reports a per-case text length for one
   `Note` feature rather than a single whole-frame total.
 - A frame with `0` cases or `0` features has `length() == 0`, even if the other
   dimension is non-zero.

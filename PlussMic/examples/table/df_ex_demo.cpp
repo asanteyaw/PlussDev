@@ -33,9 +33,10 @@ int main() {
    auto all_features = df.features();
    std::cout << "features() returns " << all_features.size() << " feature names\n";
    std::cout << "cell[0, Agency Code]: "
-             << df.case_study(pluss::table::pos(0), pluss::table::feature("Agency Code")).to_string() << "\n";
-   df.case_study(pluss::table::pos(0)).head();
-   df.case_study(pluss::table::pos(1, 5)).head();
+             << df.case_study(pluss::table::DataFrame::Case::at(0),
+                              pluss::table::DataFrame::Feat::name("Agency Code")).to_string() << "\n";
+   df.case_study(pluss::table::DataFrame::Case::at(0)).head();
+   df.case_study(pluss::table::DataFrame::Case::slice(1, 5)).head();
 
    // positional overload for quick loads
    auto raw_df = pluss::table::DataFrame::load_csv(

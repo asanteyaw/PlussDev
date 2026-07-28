@@ -84,7 +84,7 @@ int main() {
       {
           {"cases", "age", pluss::table::DataFrame::SummaryOp::Count},
           {"age_mean", "age", pluss::table::DataFrame::SummaryOp::Mean},
-          {"job_cardinality", "job", pluss::table::DataFrame::SummaryOp::Nunique},
+          {"job_cardinality", "job", pluss::table::DataFrame::SummaryOp::Ndistinct},
       },
       true);
 
@@ -94,9 +94,9 @@ int main() {
   auto numeric = df.features({"age", "balance", "duration"});
   std::cout << "\narithmetic: add/subtract/multiply/divide\n";
   numeric.add(1.0).head(5);
-  numeric.subtract(1.0).head(5);
-  numeric.multiply(2.0).head(5);
-  numeric.divide(2.0).head(5);
+  numeric.sub(1.0).head(5);
+  numeric.mul(2.0).head(5);
+  numeric.div(2.0).head(5);
 
   std::cout << "\nreverse arithmetic: rsub/rpow\n";
   numeric.rsub(100.0).head(5);
@@ -108,22 +108,18 @@ int main() {
   numeric.compare(numeric.add(1.0)).head(5);
 
   std::cout << "\narrange: single + multi-feature sort\n";
-  df.sort_values({"age"}).head(8);
-  df.sort_values({
+  df.arrange({"age"}).head(8);
+  df.arrange({
       {"age", true, true},
       {"duration", false, true},
   }).head(8);
 
   std::cout << "\ncast / astype\n";
   df.astype({{"age", pluss::codem::ScalarType::Float64}}).head(8);
-  df.cast({{
-      "age",
-      pluss::table::ThreadCastTarget::Note,
-      std::nullopt,
-  }}).head(8);
+  df.features({"age"}).cast().note().head(8);
 
   std::cout << "\nwindow / rolling\n";
-  numeric.rolling(
+  numeric.ts().rolling(
              {{
                  "age_roll_mean",
                  "age",
@@ -133,7 +129,7 @@ int main() {
              }},
              false)
       .head(8);
-  numeric.rolling(
+  numeric.ts().rolling(
              {{
                  "",
                  "duration",

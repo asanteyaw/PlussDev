@@ -1825,7 +1825,7 @@ std::shared_ptr<arrow::Array> series_thread_to_arrow_array(const pluss::table::T
       return finish_or_throw(builder, "Float64");
     }
     default:
-      return note_thread_to_arrow_string_array(thread.cast(pluss::table::ThreadCastTarget::Note));
+      return note_thread_to_arrow_string_array(thread.cast().note());
   }
 }
 
@@ -1870,7 +1870,7 @@ std::shared_ptr<arrow::Array> thread_to_arrow_array(const pluss::table::Thread& 
     case pluss::table::ThreadKind::TimeIndex:
       return timeindex_thread_to_arrow_array(thread);
     default:
-      return note_thread_to_arrow_string_array(thread.cast(pluss::table::ThreadCastTarget::Note));
+      return note_thread_to_arrow_string_array(thread.cast().note());
   }
 }
 
@@ -2717,7 +2717,7 @@ std::string thread_json_scalar_token(const pluss::table::Thread& thread,
     case pluss::table::ThreadKind::TimeIndex: {
       const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
       if (note == nullptr) {
-        const auto local = thread.cast(pluss::table::ThreadCastTarget::Note).as_note();
+        const auto local = thread.cast().note().as_note();
         return json_string_token(local.at(row));
       }
       return json_string_token(note->at(row));
@@ -2858,7 +2858,7 @@ void save_json(const pluss::table::DataFrame& frame,
       valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->to_vec<bool>();
     }
     if (columns[j].kind() != pluss::table::ThreadKind::Series) {
-      note_cache[j] = columns[j].cast(pluss::table::ThreadCastTarget::Note).as_note();
+      note_cache[j] = columns[j].cast().note().as_note();
     }
   }
 

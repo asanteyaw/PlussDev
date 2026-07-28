@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <p>Builds a frequency table for a single feature: one row per distinct value of
 <code class="docutils literal notranslate"><span class="pre">feature</span></code>, paired with how many cases carry that value, sorted from most frequent to
 least frequent (ties broken alphabetically by the value itself). It is a dedicated
-shortcut for the single most common <a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group_by</span></code></span></a> query — “how many of
+shortcut for the single most common <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group</span></code></span></a> query — “how many of
 each?” — without hand-writing a <code class="docutils literal notranslate"><span class="pre">GroupSpec</span></code> for a plain count.</p>
 </section>
 <section id="parameters">
@@ -220,7 +220,7 @@ output.</p>
 <ul class="simple">
 <li><p>The sort is always count-descending, value-ascending-on-ties — there is no
 parameter to reverse either ordering; pipe the result through
-<a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_values</span></code></span></a> afterward if you need a different order. A
+<a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange</span></code></span></a> afterward if you need a different order. A
 missing key is never alphabetized against real values for tie-breaking; it
 always sorts after every real value tied with it on count.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code> gives a missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value its own group in the count,
@@ -232,7 +232,7 @@ an arbitrary prefix of the unsorted data.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="group_by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group_by</span></code></span></a>: the general grouped-aggregation surface
+<li><p><a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a>: the general grouped-aggregation surface
 <code class="docutils literal notranslate"><span class="pre">count_by()</span></code> is a convenience shortcut for.</p></li>
 <li><p><a class="reference internal" href="bucketize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::bucketize</span></code></span></a>: often used just before <code class="docutils literal notranslate"><span class="pre">count_by()</span></code>, to
 tally how many cases fell into each engineered band.</p></li>

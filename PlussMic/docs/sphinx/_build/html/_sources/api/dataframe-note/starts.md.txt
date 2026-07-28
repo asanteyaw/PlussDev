@@ -53,7 +53,7 @@ auto catalog = DataFrame({
 });
 std::cout << catalog;
 
-auto out = catalog.note().starts("SKU-");
+auto out = catalog.nt().starts("SKU-");
 std::cout << out;
 ```
 
@@ -95,7 +95,7 @@ Example 2. Chain `starts()` directly into `DataFrame::filter()` to keep only
 the matching rows — the most common real use of a prefix check.
 
 ```cpp
-auto skus_only = catalog.filter(catalog.note().starts("SKU-").features("code"));
+auto skus_only = catalog.filter(catalog.nt().starts("SKU-").features("code"));
 std::cout << skus_only;
 ```
 
@@ -117,7 +117,7 @@ with `"SKU-"`. Rows with `false` or `NULL` in the boolean mask are dropped by
 Example 3. An empty prefix matches every valid cell, regardless of content.
 
 ```cpp
-auto trivial = catalog.note().starts("");
+auto trivial = catalog.nt().starts("");
 std::cout << trivial;
 ```
 

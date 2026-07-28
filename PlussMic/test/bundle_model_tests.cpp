@@ -219,7 +219,7 @@ void test_slot_methods() {
   expect(to_f64(dup_ids.mean().at(0)) == 2.0, "Slot::mean should reduce through Stream");
   expect(to_i64(dup_ids.min().at(0)) == 1, "Slot::min should reduce through Stream");
   expect(to_i64(dup_ids.max().at(0)) == 3, "Slot::max should reduce through Stream");
-  const auto cast_note = dup_ids.cast(pluss::table::ThreadCastTarget::Note);
+  const auto cast_note = dup_ids.cast().note();
   expect(is_note(cast_note.at(0)), "Slot::cast(Note) should convert payload");
 
   const Slot hetero({

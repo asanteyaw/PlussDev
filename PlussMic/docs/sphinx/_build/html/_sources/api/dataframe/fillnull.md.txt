@@ -30,7 +30,7 @@ DataFrame::fillnull(std::initializer_list<FillSpec> specs) const -> DataFrame
 
 Returns a copy of the frame with missing values replaced by a fill value, and is the
 main non-mutating entry point in the missing-data cleanup path — typically applied right
-before a summary (`describe()`, `corr()`), a `group_by`, or an export (`save_csv`,
+before a summary (`describe()`, `corr()`), a grouped `agg()` workflow, or an export (`save_csv`,
 `save_excel`), all of which either skip nulls silently or fail outright depending on the
 destination format.
 

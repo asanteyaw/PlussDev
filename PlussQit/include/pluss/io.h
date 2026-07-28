@@ -459,7 +459,7 @@ inline pluss::Series read_series_payload_(BinaryReader& reader, const LoadOption
   const auto strides = contiguous_strides_(sizes);
   pluss::Series out = pluss::Series::undefined();
   try {
-    out = pluss::from_buffer(raw, sizes, strides, deleter, dtype);
+    out = pluss::from_host(raw, sizes, strides, deleter, dtype);
   } catch (...) {
     delete[] raw;
     throw;

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -65,7 +65,7 @@ is a bag of characters to peel off, not a string to match.</p></li>
 </ul>
 <p>Every method on <code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor</span></code> — <code class="docutils literal notranslate"><span class="pre">strip()</span></code> included — applies to
 <strong>every feature the accessor was built with</strong>, not just one. When reached the
-ordinary way, through <a class="reference internal" href="../dataframe/note.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::note()</span></code></span></a>, that means
+ordinary way, through <a class="reference internal" href="../dataframe/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::nt()</span></code></span></a>, that means
 every feature on the (already all-<code class="docutils literal notranslate"><span class="pre">Note</span></code>) frame the accessor was constructed
 from. A cell that is already null on the underlying <code class="docutils literal notranslate"><span class="pre">Thread</span></code> stays null;
 <code class="docutils literal notranslate"><span class="pre">strip()</span></code> never turns a missing cell into an empty string or vice versa.</p>
@@ -73,7 +73,7 @@ from. A cell that is already null on the underlying <code class="docutils litera
 <p class="admonition-title">Tip</p>
 <p>A second way to reach the accessor: construct it directly
 <code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor</span></code>’s constructor — <code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor(DataFrame</span> <span class="pre">frame,</span> <span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">features)</span></code> — is public. Besides the usual
-<code class="docutils literal notranslate"><span class="pre">frame.features({&quot;city&quot;}).note()</span></code> route (which requires the <em>entire</em> frame
+<code class="docutils literal notranslate"><span class="pre">frame.features({&quot;city&quot;}).nt()</span></code> route (which requires the <em>entire</em> frame
 to already be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind), you can construct the accessor directly with an
 explicit feature list against a frame that still has other, non-text columns
 mixed in — see Example 3. Every other accessor method inherits this same
@@ -107,7 +107,7 @@ left completely unchanged.</p>
 <span class="w">        </span><span class="s">&quot; Wireless Mouse &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;USB-C Cable</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;  Mechanical Keyboard&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Clearance Bin&quot;</span><span class="p">}))},</span>
 <span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p4&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">strip</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">strip</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -124,7 +124,7 @@ p4   | NULL      Clearance Bin
 [4 cs x 2 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">catalog</span></code> is already entirely <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">sku</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code>), so <code class="docutils literal notranslate"><span class="pre">catalog.note()</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">catalog</span></code> is already entirely <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">sku</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code>), so <code class="docutils literal notranslate"><span class="pre">catalog.nt()</span></code>
 works directly with no <code class="docutils literal notranslate"><span class="pre">.features()</span></code> narrowing needed. Both columns are
 stripped in the same call: <code class="docutils literal notranslate"><span class="pre">sku</span></code>’s leading spaces, a trailing newline, a
 leading tab, and trailing spaces are all removed, and <code class="docutils literal notranslate"><span class="pre">name</span></code>’s leading/trailing
@@ -141,7 +141,7 @@ characters that never appear together as the literal text <code class="docutils 
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">codes</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">stripped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;[]()&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stripped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;[]()&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stripped</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -178,7 +178,7 @@ and <code class="docutils literal notranslate"><span class="pre">]]]</span></cod
 reaches <code class="docutils literal notranslate"><span class="pre">S</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>. Row <code class="docutils literal notranslate"><span class="pre">2</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;SKU-1003&quot;</span></code>) has no bracket characters on either
 edge at all, so it’s returned unchanged.</p>
 <p>Example 3. Construct the accessor directly against a mixed frame, selecting
-just one text feature — bypassing <code class="docutils literal notranslate"><span class="pre">note()</span></code>’s “every column must already be
+just one text feature — bypassing <code class="docutils literal notranslate"><span class="pre">nt()</span></code>’s “every column must already be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>” requirement entirely — then see the same direct construction throw
 when the named feature doesn’t exist.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -216,10 +216,10 @@ when the named feature doesn’t exist.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::note().strip: unknown feature &#39;price&#39;
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::nt().strip: unknown feature &#39;price&#39;
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">mixed.note()</span></code> directly would have thrown immediately, since <code class="docutils literal notranslate"><span class="pre">mixed</span></code> still has
+<p><code class="docutils literal notranslate"><span class="pre">mixed.nt()</span></code> directly would have thrown immediately, since <code class="docutils literal notranslate"><span class="pre">mixed</span></code> still has
 a <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature (<code class="docutils literal notranslate"><span class="pre">id</span></code>). Constructing <code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor(mixed,</span> <span class="pre">{&quot;city&quot;})</span></code> explicitly sidesteps that check: only <code class="docutils literal notranslate"><span class="pre">city</span></code> is touched, <code class="docutils literal notranslate"><span class="pre">id</span></code>
 passes through completely untouched, and the frame never needs to be narrowed
 with <a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first. Naming a feature that
@@ -236,7 +236,7 @@ validation.</p>
 for the one-sided versions of everything shown here.</p></li>
 <li><p>Every accessor method — not just <code class="docutils literal notranslate"><span class="pre">strip()</span></code> — applies to every feature the
 accessor was built with, whether that’s “every <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature on the frame”
-(via <code class="docutils literal notranslate"><span class="pre">.note()</span></code>) or an explicit subset (via direct construction, Example 3).</p></li>
+(via <code class="docutils literal notranslate"><span class="pre">.nt()</span></code>) or an explicit subset (via direct construction, Example 3).</p></li>
 <li><p>A null cell on input stays null on output; <code class="docutils literal notranslate"><span class="pre">strip()</span></code> never fabricates or
 discards nullity.</p></li>
 </ul>
@@ -246,7 +246,7 @@ discards nullity.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::lstrip</span></code></span></a> / <a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::rstrip</span></code></span></a>:
 the one-sided equivalents.</p></li>
-<li><p><a class="reference internal" href="../dataframe/note.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::note</span></code></span></a>: the usual entry point into this
+<li><p><a class="reference internal" href="../dataframe/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::nt</span></code></span></a>: the usual entry point into this
 accessor, and the <code class="docutils literal notranslate"><span class="pre">features()</span></code>-first pattern this page’s Example 3
 deliberately bypasses.</p></li>
 <li><p><a class="reference internal" href="pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::pad</span></code></span></a>: the inverse operation — add

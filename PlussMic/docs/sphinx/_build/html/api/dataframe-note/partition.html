@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -61,7 +61,7 @@ exactly three columns regardless of the input.</p>
 Like <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>, <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>, <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>,
 and <a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">indicate()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">partition()</span></code> operates on exactly one
 column — calling it through a multi-feature accessor throws
-<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::note().partition</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::nt().partition</span> <span class="pre">requires</span> <span class="pre">one</span> <span class="pre">feature&quot;</span></code>.</p>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -107,7 +107,7 @@ and the genuinely-invalid row’s <code class="docutils literal notranslate"><sp
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">entries</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;entry&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;entry&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -146,7 +146,7 @@ itself is valid. Row 2 (<code class="docutils literal notranslate"><span class="
 Row 3 was invalid on input, so all three of its output columns are
 genuinely <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 <p>Example 2. A custom column prefix.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;entry&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;kv&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;entry&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;kv&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -168,7 +168,7 @@ genuinely <code class="docutils literal notranslate"><span class="pre">NULL</spa
 default <code class="docutils literal notranslate"><span class="pre">part_0</span></code>/<code class="docutils literal notranslate"><span class="pre">part_1</span></code>/<code class="docutils literal notranslate"><span class="pre">part_2</span></code>.</p>
 <p>Example 3. An empty separator throws immediately.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;entry&quot;</span><span class="p">}).</span><span class="n">note</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;entry&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>

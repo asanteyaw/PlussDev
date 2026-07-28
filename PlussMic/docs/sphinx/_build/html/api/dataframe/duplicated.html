@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,37 +37,35 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c191fc9fba2e -->
 <section id="dataframe-duplicated">
 <h1>DataFrame::duplicated<a class="headerlink" href="#dataframe-duplicated" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">duplicated</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">duplicated</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Builds a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> mask, one entry per case, marking which rows are duplicates of an
-earlier or later row when compared across the selected features. Rows are grouped by
-the concatenated string value of every selected feature (missing cells compare as a
-shared <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> placeholder, so two rows both missing the same feature are still
+earlier or later row when compared across every feature currently on the frame. Rows
+are grouped by the concatenated string value of every feature (missing cells compare
+as a shared <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> placeholder, so two rows both missing the same feature are still
 considered a match on that feature); any group with more than one row contributes
 <code class="docutils literal notranslate"><span class="pre">true</span></code> entries according to <code class="docutils literal notranslate"><span class="pre">keep_first</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_last</span></code>. This returns the mask itself —
 for the frame with those rows already removed, see <a class="reference internal" href="drop_duplicates.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code></span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code> carries no feature selector of its own: it always compares using every
+feature on the current frame as the composite key, so narrow first with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> when only some features should define a “duplicate” — for
+example <code class="docutils literal notranslate"><span class="pre">orders.features({&quot;city&quot;,</span> <span class="pre">&quot;product&quot;}).duplicated()</span></code>, ignoring an <code class="docutils literal notranslate"><span class="pre">order_id</span></code>
+column that is unique per row by design.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keep_first</span></code> and <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> cannot both be <code class="docutils literal notranslate"><span class="pre">true</span></code> at the same time — asking to keep
 both the first and last occurrence exempt from <code class="docutils literal notranslate"><span class="pre">true</span></code> is ambiguous when a group has
 three or more rows, so the two flags are mutually exclusive.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
-<p>Which features to compare when deciding whether two rows match. An empty range (the
-default) compares <strong>every</strong> column in the frame — including any unique identifier
-column, which means no two rows will ever match if such a column is present. Pass the
-specific feature names that define a “duplicate” for your use case (for example, just
-<code class="docutils literal notranslate"><span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;product&quot;}</span></code>, ignoring an <code class="docutils literal notranslate"><span class="pre">order_id</span></code> column that is unique per row by design).</p>
 <p><strong>keep_first</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the first row encountered in each duplicate group is left <code class="docutils literal notranslate"><span class="pre">false</span></code> (not
 flagged), and every later row in that group is flagged <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
@@ -99,7 +97,7 @@ default policy.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">dupes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">duplicated</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dupes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">}).</span><span class="n">duplicated</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dupes</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -117,11 +115,11 @@ Name: duplicated, ptype: Series
 <p>Cases <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, and <code class="docutils literal notranslate"><span class="pre">3</span></code> all share <code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Laptop)</span></code>; case <code class="docutils literal notranslate"><span class="pre">0</span></code> is the first occurrence
 and stays <code class="docutils literal notranslate"><span class="pre">false</span></code>, while <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> are flagged. Cases <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">5</span></code> share
 <code class="docutils literal notranslate"><span class="pre">(Tema,</span> <span class="pre">Phone)</span></code>; case <code class="docutils literal notranslate"><span class="pre">2</span></code> stays <code class="docutils literal notranslate"><span class="pre">false</span></code>, case <code class="docutils literal notranslate"><span class="pre">5</span></code> is flagged. Case <code class="docutils literal notranslate"><span class="pre">4</span></code> (<code class="docutils literal notranslate"><span class="pre">Kumasi,</span> <span class="pre">Laptop</span></code>) has no match anywhere else in the frame, so it is never flagged. <code class="docutils literal notranslate"><span class="pre">order_id</span></code>
-was deliberately left out of <code class="docutils literal notranslate"><span class="pre">features</span></code> — including it would make every row unique
-and nothing would ever be flagged.</p>
+was deliberately narrowed out with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first — including it
+would make every row unique and nothing would ever be flagged.</p>
 <p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">keep_last</span> <span class="pre">=</span> <span class="pre">true</span></code> to exempt the <em>last</em> occurrence in each group
 instead of the first.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dupes_keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">duplicated</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dupes_keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">}).</span><span class="n">duplicated</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dupes_keep_last</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -142,7 +140,7 @@ now flagged and case <code class="docutils literal notranslate"><span class="pre
 flagged and case <code class="docutils literal notranslate"><span class="pre">5</span></code> (the last one) is exempt.</p>
 <p>Example 3. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> for both flags to mark every row in a duplicate group,
 including what would otherwise be the exempted first or last occurrence.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dupes_all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">duplicated</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dupes_all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">}).</span><span class="n">duplicated</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dupes_all</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -169,23 +167,29 @@ member) is still <code class="docutils literal notranslate"><span class="pre">fa
 <li><p><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>’s result is always named <code class="docutils literal notranslate"><span class="pre">&quot;duplicated&quot;</span></code> and labeled by case index,
 and prints like a small labeled <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not like a row sliced from the source
 frame.</p></li>
-<li><p>Grouping is done by comparing string representations of the selected features’
-values, so it works uniformly across numeric, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
+<li><p>Grouping is done by comparing string representations of every feature currently on
+the frame, so it works uniformly across numeric, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
 features in the same call.</p></li>
 <li><p>Missing cells compare as a shared placeholder, so two rows that are both missing the
-same selected feature can still be grouped as duplicates of each other on that basis.</p></li>
+same feature can still be grouped as duplicates of each other on that basis.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">keep_first</span> <span class="pre">=</span> <span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">keep_last</span> <span class="pre">=</span> <span class="pre">true</span></code> together is a validation error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code> has no feature selector of its own — narrow with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first to compare on a subset of columns.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="drop_duplicates.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::drop_duplicates</span></code></span></a>: removes the flagged rows instead
-of just marking them, sharing the exact same parameters.</p></li>
+of just marking them, sharing the same <code class="docutils literal notranslate"><span class="pre">keep_first</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> policy — and,
+unlike <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>, also accepts a <code class="docutils literal notranslate"><span class="pre">features</span></code> selector directly rather than
+requiring <code class="docutils literal notranslate"><span class="pre">.features(...)</span></code> narrowing first.</p></li>
 <li><p><a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::repeated</span></code></span></a>: a convenience shorthand equivalent to
-<code class="docutils literal notranslate"><span class="pre">duplicated(features,</span> <span class="pre">false,</span> <span class="pre">false)</span></code> — every occurrence in a duplicate group flagged.</p></li>
+<code class="docutils literal notranslate"><span class="pre">duplicated(false,</span> <span class="pre">false)</span></code> — every occurrence in a duplicate group flagged.</p></li>
 <li><p><a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ndistinct</span></code></span></a>: counts unique combinations instead of
 flagging individual rows.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature(s) that
+define a “duplicate” before calling <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dtypes.html">

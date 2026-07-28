@@ -27,7 +27,7 @@ look like joined strings, but operations use the structured case-label payloads.
 
 `DataFrame::label().sort(options: SortLabelOptions) -> DataFrame`
 
-`DataFrame::group_by(keys: LabelGroup, specs: RangeView<GroupSpec>, dropnull_keys: bool = true, render: bool = false) -> DataFrameView`
+`DataFrame::group().by(keys: LabelGroup).agg(specs) -> DataFrame`
 
 `DataFrame::label().rename(renames: RangeView<LabelRename>) -> DataFrame`
 
@@ -89,7 +89,7 @@ look like joined strings, but operations use the structured case-label payloads.
 - A hierarchical case axis is typed. Numeric case labels remain numeric, text case labels remain `Note`, and timeline case labels remain temporal.
 - `features(...)`, `select(...)`, `drop(...)`, transforms, and feature reordering preserve case-label metadata.
 - `case_study(CasePick)` supports partial-label and full-key lookup.
-- `group_by(LabelGroup{...})` groups by case labels without requiring those labels to exist as ordinary features.
+- `group().by(LabelGroup{...}).agg(...)` groups by case labels without requiring those labels to exist as ordinary features.
 - `unstack(...)` rejects duplicate output cells. Aggregate first when multiple rows map to the same output cell.
 - `stack(...)` moves feature names into the case hierarchy and preserves homogeneous typed values.
 
@@ -147,8 +147,8 @@ std::vector<DataFrame::GroupSpec> specs{
     {"total_sales", "sales", DataFrame::GroupOp::Sum},
     {"n", "", DataFrame::GroupOp::Count},
 };
-auto out = static_cast<DataFrame>(
-    indexed.group_by(DataFrame::LabelGroup{.caselbl = "region"}, specs));
+auto out =
+    indexed.group().by(DataFrame::LabelGroup{.label = "region"}).agg(specs);
 ```
 
 Expected output:

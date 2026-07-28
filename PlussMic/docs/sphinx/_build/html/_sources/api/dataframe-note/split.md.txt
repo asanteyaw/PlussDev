@@ -36,7 +36,7 @@ delimiter semantics:
 Like [`findall()`](findall.md), [`extract()`](extract.md), [`partition()`](partition.md),
 and [`indicate()`](indicate.md), `split()` operates on exactly one column —
 calling it through a multi-feature accessor throws
-`"DataFrame::note().split requires one feature"`.
+`"DataFrame::nt().split requires one feature"`.
 ```
 
 Both overloads produce ragged results the same way `findall()` does: a row
@@ -101,7 +101,7 @@ auto paths = DataFrame({
 });
 std::cout << paths;
 
-auto out1 = paths.features({"path"}).note().split("/");
+auto out1 = paths.features({"path"}).nt().split("/");
 std::cout << out1;
 ```
 
@@ -141,7 +141,7 @@ Example 2. `limit` caps the number of splits — the remainder after the
 limit is reached stays joined together in the last column, not dropped.
 
 ```cpp
-auto out2 = paths.features({"path"}).note().split("/", 1);
+auto out2 = paths.features({"path"}).nt().split("/", 1);
 std::cout << out2;
 ```
 
@@ -174,7 +174,7 @@ auto rows = DataFrame({
 });
 std::cout << rows;
 
-auto out3 = rows.features({"csv"}).note().split(
+auto out3 = rows.features({"csv"}).nt().split(
     R"(\s*,\s*)", {.regex = true, .prefix = "field"});
 std::cout << out3;
 ```
@@ -224,10 +224,10 @@ auto mixed = DataFrame({
 });
 std::cout << mixed;
 
-auto via_overload1 = mixed.features({"path"}).note().split("/");
+auto via_overload1 = mixed.features({"path"}).nt().split("/");
 std::cout << via_overload1;
 
-auto via_overload2 = mixed.features({"path"}).note().split("/", TextOptions{});
+auto via_overload2 = mixed.features({"path"}).nt().split("/", TextOptions{});
 std::cout << via_overload2;
 ```
 

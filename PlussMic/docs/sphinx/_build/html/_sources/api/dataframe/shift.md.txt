@@ -4,25 +4,27 @@
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 DataFrame::shift(std::int64_t periods = 1) const -> DataFrame
-DataFrame::shift(pluss::RangeView<std::string_view> features, std::int64_t periods = 1) const -> DataFrame
 ```
 
 ## What It Does
 
-Shifts each selected feature's values down (or up) by `periods` positions along the
-case axis — case `i`'s new value becomes whatever was at case `i - periods` before
-the shift, with `NULL` filling in the positions that have no source row to pull
-from. This is the standard "lag/lead" primitive: a positive `periods` produces a lag
-(each row now shows an earlier row's value; the first `periods` rows become `NULL`),
-a negative `periods` produces a lead (each row shows a later row's value; the last
-`|periods|` rows become `NULL`).
+Shifts every feature's values down (or up) by `periods` positions along the case axis
+— case `i`'s new value becomes whatever was at case `i - periods` before the shift,
+with `NULL` filling in the positions that have no source row to pull from. This is
+the standard "lag/lead" primitive: a positive `periods` produces a lag (each row now
+shows an earlier row's value; the first `periods` rows become `NULL`), a negative
+`periods` produces a lead (each row shows a later row's value; the last `|periods|`
+rows become `NULL`).
 
-The single-argument overload shifts every feature; the range overload restricts the
-shift to the named `features`, leaving every other feature completely untouched.
+`shift()` carries no feature selector of its own: it always shifts every feature on
+the current frame. Narrow to one or a few features first with
+[`features()`](features.md) when only some columns should shift — recombine with
+[`update()`](update.md) afterward if the untouched features need to survive alongside
+the shifted result.
 
 ## Parameters
 
@@ -33,21 +35,16 @@ case `i` becomes case `i - periods`'s old value, and the first `periods` rows be
 `NULL`. Negative values move values upward (lead), with `NULL` filling the last
 `|periods|` rows instead.
 
-**features** (`pluss::RangeView<std::string_view>`)
-
-Which features to shift. Only present on the range overload; every feature not
-listed here is left completely unchanged. Omitting this argument entirely (the
-single-argument overload) shifts every feature.
-
 ## Returns
 
 `DataFrame`
-    A new frame, same shape as the source, with the selected feature(s)' values
-    shifted and `NULL`-padded at the vacated end.
+    A new frame, same shape as the (possibly `features()`-narrowed) source, with every
+    feature's values shifted and `NULL`-padded at the vacated end.
 
 ## Examples
 
-Example 1. Shift one selected feature, leaving the rest of the frame untouched.
+Example 1. Shift one selected feature, then merge it back so the rest of the frame is
+untouched.
 
 ```cpp
 using namespace pluss::table;
@@ -74,11 +71,27 @@ std::cout << orders;
 ```
 
 ```cpp
-auto shifted_sales = orders.shift({"sales"}, 2);
+auto shifted_sales_only = orders.features({"sales"}).shift(2);
+std::cout << shifted_sales_only;
+
+auto shifted_sales = orders.update(shifted_sales_only);
 std::cout << shifted_sales;
 ```
 
-### Output (after)
+### Output (narrowed, shifted-only result)
+
+```text
+===========
+     | sales
+-----------
+0    | NULL 
+1    | NULL 
+2    | 100  
+-----------
+[3 cs x 1 feat]
+```
+
+### Output (merged back into the full frame)
 
 ```text
 ==========================
@@ -93,7 +106,8 @@ std::cout << shifted_sales;
 
 Only `sales` moved: case `2` now shows case `0`'s old value (`100`), and cases `0`
 and `1` — which have no source row two positions back — become `NULL`. `id` and
-`city` are completely unaffected.
+`city` were never part of the narrowed frame `shift()` ran against, so
+[`update()`](update.md) leaves them exactly as they were.
 
 Example 2. Shift every feature by the same amount.
 
@@ -150,6 +164,9 @@ instead of the start.
   axis stays exactly as it was.
 - Shifting a `Note` feature fills the vacated positions with a missing (`NULL`)
   text value, the same missing-value convention used across every other kind.
+- `shift()` has no feature selector of its own — narrow with
+  [`features()`](features.md) first to shift a subset, and recombine with
+  [`update()`](update.md) to preserve the untouched features (Example 1).
 
 ## See Also
 
@@ -159,6 +176,8 @@ instead of the start.
   running computations, rather than a plain positional shift.
 - [`DataFrame::fillnull`](fillnull.md): resolve the `NULL`s a shift introduces, if a
   gap at the edge should not appear at all.
+- [`DataFrame::features`](features.md), [`DataFrame::update`](update.md): narrow to a
+  feature subset before shifting, then merge the result back into the full frame.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="shape.html">

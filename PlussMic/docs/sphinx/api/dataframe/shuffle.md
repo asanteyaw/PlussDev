@@ -65,7 +65,7 @@ std::cout << orders;
 ```cpp
 auto shuffled = orders.shuffle(42);
 std::cout << shuffled.ncases() << "\n";
-std::cout << shuffled.sort_values({"id"}).equals(orders) << "\n";
+std::cout << shuffled.arrange({"id"}).equals(orders) << "\n";
 ```
 
 ### Output

@@ -1,5 +1,4 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: dc2f0967b7c8 -->
 
 # DataFrame::all
 
@@ -8,30 +7,25 @@
 ## Signatures
 
 ```cpp
-DataFrame::all(pluss::RangeView<std::string_view> features = {}, bool skipnull = true) const -> Thread
-DataFrame::all(Axis axis, pluss::RangeView<std::string_view> features = {}, bool skipnull = true) const -> Thread
+DataFrame::all(bool skipnull = true) const -> Thread
+DataFrame::all(Axis axis, bool skipnull = true) const -> Thread
 ```
 
 ## What It Does
 
-Reports whether **every** value is `true` along the requested axis, over a set of
-`Bool` `Series` features — the counterpart to [`any()`](any.md), which only requires
-one. Every feature it reduces over must already be a `Bool` `Series`; if `features` is
-left empty, it defaults to *every* column in the frame, so a frame that mixes boolean
-flags with other feature types must pass `features` explicitly to select only the
-boolean ones.
+Reports whether **every** value is `true` along the requested axis, over every `Bool`
+`Series` feature currently on the frame — the counterpart to [`any()`](any.md), which
+only requires one. Every feature it reduces over must already be a `Bool` `Series`.
+`all()` itself carries no feature selector: it always reduces over the *entire*
+current frame, so a frame that mixes boolean flags with other feature types must be
+narrowed down first with [`features()`](features.md) — `checks.features({"in_stock",
+"paid"}).all()`, not a `features` argument on `all()` itself.
 
 The two overloads differ only in whether you supply an axis: the short overload always
 reduces `Axis::Case` (down each feature's cases); the longer overload lets you choose
 `Axis::Feature` instead (across each row's selected features).
 
 ## Parameters
-
-**features** (`pluss::RangeView<std::string_view>`, default `{}`)
-
-Which `Bool` `Series` features to reduce over. An empty range (the default) selects
-every column in the frame — which only works if every column actually is a `Bool`
-`Series`; otherwise, pass the specific boolean feature names you want.
 
 **axis** (`Axis`, default `Axis::Case` when omitted)
 
@@ -71,7 +65,7 @@ auto checks = DataFrame({
     {"paid",     Thread(pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool))},
 });
 
-auto always_true = checks.all({"in_stock", "paid"});
+auto always_true = checks.features({"in_stock", "paid"}).all();
 std::cout << always_true;
 ```
 
@@ -84,15 +78,16 @@ ptype: Series
 ```
 
 Both flags have at least one `false` case (`in_stock` at cases `2` and `4`; `paid` at
-cases `1`, `2`, and `4`), so both come back `false`. `order_id` was deliberately left
-out of `features` — passing it would fail, because `all()` requires every selected
-feature to already be a `Bool` `Series`.
+cases `1`, `2`, and `4`), so both come back `false`. `order_id` was deliberately
+narrowed out with [`features()`](features.md) first — calling `all()` directly on
+`checks` (all three columns) would fail, because `all()` requires every feature on
+the current frame to already be a `Bool` `Series`.
 
 Example 2. Use `Axis::Feature` to ask, per row, whether *both* flags are set — a
 "ready to ship" eligibility gate.
 
 ```cpp
-auto ready_to_ship = checks.all(Axis::Feature, {"in_stock", "paid"});
+auto ready_to_ship = checks.features({"in_stock", "paid"}).all(Axis::Feature);
 std::cout << ready_to_ship;
 ```
 
@@ -123,7 +118,7 @@ auto flags = DataFrame({
 auto lenient = flags.all();
 std::cout << lenient;
 
-auto strict = flags.all({}, false);
+auto strict = flags.all(false);
 std::cout << strict;
 ```
 
@@ -148,12 +143,12 @@ missing cell.
 - `all()`'s result is labeled by feature name (`Axis::Case`) or by case index
   (`Axis::Feature`), and prints like a small labeled `Series`, not like a row sliced
   from the source frame.
-- Every selected feature must already be a `Bool` `Series` — pass `features`
-  explicitly whenever the frame contains non-boolean columns.
+- Every feature on the current frame must already be a `Bool` `Series` — narrow with
+  [`features()`](features.md) first whenever the frame contains non-boolean columns.
 - A missing value never makes an `all()` result `false` by itself; it can only make
   the result `NULL` (under `skipnull = false`) or be silently excluded (under
   `skipnull = true`).
-- An empty selection (a feature with zero cases, or `features` matching nothing) is a
+- An empty selection (a frame with zero cases, or narrowed to zero features) is a
   validation error, not a vacuously-`true` result.
 
 ## See Also
@@ -162,6 +157,8 @@ missing cell.
   instead of every one, sharing the same parameter shape.
 - [`DataFrame::count`](count.md): counts non-missing cells instead of testing
   truthiness.
+- [`DataFrame::features`](features.md): narrow the frame to the boolean feature(s)
+  `all()` should reduce over.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="align.html">

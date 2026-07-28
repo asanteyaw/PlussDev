@@ -43,7 +43,7 @@ DataFrame make_frame() {
           1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
       {6},
       Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-  const Thread ts = Thread(epoch_nanos).cast(pluss::table::ThreadCastTarget::Timeline);
+  const Thread ts = Thread(epoch_nanos).cast().timeline();
   const Series y = x0.mul(2.0).sub(x1.mul(0.5)).add(1.0);
   const Series w = pluss::make_series(std::vector<double>{1.0, 1.0, 0.8, 1.2, 1.0, 0.9}, {6}, f64());
 

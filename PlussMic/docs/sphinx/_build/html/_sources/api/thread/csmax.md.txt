@@ -141,7 +141,7 @@ Thread::csmax on an all-null Thread
   you want the value itself.
 - Ties keep the first occurrence.
 - Works on every payload kind, since row comparison is delegated to the same
-  logic [`sort_values()`](sort_values.md) uses.
+  logic [`arrange()`](arrange.md) uses.
 - An empty thread throws `"Thread::csmax on an empty Thread"`; a thread with no
   observed values throws `"Thread::csmax on an all-null Thread"`.
 

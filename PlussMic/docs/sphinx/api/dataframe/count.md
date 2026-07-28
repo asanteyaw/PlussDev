@@ -169,8 +169,8 @@ from the result entirely rather than count it.
     <span class="label">Previous</span>
     <span class="title">corr_with</span>
   </a>
-  <a class="next-link" href="count_by.html">
+  <a class="next-link" href="covar.html">
     <span class="label">Next</span>
-    <span class="title">count_by</span>
+    <span class="title">covar</span>
   </a>
 </div>

@@ -78,7 +78,7 @@ std::cout << orders;
 ```cpp
 auto reshuffled = orders.reshuffle(Axis::Case, 42);
 std::cout << reshuffled.ncases() << "\n";
-std::cout << reshuffled.sort_values({"id"}).equals(orders) << "\n";
+std::cout << reshuffled.arrange({"id"}).equals(orders) << "\n";
 ```
 
 ### Output

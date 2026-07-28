@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,6 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: cf5b11fecad9 -->
 <section id="dataframe-corr">
 <h1>DataFrame::corr<a class="headerlink" href="#dataframe-corr" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
@@ -46,20 +45,21 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">corr</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
 
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">corr</span><span class="p">(</span><span class="n">CorrMethod</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">corr</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
-
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">corr</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="n">CorrMethod</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameView</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a correlation matrix across the frame’s numeric features and returns it as a
-square <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>: one row and one column per participating feature, with cell
-<code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> holding the correlation between feature <code class="docutils literal notranslate"><span class="pre">i</span></code> and feature <code class="docutils literal notranslate"><span class="pre">j</span></code>. The diagonal is
-always <code class="docutils literal notranslate"><span class="pre">1</span></code> (every feature correlates perfectly with itself), and the matrix is symmetric
-— <code class="docutils literal notranslate"><span class="pre">corr(i,</span> <span class="pre">j)</span> <span class="pre">==</span> <span class="pre">corr(j,</span> <span class="pre">i)</span></code>.</p>
+<p>Computes a correlation matrix across every numeric feature currently on the frame and
+returns it as a square <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>: one row and one column per participating
+feature, with cell <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> holding the correlation between feature <code class="docutils literal notranslate"><span class="pre">i</span></code> and feature
+<code class="docutils literal notranslate"><span class="pre">j</span></code>. The diagonal is always <code class="docutils literal notranslate"><span class="pre">1</span></code> (every feature correlates perfectly with itself), and
+the matrix is symmetric — <code class="docutils literal notranslate"><span class="pre">corr(i,</span> <span class="pre">j)</span> <span class="pre">==</span> <span class="pre">corr(j,</span> <span class="pre">i)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">corr()</span></code> carries no feature selector of its own: it always correlates every numeric
+feature on the current frame. On a wide frame, where the full matrix would be large
+and mostly uninteresting, narrow to the columns you actually care about first with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">corr_base.features({&quot;x&quot;,</span> <span class="pre">&quot;z&quot;}).corr()</span></code> — rather than
+computing the full N×N matrix and slicing it down afterward.</p>
 <p><code class="docutils literal notranslate"><span class="pre">corr()</span></code> is naturally the next step after <a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">describe()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">describe()</span></code> tells
 you what each feature looks like in isolation, <code class="docutils literal notranslate"><span class="pre">corr()</span></code> tells you how features move
 together — useful for spotting redundant features before modeling, or for a quick check
@@ -85,11 +85,6 @@ is less sensitive to outliers.</p></li>
 more robust than Spearman on small samples at the cost of being more expensive to
 compute.</p></li>
 </ul>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, optional)</p>
-<p>An explicit feature subset to correlate. Leave this out to let PlussMic infer every
-numeric feature on the frame automatically; pass a subset when you only care about the
-relationships among a handful of columns (especially useful on a wide frame, where the
-full matrix would be large and mostly uninteresting).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -154,8 +149,9 @@ relationship is monotonic but not linear (or once outliers are present), which f
 clean points does not exercise. On real data with heavier tails or a non-linear-but-
 monotonic relationship, expect Pearson and Spearman to disagree, sometimes
 substantially.</p>
-<p>Example 3. Restrict the correlation matrix to an explicit feature subset.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">corr_base</span><span class="p">.</span><span class="n">corr</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<p>Example 3. Restrict the correlation matrix to an explicit feature subset by narrowing
+with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">corr_base</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}).</span><span class="n">corr</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -171,11 +167,11 @@ z    | -0.4   1
 [2 cs x 2 feat]
 </pre></div>
 </div>
-<p>Passing <code class="docutils literal notranslate"><span class="pre">features</span></code> is not just a display convenience — on a frame with many numeric
-columns, computing the full N×N matrix and then slicing it down is wasted work compared
-to naming the handful of columns you actually want compared.</p>
+<p>Narrowing with <code class="docutils literal notranslate"><span class="pre">features()</span></code> first is not just a display convenience — on a frame with
+many numeric columns, computing the full N×N matrix and then slicing it down is wasted
+work compared to naming the handful of columns you actually want compared.</p>
 <p>Example 4. Combine an explicit subset with a non-default method.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">corr_base</span><span class="p">.</span><span class="n">corr</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CorrMethod</span><span class="o">::</span><span class="n">KendallTau</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">corr_base</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}).</span><span class="n">corr</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CorrMethod</span><span class="o">::</span><span class="n">KendallTau</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -225,10 +221,10 @@ would produce no output.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Non-numeric features are ignored even when they exist on the source frame — there is
-no need to drop <code class="docutils literal notranslate"><span class="pre">Note</span></code> or <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> columns manually before calling <code class="docutils literal notranslate"><span class="pre">corr()</span></code>.</p></li>
-<li><p>When you pass <code class="docutils literal notranslate"><span class="pre">features</span></code>, only that subset participates in the matrix, and only those
-columns need to be numeric.</p></li>
+<li><p>Non-numeric features are ignored even when they exist on the current frame — there
+is no need to drop <code class="docutils literal notranslate"><span class="pre">Note</span></code> or <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> columns manually before calling <code class="docutils literal notranslate"><span class="pre">corr()</span></code>.</p></li>
+<li><p>When you narrow with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first, only that subset
+participates in the matrix, and only those columns need to be numeric.</p></li>
 <li><p>All three methods report values in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>; <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">-1</span></code> indicate a perfect
 monotonic (Spearman/Kendall) or linear (Pearson) relationship, and <code class="docutils literal notranslate"><span class="pre">0</span></code> indicates none.</p></li>
 </ul>
@@ -242,6 +238,8 @@ frames instead of correlating a frame’s features against each other.</p></li>
 matrix.</p></li>
 <li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: per-feature statistics, typically checked before
 moving on to cross-feature correlation.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature subset
+<code class="docutils literal notranslate"><span class="pre">corr()</span></code> should compute over.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="copy.html">

@@ -16,17 +16,30 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/thread-ts/add
+api/thread-ts/align_to
 api/thread-ts/diff
+api/thread-ts/div
+api/thread-ts/eq
+api/thread-ts/ewm
+api/thread-ts/expanding
+api/thread-ts/fill_gaps
+api/thread-ts/ge
+api/thread-ts/grouped
+api/thread-ts/gt
 api/thread-ts/lag
+api/thread-ts/lag_block
+api/thread-ts/le
 api/thread-ts/lead
 api/thread-ts/log_returns
+api/thread-ts/lt
+api/thread-ts/mul
+api/thread-ts/ne
+api/thread-ts/resample
 api/thread-ts/returns
-```
-
-```{note} in progress
-This accessor has ~26 methods. Pages are being added in batches; the sidebar
-above will grow to cover `rolling`/`timed`/`grouped`/`expanding`/`ewm`,
-`fill_gaps`/`align_to`/`lag_block`/`rolling_block`/`resample`, and the
-axis-aligned arithmetic methods (`add`/`sub`/`mul`/`div`/`eq`/`ne`/`lt`/`le`/
-`gt`/`ge`) as those are completed.
+api/thread-ts/rolling
+api/thread-ts/rolling_block
+api/thread-ts/sub
+api/thread-ts/timed
+api/thread-ts/zscore_rolling
 ```

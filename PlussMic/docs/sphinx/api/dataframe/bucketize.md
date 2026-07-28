@@ -4,43 +4,33 @@
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 DataFrame::bucketize(pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
-DataFrame::bucketize(std::string_view feature_name, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
-DataFrame::bucketize(pluss::msharp::RangeView::Of<std::string_view> feature_names, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
 ```
 
 ## What It Does
 
-Replaces one, several, or every numeric `Series` feature's values with integer bucket
+Replaces every numeric `Series` feature currently on the frame with integer bucket
 codes, based on a strictly increasing list of bin edges — the classic "cut into
 bands" transform used for grading scales, coarse histogram binning, or turning a
 continuous value into a small number of discrete tiers before grouping or one-hot
-encoding. `N + 1` edges define `N` buckets; every other feature (and every non-numeric
-feature, if you called the no-argument overload) passes through completely unchanged.
+encoding. `N + 1` edges define `N` buckets; every non-numeric feature on the current
+frame passes through completely unchanged.
+
+`bucketize()` carries no feature selector of its own: it always bucketizes every
+numeric feature it finds on the current frame. Narrow to one or a few features first
+with [`features()`](features.md) when only some columns should be bucketized —
+`readings.features({"amount"}).bucketize({...})` — and recombine with
+[`update()`](update.md) afterward if the untouched features need to survive alongside
+the bucketed result.
 
 A value that doesn't fall into any bucket — outside the full `[bins.front(),
 bins.back()]` span, given the current `right`/`include_lowest` settings — becomes
 `NULL` in the output rather than being clamped into the nearest bucket.
 
 ## Parameters
-
-**feature_name** (`std::string_view`, single-feature overload)
-
-Bucketize exactly this one feature; every other feature is left alone.
-
-**feature_names** (`pluss::RangeView<std::string_view>`, multi-feature overload)
-
-Bucketize exactly this named subset of features, all using the same `bins`/`labels`/
-`right`/`include_lowest` settings. An empty list is a no-op that returns the frame
-unchanged.
-
-*(no feature argument)*
-
-Bucketize every numeric `Series` feature on the frame automatically. Throws
-`"DataFrame::bucketize: no numeric Series features available"` if there are none.
 
 **bins** (`pluss::RangeView<double>`)
 
@@ -106,7 +96,7 @@ std::cout << readings;
 ```
 
 ```cpp
-auto bucketed = readings.bucketize("amount", {0.0, 10.0, 20.0, 30.0, 40.0, 50.0});
+auto bucketed = readings.bucketize({0.0, 10.0, 20.0, 30.0, 40.0, 50.0});
 std::cout << bucketed;
 ```
 
@@ -139,7 +129,7 @@ auto readings2 = DataFrame({
 });
 
 auto bucketed2 = readings2.bucketize(
-    "amount", {0.0, 10.0, 20.0, 30.0, 40.0}, {100, 200, 300, 400},
+    {0.0, 10.0, 20.0, 30.0, 40.0}, {100, 200, 300, 400},
     /*right=*/false);
 std::cout << bucketed2;
 ```
@@ -163,23 +153,26 @@ With `right = false`, every bucket is `[edge, next_edge)`: `10.0` lands in bucke
 that same `10.0` would instead have landed in the *first* bucket (`(0, 10]`, or
 `[0, 10]` with `include_lowest`), one bucket earlier than shown here.
 
-Example 3. Bucketize two numeric features together with one call, leaving a third,
-non-numeric feature untouched by using the multi-feature overload alongside a
-pass-through column.
+Example 3. Bucketize two numeric features together, leaving a third, non-numeric
+feature untouched — narrow to the two target features with
+[`features()`](features.md), then merge the bucketed pair back into the full frame
+with [`update()`](update.md).
 
 ```cpp
 auto orders = DataFrame({
     {"amount", Thread(pluss::make_series({5.0, 15.0, 25.0, 35.0}))},
     {"weight", Thread(pluss::make_series({8.0, 22.0, 12.0, 38.0}))},
+    {"region", Thread(pluss::make_note({"north", "south", "north", "east"}))},
 });
 
-std::array<std::string_view, 2> targets{"amount", "weight"};
-auto bucketed3 = orders.bucketize(
-    pluss::msharp::RangeView::Of<std::string_view>(targets), {0.0, 10.0, 20.0, 30.0, 40.0});
+auto bucketed_pair = orders.features({"amount", "weight"}).bucketize({0.0, 10.0, 20.0, 30.0, 40.0});
+std::cout << bucketed_pair;
+
+auto bucketed3 = orders.update(bucketed_pair);
 std::cout << bucketed3;
 ```
 
-### Output
+### Output (the narrowed, bucketed-only pair)
 
 ```text
 =====================
@@ -193,10 +186,26 @@ std::cout << bucketed3;
 [4 cs x 2 feat]
 ```
 
-Both features are bucketed with the same edges and default labels; `amount` and
-`weight` land in different buckets independently based on their own values —
-`weight`'s `22.0` (bucket `2`) and `amount`'s `15.0` (bucket `1`) demonstrate that each
-column is evaluated on its own values, not jointly.
+### Output (merged back into the full frame)
+
+```text
+==============================
+     | amount  weight  region
+------------------------------
+0    | 0       0       north 
+1    | 1       2       south 
+2    | 2       1       north 
+3    | 3       3       east  
+------------------------------
+[4 cs x 3 feat]
+```
+
+Both `amount` and `weight` are bucketed with the same edges and default labels,
+landing in different buckets independently based on their own values —
+`weight`'s `22.0` (bucket `2`) and `amount`'s `15.0` (bucket `1`) demonstrate that
+each column is evaluated on its own values, not jointly. `region` was never part of
+the narrowed frame `bucketize()` ran against, so [`update()`](update.md) leaves it
+exactly as it was on `orders`.
 
 Example 4. Pass `include_lowest = false` to see a value sitting exactly on the
 lowest edge fall out of every bucket.
@@ -206,11 +215,11 @@ auto edge_case = DataFrame({
     {"amount", Thread(pluss::make_series({0.0, 10.0, 25.0}))},
 });
 
-auto default_lowest = edge_case.bucketize("amount", {0.0, 10.0, 20.0, 30.0});
+auto default_lowest = edge_case.bucketize({0.0, 10.0, 20.0, 30.0});
 std::cout << default_lowest;
 
 auto excluded_lowest = edge_case.bucketize(
-    "amount", {0.0, 10.0, 20.0, 30.0}, {}, /*right=*/true, /*include_lowest=*/false);
+    {0.0, 10.0, 20.0, 30.0}, {}, /*right=*/true, /*include_lowest=*/false);
 std::cout << excluded_lowest;
 ```
 
@@ -252,7 +261,7 @@ throw.
 
 ```cpp
 try {
-  auto out = edge_case.bucketize("amount", {0.0, 20.0, 10.0, 30.0});
+  auto out = edge_case.bucketize({0.0, 20.0, 10.0, 30.0});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -277,18 +286,24 @@ bucketed.
 - Out-of-range values become `NULL`, never clamped into the nearest bucket — a value
   below the first edge or above the last edge (given the current `right` setting) is
   simply missing in the output.
-- The no-argument overload silently limits itself to numeric `Series` features; it
-  never attempts to bucketize a `Note`, `Timeline`, or `TimeIndex` column.
-- Follow up with [`count_by`](count_by.md) on the bucketed feature to get a frequency
-  table of how many cases fell into each band.
+- `bucketize()` silently limits itself to numeric `Series` features on the current
+  frame; it never attempts to bucketize a `Note`, `Timeline`, or `TimeIndex` column.
+- It has no feature selector of its own — narrow with [`features()`](features.md)
+  first to bucketize only some features, and recombine with [`update()`](update.md)
+  if the untouched features need to survive alongside the result (Example 3).
+- Follow up with [`group`](group.md) on the bucketed feature (`.group().by({bucketed_feature}).count()`)
+  to get a frequency table of how many cases fell into each band.
 
 ## See Also
 
-- [`DataFrame::count_by`](count_by.md): tally how many cases landed in each bucket.
+- [`DataFrame::group`](group.md): tally how many cases landed in each bucket via
+  `.group().by({...}).count()`.
 - [`DataFrame::cast`](cast.md): change a feature's underlying dtype or payload kind
   outright, rather than binning its numeric values into a small set of codes.
 - [`DataFrame::clip`](clip.md): cap values into a numeric range instead of assigning
   them a discrete bucket code.
+- [`DataFrame::features`](features.md), [`DataFrame::update`](update.md): narrow to a
+  feature subset before bucketizing, then merge the result back into the full frame.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bottom.html">

@@ -169,18 +169,18 @@ thread.view(10, 20);
 thread.slice(10, 20);
 thread.take(std::vector<std::int64_t>{0, 3, 8});
 thread.shift(1);
-thread.sort_values(true, true);
+thread.arrange(true, true);
 thread.dropnull();
 thread.distinct(true);
 ```
 
 `head`, `tail`, and `view` return `ThreadView`, which can auto-render. `slice`,
-`take`, `shift`, `sort_values`, `dropnull`, and `distinct` return ordinary
+`take`, `shift`, `arrange`, `dropnull`, and `distinct` return ordinary
 `Thread` values.
 
 `slice(start, stop)` is half-open. `take(indices)` keeps exactly the requested
 positions in exactly that order. `shift(periods)` moves values by row offset
-and marks the newly exposed edge as missing. `sort_values(ascending,
+and marks the newly exposed edge as missing. `arrange(ascending,
 nulls_last)` sorts the valid values and places masked rows according to
 `nulls_last`.
 
@@ -223,7 +223,7 @@ std::cout << "isnull:\n" << score.isnull().to_string() << '\n';
 std::cout << "fillnull:\n" << score.fillnull(99.0).to_string() << '\n';
 std::cout << "dropnull:\n" << score.dropnull().to_string() << '\n';
 std::cout << "shift(2):\n" << score.shift(2).to_string() << '\n';
-std::cout << "sort asc nulls first:\n" << score.sort_values(true, false).to_string() << '\n';
+std::cout << "sort asc nulls first:\n" << score.arrange(true, false).to_string() << '\n';
 std::cout << "take 4,1,0:\n" << score.take(std::vector<std::int64_t>{4, 1, 0}).to_string() << '\n';
 ```
 
@@ -285,7 +285,7 @@ so it displays as `NA`. `isnull()` is the logical inverse of the validity mask.
 the masked row with `99`. `dropnull()` removes the masked row. `shift(2)` moves
 values down by two rows, marks rows 0 and 1 missing because there are no source
 values for them, and also carries the original missing row forward so row 4 is
-missing. `sort_values` with `nulls_last=false` places the missing value first,
+missing. `arrange` with `nulls_last=false` places the missing value first,
 then sorts valid values ascending. `take({4, 1, 0})` keeps rows 4, 1, and 0, in
 that order.
 

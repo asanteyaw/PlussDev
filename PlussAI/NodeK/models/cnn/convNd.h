@@ -157,7 +157,9 @@ inline Series conv2d_impl_(const Series& input,
     PLUSS_CHECK(b.dim() == 1 && b.sizes()[0] == out_channels, "pluss::ai::conv: bias size mismatch");
   }
 
-  const bool require_backward = x.tracks_slope() || w.tracks_slope();
+  const bool require_backward =
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x.tracks_slope() || w.tracks_slope());
   if (x.platform() == pluss::pCUDA) {
     const auto y = ::pluss::ai::kernels::cudnn::try_conv2d(
         x,
@@ -290,7 +292,9 @@ inline Series conv3d_impl_(const Series& input,
     PLUSS_CHECK(b.dim() == 1 && b.sizes()[0] == out_channels, "pluss::ai::conv3d: bias size mismatch");
   }
 
-  const bool require_backward = x.tracks_slope() || w.tracks_slope() || (b.defined() && b.tracks_slope());
+  const bool require_backward =
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x.tracks_slope() || w.tracks_slope() || (b.defined() && b.tracks_slope()));
   if (x.platform() == pluss::pMPS) {
     const auto routed = ::pluss::ai::kernels::mps::try_conv3d(x, w, b, stride, padding, dilation, groups, require_backward);
     if (routed.has_value()) {

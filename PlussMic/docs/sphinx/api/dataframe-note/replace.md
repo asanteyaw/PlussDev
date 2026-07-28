@@ -85,7 +85,7 @@ auto notes = DataFrame({
 });
 std::cout << notes;
 
-auto out1 = notes.note().replace("cat", "dog");
+auto out1 = notes.nt().replace("cat", "dog");
 std::cout << out1;
 ```
 
@@ -125,7 +125,7 @@ Example 2. `case_sensitive = false`: matching ignores case, but the
 replacement text is still inserted literally as given.
 
 ```cpp
-auto out2 = notes.note().replace("cat", "dog", {.case_sensitive = false});
+auto out2 = notes.nt().replace("cat", "dog", {.case_sensitive = false});
 std::cout << out2;
 ```
 
@@ -161,7 +161,7 @@ auto words = DataFrame({
 });
 std::cout << words;
 
-auto out3 = words.note().replace("a", "X", {.limit = 2});
+auto out3 = words.nt().replace("a", "X", {.limit = 2});
 std::cout << out3;
 ```
 
@@ -211,7 +211,7 @@ auto emails = DataFrame({
 });
 std::cout << emails;
 
-auto out4 = emails.note().replace(
+auto out4 = emails.nt().replace(
     R"((\w+)@(\w+))", "$2#$1", {.regex = true});
 std::cout << out4;
 ```

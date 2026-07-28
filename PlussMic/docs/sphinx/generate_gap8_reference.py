@@ -11,7 +11,7 @@ METHODS = {
     "extend": ("other: const DataFrame&, features: FrameMatchRule = Unite, fresh_cases: bool = false, reject_repeated_cases: bool = false", "DataFrame", "case-wise extension with matched features"),
     "unify": ("left_on: RangeView<string_view>, right: const DataFrame&, right_on: RangeView<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\"", "DataFrame", "key-matched rows from two frames"),
     "combine": ("other: const DataFrame&, spec: const CombineSpec&", "DataFrame", "feature-wise composition or aligned update"),
-    "group_by": ("keys: RangeView<string_view>, specs: RangeView<GroupSpec>, dropnull_keys: bool = true, render: bool = true", "DataFrameView", "stable grouped reductions"),
+    "group": ("options: GroupOptions = {}", "DataFrameGroupBuilder", "grouped workspace builder for stable grouped reductions"),
     "lengthen": ("id_features: RangeView<string_view> = {}, value_features: RangeView<string_view> = {}, feature_name: string = \"feature\", value_name: string = \"value\", fresh_cases: bool = true", "DataFrame", "wide-to-long typed reshape"),
     "catalogue": ("feature: string_view, ordered: bool = false, sort_levels: bool = false", "CategoryEncoding", "typed codes, levels, and ordered metadata"),
     "covariance": ("options: StatisticOptions = {}, render: bool = false", "DataFrameView", "pairwise covariance matrix"),
@@ -75,7 +75,7 @@ PRIMARY = {
     "extend": ("auto out = north.extend(south);", "south cases follow north cases; one-sided features are null-filled"),
     "unify": ("auto out = left.unify(\"id\", right);", "only matching id rows are returned"),
     "combine": ("auto out = left.combine(right);", "right features are appended after aligned left features"),
-    "group_by": ("auto out = sales.group_by({\"region\"}, {{\"total\", \"amount\", DataFrame::GroupOp::Sum}}, true, false);", "one stable first-seen row per region with total amount"),
+    "group": ("auto out = sales.group({.dropnull = true}).by({\"region\"}).agg({{\"total\", \"amount\", DataFrame::GroupOp::Sum}});", "one stable first-seen row per region with total amount"),
     "lengthen": ("auto out = wide.lengthen({\"id\"}, {\"q1\", \"q2\"});", "each id is repeated twice; feature identifies q1/q2; value contains stacked values"),
     "catalogue": ("auto out = df.catalogue(\"city\");", "out.codes uses first-seen integer levels and out.decode() reconstructs city"),
     "covariance": ("auto out = df.covariance();", "x/x = 1.666667; x/y = 3.333333"),
@@ -210,8 +210,11 @@ def option_lines(name: str, args: str) -> list[str]:
             "- Retention: `common`, `keep_left`, `keep_right`, `unite`, `cross`, `left_only`, or `right_only`.",
             "- Validation: `many_to_many`, `one_to_one`, `one_to_many`, or `many_to_one`.",
         ])
-    if name == "group_by":
-        lines.append("- Group operations: Count, Nunique, Sum, Mean, Min, Max, Std, and Var.")
+    if name == "group":
+        lines.extend([
+            "- Group options include `dropnull` and `sort`.",
+            "- Group operations are chosen later in `.by(...).agg(...)` or `.by(...).transform(...)`: Count, Ndistinct, Sum, Mean, Min, Max, Std, and Var.",
+        ])
     if name == "grouped_moving":
         lines.append("- Window statistics: Sum, Mean, Minimum, Maximum, Variance, and Deviation.")
     if name == "time_moving":
@@ -331,13 +334,13 @@ def examples(name: str) -> list[tuple[str, str]]:
             ("auto out = left.combine(right, {DataFrame::CombineOp::Update, \"_r\", false});", "existing left observations are preserved"),
             ("auto out = left.join(right, \"_rhs\");", "the feature-combine convenience path uses _rhs for collisions"),
         ]
-    if name == "group_by":
+    if name == "group":
         return [
             first,
-            ("auto out = sales.group_by({\"region\"}, {{\"avg\", \"amount\", DataFrame::GroupOp::Mean}}, true, false);", "one mean amount is returned per region"),
-            ("auto out = sales.group_by({\"region\", \"year\"}, {{\"n\", \"\", DataFrame::GroupOp::Count}}, true, false);", "one row count is returned per region/year tuple"),
-            ("auto out = sales.group_by({\"region\"}, {{\"low\", \"amount\", DataFrame::GroupOp::Min}, {\"high\", \"amount\", DataFrame::GroupOp::Max}}, true, false);", "low and high are computed in one grouping pass"),
-            ("auto out = sales.group_by({\"region\"}, {{\"spread\", \"amount\", DataFrame::GroupOp::Std}}, false, false);", "null region keys participate and spread is sample standard deviation"),
+            ("auto out = sales.group({.dropnull = true}).by({\"region\"}).agg({{\"avg\", \"amount\", DataFrame::GroupOp::Mean}});", "one mean amount is returned per region"),
+            ("auto out = sales.group({.dropnull = true}).by({\"region\", \"year\"}).agg({{\"n\", \"\", DataFrame::GroupOp::Count}});", "one row count is returned per region/year tuple"),
+            ("auto out = sales.group({.dropnull = true}).by({\"region\"}).agg({{\"low\", \"amount\", DataFrame::GroupOp::Min}, {\"high\", \"amount\", DataFrame::GroupOp::Max}});", "low and high are computed in one grouping pass"),
+            ("auto out = sales.group({.dropnull = false}).by({\"region\"}).agg({{\"spread\", \"amount\", DataFrame::GroupOp::Std}});", "null region keys participate and spread is sample standard deviation"),
         ]
     if name == "lengthen":
         return [

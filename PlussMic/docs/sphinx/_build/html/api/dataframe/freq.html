@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -40,188 +40,139 @@
 <section id="dataframe-freq">
 <h1>DataFrame::freq<a class="headerlink" href="#dataframe-freq" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">freq</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">freq</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">freq</span><span class="p">(</span><span class="n">FreqOptions</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Counts how often each distinct value (or, with several features, each distinct
-<em>combination</em> of values) occurs, and returns the counts as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> labeled by the
-value itself — sorted most-frequent first, ties broken alphabetically by the value’s
-own text. With exactly one feature named, this delegates straight to that feature’s
-own <a class="reference internal" href="../thread/tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally()</span></code></span></a>, reshaped into this labeled-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-form. With zero or several features, it builds a
-<code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code>-joined composite key per row from the selected features’ string representations
-and counts occurrences of that composite key instead.</p>
-<p>This is a values-first counting tool: it answers “what are the most common cities in
-this column” or “what are the most common (city, product) combinations,” rather than
-“how many rows/features does this frame have” (see <a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code></span></a> for a
-plain distinct-count instead of a per-value breakdown).</p>
+<p>Counts distinct rows of the current frame and returns the result as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.
+This is the features-first value-count surface:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;is_adult&quot;</span><span class="p">}).</span><span class="n">freq</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;is_adult&quot;</span><span class="p">}).</span><span class="n">freq</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">FreqKind</span><span class="o">::</span><span class="n">Prop</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>The selected frame defines the grouping columns. <code class="docutils literal notranslate"><span class="pre">freq()</span></code> no longer accepts a
+feature selector itself.</p>
+<p>For multi-feature counts, the result carries structured case labels and prints like a
+stacked index instead of packing keys into a pipe-joined string.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
-<p>Which feature(s) define the value being counted:</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">FreqOptions</span></code>, optional)</p>
+<p><strong>options.kind</strong> (<code class="docutils literal notranslate"><span class="pre">FreqKind</span></code>, default <code class="docutils literal notranslate"><span class="pre">FreqKind::Count</span></code>)</p>
+<p>Selects the output measure:</p>
 <ul class="simple">
-<li><p>Empty (the default): every feature on the frame participates in the composite key.</p></li>
-<li><p>One name: delegates to that feature’s own frequency count.</p></li>
-<li><p>Several names: counts distinct combinations across exactly those features, joined
-with <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code> into one composite key per row.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::FreqKind::Count</span></code>: raw counts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::FreqKind::Prop</span></code>: counts divided by the total</p></li>
 </ul>
-<p><strong>top_n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
-<p>Keep only the <code class="docutils literal notranslate"><span class="pre">top_n</span></code> most frequent entries after sorting. <code class="docutils literal notranslate"><span class="pre">0</span></code> (the default) keeps
-every distinct value or combination observed.</p>
-<p><strong>dropnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default): a row where any selected feature is missing is excluded from
-the count entirely.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: a missing selected feature contributes the literal placeholder <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> to
-that row’s key instead of being dropped — only the missing feature’s own part of the
-key is affected; every other, still-present feature in the same row keeps its real
-value.</p></li>
-</ul>
+<p><strong>options.dropnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">true</span></code>, any row with a missing grouping value is excluded. When <code class="docutils literal notranslate"><span class="pre">false</span></code>,
+missing grouping values participate as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p><strong>options.sort</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">true</span></code>, rows are ordered by frequency. When <code class="docutils literal notranslate"><span class="pre">false</span></code>, the grouped result stays
+in first-seen order.</p>
+<p><strong>options.ascending</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>Only used when <code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">=</span> <span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">false</span></code> gives the usual largest-first ordering.</p>
+<p><strong>options.top</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
+<p>Keeps only the first <code class="docutils literal notranslate"><span class="pre">top</span></code> rows after ordering. <code class="docutils literal notranslate"><span class="pre">0</span></code> keeps every group.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-One <code class="docutils literal notranslate"><span class="pre">Int64</span></code> entry per distinct value (or combination), labeled by that value’s (or
-joined combination’s) string form, named <code class="docutils literal notranslate"><span class="pre">&quot;freq&quot;</span></code>, sorted by count descending and
-then alphabetically by label ascending on ties.</p>
+A frequency series named <code class="docutils literal notranslate"><span class="pre">count</span></code> or <code class="docutils literal notranslate"><span class="pre">prop</span></code>.</p>
+<ul class="simple">
+<li><p>With one grouping feature, labels are the distinct values of that feature.</p></li>
+<li><p>With several grouping features, labels are structured and render as separate
+index columns.</p></li>
+</ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Count the most frequent values in a single feature.</p>
+<p>Example 1. Count distinct combinations of two grouping features.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;is_adult&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
 <span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;is_adult&quot;</span><span class="p">}).</span><span class="n">freq</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counts</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
-     | city  
--------------
-0    | Accra 
-1    | Tema  
-2    | Accra 
-3    | Kumasi
-4    | Accra 
-5    | Tema  
--------------
-[6 cs x 1 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>default  is_adult
+yes      true        3
+no       true        1
+yes      false       1
+no       false       1
+Name: count, ptype: Series
 </pre></div>
 </div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">freq</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counts</span><span class="p">;</span>
+<p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">FreqKind::Prop</span></code> to get proportions instead of raw counts.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">prop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;is_adult&quot;</span><span class="p">}).</span><span class="n">freq</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">FreqKind</span><span class="o">::</span><span class="n">Prop</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">prop</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span> Accra  3
-  Tema  2
-Kumasi  1
-Name: freq, ptype: Series
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>default  is_adult
+yes      true        0.5
+no       true        0.1666666667
+yes      false       0.1666666667
+no       false       0.1666666667
+Name: prop, ptype: Series
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">Accra</span></code> is the most frequent city (<code class="docutils literal notranslate"><span class="pre">3</span></code> occurrences), <code class="docutils literal notranslate"><span class="pre">Tema</span></code> next (<code class="docutils literal notranslate"><span class="pre">2</span></code>), <code class="docutils literal notranslate"><span class="pre">Kumasi</span></code> least
-(<code class="docutils literal notranslate"><span class="pre">1</span></code>) — sorted strictly by count, with no ties to break here.</p>
-<p>Example 2. Count distinct combinations across two features at once.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">}))},</span>
+<p>Example 3. Keep missing grouping values instead of dropping them, and skip sorting.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">keep_null</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">}),</span>
+<span class="w">                    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">combo_counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">freq</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">combo_counts</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keep_null</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;zone&quot;</span><span class="p">}).</span><span class="n">freq</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Accra|Laptop  2
-  Tema|Phone  2
- Accra|Phone  1
-Name: freq, ptype: Series
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>city   zone
+Accra  West    1
+Accra  NULL    1
+Tema   North   1
+Name: count, ptype: Series
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Laptop)</span></code> and <code class="docutils literal notranslate"><span class="pre">(Tema,</span> <span class="pre">Phone)</span></code> both occur twice; with the count tied at <code class="docutils literal notranslate"><span class="pre">2</span></code>, the
-alphabetically earlier composite key (<code class="docutils literal notranslate"><span class="pre">&quot;Accra|Laptop&quot;</span></code> before <code class="docutils literal notranslate"><span class="pre">&quot;Tema|Phone&quot;</span></code>) sorts
-first. <code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Phone)</span></code>, occurring once, sorts last.</p>
-<p>Example 3. Keep missing values in the count instead of dropping their rows.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">}),</span>
-<span class="w">                       </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_gap</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
-     | city   product  region
------------------------------
-0    | Accra  Laptop   South 
-1    | Accra  NULL     South 
-2    | Tema   Phone    North 
------------------------------
-[3 cs x 3 feat]
-</pre></div>
-</div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">gap_counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_gap</span><span class="p">.</span><span class="n">freq</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="cm">/*dropnull=*/</span><span class="nb">false</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">gap_counts</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Accra|Laptop|South  1
-  Accra|NULL|South  1
-  Tema|Phone|North  1
-Name: freq, ptype: Series
-</pre></div>
-</div>
-<p>Row <code class="docutils literal notranslate"><span class="pre">1</span></code>’s <code class="docutils literal notranslate"><span class="pre">product</span></code> is missing, so its key contribution becomes <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> — but <code class="docutils literal notranslate"><span class="pre">region</span></code>
-at row <code class="docutils literal notranslate"><span class="pre">1</span></code>, a perfectly present value (<code class="docutils literal notranslate"><span class="pre">&quot;South&quot;</span></code>), keeps reading as <code class="docutils literal notranslate"><span class="pre">&quot;South&quot;</span></code> in the
-composite key rather than also being swallowed into <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>. Each selected feature’s
-contribution to the composite key is decided independently, so one missing feature
-never affects any other feature’s part of the same row’s key.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>With one feature named, <code class="docutils literal notranslate"><span class="pre">freq()</span></code> is exactly that feature’s own frequency count (see
-<a class="reference internal" href="../thread/tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tally()</span></code></span></a>); the multi-feature composite-key behavior
-described above only applies when zero or several feature names are given.</p></li>
-<li><p>Sorting is always most-frequent first; ties are broken by ascending alphabetical
-order of the value (or composite key) itself, never by first-appearance order.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">top_n</span> <span class="pre">=</span> <span class="pre">0</span></code> (the default) keeps every distinct value or combination; a positive
-<code class="docutils literal notranslate"><span class="pre">top_n</span></code> truncates the result <em>after</em> sorting, so it always keeps the most frequent
-entries, never an arbitrary sample.</p></li>
-<li><p>Every missing-value placeholder throughout this reference — here, in
-<a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>, and elsewhere — reads as the literal text <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>,
-matching the <code class="docutils literal notranslate"><span class="pre">NULL</span></code> convention used for missing cells in a rendered frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::FreqKind</span></code> is the frequency measure enum used by <code class="docutils literal notranslate"><span class="pre">FreqOptions</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::FreqOptions</span></code> is the public options struct for <code class="docutils literal notranslate"><span class="pre">freq()</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ndistinct</span></code></span></a>: a plain distinct-value <em>count</em>, without the
-per-value frequency breakdown.</p></li>
-<li><p><a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::duplicated</span></code></span></a>: flag individual duplicate <em>rows</em> instead of
-counting distinct values.</p></li>
-<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::isnull</span></code></span></a>: inspect missingness directly, useful before
-deciding whether <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">false</span></code>’s composite-key behavior matters for your data.</p></li>
+<li><p><a class="reference internal" href="tally.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tally</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../thread/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

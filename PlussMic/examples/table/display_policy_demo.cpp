@@ -65,10 +65,10 @@ int main() {
 
   std::cout << "\n=== Atlas popup viewer ===\n";
   auto baseline = df.head(8, false).title("baseline");
-  auto stress = baseline
-                    .transform("Lifecycle Cost", [](const pluss::table::Thread& t) { return t + 250.0; })
-                    .transform("Schedule Variance (%)", [](const pluss::table::Thread& t) { return t - 5.0; })
-                    .title("stress");
+  auto stress = baseline;
+  stress.set("Lifecycle Cost") = baseline.features("Lifecycle Cost") + 250.0;
+  stress.set("Schedule Variance (%)") = baseline.features("Schedule Variance (%)") - 5.0;
+  stress = stress.title("stress");
   auto atlas = pluss::table::Atlas(
       {baseline, stress},
       pluss::table::Thread(pluss::make_note({"baseline", "stress"})));

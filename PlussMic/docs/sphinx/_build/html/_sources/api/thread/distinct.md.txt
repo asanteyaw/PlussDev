@@ -14,7 +14,7 @@ Thread::distinct(bool dropnull = true) const -> Thread
 
 Returns the distinct values of the thread, one representative per value, in
 **first-seen order** — not sorted. Grouping is done by each value's string form
-(the same conversion [`tally()`](tally.md) uses), so this works on any payload
+(the same conversion [`freq()`](freq.md) uses), so this works on any payload
 kind, not just `Note`. Unlike a sort-based dedup, the surviving representative
 for each value is always the earliest occurrence, and the relative order of
 distinct values in the output matches the order they first appeared in the
@@ -85,7 +85,7 @@ though the source had two missing entries.
 
 ## Notes
 
-- Order is first-seen, never sorted — see [`sort_values()`](sort_values.md) if
+- Order is first-seen, never sorted — see [`arrange()`](arrange.md) if
   you want the distinct values in value order instead.
 - `dropnull = false` keeps at most one missing entry, not one per occurrence.
 - Grouping is by each value's string form, so this works across every payload
@@ -95,7 +95,7 @@ though the source had two missing entries.
 
 - [`Thread::ndistinct`](ndistinct.md): the count of distinct values, without
   the values themselves.
-- [`Thread::tally`](tally.md): distinct values paired with their occurrence
+- [`Thread::freq`](freq.md): distinct values paired with their occurrence
   counts, sorted by frequency instead of first-seen order.
 - [`Thread::duplicated`](duplicated.md) / [`Thread::repeated`](repeated.md):
   boolean masks over the original thread's positions, rather than a

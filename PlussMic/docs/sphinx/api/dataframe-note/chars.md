@@ -87,7 +87,7 @@ Example 1. A plain forward range: `chars(0, 5)` keeps the first five
 characters of each cell (or fewer, if the cell is shorter).
 
 ```cpp
-auto out1 = words.note().chars(0, 5);
+auto out1 = words.nt().chars(0, 5);
 std::cout << out1;
 ```
 
@@ -114,7 +114,7 @@ Example 2. A negative `start` counts from the end: `chars(-5)` keeps the
 last five characters of each cell (with `stop` defaulted to "the end").
 
 ```cpp
-auto out2 = words.note().chars(-5);
+auto out2 = words.nt().chars(-5);
 std::cout << out2;
 ```
 
@@ -141,7 +141,7 @@ Example 3. A negative `step` walks backwards — `chars(-1, std::nullopt,
 like Python's `s[::-1]`.
 
 ```cpp
-auto out3 = words.note().chars(-1, std::nullopt, -1);
+auto out3 = words.nt().chars(-1, std::nullopt, -1);
 std::cout << out3;
 ```
 
@@ -168,7 +168,7 @@ Example 4. A `step` greater than 1 takes every Nth character —
 first.
 
 ```cpp
-auto out4 = words.note().chars(0, std::nullopt, 2);
+auto out4 = words.nt().chars(0, std::nullopt, 2);
 std::cout << out4;
 ```
 
@@ -195,7 +195,7 @@ Example 5. `step = 0` throws — there's no sensible stride of zero.
 
 ```cpp
 try {
-  auto bad = words.note().chars(0, std::nullopt, 0);
+  auto bad = words.nt().chars(0, std::nullopt, 0);
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

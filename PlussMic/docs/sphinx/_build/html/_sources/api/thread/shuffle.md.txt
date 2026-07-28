@@ -103,7 +103,7 @@ auto d = scores.shuffle();
 
 - [`Thread::sample`](sample.md): draw a random subset (or the whole thread,
   reordered) with more control over count/fraction and replacement.
-- [`Thread::sort_values`](sort_values.md): reorder deterministically by value,
+- [`Thread::arrange`](arrange.md): reorder deterministically by value,
   rather than randomly.
 
 <div class="pluss-inline-prev-next">

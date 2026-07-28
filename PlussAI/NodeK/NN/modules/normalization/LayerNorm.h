@@ -15,7 +15,7 @@ struct LayerNormOptions {
 // LayerNorm over the last dimension: (x - mean) / sqrt(var + eps) * weight
 // + bias, mean/var computed per-row over the last `normalized_size`
 // elements. Promoted out of ice::models::TemporalFusionTransformer's
-// originally-private building blocks (Ice/models/tft/tft_blocks.h) once a
+// originally-private building blocks (Ice/models/ts/tft_blocks.h) once a
 // second consumer needed it -- see ICE_BLUEPRINT.md's centralization note.
 class PLUSS_API LayerNormImpl final : public Module {
 public:

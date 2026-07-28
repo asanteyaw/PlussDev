@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: f0668df6aa49 -->
 <section id="dataframe-drop-duplicates">
 <h1>DataFrame::drop_duplicates<a class="headerlink" href="#dataframe-drop-duplicates" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -51,17 +51,26 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Removes duplicate rows and returns a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> containing only the survivors —
 exactly the rows <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a> would flag <code class="docutils literal notranslate"><span class="pre">false</span></code> under the same
-<code class="docutils literal notranslate"><span class="pre">features</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_first</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> policy. Surviving rows keep their original
-feature set, feature order, and case labels; nothing is renumbered or reordered.</p>
+<code class="docutils literal notranslate"><span class="pre">keep_first</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> policy. Surviving rows keep their original feature set,
+feature order, and case labels; nothing is renumbered or reordered.</p>
+<p>Called with no <code class="docutils literal notranslate"><span class="pre">features</span></code>, every column on the frame is compared. Unlike the other
+selector-bearing reductions in this family — <a class="reference internal" href="any.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">any()</span></code></span></a>, <a class="reference internal" href="all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">all()</span></code></span></a>,
+<a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code></span></a>, <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>,
+<a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">repeated()</span></code></span></a>, <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a> — where narrowing first with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> is a direct, lossless replacement for an explicit selector,
+<code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code> keeps its own <code class="docutils literal notranslate"><span class="pre">features</span></code> overload. Narrowing first with
+<code class="docutils literal notranslate"><span class="pre">.features({...})</span></code> before calling <code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code> would also narrow the
+<em>survivors’</em> columns, since <code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code> returns whatever frame it was called
+on — not what’s usually wanted when comparing on a subset of columns. Passing
+<code class="docutils literal notranslate"><span class="pre">features</span></code> directly to <code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code> instead compares on just those columns
+while every other column on the frame survives untouched (Example 1).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
-<p>Which features define a “duplicate.” An empty range (the default) compares <strong>every</strong>
-column in the frame — including any unique identifier column, which means no row will
-ever be considered a duplicate of another. Pass the specific feature names that
-matter (for example, <code class="docutils literal notranslate"><span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;product&quot;}</span></code>, ignoring an <code class="docutils literal notranslate"><span class="pre">order_id</span></code> column that is
-unique per row by design).</p>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, optional)</p>
+<p>The feature(s) to compare when deciding whether two rows are duplicates. When
+omitted, every feature on the frame is compared. Every other feature on the frame is
+left untouched on the surviving rows either way.</p>
 <p><strong>keep_first</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the first row in each duplicate group survives and every later row in
 that group is dropped.</p>
@@ -72,14 +81,15 @@ that group is dropped. Cannot be combined with <code class="docutils literal not
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-A new frame containing one row per distinct combination of the selected features
-— the survivor chosen by <code class="docutils literal notranslate"><span class="pre">keep_first</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> — with the original feature
-set, feature order, and case labels of the surviving rows.</p>
+A new frame containing one row per distinct combination of the compared
+features — the survivor chosen by <code class="docutils literal notranslate"><span class="pre">keep_first</span></code> / <code class="docutils literal notranslate"><span class="pre">keep_last</span></code> — with the original
+feature set, feature order, and case labels of the surviving rows.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Keep the first occurrence of each <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code> combination, the
-default policy.</p>
+default policy — comparing on a subset of columns while every other column on the
+frame survives untouched.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -108,7 +118,9 @@ default policy.</p>
 of each survives, and it’s the <strong>first</strong> row encountered for that combination — case
 <code class="docutils literal notranslate"><span class="pre">0</span></code> for <code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Laptop)</span></code>, case <code class="docutils literal notranslate"><span class="pre">2</span></code> for <code class="docutils literal notranslate"><span class="pre">(Tema,</span> <span class="pre">Phone)</span></code>, case <code class="docutils literal notranslate"><span class="pre">4</span></code> for the one-off
 <code class="docutils literal notranslate"><span class="pre">(Kumasi,</span> <span class="pre">Laptop)</span></code>. Case labels <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, and <code class="docutils literal notranslate"><span class="pre">4</span></code> are preserved from the source frame,
-not renumbered to <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+not renumbered to <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code> — and <code class="docutils literal notranslate"><span class="pre">order_id</span></code> survives on every row even though it
+was never part of the comparison, because <code class="docutils literal notranslate"><span class="pre">features</span></code> only narrows what’s <em>compared</em>,
+not what’s returned.</p>
 <p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">keep_last</span> <span class="pre">=</span> <span class="pre">true</span></code> to keep the <em>last</em> occurrence of each combination
 instead.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">unique_combos_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">drop_duplicates</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
@@ -139,12 +151,15 @@ not grouped by combination.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code>’s result keeps the original feature set, feature order, and case
 labels of the surviving rows — surviving rows are never renumbered.</p></li>
-<li><p>Leaving <code class="docutils literal notranslate"><span class="pre">features</span></code> empty compares every column, including any unique identifier —
-which means nothing will ever be dropped if such a column is present. This is almost
-always a mistake; pass the specific features that define a duplicate for your use
-case.</p></li>
-<li><p>Internally this is exactly <code class="docutils literal notranslate"><span class="pre">filter(!duplicated(features,</span> <span class="pre">keep_first,</span> <span class="pre">keep_last))</span></code> —
-anything <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a> would flag <code class="docutils literal notranslate"><span class="pre">true</span></code> is excluded here.</p></li>
+<li><p>Called with no <code class="docutils literal notranslate"><span class="pre">features</span></code>, every column on the frame is compared, including any
+unique identifier — which means nothing will ever be dropped if such a column is
+present and uncompared. Calling it plain (<code class="docutils literal notranslate"><span class="pre">orders.drop_duplicates()</span></code>) is almost
+always a mistake on a frame with an ID column; pass the subset of columns that
+should define a “duplicate” instead (Example 1).</p></li>
+<li><p>Internally, <code class="docutils literal notranslate"><span class="pre">orders.drop_duplicates(features,</span> <span class="pre">keep_first,</span> <span class="pre">keep_last)</span></code> is exactly
+<code class="docutils literal notranslate"><span class="pre">orders.filter(!orders.duplicated(features,</span> <span class="pre">keep_first,</span> <span class="pre">keep_last))</span></code> — anything
+<a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a> would flag <code class="docutils literal notranslate"><span class="pre">true</span></code> for the compared features is
+excluded, while every other column rides along unchanged on the survivors.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">keep_first</span> <span class="pre">=</span> <span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">keep_last</span> <span class="pre">=</span> <span class="pre">true</span></code> together is a validation error.</p></li>
 </ul>
 </section>
@@ -153,10 +168,14 @@ anything <a class="reference internal" href="duplicated.html"><span class="std s
 <ul class="simple">
 <li><p><a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::duplicated</span></code></span></a>: the mask this method filters by, useful
 when you want to inspect or count duplicates before deciding whether to drop them.</p></li>
-<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::filter</span></code></span></a>: the general row-selection method this is built on
-top of.</p></li>
+<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::filter</span></code></span></a>: the general row-selection method this is built on.</p></li>
 <li><p><a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ndistinct</span></code></span></a>: counts unique combinations without
 constructing a filtered frame.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow to a subset of columns for other
+reductions in this family — <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>, <code class="docutils literal notranslate"><span class="pre">any()</span></code>, <code class="docutils literal notranslate"><span class="pre">all()</span></code>, <code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">repeated()</span></code>, <code class="docutils literal notranslate"><span class="pre">corr()</span></code> — where narrowing first is a direct, lossless replacement for
+an explicit selector. <code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code> is the exception: pass <code class="docutils literal notranslate"><span class="pre">features</span></code> to it
+directly instead of narrowing first.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="drop.html">

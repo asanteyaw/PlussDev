@@ -36,7 +36,7 @@ int main() {
   scat_opts.corner = true;
   scat_opts.pair.kind = pluss::pl::flash::PairPlotKind::Reg;
   scat_opts.pair.diag_kind = pluss::pl::flash::PairPlotDiagKind::Density;
-  scat_opts.pair.dropnull = true;
+  scat_opts.pair.dropna = true;
   scat_opts.pair.max_points = 1400;
   scat_opts.pair.show_grid = true;
   df.plot()
@@ -61,14 +61,13 @@ int main() {
   // Top three months with the most traded volumes
   //==============End Cell Three =============
   std::cout << "\n[Cell 3] Top (Year, Month) by traded volume\n";
-  let monthly_volume = df.group_by({"Year", "Month"},
-                                    {
-                                        {"TotalVolume", "Volume", GroupOp::Sum},
-                                        {"MeanClose", "Close", GroupOp::Mean},
-                                    },
-                                    true,
-                                    false)
-                            .sort_values({"TotalVolume"}, false);
+  let monthly_volume = df.group({.dropnull = true})
+                           .by({"Year", "Month"})
+                           .agg({
+                               {"TotalVolume", "Volume", GroupOp::Sum},
+                               {"MeanClose", "Close", GroupOp::Mean},
+                           })
+                           .arrange({"TotalVolume"}, false);
   monthly_volume.head(3);
 
   //========== Cell Four ===========
@@ -247,10 +246,10 @@ int main() {
   //==============End Cell Six =============
   std::cout << "\n[Cell 6] ML prep (features, target, split, export)\n";
   let ml_frame = df.features({"Date"}).combine(numeric);
-  let close_prev_1 = numeric.shift({"Close"}, 1).features({"Close"}).rename("Close", "ClosePrev1");
-  let close_prev_5 = numeric.shift({"Close"}, 5).features({"Close"}).rename("Close", "ClosePrev5");
-  let volume_prev_1 = numeric.shift({"Volume"}, 1).features({"Volume"}).rename("Volume", "VolumePrev1");
-  let close_next_1 = numeric.shift({"Close"}, -1).features({"Close"}).rename("Close", "CloseNext1");
+  let close_prev_1 = numeric.features({"Close"}).shift(1).rename("Close", "ClosePrev1");
+  let close_prev_5 = numeric.features({"Close"}).shift(5).rename("Close", "ClosePrev5");
+  let volume_prev_1 = numeric.features({"Volume"}).shift(1).rename("Volume", "VolumePrev1");
+  let close_next_1 = numeric.features({"Close"}).shift(-1).rename("Close", "CloseNext1");
 
   ml_frame = ml_frame.combine(close_prev_1).combine(close_prev_5).combine(volume_prev_1).combine(close_next_1).dropnull();
   ml_frame.set({"Ret1D", "Ret5D", "VolumeChange1D", "TargetNextRet"}) = {

@@ -55,7 +55,7 @@ auto codes = DataFrame({
 });
 std::cout << codes;
 
-auto out = codes.note().fullmatch("A[0-9]+");
+auto out = codes.nt().fullmatch("A[0-9]+");
 std::cout << out;
 ```
 
@@ -99,7 +99,7 @@ under `fullmatch()`, since the whole-cell requirement is already implicit —
 the explicit anchors are redundant but harmless.
 
 ```cpp
-auto out2 = codes.note().fullmatch("^A[0-9]+$");
+auto out2 = codes.nt().fullmatch("^A[0-9]+$");
 std::cout << out2;
 ```
 

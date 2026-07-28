@@ -68,10 +68,10 @@ auto codes = DataFrame({
 });
 std::cout << codes;
 
-auto start_only = codes.note().matches("A[0-9]+");
+auto start_only = codes.nt().matches("A[0-9]+");
 std::cout << start_only;
 
-auto whole_cell = codes.note().matches("A[0-9]+", true);
+auto whole_cell = codes.nt().matches("A[0-9]+", true);
 std::cout << whole_cell;
 ```
 
@@ -124,10 +124,10 @@ match is required. Row 2 (`"123A"`) doesn't start with `A` at all, so it's
 `false` under both. Row 3 is invalid and stays `NULL`.
 
 Example 2. `full = true` and [`fullmatch()`](fullmatch.md) are the exact
-same operation — this call is identical to `codes.note().fullmatch("A[0-9]+")`.
+same operation — this call is identical to `codes.nt().fullmatch("A[0-9]+")`.
 
 ```cpp
-auto same_as_fullmatch = codes.note().matches("A[0-9]+", true);
+auto same_as_fullmatch = codes.nt().matches("A[0-9]+", true);
 std::cout << same_as_fullmatch;
 ```
 
@@ -153,7 +153,7 @@ evaluated.
 
 ```cpp
 try {
-  auto bad = codes.note().matches("[unclosed");
+  auto bad = codes.nt().matches("[unclosed");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

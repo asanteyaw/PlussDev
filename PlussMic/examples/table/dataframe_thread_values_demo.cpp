@@ -81,9 +81,7 @@ int main() {
   std::cout << "features(\"event_time\").as_timeline().year()/hour() used to derive year/hour:\n";
   ts_enriched.features({"event_time", "year", "hour", "load_mw"}).head(8);
 
-  auto ts_idx = ts.cast({
-      DataFrame::CastSpec{"event_time", pluss::table::ThreadCastTarget::TimeIndex, {}},
-  });
+  auto ts_idx = ts.features({"event_time"}).cast().timeindex();
   auto bins = ts_idx.features("event_time").as_timeindex().resample_count("H", 6);
   std::cout << "features(\"event_time\").as_timeindex().resample_count(\"H\", 6):\n";
   std::cout << pluss::print_series(bins) << "\n";
@@ -100,9 +98,9 @@ int main() {
   txt.head(8);
   txt.info();
 
-  auto txt_aug = txt
-                     .set("city_lower", txt.features("city").as_note().lower())
-                     .set("comment_tagged", txt.features("comment").as_note().replace(" ", "_"));
+  auto txt_aug = txt;
+  txt_aug.set_("city_lower", txt.features("city").as_note().lower());
+  txt_aug.set_("comment_tagged", txt.features("comment").as_note().replace(" ", "_"));
 
   std::cout << "features(\"...\").as_note() chain derived features:\n";
   txt_aug.features({"city", "city_lower", "comment", "comment_tagged", "score"}).head(8);

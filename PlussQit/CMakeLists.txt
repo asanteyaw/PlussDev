@@ -110,18 +110,51 @@ endif()
 
 include(FetchContent)
 
+set(PLUSSQIT_FMT_INCLUDE_DIR "" CACHE INTERNAL "Resolved fmt include directory for PlussQit SDK staging")
+
 if (PLUSSQIT_USE_FMT)
-  find_package(fmt QUIET)
-  if (NOT fmt_FOUND AND PLUSSQIT_FETCH_DEPS)
-    FetchContent_Declare(
-      fmt
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG 10.2.1
-    )
-    FetchContent_MakeAvailable(fmt)
+  set(_plussqit_fmt_candidates
+    "${CMAKE_CURRENT_LIST_DIR}/../ExLibs/fmt/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../ExLibs/fmt/include"
+    "${CMAKE_SOURCE_DIR}/ExLibs/fmt/include"
+    "${CMAKE_SOURCE_DIR}/../ExLibs/fmt/include"
+  )
+  foreach(_plussqit_fmt_candidate IN LISTS _plussqit_fmt_candidates)
+    if(EXISTS "${_plussqit_fmt_candidate}/fmt/format.h")
+      set(PLUSSQIT_FMT_INCLUDE_DIR "${_plussqit_fmt_candidate}" CACHE INTERNAL "Resolved fmt include directory for PlussQit SDK staging" FORCE)
+      break()
+    endif()
+  endforeach()
+
+  if (NOT PLUSSQIT_FMT_INCLUDE_DIR)
+    find_package(fmt QUIET)
+    if (NOT fmt_FOUND AND PLUSSQIT_FETCH_DEPS)
+      FetchContent_Declare(
+        fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+        GIT_TAG 10.2.1
+      )
+      FetchContent_MakeAvailable(fmt)
+    endif()
+
+    if (TARGET fmt::fmt-header-only)
+      get_target_property(_plussqit_fmt_target_includes fmt::fmt-header-only INTERFACE_INCLUDE_DIRECTORIES)
+    elseif (TARGET fmt::fmt)
+      get_target_property(_plussqit_fmt_target_includes fmt::fmt INTERFACE_INCLUDE_DIRECTORIES)
+    endif()
+
+    if (_plussqit_fmt_target_includes)
+      foreach(_plussqit_fmt_target_include IN LISTS _plussqit_fmt_target_includes)
+        if (EXISTS "${_plussqit_fmt_target_include}/fmt/format.h")
+          set(PLUSSQIT_FMT_INCLUDE_DIR "${_plussqit_fmt_target_include}" CACHE INTERNAL "Resolved fmt include directory for PlussQit SDK staging" FORCE)
+          break()
+        endif()
+      endforeach()
+    endif()
   endif()
-  if (NOT fmt_FOUND)
-    message(STATUS "fmt not found; disabling fmt support (set PLUSSQIT_FETCH_DEPS=ON to fetch, or install fmt).")
+
+  if (NOT PLUSSQIT_FMT_INCLUDE_DIR)
+    message(STATUS "fmt headers not found; disabling fmt support (install fmt, vendor ExLibs/fmt, or set PLUSSQIT_FETCH_DEPS=ON).")
     set(PLUSSQIT_USE_FMT OFF)
   endif()
 endif()
@@ -380,8 +413,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
 endif()
 
 if (PLUSSQIT_USE_FMT)
-  target_link_libraries(plussqit_codem PUBLIC fmt::fmt)
-  target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=1)
+  target_include_directories(plussqit_codem PUBLIC
+    $<BUILD_INTERFACE:${PLUSSQIT_FMT_INCLUDE_DIR}>
+  )
+  target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=1 FMT_HEADER_ONLY=1)
 else()
   target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=0)
 endif()
@@ -1034,6 +1069,16 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/Flame/
   PATTERN "*.inc"
   PATTERN ".DS_Store" EXCLUDE
 )
+
+if (PLUSSQIT_USE_FMT AND PLUSSQIT_FMT_INCLUDE_DIR)
+  install(DIRECTORY ${PLUSSQIT_FMT_INCLUDE_DIR}/fmt/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fmt
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN ".DS_Store" EXCLUDE
+  )
+endif()
 
 if (PLUSSQIT_BUILD_CODEH)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/core/

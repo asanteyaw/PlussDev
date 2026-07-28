@@ -24,7 +24,7 @@ exactly three columns regardless of the input.
 Like [`split()`](split.md), [`findall()`](findall.md), [`extract()`](extract.md),
 and [`indicate()`](indicate.md), `partition()` operates on exactly one
 column — calling it through a multi-feature accessor throws
-`"DataFrame::note().partition requires one feature"`.
+`"DataFrame::nt().partition requires one feature"`.
 ```
 
 ```{important} A missing separator produces empty strings, not NULL
@@ -72,7 +72,7 @@ auto entries = DataFrame({
 });
 std::cout << entries;
 
-auto out1 = entries.features({"entry"}).note().partition("=");
+auto out1 = entries.features({"entry"}).nt().partition("=");
 std::cout << out1;
 ```
 
@@ -115,7 +115,7 @@ genuinely `NULL`.
 Example 2. A custom column prefix.
 
 ```cpp
-auto out2 = entries.features({"entry"}).note().partition("=", "kv");
+auto out2 = entries.features({"entry"}).nt().partition("=", "kv");
 std::cout << out2;
 ```
 
@@ -140,7 +140,7 @@ Example 3. An empty separator throws immediately.
 
 ```cpp
 try {
-  auto bad = entries.features({"entry"}).note().partition("");
+  auto bad = entries.features({"entry"}).nt().partition("");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

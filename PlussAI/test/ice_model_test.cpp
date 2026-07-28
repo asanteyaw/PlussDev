@@ -59,10 +59,10 @@ bool run_ice_outline_classification_checks(std::ostream* err = nullptr) {
   ice::TrainOptions options{};
   options.loss = ice::LossKind::BCEWithLogits;
   options.optimizer = ice::OptimizerKind::Adam;
-  options.max_epochs = 150;
+  options.execution.max_epochs = 150;
   options.batch_size = 64;
   options.learning_rate = 0.05;
-  options.val_ratio = 0.15;
+  options.validation.split_ratio = 0.15;
   options.seed = 7;
 
   model.learn(data.x, data.y, options);
@@ -143,10 +143,10 @@ bool run_ice_outline_regression_checks(std::ostream* err = nullptr) {
   auto model = ice::Outline(pluss::nn::Fusion(3, 12), pluss::nn::ReLU(), pluss::nn::Fusion(12, 1));
   ice::TrainOptions options{};
   options.loss = ice::LossKind::MSE;
-  options.max_epochs = 150;
+  options.execution.max_epochs = 150;
   options.batch_size = 64;
   options.learning_rate = 0.02;
-  options.val_ratio = 0.15;
+  options.validation.split_ratio = 0.15;
   options.seed = 11;
   model.learn(x, y, options);
 
@@ -182,17 +182,68 @@ private:
   pluss::nn::Fusion fusion2_{8, 1};
 };
 
+class StepAwareClassifier final : public ice::Model {
+public:
+  StepAwareClassifier() {
+    register_module(*fusion1_.get());
+    register_module(*relu_.get());
+    register_module(*fusion2_.get());
+  }
+
+  [[nodiscard]] Series forward(const Series& x) const override {
+    return fusion2_->forward(relu_->forward(fusion1_->forward(x)));
+  }
+
+  [[nodiscard]] ice::StepResult learn_step(const ice::Batch& batch,
+                                           const ice::StepContext& ctx) const override {
+    ++learn_step_calls_;
+    return Model::learn_step(batch, ctx);
+  }
+
+  [[nodiscard]] ice::StepResult valid_step(const ice::Batch& batch,
+                                           const ice::StepContext& ctx) const override {
+    ++valid_step_calls_;
+    return Model::valid_step(batch, ctx);
+  }
+
+  [[nodiscard]] ice::StepResult test_step(const ice::Batch& batch,
+                                          const ice::StepContext& ctx) const override {
+    ++test_step_calls_;
+    return Model::test_step(batch, ctx);
+  }
+
+  [[nodiscard]] ice::StepResult infer_step(const ice::Batch& batch,
+                                           const ice::StepContext& ctx) const override {
+    ++infer_step_calls_;
+    return Model::infer_step(batch, ctx);
+  }
+
+  [[nodiscard]] int learn_step_calls() const noexcept { return learn_step_calls_; }
+  [[nodiscard]] int valid_step_calls() const noexcept { return valid_step_calls_; }
+  [[nodiscard]] int test_step_calls() const noexcept { return test_step_calls_; }
+  [[nodiscard]] int infer_step_calls() const noexcept { return infer_step_calls_; }
+
+private:
+  mutable int learn_step_calls_ = 0;
+  mutable int valid_step_calls_ = 0;
+  mutable int test_step_calls_ = 0;
+  mutable int infer_step_calls_ = 0;
+  pluss::nn::Fusion fusion1_{4, 8};
+  pluss::nn::ReLU relu_{};
+  pluss::nn::Fusion fusion2_{8, 1};
+};
+
 bool run_ice_custom_model_checks(std::ostream* err = nullptr) {
   const auto data = make_classification_data(300, 55);
   TinyCustomClassifier model{};
 
   ice::TrainOptions options{};
   options.loss = ice::LossKind::BCEWithLogits;
-  options.max_epochs = 100;
+  options.execution.max_epochs = 100;
   options.batch_size = 64;
   options.learning_rate = 0.05;
-  options.val_ratio = 0.0; // exercise the no-early-stopping path too
-  options.early_stopping = false;
+  options.validation.split_ratio = 0.0; // exercise the no-early-stopping path too
+  options.loop_regularization.early_stopping = false;
   options.seed = 3;
   model.learn(data.x, data.y, options);
 
@@ -205,6 +256,52 @@ bool run_ice_custom_model_checks(std::ostream* err = nullptr) {
     if (err) *err << "ice custom Model subclass should learn something real; got accuracy=" << report.metric << "\n";
     return false;
   }
+  return true;
+}
+
+bool run_ice_step_lifecycle_checks(std::ostream* err = nullptr) {
+  const auto data = make_classification_data(260, 71);
+  StepAwareClassifier model{};
+
+  ice::TrainOptions options{};
+  options.loss = ice::LossKind::BCEWithLogits;
+  options.optimizer = ice::OptimizerKind::Adam;
+  options.execution.max_epochs = 40;
+  options.batch_size = 32;
+  options.learning_rate = 0.04;
+  options.validation.split_ratio = 0.2;
+  options.seed = 8;
+
+  model.learn(data.x, data.y, options);
+  if (model.learn_step_calls() <= 0) {
+    if (err) *err << "ice Coach should route training through Model::learn_step()\n";
+    return false;
+  }
+  if (model.valid_step_calls() <= 0) {
+    if (err) *err << "ice Coach should route validation through Model::valid_step()\n";
+    return false;
+  }
+
+  const auto report = model.assess(data.x, data.y, ice::LossKind::BCEWithLogits);
+  if (report.metric_name != "accuracy") {
+    if (err) *err << "ice step lifecycle assess() should still compute the expected metric\n";
+    return false;
+  }
+  if (model.test_step_calls() <= 0) {
+    if (err) *err << "ice Coach should route assess() through Model::test_step()\n";
+    return false;
+  }
+
+  const Series predictions = model.infer(data.x, 41);
+  if (predictions.sizes()[0] != data.x.sizes()[0]) {
+    if (err) *err << "ice step lifecycle infer() should preserve row count\n";
+    return false;
+  }
+  if (model.infer_step_calls() <= 0) {
+    if (err) *err << "ice Coach should route infer() through Model::infer_step()\n";
+    return false;
+  }
+
   return true;
 }
 
@@ -221,15 +318,15 @@ bool run_ice_numerical_safety_checks(std::ostream* err = nullptr) {
   // surprisingly robust to a huge nominal LR, so SGD is what reliably
   // reproduces a genuine blow-up here.
   options.optimizer = ice::OptimizerKind::SGD;
-  options.max_epochs = 20;
+  options.execution.max_epochs = 20;
   options.batch_size = 32;
   options.learning_rate = 1.0e8; // deliberately absurd
   // Gradient clipping is on by default specifically to neutralize scenarios
   // like this one — disable it here so this test isolates the *other*
   // safety net (fail_if_non_finite_*) instead of re-proving clipping works.
-  options.grad_clip.mode = pluss::nn::optim::GradientClipMode::None;
-  options.val_ratio = 0.0;
-  options.early_stopping = false;
+  options.execution.grad_clip.mode = pluss::nn::optim::GradientClipMode::None;
+  options.validation.split_ratio = 0.0;
+  options.loop_regularization.early_stopping = false;
   options.seed = 1;
 
   bool threw = false;
@@ -258,12 +355,12 @@ bool run_ice_platform_fallback_checks(std::ostream* err = nullptr) {
 
     ice::TrainOptions options{};
     options.loss = ice::LossKind::BCEWithLogits;
-    options.max_epochs = 30;
+    options.execution.max_epochs = 30;
     options.batch_size = 64;
     options.learning_rate = 0.05;
-    options.val_ratio = 0.15;
+    options.validation.split_ratio = 0.15;
     options.seed = 5;
-    options.platform = platform;
+    options.execution.platform = platform;
 
     try {
       model.learn(data.x, data.y, options);
@@ -317,11 +414,11 @@ bool run_ice_dataframe_standardize_checks(std::ostream* err = nullptr) {
   ice::TrainOptions options{};
   options.loss = ice::LossKind::BCEWithLogits;
   options.optimizer = ice::OptimizerKind::Adam;
-  options.max_epochs = 100;
+  options.execution.max_epochs = 100;
   options.batch_size = 64;
   options.learning_rate = 0.05;
   options.standardize = true;
-  options.val_ratio = 0.15;
+  options.validation.split_ratio = 0.15;
   options.seed = 9;
   model.learn(df, "label", options);
 
@@ -398,6 +495,7 @@ TEST_CASE("ice model tranche", "[ice][model]") {
   if (!run_ice_outline_classification_checks(&std::cerr)) FAIL("ice Outline classification checks failed");
   if (!run_ice_outline_regression_checks(&std::cerr)) FAIL("ice Outline regression checks failed");
   if (!run_ice_custom_model_checks(&std::cerr)) FAIL("ice custom Model checks failed");
+  if (!run_ice_step_lifecycle_checks(&std::cerr)) FAIL("ice step lifecycle checks failed");
   if (!run_ice_numerical_safety_checks(&std::cerr)) FAIL("ice numerical safety checks failed");
   if (!run_ice_platform_fallback_checks(&std::cerr)) FAIL("ice platform fallback checks failed");
   if (!run_ice_dataframe_standardize_checks(&std::cerr)) FAIL("ice DataFrame standardize checks failed");
@@ -408,6 +506,7 @@ int main() {
   ok = run_ice_outline_classification_checks(&std::cerr) && ok;
   ok = run_ice_outline_regression_checks(&std::cerr) && ok;
   ok = run_ice_custom_model_checks(&std::cerr) && ok;
+  ok = run_ice_step_lifecycle_checks(&std::cerr) && ok;
   ok = run_ice_numerical_safety_checks(&std::cerr) && ok;
   ok = run_ice_platform_fallback_checks(&std::cerr) && ok;
   ok = run_ice_dataframe_standardize_checks(&std::cerr) && ok;

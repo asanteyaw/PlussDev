@@ -53,8 +53,12 @@ int main() {
   fig_scatter.headline("Lifecycle Cost vs Agency Code");
   fig_scatter.save_pdf("plot_df_scatter.pdf");
 
-  auto top_agencies = df.tally("Agency Name", /*top_n=*/8, /*dropnull=*/true, /*render=*/false);
-  auto ranked_agencies = top_agencies.label().set("Agency Name", /*drop_feature=*/false);
+  auto top_agencies = df.features({"Agency Name"}).freq({
+      .top = 8,
+      .dropnull = true,
+  });
+  auto ranked_agencies = pluss::table::DataFrame({{"count", top_agencies}})
+                             .label().set(top_agencies.label().values());
   auto fig_bar = ranked_agencies.plot().bar("count");
   fig_bar.headline("Top Agencies by count");
   fig_bar.save_pdf("plot_df_bar.pdf");

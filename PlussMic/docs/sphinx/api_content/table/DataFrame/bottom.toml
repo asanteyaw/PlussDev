@@ -13,7 +13,7 @@ returns = """
 
 see_also = [
   "<a href=\"#top\"><code>DataFrame::top</code></a>: inspect the highest rows instead of the lowest ones.",
-  "<a href=\"#sort_values\"><code>DataFrame::sort_values</code></a>: perform full explicit sorting when you need more control than `bottom(...)` exposes.",
+  "<a href=\"#arrange\"><code>DataFrame::arrange</code></a>: perform full explicit sorting when you need more control than `bottom(...)` exposes.",
   "<a href=\"#head\"><code>DataFrame::head</code></a>: preview the first rows of an already sorted frame."
 ]
 

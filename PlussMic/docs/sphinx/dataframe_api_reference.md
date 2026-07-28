@@ -16,10 +16,12 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `DataFrame` exposes nested accessors, each with its own method pages and sidebar:
 
-- `note()` -> [`DataFrameNoteAccessor`](dataframe_note_accessor_api_reference.md)
+- `nt()` -> [`DataFrameNoteAccessor`](dataframe_note_accessor_api_reference.md)
 - `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
 - `label()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
 - `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
+- `cast()` -> [`DataFrameCastAccessor`](dataframe_cast_accessor_api_reference.md)
+- `group()` -> [`DataFrameGroupBuilder`](dataframe_group_accessor_api_reference.md)
 - `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
 - `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
 
@@ -48,7 +50,6 @@ api/dataframe/copy
 api/dataframe/corr
 api/dataframe/corr_with
 api/dataframe/count
-api/dataframe/count_by
 api/dataframe/covar
 api/dataframe/csmax
 api/dataframe/csmin
@@ -82,7 +83,7 @@ api/dataframe/fold
 api/dataframe/freq
 api/dataframe/ge
 api/dataframe/get
-api/dataframe/group_by
+api/dataframe/group
 api/dataframe/gt
 api/dataframe/has
 api/dataframe/head
@@ -118,7 +119,6 @@ api/dataframe/matmul
 api/dataframe/matrix
 api/dataframe/max
 api/dataframe/mean
-api/dataframe/mean_by
 api/dataframe/median
 api/dataframe/min
 api/dataframe/mod
@@ -128,7 +128,7 @@ api/dataframe/ncases
 api/dataframe/ndistinct
 api/dataframe/ne
 api/dataframe/nfeatures
-api/dataframe/note
+api/dataframe/nt
 api/dataframe/notnull
 api/dataframe/observe
 api/dataframe/percentiles
@@ -181,7 +181,7 @@ api/dataframe/show
 api/dataframe/shuffle
 api/dataframe/skew
 api/dataframe/slice
-api/dataframe/sort_values
+api/dataframe/arrange
 api/dataframe/sql
 api/dataframe/stack
 api/dataframe/std

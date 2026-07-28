@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,8 +50,8 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Lowercases every character in every selected text feature’s cells, returning
 a new frame — the classic normalization step before a case-insensitive
-comparison, a <code class="docutils literal notranslate"><span class="pre">count_by()</span></code>/<code class="docutils literal notranslate"><span class="pre">group_by()</span></code> key that shouldn’t be split by
-casing accidents, or a lookup against a canonical lowercase reference list.</p>
+comparison, a <code class="docutils literal notranslate"><span class="pre">group()</span></code> key that shouldn’t be split by casing accidents,
+or a lookup against a canonical lowercase reference list.</p>
 <p>Like every method on this accessor, <code class="docutils literal notranslate"><span class="pre">lower()</span></code> applies to <strong>every feature the
 accessor was built with</strong> in one call — see <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a> for the
 full explanation of that shared mechanic (including the two ways to reach
@@ -94,7 +94,7 @@ preserved.</p>
 <span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p3&quot;</span><span class="p">})));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">lower</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">lower</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>

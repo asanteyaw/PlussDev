@@ -44,6 +44,65 @@ DataFrame make_xy_frame() {
   });
 }
 
+void test_thread_plot_apis() {
+  const auto x = Thread(pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0})).name("x");
+  const auto y = Thread(pluss::make_series(std::vector<double>{1.0, 1.4, 2.2, 3.0}))
+                     .label().set(Thread(pluss::make_note({"r0", "r1", "r2", "r3"})))
+                     .name("y");
+  const auto grp = Thread(pluss::make_note({"alpha", "alpha", "beta", "beta"})).name("grp");
+
+  const auto fig_line = y.plot().line(x);
+  expect(fig_line.panes().front().trace_count() == 1, "thread.plot().line(x) should emit one trace");
+  expect(fig_line.panes().front().traces().front().kind() == TraceKind::Trend,
+         "thread.plot().line(x) should emit trend trace");
+
+  const auto fig_bar = y.plot().bar();
+  expect(fig_bar.panes().front().trace_count() == 1, "thread.plot().bar should emit one trace");
+  expect(fig_bar.panes().front().traces().front().kind() == TraceKind::Columns,
+         "thread.plot().bar should emit columns trace");
+
+  const auto fig_hist = y.plot().hist(7);
+  expect(fig_hist.panes().front().trace_count() == 1, "thread.plot().hist should emit one trace");
+  expect(fig_hist.panes().front().traces().front().kind() == TraceKind::Bucket,
+         "thread.plot().hist should emit bucket trace");
+
+  const auto fig_density = y.plot().density(64);
+  expect(fig_density.panes().front().trace_count() == 1, "thread.plot().density should emit one trace");
+  expect(fig_density.panes().front().traces().front().kind() == TraceKind::Trend,
+         "thread.plot().density should emit trend trace");
+
+  const auto fig_pie = y.plot().pie(grp);
+  expect(fig_pie.panes().front().trace_count() == 1, "thread.plot().pie(labels) should emit one trace");
+  expect(fig_pie.panes().front().traces().front().kind() == TraceKind::Wedge,
+         "thread.plot().pie(labels) should emit wedge trace");
+
+  const auto fig_scatter = y.plot().scatter(x, grp);
+  expect(fig_scatter.panes().front().trace_count() == 2, "thread.plot().scatter(x, hue) should split by hue");
+  expect(fig_scatter.panes().front().traces().front().kind() == TraceKind::Cloud,
+         "thread.plot().scatter(x, hue) should emit cloud trace");
+
+  const auto fig_lag = y.plot().lag();
+  expect(fig_lag.panes().front().trace_count() == 1, "thread.plot().lag should emit one trace");
+  expect(fig_lag.panes().front().traces().front().kind() == TraceKind::Cloud,
+         "thread.plot().lag should emit cloud trace");
+
+  const auto fig_act = y.plot().act();
+  expect(fig_act.panes().front().trace_count() >= 1, "thread.plot().act should emit at least one trace");
+  expect(fig_act.panes().front().traces().front().kind() == TraceKind::Spike,
+         "thread.plot().act should emit spike trace first");
+
+  const auto fig_bootstrap = y.plot().bootstrap();
+  expect(fig_bootstrap.panes().front().trace_count() == 1,
+         "thread.plot().bootstrap should emit one trace");
+  expect(fig_bootstrap.panes().front().traces().front().kind() == TraceKind::Bucket,
+         "thread.plot().bootstrap should emit bucket trace");
+
+  const auto fig_auto = y.plot().auto_plot();
+  expect(fig_auto.panes().front().trace_count() == 1, "thread.plot().auto_plot should emit one trace");
+  expect(fig_auto.panes().front().traces().front().kind() == TraceKind::Columns,
+         "thread.plot().auto_plot should prefer columns for short labeled threads");
+}
+
 void test_object_plot_apis() {
   const auto df = make_xy_frame();
 
@@ -275,9 +334,9 @@ void test_plot_options_defaults() {
 
 void test_corr_methods_and_plot3d() {
   const auto df = make_xy_frame();
-  const auto pearson = df.corr({"x", "y", "z"}, false);
-  const auto spearman = df.corr({"x", "y", "z"}, DataFrame::CorrMethod::Spearman, false);
-  const auto kendall = df.corr({"x", "y", "z"}, DataFrame::CorrMethod::KendallTau, false);
+  const auto pearson = df.features({"x", "y", "z"}).corr(false);
+  const auto spearman = df.features({"x", "y", "z"}).corr(DataFrame::CorrMethod::Spearman, false);
+  const auto kendall = df.features({"x", "y", "z"}).corr(DataFrame::CorrMethod::KendallTau, false);
   expect(pearson.ncases() == 3 && pearson.nfeatures() == 3, "corr(pearson) should return square matrix");
   expect(spearman.ncases() == 3 && spearman.nfeatures() == 3, "corr(spearman) should return square matrix");
   expect(kendall.ncases() == 3 && kendall.nfeatures() == 3, "corr(kendall) should return square matrix");
@@ -307,6 +366,7 @@ void test_corr_methods_and_plot3d() {
 } // namespace
 
 int main() {
+  test_thread_plot_apis();
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();
   test_plot_options_defaults();

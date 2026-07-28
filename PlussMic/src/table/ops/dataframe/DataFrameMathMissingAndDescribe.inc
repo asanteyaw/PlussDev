@@ -34,6 +34,33 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_zip_threads_(const
       lhs.names_, std::move(out_cols), lhs.cases_, lhs.title_, lhs.case_axis_);
 }
 
+std::string freq_label_name_token_(const std::vector<std::string>& names) {
+  std::string out;
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    if (i > 0) {
+      out.append("\x1F", 1);
+    }
+    out += names[i];
+  }
+  return out;
+}
+
+Thread cast_thread_target_(const Thread& thread,
+                           ThreadCastTarget target,
+                           const ThreadCastOptions& options = {}) {
+  switch (target) {
+    case ThreadCastTarget::Series:
+      return thread.cast(options).series();
+    case ThreadCastTarget::Note:
+      return thread.cast(options).note();
+    case ThreadCastTarget::Timeline:
+      return thread.cast(options).timeline();
+    case ThreadCastTarget::TimeIndex:
+      return thread.cast(options).timeindex();
+  }
+  return thread;
+}
+
 }  // namespace
 
 DataFrame DataFrame::add(double other) const {
@@ -1201,8 +1228,16 @@ Thread DataFrame::count(Axis axis) const {
   return with_reduce_labels_(std::move(out), src, names, normalized_axis);
 }
 
+Thread DataFrame::any(bool skipnull) const {
+  return any(Axis::Case, {}, skipnull);
+}
+
 Thread DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
   return any(Axis::Case, features, skipnull);
+}
+
+Thread DataFrame::any(Axis axis, bool skipnull) const {
+  return any(axis, {}, skipnull);
 }
 
 Thread DataFrame::any(Axis axis,
@@ -1213,8 +1248,16 @@ Thread DataFrame::any(Axis axis,
       impl_ref_(), normalized_axis, features, false, skipnull, "DataFrame::any");
 }
 
+Thread DataFrame::all(bool skipnull) const {
+  return all(Axis::Case, {}, skipnull);
+}
+
 Thread DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
   return all(Axis::Case, features, skipnull);
+}
+
+Thread DataFrame::all(Axis axis, bool skipnull) const {
+  return all(axis, {}, skipnull);
 }
 
 Thread DataFrame::all(Axis axis,
@@ -1265,6 +1308,10 @@ Thread DataFrame::csmax(Axis axis, bool skipnull) const {
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
+Thread DataFrame::ndistinct(bool dropnull) const {
+  return ndistinct({}, dropnull);
+}
+
 Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> features,
                             bool dropnull) const {
   const auto& src = impl_ref_();
@@ -1300,54 +1347,61 @@ Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> featu
 
   return make_i64_thread(values)
       .label().set(make_note_thread(names))
-      .with_display_name("ndistinct");
+      .name("ndistinct");
 }
 
-Thread DataFrame::freq(pluss::msharp::RangeView::Of<std::string_view> features,
-                       std::int64_t top_n,
-                       bool dropnull) const {
-  const auto scoped = features.empty() ? *this : this->features(features);
-  if (scoped.nfeatures() == 1) {
-    return detail::tally_count_thread(scoped.features(scoped.features().front()), top_n, dropnull, "freq");
+Thread DataFrame::freq() const {
+  return freq(FreqOptions{});
+}
+
+Thread DataFrame::freq(FreqOptions options) const {
+  PLUSS_CHECK(options.top >= 0, "DataFrame::freq: top must be >= 0");
+  PLUSS_CHECK(nfeatures() > 0, "DataFrame::freq: no features");
+
+  const auto& names = features();
+  std::vector<std::string_view> key_views;
+  key_views.reserve(names.size());
+  for (const auto& name : names) {
+    key_views.push_back(name);
   }
 
-  std::unordered_map<std::string, std::int64_t> counts;
-  std::vector<std::string> order;
-  for (std::int64_t row = 0; row < scoped.ncases(); ++row) {
-    bool skip_row = false;
-    std::string key;
-    for (const auto& name : scoped.features()) {
-      const auto column = scoped.features(name);
-      const auto column_valid = column.is_valid(row);
-      if (!column_valid && dropnull) {
-        skip_row = true;
-        break;
-      }
-      if (!key.empty()) key += "|";
-      key += column_valid ? thread_scalar_string_at(column, row) : "NULL";
+  auto grouped = group(
+      pluss::msharp::RangeView::Of<std::string_view>(
+          std::span<const std::string_view>(key_views.data(), key_views.size())),
+      {GroupSpec{"count", "", GroupOp::Count}},
+      options.dropnull,
+      false);
+
+  if (options.sort) {
+    grouped = grouped.arrange({ArrangeSpec{"count", options.ascending, true}});
+  }
+  if (options.top > 0) {
+    grouped = grouped.slice(0, std::min<std::int64_t>(grouped.ncases(), options.top));
+  }
+
+  grouped = grouped.label().set(
+      pluss::msharp::RangeView::Of<std::string_view>(
+          std::span<const std::string_view>(key_views.data(), key_views.size())),
+      true,
+      "\x1F");
+
+  auto labels = grouped.label().values().name(freq_label_name_token_(names));
+  auto out = grouped.features("count").label().set(labels);
+  if (options.kind == FreqKind::Prop) {
+    if (out.size() == 0) {
+      out = make_f64_thread({}).label().set(labels);
+    } else {
+      const auto total = out.sum().thread().as_series().item<double>();
+      out = out.div(total).label().set(labels);
     }
-    if (skip_row) continue;
-    if (!counts.contains(key)) order.push_back(key);
-    counts[key] += 1;
+    return out.name("prop");
   }
-  std::sort(order.begin(), order.end(), [&](const auto& lhs, const auto& rhs) {
-    if (counts[lhs] != counts[rhs]) return counts[lhs] > counts[rhs];
-    return lhs < rhs;
-  });
-  if (top_n > 0 && static_cast<std::size_t>(top_n) < order.size()) {
-    order.resize(static_cast<std::size_t>(top_n));
-  }
-  std::vector<std::string> keys;
-  std::vector<std::int64_t> values;
-  keys.reserve(order.size());
-  values.reserve(order.size());
-  for (const auto& key : order) {
-    keys.push_back(key);
-    values.push_back(counts[key]);
-  }
-  return make_i64_thread(values)
-      .label().set(Thread(pluss::make_note(keys)))
-      .with_display_name("freq");
+  return out.name("count");
+}
+
+Thread DataFrame::duplicated(bool keep_first,
+                             bool keep_last) const {
+  return duplicated({}, keep_first, keep_last);
 }
 
 Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1361,7 +1415,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     return scoped.features(name)
         .duplicated(keep_first, keep_last)
         .label().set(scoped.label().values())
-        .with_display_name("duplicated");
+        .name("duplicated");
   }
 
   std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_key;
@@ -1386,11 +1440,20 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
   }
   return Thread(bool_series_from_keep(mask))
       .label().set(scoped.label().values())
-      .with_display_name("duplicated");
+      .name("duplicated");
+}
+
+Thread DataFrame::repeated() const {
+  return repeated({});
 }
 
 Thread DataFrame::repeated(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return duplicated(features, false, false).with_display_name("repeated");
+  return duplicated(features, false, false).name("repeated");
+}
+
+DataFrame DataFrame::drop_duplicates(bool keep_first,
+                                     bool keep_last) const {
+  return drop_duplicates({}, keep_first, keep_last);
 }
 
 DataFrame DataFrame::drop_duplicates(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1642,7 +1705,7 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
     if (!seen.insert(spec.feature).second) {
       continue;
     }
-    out_cols[it->second] = src.columns_[it->second].cast(spec.target, spec.options);
+    out_cols[it->second] = cast_thread_target_(src.columns_[it->second], spec.target, spec.options);
   }
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
@@ -1692,7 +1755,7 @@ DataFrame DataFrame::cast(
     if (!seen.insert(key).second) {
       continue;
     }
-    out_cols[it->second] = src.columns_[it->second].cast(target);
+    out_cols[it->second] = cast_thread_target_(src.columns_[it->second], target);
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -55,8 +55,8 @@ count on its own; a <code class="docutils literal notranslate"><span class="pre"
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Not to be confused with DataFrameNoteAccessor::length()
-<code class="docutils literal notranslate"><span class="pre">.note().length()</span></code> is an entirely different method on a different class: a
-per-cell text-length accessor reached through the <a class="reference internal" href="note.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">note()</span></code></span></a> accessor,
+<code class="docutils literal notranslate"><span class="pre">.nt().length()</span></code> is an entirely different method on a different class: a
+per-cell text-length accessor reached through the <a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nt()</span></code></span></a> accessor,
 returning one integer per case for a given text feature. <code class="docutils literal notranslate"><span class="pre">DataFrame::length()</span></code>
 (this page) is a single whole-frame scalar with no accessor involved.</p>
 </div>
@@ -102,7 +102,7 @@ confirm both), so <code class="docutils literal notranslate"><span class="pre">l
 <li><p><code class="docutils literal notranslate"><span class="pre">length()</span> <span class="pre">==</span> <span class="pre">width()</span> <span class="pre">*</span> <span class="pre">height()</span> <span class="pre">==</span> <span class="pre">nfeatures()</span> <span class="pre">*</span> <span class="pre">ncases()</span></code> always; there is no
 separate stored count, it is computed fresh from the two dimensions each call.</p></li>
 <li><p>Not related to <a class="reference internal" href="../dataframe-note/length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::length()</span></code></span></a>
-(reached via <code class="docutils literal notranslate"><span class="pre">.note().length()</span></code>), which reports a per-case text length for one
+(reached via <code class="docutils literal notranslate"><span class="pre">.nt().length()</span></code>), which reports a per-case text length for one
 <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature rather than a single whole-frame total.</p></li>
 <li><p>A frame with <code class="docutils literal notranslate"><span class="pre">0</span></code> cases or <code class="docutils literal notranslate"><span class="pre">0</span></code> features has <code class="docutils literal notranslate"><span class="pre">length()</span> <span class="pre">==</span> <span class="pre">0</span></code>, even if the other
 dimension is non-zero.</p></li>

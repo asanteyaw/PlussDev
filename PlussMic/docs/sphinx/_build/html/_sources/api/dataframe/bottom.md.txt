@@ -15,7 +15,7 @@ DataFrame::bottom(std::string_view feature, std::int64_t n) const -> DataFrame
 
 Returns the `n` rows with the smallest values in `feature`, with every other feature
 carried along unchanged — the ascending counterpart to [`top()`](top.md). This is
-exactly `sort_values({feature}, /*ascending=*/true)` followed by
+exactly `arrange({feature}, /*ascending=*/true)` followed by
 [`head(n)`](head.md).
 
 Missing values in `feature` always sort to the very end — even here, in the ascending
@@ -80,8 +80,8 @@ naive sort — missing values are always ranked last here too, so they only surf
 
 ## Notes
 
-- `bottom()` is exactly `sort_values({feature}, true).head(n)`; reach for
-  `sort_values()` directly if you need more than one sort key.
+- `bottom()` is exactly `arrange({feature}, true).head(n)`; reach for
+  `arrange()` directly if you need more than one sort key.
 - A missing value in `feature` sorts to the very end regardless of ascending or
   descending direction — this is the same nulls-last rule `top()` follows, not a
   nulls-first rule for the ascending case.
@@ -92,7 +92,7 @@ naive sort — missing values are always ranked last here too, so they only surf
 
 - [`DataFrame::top`](top.md): the descending counterpart, returning the largest `n`
   rows by `feature`.
-- [`DataFrame::sort_values`](sort_values.md): the general sorting method this is built
+- [`DataFrame::arrange`](arrange.md): the general sorting method this is built
   on, supporting multiple keys and mixed sort directions.
 - [`DataFrame::head`](head.md): the plain positional prefix `bottom()` applies after
   sorting.

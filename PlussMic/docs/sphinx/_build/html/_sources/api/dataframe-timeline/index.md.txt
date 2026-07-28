@@ -213,7 +213,7 @@ its own, with a different message than the plain-unsorted case above.
 
 - With the default `require_sorted = true`, calling this on an *unsorted*
   `Timeline` (or one containing `NaT`) throws immediately — sort with
-  [`DataFrame::sort_values`](../dataframe/sort_values.md) (or an equivalent)
+  [`DataFrame::arrange`](../dataframe/arrange.md) (or an equivalent)
   first if needed.
 - `require_sorted = false` skips that check entirely — use it only when you
   already know the data's order doesn't matter for what comes next, since

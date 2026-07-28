@@ -264,7 +264,21 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
       out.push_back(std::monostate{});
       continue;
     }
-    out.push_back(slot_value_from_thread_payload(thread_from_slot_value(value).cast(target, options)));
+    const auto casted = [&]() {
+      const auto thread = thread_from_slot_value(value);
+      switch (target) {
+        case pluss::table::ThreadCastTarget::Series:
+          return thread.cast(options).series();
+        case pluss::table::ThreadCastTarget::Note:
+          return thread.cast(options).note();
+        case pluss::table::ThreadCastTarget::Timeline:
+          return thread.cast(options).timeline();
+        case pluss::table::ThreadCastTarget::TimeIndex:
+          return thread.cast(options).timeindex();
+      }
+      return thread;
+    }();
+    out.push_back(slot_value_from_thread_payload(casted));
   }
   return Slot(std::move(out));
 }

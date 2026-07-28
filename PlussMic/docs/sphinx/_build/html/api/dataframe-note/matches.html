@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -103,10 +103,10 @@ is required to match (<code class="docutils literal notranslate"><span class="pr
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">codes</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">start_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;A[0-9]+&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">start_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;A[0-9]+&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">start_only</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">whole_cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;A[0-9]+&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">whole_cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;A[0-9]+&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">whole_cell</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -157,8 +157,8 @@ text after it — <code class="docutils literal notranslate"><span class="pre">t
 match is required. Row 2 (<code class="docutils literal notranslate"><span class="pre">&quot;123A&quot;</span></code>) doesn’t start with <code class="docutils literal notranslate"><span class="pre">A</span></code> at all, so it’s
 <code class="docutils literal notranslate"><span class="pre">false</span></code> under both. Row 3 is invalid and stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 <p>Example 2. <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">true</span></code> and <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a> are the exact
-same operation — this call is identical to <code class="docutils literal notranslate"><span class="pre">codes.note().fullmatch(&quot;A[0-9]+&quot;)</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">same_as_fullmatch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;A[0-9]+&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+same operation — this call is identical to <code class="docutils literal notranslate"><span class="pre">codes.nt().fullmatch(&quot;A[0-9]+&quot;)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">same_as_fullmatch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;A[0-9]+&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">same_as_fullmatch</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -180,7 +180,7 @@ same operation — this call is identical to <code class="docutils literal notra
 <p>Example 3. An invalid regex pattern throws immediately, before any row is
 evaluated.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;[unclosed&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;[unclosed&quot;</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>

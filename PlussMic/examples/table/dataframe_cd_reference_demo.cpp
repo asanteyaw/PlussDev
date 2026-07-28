@@ -110,24 +110,21 @@ int main() {
       {"final", make_series({80.0, 75.0, std::numeric_limits<double>::quiet_NaN(), 90.0})},
   }).title("missing");
 
-  print_block("CASE_STUDY_POS", labeled.case_study(pos(1)).to_string());
-  print_block("CASE_STUDY_LABELS", labeled.case_study(labels({"B200", "A100"})).to_string());
+  print_block("CASE_STUDY_POS", labeled.case_study(DataFrame::Case::at(1)).to_string());
+  print_block("CASE_STUDY_LABELS", labeled.case_study(DataFrame::Case::labels({"B200", "A100"})).to_string());
   print_block("CASE_STUDY_MASK_FEATURES",
-              labeled.case_study(mask(labeled.features("region") == "south"),
-                                 features({"city", "price"})).to_string());
+              labeled.case_study(DataFrame::Case::where(labeled.features("region") == "south"),
+                                 DataFrame::Feat::names({"city", "price"})).to_string());
 
   print_block("CASES", labeled.label().values().to_string());
   print_block("CASES_AS_SERIES", Thread(numeric_cases.label().values().as_series()).to_string());
 
-  print_block("CAST_DTYPES", raw.cast({
+  print_block("CAST_DTYPES", raw.astype({
       {"student_id", ScalarType::Int64},
       {"passed", ScalarType::Bool},
   }).to_string());
 
-  DataFrame::CastSpec note_to_series;
-  note_to_series.feature = "raw_name";
-  note_to_series.target = ThreadCastTarget::Note;
-  print_block("CAST_SPEC", raw.cast({note_to_series}).to_string());
+  print_block("CAST_SPEC", raw.features({"raw_name"}).cast().note().to_string());
 
   print_block("COMBINE_FEATURES", labeled.combine(extra).to_string());
   DataFrame::CombineSpec combine_update;
@@ -147,9 +144,9 @@ int main() {
 
   print_block("CORR_DEFAULT", corr_base.corr(false).to_string());
   print_block("CORR_METHOD", corr_base.corr(DataFrame::CorrMethod::Spearman, false).to_string());
-  print_block("CORR_FEATURES", corr_base.corr({"x", "z"}, false).to_string());
+  print_block("CORR_FEATURES", corr_base.features({"x", "z"}).corr(false).to_string());
   print_block("CORR_FEATURES_METHOD",
-              corr_base.corr({"x", "z"}, DataFrame::CorrMethod::KendallTau, false).to_string());
+              corr_base.features({"x", "z"}).corr(DataFrame::CorrMethod::KendallTau, false).to_string());
 
   print_block("CORR_WITH_ONE",
               corr_base.corr_with(corr_peer, DataFrame::CorrMethod::Pearson, 1).to_string());
@@ -161,8 +158,14 @@ int main() {
   print_block("COUNT_FEATURE_AXIS", corr_base.count(Axis::Feature).to_string());
   print_block("COUNT_CASE_AXIS", corr_base.features({"x", "y", "z"}).count(Axis::Case).to_string());
 
-  print_block("COUNT_BY_ALL", cities.count_by("city", 0, true, false).to_string());
-  print_block("COUNT_BY_TOP2", cities.count_by("city", 2, true, false).to_string());
+  const auto city_counts = cities.group({.dropnull = true})
+                               .by({"city"})
+                               .agg({
+                                   {"count", "", GroupOp::Count},
+                               })
+                               .arrange({"count"}, false);
+  print_block("COUNT_BY_ALL", city_counts.to_string());
+  print_block("COUNT_BY_TOP2", city_counts.top("count", 2).to_string());
 
   print_block("COVAR_DEFAULT", corr_base.covar({}, false).to_string());
   print_block("CSMAX_CASE", corr_base.features({"x", "z"}).csmax(Axis::Case).to_string());
@@ -178,17 +181,17 @@ int main() {
   }, make_note({"s1", "s2", "s3"}))).to_string());
 
   print_block("DROP", labeled.drop({"region"}).to_string());
-  print_block("DROP_DUPLICATES_DEFAULT", duplicates.drop_duplicates({"student", "quiz"}).to_string());
+  print_block("DROP_DUPLICATES_DEFAULT", duplicates.features({"student", "quiz"}).drop_duplicates().to_string());
   print_block("DROP_DUPLICATES_KEEP_LAST",
-              duplicates.drop_duplicates({"student"}, false, true).to_string());
+              duplicates.features({"student"}).drop_duplicates(false, true).to_string());
 
   print_block("DROP_LEVELS", levels.label().drop({"term"}).to_string());
   print_block("DROPNULL", missing.dropnull({"quiz", "final"}).to_string());
 
   print_dtypes("DTYPES", raw.dtypes());
 
-  print_block("DUPLICATED_DEFAULT", duplicates.duplicated({"student", "quiz"}).to_string());
-  print_block("DUPLICATED_KEEP_LAST", duplicates.duplicated({"student"}, false, true).to_string());
+  print_block("DUPLICATED_DEFAULT", duplicates.features({"student", "quiz"}).duplicated().to_string());
+  print_block("DUPLICATED_KEEP_LAST", duplicates.features({"student"}).duplicated(false, true).to_string());
 
   return 0;
 }

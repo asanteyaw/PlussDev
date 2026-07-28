@@ -112,17 +112,17 @@ happened to be observed."
 - [`DataFrame::sum`](sum.md), [`DataFrame::std`](std.md), [`DataFrame::median`](median.md):
   the other single-statistic feature reductions, sharing the same `axis` / `skipnull`
   shape.
-- [`DataFrame::mean_by`](mean_by.md): the grouped version — one mean per group instead of
-  one mean for the whole frame.
 - [`DataFrame::describe`](describe.md): several statistics per feature in one call.
+- [`DataFrame::group`](group.md): compute a grouped mean per group instead of one mean
+  for the whole frame — `.group().by({...}).mean()` or an explicit `.agg({...})` spec.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="max.html">
     <span class="label">Previous</span>
     <span class="title">max</span>
   </a>
-  <a class="next-link" href="mean_by.html">
+  <a class="next-link" href="median.html">
     <span class="label">Next</span>
-    <span class="title">mean_by</span>
+    <span class="title">median</span>
   </a>
 </div>

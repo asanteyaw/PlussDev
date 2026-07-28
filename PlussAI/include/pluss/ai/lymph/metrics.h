@@ -487,7 +487,7 @@ struct FoldBatchPair {
 
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
   if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
-  return thread.cast(pluss::table::ThreadCastTarget::Series, ScalarType::Float64).as_series();
+  return thread.cast({.series_dtype = ScalarType::Float64}).series().as_series();
 }
 
 [[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options) {

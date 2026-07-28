@@ -125,11 +125,13 @@ Check:
 - grouping features have the expected type;
 - null group keys are handled by `dropnull_keys`;
 - the selected value feature is numeric for numeric operations;
-- `GroupOp::Count` vs `GroupOp::Nunique` semantics match your intent.
+- `GroupOp::Count` vs `GroupOp::Ndistinct` semantics match your intent.
 
 ```cpp
 df.tally("group", 20, false, true);
-df.group_by({"group"}, {{"n", "value", DataFrame::GroupOp::Count}}, false, true);
+df.group({.dropnull = false, .sort = true})
+  .by({"group"})
+  .agg({{"n", "value", DataFrame::GroupOp::Count}});
 ```
 
 ## Plot is empty or too dense

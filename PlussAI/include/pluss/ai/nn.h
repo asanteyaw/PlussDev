@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/ai/nn_grad.h"
 #include "pluss/ai/nn_functional.h"
 
 #include "NodeK/NN/modules/Module.h"

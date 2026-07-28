@@ -192,16 +192,16 @@ so it throws instead of silently behaving like ungrouped [`rolling()`](rolling.m
 
 - [`DataFrameTsAccessor::rolling`](rolling.md): the ungrouped fixed-window
   statistic this method scopes per group.
-- [`DataFrame::group_by`](../dataframe/group_by.md): general-purpose grouping and
+- [`DataFrame::group`](../dataframe/group.md): general-purpose grouping and
   aggregation, for reductions rather than row-aligned rolling statistics.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fill_gaps.html">
+  <a class="prev-link" href="ge.html">
     <span class="label">Previous</span>
-    <span class="title">fill_gaps</span>
+    <span class="title">ge</span>
   </a>
-  <a class="next-link" href="insert_gaps.html">
+  <a class="next-link" href="gt.html">
     <span class="label">Next</span>
-    <span class="title">insert_gaps</span>
+    <span class="title">gt</span>
   </a>
 </div>

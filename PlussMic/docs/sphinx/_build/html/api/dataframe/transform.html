@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -46,11 +46,7 @@
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="w">  </span><span class="c1">// axis must be Axis::Feature</span>
 
-<span class="c1">// Single feature</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-
-<span class="c1">// Several features via structured specs</span>
+<span class="c1">// One or several features via structured specs</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">TransformSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
 <span class="c1">// Row-wise (Axis::Case only)</span>
@@ -69,13 +65,10 @@ depending on which overload you reach for:</p>
 the same thing spelled out explicitly — it requires <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> and throws
 otherwise, pointing you at the row-wise <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback overload for
 <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> instead.</p></li>
-<li><p><strong>Single feature</strong> (<code class="docutils literal notranslate"><span class="pre">transform(feature,</span> <span class="pre">fn)</span></code>): rewrites just <code class="docutils literal notranslate"><span class="pre">feature</span></code>. The
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback form receives that feature’s own values; the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback
-form receives the <em>whole frame</em> so <code class="docutils literal notranslate"><span class="pre">fn</span></code> can derive the new column from other
-features too — this form can also <strong>create</strong> a brand-new feature named <code class="docutils literal notranslate"><span class="pre">feature</span></code>
-if it doesn’t already exist (it’s implemented via <a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a>).</p></li>
-<li><p><strong>Several features via <code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">transform(specs)</span></code>): apply a different
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback to each of several named features in one call.</p></li>
+<li><p><strong>One or several features via <code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">transform(specs)</span></code>): apply a
+different <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback to each of one or several named features in one call —
+<code class="docutils literal notranslate"><span class="pre">transform({{&quot;sales&quot;,</span> <span class="pre">fn}})</span></code> targets just <code class="docutils literal notranslate"><span class="pre">&quot;sales&quot;</span></code>; every feature not named in
+<code class="docutils literal notranslate"><span class="pre">specs</span></code> is left untouched.</p></li>
 <li><p><strong>Row-wise</strong> (<code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> only): the two least common overloads. The
 <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-callback form calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> once per case (each case observed as a
 one-row <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>) and expects a single scalar back, concatenating the results
@@ -86,24 +79,24 @@ no consistency check at all; <code class="docutils literal notranslate"><span cl
 case; <code class="docutils literal notranslate"><span class="pre">Expand</span></code> requires every case’s callback result to share the same case count
 and feature schema.</p></li>
 </ul>
+<p>To <em>derive a brand-new feature</em> from the whole frame (rather than rewrite an existing
+one from its own values), reach for <a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a> instead — <code class="docutils literal notranslate"><span class="pre">transform()</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code> overload only ever sees one feature’s own <code class="docutils literal notranslate"><span class="pre">Thread</span></code> at a time, so it
+can rewrite an existing feature but never create one that doesn’t already exist.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>fn</strong></p>
-<p>The transform function. Its signature (<code class="docutils literal notranslate"><span class="pre">Thread(const</span> <span class="pre">Thread&amp;)</span></code>, <code class="docutils literal notranslate"><span class="pre">Thread(const</span> <span class="pre">DataFrame&amp;)</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadValue(const</span> <span class="pre">DataFrame&amp;)</span></code>, or <code class="docutils literal notranslate"><span class="pre">DataFrame(const</span> <span class="pre">DataFrame&amp;)</span></code>)
-selects which overload is called. A returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> must match the frame’s case
-count.</p>
+<p>The transform function. Its signature (<code class="docutils literal notranslate"><span class="pre">Thread(const</span> <span class="pre">Thread&amp;)</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreadValue(const</span> <span class="pre">DataFrame&amp;)</span></code>, or <code class="docutils literal notranslate"><span class="pre">DataFrame(const</span> <span class="pre">DataFrame&amp;)</span></code>) selects which overload is called. A
+returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> must match the frame’s case count.</p>
 <p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>)</p>
 <p>For the whole-frame overload, must be <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> (throws otherwise). For the
 row-wise overloads, must be <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> (throws otherwise) — <code class="docutils literal notranslate"><span class="pre">axis</span></code> exists on these
 signatures mainly to make the row-wise-vs-feature-wise choice explicit at the call
 site.</p>
-<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
-<p>The feature to rewrite (or create, for the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback single-feature
-overload).</p>
 <p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;TransformSpec&gt;</span></code>)</p>
-<p>A list of <code class="docutils literal notranslate"><span class="pre">{feature,</span> <span class="pre">expr}</span></code> pairs, each naming one feature and the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback
-to apply to it.</p>
+<p>A list of <code class="docutils literal notranslate"><span class="pre">{feature,</span> <span class="pre">expr}</span></code> pairs, each naming one existing feature and the
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback to apply to it. A single-element list targets just one feature.</p>
 <p><strong>shape</strong> (<code class="docutils literal notranslate"><span class="pre">ResultShape</span></code>, default <code class="docutils literal notranslate"><span class="pre">Infer</span></code>, row-wise <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback overload
 only)</p>
 <p>Controls what consistency is required across every case’s callback result:
@@ -115,8 +108,7 @@ other).</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-(Most overloads) A new frame with the targeted feature(s) rewritten (or, for the
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback single-feature and row-wise overloads, potentially added).</p>
+(Most overloads) A new frame with the targeted feature(s) rewritten.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
 (Row-wise <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-callback overload) One entry per case, concatenated from
 each case’s scalar result.</p>
@@ -170,10 +162,10 @@ unaffected; <code class="docutils literal notranslate"><span class="pre">city</s
 non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> kind. <code class="docutils literal notranslate"><span class="pre">transform(fn)</span></code> applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to <strong>every</strong> feature — there is no
 way to skip a feature except by having <code class="docutils literal notranslate"><span class="pre">fn</span></code> itself return it unchanged, as done
 here.</p>
-<p>Example 2. Rewrite just one named feature, leaving the rest of the frame alone by
-construction rather than by the callback’s own logic.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales_clipped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">110.0</span><span class="p">);</span>
+<p>Example 2. Rewrite just one named feature with a <code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code>, leaving the rest of
+the frame alone by construction rather than by the callback’s own logic.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales_clipped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">transform</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">110.0</span><span class="p">);</span><span class="w"> </span><span class="p">}},</span>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales_clipped</span><span class="p">;</span>
 </pre></div>
@@ -191,39 +183,39 @@ construction rather than by the callback’s own logic.</p>
 [3 cs x 3 feat]
 </pre></div>
 </div>
-<p>Example 3. Derive a brand-new feature from the whole frame.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_profit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&quot;profit&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">frame</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">as_series</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.3</span><span class="p">);</span>
+<p>Example 3. Rewrite two named features with different callbacks in one call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">both</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">transform</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="mf">100.0</span><span class="p">);</span><span class="w"> </span><span class="p">}},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">110.0</span><span class="p">);</span><span class="w"> </span><span class="p">}},</span>
 <span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_profit</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">both</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================================
-     | id    sales  city    profit
-----------------------------------
-0    | 1     100    Accra   30    
-1    | 2     120    Tema    36    
-2    | 3     90     Kumasi  27    
-----------------------------------
-[3 cs x 4 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | id    sales  city  
+--------------------------
+0    | 101   100    Accra 
+1    | 102   110    Tema  
+2    | 103   90     Kumasi
+--------------------------
+[3 cs x 3 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;profit&quot;</span></code> didn’t exist before, so this <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback single-feature overload
-creates it, computed here as <code class="docutils literal notranslate"><span class="pre">30%</span></code> of each row’s <code class="docutils literal notranslate"><span class="pre">sales</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">city</span></code> is untouched since it wasn’t named in <code class="docutils literal notranslate"><span class="pre">specs</span></code>.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">transform(fn)</span></code> (no feature name) always applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to every feature; use the
-single-feature or <code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code> overloads to target specific features instead.</p></li>
-<li><p>The single-feature <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback overload can both <strong>rewrite</strong> an existing
-feature and <strong>create</strong> a brand-new one, depending on whether <code class="docutils literal notranslate"><span class="pre">feature</span></code> already
-exists — it’s implemented directly via <a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a>.</p></li>
-<li><p>Every returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (whole-frame and single-feature overloads) must have the
+<li><p><code class="docutils literal notranslate"><span class="pre">transform(fn)</span></code> (no <code class="docutils literal notranslate"><span class="pre">specs</span></code>) always applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to every feature; use the
+<code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code> overload to target specific, already-existing features instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transform()</span></code> can only <strong>rewrite</strong> features that already exist on the frame —
+passing a name not already present throws. To <strong>create</strong> a new feature, use
+<a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a> instead.</p></li>
+<li><p>Every returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (whole-frame and <code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code> overloads) must have the
 same length as the frame’s case count, or the call throws.</p></li>
 <li><p>For the row-wise <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback overload, <code class="docutils literal notranslate"><span class="pre">ResultShape::Infer</span></code> (the
 default) performs <strong>no</strong> shape consistency check across cases at all — reach for
@@ -233,9 +225,10 @@ default) performs <strong>no</strong> shape consistency check across cases at al
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::assign</span></code></span></a>: the more direct way to derive one or more new
-features from frame-wide expressions, which this method’s single-feature
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback overload is built on.</p></li>
+<li><p><a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::assign</span></code></span></a>: derive one or more <strong>new</strong> features from
+whole-frame expressions, including creating a feature that doesn’t already exist —
+the tool to reach for when <code class="docutils literal notranslate"><span class="pre">transform()</span></code>’s existing-feature-only <code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code>
+overload isn’t enough.</p></li>
 <li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::map</span></code></span></a>: a scalar-per-cell transform (<code class="docutils literal notranslate"><span class="pre">ThreadValue</span> <span class="pre">-&gt;</span> <span class="pre">ThreadValue</span></code>,
 skipping nulls automatically), a narrower tool than this method’s <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-wide
 callbacks.</p></li>

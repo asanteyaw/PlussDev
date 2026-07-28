@@ -271,9 +271,9 @@ Thread::split: expected Note payload
   its output columns.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort_values.html">
+  <a class="prev-link" href="arrange.html">
     <span class="label">Previous</span>
-    <span class="title">sort_values</span>
+    <span class="title">arrange</span>
   </a>
   <a class="next-link" href="starts.html">
     <span class="label">Next</span>

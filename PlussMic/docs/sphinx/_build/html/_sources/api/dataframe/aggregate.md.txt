@@ -34,15 +34,15 @@ column:
 
 - **`feature`** (`std::string`): the source column to reduce. Cannot be empty.
 - **`op`** (`SummaryOp`, default `Mean`): the reduction to apply —
-  `Count`, `Nunique`, `Sum`, `Mean`, `Median`, `Min`, `Max`, `Std`, `Var`, or `Prod`.
-  `Count` and `Nunique` accept a feature of any kind (they count non-null values or
+  `Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`, `Max`, `Std`, `Var`, or `Prod`.
+  `Count` and `Ndistinct` accept a feature of any kind (they count non-null values or
   distinct non-null values respectively); every other op requires `feature` to be a
   numeric `Series` and throws `"DataFrame::summarize: numeric reductions require
   numeric Series feature"` otherwise.
 - **`output`** (`std::string`): the name of the resulting column. Leave it empty to
   auto-generate one as `"{feature}_{op_name}"` (for example, `amount_max` for
-  `{"", "amount", SummaryOp::Max}`) — note the auto-generated name for `Nunique` is
-  `"{feature}_distinct_count"`, not `"{feature}_nunique"`.
+  `{"", "amount", SummaryOp::Max}`) — note the auto-generated name for `Ndistinct` is
+  `"{feature}_ndistinct"`, not `"{feature}_nunique"`.
 
 Two specs that resolve to the same output name (whether both explicit or one
 auto-generated) are rejected with `"DataFrame::summarize: duplicate output name
@@ -188,22 +188,20 @@ would be.
 
 - Duplicate output names (whether explicit or auto-generated) are rejected up front,
   before any reduction runs — give each spec a distinct output name.
-- `Count`/`Nunique` tolerate any feature kind; every other `SummaryOp` requires a
+- `Count`/`Ndistinct` tolerate any feature kind; every other `SummaryOp` requires a
   numeric `Series` feature and throws otherwise.
 - `Sum` on an all-null numeric feature (after dropping nulls) returns `0`, and `Prod`
   returns `1` — the identity element for each operation — rather than `NaN`; every
   other op returns `NaN` in that case.
 - `aggregate()` always collapses to exactly one row; for a per-group breakdown instead
-  of a single summary row, use [`group_by`](group_by.md).
+  of a single summary row, use [`group`](group.md).
 
 ## See Also
 
 - [`DataFrame::describe`](describe.md): a fixed, canned set of per-feature statistics,
   computed without hand-writing `SummarySpec`s.
-- [`DataFrame::group_by`](group_by.md): the grouped analogue — one summary row per key
+- [`DataFrame::group`](group.md): the grouped analogue — one summary row per key
   instead of one row for the whole frame.
-- [`DataFrame::count_by`](count_by.md): a dedicated frequency-table shortcut for a
-  single grouping feature.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="add.html">

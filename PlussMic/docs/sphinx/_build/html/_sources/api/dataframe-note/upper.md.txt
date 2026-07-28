@@ -55,7 +55,7 @@ auto orders = DataFrame({
     {"code", Thread(pluss::make_note({"gh-001", "Gh-002", "GH-003"}))},
 }, Thread(pluss::make_note({"p1", "p2", "p3"})));
 
-auto out = orders.note().upper();
+auto out = orders.nt().upper();
 std::cout << out;
 ```
 

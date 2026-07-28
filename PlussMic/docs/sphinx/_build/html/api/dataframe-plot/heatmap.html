@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -72,7 +72,7 @@ aggregation happens.</p></li>
 rows (one row per case/feature/value triple) into a two-dimensional grid — rows are
 distinct <code class="docutils literal notranslate"><span class="pre">case_feature</span></code> values, columns are distinct <code class="docutils literal notranslate"><span class="pre">feature_feature</span></code> values, and each
 cell is <code class="docutils literal notranslate"><span class="pre">value_feature</span></code> aggregated across the matching rows using <code class="docutils literal notranslate"><span class="pre">op</span></code> (default
-<code class="docutils literal notranslate"><span class="pre">DataFrame::GroupOp::Mean</span></code>; also accepts <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Nunique</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DataFrame::GroupOp::Mean</span></code>; also accepts <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, <code class="docutils literal notranslate"><span class="pre">Mode</span></code>). This is the method to reach for when the data isn’t already
 laid out as a matrix and needs pivoting first.</p></li>
 </ul>
@@ -100,7 +100,7 @@ Feature whose distinct values become the output heatmap’s columns.</p>
 <p><strong>value_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, grouped mode)
 Feature aggregated into each cell.</p>
 <p><strong>op</strong> (<code class="docutils literal notranslate"><span class="pre">DataFrame::GroupOp</span></code>, grouped mode, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
-The aggregation applied per cell: <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Nunique</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
+The aggregation applied per cell: <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, or <code class="docutils literal notranslate"><span class="pre">Mode</span></code>.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">HeatmapPlotOptions</span></code>)
 <code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">HeatmapPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">bool</span> <span class="pre">annotate_levels{false};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">bool</span> <span class="pre">scale_guide{true};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">bool</span> <span class="pre">borderless{false};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>

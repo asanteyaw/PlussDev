@@ -7,7 +7,7 @@ Use it when you want:
 
 - named features with mixed typed columns
 - a case axis that can be numeric, note-based, timeline-based, or time-index based
-- table verbs such as `query`, `assign`, `group_by`, `pivot_table`, `join`, `fillnull`, and `describe`
+- table verbs such as `query`, `assign`, `group`, `pivot_table`, `join`, `fillnull`, and `describe`
 - import/export across CSV, TXT, JSON, Excel, and Parquet
 
 ## Construction And Loading
@@ -179,7 +179,7 @@ auto positive = df.filter(df.features("sales").as_series().gt(95.0));
 
 auto queried = df.query("sales > 95");
 
-auto sorted = df.sort_values({"sales"}, false);
+auto sorted = df.arrange({"sales"}, false);
 
 auto top3 = df.top("sales", 3);
 ```
@@ -250,19 +250,17 @@ one-to-many, or many-to-one.
 One call can compute several named reductions:
 
 ```cpp
-auto summary = sales.group_by(
-    {"region"},
-    {
-        {"orders", "", pluss::table::DataFrame::GroupOp::Count},
-        {"revenue", "amount", pluss::table::DataFrame::GroupOp::Sum},
-        {"average", "amount", pluss::table::DataFrame::GroupOp::Mean},
-        {"volatility", "amount", pluss::table::DataFrame::GroupOp::Std},
-    },
-    true,
-    false);
+auto summary = sales.group({.dropnull = true})
+                  .by({"region"})
+                  .agg({
+                      {"orders", "", pluss::table::DataFrame::GroupOp::Count},
+                      {"revenue", "amount", pluss::table::DataFrame::GroupOp::Sum},
+                      {"average", "amount", pluss::table::DataFrame::GroupOp::Mean},
+                      {"volatility", "amount", pluss::table::DataFrame::GroupOp::Std},
+                  });
 ```
 
-Supported grouped operations are `Count`, `Nunique`, `Sum`, `Mean`, `Min`,
+Supported grouped operations are `Count`, `Ndistinct`, `Sum`, `Mean`, `Min`,
 `Max`, `Std`, and `Var`. Numeric reductions use Series scatter operations and
 stay on the payload platform. Group keys retain their original Thread type and
 first-seen order.
@@ -335,11 +333,9 @@ That matches every row whose `First Name` equals `"Laurel"`.
 ## Grouping, Pivoting, And Summaries
 
 ```cpp
-auto grouped = df.group_by(
-    {"city"},
-    {{"avg_sales", "sales", pluss::table::DataFrame::GroupOp::Mean}},
-    true,
-    false);
+auto grouped = df.group({.dropnull = true})
+                 .by({"city"})
+                 .agg({{"avg_sales", "sales", pluss::table::DataFrame::GroupOp::Mean}});
 
 auto pivoted = df.pivot_table(
     "city",

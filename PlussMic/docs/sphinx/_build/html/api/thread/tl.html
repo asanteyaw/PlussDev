@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,31 @@
 
           <div class="body" role="main">
             
-  <section id="thread-tl">
+  <!-- pluss-hand-authored -->
+<section id="thread-tl">
 <h1>Thread::tl<a class="headerlink" href="#thread-tl" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">tl</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadTimelineAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">tl</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadTimelineAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+<p>Enters the dedicated timestamp accessor for this thread — calendar-component
+extraction (<code class="docutils literal notranslate"><span class="pre">year</span></code>, <code class="docutils literal notranslate"><span class="pre">month</span></code>, <code class="docutils literal notranslate"><span class="pre">weekday</span></code>, …), formatting, timezone conversion,
+flooring/ceiling/rounding to a unit, spans between two timestamps, and more, one
+method per operation. Unlike <a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nt()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">tl()</span></code> validates <strong>eagerly</strong>: the
+thread must already be defined and must already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind,
+or the <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call itself throws immediately, before any accessor method runs.</p>
+<p>Unlike <a class="reference internal" href="../dataframe/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code></span></a>, this accessor is bound to a single
+thread — there’s no equivalent of <code class="docutils literal notranslate"><span class="pre">.features(...)</span></code> narrowing to do first.</p>
+<p>This page previews the accessor’s most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+<a class="reference internal" href="../../thread_timeline_accessor_api_reference.html"><span class="doc std std-doc">ThreadTimelineAccessor API Reference</span></a>
+and use its left sidebar to jump straight to any method (<code class="docutils literal notranslate"><span class="pre">year</span></code>, <code class="docutils literal notranslate"><span class="pre">month</span></code>, <code class="docutils literal notranslate"><span class="pre">fmt</span></code>,
+<code class="docutils literal notranslate"><span class="pre">floor</span></code>, <code class="docutils literal notranslate"><span class="pre">tz</span></code>, <code class="docutils literal notranslate"><span class="pre">span</span></code>, and more).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +69,90 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadTimelineAccessor</span></code>
-Value produced by this call.</p>
+A lightweight accessor bound to this (already-validated) <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
+thread. Nearly every method on it returns a new <code class="docutils literal notranslate"><span class="pre">Thread</span></code>; the source thread is
+never mutated.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Pull calendar components off a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> thread.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-15T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-06-30T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-12-25T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">years</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2024
+1  2024
+2  2024
+
+ptype: Series
 </pre></div>
 </div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">weekdays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">weekday_name</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">weekdays</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Monday
+1  Sunday
+2  Wednesday
+
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.year()</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread; <code class="docutils literal notranslate"><span class="pre">.weekday_name()</span></code> returns a
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread of full weekday names.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">tl()</span></code> throws immediately on a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread — unlike
+<a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nt()</span></code></span></a>, the check happens at the <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call itself, not on first method use.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::tl: expected Timeline or TimeIndex payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tl()</span></code> validates eagerly: the thread must be defined and must already be
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, or <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> itself throws
+(<code class="docutils literal notranslate"><span class="pre">&quot;Thread::tl:</span> <span class="pre">Thread</span> <span class="pre">is</span> <span class="pre">undefined&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;Thread::tl:</span> <span class="pre">expected</span> <span class="pre">Timeline</span> <span class="pre">or</span> <span class="pre">TimeIndex</span> <span class="pre">payload&quot;</span></code>) before any accessor method runs.</p></li>
+<li><p>Compare <a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nt()</span></code></span></a>, whose <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind check is lazy (deferred to the first
+method call on the accessor) rather than eager.</p></li>
+<li><p>No <code class="docutils literal notranslate"><span class="pre">options</span></code>/narrowing step is needed before calling <code class="docutils literal notranslate"><span class="pre">.tl()</span></code>, unlike
+<a class="reference internal" href="../dataframe/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code></span></a> — a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is already a single payload.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::nt</span></code></span></a>: the equivalent dedicated accessor for <code class="docutils literal notranslate"><span class="pre">Note</span></code> text payloads,
+which validates its payload kind lazily instead of eagerly.</p></li>
+<li><p><a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::label</span></code></span></a>: the dedicated accessor for the case-label axis, which
+works regardless of the thread’s own payload kind.</p></li>
+<li><p><a class="reference internal" href="../dataframe/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl</span></code></span></a>: the frame-level equivalent, which requires
+every selected feature to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="titlecase.html">
     <span class="label">Previous</span>
@@ -81,7 +163,6 @@ Value produced by this call.</p>
     <span class="title">to_note_weekday</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

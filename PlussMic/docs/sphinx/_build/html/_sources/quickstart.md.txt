@@ -38,7 +38,7 @@ sales.head();
 
 ## Terminal vs Popup Preview
 
-Table preview methods such as `head`, `tail`, `view`, `describe`, `aggregate`, and `group_by`
+Table preview methods such as `head`, `tail`, `view`, `describe`, `aggregate`, and `group`
 return a lightweight `DataFrameView`.
 
 ```cpp
@@ -67,7 +67,7 @@ auto accidents = pluss::table::DataFrame::load_csv(
     {{"nrows", 64}})
     .fillnull(0.0, {"Lifecycle Cost", "Cost Variance (%)"})
     .query("isnotnull(Agency Name)")
-    .sort_values({"Lifecycle Cost"}, false)
+    .arrange({"Lifecycle Cost"}, false)
     .head(10, false);
 
 accidents.show();

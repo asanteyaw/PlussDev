@@ -28,8 +28,8 @@ repeatedly calling [`extend`](extend.md) in a loop.
 
 `head()` looks at position, not value: it always returns the *first* `n` cases as
 currently ordered on the frame. If you want the first `n` cases after sorting by some
-key, call [`sort_values`](sort_values.md) first and then `head()` the result — the two
-compose exactly like `df.sort_values(...).head(...)` reads.
+key, call [`arrange`](arrange.md) first and then `head()` the result — the two
+compose exactly like `df.arrange(...).head(...)` reads.
 
 ## Parameters
 
@@ -122,7 +122,7 @@ first.
 ## Notes
 
 - `head()` composes naturally with the rest of the pipeline-style API:
-  `orders.sort_values({{.feature = "unit_price", .ascending = false}}).head(3)` gives you
+  `orders.arrange({{.feature = "unit_price", .ascending = false}}).head(3)` gives you
   the three highest-priced orders without a separate sort-then-slice step.
 - For the tail end of a frame instead of the top, use [`tail(n, render)`](tail.md), which
   has an identical signature and clamping behavior.

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pluss/ai/ice/options.h"
+#include "pluss/ai/ice/step.h"
 #include "pluss/nn.h"
 
 #include <string_view>
@@ -11,6 +11,9 @@ class DataFrame;
 } // namespace pluss::table
 
 namespace pluss::ai::ice {
+
+class Coach;
+class Source;
 
 // The generic escape hatch (ICE_BLUEPRINT.md §4): define parameters plus
 // forward/loss, get learn/infer/assess/save/load for free. `ice::Outline`
@@ -25,13 +28,27 @@ public:
   virtual ~Model() = default;
 
   [[nodiscard]] virtual Series forward(const Series& x) const = 0;
+  [[nodiscard]] virtual Series forward(const Batch& batch) const;
 
   // Default dispatches on `kind` to the matching pluss::nn::losses:: free
   // function. Override for models that need a custom objective.
   [[nodiscard]] virtual Series compute_loss(const Series& predictions, const Series& y, LossKind kind) const;
+  [[nodiscard]] virtual Series compute_loss(const Series& predictions,
+                                            const Batch& batch,
+                                            const StepContext& ctx) const;
 
-  // Trains on `x_train`/`y_train`. When `options.val_ratio > 0`, an internal
-  // validation split is carved out for early stopping (see TrainOptions).
+  // Phase 4 override ladder: Coach owns the loop, but Model owns the
+  // per-step semantics. Default implementations delegate downward so a
+  // model author only overrides the lowest level that matters.
+  [[nodiscard]] virtual StepResult learn_step(const Batch& batch, const StepContext& ctx) const;
+  [[nodiscard]] virtual StepResult valid_step(const Batch& batch, const StepContext& ctx) const;
+  [[nodiscard]] virtual StepResult test_step(const Batch& batch, const StepContext& ctx) const;
+  [[nodiscard]] virtual StepResult infer_step(const Batch& batch, const StepContext& ctx) const;
+
+  // Trains on `x_train`/`y_train`. When `options.validation.split_ratio > 0`,
+  // an internal validation split is carved out for monitored validation /
+  // early stopping (see Recipe / TrainOptions).
+  void learn(Source& source, const TrainOptions& options = {});
   void learn(const Series& x_train, const Series& y_train, const TrainOptions& options = {});
 
   // Trains on an already-split train/val pair — for callers who manage
@@ -52,6 +69,7 @@ public:
   // Runs inference in eval mode. `chunk_size > 0` bounds memory for large
   // `x` by looping over row-chunks (each chunk is still one batched forward
   // call, not a per-row loop) and concatenating the results.
+  [[nodiscard]] Series infer(Source& source) const;
   [[nodiscard]] Series infer(const Series& x, std::int64_t chunk_size = 0) const;
 
   // Tabular convenience mirroring learn(DataFrame, ...): pulls every column
@@ -72,6 +90,7 @@ public:
   // artifact has no metadata channel for it — see ice::io), so it would be
   // silently wrong for a freshly loaded model. Pass the same LossKind used
   // to train.
+  [[nodiscard]] AssessReport assess(Source& source, LossKind loss) const;
   [[nodiscard]] AssessReport assess(const Series& x, const Series& y, LossKind loss) const;
 
   // Tabular convenience mirroring learn(DataFrame, ...): pulls every column
@@ -93,13 +112,18 @@ public:
   void load(std::string_view filepath);
 
   [[nodiscard]] bool ready() const noexcept { return trained_; }
+  [[nodiscard]] bool is_training() const noexcept { return training_; }
+  void train(bool enabled = true) noexcept;
+  void eval() noexcept { train(false); }
 
   // Moves every registered parameter and module onto `platform` in place.
-  // learn() calls this for you (see TrainOptions::platform); exposed
+  // learn() calls this for you (see TrainOptions::execution.platform); exposed
   // publicly as an escape hatch for callers who want to place a model
   // before/without going through learn() — e.g. to warm it up on a GPU
   // ahead of a save()/load() round trip.
   Model& to(Platform platform);
+  Model& to(ScalarType dtype);
+  Model& to(Platform platform, ScalarType dtype);
 
 protected:
   // Called by subclasses (from their constructor) to register the raw
@@ -109,9 +133,12 @@ protected:
   void register_module(pluss::nn::Module& module);
 
 private:
+  friend class Coach;
+
   std::vector<Series*> owned_parameters_{};
   std::vector<pluss::nn::Module*> owned_modules_{};
   bool trained_ = false;
+  bool training_ = true;
 
   // Fitted by learn(DataFrame, ..., standardize=true); applied by the
   // DataFrame overloads of infer()/assess() and reloaded by load(). Left
@@ -125,9 +152,8 @@ private:
   [[nodiscard]] Series dataframe_matrix_(const pluss::table::DataFrame& df, std::string_view exclude) const;
   [[nodiscard]] Series fit_standardize_(const Series& x);
   [[nodiscard]] Series apply_standardize_(const Series& x) const;
-  void train_loop_(const Series& x_train, const Series& y_train,
-                   const Series* x_val, const Series* y_val,
-                   const TrainOptions& options);
+  [[nodiscard]] Series apply_objective_regularization_(const Series& base_loss,
+                                                       const StepContext& ctx) const;
 };
 
 } // namespace pluss::ai::ice

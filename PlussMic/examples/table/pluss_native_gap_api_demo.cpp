@@ -56,7 +56,7 @@ int main() {
   auto score_se = df.features("score").se(ErrorTarget::Mean, StatisticOptions{.ddof = 1, .min_count = 2});
   auto score_mode = df.features("score").mode();
   auto score_rank = df.features("score").rank(RankTieRule::Dense, RankNullRule::Keep);
-  auto score_tally = df.features("score").tally(0, true, false);
+  auto score_freq = df.features("score").freq();
   auto score_distinct = df.features("score").distinct();
   auto score_ndistinct = df.features("score").ndistinct();
   auto score_duplicates = df.features("score").repeated();
@@ -68,17 +68,17 @@ int main() {
   auto score_cost_corr = df.features("score").corr_with(df.features("cost"));
   auto score_cost_dot = df.features("score").matmul(df.features("cost"));
 
-  auto upper_label = df.features("label").note().upper();
-  auto label_lengths = df.features("label").note().length();
-  auto label_matches = df.features("label").note().matches("[A-Za-z]+");
-  auto label_parts = df.features("label").note().split("-");
-  auto label_partition = df.features("label").note().partition("-");
-  auto label_groups = df.features("label").note().extract("([A-Za-z]+)-([0-9]+)", {"word", "number"});
-  auto label_padded = df.features("label").note().pad(12, TextAlign::Right, '.');
-  auto label_chars = df.features("label").note().chars(0, 4);
-  auto label_normalized = df.features("label").note().normalize(UnicodeForm::NFC);
-  auto label_encoded = df.features("label").note().encode("hex");
-  auto label_indicators = df.features("label").note().indicate("|");
+  auto upper_label = df.features("label").nt().upper();
+  auto label_lengths = df.features("label").nt().length();
+  auto label_matches = df.features("label").nt().matches("[A-Za-z]+");
+  auto label_parts = df.features("label").nt().split("-");
+  auto label_partition = df.features("label").nt().partition("-");
+  auto label_groups = df.features("label").nt().extract("([A-Za-z]+)-([0-9]+)", {"word", "number"});
+  auto label_padded = df.features("label").nt().pad(12, TextAlign::Right, '.');
+  auto label_chars = df.features("label").nt().chars(0, 4);
+  auto label_normalized = df.features("label").nt().normalize(UnicodeForm::NFC);
+  auto label_encoded = df.features("label").nt().encode("hex");
+  auto label_indicators = df.features("label").nt().indicate("|");
 
   auto df_cov = df.covar();
   auto df_corr = df.corr();
@@ -118,16 +118,15 @@ int main() {
       StatisticOptions{.ddof = 1, .min_count = 1},
       WindowClosure::Right);
 
-  auto cleaned_labels = df.features({"label"}).note().casefold();
-  auto label_lengths_df = df.features({"label"}).note().length();
-  auto label_tokens_df = df.features({"label"}).note().split("-");
-  auto label_indicators_df = df.features({"label"}).note().indicate("|");
+  auto cleaned_labels = df.features({"label"}).nt().casefold();
+  auto label_lengths_df = df.features({"label"}).nt().length();
+  auto label_tokens_df = df.features({"label"}).nt().split("-");
+  auto label_indicators_df = df.features({"label"}).nt().indicate("|");
 
-  auto mapped_scores = df.map(
+  auto mapped_scores = df.features({"score", "cost"}).map(
       [](const ThreadValue& value) {
         return ThreadValue(Thread(value.as_series() * 2.0));
-      },
-      {"score", "cost"});
+      });
   auto row_score = df.transform(
       [](const DataFrame& row) {
         return ThreadValue(Thread(row.features("score").as_series() +
@@ -146,14 +145,14 @@ int main() {
       });
   auto flowed = df.flow(
       [](const DataFrame& value) {
-        return value.features({"label"}).note().upper();
+        return value.features({"label"}).nt().upper();
       });
 
   auto df_nulls_dropped = df.dropnull({"score", "label"}, true);
-  auto df_ndistinct = df.ndistinct({"group", "label"}, true);
-  auto df_freq = df.freq({"group"}, 0, true);
-  auto df_duplicated = df.duplicated({"score"});
-  auto df_unique_cases = df.drop_duplicates({"score"});
+  auto df_ndistinct = df.features({"group", "label"}).ndistinct(true);
+  auto df_freq = df.features({"group"}).freq();
+  auto df_duplicated = df.features({"score"}).duplicated();
+  auto df_unique_cases = df.features({"score"}).drop_duplicates();
   auto df_renamed = df.rename({{"score", "amount"}, {"cost", "expense"}});
   auto df_relabelled = df.features({"score", "cost"}).rename({"amount", "expense"});
 
@@ -178,7 +177,7 @@ int main() {
   auto atlas_flowed = atlas.flow(
       [](const Atlas& value) {
         return value.map_frames([](const DataFrame& frame) {
-          return frame.features({"label"}).note().upper();
+          return frame.features({"label"}).nt().upper();
         });
       });
 
@@ -190,7 +189,7 @@ int main() {
   std::cout << "score_se=" << score_se << "\n";
   std::cout << "score_mode cases=" << score_mode.size() << "\n";
   std::cout << "score_rank cases=" << score_rank.size() << "\n";
-  std::cout << "score_tally cases=" << score_tally.ncases() << "\n";
+  std::cout << "score_freq cases=" << score_freq.size() << "\n";
   std::cout << "score_distinct cases=" << score_distinct.size() << "\n";
   std::cout << "score_ndistinct=" << score_ndistinct << "\n";
   std::cout << "score_duplicates cases=" << score_duplicates.size() << "\n";

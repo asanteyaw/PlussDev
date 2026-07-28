@@ -21,7 +21,7 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
 }
 
 std::int64_t find_note_label(const Stream& labels, std::string_view key) {
-  const auto note = labels.to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto note = labels.to_thread().cast().note().as_note();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (note.at(i) == key) {
       return i;
@@ -32,7 +32,8 @@ std::int64_t find_note_label(const Stream& labels, std::string_view key) {
 
 std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
   const auto values = labels.to_thread()
-                          .cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Int64)
+                          .cast({.series_dtype = pluss::codem::ScalarType::Int64})
+                          .series()
                           .as_series()
                           .to_vec<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
@@ -46,7 +47,7 @@ std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
 std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& key) {
   PLUSS_CHECK(key.defined(), "Archive::loc(Timeline): key is undefined");
   PLUSS_CHECK(key.numel() == 1, "Archive::loc(Timeline): key must be scalar Timeline");
-  const auto keys = labels.to_thread().cast(pluss::table::ThreadCastTarget::Timeline).as_timeline().to_epoch_nanos_vector();
+  const auto keys = labels.to_thread().cast().timeline().as_timeline().to_epoch_nanos_vector();
   const auto want = key.to_epoch_nanos_vector();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (keys[static_cast<std::size_t>(i)] == want[0]) {
@@ -57,7 +58,7 @@ std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& ke
 }
 
 std::string label_string_at(const Stream& labels, std::int64_t i) {
-  const auto note = labels.to_thread().cast(pluss::table::ThreadCastTarget::Note).as_note();
+  const auto note = labels.to_thread().cast().note().as_note();
   return std::string(note.at(i));
 }
 

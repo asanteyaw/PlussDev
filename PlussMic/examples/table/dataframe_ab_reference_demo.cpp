@@ -119,7 +119,7 @@ int main() {
       },
   }).to_string() << "\n\n";
 
-  std::cout << "ASTYPE\n" << raw.astype({"passed"}, ScalarType::Bool).to_string() << "\n\n";
+  std::cout << "ASTYPE\n" << raw.features({"passed"}).astype(ScalarType::Bool).to_string() << "\n\n";
   std::cout << "ASTYPE_MULTI\n" << raw.astype({
       {"student_id", ScalarType::Int64},
       {"passed", ScalarType::Bool},

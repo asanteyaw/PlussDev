@@ -228,7 +228,9 @@ inline std::tuple<Series, Series> scaled_attention(
   }
 
   logits = detail::attn::apply_mask_(logits, attn_mask);
-  const bool require_backward = query.tracks_slope() || key.tracks_slope() || value.tracks_slope();
+  const bool require_backward =
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (query.tracks_slope() || key.tracks_slope() || value.tracks_slope());
   Series weights;
   if (auto cudnn_weights = ::pluss::ai::kernels::cudnn::try_scaled_attention_softmax(logits, require_backward);
       cudnn_weights.has_value()) {

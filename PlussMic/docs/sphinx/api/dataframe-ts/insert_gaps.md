@@ -166,9 +166,9 @@ labels.
   method's regular grid is built from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="grouped.html">
+  <a class="prev-link" href="gt.html">
     <span class="label">Previous</span>
-    <span class="title">grouped</span>
+    <span class="title">gt</span>
   </a>
   <a class="next-link" href="lag.html">
     <span class="label">Next</span>

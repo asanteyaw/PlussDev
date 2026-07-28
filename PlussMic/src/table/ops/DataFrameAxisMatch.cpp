@@ -653,7 +653,7 @@ FrameMatch DataFrame::match(
   PLUSS_CHECK(other.defined(), "DataFrame::match: right frame is undefined");
 
   if (options.repeated_cases == RepeatedCaseRule::PairInOrder &&
-      case_labels_().shares_payload_with(other.label().values()) &&
+      case_labels_().same_payload_(other.label().values()) &&
       features() == other.features()) {
     return FrameMatch{*this, other};
   }

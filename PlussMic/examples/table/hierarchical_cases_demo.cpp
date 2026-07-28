@@ -53,8 +53,8 @@ int main() {
       {"mean_cost", "cost", DataFrame::GroupOp::Mean},
       {"n", "", DataFrame::GroupOp::Count},
   };
-  auto by_region = static_cast<DataFrame>(
-      indexed.group_by(DataFrame::LabelGroup{.label = "region"}, group_specs));
+  auto by_region =
+      indexed.group().by(DataFrame::LabelGroup{.label = "region"}).agg(group_specs);
   std::cout << "Grouped by case level: region\n";
   std::cout << by_region << "\n";
 

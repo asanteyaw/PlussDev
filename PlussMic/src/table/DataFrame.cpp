@@ -25,6 +25,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
+#include "CodeN/core/OpsInternal.h"
 #include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/tils/aux/transmit.h"
@@ -159,8 +160,8 @@ struct CaseAxis {
   std::vector<CaseAxisLevel> levels{};
   // The separator used to join levels[*].values into the composite displayed
   // case label. Preserved across operations that rebuild that composite
-  // string from the levels (order_caselbls, drop_caselbls, structured
-  // DataFrameLabelAccessor::cast) so a custom separator passed to
+  // string from the levels (order_caselbls, drop_caselbls, and similar
+  // structured-label rebuild paths) so a custom separator passed to
   // DataFrame::set_caselbl(...) survives them, instead of silently reverting
   // to the library default.
   std::string separator{"\x1F"};
@@ -500,8 +501,8 @@ std::string summary_op_name(DataFrame::SummaryOp op) {
   switch (op) {
     case DataFrame::SummaryOp::Count:
       return "count";
-    case DataFrame::SummaryOp::Nunique:
-      return "distinct_count";
+    case DataFrame::SummaryOp::Ndistinct:
+      return "ndistinct";
     case DataFrame::SummaryOp::Sum:
       return "sum";
     case DataFrame::SummaryOp::Mean:
@@ -527,8 +528,8 @@ std::string group_op_name(DataFrame::GroupOp op) {
   switch (op) {
     case DataFrame::GroupOp::Count:
       return "count";
-    case DataFrame::GroupOp::Nunique:
-      return "distinct_count";
+    case DataFrame::GroupOp::Ndistinct:
+      return "ndistinct";
     case DataFrame::GroupOp::Sum:
       return "sum";
     case DataFrame::GroupOp::Mean:
@@ -2026,36 +2027,21 @@ DataFrame arrange_impl_frame(
     return frame;
   }
 
-  std::vector<Thread> keys;
-  keys.reserve(normalized.size());
-  for (const auto& spec : normalized) {
-    keys.push_back(frame.features(spec.feature));
-  }
-
   std::vector<std::int64_t> indices(static_cast<std::size_t>(frame.ncases()));
   std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
 
-  std::stable_sort(indices.begin(), indices.end(), [&](std::int64_t lhs, std::int64_t rhs) {
-    for (std::size_t i = 0; i < keys.size(); ++i) {
-      const auto lhs_valid = keys[i].is_valid(lhs);
-      const auto rhs_valid = keys[i].is_valid(rhs);
-      if (lhs_valid != rhs_valid) {
-        if (normalized[i].nulls_last) {
-          return lhs_valid; // valid values first
-        }
-        return !lhs_valid; // null values first
-      }
-
-      const auto cmp = keys[i].compare_rows(lhs, rhs, true);
-      if (cmp < 0) {
-        return normalized[i].ascending;
-      }
-      if (cmp > 0) {
-        return !normalized[i].ascending;
-      }
-    }
-    return false;
-  });
+  // Multi-key frame ordering is coordinated here, but each key's actual sort is delegated
+  // down to Thread::arrange. We sort from the least-significant key back to the most-
+  // significant key so Thread's stable ordering composes into the final row order.
+  for (auto it = normalized.rbegin(); it != normalized.rend(); ++it) {
+    auto ordered_key = frame.features(it->feature).take(
+        std::span<const std::int64_t>(indices.data(), indices.size()));
+    ordered_key = ordered_key.label().set(make_i64_thread(indices));
+    indices = ordered_key.arrange(it->ascending, it->nulls_last)
+                  .label().values()
+                  .as_series()
+                  .to_vec<std::int64_t>();
+  }
 
   return frame.take(indices);
 }
@@ -2391,8 +2377,8 @@ Thread clear_assignment_metadata_(const Thread& value) {
   if (detail::has_display_labels(out)) {
     out = detail::clear_display_labels(out);
   }
-  if (out.has_display_name()) {
-    out = out.clear_display_name();
+  if (out.named()) {
+    out = out.unname();
   }
   return out;
 }
@@ -2593,10 +2579,12 @@ void set_prepared_feature_(
 } // namespace
 
 
+#include "table/ops/shared/GroupInternals.inc"
 #include "table/ops/dataframe/DataFrameLifecycleAndIO.inc"
 #include "table/ops/dataframe/DataFrameCoreAndFeatures.inc"
 #include "table/ops/dataframe/DataFrameSelectionAndTransform.inc"
 #include "table/ops/dataframe/DataFrameTimeSeries.inc"
+#include "table/ops/dataframe/DataFrameGroupAccessor.inc"
 #include "table/ops/dataframe/DataFrameGroupAndCombine.inc"
 #include "table/ops/dataframe/DataFrameMathMissingAndDescribe.inc"
 #include "table/ops/dataframe/DataFrameStatisticsAndWindows.inc"

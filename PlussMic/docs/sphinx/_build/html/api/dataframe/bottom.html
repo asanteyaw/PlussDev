@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the <code class="docutils literal notranslate"><span class="pre">n</span></code> rows with the smallest values in <code class="docutils literal notranslate"><span class="pre">feature</span></code>, with every other feature
 carried along unchanged — the ascending counterpart to <a class="reference internal" href="top.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">top()</span></code></span></a>. This is
-exactly <code class="docutils literal notranslate"><span class="pre">sort_values({feature},</span> <span class="pre">/*ascending=*/true)</span></code> followed by
+exactly <code class="docutils literal notranslate"><span class="pre">arrange({feature},</span> <span class="pre">/*ascending=*/true)</span></code> followed by
 <a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head(n)</span></code></span></a>.</p>
 <p>Missing values in <code class="docutils literal notranslate"><span class="pre">feature</span></code> always sort to the very end — even here, in the ascending
 case — so a row with a missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value can only appear in the result if <code class="docutils literal notranslate"><span class="pre">n</span></code> is
@@ -111,8 +111,8 @@ naive sort — missing values are always ranked last here too, so they only surf
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">bottom()</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">sort_values({feature},</span> <span class="pre">true).head(n)</span></code>; reach for
-<code class="docutils literal notranslate"><span class="pre">sort_values()</span></code> directly if you need more than one sort key.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bottom()</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">arrange({feature},</span> <span class="pre">true).head(n)</span></code>; reach for
+<code class="docutils literal notranslate"><span class="pre">arrange()</span></code> directly if you need more than one sort key.</p></li>
 <li><p>A missing value in <code class="docutils literal notranslate"><span class="pre">feature</span></code> sorts to the very end regardless of ascending or
 descending direction — this is the same nulls-last rule <code class="docutils literal notranslate"><span class="pre">top()</span></code> follows, not a
 nulls-first rule for the ascending case.</p></li>
@@ -125,7 +125,7 @@ this exact signature.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="top.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::top</span></code></span></a>: the descending counterpart, returning the largest <code class="docutils literal notranslate"><span class="pre">n</span></code>
 rows by <code class="docutils literal notranslate"><span class="pre">feature</span></code>.</p></li>
-<li><p><a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort_values</span></code></span></a>: the general sorting method this is built
+<li><p><a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::arrange</span></code></span></a>: the general sorting method this is built
 on, supporting multiple keys and mixed sort directions.</p></li>
 <li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::head</span></code></span></a>: the plain positional prefix <code class="docutils literal notranslate"><span class="pre">bottom()</span></code> applies after
 sorting.</p></li>

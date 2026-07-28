@@ -130,7 +130,8 @@ void test_statistics() {
   expect(assigned_axis.features("Assignments").as_series().to_vec<double>() ==
              std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "row-wise reduction result should assign as a same-length feature");
-  const auto direct_assigned_axis = axis_frame.set("Assignments2", row_sum);
+  auto direct_assigned_axis = axis_frame;
+  direct_assigned_axis.set("Assignments2") = row_sum;
   expect(direct_assigned_axis.features("Assignments2").as_series().to_vec<double>() ==
              std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "set_features should accept a same-length row-wise reduction result");
@@ -148,16 +149,15 @@ void test_statistics() {
          "explicit case-label assignment should null-fill feature-indexed reduction labels");
   bool set_features_feature_labeled_default_threw = false;
   try {
-    (void)axis_frame.set("ColumnTotals2", column_sum);
+    auto should_throw = axis_frame;
+    should_throw.set("ColumnTotals2") = column_sum;
   } catch (const std::exception&) {
     set_features_feature_labeled_default_threw = true;
   }
   expect(set_features_feature_labeled_default_threw,
          "set_features default should reject feature-labeled reductions with case-length mismatch");
-  const auto direct_feature_indexed = axis_frame.set(
-      "ColumnTotals2",
-      column_sum,
-      {.align = pluss::table::AlignBy::Caselbl});
+  auto direct_feature_indexed = axis_frame;
+  direct_feature_indexed.set("ColumnTotals2", {.align = pluss::table::AlignBy::Caselbl}) = column_sum;
   expect(pluss::table::detail::validity_mask(direct_feature_indexed.features("ColumnTotals2"))->to_vec<bool>() ==
              std::vector<bool>({false, false, false, false}),
          "set_features with explicit case-label alignment should null-fill misses");
@@ -255,16 +255,16 @@ void test_statistics() {
          "DataFrame::label().drop({.duplicated=true}) should drop duplicate follower label rows");
   expect(label_df.label().drop({.repeated = true}).ncases() == 2,
          "DataFrame::label().drop({.repeated=true}) should drop all members of repeated label groups");
-  expect(label_df.repeated({"score"}).as_series().to_vec<bool>() ==
+  expect(label_df.features({"score"}).repeated().as_series().to_vec<bool>() ==
              std::vector<bool>({false, false, false, false}),
          "DataFrame::repeated(feature) should mark all members of repeated row-value groups");
   const auto repeated_rows = DataFrame({
       {"name", Thread(pluss::make_note({"A", "B", "A", "C", "B"}))},
   });
-  expect(repeated_rows.duplicated({"name"}).as_series().to_vec<bool>() ==
+  expect(repeated_rows.features({"name"}).duplicated().as_series().to_vec<bool>() ==
              std::vector<bool>({false, false, true, false, true}),
          "DataFrame::duplicated should mark duplicate followers");
-  expect(repeated_rows.repeated({"name"}).as_series().to_vec<bool>() ==
+  expect(repeated_rows.features({"name"}).repeated().as_series().to_vec<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
          "DataFrame::repeated should mark every member of repeated groups");
   expect(label_df.label().has("a").as_series().to_vec<bool>() ==
@@ -328,6 +328,26 @@ void test_statistics() {
   expect(thread_label_ops.label().pos("x").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 2}),
          "Thread::label().pos should expose Index.get_loc-style duplicate positions");
+  expect(thread_label_ops.label().duplicated().as_series().to_vec<bool>() ==
+             std::vector<bool>({false, false, true}),
+         "Thread::label().duplicated should mark duplicate follower labels");
+  expect(thread_label_ops.label().repeated().as_series().to_vec<bool>() ==
+             std::vector<bool>({true, false, true}),
+         "Thread::label().repeated should mark every member of repeated label groups");
+  expect(thread_label_ops.label().distinct().as_note().vector() ==
+             std::vector<std::string_view>({"x", "y"}),
+         "Thread::label().distinct should return distinct label values");
+  expect(thread_label_ops.label().has(Thread(pluss::make_note({"y"}))).as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, false}),
+         "Thread::label().has(Thread) should test set membership against current labels");
+  expect(thread_label_ops.label().take({2, 0}).as_note().vector() ==
+             std::vector<std::string_view>({"x", "x"}),
+         "Thread::label().take should take label values by position");
+  expect(thread_label_ops.label().slice(1, 3).as_note().vector() ==
+             std::vector<std::string_view>({"y", "x"}),
+         "Thread::label().slice should slice label values by position");
+  expect(!thread_label_ops.label().monotonic(),
+         "Thread::label().monotonic should detect unsorted labels");
   const auto numeric_label_ops =
       Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
           .label().set(Thread(pluss::make_series(std::vector<std::int64_t>{10, 20, 10})));
@@ -982,6 +1002,33 @@ void test_windows() {
   near(timed_values[1], 1.5, 1e-9, "time window row 1");
   near(timed_values[2], 2.5, 1e-9, "time window excludes left boundary");
   near(timed_values[3], 3.5, 1e-9, "time window row 3");
+  const auto grouped_timed_frame = DataFrame({
+      {"group", Thread(pluss::make_note({"a", "a", "b", "b"}))},
+      {"time", Thread(pluss::make_timeline({
+                   "2024-01-01T00:00:00Z",
+                   "2024-01-02T00:00:00Z",
+                   "2024-01-03T00:00:00Z",
+                   "2024-01-04T00:00:00Z",
+               }))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 3.0, 10.0, 20.0}))},
+  });
+  const auto grouped_timed = grouped_timed_frame.features("value").ts().rolling(
+      grouped_timed_frame.features("time"),
+      grouped_timed_frame.features("group"),
+      "2D",
+      WindowStatistic::Mean);
+  expect(grouped_timed.as_series().to_vec<double>() ==
+             std::vector<double>({1.0, 2.0, 10.0, 15.0}),
+         "Thread::ts().rolling(axis, groups, duration) should compute grouped timed windows");
+  const auto grouped_timed_df = grouped_timed_frame.features({"value"})
+                                    .ts({
+                                        .axis = grouped_timed_frame.features("time"),
+                                        .group = grouped_timed_frame.features("group"),
+                                    })
+                                    .rolling("2D", WindowStatistic::Mean);
+  expect(grouped_timed_df.features("value").as_series().to_vec<double>() ==
+             grouped_timed.as_series().to_vec<double>(),
+         "DataFrame::ts().rolling(duration) should delegate grouped timed windows to Thread");
   const auto timed_variance_frame = DataFrame({
       {"time", Thread(pluss::make_series(std::vector<std::int64_t>{0, 1, 3, 4}))},
       {"value", Thread(pluss::make_series(std::vector<double>{1, 2, 3, 4}))},
@@ -1072,6 +1119,14 @@ void test_thread_delegation_and_advanced_windows() {
   expect(right_labeled.values.as_series().to_vec<double>() ==
              std::vector<double>({3.0, 3.0}),
          "Thread ts resample options should preserve aggregation");
+  const auto chained_daily = resample_values.ts().resample(
+      resample_axis,
+      pluss::TimeIndex::ResampleOptions{.freq = "D"}).sum();
+  expect(chained_daily.label().values().as_timeline().day().to_vec<std::int32_t>() ==
+             std::vector<std::int32_t>({1, 2}) &&
+             chained_daily.as_series().to_vec<double>() ==
+             std::vector<double>({3.0, 3.0}),
+         "Thread ts resample(...).sum() should materialize labels and aggregated values");
   const auto shifted_bins = resample_values.ts().resample(
       resample_axis,
       pluss::TimeIndex::ResampleOptions{
@@ -1082,6 +1137,37 @@ void test_thread_delegation_and_advanced_windows() {
   expect(shifted_bins.values.as_series().to_vec<double>() ==
              std::vector<double>({1.0, 5.0}),
          "Thread ts resample should support offset bin anchors");
+  const auto six_hour_exact = resample_values.ts().resample(
+      resample_axis,
+      pluss::TimeIndex::ResampleOptions{.freq = "6H"}).asfreq();
+  const auto six_hour_exact_vals = six_hour_exact.as_series().to_vec<double>();
+  expect(six_hour_exact.label().values().as_timeline().hour().to_vec<std::int32_t>() ==
+                 std::vector<std::int32_t>({0, 6, 12, 18, 0}) &&
+             six_hour_exact_vals.size() == 5 &&
+             std::abs(six_hour_exact_vals[0] - 1.0) < 1e-12 &&
+             std::isnan(six_hour_exact_vals[1]) &&
+             std::abs(six_hour_exact_vals[2] - 2.0) < 1e-12 &&
+             std::isnan(six_hour_exact_vals[3]) &&
+             std::abs(six_hour_exact_vals[4] - 3.0) < 1e-12,
+         "Thread ts resample(...).asfreq() should reindex exactly onto the target frequency");
+  const auto six_hour_ffill = resample_values.ts().resample(
+      resample_axis,
+      pluss::TimeIndex::ResampleOptions{.freq = "6H"}).ffill();
+  expect(six_hour_ffill.as_series().to_vec<double>() ==
+             std::vector<double>({1.0, 1.0, 2.0, 2.0, 3.0}),
+         "Thread ts resample(...).ffill() should forward fill across inserted bins");
+  const auto six_hour_bfill = resample_values.ts().resample(
+      resample_axis,
+      pluss::TimeIndex::ResampleOptions{.freq = "6H"}).bfill();
+  expect(six_hour_bfill.as_series().to_vec<double>() ==
+             std::vector<double>({1.0, 2.0, 2.0, 3.0, 3.0}),
+         "Thread ts resample(...).bfill() should backward fill across inserted bins");
+  const auto resample_calendar = resample_values.ts().calendar(resample_axis);
+  expect(resample_calendar.get("axis_year").has_value() &&
+             resample_calendar.get("axis_weekday").has_value() &&
+             resample_calendar.label().values().as_timeline().day().to_vec<std::int32_t>() ==
+                 std::vector<std::int32_t>({1, 1, 2}),
+         "Thread ts calendar(axis) should expand the supplied time axis into calendar features");
   const auto resample_frame = DataFrame({
       {"when", resample_axis},
       {"x", resample_values},
@@ -1209,71 +1295,71 @@ void test_udfs_and_text() {
       pluss::make_note({"alpha-10", "Beta-20", "red|blue"}));
   expect(text.upper().as_note().at(0) == "ALPHA-10",
          "text upper");
-  expect(text.note().length().as_series().to_vec<std::int64_t>(0) == 8,
+  expect(text.nt().length().as_series().to_vec<std::int64_t>(0) == 8,
          "Unicode character length");
-  expect(text.note().matches("[a-z]+").as_series().to_vec<bool>(0),
+  expect(text.nt().matches("[a-z]+").as_series().to_vec<bool>(0),
          "regex prefix match");
-  expect(!text.note().fullmatch("[a-z]+").as_series().to_vec<bool>(0),
+  expect(!text.nt().fullmatch("[a-z]+").as_series().to_vec<bool>(0),
          "regex full match");
-  expect(text.note().has("BETA", {.case_sensitive = false})
+  expect(text.nt().has("BETA", {.case_sensitive = false})
              .as_series().to_vec<bool>(1),
          "case-insensitive literal text has");
-  expect(text.note().has("[A-Z][a-z]+-[0-9]+", {.regex = true})
+  expect(text.nt().has("[A-Z][a-z]+-[0-9]+", {.regex = true})
              .as_series().to_vec<bool>(1),
          "regex text has");
-  expect(text.note().count("[0-9]").as_series().to_vec<std::int64_t>(0) == 2,
+  expect(text.nt().count("[0-9]").as_series().to_vec<std::int64_t>(0) == 2,
          "regex text count");
   bool invalid_regex_rejected = false;
   try {
-    (void)text.note().matches("(");
+    (void)text.nt().matches("(");
   } catch (const pluss::Error&) {
     invalid_regex_rejected = true;
   }
   expect(invalid_regex_rejected,
          "invalid regex uses the centralized Pluss error path");
   const auto extracted =
-      text.note().extract("([A-Za-z]+)-([0-9]+)", {"word", "number"});
+      text.nt().extract("([A-Za-z]+)-([0-9]+)", {"word", "number"});
   expect(extracted.features("word").as_note().at(1) == "Beta",
          "regex capture");
-  const auto found_digits = text.note().findall("[0-9]");
+  const auto found_digits = text.nt().findall("[0-9]");
   expect(found_digits.features("match_1").as_note().at(1) == "0",
          "regex findall expansion");
-  const auto split = text.note().split("-");
+  const auto split = text.nt().split("-");
   expect(split.features("part_1").as_note().at(0) == "10",
          "text split");
   const auto regex_split =
-      text.note().split("[|-]", {.regex = true, .prefix = "piece"});
+      text.nt().split("[|-]", {.regex = true, .prefix = "piece"});
   expect(regex_split.features("piece_1").as_note().at(2) == "blue",
          "regex text split");
-  const auto partition = text.note().partition("-");
+  const auto partition = text.nt().partition("-");
   expect(partition.features("part_2").as_note().at(1) == "20",
          "text partition");
-  expect(text.note().replace("[0-9]+", "NUM", {.regex = true})
+  expect(text.nt().replace("[0-9]+", "NUM", {.regex = true})
              .as_note().at(0) == "alpha-NUM",
          "regex text replace");
-  expect(text.note().pad(10, pluss::table::TextAlign::Right, '.')
+  expect(text.nt().pad(10, pluss::table::TextAlign::Right, '.')
              .as_note().at(0) == "..alpha-10",
          "text padding");
-  expect(text.note().chars(0, 5).as_note().at(0) == "alpha",
+  expect(text.nt().chars(0, 5).as_note().at(0) == "alpha",
          "text slicing");
-  expect(text.note().encode("hex").as_note().at(0) ==
+  expect(text.nt().encode("hex").as_note().at(0) ==
              "616c7068612d3130",
          "hex encoding");
   const auto unicode = Thread(
       pluss::make_note({"Cafe\u0301", "Straße"}));
-  expect(unicode.note().normalize(pluss::table::UnicodeForm::NFC)
+  expect(unicode.nt().normalize(pluss::table::UnicodeForm::NFC)
              .as_note().at(0) == "Café",
          "canonical Unicode normalization");
   expect(unicode.casefold().as_note().at(1) == "strasse",
          "Unicode case folding");
-  const auto indicators = text.note().indicate("|");
+  const auto indicators = text.nt().indicate("|");
   expect(indicators.features("red").as_series().to_vec<bool>(2) &&
              indicators.features("blue").as_series().to_vec<bool>(2),
          "delimited text indicators");
   const DataFrame text_frame({
       {"raw", text},
   });
-  expect(text_frame.features({"raw"}).note().has("red").features("raw").as_series().to_vec<bool>(2),
+  expect(text_frame.features({"raw"}).nt().has("red").features("raw").as_series().to_vec<bool>(2),
          "DataFrame note has delegates to Thread");
 
   const auto mapped = Thread(
@@ -1308,21 +1394,19 @@ void test_udfs_and_text() {
   expect(case_values.as_series().to_vec<double>() ==
              std::vector<double>({10, 20, 30}),
          "case-wise UDF");
-  const auto mapped_frame = frame.map(
+  const auto mapped_frame = frame.features({"x"}).map(
       [](const ThreadValue& value) {
         return ThreadValue(Thread(value.as_series() * 3.0));
-      },
-      {"x"});
+      });
   expect(mapped_frame.features("x").as_series().to_vec<double>() ==
-             std::vector<double>({3, 6, 9}) &&
-             mapped_frame.features("label").as_note().at(1) == "bb",
-         "DataFrame element UDF selects features");
+             std::vector<double>({3, 6, 9}),
+         "DataFrame element UDF should apply through selected features");
   near(frame.fold([](const DataFrame& value) {
         return Thread(value.features("x").sum().as_series());
       }).as_series().to_vec<double>(0),
        6.0, 1e-9, "arbitrary aggregation UDF");
   expect(frame.flow([](const DataFrame& value) {
-           return value.features({"label"}).note().upper();
+           return value.features({"label"}).nt().upper();
          }).features("label").as_note().at(1) == "BB",
          "chainable DataFrame flow");
   const auto preserved = frame.transform(
@@ -1350,7 +1434,7 @@ void test_udfs_and_text() {
          "Atlas delegates windows to DataFrame");
   expect(atlas.flow([](const Atlas& value) {
            return value.map_frames([](const DataFrame& part) {
-             return part.features({"label"}).note().upper();
+             return part.features({"label"}).nt().upper();
            });
          }).frame(0).features("label").as_note().at(0) == "A",
          "chainable Atlas flow and DataFrame delegation");

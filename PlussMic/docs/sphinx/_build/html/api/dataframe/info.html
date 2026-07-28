@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -60,7 +60,7 @@ are the columns, and where is data missing?</em></p>
 <p>Unlike <a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">describe()</span></code></span></a>, which summarizes the <strong>values</strong> of numeric features
 (mean, spread, quantiles), <code class="docutils literal notranslate"><span class="pre">info()</span></code> summarizes the <strong>structure</strong> of the whole frame,
 including non-numeric columns. Reach for <code class="docutils literal notranslate"><span class="pre">info()</span></code> first when you inspect a frame you did
-not build yourself — after <code class="docutils literal notranslate"><span class="pre">load_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">load_excel</span></code>, a <code class="docutils literal notranslate"><span class="pre">join</span></code>, or a <code class="docutils literal notranslate"><span class="pre">group_by</span></code> — and use
+not build yourself — after <code class="docutils literal notranslate"><span class="pre">load_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">load_excel</span></code>, a <code class="docutils literal notranslate"><span class="pre">join</span></code>, or a grouped <code class="docutils literal notranslate"><span class="pre">agg()</span></code> result — and use
 <code class="docutils literal notranslate"><span class="pre">describe()</span></code> once you already know the shape is what you expect and want to look at the
 numbers themselves.</p>
 <p>Both overloads compute the same content; the first prints to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>, the second writes

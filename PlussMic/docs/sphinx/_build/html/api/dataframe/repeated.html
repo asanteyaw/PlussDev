@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=a5407de1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -42,25 +42,27 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">repeated</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">repeated</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Flags <strong>every</strong> row that belongs to a group sharing the same composite key across
-<code class="docutils literal notranslate"><span class="pre">features</span></code> — including that group’s very first occurrence, not just the ones after
-it. This is exactly <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated(features,</span> <span class="pre">false,</span> <span class="pre">false)</span></code></span></a> with its
-display name changed to <code class="docutils literal notranslate"><span class="pre">&quot;repeated&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">repeated()</span></code> is what you reach for when you
-want “is this row part of a repeated group at all,” rather than “is this row a
-duplicate follower of an earlier one” (which is what <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>’s default
-<code class="docutils literal notranslate"><span class="pre">keep_first</span> <span class="pre">=</span> <span class="pre">true</span></code> answers instead).</p>
+every feature currently on the frame — including that group’s very first occurrence,
+not just the ones after it. This is exactly
+<a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated(false,</span> <span class="pre">false)</span></code></span></a> with its display name changed to
+<code class="docutils literal notranslate"><span class="pre">&quot;repeated&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">repeated()</span></code> is what you reach for when you want “is this row part of a
+repeated group at all,” rather than “is this row a duplicate follower of an earlier
+one” (which is what <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>’s default <code class="docutils literal notranslate"><span class="pre">keep_first</span> <span class="pre">=</span> <span class="pre">true</span></code> answers instead).</p>
+<p><code class="docutils literal notranslate"><span class="pre">repeated()</span></code> carries no feature selector of its own: it always compares whole rows
+across every feature on the current frame, so narrow first with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">roster.features({&quot;student&quot;}).repeated()</span></code> — when only
+some features should form the composite key.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
-<p>Which features form the composite key that defines a “group.” Leave empty (the
-default) to compare whole rows across every feature.</p>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -94,7 +96,7 @@ marks a row whose key is unique.</p>
 [5 cs x 1 feat]
 </pre></div>
 </div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roster</span><span class="p">.</span><span class="n">repeated</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roster</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">}).</span><span class="n">repeated</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">groups</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -114,7 +116,7 @@ including case <code class="docutils literal notranslate"><span class="pre">0</s
 once, so case <code class="docutils literal notranslate"><span class="pre">3</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <p>Example 2. Compare against <code class="docutils literal notranslate"><span class="pre">duplicated()</span></code>’s default follower-only semantics on the
 same data.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">followers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roster</span><span class="p">.</span><span class="n">duplicated</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">followers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roster</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;student&quot;</span><span class="p">}).</span><span class="n">duplicated</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">followers</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -140,12 +142,14 @@ methods answer genuinely different questions: “which rows are extras I could d
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">repeated()</span></code> is literally <code class="docutils literal notranslate"><span class="pre">duplicated(features,</span> <span class="pre">/*keep_first=*/false,</span> <span class="pre">/*keep_last=*/false)</span></code> under a different display name — it never has its own
-separate keep-policy parameters.</p></li>
-<li><p>A missing value in every selected feature is itself a valid “value” for grouping
-purposes — two rows that are both missing on every selected feature count as
+<li><p><code class="docutils literal notranslate"><span class="pre">repeated()</span></code> is literally <code class="docutils literal notranslate"><span class="pre">duplicated(/*keep_first=*/false,</span> <span class="pre">/*keep_last=*/false)</span></code>
+under a different display name — it never has its own separate keep-policy
+parameters.</p></li>
+<li><p>A missing value in every feature on the current frame is itself a valid “value” for
+grouping purposes — two rows that are both missing on every feature count as
 sharing a key, same as <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>.</p></li>
-<li><p>Every selected feature name must exist on the frame; an unknown name throws.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">repeated()</span></code> has no feature selector of its own — narrow with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first to compare on a subset of columns.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -157,6 +161,8 @@ marking only the extras after (or before) the first occurrence.</p></li>
 instead of just flagging them.</p></li>
 <li><p><a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::freq</span></code></span></a>: counts <em>how many times</em> each composite key occurs,
 rather than flagging individual rows.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature(s) that
+define a “group” before calling <code class="docutils literal notranslate"><span class="pre">repeated()</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="reorder.html">

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace pluss::view {
 class VirtualTableModel;
@@ -32,6 +33,9 @@ bool show_windows_html_window(const std::string& title,
                               const std::string& snapshot_name);
 bool inhouse_html_viewer_available();
 bool export_inhouse_table_xlsx(const std::string& html, const std::string& path);
+bool export_inhouse_table_xlsx(std::shared_ptr<const VirtualTableModel> model,
+                               const std::string& path,
+                               const std::vector<std::int64_t>* row_order = nullptr);
 bool show_inhouse_html_window(const std::string& title,
                               const std::string& html,
                               std::int64_t width,

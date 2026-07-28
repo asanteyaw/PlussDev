@@ -90,7 +90,7 @@ int main() {
   }
   std::cout << "\n";
 
-  auto corr_ranked = train_df.corr().sort_values({"median_house_value"}, false).features({"median_house_value"});
+  auto corr_ranked = train_df.corr().arrange({"median_house_value"}, false).features({"median_house_value"});
   auto corr_vals = corr_ranked.features("median_house_value").as_series().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
   std::cout << "CORR_MHV_DESC";
   for (std::size_t i = 0; i < corr_vals.size(); ++i) {
@@ -108,8 +108,8 @@ int main() {
   out_opts.contamination_auto = true;
 
   auto isolator = lymph::prep::outlier_isolator(out_opts);
-  auto labels_thread = isolator.learn_infer(train_df.series_features());
-  auto scores_thread = isolator.score_samples(train_df.series_features());
+  auto labels_thread = isolator.learn_infer(train_df.feataxis().series());
+  auto scores_thread = isolator.score_samples(train_df.feataxis().series());
 
   auto labels = labels_thread.as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
   auto scores = scores_thread.as_series().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();

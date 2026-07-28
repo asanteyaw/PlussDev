@@ -26,7 +26,7 @@
 #include <pluss/ai/ice/data/time_series_dataset.h>
 #include <pluss/ai/ice/io.h>
 #include <pluss/ai/ice/model.h>
-#include <pluss/ai/ice/models/tft.h>
+#include <pluss/ai/ice/models/ts/temporal_fusion_transformer.h>
 #include <pluss/ai/ice/no_grad.h>
 #include <pluss/ai/ice/optim.h>
 #include <pluss/ai/ice/options.h>
@@ -111,21 +111,21 @@ int main() {
     LinearRegressionModel model(2, cfg, 2001ULL);
 
     ice::TrainOptions options{};
-    options.max_epochs = 150;
+    options.execution.max_epochs = 150;
     options.batch_size = 32;
     options.learning_rate = 0.05;
     options.optimizer = ice::OptimizerKind::Adam;
     options.loss = ice::LossKind::MSE;
-    options.grad_clip.mode = pluss::nn::optim::GradientClipMode::ByNorm;
-    options.grad_clip.threshold = 1.0;
-    options.fail_on_non_finite = true;
+    options.execution.grad_clip.mode = pluss::nn::optim::GradientClipMode::ByNorm;
+    options.execution.grad_clip.threshold = 1.0;
+    options.execution.fail_on_non_finite = true;
     options.shuffle = true;
     options.seed = 7;
-    options.val_ratio = 0.15;
-    options.early_stopping = true;
-    options.patience = 15;
-    options.min_delta = 1e-6;
-    options.platform = ice::TrainPlatform::CPU;
+    options.validation.split_ratio = 0.15;
+    options.loop_regularization.early_stopping = true;
+    options.loop_regularization.patience = 15;
+    options.loop_regularization.min_delta = 1e-6;
+    options.execution.platform = ice::TrainPlatform::CPU;
 
     std::cout << "  ready() before learn(): " << std::boolalpha << model.ready() << "\n";
     model.learn(x, y, options);
@@ -155,11 +155,11 @@ int main() {
     const Series y_val = y.narrow_copy(0, split, n - split);
 
     ice::TrainOptions options{};
-    options.max_epochs = 200;
+    options.execution.max_epochs = 200;
     options.optimizer = ice::OptimizerKind::AdamW;
     options.loss = ice::LossKind::MSE;
     options.learning_rate = 0.01;
-    options.platform = ice::TrainPlatform::CPU;
+    options.execution.platform = ice::TrainPlatform::CPU;
 
     model_b.learn(x_train, y_train, x_val, y_val, options);
     report(model_b.assess(x_val, y_val, options.loss));
@@ -187,12 +187,12 @@ int main() {
         pluss::nn::Fusion(8, 1, true, cfg, 6002ULL));
 
     ice::TrainOptions options{};
-    options.max_epochs = 100;
+    options.execution.max_epochs = 100;
     options.optimizer = ice::OptimizerKind::RMSProp;
     options.loss = ice::LossKind::BCEWithLogits;
     options.learning_rate = 0.02;
     options.standardize = true;
-    options.val_ratio = 0.2;
+    options.validation.split_ratio = 0.2;
 
     model_c.learn(df, "label", options);
 
@@ -230,11 +230,11 @@ int main() {
         pluss::nn::Fusion(16, 3, true, cfg, 8002ULL));
 
     ice::TrainOptions options{};
-    options.max_epochs = 150;
+    options.execution.max_epochs = 150;
     options.optimizer = ice::OptimizerKind::SGD;
     options.loss = ice::LossKind::CrossEntropy;
     options.learning_rate = 0.1;
-    options.val_ratio = 0.15;
+    options.validation.split_ratio = 0.15;
 
     model_d.learn(x, y, options);
     report(model_d.assess(x, y, options.loss));
@@ -261,8 +261,8 @@ int main() {
     const Series true_w = pluss::make_series(std::vector<float>{3.0f, -2.0f}, {2, 1}, cfg);
     const Series y = x.matmul(true_w).add(1.0);
     ice::TrainOptions options{};
-    options.max_epochs = 80;
-    options.val_ratio = 0.0;
+    options.execution.max_epochs = 80;
+    options.validation.split_ratio = 0.0;
     trained.learn(x, y, options);
 
     fs::path out_dir = fs::path(PLUSSAI_SOURCE_DIR) / "examples" / "outputs" / "ice_full_capability_demo";
@@ -343,18 +343,20 @@ int main() {
   }
 
   // -------------------------------------------------------------------------
-  print_section("10. ice::NoGradGuard used directly -- toggles tracks_slope_() for its lifetime");
+  print_section("10. ice::NoGradGuard used directly -- shared thread-local no-grad scope");
   // -------------------------------------------------------------------------
   {
     Series w = pluss::randn({2, 1}, cfg, 13001ULL);
     w.tracks_slope_(true);
-    std::cout << "  tracks_slope() before guard: " << std::boolalpha << w.tracks_slope() << "\n";
+    std::cout << "  grad mode before guard:      " << std::boolalpha << pluss::nn::GradMode::is_enabled() << "\n";
     {
       const std::vector<Series*> params{&w};
       const ice::NoGradGuard guard(params);
-      std::cout << "  tracks_slope() inside guard:  " << w.tracks_slope() << "\n";
+      const Series y = w.mul(w);
+      std::cout << "  grad mode inside guard:      " << pluss::nn::GradMode::is_enabled() << "\n";
+      std::cout << "  derived tracks_slope():      " << y.tracks_slope() << "\n";
     }
-    std::cout << "  tracks_slope() after guard:   " << w.tracks_slope() << "\n";
+    std::cout << "  grad mode after guard:       " << pluss::nn::GradMode::is_enabled() << "\n";
   }
 
   // -------------------------------------------------------------------------
@@ -434,14 +436,14 @@ int main() {
     test_batch.target = test_data.target;
 
     ice::models::TFTTrainOptions train_options{};
-    train_options.max_epochs = 150;
+    train_options.execution.max_epochs = 150;
     train_options.batch_size = 64;
     train_options.learning_rate = 1e-2;
     train_options.optimizer = ice::OptimizerKind::Adam;
-    train_options.early_stopping = true;
-    train_options.patience = 15;
+    train_options.loop_regularization.early_stopping = true;
+    train_options.loop_regularization.patience = 15;
     train_options.seed = 3;
-    train_options.platform = ice::TrainPlatform::CPU;
+    train_options.execution.platform = ice::TrainPlatform::CPU;
 
     // The explicit train/val overload -- mirrors ice::Model's two-Series-pair
     // learn(), for callers managing their own splitting.
@@ -499,11 +501,11 @@ int main() {
         pluss::nn::Fusion(d_model, 1, true, cfg, 16003ULL));
 
     ice::TrainOptions options{};
-    options.max_epochs = 80;
+    options.execution.max_epochs = 80;
     options.optimizer = ice::OptimizerKind::Adam;
     options.loss = ice::LossKind::BCEWithLogits;
     options.learning_rate = 0.01;
-    options.val_ratio = 0.15;
+    options.validation.split_ratio = 0.15;
 
     model_transformer.learn(x, label, options);
     report(model_transformer.assess(x, label, options.loss));
@@ -660,8 +662,8 @@ int main() {
 
     ice::models::TemporalFusionTransformer dataset_model(tft_options);
     ice::models::TFTTrainOptions train_options{};
-    train_options.max_epochs = 150;
-    train_options.val_ratio = 0.15;
+    train_options.execution.max_epochs = 150;
+    train_options.validation.split_ratio = 0.15;
     train_options.seed = 3;
 
     // learn()/predict() take the data::TimeSeriesBatch directly -- no

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the <code class="docutils literal notranslate"><span class="pre">n</span></code> rows with the largest values in <code class="docutils literal notranslate"><span class="pre">feature</span></code>, with every other feature
 carried along unchanged — the whole row moves together, not just the sorted column.
-This is exactly <code class="docutils literal notranslate"><span class="pre">sort_values({feature},</span> <span class="pre">/*ascending=*/false)</span></code> followed by
+This is exactly <code class="docutils literal notranslate"><span class="pre">arrange({feature},</span> <span class="pre">/*ascending=*/false)</span></code> followed by
 <a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head(n)</span></code></span></a>; it exists as a single call for the extremely common
 “give me the top N by X” query.</p>
 <p>Missing values in <code class="docutils literal notranslate"><span class="pre">feature</span></code> always sort to the very end, regardless of the descending
@@ -112,7 +112,7 @@ matter how few rows are requested.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">top()</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">sort_values({feature},</span> <span class="pre">false).head(n)</span></code>; reach for <code class="docutils literal notranslate"><span class="pre">sort_values()</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">top()</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">arrange({feature},</span> <span class="pre">false).head(n)</span></code>; reach for <code class="docutils literal notranslate"><span class="pre">arrange()</span></code>
 directly if you need more than one sort key or an ascending mix.</p></li>
 <li><p>A missing value in <code class="docutils literal notranslate"><span class="pre">feature</span></code> sorts to the very end regardless of direction — it can
 only appear in a <code class="docutils literal notranslate"><span class="pre">top()</span></code> result if <code class="docutils literal notranslate"><span class="pre">n</span></code> is large enough to include it.</p></li>
@@ -125,7 +125,7 @@ shares this exact signature.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="bottom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::bottom</span></code></span></a>: the ascending counterpart, returning the smallest
 <code class="docutils literal notranslate"><span class="pre">n</span></code> rows by <code class="docutils literal notranslate"><span class="pre">feature</span></code>.</p></li>
-<li><p><a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort_values</span></code></span></a>: the general sorting method this is built
+<li><p><a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::arrange</span></code></span></a>: the general sorting method this is built
 on, supporting multiple keys and mixed sort directions.</p></li>
 <li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::head</span></code></span></a>: the plain positional prefix <code class="docutils literal notranslate"><span class="pre">top()</span></code> applies after
 sorting.</p></li>

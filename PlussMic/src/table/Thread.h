@@ -25,9 +25,11 @@ namespace pluss::table {
 
 class Thread;
 enum class LabelKind : std::uint8_t;
+struct DataFramePlotOptions;
 
 namespace detail {
 class ThreadImpl;
+struct GroupStateCache;
 bool has_validity_mask(const Thread& thread);
 const std::optional<pluss::Series>& validity_mask(const Thread& thread);
 Thread with_validity_mask(const Thread& thread, const pluss::Series& validity_mask);
@@ -43,20 +45,25 @@ Thread& clear_display_labels_(Thread& thread);
 LabelKind label_kind(const Thread& thread);
 Thread with_label_kind(const Thread& thread, LabelKind kind);
 Thread& with_label_kind_(Thread& thread, LabelKind kind);
-Thread tally_count_thread(const Thread& thread,
-                          std::int64_t top_n,
-                          bool dropnull,
-                          std::string_view display_name);
+Thread freq_count_thread(const Thread& thread,
+                         std::int64_t top_n,
+                         bool dropnull,
+                         std::string_view display_name);
 }
 class ThreadValue;
 class DataFrame;
 class DataFrameView;
 class Atlas;
 class ThreadView;
+class ThreadPlotAccessor;
+class ThreadCastAccessor;
+class ThreadGroupBuilder;
+class ThreadGrouped;
 class ThreadNoteAccessor;
 class ThreadTimelineAccessor;
 class ThreadLabelAccessor;
 class TimeSeriesAccessor;
+class TimeSeriesResampler;
 
 enum class ThreadKind : std::uint8_t {
   Series = 0,
@@ -218,6 +225,42 @@ enum class ErrorTarget : std::uint8_t {
   Median = 1,
 };
 
+enum class ThreadFreqKind : std::uint8_t {
+  Count = 0,
+  Prop = 1,
+};
+
+enum class GroupOp : std::uint8_t {
+  Count = 0,
+  Ndistinct = 1,
+  Sum = 2,
+  Mean = 3,
+  Median = 4,
+  Min = 5,
+  Max = 6,
+  Std = 7,
+  Var = 8,
+  Mode = 9,
+};
+
+struct ThreadFreqOptions {
+  ThreadFreqKind kind{ThreadFreqKind::Count};
+  bool dropnull{true};
+  bool sort{true};
+  bool ascending{false};
+  std::int64_t top{0};
+};
+
+struct ThreadGroupOptions {
+  bool dropnull{true};
+  bool sort{false};
+};
+
+struct ThreadGroupSpec {
+  std::string output{};
+  GroupOp op{GroupOp::Count};
+};
+
 enum class UnicodeForm : std::uint8_t {
   NFC = 0,
   NFD = 1,
@@ -312,7 +355,6 @@ public:
   ~Thread();
 
   bool defined() const noexcept;
-  bool shares_payload_with(const Thread& other) const noexcept;
   std::int64_t size() const;
   std::int64_t ncases() const;
   std::pair<std::int64_t, std::int64_t> shape() const;
@@ -376,19 +418,20 @@ public:
   Thread take(std::span<const std::int64_t> indices) const;
   Thread filter(const pluss::Series& bool_mask) const;
   Thread dropnull() const;
-  Thread sort_values(bool ascending = true, bool nulls_last = true) const;
+  Thread arrange(bool ascending = true, bool nulls_last = true) const;
   Thread ffill(std::int64_t limit = -1) const;
   Thread bfill(std::int64_t limit = -1) const;
   Thread interp(std::int64_t limit = -1) const;
   Thread distinct(bool dropnull = true) const;
-  DataFrameView tally(std::int64_t top_n = 0, bool dropnull = true, bool render = false) const;
+  Thread freq() const;
+  Thread freq(ThreadFreqOptions options) const;
   ThreadView describe(bool render = false) const;
   Thread bucketize(pluss::msharp::RangeView::Double bins,
                    pluss::msharp::RangeView::Int labels = {},
                    bool right = true,
                    bool include_lowest = true) const;
 
-  ThreadNoteAccessor note() const;
+  ThreadNoteAccessor nt() const;
   ThreadTimelineAccessor tl() const;
 
   // Reductions return scalar payloads where the operation is valid.
@@ -616,11 +659,7 @@ public:
   Thread month() const;
   Thread day() const;
   Thread hour() const;
-  Thread to_note_weekday() const;
 
-  // Binary operations for DataFrame-level delegation.
-  Thread numeric_binary(double other, ThreadBinaryMathOp op, bool reverse = false) const;
-  Thread numeric_binary(const Thread& other, ThreadBinaryMathOp op) const;
   Thread add(double other) const;
   Thread add(const Thread& other) const;
   Thread radd(double other) const;
@@ -717,10 +756,11 @@ public:
   }
   int compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last = true) const;
   Thread window(std::int64_t window, ThreadWindowOp op, std::int64_t min_periods = 1) const;
-  Thread cast(ThreadCastTarget target, const ThreadCastOptions& options = {}) const;
-  Thread cast(ThreadCastTarget target,
-              std::optional<pluss::codem::ScalarType> series_dtype) const;
+  ThreadCastAccessor cast() const;
+  ThreadCastAccessor cast(const ThreadCastOptions& options) const;
   Thread astype(pluss::codem::ScalarType dtype) const;
+  ThreadGroupBuilder group() const;
+  ThreadGroupBuilder group(const ThreadGroupOptions& options) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   std::string info_string() const;
@@ -728,12 +768,14 @@ public:
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
   void info() const;
   void info(std::ostream& os) const;
+  ThreadPlotAccessor plot() const;
+  ThreadPlotAccessor plot(const DataFramePlotOptions& options) const;
   ThreadLabelAccessor label() const;
   Thread align(const Thread& target_labels, const AlignOptions& options = {}) const;
-  bool has_display_name() const;
-  std::string display_name() const;
-  Thread with_display_name(std::string name) const;
-  Thread clear_display_name() const;
+  bool named() const;
+  std::string name() const;
+  Thread name(std::string value) const;
+  Thread unname() const;
 
   const pluss::Series& as_series() const;
   const pluss::Note& as_note() const;
@@ -746,6 +788,9 @@ private:
   friend class Atlas;
   friend class DataFrame;
   friend class DataFrameView;
+  friend class ThreadCastAccessor;
+  friend class ThreadGroupBuilder;
+  friend class ThreadGrouped;
   friend class ThreadNoteAccessor;
   friend class ThreadTimelineAccessor;
   friend class ThreadLabelAccessor;
@@ -769,6 +814,9 @@ private:
   friend Thread& detail::with_label_kind_(Thread& thread, LabelKind kind);
 
   explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
+  Thread cast_(ThreadCastTarget target, const ThreadCastOptions& options = {}) const;
+  Thread cast_(ThreadCastTarget target,
+               std::optional<pluss::codem::ScalarType> series_dtype) const;
 
   bool unique() const noexcept;
   bool has_validity_mask() const;
@@ -791,6 +839,11 @@ private:
   Thread& rangelbl_();
   Thread clear_caselbl() const;
   Thread& clear_caselbl_();
+public:
+  bool same_payload_(const Thread& other) const noexcept;
+  Thread math_(double other, ThreadBinaryMathOp op, bool reverse = false) const;
+  Thread math_(const Thread& other, ThreadBinaryMathOp op) const;
+private:
   Thread sample_fraction_(double frac,
                           std::optional<std::uint64_t> random_state,
                           bool replace) const;
@@ -869,6 +922,20 @@ inline Thread clear_display_labels(const Thread& thread) {
 inline Thread& clear_display_labels_(Thread& thread) {
   return thread.clear_display_labels_();
 }
+
+struct GroupStateCache {
+  std::vector<Thread> keys{};
+  std::vector<std::string> names{};
+  std::vector<bool> included{};
+  std::vector<std::int64_t> group_ids{};
+  std::vector<std::int64_t> first_rows{};
+  std::vector<std::int64_t> order{};
+  std::vector<std::int64_t> order_positions{};
+  std::vector<std::int64_t> ordered_first_rows{};
+  std::vector<std::int64_t> broadcast_positions{};
+  std::int64_t ngroups{0};
+  bool all_included{true};
+};
 } // namespace detail
 
 struct TimeSeriesResample {
@@ -899,6 +966,12 @@ class TimeSeriesAccessor {
                  WindowStatistic statistic = WindowStatistic::Mean,
                  const WindowOptions& options = {}) const;
   Thread rolling(const Thread& axis,
+                 std::string_view duration,
+                 WindowStatistic statistic = WindowStatistic::Mean,
+                 const StatisticOptions& options = {},
+                 WindowClosure closure = WindowClosure::Right) const;
+  Thread rolling(const Thread& axis,
+                 const Thread& groups,
                  std::string_view duration,
                  WindowStatistic statistic = WindowStatistic::Mean,
                  const StatisticOptions& options = {},
@@ -937,16 +1010,19 @@ class TimeSeriesAccessor {
   DataFrame lag_block(pluss::msharp::RangeView::Int lags) const;
   DataFrame rolling_block(pluss::msharp::RangeView::Int windows,
                           const TsRollingBlockOptions& options = {}) const;
+  TimeSeriesResampler resample(const Thread& axis,
+                               std::string_view freq,
+                               std::int64_t step = 1) const;
+  TimeSeriesResampler resample(const Thread& axis,
+                               const pluss::TimeIndex::ResampleOptions& options) const;
   TimeSeriesResample resample(const Thread& axis,
                               std::string_view freq,
-                              pluss::subsp::stats::ts::ResampleOp op =
-                                  pluss::subsp::stats::ts::ResampleOp::Mean,
+                              pluss::subsp::stats::ts::ResampleOp op,
                               std::int64_t step = 1) const;
   TimeSeriesResample resample(
       const Thread& axis,
       const pluss::TimeIndex::ResampleOptions& options,
-      pluss::subsp::stats::ts::ResampleOp op =
-          pluss::subsp::stats::ts::ResampleOp::Mean) const;
+      pluss::subsp::stats::ts::ResampleOp op) const;
   Thread add(const Thread& other,
              const Thread& left_axis,
              const Thread& right_axis,
@@ -987,11 +1063,42 @@ class TimeSeriesAccessor {
             const Thread& left_axis,
             const Thread& right_axis,
             TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame calendar(const Thread& axis) const;
+  Thread sort(const Thread& axis,
+              bool ascending = true,
+              bool nulls_last = true) const;
 
  private:
   const pluss::Series& series_payload_(const char* op) const;
   pluss::Series masked_series_payload_(const char* op) const;
   Thread base_{};
+};
+
+class TimeSeriesResampler {
+ public:
+  TimeSeriesResampler(Thread base,
+                      Thread axis,
+                      pluss::TimeIndex::ResampleOptions options);
+
+  Thread mean() const;
+  Thread sum() const;
+  Thread min() const;
+  Thread max() const;
+  Thread first() const;
+  Thread last() const;
+  Thread count() const;
+
+  Thread asfreq(std::optional<double> fill_value = std::nullopt) const;
+  Thread ffill() const;
+  Thread bfill() const;
+  Thread nearest() const;
+
+ private:
+  Thread aggregate_(pluss::subsp::stats::ts::ResampleOp op) const;
+
+  Thread base_{};
+  Thread axis_{};
+  pluss::TimeIndex::ResampleOptions options_{};
 };
 
 class ThreadLabelAccessor {
@@ -1022,8 +1129,18 @@ public:
   }
   Thread fillnull(const pluss::Timeline& value) const;
   Thread fillnull(const pluss::TimeIndex& value) const;
+  Thread duplicated(bool keep_first = true, bool keep_last = false) const;
+  Thread repeated() const;
+  Thread distinct(bool dropnull = true) const;
+  Thread freq(std::int64_t top_n = 0, bool dropnull = true) const;
+  Thread has(const Thread& values) const;
   Thread isnull() const;
   Thread notnull() const;
+  Thread map(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
+  Thread take(pluss::msharp::RangeView::Int indices) const;
+  Thread slice(std::int64_t start, std::int64_t stop) const;
+  Thread sort(bool ascending = true, bool nulls_last = true) const;
+  bool monotonic(bool ascending = true, bool strict = false, bool nulls_last = true) const;
 
 private:
   Thread base_{};
@@ -1054,6 +1171,71 @@ class ThreadView final : public Thread {
 
   friend void output_render(std::ostream& os, const ThreadView& thread);
   friend std::ostream& operator<<(std::ostream& os, const ThreadView& thread);
+};
+
+class ThreadCastAccessor {
+public:
+  explicit ThreadCastAccessor(Thread base, ThreadCastOptions options = {});
+
+  Thread series() const;
+  Thread note() const;
+  Thread timeline() const;
+  Thread timeindex() const;
+
+private:
+  Thread base_{};
+  ThreadCastOptions options_{};
+};
+
+class ThreadGroupBuilder {
+public:
+  explicit ThreadGroupBuilder(Thread value, ThreadGroupOptions options = {});
+
+  ThreadGrouped by(const Thread& key) const;
+  ThreadGrouped by(std::initializer_list<Thread> keys) const;
+  ThreadGrouped by(pluss::msharp::RangeView::Of<Thread> keys) const;
+
+private:
+  Thread value_{};
+  ThreadGroupOptions options_{};
+};
+
+class ThreadGrouped {
+public:
+  ThreadGrouped(Thread value,
+                std::vector<Thread> keys,
+                std::vector<std::string> names,
+                ThreadGroupOptions options = {});
+
+  DataFrame agg(pluss::msharp::RangeView::Of<ThreadGroupSpec> specs) const;
+  DataFrame agg(std::initializer_list<ThreadGroupSpec> specs) const;
+  Thread transform(GroupOp op) const;
+  DataFrame transform(pluss::msharp::RangeView::Of<ThreadGroupSpec> specs) const;
+  DataFrame transform(std::initializer_list<ThreadGroupSpec> specs) const;
+  Thread filter(const pluss::Series& keep) const;
+  Thread filter(const Thread& keep) const;
+
+  DataFrame count() const;
+  DataFrame ndistinct() const;
+  DataFrame sum() const;
+  DataFrame mean() const;
+  DataFrame median() const;
+  DataFrame min() const;
+  DataFrame max() const;
+  DataFrame std() const;
+  DataFrame var() const;
+  DataFrame mode() const;
+
+private:
+  const detail::GroupStateCache& state_cached_() const;
+
+  DataFrame terminal_(GroupOp op) const;
+
+  Thread value_{};
+  std::vector<Thread> keys_{};
+  std::vector<std::string> names_{};
+  ThreadGroupOptions options_{};
+  mutable std::shared_ptr<const detail::GroupStateCache> state_cache_{};
 };
 
 class ThreadNoteAccessor {

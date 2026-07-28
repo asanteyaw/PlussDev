@@ -475,7 +475,7 @@ void run_verb_walkthrough(const DataFrame& df) {
   (void)df.aggregate({{"severity_max", "Severity", DataFrame::SummaryOp::Max}});
   (void)sum;
 
-  auto arranged = q_mask.sort_values({"State"}).sort_values({
+  auto arranged = q_mask.arrange({"State"}).arrange({
       {"Severity", false, true},
       {"Distance(mi)", false, true},
   });
@@ -496,12 +496,11 @@ void run_verb_walkthrough(const DataFrame& df) {
   (void)miss_ffill;
   (void)miss_bfill;
 
-  auto cast_note = df.cast({DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Note, {}}});
+  auto cast_note = df.features({"Start_Time"}).cast().note();
   auto cast_series = cast_note.cast(
-      {DataFrame::CastSpec{"Start_Time",
-                           ThreadCastTarget::Series,
-                           ThreadCastOptions{
-                               .series_dtype = pluss::codem::ScalarType::Int64}}});
+      ThreadCastOptions{
+          .series_dtype = pluss::codem::ScalarType::Int64,
+      }).series();
   auto typed = cast_series.astype({{"Severity", pluss::codem::ScalarType::Float64}});
   (void)typed;
 
@@ -538,9 +537,9 @@ void run_verb_walkthrough(const DataFrame& df) {
   auto win = numeric.ts().rolling({
       DataFrame::WindowSpec{"severity_rollmean_12", "Severity", ThreadWindowOp::RollingMean, 12, 3},
       DataFrame::WindowSpec{"distance_rollmax_24", "Distance(mi)", ThreadWindowOp::RollingMax, 24, 1},
+      DataFrame::WindowSpec{"visibility_rollmin_6", "Visibility(mi)", ThreadWindowOp::RollingMin, 6, 1},
   });
-  (void)win.rolling(
-      {DataFrame::WindowSpec{"visibility_rollmin_6", "Visibility(mi)", ThreadWindowOp::RollingMin, 6, 1}});
+  (void)win;
 
   std::cout << "Verb walkthrough complete.\n";
 }
@@ -603,15 +602,10 @@ int main(int argc, char** argv) {
 
   run_verb_walkthrough(df);
 
-  auto start_as_note = df.cast({DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Note, {}}});
-  auto times_ns = df.cast({
-      DataFrame::CastSpec{"Start_Time",
-                          ThreadCastTarget::Series,
-                          ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}},
-      DataFrame::CastSpec{"End_Time",
-                          ThreadCastTarget::Series,
-                          ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}},
-  });
+  auto start_as_note = df.features({"Start_Time"}).cast().note();
+  auto times_ns = df.features({"Start_Time", "End_Time"})
+                      .cast(ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64})
+                      .series();
 
   const auto& severity_t = df.features("Severity");
   const auto& distance_t = df.features("Distance(mi)");

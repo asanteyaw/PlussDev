@@ -11,11 +11,7 @@
 DataFrame::transform(const std::function<Thread(const Thread&)>& fn) const -> DataFrame
 DataFrame::transform(const std::function<Thread(const Thread&)>& fn, Axis axis) const -> DataFrame  // axis must be Axis::Feature
 
-// Single feature
-DataFrame::transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const -> DataFrame
-DataFrame::transform(std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const -> DataFrame
-
-// Several features via structured specs
+// One or several features via structured specs
 DataFrame::transform(pluss::RangeView<TransformSpec> specs) const -> DataFrame
 
 // Row-wise (Axis::Case only)
@@ -33,13 +29,10 @@ depending on which overload you reach for:
   the same thing spelled out explicitly — it requires `Axis::Feature` and throws
   otherwise, pointing you at the row-wise `DataFrame`-callback overload for
   `Axis::Case` instead.
-- **Single feature** (`transform(feature, fn)`): rewrites just `feature`. The
-  `Thread`-callback form receives that feature's own values; the `DataFrame`-callback
-  form receives the *whole frame* so `fn` can derive the new column from other
-  features too — this form can also **create** a brand-new feature named `feature`
-  if it doesn't already exist (it's implemented via [`assign()`](assign.md)).
-- **Several features via `TransformSpec`** (`transform(specs)`): apply a different
-  `Thread`-callback to each of several named features in one call.
+- **One or several features via `TransformSpec`** (`transform(specs)`): apply a
+  different `Thread`-callback to each of one or several named features in one call —
+  `transform({{"sales", fn}})` targets just `"sales"`; every feature not named in
+  `specs` is left untouched.
 - **Row-wise** (`Axis::Case` only): the two least common overloads. The
   `ThreadValue`-callback form calls `fn` once per case (each case observed as a
   one-row `DataFrame`) and expects a single scalar back, concatenating the results
@@ -50,14 +43,18 @@ depending on which overload you reach for:
   case; `Expand` requires every case's callback result to share the same case count
   and feature schema.
 
+To *derive a brand-new feature* from the whole frame (rather than rewrite an existing
+one from its own values), reach for [`assign()`](assign.md) instead — `transform()`'s
+`TransformSpec` overload only ever sees one feature's own `Thread` at a time, so it
+can rewrite an existing feature but never create one that doesn't already exist.
+
 ## Parameters
 
 **fn**
 
-The transform function. Its signature (`Thread(const Thread&)`, `Thread(const
-DataFrame&)`, `ThreadValue(const DataFrame&)`, or `DataFrame(const DataFrame&)`)
-selects which overload is called. A returned `Thread` must match the frame's case
-count.
+The transform function. Its signature (`Thread(const Thread&)`, `ThreadValue(const
+DataFrame&)`, or `DataFrame(const DataFrame&)`) selects which overload is called. A
+returned `Thread` must match the frame's case count.
 
 **axis** (`Axis`)
 
@@ -66,15 +63,10 @@ row-wise overloads, must be `Axis::Case` (throws otherwise) — `axis` exists on
 signatures mainly to make the row-wise-vs-feature-wise choice explicit at the call
 site.
 
-**feature** (`std::string_view`)
-
-The feature to rewrite (or create, for the `DataFrame`-callback single-feature
-overload).
-
 **specs** (`pluss::RangeView<TransformSpec>`)
 
-A list of `{feature, expr}` pairs, each naming one feature and the `Thread`-callback
-to apply to it.
+A list of `{feature, expr}` pairs, each naming one existing feature and the
+`Thread`-callback to apply to it. A single-element list targets just one feature.
 
 **shape** (`ResultShape`, default `Infer`, row-wise `DataFrame`-callback overload
 only)
@@ -88,8 +80,7 @@ other).
 ## Returns
 
 `DataFrame`
-    (Most overloads) A new frame with the targeted feature(s) rewritten (or, for the
-    `DataFrame`-callback single-feature and row-wise overloads, potentially added).
+    (Most overloads) A new frame with the targeted feature(s) rewritten.
 
 `Thread`
     (Row-wise `ThreadValue`-callback overload) One entry per case, concatenated from
@@ -149,12 +140,12 @@ non-`Series` kind. `transform(fn)` applies `fn` to **every** feature — there i
 way to skip a feature except by having `fn` itself return it unchanged, as done
 here.
 
-Example 2. Rewrite just one named feature, leaving the rest of the frame alone by
-construction rather than by the callback's own logic.
+Example 2. Rewrite just one named feature with a `TransformSpec`, leaving the rest of
+the frame alone by construction rather than by the callback's own logic.
 
 ```cpp
-auto sales_clipped = orders.transform("sales", [](const Thread& t) {
-  return t.clip(0.0, 110.0);
+auto sales_clipped = orders.transform({
+    {"sales", [](const Thread& t) { return t.clip(0.0, 110.0); }},
 });
 std::cout << sales_clipped;
 ```
@@ -172,39 +163,39 @@ std::cout << sales_clipped;
 [3 cs x 3 feat]
 ```
 
-Example 3. Derive a brand-new feature from the whole frame.
+Example 3. Rewrite two named features with different callbacks in one call.
 
 ```cpp
-auto with_profit = orders.transform("profit", [](const DataFrame& frame) {
-  return Thread(frame.features("sales").as_series() * 0.3);
+auto both = orders.transform({
+    {"id",    [](const Thread& t) { return t.add(100.0); }},
+    {"sales", [](const Thread& t) { return t.clip(0.0, 110.0); }},
 });
-std::cout << with_profit;
+std::cout << both;
 ```
 
 ### Output
 
 ```text
-==================================
-     | id    sales  city    profit
-----------------------------------
-0    | 1     100    Accra   30    
-1    | 2     120    Tema    36    
-2    | 3     90     Kumasi  27    
-----------------------------------
-[3 cs x 4 feat]
+==========================
+     | id    sales  city  
+--------------------------
+0    | 101   100    Accra 
+1    | 102   110    Tema  
+2    | 103   90     Kumasi
+--------------------------
+[3 cs x 3 feat]
 ```
 
-`"profit"` didn't exist before, so this `DataFrame`-callback single-feature overload
-creates it, computed here as `30%` of each row's `sales`.
+`city` is untouched since it wasn't named in `specs`.
 
 ## Notes
 
-- `transform(fn)` (no feature name) always applies `fn` to every feature; use the
-  single-feature or `TransformSpec` overloads to target specific features instead.
-- The single-feature `DataFrame`-callback overload can both **rewrite** an existing
-  feature and **create** a brand-new one, depending on whether `feature` already
-  exists — it's implemented directly via [`assign()`](assign.md).
-- Every returned `Thread` (whole-frame and single-feature overloads) must have the
+- `transform(fn)` (no `specs`) always applies `fn` to every feature; use the
+  `TransformSpec` overload to target specific, already-existing features instead.
+- `transform()` can only **rewrite** features that already exist on the frame —
+  passing a name not already present throws. To **create** a new feature, use
+  [`assign()`](assign.md) instead.
+- Every returned `Thread` (whole-frame and `TransformSpec` overloads) must have the
   same length as the frame's case count, or the call throws.
 - For the row-wise `DataFrame`-callback overload, `ResultShape::Infer` (the
   default) performs **no** shape consistency check across cases at all — reach for
@@ -212,9 +203,10 @@ creates it, computed here as `30%` of each row's `sales`.
 
 ## See Also
 
-- [`DataFrame::assign`](assign.md): the more direct way to derive one or more new
-  features from frame-wide expressions, which this method's single-feature
-  `DataFrame`-callback overload is built on.
+- [`DataFrame::assign`](assign.md): derive one or more **new** features from
+  whole-frame expressions, including creating a feature that doesn't already exist —
+  the tool to reach for when `transform()`'s existing-feature-only `TransformSpec`
+  overload isn't enough.
 - [`DataFrame::map`](map.md): a scalar-per-cell transform (`ThreadValue -> ThreadValue`,
   skipping nulls automatically), a narrower tool than this method's `Thread`-wide
   callbacks.

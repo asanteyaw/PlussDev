@@ -191,10 +191,10 @@ Use `strip()` for whitespace cleanup, `lstrip(chars)` for leading markers, and
 ## Sort and rank
 
 ```cpp
-auto by_age = df.sort_values({"age"});
-auto by_age_desc = df.sort_values({"age"}, false);
+auto by_age = df.arrange({"age"});
+auto by_age_desc = df.arrange({"age"}, false);
 
-auto by_multiple = df.sort_values({
+auto by_multiple = df.arrange({
     {"age", true, true},
     {"duration", false, true},
 });
@@ -203,7 +203,7 @@ auto top = df.top("balance", 10);
 auto bottom = df.bottom("balance", 10);
 ```
 
-`sort_values({"age"})` sorts ascending by default and puts null values last by
+`arrange({"age"})` sorts ascending by default and puts null values last by
 default. Use `ArrangeSpec` when a sort needs per-feature direction or null
 placement. `top(feature, n)` is shorthand for descending sort plus the first
 `n` rows. `bottom(feature, n)` is shorthand for ascending sort plus the first
@@ -214,7 +214,7 @@ placement. `top(feature, n)` is shorthand for descending sort plus the first
 ```cpp
 auto sales = sales_frame();
 
-auto sorted = sales.sort_values({DataFrame::ArrangeSpec{"price", false, true}})
+auto sorted = sales.arrange({DataFrame::ArrangeSpec{"price", false, true}})
                   .features({"city", "price"});
 std::cout << sorted.to_string() << '\n';
 
@@ -478,7 +478,7 @@ Named summaries:
 df.aggregate({
     {"cases", "age", DataFrame::SummaryOp::Count},
     {"age_mean", "age", DataFrame::SummaryOp::Mean},
-    {"job_cardinality", "job", DataFrame::SummaryOp::Nunique},
+    {"job_cardinality", "job", DataFrame::SummaryOp::Ndistinct},
 }, true);
 ```
 
@@ -499,14 +499,12 @@ auto summary = sales.aggregate({
 }, false);
 std::cout << summary.to_string() << '\n';
 
-auto grouped = sales.group_by(
-    {"region"},
-    {
+auto grouped = sales.group({.dropnull = true})
+    .by({"region"})
+    .agg({
         {"units_sum", "units", DataFrame::GroupOp::Sum},
         {"revenue_mean", "revenue", DataFrame::GroupOp::Mean},
-    },
-    true,
-    false);
+    });
 std::cout << grouped.to_string() << '\n';
 ```
 
@@ -536,22 +534,13 @@ row per region. The south group combines Accra and Tema, so `units_sum` is
 Grouped summaries:
 
 ```cpp
-df.group_by(
-    {"job"},
-    {
-        {"count", "age", DataFrame::GroupOp::Count},
-        {"mean_balance", "balance", DataFrame::GroupOp::Mean},
-        {"max_duration", "duration", DataFrame::GroupOp::Max},
-    },
-    true,
-    true);
-```
-
-Convenience group summaries:
-
-```cpp
-df.count_by("job", 10, true, true);
-df.mean_by("job", "balance", 10, 1, true, true);
+df.group({.dropnull = true, .sort = true})
+  .by({"job"})
+  .agg({
+      {"count", "age", DataFrame::GroupOp::Count},
+      {"mean_balance", "balance", DataFrame::GroupOp::Mean},
+      {"max_duration", "duration", DataFrame::GroupOp::Max},
+  });
 ```
 
 ## Pivoting

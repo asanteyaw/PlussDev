@@ -181,7 +181,7 @@ template <>
         {1},
         Config{}.with_dtype(ScalarType::Int64).with_platform(mapped.platform()));
     const Series col = mapped.index_select(1, idx).reshape({sample_count});
-    out = out.set(names[static_cast<std::size_t>(j)], pluss::table::Thread(col));
+    out.set_(names[static_cast<std::size_t>(j)], pluss::table::Thread(col));
   }
   return out;
 }
@@ -453,8 +453,8 @@ pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss::table
                                                       const TrainOptions& options) {              \
     prep_before_thread_fit_(*this, feature);                                                     \
     resolve(core_.learn(feature, options), Label ".learn(Thread)");                              \
-    if (feature_names_.empty() && feature.has_display_name()) {                                   \
-      feature_names_ = {feature.display_name()};                                                  \
+    if (feature_names_.empty() && feature.named()) {                                              \
+      feature_names_ = {feature.name()};                                                          \
       feature_names_pinned_ = true;                                                               \
     }                                                                                             \
     learned_ = true;                                                                              \
@@ -476,8 +476,8 @@ pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss::table
     prep_before_thread_fit_(*this, feature);                                                     \
     const auto mapped = resolve(core_.learn_map(feature, learn_options, infer_options),          \
                                 Label ".learn_map(Thread)");                                      \
-    if (feature_names_.empty() && feature.has_display_name()) {                                   \
-      feature_names_ = {feature.display_name()};                                                  \
+    if (feature_names_.empty() && feature.named()) {                                              \
+      feature_names_ = {feature.name()};                                                          \
       feature_names_pinned_ = true;                                                               \
     }                                                                                             \
     learned_ = true;                                                                              \
@@ -842,8 +842,8 @@ prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::Thread& 
   if (!feature.defined()) {
     ::pluss::throw_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
   }
-  if (feature.has_display_name()) {
-    feature_names_ = {feature.display_name()};
+  if (feature.named()) {
+    feature_names_ = {feature.name()};
     feature_names_pinned_ = true;
   } else if (feature_names_.empty()) {
     feature_names_ = {"feature_0"};

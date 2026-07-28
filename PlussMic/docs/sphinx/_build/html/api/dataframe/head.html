@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f0e02664"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -62,8 +62,8 @@ empty-but-typed frame with the same schema, for example as a seed value before
 repeatedly calling <a class="reference internal" href="extend.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extend</span></code></span></a> in a loop.</p>
 <p><code class="docutils literal notranslate"><span class="pre">head()</span></code> looks at position, not value: it always returns the <em>first</em> <code class="docutils literal notranslate"><span class="pre">n</span></code> cases as
 currently ordered on the frame. If you want the first <code class="docutils literal notranslate"><span class="pre">n</span></code> cases after sorting by some
-key, call <a class="reference internal" href="sort_values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_values</span></code></span></a> first and then <code class="docutils literal notranslate"><span class="pre">head()</span></code> the result — the two
-compose exactly like <code class="docutils literal notranslate"><span class="pre">df.sort_values(...).head(...)</span></code> reads.</p>
+key, call <a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange</span></code></span></a> first and then <code class="docutils literal notranslate"><span class="pre">head()</span></code> the result — the two
+compose exactly like <code class="docutils literal notranslate"><span class="pre">df.arrange(...).head(...)</span></code> reads.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -147,7 +147,7 @@ first.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">head()</span></code> composes naturally with the rest of the pipeline-style API:
-<code class="docutils literal notranslate"><span class="pre">orders.sort_values({{.feature</span> <span class="pre">=</span> <span class="pre">&quot;unit_price&quot;,</span> <span class="pre">.ascending</span> <span class="pre">=</span> <span class="pre">false}}).head(3)</span></code> gives you
+<code class="docutils literal notranslate"><span class="pre">orders.arrange({{.feature</span> <span class="pre">=</span> <span class="pre">&quot;unit_price&quot;,</span> <span class="pre">.ascending</span> <span class="pre">=</span> <span class="pre">false}}).head(3)</span></code> gives you
 the three highest-priced orders without a separate sort-then-slice step.</p></li>
 <li><p>For the tail end of a frame instead of the top, use <a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail(n,</span> <span class="pre">render)</span></code></span></a>, which
 has an identical signature and clamping behavior.</p></li>

@@ -128,9 +128,9 @@ observations. `order_id` and `units`, with no missing values, are unaffected eit
   several other statistics in one call.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mean_by.html">
+  <a class="prev-link" href="mean.html">
     <span class="label">Previous</span>
-    <span class="title">mean_by</span>
+    <span class="title">mean</span>
   </a>
   <a class="next-link" href="min.html">
     <span class="label">Next</span>
