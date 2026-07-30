@@ -84,11 +84,13 @@ auto flowers = DataFrame({
 });
 
 auto chart = flowers.plot().radviz();
-chart.save_svg("flowers_radviz.svg");
+chart.show();
 ```
 
 Three anchors (`sepal_length`, `sepal_width`, `petal_length`) placed 120° apart; `species` is
 excluded from the anchors since it's Note-kind, not numeric.
+
+![Output of Example 1](img/radviz-1.svg)
 
 Example 2. An explicit feature subset, colored by class.
 
@@ -97,6 +99,8 @@ auto chart = flowers.plot().radviz(
     {"sepal_length", "sepal_width", "petal_length"}, "species");
 chart.show();
 ```
+
+![Output of Example 2](img/radviz-2.svg)
 
 Example 3. An explicit `RadvizPlotOptions`, hiding the anchor labels and enlarging the
 markers.
@@ -108,8 +112,10 @@ options.marker_area = 32.0;
 
 auto chart = flowers.plot().radviz(
     {"sepal_length", "sepal_width", "petal_length"}, "species", options);
-chart.save_png("flowers_radviz.png");
+chart.show();
 ```
+
+![Output of Example 3](img/radviz-3.svg)
 
 Example 4. `class_feature` accepts a numeric feature too, exactly like
 [`parallel()`](parallel.md)'s Example 4.
@@ -124,6 +130,8 @@ auto numeric_class = DataFrame({
 
 auto chart = numeric_class.plot().radviz({"x1", "x2", "x3"}, "code");
 ```
+
+![Output of Example 4](img/radviz-4.svg)
 
 ## Notes
 

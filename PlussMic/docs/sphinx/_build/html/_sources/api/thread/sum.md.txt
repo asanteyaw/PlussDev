@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f4eb731a0707 -->
 
 # Thread::sum
 
@@ -49,7 +50,8 @@ enough data — but `.to_dbl()`/`.to_int()`/`.to_str()` still hand back whatever
 number the underlying arithmetic produced, with no indication it's actually
 meaningless. `Series`/`Note`/`Timeline`/`TimeIndex` printing has no concept of
 nullness at all — only the wrapping `Thread`'s own validity mask does. Check
-`result.thread().is_valid(0)` before trusting a result from one of those
+`result.thread().notnull().as_series().to_vec<bool>()[0]` before trusting a
+result from one of those
 methods.
 ```
 

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9f1772b1ecaa -->
 
 # Thread::ts
 
@@ -132,8 +133,8 @@ itself never throws, since it just binds the thread without inspecting it.
     <span class="label">Previous</span>
     <span class="title">truediv</span>
   </a>
-  <a class="next-link" href="upper.html">
+  <a class="next-link" href="unname.html">
     <span class="label">Next</span>
-    <span class="title">upper</span>
+    <span class="title">unname</span>
   </a>
 </div>

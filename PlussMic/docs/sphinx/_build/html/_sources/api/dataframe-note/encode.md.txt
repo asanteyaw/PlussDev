@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f2fe51f7eacd -->
 
 # DataFrameNoteAccessor::encode
 

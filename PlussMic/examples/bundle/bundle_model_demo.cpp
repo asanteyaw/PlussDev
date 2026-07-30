@@ -171,14 +171,14 @@ void demo_registry_methods() {
   registry.set_("city_copy", cities);
 
   std::cout << "registry nfields: " << registry.nfields()
-            << ", head(ids) size: " << head.at("ids").size()
-            << ", tail(ids) size: " << tail.at("ids").size()
-            << ", slice(ids) size: " << slice.at("ids").size()
+            << ", head(ids) size: " << head.select("ids").size()
+            << ", tail(ids) size: " << tail.select("ids").size()
+            << ", slice(ids) size: " << slice.select("ids").size()
             << ", select nfields: " << select.nfields()
             << ", drop nfields: " << drop.nfields()
             << ", rename has(location): " << rename.has("location")
-            << ", applied ids[0] updated: " << to_i64(applied.at("ids").at(0))
-            << ", apply_all city[0]: " << to_string_value(all_upper.at("city").at(0))
+            << ", applied ids[0] updated: " << to_i64(applied.select("ids").at(0))
+            << ", apply_all city[0]: " << to_string_value(all_upper.select("city").at(0))
             << ", combined nfields: " << combined.nfields()
             << ", with_status has(status): " << with_status.has("status")
             << ", has(city_copy): " << registry.has("city_copy") << "\n";

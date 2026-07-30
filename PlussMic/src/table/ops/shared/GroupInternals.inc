@@ -80,7 +80,7 @@ std::string group_key_name_(std::size_t index, const Thread& key) {
 }
 
 std::string group_row_part_(const Thread& value, std::int64_t row) {
-  if (!value.is_valid(row)) {
+  if (!detail::valid_at(value, row)) {
     return std::string("__NULL__");
   }
   return thread_scalar_string_at(value, row);
@@ -306,7 +306,7 @@ Thread group_broadcast_thread_(const Thread& grouped, const GroupState_& state) 
     if (!state.included[row]) {
       continue;
     }
-    valid[row] = grouped.is_valid(indices[row]);
+    valid[row] = detail::valid_at(grouped, indices[row]);
   }
 
   auto out = grouped.take(indices);
@@ -434,7 +434,7 @@ Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state) {
   std::unordered_set<std::string> seen;
   seen.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, value.size())));
   for (std::int64_t row = 0; row < value.size(); ++row) {
-    if (!state.included[static_cast<std::size_t>(row)] || !value.is_valid(row)) {
+    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
       continue;
     }
     const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
@@ -460,7 +460,7 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
   std::vector<std::unordered_map<std::string, ModeBucket>> buckets(
       static_cast<std::size_t>(state.ngroups));
   for (std::int64_t row = 0; row < value.size(); ++row) {
-    if (!state.included[static_cast<std::size_t>(row)] || !value.is_valid(row)) {
+    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
       continue;
     }
     const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
@@ -507,6 +507,115 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
     note = detail::with_validity_mask(note, group_bool_mask_(valid));
   }
   return reorder_group_thread_(note, state);
+}
+
+// Per-group set of every value tied for the highest count, sorted ascending.
+// Index i of the returned vector corresponds to *original* group id i (not
+// the sort-adjusted "order" position) — callers that care about output order
+// must walk state.order themselves, the same way group_key_columns_ does via
+// ordered_first_rows. An empty inner vector means the group had zero valid
+// (non-null) observations at all.
+std::vector<std::vector<std::string>> group_note_mode_ties_(const Thread& value,
+                                                             const GroupState_& state) {
+  std::vector<std::unordered_map<std::string, std::int64_t>> counts(
+      static_cast<std::size_t>(state.ngroups));
+  for (std::int64_t row = 0; row < value.size(); ++row) {
+    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
+      continue;
+    }
+    const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
+    if (group_id < 0) {
+      continue;
+    }
+    ++counts[static_cast<std::size_t>(group_id)][thread_scalar_string_at(value, row)];
+  }
+
+  std::vector<std::vector<std::string>> out(static_cast<std::size_t>(state.ngroups));
+  for (std::int64_t group = 0; group < state.ngroups; ++group) {
+    const auto& bucket = counts[static_cast<std::size_t>(group)];
+    if (bucket.empty()) {
+      continue;
+    }
+    std::int64_t best_count = 0;
+    for (const auto& [candidate, count] : bucket) {
+      best_count = std::max(best_count, count);
+    }
+    std::vector<std::string> tied;
+    tied.reserve(bucket.size());
+    for (const auto& [candidate, count] : bucket) {
+      if (count == best_count) {
+        tied.push_back(candidate);
+      }
+    }
+    std::sort(tied.begin(), tied.end());
+    out[static_cast<std::size_t>(group)] = std::move(tied);
+  }
+  return out;
+}
+
+// Numeric counterpart of group_note_mode_ties_: same contract, but sorted
+// ascending by numeric value rather than lexicographically by string.
+std::vector<std::vector<double>> group_numeric_mode_ties_(const Thread& value,
+                                                           const GroupState_& state) {
+  PLUSS_CHECK(value.kind() == ThreadKind::Series && is_numeric_series_type(value.as_series()),
+              "DataFrameGrouped::mode_ties: value feature must be Note or a numeric Series");
+  const auto values = value.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+
+  std::vector<std::unordered_map<double, std::int64_t>> counts(
+      static_cast<std::size_t>(state.ngroups));
+  for (std::int64_t row = 0; row < value.size(); ++row) {
+    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
+      continue;
+    }
+    const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
+    if (group_id < 0) {
+      continue;
+    }
+    ++counts[static_cast<std::size_t>(group_id)][values[static_cast<std::size_t>(row)]];
+  }
+
+  std::vector<std::vector<double>> out(static_cast<std::size_t>(state.ngroups));
+  for (std::int64_t group = 0; group < state.ngroups; ++group) {
+    const auto& bucket = counts[static_cast<std::size_t>(group)];
+    if (bucket.empty()) {
+      continue;
+    }
+    std::int64_t best_count = 0;
+    for (const auto& [candidate, count] : bucket) {
+      best_count = std::max(best_count, count);
+    }
+    std::vector<double> tied;
+    tied.reserve(bucket.size());
+    for (const auto& [candidate, count] : bucket) {
+      if (count == best_count) {
+        tied.push_back(candidate);
+      }
+    }
+    std::sort(tied.begin(), tied.end());
+    out[static_cast<std::size_t>(group)] = std::move(tied);
+  }
+  return out;
+}
+
+// Same idea as group_key_columns_, but each output row is one entry in
+// `expanded_order_positions` (a "order" position, i.e. an index into
+// state.ordered_first_rows) rather than assuming exactly one output row per
+// group — the mechanism that lets a single group contribute more than one
+// row to mode_ties()'s output.
+std::vector<std::pair<std::string, Thread>> group_key_columns_expanded_(
+    const GroupState_& state,
+    const std::vector<std::int64_t>& expanded_order_positions) {
+  std::vector<std::int64_t> expanded_rows;
+  expanded_rows.reserve(expanded_order_positions.size());
+  for (const auto pos : expanded_order_positions) {
+    expanded_rows.push_back(state.ordered_first_rows[static_cast<std::size_t>(pos)]);
+  }
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(state.keys.size());
+  for (std::size_t i = 0; i < state.keys.size(); ++i) {
+    out.emplace_back(state.names[i], state.keys[i].take(expanded_rows));
+  }
+  return out;
 }
 
 Thread group_numeric_thread_(const Thread& value,

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5661355c0130 -->
 
 # Thread::covar
 
@@ -23,7 +24,7 @@ result. `ddof` (in `options`) controls the divisor, exactly like
 gives the sample covariance (`n - 1` divisor); `ddof = 0` gives the
 population covariance (`n` divisor). Below `min_count` valid pairs, the result
 is marked *invalid* rather than thrown — see
-[`Thread::sum`'s note](sum.md) on checking `.thread().is_valid(0)` rather than
+[`Thread::sum`'s note](sum.md) on checking the scalar validity mask rather than
 trusting the printed number in that case.
 
 Unlike `corr()`, this method requires both threads to already share the same
@@ -84,7 +85,7 @@ than thrown.
 auto small = Thread(pluss::make_series({1.0, 2.0}));
 auto small_other = Thread(pluss::make_series({3.0, 4.0}));
 auto out3 = small.covar(small_other, StatisticOptions{.ddof = 1, .min_count = 5});
-std::cout << out3.thread().is_valid(0);
+std::cout << out3.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output

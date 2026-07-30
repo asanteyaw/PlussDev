@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 973606898ea2 -->
 
 # Thread::invalid
 
@@ -113,8 +114,8 @@ ptype: Series
     <span class="label">Previous</span>
     <span class="title">interp</span>
   </a>
-  <a class="next-link" href="is_valid.html">
+  <a class="next-link" href="isfinite.html">
     <span class="label">Next</span>
-    <span class="title">is_valid</span>
+    <span class="title">isfinite</span>
   </a>
 </div>

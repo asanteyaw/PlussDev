@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2be009f73669 -->
 
 # Thread::notnull
 
@@ -68,12 +69,12 @@ ptype: Series
   check.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="note.html">
+  <a class="prev-link" href="normalize.html">
     <span class="label">Previous</span>
-    <span class="title">note</span>
+    <span class="title">normalize</span>
   </a>
-  <a class="next-link" href="numeric_binary.html">
+  <a class="next-link" href="nt.html">
     <span class="label">Next</span>
-    <span class="title">numeric_binary</span>
+    <span class="title">nt</span>
   </a>
 </div>

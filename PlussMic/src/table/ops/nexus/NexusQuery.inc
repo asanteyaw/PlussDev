@@ -5,6 +5,11 @@ std::vector<std::string> normalize_query_names(std::initializer_list<std::string
   return normalize_requested_keys(names, where);
 }
 
+std::vector<std::string> normalize_query_names(pluss::msharp::RangeView::Of<std::string_view> names,
+                                               std::string_view where) {
+  return normalize_requested_keys(names, where);
+}
+
 std::vector<std::string_view> query_name_views(const std::vector<std::string>& names) {
   std::vector<std::string_view> out;
   out.reserve(names.size());
@@ -96,6 +101,10 @@ NexusQuery NexusQuery::via(std::string_view to, JoinHow how) const {
 }
 
 NexusQuery NexusQuery::pick(std::initializer_list<std::string_view> features) const {
+  return pick(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+NexusQuery NexusQuery::pick(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return NexusQuery(
       nexus_,
       plan_,
@@ -106,6 +115,10 @@ NexusQuery NexusQuery::pick(std::initializer_list<std::string_view> features) co
 }
 
 NexusQuery NexusQuery::drop(std::initializer_list<std::string_view> features) const {
+  return drop(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+NexusQuery NexusQuery::drop(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return NexusQuery(
       nexus_,
       plan_,

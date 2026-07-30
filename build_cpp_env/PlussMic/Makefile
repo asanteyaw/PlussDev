@@ -878,6 +878,30 @@ src/table/plot/DataFramePlot.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/DataFramePlot.cpp.s
 .PHONY : src/table/plot/DataFramePlot.cpp.s
 
+src/table/plot/ThreadPlot.o: src/table/plot/ThreadPlot.cpp.o
+.PHONY : src/table/plot/ThreadPlot.o
+
+# target to build an object file
+src/table/plot/ThreadPlot.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/ThreadPlot.cpp.o
+.PHONY : src/table/plot/ThreadPlot.cpp.o
+
+src/table/plot/ThreadPlot.i: src/table/plot/ThreadPlot.cpp.i
+.PHONY : src/table/plot/ThreadPlot.i
+
+# target to preprocess a source file
+src/table/plot/ThreadPlot.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/ThreadPlot.cpp.i
+.PHONY : src/table/plot/ThreadPlot.cpp.i
+
+src/table/plot/ThreadPlot.s: src/table/plot/ThreadPlot.cpp.s
+.PHONY : src/table/plot/ThreadPlot.s
+
+# target to generate assembly for a file
+src/table/plot/ThreadPlot.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/ThreadPlot.cpp.s
+.PHONY : src/table/plot/ThreadPlot.cpp.s
+
 src/table/plot/atlas/AtlasPlotAccessor.o: src/table/plot/atlas/AtlasPlotAccessor.cpp.o
 .PHONY : src/table/plot/atlas/AtlasPlotAccessor.o
 
@@ -1050,6 +1074,9 @@ help:
 	@echo "... src/table/plot/DataFramePlot.o"
 	@echo "... src/table/plot/DataFramePlot.i"
 	@echo "... src/table/plot/DataFramePlot.s"
+	@echo "... src/table/plot/ThreadPlot.o"
+	@echo "... src/table/plot/ThreadPlot.i"
+	@echo "... src/table/plot/ThreadPlot.s"
 	@echo "... src/table/plot/atlas/AtlasPlotAccessor.o"
 	@echo "... src/table/plot/atlas/AtlasPlotAccessor.i"
 	@echo "... src/table/plot/atlas/AtlasPlotAccessor.s"

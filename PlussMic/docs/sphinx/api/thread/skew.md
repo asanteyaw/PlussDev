@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7674ff06d8e9 -->
 
 # Thread::skew
 
@@ -19,7 +20,7 @@ negative for a left-leaning tail. Rather than throwing on a too-small sample,
 this method returns a result marked *invalid* whenever the observed count is
 below `max(3, min_count)` — skewness is undefined below 3 observations, so
 `min_count` can only raise that floor, never lower it. See
-[`Thread::sum`'s note](sum.md) on why you should check `.thread().is_valid(0)`
+[`Thread::sum`'s note](sum.md) on why you should check the scalar validity mask
 rather than trust the printed number for an invalid result.
 
 If every observed value is identical (zero variance), the result is `0`
@@ -77,7 +78,7 @@ throwing.
 ```cpp
 auto small = Thread(pluss::make_series({1.0, 2.0}));
 auto out3 = small.skew();
-std::cout << out3.thread().is_valid(0);
+std::cout << out3.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output
@@ -94,7 +95,7 @@ false
   `NaN`.
 - Below the effective minimum count, the result is marked invalid rather than
   thrown — see the caveat on [`Thread::sum`'s page](sum.md) about checking
-  `.thread().is_valid(0)` rather than trusting the printed number.
+  the scalar validity mask rather than trusting the printed number.
 - Restricted to numeric `Series` payloads; anything else throws
   `"Thread::skew: expected a real numeric Series Thread"`.
 

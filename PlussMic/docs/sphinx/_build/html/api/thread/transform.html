@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,59 +36,139 @@
 
           <div class="body" role="main">
             
-  <section id="thread-transform">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c8fc531fed08 -->
+<section id="thread-transform">
 <h1>Thread::transform<a class="headerlink" href="#thread-transform" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">ResultShape</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Reduce</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">ResultShape</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Reduce</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with <code class="docutils literal notranslate"><span class="pre">_</span></code> perform the change in place.</p>
+<p>A dispatcher, not an independent implementation — <code class="docutils literal notranslate"><span class="pre">transform()</span></code> picks which functional
+surface to use purely based on which overload you call:</p>
+<ul class="simple">
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-callback overload</strong> forwards straight to <a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">fn</span></code> runs
+once per valid row.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback overload</strong> forwards straight to <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">fn</span></code> runs
+once with the whole thread, and the result’s size is checked against <code class="docutils literal notranslate"><span class="pre">shape</span></code>.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>transform() has no behavior of its own
+Both overloads are pure pass-throughs — <code class="docutils literal notranslate"><span class="pre">transform(threadvalue_fn)</span></code> is exactly
+<code class="docutils literal notranslate"><span class="pre">map(threadvalue_fn)</span></code>, and <code class="docutils literal notranslate"><span class="pre">transform(thread_fn,</span> <span class="pre">shape)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">fold(thread_fn,</span> <span class="pre">shape)</span></code>,
+argument for argument. Which overload C++ selects depends entirely on your callback’s
+signature: a lambda taking <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">ThreadValue&amp;</span></code> resolves to the <code class="docutils literal notranslate"><span class="pre">map()</span></code>-forwarding overload;
+one taking <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code> resolves to the <code class="docutils literal notranslate"><span class="pre">fold()</span></code>-forwarding overload. Read
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a>’s and <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>’s own pages for the full behavior — including
+<code class="docutils literal notranslate"><span class="pre">fold()</span></code>’s important callout that it calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the whole thread, not once per
+row despite <code class="docutils literal notranslate"><span class="pre">transform</span></code>’s row-suggestive name.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>fn</strong>
-Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
-<p><strong>shape</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+Either <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;ThreadValue(const</span> <span class="pre">ThreadValue&amp;)&gt;&amp;</span></code> (per-row, forwards to
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a>) or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Thread(const</span> <span class="pre">Thread&amp;)&gt;&amp;</span></code> (whole-thread,
+forwards to <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>) — overload resolution picks based on the callback’s
+parameter and return type.</p>
+<p><strong>shape</strong> (<code class="docutils literal notranslate"><span class="pre">ResultShape</span></code>, default <code class="docutils literal notranslate"><span class="pre">Reduce</span></code>, <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback overload only)
+Forwarded unchanged to <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a> — see that page for what each value means.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+Whatever the forwarded-to method (<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> or <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>) returns.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply a user function and inspect the transformed result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">}));</span>
+<p>Example 1. The <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-callback overload — identical behavior to calling
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  40
+2  60
+ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Apply a user function and inspect the transformed result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback overload with the default <code class="docutils literal notranslate"><span class="pre">shape</span></code> (<code class="docutils literal notranslate"><span class="pre">Reduce</span></code>) — identical
+behavior to calling <code class="docutils literal notranslate"><span class="pre">fold(fn,</span> <span class="pre">ResultShape::Reduce)</span></code> directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">transform</span><span class="p">({});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">t</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">to_dbl</span><span class="p">()}));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  60
+ptype: Series
 </pre></div>
 </div>
+<p>Example 3. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback overload with <code class="docutils literal notranslate"><span class="pre">ResultShape::Preserve</span></code> — identical
+behavior to calling <code class="docutils literal notranslate"><span class="pre">fold(fn,</span> <span class="pre">ResultShape::Preserve)</span></code> directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">astype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span>
+<span class="p">},</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Preserve</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  40
+2  60
+ptype: Series
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Purely a dispatcher — see the important callout above. There is no behavior documented
+here that isn’t already documented on <a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> or <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>; this page
+exists to explain which overload maps to which.</p></li>
+<li><p>Overload selection is based on the callback’s signature, not on any runtime flag — a
+lambda’s parameter type (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">ThreadValue&amp;</span></code> vs <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>) determines which
+underlying method actually runs.</p></li>
+<li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::flow</span></code></span></a> is a related whole-thread transform but is <strong>not</strong> one of
+<code class="docutils literal notranslate"><span class="pre">transform()</span></code>’s targets — it has no <code class="docutils literal notranslate"><span class="pre">transform()</span></code>-overload equivalent.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::map</span></code></span></a>: what the <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-callback overload forwards to — row-by-row
+transformation.</p></li>
+<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fold</span></code></span></a>: what the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback overload forwards to — whole-thread
+transformation with a size check.</p></li>
+<li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::flow</span></code></span></a>: whole-thread transformation with no size check at all, not
+reachable through <code class="docutils literal notranslate"><span class="pre">transform()</span></code>.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="top.html">
     <span class="label">Previous</span>
@@ -99,7 +179,6 @@ Value produced by this call.</p>
     <span class="title">truediv</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

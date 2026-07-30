@@ -13,12 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/api_nav.js?v=f9ac45ee"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ColumnRef API Reference" href="column_ref_api_reference.html" />
-    <link rel="prev" title="Nexus::unique" href="api/nexus/unique.html" />
+    <link rel="next" title="NexusQuery::join" href="api/nexus-query/join.html" />
+    <link rel="prev" title="Nexus::validate_relationship" href="api/nexus/validate_relationship.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -40,12 +40,6 @@
 <h1>NexusQuery API Reference<a class="headerlink" href="#nexusquery-api-reference" title="Link to this heading">¶</a></h1>
 <p>This page documents the public <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> surface — the fluent join-graph query
 builder returned by <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::from(table)</span></code></span></a>.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>Coming soon
-<code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> method pages are not written yet — this landing page is a placeholder
-reserved as part of building out the <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus</span></code></span></a> reference.</p>
-</div>
 <section id="what-it-is">
 <h2>What It Is<a class="headerlink" href="#what-it-is" title="Link to this heading">¶</a></h2>
 <p>Calling <code class="docutils literal notranslate"><span class="pre">nexus.from(&quot;table_name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> anchored at that table.
@@ -53,6 +47,24 @@ From there, <code class="docutils literal notranslate"><span class="pre">.join(o
 extends the walk across the join graph, <code class="docutils literal notranslate"><span class="pre">.pick()</span></code>/<code class="docutils literal notranslate"><span class="pre">.drop()</span></code> narrow the result
 columns, <code class="docutils literal notranslate"><span class="pre">.name()</span></code> labels the result, and <code class="docutils literal notranslate"><span class="pre">.collect()</span></code> executes the accumulated plan
 and returns the joined <a class="reference internal" href="dataframe_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></span></a>.</p>
+<p>Every method except <code class="docutils literal notranslate"><span class="pre">.collect()</span></code> is non-mutating and chainable, returning a new
+<code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> with one more step accumulated — nothing touches table data until
+<code class="docutils literal notranslate"><span class="pre">.collect()</span></code> actually runs.</p>
+</section>
+<section id="using-this-reference">
+<h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use the left sidebar to open one method page at a time.</p></li>
+<li><p>Each method page contains its own signatures, parameter details, notes, verified
+outputs, and working previous/next navigation.</p></li>
+</ul>
+</section>
+<section id="method-pages">
+<h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
+<p>The sidebar lists methods in typical pipeline order: <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">via</span></code>, <code class="docutils literal notranslate"><span class="pre">pick</span></code>, <code class="docutils literal notranslate"><span class="pre">drop</span></code>,
+<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">collect</span></code>.</p>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 </section>
 
@@ -103,8 +115,8 @@ and returns the joined <a class="reference internal" href="dataframe_api_referen
   <li><a href="api_reference.html">API Reference</a><ul>
   <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
-      <li>Previous: <a href="api/nexus/unique.html" title="previous chapter">Nexus::unique</a></li>
-      <li>Next: <a href="column_ref_api_reference.html" title="next chapter">ColumnRef API Reference</a></li>
+      <li>Previous: <a href="api/nexus/validate_relationship.html" title="previous chapter">Nexus::validate_relationship</a></li>
+      <li>Next: <a href="api/nexus-query/join.html" title="next chapter">NexusQuery::join</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

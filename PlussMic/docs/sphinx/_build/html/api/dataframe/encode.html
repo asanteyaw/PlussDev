@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c1bb75008010 -->
 <section id="dataframe-encode">
 <h1>DataFrame::encode<a class="headerlink" href="#dataframe-encode" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
@@ -71,7 +72,7 @@ list <code class="docutils literal notranslate"><span class="pre">factor()</span
 </ul>
 <p>Before <code class="docutils literal notranslate"><span class="pre">encode()</span></code>, the closest existing tools were <a class="reference internal" href="factor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">factor()</span></code></span></a> (which
 returns a <em>separate</em> <code class="docutils literal notranslate"><span class="pre">CategoryEncoding{codes,</span> <span class="pre">levels}</span></code> pair rather than a modified
-frame) and <a class="reference internal" href="note.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">note().indicate()</span></code></span></a> (which does genuine multi-label indicator
+frame) and <a class="reference internal" href="#note.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">note().indicate()</span></code></span></a> (which does genuine multi-label indicator
 expansion for delimiter-separated tag strings, and returns only the new columns rather
 than the whole frame). <code class="docutils literal notranslate"><span class="pre">encode()</span></code> is the direct, single-call “turn this one column into
 model-ready numbers, in place, on the whole frame” entry point either mode’s use case

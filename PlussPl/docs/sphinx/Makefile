@@ -1,20 +1,25 @@
-SPHINXBUILD ?= sphinx-build
-SOURCEDIR   := .
-BUILDDIR    := _build
+REPO_ROOT := $(abspath $(CURDIR)/../../..)
+UNIFIED   := python3 $(REPO_ROOT)/docs/scripts/build_unified_docs.py
 
-.PHONY: html latex pdf latexpdf clean
+.PHONY: aggregate html site-html latex pdf latexpdf clean
+
+aggregate:
+	$(UNIFIED) aggregate
 
 html:
-	$(SPHINXBUILD) -b html $(SOURCEDIR) $(BUILDDIR)/html
+	$(UNIFIED) html --site all
+
+site-html:
+	$(UNIFIED) html --site plusspl
 
 latex:
-	$(SPHINXBUILD) -b latex $(SOURCEDIR) $(BUILDDIR)/latex
+	$(UNIFIED) latex --site plusspl
 
-pdf: latex
-	cd $(BUILDDIR)/latex && latexmk -pdf -quiet *.tex
+pdf:
+	$(UNIFIED) pdf --site plusspl
 
 latexpdf:
-	$(SPHINXBUILD) -b latexpdf $(SOURCEDIR) $(BUILDDIR)/latex
+	$(UNIFIED) latexpdf --site plusspl
 
 clean:
-	rm -rf $(BUILDDIR)
+	$(UNIFIED) clean --site all

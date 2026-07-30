@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6af5646f5d13 -->
 
 # Thread::ncases
 
@@ -54,9 +55,9 @@ std::cout << scores.ncases() << " " << scores.size();
 - [`Thread::shape`](shape.md): the pair form, `{ncases(), 1}`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mul.html">
+  <a class="prev-link" href="named.html">
     <span class="label">Previous</span>
-    <span class="title">mul</span>
+    <span class="title">named</span>
   </a>
   <a class="next-link" href="ndistinct.html">
     <span class="label">Next</span>

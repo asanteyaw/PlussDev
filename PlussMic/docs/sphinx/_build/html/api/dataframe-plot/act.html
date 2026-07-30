@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::andrews_curves" href="andrews_curves.html" />
-    <link rel="prev" title="DataFramePlotAccessor API Reference" href="../../dataframe_plot_api_reference.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -117,11 +115,12 @@ fewer, if the data is shorter).</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;signal&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;signal_act.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Since <code class="docutils literal notranslate"><span class="pre">wave</span></code> has 60 rows, <code class="docutils literal notranslate"><span class="pre">max_lag</span> <span class="pre">=</span> <span class="pre">40</span></code> (the default) fits within the <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">59]</span></code> clamp range
 unchanged; expect strong spikes near lags that are multiples of the wave’s period.</p>
+<p><img alt="Output of Example 1" src="../../_images/act-1.svg" /></p>
 <p>Example 2. A shorter feature: <code class="docutils literal notranslate"><span class="pre">max_lag</span></code> is silently clamped rather than throwing.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;reading&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.5</span><span class="p">}))},</span>
@@ -133,6 +132,7 @@ unchanged; expect strong spikes near lags that are multiples of the wave’s per
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">reading</span></code> has 7 rows, so <code class="docutils literal notranslate"><span class="pre">max_lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">6</span></code> (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code>) even though the requested
 default is <code class="docutils literal notranslate"><span class="pre">40</span></code>; spikes are drawn only for lags <code class="docutils literal notranslate"><span class="pre">1..6</span></code>.</p>
+<p><img alt="Output of Example 2" src="../../_images/act-2.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">ActPlotOptions</span></code>, narrowing <code class="docutils literal notranslate"><span class="pre">max_lag</span></code>, using a stricter
 <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code>, and thickening the spikes.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ActPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -141,11 +141,12 @@ default is <code class="docutils literal notranslate"><span class="pre">40</span
 <span class="n">options</span><span class="p">.</span><span class="n">trace_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0F</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;signal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;signal_act.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The confidence band widens (using <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">2.575829</span></code> for <code class="docutils literal notranslate"><span class="pre">0.99</span></code> instead of the default <code class="docutils literal notranslate"><span class="pre">0.95</span></code>’s
 <code class="docutils literal notranslate"><span class="pre">1.959964</span></code>), making it harder for a spike to appear “significant.”</p>
+<p><img alt="Output of Example 3" src="../../_images/act-3.svg" /></p>
 <p>Example 4. Disabling the confidence band entirely.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ActPlotOptions</span><span class="w"> </span><span class="n">bare_options</span><span class="p">;</span>
 <span class="n">bare_options</span><span class="p">.</span><span class="n">show_confidence_band</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
@@ -154,6 +155,7 @@ default is <code class="docutils literal notranslate"><span class="pre">40</span
 </pre></div>
 </div>
 <p>Only the raw spikes and the zero reference line are drawn — no <code class="docutils literal notranslate"><span class="pre">±CI</span></code> lines.</p>
+<p><img alt="Output of Example 4" src="../../_images/act-4.svg" /></p>
 <p>Example 5. A non-numeric feature throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;signal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}))},</span>
@@ -231,11 +233,8 @@ table for its <code class="docutils literal notranslate"><span class="pre">ci_en
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -249,16 +248,6 @@ table for its <code class="docutils literal notranslate"><span class="pre">ci_en
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="../../dataframe_plot_api_reference.html" title="previous chapter">DataFramePlotAccessor API Reference</a></li>
-      <li>Next: <a href="andrews_curves.html" title="next chapter">DataFramePlotAccessor::andrews_curves</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

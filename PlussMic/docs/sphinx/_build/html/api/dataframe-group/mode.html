@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrameGrouped::ndistinct" href="ndistinct.html" />
+    <link rel="next" title="DataFrameGrouped::mode_ties" href="mode_ties.html" />
     <link rel="prev" title="DataFrameGrouped::min" href="min.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -48,25 +48,72 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes grouped mode for each non-key value feature.</p>
+<p>Computes the grouped mode (most frequent value) for each non-key value feature —
+the grouped convenience terminal equivalent to calling <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with a
+<code class="docutils literal notranslate"><span class="pre">GroupOp::Mode</span></code> spec for every remaining value feature.</p>
 <p>This is the grouped “most common value inside each group” terminal. It is especially
 useful for categorical/value-coded features such as status, region code, product
-family, or segment.</p>
+family, or segment, but it also works on numeric value features.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>This method takes no parameters.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per group. The group key column(s) come first, followed by one
+<code class="docutils literal notranslate"><span class="pre">{feature}_mode</span></code> column per non-key value feature.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Most common loan status per region, including a tie.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">loans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;good&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;good&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bad&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;good&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loans</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loans</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
-<span class="w">                </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">})</span>
-<span class="w">                </span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loans</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;status&quot;</span><span class="p">})</span>
+<span class="w">               </span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
+<span class="w">               </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">})</span>
+<span class="w">               </span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output-loans">
+<h3>Output (loans)<a class="headerlink" href="#output-loans" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | region  status
+---------------------
+0    | North   good  
+1    | North   good  
+2    | South   bad   
+3    | South   good  
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-out">
+<h3>Output (out)<a class="headerlink" href="#output-out" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | region  status_mode
+--------------------------
+0    | North   good       
+1    | South   bad        
+--------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;North&quot;</span></code>’s two statuses are both <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code>, so its mode is unambiguous. <code class="docutils literal notranslate"><span class="pre">&quot;South&quot;</span></code> has
+one <code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> and one <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code> — tied at one occurrence each — and <code class="docutils literal notranslate"><span class="pre">status_mode</span></code> picks
+<code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> because it appears first in the source data (row <code class="docutils literal notranslate"><span class="pre">2</span></code>), not because it sorts
+first alphabetically. This is the same first-occurrence tie-break used by
+<a class="reference internal" href="../thread/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a>.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -74,12 +121,17 @@ family, or segment.</p>
 <li><p>Use <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> instead if you want grouped mode beside numeric grouped
 outputs in the same result with explicit names.</p></li>
 <li><p>Mode is often the most natural grouped terminal for note/categorical features,
-whereas <code class="docutils literal notranslate"><span class="pre">mean()</span></code>/<code class="docutils literal notranslate"><span class="pre">std()</span></code>/<code class="docutils literal notranslate"><span class="pre">var()</span></code> are more naturally numeric.</p></li>
+whereas <code class="docutils literal notranslate"><span class="pre">mean()</span></code>/<code class="docutils literal notranslate"><span class="pre">std()</span></code>/<code class="docutils literal notranslate"><span class="pre">var()</span></code> are more naturally numeric — but <code class="docutils literal notranslate"><span class="pre">mode()</span></code> also
+works on numeric value features, with the same first-occurrence tie-break.</p></li>
+<li><p>A group where the value feature is entirely null has a null mode, not an arbitrary
+value.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="mode_ties.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::mode_ties</span></code></span></a>: returns every tied value instead of
+picking one winner — use it when a tie should not be silently resolved.</p></li>
 <li><p><a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::median</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::agg</span></code></span></a></p></li>
 </ul>
@@ -87,6 +139,10 @@ whereas <code class="docutils literal notranslate"><span class="pre">mean()</spa
   <a class="prev-link" href="var.html">
     <span class="label">Previous</span>
     <span class="title">var</span>
+  </a>
+  <a class="next-link" href="mode_ties.html">
+    <span class="label">Next</span>
+    <span class="title">mode_ties</span>
   </a>
 </div>
 </section>
@@ -141,7 +197,7 @@ whereas <code class="docutils literal notranslate"><span class="pre">mean()</spa
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_group_accessor_api_reference.html">DataFrameGroupBuilder API Reference</a><ul>
       <li>Previous: <a href="min.html" title="previous chapter">DataFrameGrouped::min</a></li>
-      <li>Next: <a href="ndistinct.html" title="next chapter">DataFrameGrouped::ndistinct</a></li>
+      <li>Next: <a href="mode_ties.html" title="next chapter">DataFrameGrouped::mode_ties</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

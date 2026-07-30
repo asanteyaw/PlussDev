@@ -1580,7 +1580,7 @@ Thread Thread::map(
     payloads.reserve(values.size());
     for (const auto& value : values) {
       payloads.push_back(value.as_series());
-      validity.push_back(value.is_valid(0));
+      validity.push_back(detail::valid_at(value, 0));
     }
     auto output = pluss::unite(payloads, 0, true);
     auto mask = bool_series_from_bools(validity);
@@ -1594,7 +1594,7 @@ Thread Thread::map(
     payloads.reserve(values.size());
     for (const auto& value : values) {
       payloads.emplace_back(value.as_note().at(0));
-      validity.push_back(value.is_valid(0));
+      validity.push_back(detail::valid_at(value, 0));
     }
     return Thread(pluss::make_note(payloads),
                   bool_series_from_bools(validity));
@@ -1605,7 +1605,7 @@ Thread Thread::map(
       output = output.concat(values[i].as_timeline());
     }
     for (const auto& value : values) {
-      validity.push_back(value.is_valid(0));
+      validity.push_back(detail::valid_at(value, 0));
     }
     auto mask = bool_series_from_bools(validity);
     if (output.epoch_nanos().platform() !=
@@ -1619,7 +1619,7 @@ Thread Thread::map(
     timeline = timeline.concat(values[i].as_timeindex().timeline());
   }
   for (const auto& value : values) {
-    validity.push_back(value.is_valid(0));
+    validity.push_back(detail::valid_at(value, 0));
   }
   auto mask = bool_series_from_bools(validity);
   if (timeline.epoch_nanos().platform() !=
@@ -1687,7 +1687,7 @@ Thread note_has_(const Thread& source,
     for (std::int64_t row = 0; row < source.size(); ++row) {
       const auto text = std::string(source.as_note().at(row));
       values.push_back(
-          source.is_valid(row) && std::regex_search(text, expression) ? 1U : 0U);
+          detail::valid_at(source, row) && std::regex_search(text, expression) ? 1U : 0U);
     }
     return note_bool_result_(source, values);
   }
@@ -1698,7 +1698,7 @@ Thread note_has_(const Thread& source,
   values.reserve(static_cast<std::size_t>(source.size()));
   for (std::int64_t row = 0; row < source.size(); ++row) {
     values.push_back(
-        source.is_valid(row) && literal_has_(source.as_note().at(row), needle, false)
+        detail::valid_at(source, row) && literal_has_(source.as_note().at(row), needle, false)
             ? 1U
             : 0U);
   }
@@ -1719,7 +1719,7 @@ Thread note_count_(const Thread& source,
   auto* data = reinterpret_cast<std::int64_t*>(output.raw_data());
   for (std::int64_t row = 0; row < source.size(); ++row) {
     data[row] =
-        source.is_valid(row)
+        detail::valid_at(source, row)
             ? (options.regex
                    ? count_regex_(source.as_note().at(row), *expression, options.limit)
                    : count_literal_(source.as_note().at(row), pattern, options))
@@ -1742,7 +1742,7 @@ DataFrame note_findall_(const Thread& source,
   std::int64_t width = 0;
   for (std::int64_t row = 0; row < source.size(); ++row) {
     std::vector<std::string> matches;
-    if (source.is_valid(row)) {
+    if (detail::valid_at(source, row)) {
       matches =
           options.regex
               ? findall_regex_(source.as_note().at(row), *expression, options.limit)

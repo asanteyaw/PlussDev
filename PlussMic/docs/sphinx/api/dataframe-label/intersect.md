@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a6e6b7ffd2f0 -->
 
 # DataFrameLabelAccessor::intersect
 

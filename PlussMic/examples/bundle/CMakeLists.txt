@@ -13,3 +13,12 @@ target_compile_definitions(plussmic_bundle_model_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 
+add_executable(plussmic_bundle_accessor_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/bundle_accessor_demo.cpp
+)
+
+target_link_libraries(plussmic_bundle_accessor_demo PRIVATE PlussMic)
+
+target_compile_definitions(plussmic_bundle_accessor_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)

@@ -265,7 +265,7 @@ Thread ThreadLabelAccessor::align(const Thread& target_labels, const AlignOption
 namespace {
 
 std::string label_key_at_(const Thread& labels, std::int64_t row) {
-  return labels.is_valid(row) ? thread_scalar_string_at(labels, row) : std::string{"<NULL>"};
+  return detail::valid_at(labels, row) ? thread_scalar_string_at(labels, row) : std::string{"<NULL>"};
 }
 
 Thread make_position_thread_(const std::vector<std::int64_t>& positions, const Thread* labels = nullptr) {
@@ -649,7 +649,7 @@ Thread ThreadLabelAccessor::sort(bool ascending, bool nulls_last) const {
 bool ThreadLabelAccessor::monotonic(bool ascending, bool strict, bool nulls_last) const {
   const auto labels = values();
   for (std::int64_t row = 1; row < labels.size(); ++row) {
-    const auto cmp = labels.compare_rows(row - 1, row, nulls_last);
+    const auto cmp = detail::compare_rows(labels, row - 1, row, nulls_last);
     if (ascending) {
       if (strict ? cmp >= 0 : cmp > 0) {
         return false;
@@ -862,11 +862,11 @@ Thread Thread::put(const Thread& bool_mask, const Thread& value) const {
     out_values.reserve(static_cast<std::size_t>(size()));
     const bool scalar_value = aligned_value.size() == 1;
     for (std::int64_t i = 0; i < size(); ++i) {
-      const auto idx = static_cast<std::size_t>(i);
+        const auto idx = static_cast<std::size_t>(i);
       if (hit[idx]) {
         const auto rhs_row = scalar_value ? static_cast<std::int64_t>(0) : i;
         out_values.emplace_back(aligned_value.as_note().at(rhs_row));
-        out_valid[idx] = aligned_value.is_valid(rhs_row);
+        out_valid[idx] = detail::valid_at(aligned_value, rhs_row);
       } else {
         out_values.emplace_back(as_note().at(i));
       }
@@ -2726,6 +2726,15 @@ Thread Thread::compare(std::string_view other, ThreadBinaryCompareOp op) const {
     return carry_case_labels_for_alignment_(Thread(bool_series_from_u8(raw), validity_mask()), *this);
   }
 
+  if (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex) {
+    try {
+      return compare(pluss::make_timeline(other), op);
+    } catch (const std::exception& e) {
+      PLUSS_FAIL("Thread::compare(string): temporal rhs literal '" + std::string(other)
+                 + "' could not be parsed as Timeline: " + e.what());
+    }
+  }
+
   auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
 
@@ -3070,9 +3079,109 @@ std::int64_t cast_days_from_civil_(std::int64_t y, unsigned m, unsigned d) noexc
   return era * 146097 + static_cast<std::int64_t>(doe) - 719468;
 }
 
+bool cast_parse_ndigits_(std::string_view text,
+                         std::size_t start,
+                         std::size_t count,
+                         int* out) {
+  PLUSS_CHECK(out != nullptr, "cast_parse_ndigits_: output pointer is null");
+  if (start + count > text.size()) return false;
+  int value = 0;
+  for (std::size_t i = 0; i < count; ++i) {
+    const char ch = text[start + i];
+    if (ch < '0' || ch > '9') return false;
+    value = value * 10 + static_cast<int>(ch - '0');
+  }
+  *out = value;
+  return true;
+}
+
+std::optional<std::int64_t> cast_timeline_tick_from_fixed_pattern_(
+    std::string_view text,
+    std::string_view pattern) {
+  auto build = [](int y, int mo, int d, int hh, int mm, int ss) -> std::optional<std::int64_t> {
+    const auto ymd = std::chrono::year(y) / std::chrono::month(static_cast<unsigned>(mo)) /
+        std::chrono::day(static_cast<unsigned>(d));
+    if (!ymd.ok()) return std::nullopt;
+    if (hh < 0 || hh > 23 || mm < 0 || mm > 59 || ss < 0 || ss > 60) return std::nullopt;
+    const auto seconds =
+        cast_days_from_civil_(y, static_cast<unsigned>(mo), static_cast<unsigned>(d)) * 86'400LL +
+        static_cast<std::int64_t>(hh) * 3'600LL +
+        static_cast<std::int64_t>(mm) * 60LL +
+        static_cast<std::int64_t>(ss);
+    if (seconds < std::numeric_limits<std::int64_t>::min() / 1'000'000'000LL ||
+        seconds > std::numeric_limits<std::int64_t>::max() / 1'000'000'000LL) {
+      return std::nullopt;
+    }
+    return seconds * 1'000'000'000LL;
+  };
+
+  int y = 0;
+  int mo = 0;
+  int d = 0;
+  int hh = 0;
+  int mm = 0;
+  int ss = 0;
+
+  if (pattern == "%Y-%m-%d") {
+    if (text.size() != 10 || text[4] != '-' || text[7] != '-') return std::nullopt;
+    if (!cast_parse_ndigits_(text, 0, 4, &y) ||
+        !cast_parse_ndigits_(text, 5, 2, &mo) ||
+        !cast_parse_ndigits_(text, 8, 2, &d)) {
+      return std::nullopt;
+    }
+    return build(y, mo, d, 0, 0, 0);
+  }
+
+  if (pattern == "%Y/%m/%d") {
+    if (text.size() != 10 || text[4] != '/' || text[7] != '/') return std::nullopt;
+    if (!cast_parse_ndigits_(text, 0, 4, &y) ||
+        !cast_parse_ndigits_(text, 5, 2, &mo) ||
+        !cast_parse_ndigits_(text, 8, 2, &d)) {
+      return std::nullopt;
+    }
+    return build(y, mo, d, 0, 0, 0);
+  }
+
+  if (pattern == "%Y-%m-%d %H:%M:%S" || pattern == "%Y-%m-%dT%H:%M:%S") {
+    const char sep = pattern == "%Y-%m-%dT%H:%M:%S" ? 'T' : ' ';
+    if (text.size() != 19 || text[4] != '-' || text[7] != '-' || text[10] != sep || text[13] != ':' || text[16] != ':') {
+      return std::nullopt;
+    }
+    if (!cast_parse_ndigits_(text, 0, 4, &y) ||
+        !cast_parse_ndigits_(text, 5, 2, &mo) ||
+        !cast_parse_ndigits_(text, 8, 2, &d) ||
+        !cast_parse_ndigits_(text, 11, 2, &hh) ||
+        !cast_parse_ndigits_(text, 14, 2, &mm) ||
+        !cast_parse_ndigits_(text, 17, 2, &ss)) {
+      return std::nullopt;
+    }
+    return build(y, mo, d, hh, mm, ss);
+  }
+
+  if (pattern == "%Y/%m/%d %H:%M:%S") {
+    if (text.size() != 19 || text[4] != '/' || text[7] != '/' || text[10] != ' ' || text[13] != ':' || text[16] != ':') {
+      return std::nullopt;
+    }
+    if (!cast_parse_ndigits_(text, 0, 4, &y) ||
+        !cast_parse_ndigits_(text, 5, 2, &mo) ||
+        !cast_parse_ndigits_(text, 8, 2, &d) ||
+        !cast_parse_ndigits_(text, 11, 2, &hh) ||
+        !cast_parse_ndigits_(text, 14, 2, &mm) ||
+        !cast_parse_ndigits_(text, 17, 2, &ss)) {
+      return std::nullopt;
+    }
+    return build(y, mo, d, hh, mm, ss);
+  }
+
+  return std::nullopt;
+}
+
 std::optional<std::int64_t> cast_timeline_tick_from_pattern_(
     std::string_view text,
     std::string_view pattern) {
+  if (const auto fixed = cast_timeline_tick_from_fixed_pattern_(text, pattern); fixed.has_value()) {
+    return fixed;
+  }
   std::tm tm{};
   tm.tm_mday = 1;
   std::istringstream input{std::string(text)};
@@ -3127,15 +3236,19 @@ Thread cast_note_to_timeline_(
     const Thread& source,
     const ThreadCastOptions& options,
     std::string_view where) {
-  std::vector<std::int64_t> ticks(static_cast<std::size_t>(source.size()), 0);
-  std::vector<bool> valid(static_cast<std::size_t>(source.size()), true);
-  for (std::int64_t i = 0; i < source.size(); ++i) {
+  const auto n = source.size();
+  std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
+  std::vector<bool> valid = pluss::table::detail::has_validity_mask(source)
+      ? pluss::table::detail::validity_mask(source)->to_vec<bool>()
+      : std::vector<bool>(static_cast<std::size_t>(n), true);
+  const auto& notes = source.as_note();
+  for (std::int64_t i = 0; i < n; ++i) {
     const auto pos = static_cast<std::size_t>(i);
-    if (!source.is_valid(i)) {
+    if (!valid[pos]) {
       valid[pos] = false;
       continue;
     }
-    const auto text = source.as_note().at(i);
+    const auto text = notes.at(i);
     const auto tick = options.format.empty()
                           ? cast_timeline_tick_from_utf8_(text)
                           : cast_timeline_tick_from_pattern_(text, options.format);
@@ -3534,7 +3647,7 @@ Thread ts_align_right_to_left_(const Thread& left,
       if (tick != pluss::Timeline::kNaT && found != positions.end() && occurrence < found->second.size()) {
         const auto row = found->second[occurrence];
         rows.push_back(row);
-        present.push_back(right.is_valid(row));
+        present.push_back(detail::valid_at(right, row));
       } else {
         rows.push_back(0);
         present.push_back(false);

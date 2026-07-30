@@ -1,14 +1,17 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 6af3667cff79 -->
+<!-- pluss-signature-hash: ab0dee9a35dc -->
 
 # DataFrame::drop
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-DataFrame::drop(pluss::RangeView<std::string_view> names) -> DataFrame
+DataFrame::drop(pluss::RangeView<std::string_view> names) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::drop(const NameRange& names) const -> DataFrame
 ```
 
 ## What It Does
@@ -31,6 +34,9 @@ the other eighteen.
 Feature names to remove. Pass one or more names in any order — order in the argument
 list has no effect on the result. Every remaining feature keeps its original
 left-to-right position in the schema; `drop()` does not reorder or re-sort what's left.
+Any container of `std::string_view`-convertible names (`std::vector<std::string>`,
+`std::set<std::string>`, and similar) works too, via a generic template overload — not
+just a braced list or an explicit `RangeView`.
 
 ## Returns
 

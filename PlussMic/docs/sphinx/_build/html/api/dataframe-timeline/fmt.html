@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a604ad15463e -->
 <section id="dataframetimelineaccessor-fmt">
 <h1>DataFrameTimelineAccessor::fmt<a class="headerlink" href="#dataframetimelineaccessor-fmt" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTimelineAccessor API Reference</span></a></p>
@@ -183,7 +184,7 @@ outright rather than silently producing an empty string for every row.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> cannot be empty — an empty pattern throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">%f</span></code> always emits all 9 nanosecond digits, zero-padded — there’s no way to
 ask for fewer digits (e.g. milliseconds only) directly; slice the resulting
-text with <a class="reference internal" href="../dataframe/note.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">note()</span></code></span></a> accessor methods if you need
+text with <a class="reference internal" href="#../dataframe/note.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">note()</span></code></span></a> accessor methods if you need
 fewer digits.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">%z</span></code> always renders as a signed <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code> offset (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;+00:00&quot;</span></code>), never the
 bare <code class="docutils literal notranslate"><span class="pre">&quot;Z&quot;</span></code> suffix some ISO-8601 tooling uses for UTC.</p></li>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b6f27cc624b1 -->
 
 # Thread::fillnull_
 
@@ -18,8 +19,8 @@ Thread& Thread::fillnull_(const pluss::TimeIndex& value)
 The mutating counterpart to [`fillnull()`](fillnull.md): fills `NULL` cells with
 `value` and updates `*this` in place, returning a reference to it, instead of
 returning a new `Thread`. Copy-on-write applies — if this thread's storage is shared
-with another `Thread` (see [`shares_payload_with()`](shares_payload_with.md)), the
-mutation clones the storage first, so the other thread is unaffected.
+with another `Thread` (from a copy via the copy constructor or `operator=`), the
+mutation clones the storage first, so the other thread is unaffected. See Example 2.
 
 ```{note} Only the double overload is genuinely in-place
 The `double` overload mutates the underlying `Series` storage directly through the
@@ -59,7 +60,6 @@ std::cout << readings;
 0  10
 1  0
 2  30
-
 ptype: Series
 ```
 
@@ -80,11 +80,10 @@ std::cout << copy;
 ```text
 0  1
 1  NULL
-
 ptype: Series
+
 0  1
 1  99
-
 ptype: Series
 ```
 
@@ -110,9 +109,8 @@ Thread::fillnull_(double) is only valid for Series payload
 
 ## Notes
 
-- Copy-on-write: mutating a thread that shares storage with another detaches it
-  first, leaving the other thread untouched. See Example 2 and
-  [`shares_payload_with()`](shares_payload_with.md).
+- Copy-on-write: mutating a thread that shares storage with another (from a copy)
+  detaches it first, leaving the other thread untouched. See Example 2.
 - Only the `double` overload mutates storage directly; the others reassign `*this`
   via the functional [`fillnull()`](fillnull.md). See the note above.
 - The `double` overload's error message includes the underscore:
@@ -122,8 +120,6 @@ Thread::fillnull_(double) is only valid for Series payload
 ## See Also
 
 - [`Thread::fillnull`](fillnull.md): the functional (non-mutating) form.
-- [`Thread::shares_payload_with`](shares_payload_with.md): check storage sharing
-  directly.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fillnull.html">

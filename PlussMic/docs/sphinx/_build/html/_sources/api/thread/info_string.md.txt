@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b1a2aeba4233 -->
+
 # Thread::info_string
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +8,16 @@
 ## Signature
 
 ```cpp
-Thread::info_string() -> std::string
+Thread::info_string() const -> std::string
 ```
 
 ## What It Does
 
-Serializes or renders the current object into a text form you can inspect, log, or export.
+Builds a short, fixed-format summary of the thread's metadata — name, payload kind, dtype,
+row count, and a valid/null breakdown — as a plain `std::string`. This is metadata only;
+unlike [`to_string()`](to_string.md) or [`show()`](show.md), it never renders the thread's
+actual row values. Use it for logging, quick sanity checks, or anywhere you want a
+one-glance summary of what a thread contains without printing every row.
 
 ## Parameters
 
@@ -19,24 +26,105 @@ Serializes or renders the current object into a text form you can inspect, log, 
 ## Returns
 
 `std::string`
-    Rendered string result.
+    A multi-line summary in this fixed shape (no trailing newline):
+    ```text
+    Thread Info
+    Name: <name, or "<unnamed>">
+    Kind: <Series|Note|Timeline|TimeIndex>
+    Dtype: <dtype string, e.g. float64, utf8, int64>
+    Cases: <total row count>
+    Non-Null Cases: <valid row count>
+    Null Cases: <invalid row count>
+    ```
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. An unnamed numeric thread with no `NULL` rows.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.info_string();
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.info_string();
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-sales
+Thread Info
+Name: <unnamed>
+Kind: Series
+Dtype: float64
+Cases: 3
+Non-Null Cases: 3
+Null Cases: 0
 ```
 
+Example 2. A named thread with a `NULL` row — [`name()`](name.md) assigns the display name
+that shows up as `Name:` here, and `Non-Null Cases`/`Null Cases` reflect the validity mask.
+
+```cpp
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}),
+    pluss::make_series(std::vector<bool>{true, false, true})).name("sales");
+
+auto out = scores.info_string();
+std::cout << out;
+```
+
+### Output
+
+```text
+Thread Info
+Name: sales
+Kind: Series
+Dtype: float64
+Cases: 3
+Non-Null Cases: 2
+Null Cases: 1
+```
+
+Example 3. Non-numeric payload kinds report their own `Kind`/`Dtype` — here, `Note`-kind
+text reports dtype `utf8`.
+
+```cpp
+auto names = Thread(pluss::make_note({"Ada", "Bola"}));
+
+auto out = names.info_string();
+std::cout << out;
+```
+
+### Output
+
+```text
+Thread Info
+Name: <unnamed>
+Kind: Note
+Dtype: utf8
+Cases: 2
+Non-Null Cases: 2
+Null Cases: 0
+```
+
+## Notes
+
+- Metadata only — never renders row values. Use [`to_string()`](to_string.md) or
+  [`show()`](show.md) instead if you want the actual data rendered.
+- The returned string has **no trailing newline** — [`info()`](info.md) is the
+  convenience wrapper that both calls this and adds one when writing to a stream.
+- `Name:` reads `<unnamed>` unless the thread was given one via [`name()`](name.md).
+
+## See Also
+
+- [`Thread::info`](info.md): writes this same text straight to a stream (`std::cout` by
+  default) with a trailing newline, instead of returning it as a string.
+- [`Thread::to_string`](to_string.md) / [`Thread::show`](show.md): render the thread's
+  actual row values, rather than metadata.
+- [`Thread::name`](name.md) / [`Thread::named`](named.md): set or check the display name
+  that shows up as `Name:` here.
+- [`Thread::size`](size.md) / [`Thread::kind`](kind.md) / [`Thread::dtype`](dtype.md): the
+  individual accessors this summary is built from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="info.html">

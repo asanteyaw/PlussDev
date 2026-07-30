@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 62173bdda3da -->
 
 # Thread::upper
 
@@ -88,9 +89,9 @@ Thread::upper: expected Note payload
   than display.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ts.html">
+  <a class="prev-link" href="unname.html">
     <span class="label">Previous</span>
-    <span class="title">ts</span>
+    <span class="title">unname</span>
   </a>
   <a class="next-link" href="value.html">
     <span class="label">Next</span>

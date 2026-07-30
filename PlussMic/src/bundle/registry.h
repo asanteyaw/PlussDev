@@ -5,13 +5,16 @@
 #include <initializer_list>
 #include <iosfwd>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "common/StringViewNameRange.h"
 #include "MSharp/IntrusivePtr.h"
 #include "bundle/Slot.h"
 #include "loader/Config.h"
@@ -27,6 +30,12 @@ namespace pluss::bundle {
 namespace detail {
 class RegistryImpl;
 }
+
+class RegistryFieldAccessor;
+class RegistryFieldAxisAccessor;
+class RegistryCastAccessor;
+class RegistryNoteAccessor;
+class RegistryTimelineAccessor;
 
 class Registry {
 public:
@@ -66,10 +75,25 @@ public:
   std::pair<std::int64_t, std::int64_t> shape() const;
   bool empty() const;
   const std::vector<std::string>& fields() const;
+  RegistryFieldAccessor fields(std::string_view key) const;
+  RegistryFieldAccessor fields(std::span<const std::string_view> keys) const;
+  RegistryFieldAccessor fields(std::initializer_list<std::string_view> keys) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  RegistryFieldAccessor fields(const NameRange& keys) const;
+  RegistryFieldAxisAccessor fieldaxis() const;
   bool has(std::string_view key) const;
+  bool has_all(std::span<const std::string_view> keys) const;
   bool has_all(std::initializer_list<std::string_view> keys) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  bool has_all(const NameRange& keys) const {
+    return pluss::detail::with_name_span(keys, [&](auto names) { return has_all(names); });
+  }
+  bool has_any(std::span<const std::string_view> keys) const;
   bool has_any(std::initializer_list<std::string_view> keys) const;
-  Slot at(std::string_view key) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  bool has_any(const NameRange& keys) const {
+    return pluss::detail::with_name_span(keys, [&](auto names) { return has_any(names); });
+  }
   std::optional<Slot> get(std::string_view key) const;
   bool is_stream_compatible() const;
   void ensure_stream_compatible(std::string_view where = "Registry") const;
@@ -84,22 +108,46 @@ public:
   Registry take(const std::vector<std::int64_t>& indices) const;
   Registry sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
 
+  Registry select(std::span<const std::string_view> keys) const;
   Registry select(std::initializer_list<std::string_view> keys) const;
   Registry select(const std::vector<std::string>& keys) const;
-  Registry select(std::string_view key) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  Registry select(const NameRange& keys) const {
+    return pluss::detail::with_name_span(keys, [&](auto names) { return select(names); });
+  }
+  Slot select(std::string_view key) const;
+  Registry drop(std::span<const std::string_view> keys) const;
   Registry drop(std::initializer_list<std::string_view> keys) const;
   Registry drop(const std::vector<std::string>& keys) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  Registry drop(const NameRange& keys) const {
+    return pluss::detail::with_name_span(keys, [&](auto names) { return drop(names); });
+  }
   Registry drop(std::string_view key) const;
   Registry rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const;
   Registry rename(const std::unordered_map<std::string, std::string>& mapping) const;
   Registry rename(std::string_view from, std::string_view to) const;
   Registry& rename_(std::string_view from, std::string_view to);
   Registry apply(std::string_view key, const std::function<Slot(const Slot&)>& fn) const;
+  Registry apply(std::span<const std::string_view> keys,
+                 const std::function<Slot(const Slot&)>& fn) const;
   Registry apply(std::initializer_list<std::string_view> keys,
                  const std::function<Slot(const Slot&)>& fn) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  Registry apply(const NameRange& keys,
+                 const std::function<Slot(const Slot&)>& fn) const {
+    return pluss::detail::with_name_span(keys, [&](auto names) { return apply(names, fn); });
+  }
   Registry& apply_(std::string_view key, const std::function<Slot(const Slot&)>& fn);
+  Registry& apply_(std::span<const std::string_view> keys,
+                   const std::function<Slot(const Slot&)>& fn);
   Registry& apply_(std::initializer_list<std::string_view> keys,
                    const std::function<Slot(const Slot&)>& fn);
+  template <pluss::detail::StringViewNameRange NameRange>
+  Registry& apply_(const NameRange& keys,
+                   const std::function<Slot(const Slot&)>& fn) {
+    return pluss::detail::with_name_span(keys, [&](auto names) -> Registry& { return apply_(names, fn); });
+  }
   Registry apply_all(const std::function<Slot(const Slot&)>& fn) const;
   Registry map(const std::function<Slot(const Slot&)>& fn) const;
   Registry& map_(const std::function<Slot(const Slot&)>& fn);
@@ -112,41 +160,19 @@ public:
   Registry& drop_empty_();
 
   Registry isnull() const;
-  Registry isnull(std::initializer_list<std::string_view> fields) const;
   Registry notnull() const;
-  Registry notnull(std::initializer_list<std::string_view> fields) const;
   Registry invalid() const;
-  Registry invalid(std::initializer_list<std::string_view> fields) const;
   Registry fillnull(double value) const;
-  Registry fillnull(double value, std::initializer_list<std::string_view> fields) const;
   Registry fillnull(std::string_view value) const;
-  Registry fillnull(std::string_view value, std::initializer_list<std::string_view> fields) const;
   Registry fillnull(const char* value) const {
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
-  Registry fillnull(const char* value, std::initializer_list<std::string_view> fields) const {
-    return fillnull(std::string_view{value != nullptr ? value : ""}, fields);
-  }
   Registry fillnull(const pluss::Timeline& value) const;
-  Registry fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields) const;
   Registry fillnull(const pluss::TimeIndex& value) const;
-  Registry fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields) const;
   Registry dropnull() const;
-  Registry dropnull(std::initializer_list<std::string_view> fields) const;
   Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
-  Registry distinct(std::initializer_list<std::string_view> fields,
-                    pluss::kindle::DistinctOptions options = {}) const;
   Registry freq(pluss::kindle::FreqOptions options = {}) const;
-  Registry freq(std::initializer_list<std::string_view> fields,
-                pluss::kindle::FreqOptions options = {}) const;
   Registry ndistinct(pluss::kindle::DistinctOptions options = {}) const;
-  Registry ndistinct(std::initializer_list<std::string_view> fields,
-                     pluss::kindle::DistinctOptions options = {}) const;
-  Registry cast(std::initializer_list<std::string_view> fields,
-                pluss::table::ThreadCastTarget target,
-                const pluss::table::ThreadCastOptions& options = {}) const;
-  Registry astype(std::initializer_list<std::string_view> fields,
-                  pluss::codem::ScalarType dtype) const;
   Slot sum(std::string_view field) const;
   Slot mean(std::string_view field) const;
   Slot min(std::string_view field) const;
@@ -224,12 +250,213 @@ private:
   Registry& set_slots_(std::initializer_list<std::pair<std::string_view, Slot>> items);
   Registry set_slots(std::initializer_list<std::pair<std::string, Slot>> items) const;
   Registry& set_slots_(std::initializer_list<std::pair<std::string, Slot>> items);
+  Registry isnull(std::span<const std::string_view> fields) const;
+  Registry isnull(std::initializer_list<std::string_view> fields) const;
+  Registry notnull(std::span<const std::string_view> fields) const;
+  Registry notnull(std::initializer_list<std::string_view> fields) const;
+  Registry invalid(std::span<const std::string_view> fields) const;
+  Registry invalid(std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(double value, std::span<const std::string_view> fields) const;
+  Registry fillnull(double value, std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(std::string_view value, std::span<const std::string_view> fields) const;
+  Registry fillnull(std::string_view value, std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(const pluss::Timeline& value, std::span<const std::string_view> fields) const;
+  Registry fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields) const;
+  Registry fillnull(const pluss::TimeIndex& value, std::span<const std::string_view> fields) const;
+  Registry fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields) const;
+  Registry dropnull(std::span<const std::string_view> fields) const;
+  Registry dropnull(std::initializer_list<std::string_view> fields) const;
+  Registry distinct(std::span<const std::string_view> fields,
+                    pluss::kindle::DistinctOptions options = {}) const;
+  Registry distinct(std::initializer_list<std::string_view> fields,
+                    pluss::kindle::DistinctOptions options = {}) const;
+  Registry freq(std::span<const std::string_view> fields,
+                pluss::kindle::FreqOptions options = {}) const;
+  Registry freq(std::initializer_list<std::string_view> fields,
+                pluss::kindle::FreqOptions options = {}) const;
+  Registry ndistinct(std::span<const std::string_view> fields,
+                     pluss::kindle::DistinctOptions options = {}) const;
+  Registry ndistinct(std::initializer_list<std::string_view> fields,
+                     pluss::kindle::DistinctOptions options = {}) const;
+  Registry cast(std::span<const std::string_view> fields,
+                pluss::table::ThreadCastTarget target,
+                const pluss::table::ThreadCastOptions& options = {}) const;
+  Registry cast(std::initializer_list<std::string_view> fields,
+                pluss::table::ThreadCastTarget target,
+                const pluss::table::ThreadCastOptions& options = {}) const;
+  Registry astype(std::span<const std::string_view> fields,
+                  pluss::codem::ScalarType dtype) const;
+  Registry astype(std::initializer_list<std::string_view> fields,
+                  pluss::codem::ScalarType dtype) const;
   const detail::RegistryImpl& impl_ref_() const;
   detail::RegistryImpl& mut_impl_();
 
   pluss::msharp::intrusive_ptr<detail::RegistryImpl> impl_{nullptr};
 };
 
+class RegistryFieldAccessor {
+public:
+  explicit RegistryFieldAccessor(Registry base, std::vector<std::string> keys);
+
+  RegistryCastAccessor cast() const;
+  RegistryCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  RegistryNoteAccessor nt() const;
+  RegistryTimelineAccessor tl() const;
+
+  Registry fillnull(double value) const;
+  Registry fillnull(std::string_view value) const;
+  Registry fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
+  }
+  Registry fillnull(const pluss::Timeline& value) const;
+  Registry fillnull(const pluss::TimeIndex& value) const;
+  Registry dropnull() const;
+  Registry isnull() const;
+  Registry notnull() const;
+  Registry invalid() const;
+  Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
+  Registry freq(pluss::kindle::FreqOptions options = {}) const;
+  Registry ndistinct(pluss::kindle::DistinctOptions options = {}) const;
+  Registry astype(pluss::codem::ScalarType dtype) const;
+
+private:
+  friend class RegistryCastAccessor;
+  friend class RegistryNoteAccessor;
+  friend class RegistryTimelineAccessor;
+  template <class Fn>
+  Registry map_selected_(Fn&& fn) const;
+
+  Registry base_{};
+  std::vector<std::string> keys_{};
+};
+
+class RegistryFieldAxisAccessor {
+public:
+  explicit RegistryFieldAxisAccessor(Registry base);
+
+  Registry like(std::string_view needle, bool case_sensitive = false) const;
+  Registry match(std::string_view pattern) const;
+  Registry prefix(std::string_view token) const;
+  Registry suffix(std::string_view token) const;
+  Registry kind(SlotKind kind) const;
+  Registry series() const;
+  Registry note() const;
+  Registry timeline() const;
+  Registry timeindex() const;
+  Registry mixed() const;
+  Registry nulls() const;
+  Registry empty() const;
+
+private:
+  Registry base_{};
+};
+
+class RegistryCastAccessor {
+public:
+  explicit RegistryCastAccessor(Registry base,
+                                std::vector<std::string> keys,
+                                pluss::table::ThreadCastOptions options = {});
+
+  Registry series() const;
+  Registry note() const;
+  Registry timeline() const;
+  Registry timeindex() const;
+
+private:
+  Registry base_{};
+  std::vector<std::string> keys_{};
+  pluss::table::ThreadCastOptions options_{};
+};
+
+class RegistryNoteAccessor {
+public:
+  explicit RegistryNoteAccessor(Registry base, std::vector<std::string> keys);
+
+  Registry strip() const;
+  Registry strip(std::string_view chars) const;
+  Registry lstrip() const;
+  Registry lstrip(std::string_view chars) const;
+  Registry rstrip() const;
+  Registry rstrip(std::string_view chars) const;
+  Registry lower() const;
+  Registry upper() const;
+  Registry casefold() const;
+  Registry titlecase() const;
+  Registry length() const;
+  Registry starts(std::string_view prefix) const;
+  Registry ends(std::string_view suffix) const;
+  Registry has(std::string_view needle,
+               const pluss::table::TextOptions& options = {}) const;
+  Registry count(std::string_view pattern) const;
+  Registry count(std::string_view pattern,
+                 const pluss::table::TextOptions& options) const;
+  Registry matches(std::string_view pattern, bool full = false) const;
+  Registry fullmatch(std::string_view pattern) const;
+  Registry pad(std::int64_t width,
+               pluss::table::TextAlign align = pluss::table::TextAlign::Left,
+               char fill = ' ') const;
+  Registry chars(std::int64_t start,
+                 std::optional<std::int64_t> stop = std::nullopt,
+                 std::int64_t step = 1) const;
+  Registry normalize(pluss::table::UnicodeForm form = pluss::table::UnicodeForm::NFC) const;
+  Registry encode(std::string_view encoding = "base64") const;
+  Registry replace(std::string_view from, std::string_view to) const;
+  Registry replace(std::string_view from,
+                   std::string_view to,
+                   const pluss::table::TextOptions& options) const;
+
+private:
+  Registry base_{};
+  std::vector<std::string> keys_{};
+};
+
+class RegistryTimelineAccessor {
+public:
+  explicit RegistryTimelineAccessor(Registry base, std::vector<std::string> keys);
+
+  Registry isnat() const;
+  Registry valid() const;
+  Registry year() const;
+  Registry month() const;
+  Registry day() const;
+  Registry hour() const;
+  Registry minute() const;
+  Registry second() const;
+  Registry weekday() const;
+  Registry yearday() const;
+  Registry quarter() const;
+  Registry week() const;
+  Registry weekend() const;
+  Registry month_start() const;
+  Registry month_end() const;
+  Registry leap() const;
+  Registry weekday_name() const;
+  Registry month_name() const;
+  Registry fmt(std::string_view pattern) const;
+  Registry iso() const;
+  Registry epoch(pluss::table::TimeUnit unit = pluss::table::TimeUnit::Nanos) const;
+  Registry floor(std::string_view unit) const;
+  Registry ceil(std::string_view unit) const;
+  Registry round(std::string_view unit) const;
+  Registry date() const;
+  Registry time() const;
+  Registry shift(std::int64_t periods, std::string_view freq) const;
+  Registry period(std::string_view freq) const;
+  Registry tz(std::string_view name) const;
+  Registry localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
+  Registry utc() const;
+  Registry index(bool require_sorted = true) const;
+
+private:
+  Registry base_{};
+  std::vector<std::string> keys_{};
+};
+
 std::ostream& operator<<(std::ostream& os, const Registry& registry);
+
+template <pluss::detail::StringViewNameRange NameRange>
+RegistryFieldAccessor Registry::fields(const NameRange& keys) const {
+  return pluss::detail::with_name_span(keys, [&](auto names) { return fields(names); });
+}
 
 } // namespace pluss::bundle

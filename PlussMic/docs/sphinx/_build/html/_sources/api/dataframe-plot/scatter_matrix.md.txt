@@ -82,11 +82,13 @@ auto metrics = DataFrame({
 });
 
 auto chart = metrics.plot().scatter_matrix();
-chart.save_svg("metrics_pairs.svg");
+chart.show();
 ```
 
 A 3×3 grid: six off-diagonal scatter cells (`revenue`×`cost`, `revenue`×`headcount`,
 `cost`×`headcount`, each appearing twice, mirrored) plus three diagonal histogram cells.
+
+![Output of Example 1](img/scatter_matrix-1.svg)
 
 Example 2. An explicit feature subset via `RangeView`.
 
@@ -99,6 +101,8 @@ chart.show();
 A 2×2 grid: two off-diagonal scatter cells (mirror images of the same `revenue` vs `cost`
 relationship) plus two diagonal histograms.
 
+![Output of Example 2](img/scatter_matrix-2.svg)
+
 Example 3. `triangle = Lower`: only the lower triangle and diagonal are drawn.
 
 ```cpp
@@ -108,6 +112,8 @@ chart.save_pdf("metrics_lower.pdf");
 
 Each pairwise relationship now appears exactly once instead of twice.
 
+![Output of Example 3](img/scatter_matrix-3.svg)
+
 Example 4. An explicit `ScatterMatrixPlotOptions`, using the `corner` shorthand instead of
 setting `pair.triangle` directly.
 
@@ -116,11 +122,13 @@ ScatterMatrixPlotOptions options;
 options.corner = true;
 
 auto chart = metrics.plot().scatter_matrix({}, options);
-chart.save_png("metrics_corner.png");
+chart.show();
 ```
 
 Since `options.pair.triangle` was left at its default `Full`, `corner = true` switches it to
 `Lower` automatically — equivalent to Example 3, but expressed through the `corner` flag.
+
+![Output of Example 4](img/scatter_matrix-4.svg)
 
 Example 5. Reaching into the underlying `PairPlotOptions` for a field this accessor doesn't
 wrap directly — here, switching the diagonal cells from histograms to density curves.
@@ -131,6 +139,8 @@ density_diag.pair.diag_kind = pluss::pl::flash::PairPlotDiagKind::Density;
 
 auto chart = metrics.plot().scatter_matrix({}, density_diag);
 ```
+
+![Output of Example 5](img/scatter_matrix-5.svg)
 
 Example 6. Fewer than two numeric features throws.
 

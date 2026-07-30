@@ -136,10 +136,10 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   for (const auto& k : catalog) std::cout << " " << k;
   std::cout << "\n";
 
-  const auto s_proj = catalog.series();
-  const auto n_proj = catalog.note();
-  const auto t_proj = catalog.timeline();
-  const auto x_proj = catalog.timeindex();
+  const auto s_proj = catalog.keyaxis().series();
+  const auto n_proj = catalog.keyaxis().note();
+  const auto t_proj = catalog.keyaxis().timeline();
+  const auto x_proj = catalog.keyaxis().timeindex();
   std::cout << "series/note/timeline/timeindex keys: "
             << s_proj.nkeys() << "/" << n_proj.nkeys() << "/"
             << t_proj.nkeys() << "/" << x_proj.nkeys() << "\n";
@@ -150,7 +150,7 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   const auto renamed = catalog.rename({{"metric", "distance"}});
   const auto sorted = catalog.sort("id");
   const auto sorted_by = catalog.sort_by({"city", "id"}, {true, false});
-  const auto grouped = catalog.group_by("city");
+  const auto grouped = catalog.group().by("city");
   const auto filtered = catalog.filter(row_mask);
   const auto sliced = catalog.slice(1, 4);
   const auto iloced = catalog.cloc(0, 3);
@@ -165,8 +165,8 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
             << ", slice records: " << sliced.nrecords()
             << ", iloc records: " << iloced.nrecords() << "\n";
 
-  const auto metric_filled = catalog.fillnull(0.0, {"metric"});
-  const auto metric_dropnull = catalog.dropnull({"metric"});
+  const auto metric_filled = catalog.keys({"metric"}).fillnull(0.0);
+  const auto metric_dropnull = catalog.keys({"metric"}).dropnull();
   std::cout << "sum(id): " << scalar_stream_value(catalog.sum("id"))
             << ", mean(id): " << scalar_stream_value(catalog.mean("id"))
             << ", min(id): " << scalar_stream_value(catalog.min("id"))
@@ -271,7 +271,7 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
 
   const auto archive = atlas.kindelize();;
   std::cout << "archive depth: " << archive.depth()
-            << ", has depth labels: " << archive.depth_labels().has_value() << "\n";
+            << ", has depth labels: " << archive.label().has() << "\n";
   std::cout << "archive:\n" << archive << "\n";
 
   const auto atlas_back = archive.tabelize();

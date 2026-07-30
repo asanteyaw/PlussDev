@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,24 @@
 
           <div class="body" role="main">
             
-  <section id="thread-info-string">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b1a2aeba4233 -->
+<section id="thread-info-string">
 <h1>Thread::info_string<a class="headerlink" href="#thread-info-string" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">info_string</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">info_string</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
+<p>Builds a short, fixed-format summary of the thread’s metadata — name, payload kind, dtype,
+row count, and a valid/null breakdown — as a plain <code class="docutils literal notranslate"><span class="pre">std::string</span></code>. This is metadata only;
+unlike <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> or <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>, it never renders the thread’s
+actual row values. Use it for logging, quick sanity checks, or anywhere you want a
+one-glance summary of what a thread contains without printing every row.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +62,96 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Rendered string result.</p>
+A multi-line summary in this fixed shape (no trailing newline):
+<code class="docutils literal notranslate"><span class="pre">text</span>&#160;&#160;&#160;&#160; <span class="pre">Thread</span> <span class="pre">Info</span>&#160;&#160;&#160;&#160; <span class="pre">Name:</span> <span class="pre">&lt;name,</span> <span class="pre">or</span> <span class="pre">&quot;&lt;unnamed&gt;&quot;&gt;</span>&#160;&#160;&#160;&#160; <span class="pre">Kind:</span> <span class="pre">&lt;Series|Note|Timeline|TimeIndex&gt;</span>&#160;&#160;&#160;&#160; <span class="pre">Dtype:</span> <span class="pre">&lt;dtype</span> <span class="pre">string,</span> <span class="pre">e.g.</span> <span class="pre">float64,</span> <span class="pre">utf8,</span> <span class="pre">int64&gt;</span>&#160;&#160;&#160;&#160; <span class="pre">Cases:</span> <span class="pre">&lt;total</span> <span class="pre">row</span> <span class="pre">count&gt;</span>&#160;&#160;&#160;&#160; <span class="pre">Non-Null</span> <span class="pre">Cases:</span> <span class="pre">&lt;valid</span> <span class="pre">row</span> <span class="pre">count&gt;</span>&#160;&#160;&#160;&#160; <span class="pre">Null</span> <span class="pre">Cases:</span> <span class="pre">&lt;invalid</span> <span class="pre">row</span> <span class="pre">count&gt;</span>&#160;&#160;&#160;&#160; </code></p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. An unnamed numeric thread with no <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">info_string</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">info_string</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sales
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread Info
+Name: &lt;unnamed&gt;
+Kind: Series
+Dtype: float64
+Cases: 3
+Non-Null Cases: 3
+Null Cases: 0
 </pre></div>
 </div>
+<p>Example 2. A named thread with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> row — <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a> assigns the display name
+that shows up as <code class="docutils literal notranslate"><span class="pre">Name:</span></code> here, and <code class="docutils literal notranslate"><span class="pre">Non-Null</span> <span class="pre">Cases</span></code>/<code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">Cases</span></code> reflect the validity mask.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})).</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">info_string</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread Info
+Name: sales
+Kind: Series
+Dtype: float64
+Cases: 3
+Non-Null Cases: 2
+Null Cases: 1
+</pre></div>
+</div>
+<p>Example 3. Non-numeric payload kinds report their own <code class="docutils literal notranslate"><span class="pre">Kind</span></code>/<code class="docutils literal notranslate"><span class="pre">Dtype</span></code> — here, <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind
+text reports dtype <code class="docutils literal notranslate"><span class="pre">utf8</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">info_string</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread Info
+Name: &lt;unnamed&gt;
+Kind: Note
+Dtype: utf8
+Cases: 2
+Non-Null Cases: 2
+Null Cases: 0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Metadata only — never renders row values. Use <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> or
+<a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> instead if you want the actual data rendered.</p></li>
+<li><p>The returned string has <strong>no trailing newline</strong> — <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a> is the
+convenience wrapper that both calls this and adds one when writing to a stream.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Name:</span></code> reads <code class="docutils literal notranslate"><span class="pre">&lt;unnamed&gt;</span></code> unless the thread was given one via <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::info</span></code></span></a>: writes this same text straight to a stream (<code class="docutils literal notranslate"><span class="pre">std::cout</span></code> by
+default) with a trailing newline, instead of returning it as a string.</p></li>
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::to_string</span></code></span></a> / <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::show</span></code></span></a>: render the thread’s
+actual row values, rather than metadata.</p></li>
+<li><p><a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::name</span></code></span></a> / <a class="reference internal" href="named.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::named</span></code></span></a>: set or check the display name
+that shows up as <code class="docutils literal notranslate"><span class="pre">Name:</span></code> here.</p></li>
+<li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::size</span></code></span></a> / <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::kind</span></code></span></a> / <a class="reference internal" href="dtype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::dtype</span></code></span></a>: the
+individual accessors this summary is built from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="info.html">
     <span class="label">Previous</span>
@@ -81,7 +162,6 @@ Rendered string result.</p>
     <span class="title">interp</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

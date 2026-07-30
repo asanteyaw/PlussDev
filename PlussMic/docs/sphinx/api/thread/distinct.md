@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2639e614b78a -->
 
 # Thread::distinct
 
@@ -102,9 +103,9 @@ though the source had two missing entries.
   deduplicated thread.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="display_name.html">
+  <a class="prev-link" href="describe.html">
     <span class="label">Previous</span>
-    <span class="title">display_name</span>
+    <span class="title">describe</span>
   </a>
   <a class="next-link" href="div.html">
     <span class="label">Next</span>

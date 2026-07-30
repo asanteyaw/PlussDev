@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::parallel" href="parallel.html" />
-    <link rel="prev" title="DataFramePlotAccessor::lag" href="lag.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -146,14 +144,15 @@ A figure with one pane containing one line trace per requested y-feature.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;monthly_amount.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">sales.plot()</span></code> enters the accessor with no shared options; <code class="docutils literal notranslate"><span class="pre">.line(&quot;amount&quot;,</span> <span class="pre">&quot;month&quot;)</span></code> draws
 <code class="docutils literal notranslate"><span class="pre">amount</span></code> on the y-axis against the text feature <code class="docutils literal notranslate"><span class="pre">month</span></code> on the x-axis (rendered as four
 evenly spaced categorical positions labeled <code class="docutils literal notranslate"><span class="pre">&quot;Jan&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Apr&quot;</span></code>), producing a single unlabeled
-(no-legend, since there’s only one y-feature) line trace. <code class="docutils literal notranslate"><span class="pre">save_svg</span></code> is what actually writes
-pixels — nothing above it touches disk.</p>
+(no-legend, since there’s only one y-feature) line trace. <code class="docutils literal notranslate"><span class="pre">chart.show()</span></code> is what actually
+opens the figure — nothing above it renders anything on its own.</p>
+<p><img alt="Output of Example 1" src="../../_images/line-1.svg" /></p>
 <p>Example 2. A shared <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> set once on the accessor, used implicitly by
 multiple chart calls.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -168,13 +167,19 @@ multiple chart calls.</p>
 <p><code class="docutils literal notranslate"><span class="pre">chart1</span></code> and <code class="docutils literal notranslate"><span class="pre">chart2</span></code> both use <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code> as their x-axis without repeating it. <code class="docutils literal notranslate"><span class="pre">chart3</span></code>
 demonstrates that an explicit <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> argument (here, <code class="docutils literal notranslate"><span class="pre">&quot;cost&quot;</span></code>) always wins over
 <code class="docutils literal notranslate"><span class="pre">options.default_x_feature</span></code>, even when both are present in the same call.</p>
+<p><code class="docutils literal notranslate"><span class="pre">chart1</span></code> (<code class="docutils literal notranslate"><span class="pre">amount</span></code> vs. <code class="docutils literal notranslate"><span class="pre">month</span></code>):</p>
+<p><img alt="Output of Example 2, chart1" src="../../_images/line-2-a.svg" /></p>
+<p><code class="docutils literal notranslate"><span class="pre">chart2</span></code> (<code class="docutils literal notranslate"><span class="pre">cost</span></code> vs. <code class="docutils literal notranslate"><span class="pre">month</span></code>):</p>
+<p><img alt="Output of Example 2, chart2" src="../../_images/line-2-b.svg" /></p>
+<p><code class="docutils literal notranslate"><span class="pre">chart3</span></code> (<code class="docutils literal notranslate"><span class="pre">amount</span></code> vs. explicit <code class="docutils literal notranslate"><span class="pre">cost</span></code>, overriding the default):</p>
+<p><img alt="Output of Example 2, chart3" src="../../_images/line-2-c.svg" /></p>
 <p>Example 3. No x-feature at all — falls back to the frame’s own row labels.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">untitled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))},</span>
 <span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">untitled</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;by_case.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">untitled</span></code> was built with explicit row labels (<code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code>) and no <code class="docutils literal notranslate"><span class="pre">month</span></code>-style feature
@@ -182,6 +187,7 @@ at all. <code class="docutils literal notranslate"><span class="pre">line(&quot;
 those row labels: the x-axis renders <code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code> as categorical positions, and the axis
 title becomes <code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code> (not <code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code> and not the row-label feature’s own name — literally
 the string <code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code>).</p>
+<p><img alt="Output of Example 3" src="../../_images/line-3.svg" /></p>
 <p>Example 4. Multiple y-features overlaid on one pane, drawn from a brace-init list.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
@@ -191,6 +197,7 @@ the string <code class="docutils literal notranslate"><span class="pre">&quot;ca
 automatically (labeled <code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;cost&quot;</span></code>) because more than one y-feature was
 requested. <code class="docutils literal notranslate"><span class="pre">chart.show()</span></code> opens the figure directly instead of writing a file — useful
 during interactive exploration.</p>
+<p><img alt="Output of Example 4" src="../../_images/line-4.svg" /></p>
 <p>Example 5. The same multi-feature call using a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> instead of a brace-init
 list — useful when the feature list is built at runtime rather than known at the call site.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_names</span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">};</span>
@@ -200,6 +207,7 @@ list — useful when the feature list is built at runtime rather than known at t
 </div>
 <p>Behaves identically to Example 4 — the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload and the <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>
 overload are the same underlying call, just accepting the y-feature list in different forms.</p>
+<p><img alt="Output of Example 5" src="../../_images/line-5.svg" /></p>
 <p>Example 6. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity, stroke width, and y-axis fit.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">line_options</span><span class="p">;</span>
 <span class="n">line_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
@@ -207,17 +215,19 @@ overload are the same underlying call, just accepting the y-feature list in diff
 <span class="n">line_options</span><span class="p">.</span><span class="n">y_limit_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">LimitMethod</span><span class="o">::</span><span class="n">Tight</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">line_options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;monthly_amount.png&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/*dpi=*/</span><span class="mi">300</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The line is drawn slightly translucent (<code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0.85</span></code>), thicker (<code class="docutils literal notranslate"><span class="pre">line_width</span> <span class="pre">=</span> <span class="pre">2.5</span></code>), and
 the y-axis is fit tightly to the data’s actual min/max instead of the default padded
-margin. <code class="docutils literal notranslate"><span class="pre">save_png</span></code> additionally takes an explicit DPI for the rasterized output.</p>
+margin.</p>
+<p><img alt="Output of Example 6" src="../../_images/line-6.svg" /></p>
 <p>Example 7. Multiple y-features with an explicit options object — the three-argument
 overload works the same way for the list-based forms as it does for the single-feature form.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">line_options</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 7" src="../../_images/line-7.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -281,11 +291,8 @@ optional hue/color feature.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -299,16 +306,6 @@ optional hue/color feature.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="lag.html" title="previous chapter">DataFramePlotAccessor::lag</a></li>
-      <li>Next: <a href="parallel.html" title="next chapter">DataFramePlotAccessor::parallel</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

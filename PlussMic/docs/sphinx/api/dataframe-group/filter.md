@@ -16,7 +16,7 @@ DataFrameGrouped::filter(const Thread& keep) const -> DataFrame
 Keeps or drops **whole groups** from the original source frame.
 
 This is not row-wise filtering. `keep` is interpreted at the **group level**:
-one boolean per group, in grouped order. If a group’s slot is `true`, every row in
+one boolean per group, in grouped order. If a group's slot is `true`, every row in
 that group survives. If it is `false`, every row in that group is removed.
 
 ## Parameters
@@ -51,17 +51,34 @@ auto totals = sales.group()
 
 auto keep = totals.features("amount_sum").gt(200.0);
 auto out = sales.group().by({"region"}).filter(keep);
+std::cout << out;
 ```
 
-The important contract is that `keep` was produced in the same grouped order as the
-handle being filtered.
+### Output
+
+```text
+=====================
+     | region  amount
+---------------------
+0    | North   100   
+1    | North   250   
+---------------------
+[2 cs x 2 feat]
+```
+
+`totals` puts `"North"` (sum `350`) ahead of `"South"` (sum `200`), so `keep` is
+`[true, false]` in that same grouped order. `North`'s sum is strictly greater than
+`200`, so both of its rows survive; `South`'s sum is exactly `200`, which fails a
+strict `gt(200.0)`, so both `South` rows are dropped entirely. The important contract
+is that `keep` was produced in the same grouped order as the handle being filtered.
 
 ## Notes
 
 - `filter(...)` expects **group count**, not row count.
 - The safest pattern is: compute grouped summary from the same grouped handle shape,
   derive a boolean mask from that summary, then pass it to `filter(...)`.
-- Returned rows keep their original order from the source frame.
+- Returned rows keep their original order and original case labels from the source
+  frame — filtering never renumbers or reindexes survivors.
 
 ## See Also
 

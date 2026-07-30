@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c643904c10c0 -->
 
 # Thread::head
 
@@ -99,12 +100,12 @@ ptype: Series
   rather than positional ones.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="has_display_name.html">
+  <a class="prev-link" href="has.html">
     <span class="label">Previous</span>
-    <span class="title">has_display_name</span>
+    <span class="title">has</span>
   </a>
-  <a class="next-link" href="hour.html">
+  <a class="next-link" href="indicate.html">
     <span class="label">Next</span>
-    <span class="title">hour</span>
+    <span class="title">indicate</span>
   </a>
 </div>

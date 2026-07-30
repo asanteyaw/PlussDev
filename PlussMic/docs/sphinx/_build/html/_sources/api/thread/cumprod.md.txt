@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6982a2dcca7d -->
 
 # Thread::cumprod
 

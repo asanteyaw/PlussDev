@@ -1,26 +1,31 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 421d90862373 -->
 
 # Thread::freq
 
 [Back to Thread API Reference](../../thread_api_reference)
 
-## API Signature
+## Signatures
 
 ```cpp
-Thread::freq() -> Thread
-Thread::freq(options: ThreadFreqOptions) -> Thread
+Thread::freq() const -> Thread
+Thread::freq(ThreadFreqOptions options) const -> Thread
 ```
 
-## Notes
+## What It Does
 
-Counts how often each distinct value occurs in one thread and returns a labeled
-`Thread`. The output values are the counts or proportions; the output labels are
-the distinct source values.
+Counts how often each distinct value occurs in the thread, and returns the
+counts as a new `Thread` whose case labels are the distinct source values —
+the 1D value-count surface. Counts are sorted by frequency descending by
+default; ties keep the values' original **first-occurrence** relative order
+(a stable sort), not alphabetical order.
 
-This is the 1D frequency surface. Use [`DataFrame::freq`](../dataframe/freq.md)
-when you want grouped frequencies across one or more dataframe features.
+Use [`DataFrame::freq`](../dataframe/freq.md) for grouped frequencies across
+one or more `DataFrame` features instead of a single thread.
 
-## Options
+## Parameters
+
+**options** (`ThreadFreqOptions`, optional)
 
 ```cpp
 struct ThreadFreqOptions {
@@ -32,34 +37,44 @@ struct ThreadFreqOptions {
 };
 ```
 
-`kind`
-`Count` returns occurrence counts. `Prop` returns normalized proportions.
+**options.kind** (`ThreadFreqKind`, default `Count`)
 
-`dropnull`
-When `true`, missing values are excluded. When `false`, missing values are counted
-under the label `NULL`.
+`Count` returns raw occurrence counts (`Int64`). `Prop` returns each value's
+count divided by the total number of counted rows (`Float64`).
 
-`sort`
-When `true`, results are ordered by frequency. When `false`, first-seen order is
-preserved.
+**options.dropnull** (`bool`, default `true`)
 
-`ascending`
-Only applies when `sort=true`. Sorts from smallest to largest frequency.
+When `true`, a missing (invalid) row is excluded entirely before counting.
+When `false`, missing rows are tallied together under the label `"NULL"`.
 
-`top`
-Keeps only the first `top` rows after ordering. `0` keeps all rows.
+**options.sort** (`bool`, default `true`)
 
-## Output
+When `true`, results are ordered by count, descending unless `ascending` is
+set. When `false`, results stay in first-occurrence order and `ascending` has
+no effect.
+
+**options.ascending** (`bool`, default `false`)
+
+Only applies when `sort = true`. `true` sorts smallest-count-first instead of
+the default largest-first.
+
+**options.top** (`std::int64_t`, default `0`)
+
+Keeps only the first `top` rows after ordering. `0` keeps every distinct
+value. Must be `>= 0` — a negative `top` throws `"Thread::freq: top must be
+>= 0"`.
+
+## Returns
 
 `Thread`
-The payload is numeric:
-
-- `Int64` when `kind = Count`
-- `Float64` when `kind = Prop`
-
-The labels hold the distinct source values.
+    A numeric thread — `Int64` when `kind = Count`, `Float64` when
+    `kind = Prop` — with the distinct source values as its case labels, named
+    `"count"` or `"prop"` to match `kind`.
 
 ## Examples
+
+Example 1. Default counts, sorted descending, for a `Note`-kind thread with a
+repeated value.
 
 ```cpp
 using namespace pluss::table;
@@ -69,63 +84,111 @@ auto counts = cities.freq();
 std::cout << counts;
 ```
 
-## Expected output
+### Output
 
 ```text
-Accra    3
-Tema     2
+Accra  3
+Tema   2
+
 Name: count, ptype: Series
 ```
 
+`"Accra"` occurs three times, `"Tema"` twice — no tie to break here, but see
+Example 4 for how ties are actually resolved.
+
+Example 2. `ThreadFreqKind::Prop` returns proportions instead of raw counts.
+
 ```cpp
-auto prop = cities.freq({
-    .kind = ThreadFreqKind::Prop,
-});
+auto prop = cities.freq({.kind = ThreadFreqKind::Prop});
 std::cout << prop;
 ```
 
-## Expected output
+### Output
 
 ```text
-Accra    0.6
-Tema     0.4
+Accra  0.6
+Tema   0.4
+
 Name: prop, ptype: Series
 ```
 
+Example 3. Keep missing values in the tally (under `"NULL"`) and skip
+sorting, so the result stays in first-occurrence order.
+
 ```cpp
 auto with_gap = Thread(
-    pluss::make_note({"Accra", "", "Tema"}),
-    pluss::make_series(std::vector<bool>{true, false, true})
-);
+    pluss::make_note({"Accra", "x", "Tema"}),
+    pluss::make_series(std::vector<bool>{true, false, true}));
 
-std::cout << with_gap.freq({
-    .dropnull = false,
-    .sort = false,
-});
+auto out = with_gap.freq({.dropnull = false, .sort = false});
+std::cout << out;
 ```
 
-## Expected output
+### Output
 
 ```text
-Accra    1
-NULL     1
-Tema     1
+Accra  1
+NULL   1
+Tema   1
+
 Name: count, ptype: Series
 ```
 
+With `sort = false`, the three (here all tied at `1`) rows print in the
+order their values were first encountered, not by any count-based ordering.
+
+Example 4. A genuine tie, to show the tie-break is first-occurrence order,
+not alphabetical.
+
+```cpp
+auto regions = Thread(pluss::make_note({"east", "west", "east", "north"}));
+auto tied = regions.freq();
+std::cout << tied;
+```
+
+### Output
+
+```text
+east   2
+west   1
+north  1
+
+Name: count, ptype: Series
+```
+
+`"west"` and `"north"` are both tied at count `1`. `"west"` (first seen at
+row `1`) comes before `"north"` (first seen at row `3`) — alphabetically
+`"north"` would sort first, but that's not what happens here.
+
+## Notes
+
+- The default sort is stable: values tied at the same count keep their
+  original first-occurrence relative order. This is different from
+  [`DataFrame::tally`](../dataframe/tally.md), which breaks ties
+  alphabetically by key.
+- `top` truncates *after* sorting (when `sort = true`), so it keeps the
+  highest-count rows, never an arbitrary prefix of the unsorted data.
+- A negative `top` throws.
+- [`Thread::describe()`](describe.md) uses `freq()` internally to compute a
+  `Note`-kind thread's `top`/`freq` summary fields, and inherits this same
+  tie-break behavior.
+
 ## See Also
 
-- [`DataFrame::freq`](../dataframe/freq.md)
-- [`Thread::distinct`](distinct.md)
-- [`Thread::ndistinct`](ndistinct.md)
+- [`DataFrame::freq`](../dataframe/freq.md): the grouped, multi-feature
+  counterpart.
+- [`Thread::distinct`](distinct.md): the same set of unique values, without
+  counts, in first-occurrence order.
+- [`Thread::describe`](describe.md): a fuller summary that uses `freq()`
+  internally for `Note`-kind threads.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="take.html">
+  <a class="prev-link" href="fold.html">
     <span class="label">Previous</span>
-    <span class="title">take</span>
+    <span class="title">fold</span>
   </a>
-  <a class="next-link" href="titlecase.html">
+  <a class="next-link" href="fullmatch.html">
     <span class="label">Next</span>
-    <span class="title">titlecase</span>
+    <span class="title">fullmatch</span>
   </a>
 </div>

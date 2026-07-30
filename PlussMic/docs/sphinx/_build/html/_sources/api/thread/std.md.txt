@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7deb7d4b55b3 -->
 
 # Thread::std
 
@@ -99,13 +100,13 @@ Thread::std on an empty (all-null) selection
 ```
 
 Example 4. The `StatisticOptions`-form returns an invalid result below
-`min_count`, rather than throwing — check `.thread().is_valid(0)`, not the
+`min_count`, rather than throwing — check the scalar validity mask, not the
 number itself.
 
 ```cpp
 auto small = Thread(pluss::make_series({10.0, 20.0}));
 auto out4 = small.std(StatisticOptions{.ddof = 1, .min_count = 5});
-std::cout << out4.thread().is_valid(0);
+std::cout << out4.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output

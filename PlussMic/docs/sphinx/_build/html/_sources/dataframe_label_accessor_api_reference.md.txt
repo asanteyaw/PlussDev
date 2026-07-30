@@ -17,7 +17,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :maxdepth: 1
 
 api/dataframe-label/align
-api/dataframe-label/cast
 api/dataframe-label/codes
 api/dataframe-label/depth
 api/dataframe-label/diff

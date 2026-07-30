@@ -59,10 +59,26 @@ auto out = loans.group({.dropnull = true})
                     {"amount_mean", "amount", DataFrame::GroupOp::Mean},
                     {"status_mode", "status", DataFrame::GroupOp::Mode},
                 });
+std::cout << out;
+```
+
+### Output
+
+```text
+==========================================================
+     | region  loans  amount_sum  amount_mean  status_mode
+----------------------------------------------------------
+0    | North   2      350         175          good       
+1    | South   2      200         100          bad        
+----------------------------------------------------------
+[2 cs x 5 feat]
 ```
 
 That single call mixes row count, numeric reduction, and categorical mode under one
-stable grouping plan.
+stable grouping plan. `South`'s `status` values are `"bad"` and `"good"`, tied at one
+occurrence each; `status_mode` picks `"bad"` because it was seen first (row `2`), not
+because it sorts first alphabetically — the same first-occurrence tie-break
+[`Thread::freq()`](../thread/freq.md) uses.
 
 Example 2. Let output names be inferred.
 
@@ -73,25 +89,60 @@ auto out = loans.group()
                     {"", "amount", DataFrame::GroupOp::Min},
                     {"", "amount", DataFrame::GroupOp::Max},
                 });
+std::cout << out;
+```
+
+### Output
+
+```text
+=====================================
+     | region  amount_min  amount_max
+-------------------------------------
+0    | North   100         250       
+1    | South   80          120       
+-------------------------------------
+[2 cs x 3 feat]
 ```
 
 When `output` is left empty, Pluss generates a deterministic name from the source
-feature and the operation.
+feature and the operation: `"amount"` + `GroupOp::Min` becomes `"amount_min"`, and
+likewise for `"amount_max"`.
 
 Example 3. Aggregate by case-label levels.
 
 ```cpp
-auto indexed = loans.set_label({"region", "year"});
+auto indexed = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
+    {"year", Thread(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
+    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+}).set_label({"region", "year"});
 
 auto out = indexed.group()
-                  .by(DataFrame::LabelGroup{.label = "region"})
+                  .by(DataFrame::LabelGroup{.names = {"region", "year"}})
                   .agg({
                       {"amount_sum", "amount", DataFrame::GroupOp::Sum},
                   });
+std::cout << out;
+```
+
+### Output
+
+```text
+===============================
+     | region  year  amount_sum
+-------------------------------
+0    | North   2023  100       
+1    | North   2024  250       
+2    | South   2023  80        
+3    | South   2024  120       
+-------------------------------
+[4 cs x 3 feat]
 ```
 
 The grouped result still comes back as a normal `DataFrame`; the only difference is
-that the grouping key came from the case axis rather than an ordinary feature.
+that the grouping key came from the case axis rather than an ordinary feature. Here
+every `(region, year)` pair is already unique, so each "group" has exactly one row
+and `amount_sum` just echoes the original `amount` value.
 
 ## Notes
 
@@ -100,7 +151,10 @@ that the grouping key came from the case axis rather than an ordinary feature.
 - `agg(...)` is the right surface when you want row count explicitly beside other
   aggregates. For example:
   `{"n", "", GroupOp::Count}` and `{"avg_amount", "amount", GroupOp::Mean}`.
-- Group keys always lead the result. Aggregated outputs follow them.
+- Group keys always lead the result. Aggregated outputs follow them, in the order
+  their `GroupSpec` entries were given.
+- `GroupOp::Mode` (and every other tie-sensitive grouped op) breaks ties by
+  first-occurrence order within the group, not alphabetically or numerically.
 - Today only `GroupLayout::Flat` is supported.
 
 ## See Also

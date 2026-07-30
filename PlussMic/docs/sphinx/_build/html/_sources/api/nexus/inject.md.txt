@@ -351,8 +351,8 @@ Nexus::inject: frame is undefined
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="keys.html">
+  <a class="next-link" href="join.html">
     <span class="label">Next</span>
-    <span class="title">keys</span>
+    <span class="title">join</span>
   </a>
 </div>

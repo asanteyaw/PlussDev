@@ -14,11 +14,6 @@ ThreadTimelineAccessor::year() const -> Thread
 
 Replaces the bound thread with its calendar year, as a numeric `Series`.
 
-```{note} Also available as a direct Thread method
-`Thread::year()` exists directly (no `.tl()` needed) and produces the
-identical result.
-```
-
 ## Parameters
 
 `None`
@@ -65,7 +60,6 @@ ptype: Series
 - `year()` reads local calendar fields — i.e. relative to whatever timezone
   the thread currently carries (`"UTC"` unless changed via
   [`tz()`](tz.md)/[`localize()`](localize.md)).
-- Identical to calling [`Thread::year()`](../thread/year.md) directly.
 
 ## See Also
 

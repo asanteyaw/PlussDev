@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c66cf8d8b693 -->
+
 # Thread::btw
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,102 +8,98 @@
 ## Signatures
 
 ```cpp
-Thread::btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) -> Thread
-
-Thread::btw(const Thread& lo, const Thread& hi, bool inclusive = true) -> Thread
-
-Thread::btw(double a, double b, bool include_left, bool include_right) -> Thread
-
-Thread::btw(double a, double b, bool inclusive = false) -> Thread
-
-Thread::btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) -> Thread
-
-Thread::btw(std::string_view lo, std::string_view hi, bool inclusive = true) -> Thread
+Thread::btw(double a, double b, bool inclusive = false) const -> Thread
+Thread::btw(double a, double b, bool include_left, bool include_right) const -> Thread
+Thread::btw(std::string_view lo, std::string_view hi, bool inclusive = true) const -> Thread
+Thread::btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const -> Thread
+Thread::btw(const Thread& lo, const Thread& hi, bool inclusive = true) const -> Thread
+Thread::btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const -> Thread
 ```
 
-Return whether each element falls between two bounds.
+## What It Does
 
-`Thread::btw(...)` is the interval-membership surface on `Thread`. It supports scalar numeric bounds, scalar temporal/string bounds, and rowwise lower/upper threads. This makes it useful for grading bands, date windows, threshold rules, and per-row tolerance envelopes.
+Tests whether each element falls inside an interval, returning one boolean per row — the
+interval-membership counterpart to chaining two [`compare()`](compare.md) calls with a
+logical AND (which, internally, is exactly what `btw()` does). It supports three bound
+styles:
+
+- **Numeric scalar bounds** (`double a, double b`) — requires a numeric `Series`-kind
+  thread; throws otherwise.
+- **Temporal/text scalar bounds** (`std::string_view lo, std::string_view hi`) — requires a
+  `Timeline`- or `TimeIndex`-kind thread; the literals are parsed as timestamps.
+- **Rowwise bounds** (`const Thread& lo, const Thread& hi`) — a different lower and upper
+  bound per row, useful for grading bands or per-row tolerance envelopes.
+
+Every style accepts either a single `inclusive` flag (shared by both boundaries) or two
+independent `include_left`/`include_right` flags for asymmetric boundaries. If the lower
+bound is numerically or temporally greater than the upper bound, `btw()` swaps them (and
+their corresponding `include_*` flags) rather than returning all-`false`.
+
+```{important} The one-flag `inclusive` shorthand defaults differently per overload family
+The numeric-scalar overload defaults to `inclusive = false` (an **open** interval); the
+temporal/text-scalar and rowwise-`Thread` overloads both default to `inclusive = true` (a
+**closed** interval). This asymmetry is real, not a typo — pass the flag explicitly if you
+want to be certain rather than relying on the default. See Examples 1 and 5.
+```
 
 ## Parameters
 
-**a**
+**a**, **b** (`double`)
+    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind thread.
 
-Lower scalar numeric bound for the numeric-scalar overloads.
+**lo**, **hi** (`std::string_view`)
+    Lower and upper scalar temporal literals, parsed the same way
+    [`compare()`](compare.md)'s text overload parses them against a temporal thread.
+    Requires a `Timeline`- or `TimeIndex`-kind thread.
 
-**b**
+**lo**, **hi** (`const Thread&`)
+    Lower- and upper-bound threads, applied element by element (row `i`'s value is tested
+    against `lo`'s and `hi`'s row `i`).
 
-Upper scalar numeric bound for the numeric-scalar overloads.
+**inclusive** (`bool`)
+    Shared boundary closure: `true` closes both boundaries (`>=`/`<=`), `false` opens both
+    (`>`/`<`). Default differs by overload family — see the important callout above.
 
-**lo**
-
-Lower bound.
-
-- In scalar temporal/text overloads, this is one lower literal bound.
-- In rowwise overloads, this is the lower-bound thread used element by element.
-
-**hi**
-
-Upper bound.
-
-- In scalar temporal/text overloads, this is one upper literal bound.
-- In rowwise overloads, this is the upper-bound thread used element by element.
-
-**inclusive**
-
-Shared boundary-closure shorthand.
-
-- `true`: both boundaries are closed.
-- `false`: both boundaries are open.
-
-Use this when both sides should share the same closure rule.
-
-**include_left**
-
-Whether the lower boundary is included.
-
-- `true`: the lower boundary is closed.
-- `false`: the lower boundary is open.
-
-**include_right**
-
-Whether the upper boundary is included.
-
-- `true`: the upper boundary is closed.
-- `false`: the upper boundary is open.
+**include_left**, **include_right** (`bool`)
+    Independent boundary closure — `include_left` controls the lower bound, `include_right`
+    the upper bound. Use this form when the two boundaries need different treatment.
 
 ## Returns
 
 `Thread`
-    A boolean thread containing one interval-membership result per element.
-
-## See Also
-
-- <a href="ge.html"><code>Thread::ge</code></a> and <a href="le.html"><code>Thread::le</code></a>: spell out the two comparisons manually when you want the lower and upper tests separately.
-- <a href="../dataframe/filter.html"><code>DataFrame::filter</code></a>: use the boolean result as a row mask inside a frame workflow.
-
-## Notes
-
-The overload family supports three bound styles:
-
-- numeric scalar bounds,
-- temporal/text scalar bounds,
-- rowwise lower/upper threads.
-
-When you use the two-boolean form, `include_left` and `include_right` independently control whether each boundary is closed or open.
-
-The one-boolean `inclusive` shorthand differs by overload family in the current API. The examples below show the actual behavior for each family, which is why this method deserves more careful reading than simpler comparison helpers.
+    A `Series`-kind thread of `Bool` values, one interval-membership result per row.
 
 ## Examples
 
-Example 1. Use shared inclusion for scalar numeric bounds.
+Example 1. Numeric bounds with the default `inclusive` — note that the default is
+**`false`** here, so values sitting exactly on either boundary are excluded.
 
 ```cpp
 using namespace pluss::table;
 
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.btw(10.0, 30.0);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  false
+1  true
+2  false
+ptype: Series
+```
+
+Example 2. Numeric bounds with shared inclusion explicitly requested — now the boundary
+values are included.
+
+```cpp
 auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
 
 auto out = scores.btw(20.0, 40.0, true);
+std::cout << out;
 ```
 
 ### Output
@@ -114,14 +113,13 @@ auto out = scores.btw(20.0, 40.0, true);
 ptype: Series
 ```
 
-Example 2. Use asymmetric scalar numeric boundaries.
+Example 3. Numeric bounds with asymmetric boundaries — lower open, upper closed.
 
 ```cpp
-using namespace pluss::table;
-
 auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
 
 auto out = scores.btw(20.0, 40.0, false, true);
+std::cout << out;
 ```
 
 ### Output
@@ -135,11 +133,9 @@ auto out = scores.btw(20.0, 40.0, false, true);
 ptype: Series
 ```
 
-Example 3. Use shared inclusion for scalar temporal bounds.
+Example 4. Temporal scalar bounds with shared inclusion, explicitly requested.
 
 ```cpp
-using namespace pluss::table;
-
 auto dates = Thread(pluss::make_timeline({
     "2024-01-01T00:00:00Z",
     "2024-01-02T00:00:00Z",
@@ -147,6 +143,7 @@ auto dates = Thread(pluss::make_timeline({
 }));
 
 auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);
+std::cout << out;
 ```
 
 ### Output
@@ -158,39 +155,37 @@ auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);
 ptype: Series
 ```
 
-Example 4. Use asymmetric scalar temporal boundaries.
+Example 5. Temporal scalar bounds with the default `inclusive` — the default here is
+**`true`**, the opposite of the numeric overload's default in Example 1.
 
 ```cpp
-using namespace pluss::table;
-
 auto dates = Thread(pluss::make_timeline({
     "2024-01-01T00:00:00Z",
-    "2024-01-02T00:00:00Z",
-    "2024-01-03T00:00:00Z",
+    "2024-01-05T00:00:00Z",
 }));
 
-auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true);
+auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-05T00:00:00Z");
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-0  false
+0  true
 1  true
-2  true
 ptype: Series
 ```
 
-Example 5. Use rowwise lower and upper threads with shared inclusion.
+Example 6. Rowwise lower and upper bound threads — a different interval per row, useful
+for tolerance bands.
 
 ```cpp
-using namespace pluss::table;
-
 auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
 auto lower = Thread(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
 auto upper = Thread(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
 
 auto out = scores.btw(lower, upper, true);
+std::cout << out;
 ```
 
 ### Output
@@ -204,30 +199,43 @@ auto out = scores.btw(lower, upper, true);
 ptype: Series
 ```
 
-Example 6. Use rowwise lower and upper threads with asymmetric boundaries.
+Example 7. Calling the numeric-scalar overload on a non-`Series` thread throws.
 
 ```cpp
-using namespace pluss::table;
-
-auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
-auto lower = Thread(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
-auto upper = Thread(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
-
-auto out = scores.btw(lower, upper, false, true);
+auto notes = Thread(pluss::make_note({"a", "b"}));
+try {
+  auto out = notes.btw(1.0, 2.0);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
 ```
 
 ### Output
 
 ```text
-0  false
-1  false
-2  false
-3  true
-4  true
-ptype: Series
+Thread::btw(double,double,...): requires Series payload; use temporal overloads for date/time threads
 ```
 
+## Notes
 
+- The one-flag `inclusive` shorthand's **default value differs by overload family** —
+  `false` for the numeric-scalar overload, `true` for the temporal/text-scalar and
+  rowwise-`Thread` overloads. Pass the flag explicitly if you want the interval closure to
+  be self-documenting at the call site.
+- If the lower bound is greater than the upper bound, `btw()` swaps them (and their
+  `include_*` flags) rather than returning `false` for every row.
+- Equivalent to two chained [`compare()`](compare.md) calls combined with a logical AND —
+  `(*this >= lo) & (*this <= hi)`, with the operators adjusted per the inclusion flags.
+
+## See Also
+
+- [`Thread::between`](between.md): a pure alias for `btw()` — same overloads, same
+  defaults, different name.
+- [`Thread::ge`](ge.md) and [`Thread::le`](le.md): spell out the lower- and upper-bound
+  tests manually when you want them as two separate results instead of one combined AND.
+- [`Thread::compare`](compare.md): the general comparison surface `btw()` is built from.
+- [`DataFrame::filter`](../dataframe/filter.md): use the boolean result as a row mask
+  inside a frame workflow.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bounded.html">

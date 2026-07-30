@@ -17,7 +17,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :maxdepth: 1
 
 api/thread-label/align
-api/thread-label/cast
 api/thread-label/diff
 api/thread-label/distinct
 api/thread-label/duplicated

@@ -25,10 +25,16 @@ Public fields on this type:
 - `Series precision = Series::undefined()`
 - `Series recall = Series::undefined()`
 - `Series f1 = Series::undefined()`
+- `Series specificity = Series::undefined()`
+- `Series geometric_mean = Series::undefined()`
+- `Series balance_quality = Series::undefined()`
 - `Series accuracy = Series::undefined()`
 - `Series micro_average = Series::undefined()`
 - `Series macro_average = Series::undefined()`
 - `Series weighted_average = Series::undefined()`
+- `Series micro_balance = Series::undefined()`
+- `Series macro_balance = Series::undefined()`
+- `Series weighted_balance = Series::undefined()`
 
 ## Examples
 

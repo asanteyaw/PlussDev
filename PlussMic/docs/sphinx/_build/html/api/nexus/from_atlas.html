@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Nexus::from_atlas &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nexus::get" href="get.html" />
+    <link rel="prev" title="Nexus::from" href="from.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="nexus-from-atlas">
+<h1>Nexus::from_atlas<a class="headerlink" href="#nexus-from-atlas" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_api_reference.html"><span class="doc std std-doc">Back to Nexus API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">from_atlas</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Atlas</span><span class="o">&amp;</span><span class="w"> </span><span class="n">atlas</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">from_atlas</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Atlas</span><span class="o">&amp;</span><span class="w"> </span><span class="n">atlas</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Builds a <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> from an <a class="reference internal" href="../../atlas_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas</span></code></span></a> — a same-shaped stack of
+frames — using each frame’s position as a separate workspace table. Both overloads are
+<strong>static</strong> (called as <code class="docutils literal notranslate"><span class="pre">Nexus::from_atlas(...)</span></code>, not on an existing instance).</p>
+<p>The one-argument overload uses <code class="docutils literal notranslate"><span class="pre">atlas</span></code>’s own axis-0 labels as table keys, if the atlas has
+them (<code class="docutils literal notranslate"><span class="pre">atlas.axis0_labels().has_value()</span></code>); otherwise it falls back to auto-generated
+<code class="docutils literal notranslate"><span class="pre">table_0</span></code>, <code class="docutils literal notranslate"><span class="pre">table_1</span></code>, … keys, same as <a class="reference internal" href="inject.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inject()</span></code></span></a>’s unnamed form. The
+two-argument overload always uses the given <code class="docutils literal notranslate"><span class="pre">labels</span></code> explicitly, converting each label to
+a string key the same way <a class="reference internal" href="neighbors.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">neighbors()</span></code></span></a> and friends stringify things
+internally — text labels are used as-is; numeric labels are stringified; a labels thread
+that produces the same key string twice throws.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>atlas</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Atlas&amp;</span></code>)
+The source stack of same-shaped frames.</p>
+<p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>, two-argument overload)
+Explicit table keys, one per atlas frame. Must be defined, must have exactly
+<code class="docutils literal notranslate"><span class="pre">atlas.depth()</span></code> elements, and must not produce a duplicate key string — see the
+important callout above.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code>
+A workspace with one table per atlas frame, in atlas order.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Building from an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> with explicit labels.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders_q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders_q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">201.0</span><span class="p">,</span><span class="w"> </span><span class="mf">202.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">orders_q1</span><span class="p">,</span><span class="w"> </span><span class="n">orders_q2</span><span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">rebuilt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">from_atlas</span><span class="p">(</span><span class="n">atlas</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rebuilt</span><span class="p">.</span><span class="n">ntables</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rebuilt</span><span class="p">.</span><span class="n">keys</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2 Q1 Q2
+</pre></div>
+</div>
+<p>The atlas already carries axis-0 labels (<code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Q2&quot;</span></code>), so the one-argument overload
+uses them directly as table keys.</p>
+<p>Example 2. The two-argument overload, supplying labels explicitly regardless of what the
+atlas itself carries.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">from_atlas</span><span class="p">(</span><span class="n">atlas</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})));</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">with_labels</span><span class="p">.</span><span class="n">keys</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Q1 Q2
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Both overloads are static — call as <code class="docutils literal notranslate"><span class="pre">Nexus::from_atlas(...)</span></code>.</p></li>
+<li><p>The one-argument overload’s fallback to <code class="docutils literal notranslate"><span class="pre">table_0</span></code>/<code class="docutils literal notranslate"><span class="pre">table_1</span></code>/… only applies when the
+atlas has no axis-0 labels of its own.</p></li>
+<li><p><a class="reference internal" href="inject.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inject(const</span> <span class="pre">Atlas&amp;)</span></code></span></a> appends an atlas’s frames into an <em>existing</em>
+workspace, using this same labeling logic; <code class="docutils literal notranslate"><span class="pre">from_atlas()</span></code> builds a brand-new one.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_atlas.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::to_atlas</span></code></span></a>: the inverse — collapse selected workspace tables back
+into an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
+<li><p><a class="reference internal" href="inject.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::inject</span></code></span></a>: append an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>’s frames into an existing workspace
+instead of building a new one.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="from.html">
+    <span class="label">Previous</span>
+    <span class="title">from</span>
+  </a>
+  <a class="next-link" href="get.html">
+    <span class="label">Next</span>
+    <span class="title">get</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
+      <li>Previous: <a href="from.html" title="previous chapter">Nexus::from</a></li>
+      <li>Next: <a href="get.html" title="next chapter">Nexus::get</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/nexus/from_atlas.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -101,12 +101,14 @@ auto metrics = DataFrame({
 });
 
 auto chart = metrics.plot().brief();
-chart.save_svg("metrics_brief.svg");
+chart.show();
 ```
 
 A single pane titled `"table"` (the default), with a header row (`case`, `revenue`, `cost`,
 `headcount`) followed by 5 data rows (all 5 cases fit within the default `max_cases = 10`, so
 no truncation line is appended).
+
+![Output of Example 1](img/brief-1.svg)
 
 Example 2. An explicit feature subset and a custom title.
 
@@ -117,6 +119,8 @@ options.title = "Revenue & Cost";
 auto chart = metrics.plot().brief({"revenue", "cost"}, options);
 chart.show();
 ```
+
+![Output of Example 2](img/brief-2.svg)
 
 Example 3. `max_cases` truncation on a larger frame.
 
@@ -139,6 +143,8 @@ chart.save_pdf("big_brief.pdf");
 
 Only the first 5 of 30 rows are printed, followed by a trailing `"... (25 more cases)"` line.
 
+![Output of Example 3](img/brief-3.svg)
+
 Example 4. `transpose = true`: features become rows, cases become columns.
 
 ```cpp
@@ -152,6 +158,8 @@ The header row now reads `feature`, `case_0`, `case_1`, ..., and each subsequent
 feature's values across all shown cases — useful when there are many features but few cases,
 the opposite orientation of the default layout.
 
+![Output of Example 4](img/brief-4.svg)
+
 Example 5. `features_per_table` and `tables_per_row`: splitting a wide feature set into
 side-by-side sub-tables.
 
@@ -161,12 +169,14 @@ split.features_per_table = 2;
 split.tables_per_row = 2;
 
 auto chart = metrics.plot().brief({}, split);
-chart.save_png("metrics_split.png");
+chart.show();
 ```
 
 With 3 features and `features_per_table = 2`, the feature set splits into two sub-tables
 (`revenue`/`cost`, then `headcount` alone); `tables_per_row = 2` places both side by side in
 the same row of text, separated by `table_gap_spaces` (4, the default) spaces.
+
+![Output of Example 5](img/brief-5.svg)
 
 Example 6. The in-place overload: appending a `brief()` table into a `Studio` that already
 has a real chart, rather than creating a separate figure.
@@ -174,13 +184,15 @@ has a real chart, rather than creating a separate figure.
 ```cpp
 auto chart = metrics.plot().line({"revenue", "cost"});
 metrics.plot().brief(chart, {"revenue", "cost"});
-chart.save_svg("metrics_with_table.svg");
+chart.show();
 ```
 
 `chart` starts as the line plot's figure (one pane); the second call appends a second pane
 containing the `brief()` table directly into the same `Studio`, and returns a reference to
 that same `chart` object (which this example discards, since `chart` itself was already
 modified in place).
+
+![Output of Example 6](img/brief-6.svg)
 
 Example 7. A non-numeric feature name throws, same as [`box()`](box.md).
 

@@ -1,0 +1,111 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f8db4a5aa396 -->
+
+# Stream::as_timeindex
+
+[Back to Stream API Reference](../../stream_api_reference)
+
+## Signature
+
+```cpp
+Stream::as_timeindex() const -> const pluss::TimeIndex&
+```
+
+## What It Does
+
+Returns the stream's underlying `pluss::TimeIndex` payload by `const` reference — a raw
+escape hatch, only valid when the stream is `TimeIndex`-kind. No copy is made.
+
+```{important} Kind-specific — throws if the stream isn't TimeIndex-kind
+Calling `as_timeindex()` on a `Series`/`Note`/`Timeline` stream throws `"Stream payload is
+not TimeIndex"`. Check [`kind()`](kind.md) first, or use [`cast()`](cast.md) to convert.
+```
+
+```{important} pluss::TimeIndex has no operator<< of its own
+Unlike `pluss::Series`/`pluss::Note`/`pluss::Timeline` (each of which prints its own
+distinct representation — see [`as_series()`](as_series.md)/[`as_note()`](as_note.md)/
+[`as_timeline()`](as_timeline.md)), plain `pluss::TimeIndex` has no `operator<<` defined
+for it at all. `std::cout << stream.as_timeindex();` fails to compile as written. Use
+`.size()` and `.timeline()` (which *does* have an `operator<<`) to inspect it instead, as
+in the example below — or convert with [`to_thread()`](to_thread.md) if you need a
+printable, table-style view.
+```
+
+## Parameters
+
+`None`
+
+## Returns
+
+`const pluss::TimeIndex&`
+    The raw `TimeIndex` payload, by reference — no copy is made.
+
+## Examples
+
+Example 1. Access the raw `TimeIndex` payload; inspect it via `.size()` and `.timeline()`
+since it has no `operator<<` of its own.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_timeindex(
+    {"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
+
+const auto& ti = stream.as_timeindex();
+std::cout << "size: " << ti.size() << "\n";
+std::cout << "timeline(): " << ti.timeline();
+```
+
+### Output
+
+```text
+size: 2
+timeline(): Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 09:10:00, 2024-01-01 09:40:00 ]
+```
+
+Example 2. Calling it on a non-`TimeIndex` stream throws.
+
+```cpp
+auto series = pluss::kindle::Stream(pluss::make_series({1.0, 2.0}));
+
+try {
+  auto out = series.as_timeindex();
+} catch (const std::exception& e) {
+  std::cout << std::string_view(e.what()).substr(0, 30);
+}
+```
+
+### Output
+
+```text
+Stream payload is not TimeInde
+```
+
+## Notes
+
+- `TimeIndex`-only — throws on every other kind; see the first important callout above.
+- No `operator<<` — see the second important callout above; use `.size()`/`.timeline()`,
+  or [`to_thread()`](to_thread.md) for a printable table view.
+- Returns by `const&`, not a copy — the reference is only valid as long as the source
+  `Stream` is alive.
+- The thrown exception's `.what()` appends a native stack trace after the message text
+  shown above; examples here show only the leading message for readability.
+
+## See Also
+
+- [`Stream::as_series`](as_series.md) / [`Stream::as_note`](as_note.md) /
+  [`Stream::as_timeline`](as_timeline.md): the equivalent escape hatch for the other three
+  payload kinds, each with its own printable `operator<<`.
+- [`Stream::to_thread`](to_thread.md): converts to a `Thread`, which does print in a
+  table-style view, instead of exposing the raw `TimeIndex`.
+- [`Stream::kind`](kind.md): check the payload kind before calling this method.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="as_series.html">
+    <span class="label">Previous</span>
+    <span class="title">as_series</span>
+  </a>
+  <a class="next-link" href="as_timeline.html">
+    <span class="label">Next</span>
+    <span class="title">as_timeline</span>
+  </a>
+</div>

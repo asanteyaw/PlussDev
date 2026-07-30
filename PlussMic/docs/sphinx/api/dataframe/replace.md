@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b3f49fd8577e -->
+<!-- pluss-signature-hash: 650e6a37b70c -->
 
 # DataFrame::replace
 
@@ -35,6 +35,15 @@ DataFrame::replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to, plu
 DataFrame::replace(const pluss::TimeIndex& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
 DataFrame::replace(pluss::null_t from, const pluss::TimeIndex& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
 ```
+
+Every overload above except the two `const char*` overloads also has a template sibling
+that swaps `pluss::RangeView<std::string_view> features` for `const NameRange& features`
+(`template <detail::StringViewNameRange NameRange>`), accepting any container of
+`std::string_view`-convertible names — a `std::vector<std::string>`, a
+`std::set<std::string>`, and so on — directly, not just a braced list or an explicit
+`RangeView`. These sibling overloads are omitted from the list above to keep it
+readable; they do not change dispatch or behavior, only which container type `features`
+accepts.
 
 ## What It Does
 

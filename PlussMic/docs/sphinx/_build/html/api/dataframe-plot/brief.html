@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::corr_heatmap" href="corr_heatmap.html" />
-    <link rel="prev" title="DataFramePlotAccessor::box" href="box.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -120,12 +118,13 @@ pane appended.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">brief</span><span class="p">();</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;metrics_brief.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>A single pane titled <code class="docutils literal notranslate"><span class="pre">&quot;table&quot;</span></code> (the default), with a header row (<code class="docutils literal notranslate"><span class="pre">case</span></code>, <code class="docutils literal notranslate"><span class="pre">revenue</span></code>, <code class="docutils literal notranslate"><span class="pre">cost</span></code>,
 <code class="docutils literal notranslate"><span class="pre">headcount</span></code>) followed by 5 data rows (all 5 cases fit within the default <code class="docutils literal notranslate"><span class="pre">max_cases</span> <span class="pre">=</span> <span class="pre">10</span></code>, so
 no truncation line is appended).</p>
+<p><img alt="Output of Example 1" src="../../_images/brief-1.svg" /></p>
 <p>Example 2. An explicit feature subset and a custom title.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BriefPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Revenue &amp; Cost&quot;</span><span class="p">;</span>
@@ -134,6 +133,7 @@ no truncation line is appended).</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/brief-2.svg" /></p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">max_cases</span></code> truncation on a larger frame.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">many_values</span><span class="p">;</span>
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -152,6 +152,7 @@ no truncation line is appended).</p>
 </pre></div>
 </div>
 <p>Only the first 5 of 30 rows are printed, followed by a trailing <code class="docutils literal notranslate"><span class="pre">&quot;...</span> <span class="pre">(25</span> <span class="pre">more</span> <span class="pre">cases)&quot;</span></code> line.</p>
+<p><img alt="Output of Example 3" src="../../_images/brief-3.svg" /></p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">transpose</span> <span class="pre">=</span> <span class="pre">true</span></code>: features become rows, cases become columns.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BriefPlotOptions</span><span class="w"> </span><span class="n">transposed</span><span class="p">;</span>
 <span class="n">transposed</span><span class="p">.</span><span class="n">transpose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -162,6 +163,7 @@ no truncation line is appended).</p>
 <p>The header row now reads <code class="docutils literal notranslate"><span class="pre">feature</span></code>, <code class="docutils literal notranslate"><span class="pre">case_0</span></code>, <code class="docutils literal notranslate"><span class="pre">case_1</span></code>, …, and each subsequent row is one
 feature’s values across all shown cases — useful when there are many features but few cases,
 the opposite orientation of the default layout.</p>
+<p><img alt="Output of Example 4" src="../../_images/brief-4.svg" /></p>
 <p>Example 5. <code class="docutils literal notranslate"><span class="pre">features_per_table</span></code> and <code class="docutils literal notranslate"><span class="pre">tables_per_row</span></code>: splitting a wide feature set into
 side-by-side sub-tables.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BriefPlotOptions</span><span class="w"> </span><span class="n">split</span><span class="p">;</span>
@@ -169,23 +171,25 @@ side-by-side sub-tables.</p>
 <span class="n">split</span><span class="p">.</span><span class="n">tables_per_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">brief</span><span class="p">({},</span><span class="w"> </span><span class="n">split</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;metrics_split.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>With 3 features and <code class="docutils literal notranslate"><span class="pre">features_per_table</span> <span class="pre">=</span> <span class="pre">2</span></code>, the feature set splits into two sub-tables
 (<code class="docutils literal notranslate"><span class="pre">revenue</span></code>/<code class="docutils literal notranslate"><span class="pre">cost</span></code>, then <code class="docutils literal notranslate"><span class="pre">headcount</span></code> alone); <code class="docutils literal notranslate"><span class="pre">tables_per_row</span> <span class="pre">=</span> <span class="pre">2</span></code> places both side by side in
 the same row of text, separated by <code class="docutils literal notranslate"><span class="pre">table_gap_spaces</span></code> (4, the default) spaces.</p>
+<p><img alt="Output of Example 5" src="../../_images/brief-5.svg" /></p>
 <p>Example 6. The in-place overload: appending a <code class="docutils literal notranslate"><span class="pre">brief()</span></code> table into a <code class="docutils literal notranslate"><span class="pre">Studio</span></code> that already
 has a real chart, rather than creating a separate figure.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">});</span>
 <span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">brief</span><span class="p">(</span><span class="n">chart</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">});</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;metrics_with_table.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">chart</span></code> starts as the line plot’s figure (one pane); the second call appends a second pane
 containing the <code class="docutils literal notranslate"><span class="pre">brief()</span></code> table directly into the same <code class="docutils literal notranslate"><span class="pre">Studio</span></code>, and returns a reference to
 that same <code class="docutils literal notranslate"><span class="pre">chart</span></code> object (which this example discards, since <code class="docutils literal notranslate"><span class="pre">chart</span></code> itself was already
 modified in place).</p>
+<p><img alt="Output of Example 6" src="../../_images/brief-6.svg" /></p>
 <p>Example 7. A non-numeric feature name throws, same as <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
@@ -269,11 +273,8 @@ in contrast to <code class="docutils literal notranslate"><span class="pre">brie
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -287,16 +288,6 @@ in contrast to <code class="docutils literal notranslate"><span class="pre">brie
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="box.html" title="previous chapter">DataFramePlotAccessor::box</a></li>
-      <li>Next: <a href="corr_heatmap.html" title="next chapter">DataFramePlotAccessor::corr_heatmap</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

@@ -156,12 +156,12 @@ Nexus::map_frames: callback returned undefined DataFrame
 - [`Nexus::flow`](flow.md): whole-workspace callback composition.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="keys.html">
+  <a class="prev-link" href="load.html">
     <span class="label">Previous</span>
-    <span class="title">keys</span>
+    <span class="title">load</span>
   </a>
-  <a class="next-link" href="names.html">
+  <a class="next-link" href="materialize.html">
     <span class="label">Next</span>
-    <span class="title">names</span>
+    <span class="title">materialize</span>
   </a>
 </div>

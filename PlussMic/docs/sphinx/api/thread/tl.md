@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2517e17559b2 -->
 
 # Thread::tl
 
@@ -127,8 +128,8 @@ Thread::tl: expected Timeline or TimeIndex payload
     <span class="label">Previous</span>
     <span class="title">titlecase</span>
   </a>
-  <a class="next-link" href="to_note_weekday.html">
+  <a class="next-link" href="to_string.html">
     <span class="label">Next</span>
-    <span class="title">to_note_weekday</span>
+    <span class="title">to_string</span>
   </a>
 </div>

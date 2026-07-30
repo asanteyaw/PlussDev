@@ -95,12 +95,14 @@ auto breakdown = DataFrame({
 });
 
 auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month");
-chart.save_svg("breakdown_stacked.svg");
+chart.show();
 ```
 
 `sales` forms the bottom band (0 up to its own value at each month); `returns_cost` is
 drawn stacked on top of it, its own cumulative top reaching `sales + returns_cost` at each
 month.
+
+![Output of Example 1](img/area_stacked-1.svg)
 
 Example 2. Three features stacked, via a reusable `RangeView` built at runtime.
 
@@ -121,12 +123,16 @@ chart.show();
 The topmost trace's edge (`other`'s cumulative top) traces `product + support + other` at
 each month — the total, decomposed into three accumulating bands beneath it.
 
+![Output of Example 2](img/area_stacked-2.svg)
+
 Example 3. No `x_feature`: falls back to the frame's own row labels, exactly like every
 other chart method on this accessor — see [`line()`](line.md)'s Example 3.
 
 ```cpp
 auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"});
 ```
+
+![Output of Example 3](img/area_stacked-3.svg)
 
 Example 4. An explicit `AreaStackedPlotOptions`, raising opacity for a more solid-looking
 stack (accepting more blending obscurity for earlier layers, per the note above).
@@ -137,14 +143,18 @@ stacked_options.alpha = 0.95;
 stacked_options.line_width = 1.5;
 
 auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month", stacked_options);
-chart.save_png("breakdown_stacked.png");
+chart.show();
 ```
+
+![Output of Example 4](img/area_stacked-4.svg)
 
 Example 5. The `initializer_list` overload with an explicit options object.
 
 ```cpp
 auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month", stacked_options);
 ```
+
+![Output of Example 5](img/area_stacked-5.svg)
 
 ## Notes
 

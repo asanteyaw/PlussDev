@@ -32,10 +32,10 @@ Public fields on this type:
 ### Example 1
 
 ```cpp
-      train_options,
       assess_options,
       MetricKind::Rmse,
-      TuneObjectivePolicy::Minimize);
+      TuneObjectivePolicy::Minimize,
+      /*max_parallel=*/1);
   if (!broad_sweep_or.ok()) {
     std::cerr << "sweep(broad) failed: " << broad_sweep_or.status().message << "\n";
     return 1;

@@ -65,28 +65,28 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 - Use it when the aggregation depends on multiple catalogs together rather than catalog-by-catalog mapping.
 
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="#align_depth">
+  <a class="next-link" href="#astype">
     <span class="label">Next</span>
-    <span class="title">align_depth</span>
+    <span class="title">astype</span>
   </a>
 </div>
 
-### `align_depth`
+### `astype`
 
 #### Signature
 
 ```cpp
-Archive::align_depth(const Stream& labels) -> Archive
+Archive::astype(pluss::ScalarType dtype) -> Archive
 ```
 
 #### What It Does
 
-Reorders catalogs so their depth labels match the supplied label order.
+This changes the semantic or numeric type so later operations route through the correct implementation path.
 
 #### Parameters
 
-**labels**
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+**dtype**
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -108,73 +108,6 @@ auto c1 = pluss::kindle::Catalog({
 });
 auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
 
-auto labels = pluss::kindle::Stream(pluss::make_note({"baseline", "stress"}));
-auto out = archive.align_depth(labels);
-```
-
-##### Output
-
-```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
-
-#### Practical Behavior
-
-- `align_depth(labels)` reorders catalogs to match the requested depth label order.
-- Use it when archive depth order must match another archive or reporting layout.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#aggregate_over_catalogs">
-    <span class="label">Previous</span>
-    <span class="title">aggregate_over_catalogs</span>
-  </a>
-  <a class="next-link" href="#astype">
-    <span class="label">Next</span>
-    <span class="title">astype</span>
-  </a>
-</div>
-
-### `astype`
-
-#### Signature
-
-```cpp
-Archive::astype(std::initializer_list<std::string_view> keys, pluss::ScalarType dtype) -> Archive
-```
-
-#### What It Does
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Parameters
-
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-**dtype**
-    Target scalar dtype used by this conversion overload.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Pass several feature names inline.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
 auto out = archive.astype();
 ```
 
@@ -184,9 +117,9 @@ auto out = archive.astype();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#align_depth">
+  <a class="prev-link" href="#aggregate_over_catalogs">
     <span class="label">Previous</span>
-    <span class="title">align_depth</span>
+    <span class="title">aggregate_over_catalogs</span>
   </a>
   <a class="next-link" href="#bfill">
     <span class="label">Next</span>
@@ -201,7 +134,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Archive::bfill(std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::bfill() -> Archive
 ```
 
 #### What It Does
@@ -210,8 +143,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`None`
 
 #### Returns
 
@@ -220,7 +152,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -259,7 +191,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Archive::cast(std::initializer_list<std::string_view> keys, pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) -> Archive
+Archive::cast(pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) -> Archive
 ```
 
 #### What It Does
@@ -267,9 +199,6 @@ Archive::cast(std::initializer_list<std::string_view> keys, pluss::table::Thread
 This changes the semantic or numeric type so later operations route through the correct implementation path.
 
 #### Parameters
-
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
 
 **target**
     Target payload family chosen by this cast overload.
@@ -284,7 +213,7 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Pass an explicit options object to control the operation.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -535,61 +464,6 @@ auto out = archive.depth();
     <span class="label">Previous</span>
     <span class="title">defined</span>
   </a>
-  <a class="next-link" href="#depth_labels">
-    <span class="label">Next</span>
-    <span class="title">depth_labels</span>
-  </a>
-</div>
-
-### `depth_labels`
-
-#### Signature
-
-```cpp
-Archive::depth_labels() -> const std::optional<Stream>&
-```
-
-#### What It Does
-
-Returns the current labels used to address fields, slots, rows, or depth items.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::optional<Stream>&`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.depth_labels();
-```
-
-##### Output
-
-```text
-["train", "test"]
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#depth">
-    <span class="label">Previous</span>
-    <span class="title">depth</span>
-  </a>
   <a class="next-link" href="#distinct">
     <span class="label">Next</span>
     <span class="title">distinct</span>
@@ -598,12 +472,10 @@ auto out = archive.depth_labels();
 
 ### `distinct`
 
-#### Signatures
+#### Signature
 
 ```cpp
 Archive::distinct(DistinctOptions options = {}) -> Archive
-
-Archive::distinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) -> Archive
 ```
 
 #### What It Does
@@ -614,9 +486,6 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 
 **options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -646,31 +515,10 @@ auto out = archive.distinct();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 2. Pass several feature names inline.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.distinct();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#depth_labels">
+  <a class="prev-link" href="#depth">
     <span class="label">Previous</span>
-    <span class="title">depth_labels</span>
+    <span class="title">depth</span>
   </a>
   <a class="next-link" href="#dloc">
     <span class="label">Next</span>
@@ -745,9 +593,13 @@ metric -> Series([30.0, 40.0])
 #### Signatures
 
 ```cpp
+Archive::drop(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> Archive
+
 Archive::drop(const std::vector<std::string>& keys) -> Archive
 
 Archive::drop(std::initializer_list<std::string_view> keys) -> Archive
+
+Archive::drop(std::span<const std::string_view> keys) -> Archive
 ```
 
 #### What It Does
@@ -761,12 +613,15 @@ Use this to reduce the current object to the rows or fields that matter for the 
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> Archive`
+    Value produced by this call.
+
 `Archive`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several names together from a standard string container.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -787,7 +642,49 @@ auto out = archive.drop();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 2. Pass several feature names inline.
+Example 2. Pass several names together from a standard string container.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.drop();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.drop();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -824,7 +721,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Archive::dropnull(std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::dropnull() -> Archive
 ```
 
 #### What It Does
@@ -833,8 +730,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`None`
 
 #### Returns
 
@@ -843,7 +739,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -939,7 +835,7 @@ false
 #### Signature
 
 ```cpp
-Archive::ffill(std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::ffill() -> Archive
 ```
 
 #### What It Does
@@ -948,8 +844,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`None`
 
 #### Returns
 
@@ -958,7 +853,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -995,15 +890,15 @@ The call completes and returns the contract described under Output.
 #### Signatures
 
 ```cpp
-Archive::fillnull(const char* value, std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::fillnull(const char* value) -> Archive
 
-Archive::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::fillnull(const pluss::TimeIndex& value) -> Archive
 
-Archive::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::fillnull(const pluss::Timeline& value) -> Archive
 
-Archive::fillnull(double value, std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::fillnull(double value) -> Archive
 
-Archive::fillnull(std::string_view value, std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::fillnull(std::string_view value) -> Archive
 ```
 
 #### What It Does
@@ -1015,9 +910,6 @@ This is part of the missing-data cleanup path and is usually applied before summ
 **value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
 #### Returns
 
 `Archive`
@@ -1025,7 +917,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1046,7 +938,7 @@ auto out = archive.fillnull();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 2. Pass several feature names inline.
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1067,7 +959,7 @@ auto out = archive.fillnull();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 3. Pass several feature names inline.
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1088,7 +980,7 @@ auto out = archive.fillnull();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 4. Pass several feature names inline.
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1109,7 +1001,7 @@ auto out = archive.fillnull();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 5. Pass several feature names inline.
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1143,12 +1035,10 @@ The call completes and returns the contract described under Output.
 
 ### `freq`
 
-#### Signatures
+#### Signature
 
 ```cpp
 Archive::freq(FreqOptions options = {}) -> Archive
-
-Archive::freq(std::initializer_list<std::string_view> keys, FreqOptions options = {}) -> Archive
 ```
 
 #### What It Does
@@ -1160,9 +1050,6 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 **options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
 #### Returns
 
 `Archive`
@@ -1171,27 +1058,6 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 #### Examples
 
 Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.freq();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1345,7 +1211,7 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Archive::invalid(std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::invalid() -> Archive
 ```
 
 #### What It Does
@@ -1354,8 +1220,7 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 
 #### Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`None`
 
 #### Returns
 
@@ -1364,7 +1229,7 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1401,7 +1266,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Archive::isnull(std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::isnull() -> Archive
 ```
 
 #### What It Does
@@ -1410,8 +1275,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`None`
 
 #### Returns
 
@@ -1420,7 +1284,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1446,13 +1310,173 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">invalid</span>
   </a>
+  <a class="next-link" href="#keyaxis">
+    <span class="label">Next</span>
+    <span class="title">keyaxis</span>
+  </a>
+</div>
+
+## K
+
+### `keyaxis`
+
+#### Signature
+
+```cpp
+Archive::keyaxis() -> ArchiveKeyAxisAccessor
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`ArchiveKeyAxisAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.keyaxis();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#isnull">
+    <span class="label">Previous</span>
+    <span class="title">isnull</span>
+  </a>
+  <a class="next-link" href="#keys">
+    <span class="label">Next</span>
+    <span class="title">keys</span>
+  </a>
+</div>
+
+### `keys`
+
+#### Signatures
+
+```cpp
+Archive::keys(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> ArchiveKeyAccessor
+
+Archive::keys(std::initializer_list<std::string_view> keys) -> ArchiveKeyAccessor
+
+Archive::keys(std::span<const std::string_view> keys) -> ArchiveKeyAccessor
+```
+
+#### What It Does
+
+Returns the current labels used to address fields, slots, rows, or depth items.
+
+#### Parameters
+
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+#### Returns
+
+`template <pluss::detail::StringViewNameRange NameRange> ArchiveKeyAccessor`
+    Value produced by this call.
+
+`ArchiveKeyAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.keys();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.keys();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.keys();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#keyaxis">
+    <span class="label">Previous</span>
+    <span class="title">keyaxis</span>
+  </a>
   <a class="next-link" href="#kindelize">
     <span class="label">Next</span>
     <span class="title">kindelize</span>
   </a>
 </div>
-
-## K
 
 ### `kindelize`
 
@@ -1502,17 +1526,72 @@ train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#isnull">
+  <a class="prev-link" href="#keys">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">keys</span>
+  </a>
+  <a class="next-link" href="#label">
+    <span class="label">Next</span>
+    <span class="title">label</span>
+  </a>
+</div>
+
+## L
+
+### `label`
+
+#### Signature
+
+```cpp
+Archive::label() -> ArchiveLabelAccessor
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`ArchiveLabelAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.label();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
   </a>
   <a class="next-link" href="#loc">
     <span class="label">Next</span>
     <span class="title">loc</span>
   </a>
 </div>
-
-## L
 
 ### `loc`
 
@@ -1612,9 +1691,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#kindelize">
+  <a class="prev-link" href="#label">
     <span class="label">Previous</span>
-    <span class="title">kindelize</span>
+    <span class="title">label</span>
   </a>
   <a class="next-link" href="#map_catalogs">
     <span class="label">Next</span>
@@ -1905,12 +1984,10 @@ The call completes and returns the contract described under Output.
 
 ### `ndistinct`
 
-#### Signatures
+#### Signature
 
 ```cpp
 Archive::ndistinct(DistinctOptions options = {}) -> Archive
-
-Archive::ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) -> Archive
 ```
 
 #### What It Does
@@ -1922,9 +1999,6 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 **options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
 #### Returns
 
 `Archive`
@@ -1933,27 +2007,6 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 #### Examples
 
 Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.ndistinct();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2045,7 +2098,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Archive::notnull(std::initializer_list<std::string_view> keys = {}) -> Archive
+Archive::notnull() -> Archive
 ```
 
 #### What It Does
@@ -2054,8 +2107,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`None`
 
 #### Returns
 
@@ -2064,7 +2116,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2145,71 +2197,13 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">notnull</span>
   </a>
-  <a class="next-link" href="#relabel_depth">
-    <span class="label">Next</span>
-    <span class="title">relabel_depth</span>
-  </a>
-</div>
-
-## R
-
-### `relabel_depth`
-
-#### Signature
-
-```cpp
-Archive::relabel_depth(const Stream& labels) -> Archive
-```
-
-#### What It Does
-
-Replaces the depth-label axis with the supplied labels while keeping catalog contents unchanged.
-
-#### Parameters
-
-**labels**
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto labels = pluss::kindle::Stream(pluss::make_note({"baseline", "stress"}));
-auto out = archive.relabel_depth(labels);
-```
-
-##### Output
-
-```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#nrecords">
-    <span class="label">Previous</span>
-    <span class="title">nrecords</span>
-  </a>
   <a class="next-link" href="#rename">
     <span class="label">Next</span>
     <span class="title">rename</span>
   </a>
 </div>
+
+## R
 
 ### `rename`
 
@@ -2286,9 +2280,9 @@ auto out = archive.rename();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#relabel_depth">
+  <a class="prev-link" href="#nrecords">
     <span class="label">Previous</span>
-    <span class="title">relabel_depth</span>
+    <span class="title">nrecords</span>
   </a>
   <a class="next-link" href="#select">
     <span class="label">Next</span>
@@ -2303,9 +2297,13 @@ The call completes and returns the contract described under Output.
 #### Signatures
 
 ```cpp
+Archive::select(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> Archive
+
 Archive::select(const std::vector<std::string>& keys) -> Archive
 
 Archive::select(std::initializer_list<std::string_view> keys) -> Archive
+
+Archive::select(std::span<const std::string_view> keys) -> Archive
 ```
 
 #### What It Does
@@ -2319,12 +2317,15 @@ Use this to reduce the current object to the rows or fields that matter for the 
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> Archive`
+    Value produced by this call.
+
 `Archive`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several names together from a standard string container.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2345,7 +2346,49 @@ auto out = archive.select();
 ```text
 The call completes and returns the contract described under Output.
 ```
-Example 2. Pass several feature names inline.
+Example 2. Pass several names together from a standard string container.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.select();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Pass several feature names inline.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.select();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2598,66 +2641,6 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
     <span class="label">Previous</span>
     <span class="title">size</span>
   </a>
-  <a class="next-link" href="#sort_depth">
-    <span class="label">Next</span>
-    <span class="title">sort_depth</span>
-  </a>
-</div>
-
-### `sort_depth`
-
-#### Signature
-
-```cpp
-Archive::sort_depth(bool ascending = true, bool nulls_last = true) -> Archive
-```
-
-#### What It Does
-
-Sorts catalogs by their current depth labels.
-
-#### Parameters
-
-**ascending**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-**nulls_last**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.sort_depth(true, true);
-```
-
-##### Output
-
-```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#slice_depth">
-    <span class="label">Previous</span>
-    <span class="title">slice_depth</span>
-  </a>
   <a class="next-link" href="#tabelize">
     <span class="label">Next</span>
     <span class="title">tabelize</span>
@@ -2722,9 +2705,9 @@ sales
 40.0
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#sort_depth">
+  <a class="prev-link" href="#slice_depth">
     <span class="label">Previous</span>
-    <span class="title">sort_depth</span>
+    <span class="title">slice_depth</span>
   </a>
   <a class="next-link" href="#tail">
     <span class="label">Next</span>

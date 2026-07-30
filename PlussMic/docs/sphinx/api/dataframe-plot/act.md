@@ -91,11 +91,13 @@ auto series = DataFrame({
 });
 
 auto chart = series.plot().act("signal");
-chart.save_svg("signal_act.svg");
+chart.show();
 ```
 
 Since `wave` has 60 rows, `max_lag = 40` (the default) fits within the `[1, 59]` clamp range
 unchanged; expect strong spikes near lags that are multiples of the wave's period.
+
+![Output of Example 1](img/act-1.svg)
 
 Example 2. A shorter feature: `max_lag` is silently clamped rather than throwing.
 
@@ -111,6 +113,8 @@ chart.show();
 `reading` has 7 rows, so `max_lag` is clamped to `6` (`n - 1`) even though the requested
 default is `40`; spikes are drawn only for lags `1..6`.
 
+![Output of Example 2](img/act-2.svg)
+
 Example 3. An explicit `ActPlotOptions`, narrowing `max_lag`, using a stricter
 `confidence_level`, and thickening the spikes.
 
@@ -121,11 +125,13 @@ options.confidence_level = 0.99;
 options.trace_width = 2.0F;
 
 auto chart = series.plot().act("signal", options);
-chart.save_png("signal_act.png");
+chart.show();
 ```
 
 The confidence band widens (using `z = 2.575829` for `0.99` instead of the default `0.95`'s
 `1.959964`), making it harder for a spike to appear "significant."
+
+![Output of Example 3](img/act-3.svg)
 
 Example 4. Disabling the confidence band entirely.
 
@@ -137,6 +143,8 @@ auto chart = series.plot().act("signal", bare_options);
 ```
 
 Only the raw spikes and the zero reference line are drawn — no `±CI` lines.
+
+![Output of Example 4](img/act-4.svg)
 
 Example 5. A non-numeric feature throws.
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f4eb731a0707 -->
 <section id="thread-sum">
 <h1>Thread::sum<a class="headerlink" href="#thread-sum" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -84,7 +85,8 @@ enough data — but <code class="docutils literal notranslate"><span class="pre"
 number the underlying arithmetic produced, with no indication it’s actually
 meaningless. <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> printing has no concept of
 nullness at all — only the wrapping <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own validity mask does. Check
-<code class="docutils literal notranslate"><span class="pre">result.thread().is_valid(0)</span></code> before trusting a result from one of those
+<code class="docutils literal notranslate"><span class="pre">result.thread().notnull().as_series().to_vec&lt;bool&gt;()[0]</span></code> before trusting a
+result from one of those
 methods.</p>
 </div>
 </section>

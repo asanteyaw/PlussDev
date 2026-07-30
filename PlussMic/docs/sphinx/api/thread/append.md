@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3dce65762b98 -->
 
 # Thread::append
 
@@ -96,8 +97,8 @@ Thread::append: payload kinds must match
     <span class="label">Previous</span>
     <span class="title">any</span>
   </a>
-  <a class="next-link" href="as_note.html">
+  <a class="next-link" href="arrange.html">
     <span class="label">Next</span>
-    <span class="title">as_note</span>
+    <span class="title">arrange</span>
   </a>
 </div>

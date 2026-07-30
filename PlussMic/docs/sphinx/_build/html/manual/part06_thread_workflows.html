@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -112,14 +112,13 @@ and null-aware operations treat that row as missing.</p>
 <span class="kr">thread</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
 <span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">();</span>
 <span class="kr">thread</span><span class="p">.</span><span class="n">dtype</span><span class="p">();</span>
-<span class="kr">thread</span><span class="p">.</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 <span class="kr">thread</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
 <span class="kr">thread</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">dtype()</span></code> reports the payload dtype, such as <code class="docutils literal notranslate"><span class="pre">float64</span></code> or <code class="docutils literal notranslate"><span class="pre">utf8</span></code>. It does
-not tell you whether the thread has missing values. Use <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">notnull()</span></code>, or <code class="docutils literal notranslate"><span class="pre">is_valid(row)</span></code> for that.</p>
+not tell you whether the thread has missing values. Use <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">notnull()</span></code> for that.</p>
 <p>Display and debug methods:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kr">thread</span><span class="p">.</span><span class="n">info</span><span class="p">();</span>
 <span class="kr">thread</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
@@ -522,20 +521,20 @@ contains check is performed on the lowercased values, so it matches both
 <section id="time-operations">
 <h2>Time operations<a class="headerlink" href="#time-operations" title="Link to this heading">¶</a></h2>
 <p>Timeline and TimeIndex payloads support calendar extraction:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">year</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">months</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">month</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">day</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">hours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">hour</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">weekdays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">to_note_weekday</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">months</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">month</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">day</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">hours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">hour</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weekdays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">weekday_name</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>These return Threads so they can be inserted back into a DataFrame:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">enriched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;timestamp&quot;</span><span class="p">).</span><span class="n">year</span><span class="p">());</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;timestamp&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>If you need to parse string dates, cast a Note-backed Thread to Timeline first:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">timeline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_dates</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">months</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timeline</span><span class="p">.</span><span class="n">month</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">timeline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_dates</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">timeline</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">months</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timeline</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">month</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -543,7 +542,7 @@ contains check is performed on the lowercased values, so it matches both
 <h2>Display labels and names<a class="headerlink" href="#display-labels-and-names" title="Link to this heading">¶</a></h2>
 <p>Display metadata is useful for presentation, but it should not be treated as
 schema truth.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">named</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">with_display_name</span><span class="p">(</span><span class="s">&quot;balance&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">named</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;balance&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">named</span><span class="p">.</span><span class="n">with_display_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">);</span>
 
 <span class="n">named</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>

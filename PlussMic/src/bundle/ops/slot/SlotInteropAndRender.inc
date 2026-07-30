@@ -1,6 +1,10 @@
 Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
   PLUSS_CHECK(stream.defined(), "Slot::from_kindle: stream undefined");
   const auto n = stream.size();
+  const auto has_validity = pluss::kindle::detail::has_validity_mask(stream);
+  const auto valid = has_validity
+                         ? pluss::kindle::detail::validity_mask(stream)->to_vec<bool>()
+                         : std::vector<bool>{};
   std::vector<Value> out;
   out.reserve(static_cast<std::size_t>(n));
   switch (stream.kind()) {
@@ -8,33 +12,76 @@ Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
       const auto s = stream.as_series();
       if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
         const auto x = s.to_vec<bool>();
-        for (bool v : x) out.emplace_back(pluss::make_series(v, pluss::codem::ScalarType::Bool));
+        for (std::int64_t i = 0; i < n; ++i) {
+          if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+            out.emplace_back(std::monostate{});
+          } else {
+            out.emplace_back(bool_slot_value(x[static_cast<std::size_t>(i)]));
+          }
+        }
       } else if (s.scalar_type() == pluss::codem::ScalarType::Int64) {
         const auto x = s.to_vec<std::int64_t>();
-        for (auto v : x) out.emplace_back(pluss::make_series(v, s.scalar_type()));
+        for (std::int64_t i = 0; i < n; ++i) {
+          if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+            out.emplace_back(std::monostate{});
+          } else {
+            out.emplace_back(pluss::make_series(x[static_cast<std::size_t>(i)], s.scalar_type()));
+          }
+        }
       } else {
         const auto x = s.to(pluss::codem::ScalarType::Float64).to_vec<double>();
-        for (auto v : x) out.emplace_back(pluss::make_series(v, s.scalar_type()));
+        for (std::int64_t i = 0; i < n; ++i) {
+          if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+            out.emplace_back(std::monostate{});
+          } else {
+            out.emplace_back(pluss::make_series(x[static_cast<std::size_t>(i)], s.scalar_type()));
+          }
+        }
       }
       break;
     }
     case pluss::kindle::StreamKind::Note: {
       const auto& nte = stream.as_note();
-      for (std::int64_t i = 0; i < n; ++i) out.emplace_back(pluss::make_note(nte.at(i)));
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+          out.emplace_back(std::monostate{});
+        } else {
+          out.emplace_back(pluss::make_note(nte.at(i)));
+        }
+      }
       break;
     }
     case pluss::kindle::StreamKind::Timeline: {
       const auto x = stream.as_timeline().to_epoch_nanos_vector();
-      for (auto v : x) out.emplace_back(pluss::from_epoch_nanos(v));
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+          out.emplace_back(std::monostate{});
+        } else {
+          out.emplace_back(pluss::from_epoch_nanos(x[static_cast<std::size_t>(i)]));
+        }
+      }
       break;
     }
     case pluss::kindle::StreamKind::TimeIndex: {
       const auto x = stream.as_timeindex().timeline().to_epoch_nanos_vector();
-      for (auto v : x) out.emplace_back(pluss::make_timeindex(std::vector<std::int64_t>{v}, false));
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+          out.emplace_back(std::monostate{});
+        } else {
+          out.emplace_back(pluss::make_timeindex(
+              std::vector<std::int64_t>{x[static_cast<std::size_t>(i)]},
+              false));
+        }
+      }
       break;
     }
   }
-  return Slot(std::move(out));
+  auto impl = pluss::msharp::make_intrusive<detail::SlotImpl>(std::move(out));
+  impl->profile_cache_ = SlotProfile{
+      .kind = n == 0 ? SlotKind::Empty : slot_kind_from_stream_kind(stream.kind()),
+      .has_null = has_validity,
+      .stream_compatible = !has_validity};
+  return Slot(std::move(impl));
 }
 
 std::string Slot::to_string() const {

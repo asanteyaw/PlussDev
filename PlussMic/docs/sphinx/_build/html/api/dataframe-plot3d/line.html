@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: caec046f4baa -->
 <section id="dataframeplot3daccessor-line">
 <h1>DataFramePlot3DAccessor::line<a class="headerlink" href="#dataframeplot3daccessor-line" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_plot3d_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFramePlot3DAccessor API Reference</span></a></p>
@@ -198,6 +199,7 @@ A figure with one 3D pane containing a single connected line trace through the <
 </div>
 <p>Four points are connected in row order: <code class="docutils literal notranslate"><span class="pre">(1,4,2)</span> <span class="pre">→</span> <span class="pre">(2,3,5)</span> <span class="pre">→</span> <span class="pre">(3,5,4)</span> <span class="pre">→</span> <span class="pre">(4,2,6)</span></code> — not
 sorted by <code class="docutils literal notranslate"><span class="pre">x</span></code> or any other axis first.</p>
+<p><img alt="Output of Example 1" src="../../_images/line-11.svg" /></p>
 <p>Example 2. A <code class="docutils literal notranslate"><span class="pre">Line3DPlotOptions</span></code> with a scene preset for a presentation-style camera and
 theme.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -207,6 +209,7 @@ theme.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/line-2.svg" /></p>
 <p>Example 3. Overriding just the camera angle with an explicit <code class="docutils literal notranslate"><span class="pre">Camera3DOptions</span></code>, leaving
 the theme and lighting at their pane defaults.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -218,9 +221,10 @@ the theme and lighting at their pane defaults.</p>
 <span class="p">};</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;path3d_camera.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 3" src="../../_images/line-31.svg" /></p>
 <p>Example 4. A trace preset (<code class="docutils literal notranslate"><span class="pre">Path</span></code>, tuned for line traces) combined with an explicit
 <code class="docutils literal notranslate"><span class="pre">line_width</span></code> override — the preset sets shading/lighting/material/width, and the explicit
 <code class="docutils literal notranslate"><span class="pre">line_width</span></code> then overrides just that one field.</p>
@@ -232,6 +236,7 @@ the theme and lighting at their pane defaults.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;path3d_styled.pdf&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 4" src="../../_images/line-41.svg" /></p>
 <p>Example 5. Both a <code class="docutils literal notranslate"><span class="pre">camera_preset</span></code> and an explicit <code class="docutils literal notranslate"><span class="pre">camera</span></code> set together — the explicit
 <code class="docutils literal notranslate"><span class="pre">camera</span></code> applies last and wins, since it’s later in the fixed layering order.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Line3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -244,6 +249,7 @@ the theme and lighting at their pane defaults.</p>
 <p>The final camera angle is <code class="docutils literal notranslate"><span class="pre">(azimuth</span> <span class="pre">=</span> <span class="pre">60.0,</span> <span class="pre">elevation</span> <span class="pre">=</span> <span class="pre">15.0)</span></code> from the explicit <code class="docutils literal notranslate"><span class="pre">camera</span></code>
 field — the <code class="docutils literal notranslate"><span class="pre">TopDown</span></code> preset’s <code class="docutils literal notranslate"><span class="pre">(0.0,</span> <span class="pre">90.0)</span></code> angle is set first, then immediately
 overridden.</p>
+<p><img alt="Output of Example 5" src="../../_images/line-51.svg" /></p>
 <p>Example 6. A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature used directly as an axis — converted to epoch
 nanoseconds, per the note above.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -259,6 +265,7 @@ nanoseconds, per the note above.</p>
 range compared to <code class="docutils literal notranslate"><span class="pre">depth_m</span></code>/<code class="docutils literal notranslate"><span class="pre">temp_c</span></code>, so the pane’s own auto-scaling handles the disparity;
 this call does not reformat the x-axis into calendar tick labels the way the 2D accessor’s
 Timeline-aware axis labeling does.</p>
+<p><img alt="Output of Example 6" src="../../_images/line-61.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

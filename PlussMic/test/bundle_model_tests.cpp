@@ -19,6 +19,7 @@ namespace {
 using pluss::bundle::Axel;
 using pluss::bundle::Registry;
 using pluss::bundle::Slot;
+using pluss::bundle::SlotKind;
 
 [[noreturn]] void fail(std::string_view msg) {
   throw std::runtime_error(std::string(msg));
@@ -153,6 +154,8 @@ void test_slot_methods() {
   expect(ids.shape() == std::make_pair<std::int64_t, std::int64_t>(5, 1),
          "Slot::shape should be (size, 1)");
   expect(ids.ptype() == "Series", "homogeneous Series Slot ptype mismatch");
+  expect(ids.kind() == SlotKind::Series, "homogeneous Series Slot kind mismatch");
+  expect(ids.is_stream_compatible(), "homogeneous Series Slot should be stream-compatible");
 
   ids.push_(as_series_i64(6));
   expect(ids.size() == 6, "push_ should append");
@@ -192,6 +195,8 @@ void test_slot_methods() {
       as_series_i64(1),
       as_series_i64(3),
   });
+  expect(nullable.kind() == SlotKind::Series, "nullable homogeneous Slot kind should ignore nulls");
+  expect(!nullable.is_stream_compatible(), "nullable Slot should not be stream-compatible");
   const auto null_mask = nullable.isnull();
   const auto present_mask = nullable.notnull();
   const auto invalid_mask = nullable.invalid();
@@ -222,13 +227,47 @@ void test_slot_methods() {
   const auto cast_note = dup_ids.cast().note();
   expect(is_note(cast_note.at(0)), "Slot::cast(Note) should convert payload");
 
+  const Slot note_dates({
+      as_note("2024-01-01"),
+      std::monostate{},
+      as_note("2024-01-03"),
+  });
+  const auto cast_timeline = note_dates.cast({.format = "%Y-%m-%d"}).timeline();
+  expect(is_timeline(cast_timeline.at(0)), "nullable homogeneous Slot cast should batch notes to timeline");
+  expect(is_null_value(cast_timeline.at(1)), "nullable homogeneous Slot cast should preserve nulls");
+  expect(is_timeline(cast_timeline.at(2)), "nullable homogeneous Slot cast should batch all note positions");
+  const auto lower_notes = note_dates.nt().lower();
+  expect(to_string_value(lower_notes.at(0)) == "2024-01-01",
+         "Slot::nt().lower should delegate through Stream and preserve values");
+  expect(is_null_value(lower_notes.at(1)), "Slot::nt().lower should preserve nulls");
+  const auto years = cast_timeline.tl().year();
+  expect(to_i64(years.at(0)) == 2024, "Slot::tl().year should delegate through Stream");
+  expect(is_null_value(years.at(1)), "Slot::tl().year should preserve nulls");
+  expect(to_i64(years.at(2)) == 2024, "Slot::tl().year should keep later values");
+
   const Slot hetero({
       as_series_i64(1),
       as_note("x"),
   });
   expect(hetero.ptype() == "Mixed", "heterogeneous Slot ptype should be Mixed");
+  expect(hetero.kind() == SlotKind::Mixed, "heterogeneous Slot kind should be Mixed");
+  expect(!hetero.is_stream_compatible(), "heterogeneous Slot should not be stream-compatible");
   expect_throw([&]() { (void)hetero.to_kindle(); }, "heterogeneous slot to_kindle should throw");
   expect_throw([&]() { (void)hetero.fillnull(0.0); }, "Slot::fillnull(double) should reject non-Series values");
+  expect_throw([&]() { (void)hetero.nt().lower(); }, "Slot::nt() should reject heterogeneous slots");
+
+  const Slot all_null({
+      std::monostate{},
+      std::monostate{},
+  });
+  expect(all_null.kind() == SlotKind::Null, "all-null Slot kind should be Null");
+  expect(!all_null.is_stream_compatible(), "all-null Slot should not be stream-compatible");
+  expect_throw([&]() { all_null.ensure_stream_compatible("all_null"); },
+               "all-null Slot ensure_stream_compatible should throw");
+
+  const Slot empty_slot({});
+  expect(empty_slot.kind() == SlotKind::Empty, "empty Slot kind should be Empty");
+  expect(empty_slot.is_stream_compatible(), "empty Slot should be stream-compatible");
 }
 
 void test_registry_methods() {
@@ -270,9 +309,9 @@ void test_registry_methods() {
   const auto select = reg.select({"ids", "city"});
   const auto drop = reg.drop({"score"});
   const auto rename = reg.rename({{"city", "location"}});
-  expect(head.at("ids").size() == 2, "Registry::head field size mismatch");
-  expect(tail.at("ids").size() == 2, "Registry::tail field size mismatch");
-  expect(slice.at("ids").size() == 3, "Registry::slice field size mismatch");
+  expect(head.select("ids").size() == 2, "Registry::head field size mismatch");
+  expect(tail.select("ids").size() == 2, "Registry::tail field size mismatch");
+  expect(slice.select("ids").size() == 3, "Registry::slice field size mismatch");
   expect(select.nfields() == 2, "Registry::select field count mismatch");
   expect(drop.nfields() == 2, "Registry::drop field count mismatch");
   expect(rename.has("location"), "Registry::rename should rename key");
@@ -284,7 +323,7 @@ void test_registry_methods() {
       return v;
     });
   });
-  expect(to_i64(applied.at("ids").at(0)) == 11, "Registry::apply transform mismatch");
+  expect(to_i64(applied.select("ids").at(0)) == 11, "Registry::apply transform mismatch");
 
   reg.apply_("score", [](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
@@ -292,7 +331,7 @@ void test_registry_methods() {
       return v;
     });
   });
-  expect(to_f64(reg.at("score").at(0)) == 3.0, "Registry::apply_ mutate mismatch");
+  expect(to_f64(reg.select("score").at(0)) == 3.0, "Registry::apply_ mutate mismatch");
 
   const auto upper = reg.apply_all([](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
@@ -304,7 +343,7 @@ void test_registry_methods() {
       return v;
     });
   });
-  expect(to_string_value(upper.at("city").at(0)) == "ACCRA", "Registry::apply_all mismatch");
+  expect(to_string_value(upper.select("city").at(0)) == "ACCRA", "Registry::apply_all mismatch");
 
   const auto sizes = reg.sizes();
   expect(sizes.at("ids") == 5, "Registry::sizes mismatch");
@@ -313,34 +352,67 @@ void test_registry_methods() {
       {"score", Slot({as_series_f64(1.0), std::monostate{}, as_series_f64(3.0)})},
       {"city", Slot({as_note("Accra"), as_note("Kumasi"), std::monostate{}})},
   });
-  const auto score_nulls = nullable.isnull({"score"});
-  expect(to_bool(score_nulls.at("score").at(1)), "Registry::isnull(fields) should delegate to selected Slot");
-  expect(is_note(score_nulls.at("city").at(0)), "Registry::isnull(fields) should preserve unselected fields");
+  const auto score_nulls = nullable.fields({"score"}).isnull();
+  expect(to_bool(score_nulls.select("score").at(1)), "Registry::isnull(fields) should delegate to selected Slot");
+  expect(is_note(score_nulls.select("city").at(0)), "Registry::isnull(fields) should preserve unselected fields");
   const auto all_nulls = nullable.isnull();
-  expect(to_bool(all_nulls.at("city").at(2)), "Registry::isnull() should apply to all fields");
-  const auto filled_scores = nullable.fillnull(0.0, {"score"});
-  expect(to_f64(filled_scores.at("score").at(1)) == 0.0, "Registry::fillnull(double, fields) mismatch");
-  expect(is_null_value(filled_scores.at("city").at(2)), "Registry::fillnull(fields) should preserve unselected nulls");
-  const auto filled_city = nullable.fillnull("missing", {"city"});
-  expect(to_string_value(filled_city.at("city").at(2)) == "missing", "Registry::fillnull(string, fields) mismatch");
-  const auto dropped = nullable.dropnull({"score"});
-  expect(dropped.at("score").size() == 2, "Registry::dropnull(fields) should delegate to selected Slot");
-  expect(dropped.at("city").size() == 3, "Registry::dropnull(fields) should preserve unselected fields");
+  expect(to_bool(all_nulls.select("city").at(2)), "Registry::isnull() should apply to all fields");
+  const auto filled_scores = nullable.fields({"score"}).fillnull(0.0);
+  expect(to_f64(filled_scores.select("score").at(1)) == 0.0, "Registry::fillnull(double, fields) mismatch");
+  expect(is_null_value(filled_scores.select("city").at(2)), "Registry::fillnull(fields) should preserve unselected nulls");
+  const auto filled_city = nullable.fields({"city"}).fillnull("missing");
+  expect(to_string_value(filled_city.select("city").at(2)) == "missing", "Registry::fillnull(string, fields) mismatch");
+  const auto filled_scores_accessor = nullable.fields("score").fillnull(0.0);
+  expect(to_f64(filled_scores_accessor.select("score").at(1)) == 0.0,
+         "Registry::fields(key).fillnull should delegate to Slot");
+  const auto lowered_city = nullable.fields({"city"}).nt().lower();
+  expect(to_string_value(lowered_city.select("city").at(0)) == "accra",
+         "Registry::fields(...).nt().lower should delegate to Slot");
+  const auto dropped = nullable.fields({"score"}).dropnull();
+  expect(dropped.select("score").size() == 2, "Registry::dropnull(fields) should delegate to selected Slot");
+  expect(dropped.select("city").size() == 3, "Registry::dropnull(fields) should preserve unselected fields");
+
+  const auto temporal_reg = Registry({
+      {"when", Slot({as_note("2024-01-01"), std::monostate{}, as_note("2024-01-03")})},
+  });
+  const auto tl_reg = temporal_reg.fields({"when"}).cast({.format = "%Y-%m-%d"}).timeline();
+  expect(is_timeline(tl_reg.select("when").at(0)),
+         "Registry::fields(...).cast(options).timeline should delegate to Slot");
+  const auto years = tl_reg.fields({"when"}).tl().year();
+  expect(to_i64(years.select("when").at(0)) == 2024 && is_null_value(years.select("when").at(1)),
+         "Registry::fields(...).tl().year should preserve nullable timeline slots");
 
   const auto duplicate_reg = Registry({
       {"ids", Slot({as_series_i64(1), as_series_i64(1), as_series_i64(2)})},
       {"city", Slot({as_note("Accra"), as_note("Accra"), as_note("Kumasi")})},
   });
-  expect(duplicate_reg.distinct({"ids"}).at("ids").size() == 2,
+  expect(duplicate_reg.fields({"ids"}).distinct().select("ids").size() == 2,
          "Registry::distinct(fields) should delegate to selected Slot");
-  expect(duplicate_reg.freq({"city"}).at("city").size() >= 2,
+  expect(duplicate_reg.fields({"city"}).freq().select("city").size() >= 2,
          "Registry::freq(fields) should delegate to selected Slot");
-  expect(to_i64(duplicate_reg.ndistinct({"ids"}).at("ids").at(0)) == 2,
+  expect(to_i64(duplicate_reg.fields({"ids"}).ndistinct().select("ids").at(0)) == 2,
          "Registry::ndistinct(fields) should delegate to selected Slot");
   expect(to_f64(duplicate_reg.sum("ids").at(0)) == 4.0, "Registry::sum(field) mismatch");
   expect(to_f64(duplicate_reg.mean("ids").at(0)) == 4.0 / 3.0, "Registry::mean(field) mismatch");
-  const auto ids_as_note = duplicate_reg.cast({"ids"}, pluss::table::ThreadCastTarget::Note);
-  expect(is_note(ids_as_note.at("ids").at(0)), "Registry::cast(fields) should delegate to Slot");
+  const auto ids_as_note = duplicate_reg.fields({"ids"}).cast().note();
+  expect(is_note(ids_as_note.select("ids").at(0)), "Registry::cast(fields) should delegate to Slot");
+  const auto ids_as_note_accessor = duplicate_reg.fields({"ids"}).cast().note();
+  expect(is_note(ids_as_note_accessor.select("ids").at(0)),
+         "Registry::fields(...).cast().note should delegate to Slot");
+
+  const auto axis_reg = Registry({
+      {"score", Slot({as_series_f64(1.0), std::monostate{}, as_series_f64(3.0)})},
+      {"city", Slot({as_note("Accra"), as_note("Kumasi"), std::monostate{}})},
+      {"mixed", Slot({as_series_i64(1), as_note("x")})},
+      {"all_null", Slot({std::monostate{}, std::monostate{}})},
+      {"vacant", Slot({})},
+  });
+  expect(axis_reg.fieldaxis().series().has("score"), "Registry::fieldaxis().series should select Series slots");
+  expect(axis_reg.fieldaxis().note().has("city"), "Registry::fieldaxis().note should select Note slots");
+  expect(axis_reg.fieldaxis().mixed().has("mixed"), "Registry::fieldaxis().mixed should select Mixed slots");
+  expect(axis_reg.fieldaxis().nulls().has("all_null"), "Registry::fieldaxis().nulls should select all-null slots");
+  expect(axis_reg.fieldaxis().empty().has("vacant"), "Registry::fieldaxis().empty should select empty slots");
+  expect(axis_reg.fieldaxis().prefix("sc").has("score"), "Registry::fieldaxis().prefix should filter by field prefix");
 
   const auto other = Registry({
       {"ids", Slot({as_series_i64(9)})},
@@ -381,6 +453,40 @@ void test_registry_methods() {
   expect_throw([&]() { (void)mixed.to_kindle(); }, "Registry::to_kindle should throw on heterogeneous slot");
 }
 
+void test_bundle_lvalue_name_ranges() {
+  const auto reg = Registry({
+      {"ids", Slot({as_series_i64(1), as_series_i64(2), as_series_i64(3)})},
+      {"city", Slot({as_note("Accra"), as_note("Kumasi"), as_note("Tema")})},
+      {"score", Slot({as_series_f64(1.5), std::monostate{}, as_series_f64(3.5)})},
+  });
+  const std::vector<std::string> keys{"ids", "city"};
+  const auto selected = reg.select(keys);
+  expect(selected.nfields() == 2, "Registry lvalue select should accept reusable key vectors");
+  expect(reg.has_all(keys), "Registry lvalue has_all should accept reusable key vectors");
+
+  const std::vector<std::string> score{"score"};
+  const auto filled = reg.fields(score).fillnull(0.0);
+  expect(to_f64(filled.select("score").at(1)) == 0.0, "Registry lvalue fillnull should delegate to Slot");
+
+  const auto casted = reg.fields(std::vector<std::string>{"ids"}).cast().note();
+  expect(is_note(casted.select("ids").at(0)), "Registry lvalue cast should delegate to Slot");
+
+  const auto axel = Axel({
+      reg,
+      Registry({
+          {"ids", Slot({as_series_i64(10), as_series_i64(20), as_series_i64(30)})},
+          {"city", Slot({as_note("Tamale"), as_note("Tema"), as_note("Accra")})},
+          {"score", Slot({as_series_f64(9.0), std::monostate{}, as_series_f64(7.0)})},
+      }),
+  });
+  const auto axel_selected = axel.select(keys);
+  expect(axel_selected.registry(0).nfields() == 2, "Axel lvalue select should delegate to Registry");
+
+  const auto axel_dropnull = axel.fields(score).dropnull();
+  expect(axel_dropnull.registry(0).select("score").size() == 2,
+         "Axel lvalue dropnull should delegate to Registry");
+}
+
 void test_registry_loaders() {
   const auto csv_path = write_temp_csv(
       "registry_loader",
@@ -394,18 +500,18 @@ void test_registry_loaders() {
   expect(reg_csv.has("mixed"), "Registry::load_csv should load mixed");
   expect(reg_csv.has("when"), "Registry::load_csv should load when");
   expect(reg_csv.has("text"), "Registry::load_csv should load text");
-  expect(reg_csv.at("mixed").size() == 3, "Registry::load_csv should preserve field length");
+  expect(reg_csv.select("mixed").size() == 3, "Registry::load_csv should preserve field length");
 
-  const auto& mixed0 = reg_csv.at("mixed").at(0);
-  const auto& mixed1 = reg_csv.at("mixed").at(1);
-  const auto& mixed2 = reg_csv.at("mixed").at(2);
+  const auto& mixed0 = reg_csv.select("mixed").at(0);
+  const auto& mixed1 = reg_csv.select("mixed").at(1);
+  const auto& mixed2 = reg_csv.select("mixed").at(2);
   expect(is_series(mixed0), "mixed[0] should infer as numeric Series scalar");
   expect(is_note(mixed1), "mixed[1] should infer as Note scalar");
   expect(is_series(mixed2), "mixed[2] should infer as numeric Series scalar");
 
-  const auto& when1 = reg_csv.at("when").at(1);
+  const auto& when1 = reg_csv.select("when").at(1);
   expect(is_null_value(when1), "when[1] should infer as null/monostate");
-  expect(is_timeline(reg_csv.at("when").at(0)), "when[0] should infer as Timeline scalar");
+  expect(is_timeline(reg_csv.select("when").at(0)), "when[0] should infer as Timeline scalar");
 
   const auto reg_via_load = Registry::load("csv", csv_path.string());
   expect(reg_via_load.nfields() == reg_csv.nfields(), "Registry::load(csv) should match Registry::load_csv");
@@ -413,7 +519,7 @@ void test_registry_loaders() {
   pluss::loader::Config csv_cfg;
   csv_cfg.emplace("ncases", 2);
   const auto reg_cfg = Registry::load_csv(csv_path.string(), csv_cfg);
-  expect(reg_cfg.at("id").size() == 2, "Registry::load_csv(config) should honor nrows");
+  expect(reg_cfg.select("id").size() == 2, "Registry::load_csv(config) should honor nrows");
 
   const auto txt_path = write_temp_text_file(
       "registry_loader_txt",
@@ -429,7 +535,7 @@ void test_registry_loaders() {
           {"header", true},
       }));
   expect(reg_txt.has("id"), "Registry::load_txt should load id");
-  expect(reg_txt.at("id").size() == 3, "Registry::load_txt row count mismatch");
+  expect(reg_txt.select("id").size() == 3, "Registry::load_txt row count mismatch");
 
   const auto json_path = write_temp_text_file(
       "registry_loader_json",
@@ -437,10 +543,10 @@ void test_registry_loaders() {
       R"({"id":[1,2,3], "mixed":[10,"hello",3.5], "when":["2024-01-01T00:00:00Z",null,"2024-01-03T00:00:00Z"]})");
   const auto reg_json = Registry::load_json(json_path.string());
   expect(reg_json.has("mixed"), "Registry::load_json should load mixed");
-  expect(reg_json.at("mixed").size() == 3, "Registry::load_json row count mismatch");
-  expect(is_series(reg_json.at("mixed").at(0)), "Registry::load_json mixed[0] kind mismatch");
-  expect(is_note(reg_json.at("mixed").at(1)), "Registry::load_json mixed[1] kind mismatch");
-  expect(is_series(reg_json.at("mixed").at(2)), "Registry::load_json mixed[2] kind mismatch");
+  expect(reg_json.select("mixed").size() == 3, "Registry::load_json row count mismatch");
+  expect(is_series(reg_json.select("mixed").at(0)), "Registry::load_json mixed[0] kind mismatch");
+  expect(is_note(reg_json.select("mixed").at(1)), "Registry::load_json mixed[1] kind mismatch");
+  expect(is_series(reg_json.select("mixed").at(2)), "Registry::load_json mixed[2] kind mismatch");
 
   auto reg_save_json = write_temp_text_file("registry_save_json", "json", "");
   reg_csv.save_json(reg_save_json.string());
@@ -466,13 +572,13 @@ void test_registry_loaders() {
   const auto reg_txt_roundtrip = Registry::load_txt(
       reg_save_txt.string(),
       pluss::loader::config_from({{"header", true}, {"txt_mode", "delimited"}}));
-  expect(reg_txt_roundtrip.at("id").size() == stream_compatible.at("id").size(),
+  expect(reg_txt_roundtrip.select("id").size() == stream_compatible.select("id").size(),
          "Registry::save_txt roundtrip row count mismatch");
 
   auto reg_save_as_json = write_temp_text_file("registry_save_as_json", "json", "");
   stream_compatible.save_as("json", reg_save_as_json.string(), pluss::loader::config_from({{"orient", "split"}}));
   const auto reg_save_as_roundtrip = Registry::load_json(reg_save_as_json.string());
-  expect(reg_save_as_roundtrip.at("id").size() == stream_compatible.at("id").size(),
+  expect(reg_save_as_roundtrip.select("id").size() == stream_compatible.select("id").size(),
          "Registry::save_as(json) roundtrip row count mismatch");
 
   const auto hetero = Registry({
@@ -526,7 +632,7 @@ void test_axel_methods() {
       return v;
     });
   });
-  expect(to_i64(applied.registry(0).at("ids").at(0)) == 2, "Axel::apply_slot mismatch");
+  expect(to_i64(applied.registry(0).select("ids").at(0)) == 2, "Axel::apply_slot mismatch");
 
   const auto nullable_axel = Axel({
       Registry({
@@ -538,22 +644,34 @@ void test_axel_methods() {
           {"city", Slot({as_note("Tema"), std::monostate{}, as_note("Tamale")})},
       }),
   });
-  const auto ax_nulls = nullable_axel.isnull({"score"});
-  expect(to_bool(ax_nulls.registry(0).at("score").at(1)), "Axel::isnull(fields) should delegate to Registry");
-  const auto ax_filled = nullable_axel.fillnull(0.0, {"score"});
-  expect(to_f64(ax_filled.registry(1).at("score").at(2)) == 0.0,
+  const auto ax_nulls = nullable_axel.fields({"score"}).isnull();
+  expect(to_bool(ax_nulls.registry(0).select("score").at(1)), "Axel::isnull(fields) should delegate to Registry");
+  const auto ax_filled = nullable_axel.fields({"score"}).fillnull(0.0);
+  expect(to_f64(ax_filled.registry(1).select("score").at(2)) == 0.0,
          "Axel::fillnull(double, fields) should delegate to Registry");
-  const auto ax_dropnull = nullable_axel.dropnull({"score"});
-  expect(ax_dropnull.registry(0).at("score").size() == 2,
+  const auto ax_filled_accessor = nullable_axel.fields({"score"}).fillnull(0.0);
+  expect(to_f64(ax_filled_accessor.registry(1).select("score").at(2)) == 0.0,
+         "Axel::fields(...).fillnull should delegate to Registry");
+  const auto ax_dropnull = nullable_axel.fields({"score"}).dropnull();
+  expect(ax_dropnull.registry(0).select("score").size() == 2,
          "Axel::dropnull(fields) should delegate to Registry");
+  const auto ax_upper = nullable_axel.fields({"city"}).nt().upper();
+  expect(to_string_value(ax_upper.registry(0).select("city").at(0)) == "ACCRA",
+         "Axel::fields(...).nt().upper should delegate to Registry");
 
-  const auto ax_distinct = axel.distinct({"city"});
-  expect(ax_distinct.registry(0).at("city").size() == 3, "Axel::distinct(fields) should delegate to Registry");
-  const auto ax_ndistinct = axel.ndistinct({"city"});
-  expect(to_i64(ax_ndistinct.registry(0).at("city").at(0)) == 3,
+  const auto ax_distinct = axel.fields({"city"}).distinct();
+  expect(ax_distinct.registry(0).select("city").size() == 3, "Axel::distinct(fields) should delegate to Registry");
+  const auto ax_ndistinct = axel.fields({"city"}).ndistinct();
+  expect(to_i64(ax_ndistinct.registry(0).select("city").at(0)) == 3,
          "Axel::ndistinct(fields) should delegate to Registry");
-  const auto ax_cast = axel.cast({"ids"}, pluss::table::ThreadCastTarget::Note);
-  expect(is_note(ax_cast.registry(0).at("ids").at(0)), "Axel::cast(fields) should delegate to Registry");
+  const auto ax_cast = axel.fields({"ids"}).cast().note();
+  expect(is_note(ax_cast.registry(0).select("ids").at(0)), "Axel::cast(fields) should delegate to Registry");
+  const auto ax_cast_accessor = axel.fields({"ids"}).cast().note();
+  expect(is_note(ax_cast_accessor.registry(0).select("ids").at(0)),
+         "Axel::fields(...).cast().note should delegate to Registry");
+  const auto ax_fieldaxis = nullable_axel.fieldaxis().note();
+  expect(ax_fieldaxis.registry(0).has("city") && !ax_fieldaxis.registry(0).has("score"),
+         "Axel::fieldaxis().note should project per-registry note fields");
 
   const auto concat = axel.concat_depth(axel);
   expect(concat.depth() == 4, "Axel::concat_depth mismatch");
@@ -582,6 +700,7 @@ int main() {
   try {
     test_slot_methods();
     test_registry_methods();
+    test_bundle_lvalue_name_ranges();
     test_registry_loaders();
     test_axel_methods();
   } catch (const std::exception& e) {

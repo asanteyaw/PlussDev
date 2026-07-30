@@ -13,11 +13,11 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="_static/api_nav.js?v=f9ac45ee"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Nexus::apply" href="api/nexus/apply.html" />
+    <link rel="next" title="Nexus::add_relationship" href="api/nexus/add_relationship.html" />
     <link rel="prev" title="Atlas API Reference" href="atlas_api_reference.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -45,11 +45,9 @@ from the current table API.</p>
 them, and provides key/relationship auditing, join-graph pathfinding, a fluent query
 builder (<a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a>, returned by <code class="docutils literal notranslate"><span class="pre">from()</span></code>), and
 save/load persistence.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>This reference is being built out in batches
-Not every <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> method has its own page yet. The sidebar and the list below only
-include methods that are already documented — more are being added incrementally.
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No dedicated constructor page
 Construct a <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> with <code class="docutils literal notranslate"><span class="pre">Nexus({{&quot;name&quot;,</span> <span class="pre">frame},</span> <span class="pre">...})</span></code> (a vector or brace list of
 name/<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> pairs); there is no dedicated constructor page, the same as
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s own constructors.</p>
@@ -67,7 +65,11 @@ scroll of every method.</p></li>
 <section id="method-pages">
 <h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
 <p>The sidebar lists methods alphabetically. You can also use the search box to jump
-directly to a method name.</p>
+directly to a method name. Several names are exact aliases of a canonical method
+(<code class="docutils literal notranslate"><span class="pre">names</span></code>↔<code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">links</span></code>↔<code class="docutils literal notranslate"><span class="pre">relationships</span></code>/<code class="docutils literal notranslate"><span class="pre">add_relationship</span></code>, <code class="docutils literal notranslate"><span class="pre">meta</span></code>↔<code class="docutils literal notranslate"><span class="pre">table_meta</span></code>/
+<code class="docutils literal notranslate"><span class="pre">set_table_meta</span></code>, <code class="docutils literal notranslate"><span class="pre">duplicates</span></code>↔<code class="docutils literal notranslate"><span class="pre">detect_duplicates</span></code>, <code class="docutils literal notranslate"><span class="pre">check</span></code>↔<code class="docutils literal notranslate"><span class="pre">validate_relationship</span></code>,
+<code class="docutils literal notranslate"><span class="pre">orphans</span></code>↔<code class="docutils literal notranslate"><span class="pre">detect_orphans</span></code>, <code class="docutils literal notranslate"><span class="pre">audit</span></code>↔<code class="docutils literal notranslate"><span class="pre">relationship_audit</span></code>) — each alias has its own short
+page pointing back to the canonical one.</p>
 </section>
 <section id="the-query-builder">
 <h2>The Query Builder<a class="headerlink" href="#the-query-builder" title="Link to this heading">¶</a></h2>
@@ -128,7 +130,7 @@ the full method-by-method breakdown.</p>
   <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
       <li>Previous: <a href="atlas_api_reference.html" title="previous chapter">Atlas API Reference</a></li>
-      <li>Next: <a href="api/nexus/apply.html" title="next chapter">Nexus::apply</a></li>
+      <li>Next: <a href="api/nexus/add_relationship.html" title="next chapter">Nexus::add_relationship</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

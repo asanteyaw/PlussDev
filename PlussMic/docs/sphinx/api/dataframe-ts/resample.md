@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7a6612d8b3c8 -->
 
 # DataFrameTsAccessor::resample
 

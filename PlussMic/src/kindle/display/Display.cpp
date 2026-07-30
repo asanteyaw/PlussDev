@@ -321,10 +321,10 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
   std::ostringstream oss;
   oss << frame_rule('=', width) << "\n";
   oss << fit_line(fmt::format("kindle::Archive  depth={}", archive.depth()), width) << "\n";
-  oss << fit_line(fmt::format("depth_labels={}", archive.depth_labels().has_value() ? "yes" : "no"), width) << "\n";
+  oss << fit_line(fmt::format("depth_labels={}", archive.label().has() ? "yes" : "no"), width) << "\n";
   oss << frame_rule('-', width) << "\n";
 
-  const bool show_label = archive.depth_labels().has_value() && width >= 84;
+  const bool show_label = archive.label().has() && width >= 84;
   const bool show_span = width >= 96;
 
   const auto frame_w = 6;
@@ -355,8 +355,8 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
   const auto idx = visible_indices(archive.depth(), head, tail, ellipsis);
 
   std::optional<pluss::table::Thread> label_thread = std::nullopt;
-  if (archive.depth_labels().has_value()) {
-    label_thread = archive.depth_labels()->to_thread().cast().note();
+  if (archive.label().has()) {
+    label_thread = archive.label().values().to_thread().cast().note();
   }
 
   for (std::size_t i = 0; i < idx.size(); ++i) {

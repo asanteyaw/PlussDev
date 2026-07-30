@@ -577,6 +577,90 @@ DataFrame operator%(const Thread& lhs, const DataFrame& rhs) {
   return dataframe_math_thread(rhs, lhs, Axis::Feature, BinaryMathOp::Mod, true);
 }
 
+DataFrame operator==(const DataFrame& lhs, double rhs) { return lhs.eq(rhs); }
+DataFrame operator==(double lhs, const DataFrame& rhs) { return rhs.eq(lhs); }
+DataFrame operator==(const DataFrame& lhs, std::string_view rhs) { return lhs.eq(rhs); }
+DataFrame operator==(std::string_view lhs, const DataFrame& rhs) { return rhs.eq(lhs); }
+DataFrame operator==(const DataFrame& lhs, const char* rhs) {
+  return lhs.eq(std::string_view{rhs != nullptr ? rhs : ""});
+}
+DataFrame operator==(const char* lhs, const DataFrame& rhs) {
+  return rhs.eq(std::string_view{lhs != nullptr ? lhs : ""});
+}
+DataFrame operator==(const DataFrame& lhs, const DataFrame& rhs) { return lhs.eq(rhs); }
+DataFrame operator==(const DataFrame& lhs, const Thread& rhs) { return lhs.eq(rhs); }
+DataFrame operator==(const Thread& lhs, const DataFrame& rhs) { return rhs.eq(lhs); }
+
+DataFrame operator!=(const DataFrame& lhs, double rhs) { return lhs.ne(rhs); }
+DataFrame operator!=(double lhs, const DataFrame& rhs) { return rhs.ne(lhs); }
+DataFrame operator!=(const DataFrame& lhs, std::string_view rhs) { return lhs.ne(rhs); }
+DataFrame operator!=(std::string_view lhs, const DataFrame& rhs) { return rhs.ne(lhs); }
+DataFrame operator!=(const DataFrame& lhs, const char* rhs) {
+  return lhs.ne(std::string_view{rhs != nullptr ? rhs : ""});
+}
+DataFrame operator!=(const char* lhs, const DataFrame& rhs) {
+  return rhs.ne(std::string_view{lhs != nullptr ? lhs : ""});
+}
+DataFrame operator!=(const DataFrame& lhs, const DataFrame& rhs) { return lhs.ne(rhs); }
+DataFrame operator!=(const DataFrame& lhs, const Thread& rhs) { return lhs.ne(rhs); }
+DataFrame operator!=(const Thread& lhs, const DataFrame& rhs) { return rhs.ne(lhs); }
+
+DataFrame operator<(const DataFrame& lhs, double rhs) { return lhs.lt(rhs); }
+DataFrame operator<(double lhs, const DataFrame& rhs) { return rhs.gt(lhs); }
+DataFrame operator<(const DataFrame& lhs, std::string_view rhs) { return lhs.lt(rhs); }
+DataFrame operator<(std::string_view lhs, const DataFrame& rhs) { return rhs.gt(lhs); }
+DataFrame operator<(const DataFrame& lhs, const char* rhs) {
+  return lhs.lt(std::string_view{rhs != nullptr ? rhs : ""});
+}
+DataFrame operator<(const char* lhs, const DataFrame& rhs) {
+  return rhs.gt(std::string_view{lhs != nullptr ? lhs : ""});
+}
+DataFrame operator<(const DataFrame& lhs, const DataFrame& rhs) { return lhs.lt(rhs); }
+DataFrame operator<(const DataFrame& lhs, const Thread& rhs) { return lhs.lt(rhs); }
+DataFrame operator<(const Thread& lhs, const DataFrame& rhs) { return rhs.gt(lhs); }
+
+DataFrame operator<=(const DataFrame& lhs, double rhs) { return lhs.le(rhs); }
+DataFrame operator<=(double lhs, const DataFrame& rhs) { return rhs.ge(lhs); }
+DataFrame operator<=(const DataFrame& lhs, std::string_view rhs) { return lhs.le(rhs); }
+DataFrame operator<=(std::string_view lhs, const DataFrame& rhs) { return rhs.ge(lhs); }
+DataFrame operator<=(const DataFrame& lhs, const char* rhs) {
+  return lhs.le(std::string_view{rhs != nullptr ? rhs : ""});
+}
+DataFrame operator<=(const char* lhs, const DataFrame& rhs) {
+  return rhs.ge(std::string_view{lhs != nullptr ? lhs : ""});
+}
+DataFrame operator<=(const DataFrame& lhs, const DataFrame& rhs) { return lhs.le(rhs); }
+DataFrame operator<=(const DataFrame& lhs, const Thread& rhs) { return lhs.le(rhs); }
+DataFrame operator<=(const Thread& lhs, const DataFrame& rhs) { return rhs.ge(lhs); }
+
+DataFrame operator>(const DataFrame& lhs, double rhs) { return lhs.gt(rhs); }
+DataFrame operator>(double lhs, const DataFrame& rhs) { return rhs.lt(lhs); }
+DataFrame operator>(const DataFrame& lhs, std::string_view rhs) { return lhs.gt(rhs); }
+DataFrame operator>(std::string_view lhs, const DataFrame& rhs) { return rhs.lt(lhs); }
+DataFrame operator>(const DataFrame& lhs, const char* rhs) {
+  return lhs.gt(std::string_view{rhs != nullptr ? rhs : ""});
+}
+DataFrame operator>(const char* lhs, const DataFrame& rhs) {
+  return rhs.lt(std::string_view{lhs != nullptr ? lhs : ""});
+}
+DataFrame operator>(const DataFrame& lhs, const DataFrame& rhs) { return lhs.gt(rhs); }
+DataFrame operator>(const DataFrame& lhs, const Thread& rhs) { return lhs.gt(rhs); }
+DataFrame operator>(const Thread& lhs, const DataFrame& rhs) { return rhs.lt(lhs); }
+
+DataFrame operator>=(const DataFrame& lhs, double rhs) { return lhs.ge(rhs); }
+DataFrame operator>=(double lhs, const DataFrame& rhs) { return rhs.le(lhs); }
+DataFrame operator>=(const DataFrame& lhs, std::string_view rhs) { return lhs.ge(rhs); }
+DataFrame operator>=(std::string_view lhs, const DataFrame& rhs) { return rhs.le(lhs); }
+DataFrame operator>=(const DataFrame& lhs, const char* rhs) {
+  return lhs.ge(std::string_view{rhs != nullptr ? rhs : ""});
+}
+DataFrame operator>=(const char* lhs, const DataFrame& rhs) {
+  return rhs.le(std::string_view{lhs != nullptr ? lhs : ""});
+}
+DataFrame operator>=(const DataFrame& lhs, const DataFrame& rhs) { return lhs.ge(rhs); }
+DataFrame operator>=(const DataFrame& lhs, const Thread& rhs) { return lhs.ge(rhs); }
+DataFrame operator>=(const Thread& lhs, const DataFrame& rhs) { return rhs.le(lhs); }
+
 namespace {
 
 template <class Compatible, class Apply>
@@ -1425,7 +1509,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     for (const auto& name : scoped.features()) {
       const auto column = scoped.features(name);
       if (!key.empty()) key += "|";
-      key += column.is_valid(row) ? thread_scalar_string_at(column, row) : "NULL";
+      key += detail::valid_at(column, row) ? thread_scalar_string_at(column, row) : "NULL";
     }
     rows_by_key[key].push_back(row);
   }
@@ -2546,10 +2630,10 @@ bool dataframe_equals_impl_(const DataFrame& lhs,
   }
 
   for (std::int64_t r = 0; r < lhs.ncases(); ++r) {
-    if (lhs_labels.is_valid(r) != rhs_labels.is_valid(r)) {
+    if (detail::valid_at(lhs_labels, r) != detail::valid_at(rhs_labels, r)) {
       return false;
     }
-    if (!lhs_labels.is_valid(r)) {
+    if (!detail::valid_at(lhs_labels, r)) {
       continue;
     }
     if (!dataframe_scalar_equal_(lhs_labels, rhs_labels, r)) {
@@ -2564,10 +2648,10 @@ bool dataframe_equals_impl_(const DataFrame& lhs,
       return false;
     }
     for (std::int64_t r = 0; r < lhs_col.size(); ++r) {
-      if (lhs_col.is_valid(r) != rhs_col.is_valid(r)) {
+      if (detail::valid_at(lhs_col, r) != detail::valid_at(rhs_col, r)) {
         return false;
       }
-      if (!lhs_col.is_valid(r)) {
+      if (!detail::valid_at(lhs_col, r)) {
         continue;
       }
       const bool same = tolerant

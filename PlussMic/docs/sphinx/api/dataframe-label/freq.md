@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1f6493e426ea -->
 
 # DataFrameLabelAccessor::freq
 
@@ -13,10 +14,11 @@ DataFrameLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const
 ## What It Does
 
 Counts how many times each distinct case-label value occurs, and returns those
-counts sorted by frequency descending (ties broken by the value itself,
-ascending) — displayed against the value each count belongs to. `top_n`
-optionally caps the result to the `top_n` most frequent values; `0` (the
-default) keeps every distinct value.
+counts sorted by frequency descending (a stable sort, so values tied at the
+same count keep their original **first-occurrence** relative order, not
+alphabetical order) — displayed against the value each count belongs to.
+`top_n` optionally caps the result to the `top_n` most frequent values; `0`
+(the default) keeps every distinct value.
 
 ## Parameters
 
@@ -33,7 +35,7 @@ Whether to exclude a null case label from the tally.
 
 `Thread`
     `Int64` counts, one per distinct case-label value, sorted descending by
-    count (ties broken ascending by value), `display_name` `"freq"`.
+    count (ties keep first-occurrence order), `display_name` `"freq"`.
 
 ## Examples
 
@@ -55,14 +57,15 @@ std::cout << out;
 
 ```text
  east  2
-north  1
  west  1
+north  1
 Name: freq, ptype: Series
 ```
 
-`"east"` occurs twice, so it leads with count `2`. `"north"` and `"west"` are
-tied at `1`; the tie is broken alphabetically, so `"north"` comes before
-`"west"`.
+`"east"` occurs twice, so it leads with count `2`. `"west"` and `"north"` are
+tied at `1`; the tie is broken by which one was **first seen** in the
+original data (`"west"` at row `1`, before `"north"` at row `3`), not by
+alphabetical order (which would instead put `"north"` first).
 
 Example 2. Cap the result to the 2 most frequent values with `top_n = 2`.
 
@@ -101,23 +104,24 @@ south | 6
 
 ```text
  east  3
+ west  1
 north  1
 south  1
- west  1
 Name: freq, ptype: Series
 ```
 
 ### Output (top_n = 2)
 
 ```text
- east  3
-north  1
+east  3
+west  1
 Name: freq, ptype: Series
 ```
 
 `top_n = 2` keeps only the 2 most frequent rows *after* sorting — `"east"`
-(count `3`) and then `"north"` (the alphabetically-first of the three-way tie
-at count `1`) — never an arbitrary prefix of the unsorted labels.
+(count `3`) and then `"west"` (the first of the three-way tie at count `1`
+to appear in the original data, ahead of `"north"` and `"south"`) — never an
+arbitrary prefix of the unsorted labels.
 
 Example 3. Pass `dropnull = false` to include a null case label in the tally.
 
@@ -171,8 +175,10 @@ lower.
 
 ## Notes
 
-- The tie-break is on the value's own string form, always ascending —
-  independent of the `top_n`/`dropnull` settings.
+- The sort is stable: values tied at the same count keep their original
+  first-occurrence relative order — this is **not** an alphabetical
+  tie-break (contrast with [`DataFrame::tally`](../dataframe/tally.md),
+  which does break ties alphabetically).
 - `top_n` truncates *after* sorting, so it always keeps the most frequent
   values, never an arbitrary prefix of the unsorted data.
 

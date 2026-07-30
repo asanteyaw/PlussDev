@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 76c25b5d84d4 -->
 
 # Thread::shape
 
@@ -59,8 +60,8 @@ std::cout << rows << " x " << cols;
     <span class="label">Previous</span>
     <span class="title">select</span>
   </a>
-  <a class="next-link" href="shares_payload_with.html">
+  <a class="next-link" href="shift.html">
     <span class="label">Next</span>
-    <span class="title">shares_payload_with</span>
+    <span class="title">shift</span>
   </a>
 </div>

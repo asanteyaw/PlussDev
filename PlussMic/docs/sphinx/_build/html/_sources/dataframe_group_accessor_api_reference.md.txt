@@ -18,7 +18,9 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 `DataFrameGrouped`. Every other method here (`agg`, `transform`, `filter`, and the
 grouped convenience terminals `count`, `max`, `mean`, `median`, `min`, `mode`,
 `ndistinct`, `std`, `sum`, `var`) is a `DataFrameGrouped` method that actually
-executes the grouped work.
+executes the grouped work. `mode_ties` is a standalone companion to `mode` — it
+takes an explicit feature argument and can return more than one row per group, so
+it does not fit the zero-argument convenience-terminal pattern the others share.
 
 ```{toctree}
 :hidden:
@@ -33,6 +35,7 @@ api/dataframe-group/mean
 api/dataframe-group/median
 api/dataframe-group/min
 api/dataframe-group/mode
+api/dataframe-group/mode_ties
 api/dataframe-group/ndistinct
 api/dataframe-group/std
 api/dataframe-group/sum

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f55188ac7a2e -->
 
 # Thread::encode
 

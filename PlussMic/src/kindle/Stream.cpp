@@ -58,6 +58,22 @@ std::string payload_dtype(const Payload& payload) {
       payload);
 }
 
+std::string json_escape(std::string_view in) {
+  std::string out;
+  out.reserve(in.size() + 8);
+  for (char c : in) {
+    switch (c) {
+      case '\\': out += "\\\\"; break;
+      case '"': out += "\\\""; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default: out.push_back(c); break;
+    }
+  }
+  return out;
+}
+
 void validate_mask_size(const std::optional<pluss::Series>& mask, std::int64_t n) {
   if (!mask.has_value()) return;
   PLUSS_CHECK(mask->defined(), "Stream: validity mask is undefined");
@@ -75,10 +91,25 @@ std::optional<pluss::table::Thread> copy_label(const Stream& stream) {
   return *stream.label();
 }
 
+std::optional<pluss::table::Thread> thread_output_labels(const pluss::table::Thread& thread) {
+  if (thread.label().has()) return thread.label().values();
+  return std::nullopt;
+}
+
 template <typename Op>
 Stream unary_stream_same_label(const Stream& stream, Op&& op) {
   const auto out = std::forward<Op>(op)(stream.to_thread());
   return Stream::from_thread(out, copy_label(stream));
+}
+
+template <typename Op>
+Stream thread_accessor_stream_result(const Stream& stream, Op&& op) {
+  const auto out = std::forward<Op>(op)(stream.to_thread());
+  auto labels = thread_output_labels(out);
+  if (!labels.has_value() && out.size() == stream.size() && stream.has_label()) {
+    labels = copy_label(stream);
+  }
+  return Stream::from_thread(out, std::move(labels));
 }
 
 template <typename Op>
@@ -140,6 +171,7 @@ public:
 
 #include "kindle/ops/stream/StreamLifecycleAndMeta.inc"
 #include "kindle/ops/stream/StreamCoreOps.inc"
+#include "kindle/ops/stream/StreamAccessors.inc"
 #include "kindle/ops/stream/StreamOperators.inc"
 
 } // namespace pluss::kindle

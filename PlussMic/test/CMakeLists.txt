@@ -27,6 +27,9 @@ add_executable(plussmic_table_statistics_window_tests
 add_executable(plussmic_table_gap_benchmark
   ${CMAKE_CURRENT_SOURCE_DIR}/table_gap_benchmark.cpp
 )
+add_executable(plussmic_bundle_gap_benchmark
+  ${CMAKE_CURRENT_SOURCE_DIR}/bundle_gap_benchmark.cpp
+)
 
 target_link_libraries(plussmic_table_csv_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_kindle_catalog_tests PRIVATE PlussMic)
@@ -36,6 +39,7 @@ target_link_libraries(plussmic_table_ts_accessor_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_axis_match_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_statistics_window_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_gap_benchmark PRIVATE PlussMic)
+target_link_libraries(plussmic_bundle_gap_benchmark PRIVATE PlussMic)
 target_compile_definitions(plussmic_table_csv_tests PRIVATE
   FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"

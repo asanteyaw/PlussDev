@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -83,10 +83,26 @@ surviving rows.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">totals</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;amount_sum&quot;</span><span class="p">).</span><span class="n">gt</span><span class="p">(</span><span class="mf">200.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">().</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">}).</span><span class="n">filter</span><span class="p">(</span><span class="n">keep</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The important contract is that <code class="docutils literal notranslate"><span class="pre">keep</span></code> was produced in the same grouped order as the
-handle being filtered.</p>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | region  amount
+---------------------
+0    | North   100   
+1    | North   250   
+---------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">totals</span></code> puts <code class="docutils literal notranslate"><span class="pre">&quot;North&quot;</span></code> (sum <code class="docutils literal notranslate"><span class="pre">350</span></code>) ahead of <code class="docutils literal notranslate"><span class="pre">&quot;South&quot;</span></code> (sum <code class="docutils literal notranslate"><span class="pre">200</span></code>), so <code class="docutils literal notranslate"><span class="pre">keep</span></code> is
+<code class="docutils literal notranslate"><span class="pre">[true,</span> <span class="pre">false]</span></code> in that same grouped order. <code class="docutils literal notranslate"><span class="pre">North</span></code>’s sum is strictly greater than
+<code class="docutils literal notranslate"><span class="pre">200</span></code>, so both of its rows survive; <code class="docutils literal notranslate"><span class="pre">South</span></code>’s sum is exactly <code class="docutils literal notranslate"><span class="pre">200</span></code>, which fails a
+strict <code class="docutils literal notranslate"><span class="pre">gt(200.0)</span></code>, so both <code class="docutils literal notranslate"><span class="pre">South</span></code> rows are dropped entirely. The important contract
+is that <code class="docutils literal notranslate"><span class="pre">keep</span></code> was produced in the same grouped order as the handle being filtered.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -94,7 +110,8 @@ handle being filtered.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">filter(...)</span></code> expects <strong>group count</strong>, not row count.</p></li>
 <li><p>The safest pattern is: compute grouped summary from the same grouped handle shape,
 derive a boolean mask from that summary, then pass it to <code class="docutils literal notranslate"><span class="pre">filter(...)</span></code>.</p></li>
-<li><p>Returned rows keep their original order from the source frame.</p></li>
+<li><p>Returned rows keep their original order and original case labels from the source
+frame — filtering never renumbers or reindexes survivors.</p></li>
 </ul>
 </section>
 <section id="see-also">

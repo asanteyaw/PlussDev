@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::astype" href="astype.html" />
-    <link rel="prev" title="DataFrame::any" href="any.html" />
+    <link rel="prev" title="DataFrame::arrange" href="arrange.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: f6e738ac525a -->
+<!-- pluss-signature-hash: 80574f1c2930 -->
 <section id="dataframe-assign">
 <h1>DataFrame::assign<a class="headerlink" href="#dataframe-assign" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
@@ -46,10 +46,14 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">assign</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">DeriveSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">assign</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">assignments</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">assign</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">assign</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">expr</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 <p>Add or replace one or more features on a DataFrame and return the resulting frame.</p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::assign(...)</span></code> is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. One overload accepts already-computed <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values; the other accepts <code class="docutils literal notranslate"><span class="pre">DeriveSpec</span></code> expressions so PlussMic can compute the features inside the call.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::assign(...)</span></code> is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. The two collection overloads accept several features at once — one as already-computed <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values, the other as <code class="docutils literal notranslate"><span class="pre">DeriveSpec</span></code> expressions so PlussMic can compute the features inside the call. The two single-feature overloads are thin convenience shims over those same two paths, for the common case of assigning just one feature: <code class="docutils literal notranslate"><span class="pre">assign(name,</span> <span class="pre">value)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">assign({{std::string(name),</span> <span class="pre">value}})</span></code>, and <code class="docutils literal notranslate"><span class="pre">assign(name,</span> <span class="pre">expr)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">assign({DeriveSpec{.feature</span> <span class="pre">=</span> <span class="pre">std::string(name),</span> <span class="pre">.expr</span> <span class="pre">=</span> <span class="pre">expr}})</span></code>.</p>
 <p>The motivation is the same as any non-mutating feature-creation call: instead of
 mutating a frame in a sequence of separate statements
 (<code class="docutils literal notranslate"><span class="pre">df[&quot;total&quot;]</span> <span class="pre">=</span> <span class="pre">...;</span> <span class="pre">df[&quot;passed&quot;]</span> <span class="pre">=</span> <span class="pre">...;</span></code>), <code class="docutils literal notranslate"><span class="pre">assign()</span></code> lets a chain of feature
@@ -74,6 +78,12 @@ partially-derived frames out of named variables you would otherwise have to trac
 <li><p><code class="docutils literal notranslate"><span class="pre">expr</span></code>: a callback that receives the current frame and returns the derived <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
 </ul>
 <p>Use this overload when you want the frame to compute the derived features inside the <code class="docutils literal notranslate"><span class="pre">assign(...)</span></code> call itself.</p>
+<p><strong>name</strong> (single-feature overloads)</p>
+<p>The output feature name. Empty throws the same <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::assign:</span> <span class="pre">feature</span> <span class="pre">name</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code> check as the collection overloads, since these are thin shims over them.</p>
+<p><strong>value</strong> (single-feature, <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload)</p>
+<p>An already-computed <code class="docutils literal notranslate"><span class="pre">Thread</span></code> to assign under <code class="docutils literal notranslate"><span class="pre">name</span></code> — equivalent to a one-element <code class="docutils literal notranslate"><span class="pre">assignments</span></code> collection.</p>
+<p><strong>expr</strong> (single-feature, callback overload)</p>
+<p>A callback receiving the current frame and returning the derived <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — equivalent to a one-element <code class="docutils literal notranslate"><span class="pre">specs</span></code> collection with <code class="docutils literal notranslate"><span class="pre">feature</span> <span class="pre">=</span> <span class="pre">name</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -96,6 +106,7 @@ A new frame with the requested features added or replaced.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">assignments</span></code> overload is best when you already computed the target <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values before the call.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">DeriveSpec</span></code> overload evaluates specs from left to right against the progressively updated frame. That means later specs in the same call can depend on features created by earlier specs.</p>
 <p><code class="docutils literal notranslate"><span class="pre">assign(...)</span></code> is non-mutating. The current frame is not edited in place.</p>
+<p>The two single-feature overloads (<code class="docutils literal notranslate"><span class="pre">assign(name,</span> <span class="pre">value)</span></code> and <code class="docutils literal notranslate"><span class="pre">assign(name,</span> <span class="pre">expr)</span></code>) are pure convenience — each is implemented as a one-element call into the matching collection overload, so they share the same empty-name check, the same replace-in-place-if-the-name-exists behavior, and the same non-mutating semantics. Reach for them when you’re assigning exactly one feature and don’t want the syntactic overhead of a collection literal.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -171,6 +182,79 @@ s3   | Chen     7.5         21.5   29     false
 [3 cs x 5 feat]
 </pre></div>
 </div>
+<p>Example 3. The single-feature overloads assign exactly one feature at a time — one from an
+already-computed <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, the other from a callback — without wrapping it in a collection
+literal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">grades</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;assignment&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">9.5</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.5</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">28.0</span><span class="p">,</span><span class="w"> </span><span class="mf">24.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.5</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">})).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;grades&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">total_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">37.5</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">29.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">total_thread</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;assignment&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;final&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================
+     | student  assignment  final  total
+----------------------------------------
+s1   | Ada      9.5         28     37.5 
+s2   | Bola     8           24     32   
+s3   | Chen     7.5         21.5   29   
+----------------------------------------
+[3 cs x 4 feat]========================================
+     | student  assignment  final  total
+----------------------------------------
+s1   | Ada      9.5         28     37.5 
+s2   | Bola     8           24     32   
+s3   | Chen     7.5         21.5   29   
+----------------------------------------
+[3 cs x 4 feat]
+</pre></div>
+</div>
+<p>Example 4. Assigning under a name that already exists replaces it in place — same
+collision behavior as the collection overloads.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">grades</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;assignment&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">9.5</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.5</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">28.0</span><span class="p">,</span><span class="w"> </span><span class="mf">24.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.5</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">})).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;grades&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">with_total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;assignment&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;final&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">doubled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_total</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">doubled</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================
+     | student  assignment  final  total
+----------------------------------------
+s1   | Ada      9.5         28     75   
+s2   | Bola     8           24     64   
+s3   | Chen     7.5         21.5   58   
+----------------------------------------
+[3 cs x 4 feat]
+</pre></div>
+</div>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="any.html">
     <span class="label">Previous</span>
@@ -233,7 +317,7 @@ s3   | Chen     7.5         21.5   29     false
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
-      <li>Previous: <a href="any.html" title="previous chapter">DataFrame::any</a></li>
+      <li>Previous: <a href="arrange.html" title="previous chapter">DataFrame::arrange</a></li>
       <li>Next: <a href="astype.html" title="next chapter">DataFrame::astype</a></li>
   </ul></li>
   </ul></li>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7061eebfc8fa -->
 
 # Thread::isfinite
 
@@ -93,9 +94,9 @@ Thread::isfinite is only valid for Series payload
   `Series`-kind threads).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_valid.html">
+  <a class="prev-link" href="invalid.html">
     <span class="label">Previous</span>
-    <span class="title">is_valid</span>
+    <span class="title">invalid</span>
   </a>
   <a class="next-link" href="isnan.html">
     <span class="label">Next</span>

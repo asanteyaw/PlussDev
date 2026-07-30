@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7ea082083f4b -->
 
 # DataFrameTsResampler::first
 

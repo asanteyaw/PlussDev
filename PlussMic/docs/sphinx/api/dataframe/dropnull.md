@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 877896b6524b -->
+<!-- pluss-signature-hash: 1f364eb9df7b -->
 
 # DataFrame::dropnull
 
@@ -8,8 +8,11 @@
 ## Signatures
 
 ```cpp
-DataFrame::dropnull(const DropOptions& options) -> DataFrame
-DataFrame::dropnull(pluss::RangeView<std::string_view> features = {}, bool all = false) -> DataFrame
+DataFrame::dropnull(const DropOptions& options) const -> DataFrame
+DataFrame::dropnull(pluss::RangeView<std::string_view> features = {}, bool all = false) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::dropnull(const NameRange& features, bool all = false) const -> DataFrame
 ```
 
 ## What It Does
@@ -39,7 +42,9 @@ Two overloads cover the same underlying policy at different levels of explicitne
 Which features to inspect for missingness. Leave this empty to inspect every feature on
 the frame. Pass a subset when only certain columns — grading columns, measurement
 columns, join keys — should have a say in whether a row survives; missingness in an
-unlisted feature is simply not consulted.
+unlisted feature is simply not consulted. Any container of `std::string_view`-convertible
+names (`std::vector<std::string>`, `std::set<std::string>`, and similar) works too, via a
+generic template overload — not just a braced list or an explicit `RangeView`.
 
 **all** (`bool`, default `false`)
 

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 26796505a1fb -->
 
 # Thread::arrange
 
@@ -185,12 +186,12 @@ ptype: Series
 - [`Thread::take`](take.md): reorder (or subset) by explicit position.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="append.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">append</span>
   </a>
-  <a class="next-link" href="split.html">
+  <a class="next-link" href="as_note.html">
     <span class="label">Next</span>
-    <span class="title">split</span>
+    <span class="title">as_note</span>
   </a>
 </div>

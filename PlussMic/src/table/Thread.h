@@ -25,6 +25,7 @@ namespace pluss::table {
 
 class Thread;
 enum class LabelKind : std::uint8_t;
+enum class ThreadBinaryMathOp : std::uint8_t;
 struct DataFramePlotOptions;
 
 namespace detail {
@@ -45,6 +46,17 @@ Thread& clear_display_labels_(Thread& thread);
 LabelKind label_kind(const Thread& thread);
 Thread with_label_kind(const Thread& thread, LabelKind kind);
 Thread& with_label_kind_(Thread& thread, LabelKind kind);
+bool valid_at(const Thread& thread, std::int64_t row);
+int compare_rows(const Thread& thread,
+                 std::int64_t lhs_row,
+                 std::int64_t rhs_row,
+                 bool nulls_last = true);
+bool same_payload(const Thread& left, const Thread& right) noexcept;
+Thread math(const Thread& thread,
+            double other,
+            ThreadBinaryMathOp op,
+            bool reverse = false);
+Thread math(const Thread& left, const Thread& right, ThreadBinaryMathOp op);
 Thread freq_count_thread(const Thread& thread,
                          std::int64_t top_n,
                          bool dropnull,
@@ -362,7 +374,6 @@ public:
   std::string ptype() const;
   std::string dtype() const;
   ThreadValue value() const;
-  bool is_valid(std::int64_t row) const;
 
   Thread isnull() const;
   Thread notnull() const;
@@ -654,12 +665,6 @@ public:
   Thread has(const char* value) const { return has(std::string_view{value != nullptr ? value : ""}); }
   Thread has(const Thread& values) const;
 
-  // Time operations (Timeline / TimeIndex payload only).
-  Thread year() const;
-  Thread month() const;
-  Thread day() const;
-  Thread hour() const;
-
   Thread add(double other) const;
   Thread add(const Thread& other) const;
   Thread radd(double other) const;
@@ -754,7 +759,6 @@ public:
   Thread between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
     return btw(lo, hi, include_left, include_right);
   }
-  int compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last = true) const;
   Thread window(std::int64_t window, ThreadWindowOp op, std::int64_t min_periods = 1) const;
   ThreadCastAccessor cast() const;
   ThreadCastAccessor cast(const ThreadCastOptions& options) const;
@@ -812,6 +816,17 @@ private:
   friend LabelKind detail::label_kind(const Thread& thread);
   friend Thread detail::with_label_kind(const Thread& thread, LabelKind kind);
   friend Thread& detail::with_label_kind_(Thread& thread, LabelKind kind);
+  friend bool detail::valid_at(const Thread& thread, std::int64_t row);
+  friend int detail::compare_rows(const Thread& thread,
+                                  std::int64_t lhs_row,
+                                  std::int64_t rhs_row,
+                                  bool nulls_last);
+  friend bool detail::same_payload(const Thread& left, const Thread& right) noexcept;
+  friend Thread detail::math(const Thread& thread,
+                             double other,
+                             ThreadBinaryMathOp op,
+                             bool reverse);
+  friend Thread detail::math(const Thread& left, const Thread& right, ThreadBinaryMathOp op);
 
   explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
   Thread cast_(ThreadCastTarget target, const ThreadCastOptions& options = {}) const;
@@ -839,7 +854,13 @@ private:
   Thread& rangelbl_();
   Thread clear_caselbl() const;
   Thread& clear_caselbl_();
-public:
+
+  bool is_valid(std::int64_t row) const;
+  int compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last = true) const;
+  Thread year() const;
+  Thread month() const;
+  Thread day() const;
+  Thread hour() const;
   bool same_payload_(const Thread& other) const noexcept;
   Thread math_(double other, ThreadBinaryMathOp op, bool reverse = false) const;
   Thread math_(const Thread& other, ThreadBinaryMathOp op) const;
@@ -921,6 +942,32 @@ inline Thread clear_display_labels(const Thread& thread) {
 
 inline Thread& clear_display_labels_(Thread& thread) {
   return thread.clear_display_labels_();
+}
+
+inline bool valid_at(const Thread& thread, std::int64_t row) {
+  return thread.is_valid(row);
+}
+
+inline int compare_rows(const Thread& thread,
+                        std::int64_t lhs_row,
+                        std::int64_t rhs_row,
+                        bool nulls_last) {
+  return thread.compare_rows(lhs_row, rhs_row, nulls_last);
+}
+
+inline bool same_payload(const Thread& left, const Thread& right) noexcept {
+  return left.same_payload_(right);
+}
+
+inline Thread math(const Thread& thread,
+                   double other,
+                   ThreadBinaryMathOp op,
+                   bool reverse) {
+  return thread.math_(other, op, reverse);
+}
+
+inline Thread math(const Thread& left, const Thread& right, ThreadBinaryMathOp op) {
+  return left.math_(right, op);
 }
 
 struct GroupStateCache {

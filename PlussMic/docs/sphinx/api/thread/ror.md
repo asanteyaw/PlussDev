@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a1799aa14848 -->
 
 # Thread::ror
 

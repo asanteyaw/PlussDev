@@ -1655,7 +1655,7 @@ Thread align_thread_to_feature_axis_(
     if (found != positions.end() && occurrence < found->second.size()) {
       const auto row = found->second[occurrence];
       rows.push_back(row);
-      present.push_back(value.is_valid(row));
+      present.push_back(detail::valid_at(value, row));
     } else {
       rows.push_back(0);
       present.push_back(false);
@@ -1706,7 +1706,7 @@ Thread align_thread_to_case_axis_(
     if (found != positions.end() && occurrence < found->second.size()) {
       const auto row = found->second[occurrence];
       rows.push_back(row);
-      present.push_back(value.is_valid(row));
+      present.push_back(detail::valid_at(value, row));
     } else {
       rows.push_back(0);
       present.push_back(false);
@@ -1791,7 +1791,7 @@ DataFrame dataframe_math_thread(const DataFrame& frame,
   aligned = fill_numeric_missing_for_alignment_(aligned, options);
   const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
   for (std::size_t i = 0; i < cols.size(); ++i) {
-    if (!aligned.is_valid(static_cast<std::int64_t>(i))) {
+    if (!detail::valid_at(aligned, static_cast<std::int64_t>(i))) {
       columns.emplace_back(
           names[i],
           null_thread_like_(cols[i], frame.ncases(), "DataFrame::math(Thread, Axis::Feature)"));
@@ -1986,7 +1986,7 @@ DataFrame dataframe_cmp_thread(const DataFrame& frame,
   aligned = fill_numeric_missing_for_alignment_(aligned, options);
   const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
   for (std::size_t i = 0; i < cols.size(); ++i) {
-    if (!aligned.is_valid(static_cast<std::int64_t>(i))) {
+    if (!detail::valid_at(aligned, static_cast<std::int64_t>(i))) {
       columns.emplace_back(
           names[i],
           null_thread_like_(cols[i], frame.ncases(), "DataFrame::compare(Thread, Axis::Feature)"));
@@ -2446,7 +2446,7 @@ Thread align_assignment_thread_(
       matched.push_back(false);
     } else {
       take_indices.push_back(it->second);
-      matched.push_back(value.is_valid(it->second));
+      matched.push_back(detail::valid_at(value, it->second));
     }
   }
 

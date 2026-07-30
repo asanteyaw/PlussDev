@@ -1,14 +1,17 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 29c4b82b0f69 -->
+<!-- pluss-signature-hash: 3e1b392a43a7 -->
 
 # DataFrame::isnull
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrame::isnull(pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::isnull(const NameRange& features) const -> DataFrame
 ```
 
 ## What It Does
@@ -28,7 +31,10 @@ say, where nulls elsewhere on the frame are expected and irrelevant).
 **features** (`pluss::RangeView<std::string_view>`, default empty)
 
 Feature names to check for missingness. Leave empty to check every feature on the frame;
-pass a subset to restrict the resulting mask to just those columns.
+pass a subset to restrict the resulting mask to just those columns. Any container of
+`std::string_view`-convertible names (`std::vector<std::string>`, `std::set<std::string>`,
+and similar) works too, via a generic template overload — not just a braced list or an
+explicit `RangeView`.
 
 ## Returns
 

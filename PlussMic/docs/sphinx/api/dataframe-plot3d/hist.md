@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2c0ee9a1083c -->
 
 # DataFramePlot3DAccessor::hist
 
@@ -96,6 +97,8 @@ chart.save_svg("ab_hist3d.svg");
 `a` and `b` are jointly binned into the default `26 × 20` grid; each cell's raw count
 becomes the height of one vertical bar.
 
+![Output of Example 1](img/hist-1.svg)
+
 Example 2. `normalize = true`: cell heights become a share of the total instead of a raw
 count.
 
@@ -106,6 +109,8 @@ options.normalize = true;
 auto chart = samples.plot3d().hist("a", "b", options);
 chart.show();
 ```
+
+![Output of Example 2](img/hist-2.svg)
 
 Example 3. A coarser grid with smoothing applied.
 
@@ -120,6 +125,8 @@ auto chart = samples.plot3d().hist("a", "b", coarse);
 chart.save_pdf("ab_hist3d_smooth.pdf");
 ```
 
+![Output of Example 3](img/hist-3.svg)
+
 Example 4. `as_surface = true`: the same binned grid, rendered as a continuous surface
 instead of discrete bars.
 
@@ -128,8 +135,10 @@ Hist3DPlotOptions surface_render;
 surface_render.as_surface = true;
 
 auto chart = samples.plot3d().hist("a", "b", surface_render);
-chart.save_png("ab_hist3d_surface.png");
+chart.show();
 ```
+
+![Output of Example 4](img/hist-4.svg)
 
 Example 5. `as_wireframe = true`: the same grid again, this time as a wireframe mesh.
 
@@ -139,6 +148,8 @@ wire_render.as_wireframe = true;
 
 auto chart = samples.plot3d().hist("a", "b", wire_render);
 ```
+
+![Output of Example 5](img/hist-5.svg)
 
 Example 6. Both `as_surface` and `as_wireframe` set: `as_wireframe` wins, per the note
 above.
@@ -154,6 +165,8 @@ auto chart = samples.plot3d().hist("a", "b", both_flags);
 This produces the identical figure to Example 5 — `as_surface` is never consulted once
 `as_wireframe` is `true`.
 
+![Output of Example 6](img/hist-6.svg)
+
 Example 7. Requesting fewer than 4 bins on either axis is silently clamped, not thrown.
 
 ```cpp
@@ -166,6 +179,8 @@ auto chart = samples.plot3d().hist("a", "b", tiny);
 
 Both `bins_x` and `bins_y` are clamped up to `4`, the minimum, rather than producing a
 degenerate grid or throwing.
+
+![Output of Example 7](img/hist-7.svg)
 
 ## Notes
 

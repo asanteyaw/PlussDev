@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 35e488e6e472 -->
 
 # DataFramePlot3DAccessor::scatter
 
@@ -94,12 +95,16 @@ auto chart = points.plot3d().scatter("x", "y", "z");
 chart.save_svg("points3d.svg");
 ```
 
+![Output of Example 1](img/scatter-1.svg)
+
 Example 2. `size_feature` only: marker size scales with `mass`, color stays uniform.
 
 ```cpp
 auto chart = points.plot3d().scatter("x", "y", "z", "mass");
 chart.show();
 ```
+
+![Output of Example 2](img/scatter-2.svg)
 
 Example 3. `color_feature` only: every point stays `default_marker_size` (12.0), but
 color now maps to `speed`.
@@ -112,13 +117,17 @@ chart.save_pdf("points3d_colored.pdf");
 Passing `std::nullopt` explicitly for `size_feature` here is required syntax — there is no
 overload that skips straight to `color_feature` while omitting `size_feature` entirely.
 
+![Output of Example 3](img/scatter-3.svg)
+
 Example 4. Both `size_feature` and `color_feature`: marker size scales with `mass`, color
 maps to `speed`.
 
 ```cpp
 auto chart = points.plot3d().scatter("x", "y", "z", "mass", "speed");
-chart.save_png("points3d_full.png");
+chart.show();
 ```
+
+![Output of Example 4](img/scatter-4.svg)
 
 Example 5. An explicit `Scatter3DPlotOptions`, raising `default_marker_size` (which only
 takes effect because `size_feature` is omitted here) and applying a `Cloud` trace preset.
@@ -130,6 +139,8 @@ options.trace.preset = pluss::pl::flash::TracePreset3D::Cloud;
 
 auto chart = points.plot3d().scatter("x", "y", "z", std::nullopt, std::nullopt, options);
 ```
+
+![Output of Example 5](img/scatter-5.svg)
 
 Example 6. A mismatched-length `size_feature` (fewer rows than the frame) throws, same as
 every axis feature.

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f506aa72cf53 -->
 
 # DataFrameTsWindowAccessor::mean
 

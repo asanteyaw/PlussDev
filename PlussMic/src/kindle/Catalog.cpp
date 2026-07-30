@@ -10,6 +10,7 @@
 #include <ostream>
 #include <numeric>
 #include <random>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -46,6 +47,19 @@ std::vector<std::string> normalize_names(std::initializer_list<std::string_view>
   return out;
 }
 
+std::vector<std::string> normalize_names(std::span<const std::string_view> names) {
+  std::vector<std::string> out;
+  out.reserve(names.size());
+  std::unordered_set<std::string> seen;
+  for (const auto nsv : names) {
+    std::string n(nsv);
+    PLUSS_CHECK(!n.empty(), "Catalog: key cannot be empty");
+    PLUSS_CHECK(seen.insert(n).second, "Catalog: duplicate key '" + n + "'");
+    out.push_back(std::move(n));
+  }
+  return out;
+}
+
 std::vector<std::string> normalize_names(const std::vector<std::string>& names) {
   std::vector<std::string> out;
   out.reserve(names.size());
@@ -59,6 +73,11 @@ std::vector<std::string> normalize_names(const std::vector<std::string>& names) 
 }
 
 std::unordered_set<std::string> normalize_name_set(std::initializer_list<std::string_view> names) {
+  const auto list = normalize_names(names);
+  return std::unordered_set<std::string>(list.begin(), list.end());
+}
+
+std::unordered_set<std::string> normalize_name_set(std::span<const std::string_view> names) {
   const auto list = normalize_names(names);
   return std::unordered_set<std::string>(list.begin(), list.end());
 }
@@ -126,7 +145,7 @@ std::vector<std::int64_t> sort_indices_for_keys(const std::vector<Stream>& key_s
 
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
     for (std::size_t k = 0; k < key_threads.size(); ++k) {
-      const int cmp = key_threads[k].compare_rows(a, b, true);
+      const int cmp = pluss::table::detail::compare_rows(key_threads[k], a, b, true);
       if (cmp == 0) continue;
       const bool asc = k < ascending.size() ? ascending[k] : true;
       return asc ? (cmp < 0) : (cmp > 0);
@@ -525,6 +544,7 @@ public:
 
 #include "kindle/ops/catalog/CatalogLifecycleAndIO.inc"
 #include "kindle/ops/catalog/CatalogCoreOps.inc"
+#include "kindle/ops/catalog/CatalogAccessors.inc"
 #include "kindle/ops/catalog/CatalogTextAndMutation.inc"
 #include "kindle/ops/catalog/CatalogTabelizeAndInternals.inc"
 

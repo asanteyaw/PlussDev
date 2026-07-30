@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::scatter" href="scatter.html" />
-    <link rel="prev" title="DataFramePlotAccessor::pie" href="pie.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -104,17 +102,19 @@ anchor.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">radviz</span><span class="p">();</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;flowers_radviz.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Three anchors (<code class="docutils literal notranslate"><span class="pre">sepal_length</span></code>, <code class="docutils literal notranslate"><span class="pre">sepal_width</span></code>, <code class="docutils literal notranslate"><span class="pre">petal_length</span></code>) placed 120° apart; <code class="docutils literal notranslate"><span class="pre">species</span></code> is
 excluded from the anchors since it’s Note-kind, not numeric.</p>
+<p><img alt="Output of Example 1" src="../../_images/radviz-1.svg" /></p>
 <p>Example 2. An explicit feature subset, colored by class.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">radviz</span><span class="p">(</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sepal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sepal_width&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;petal_length&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;species&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/radviz-2.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">RadvizPlotOptions</span></code>, hiding the anchor labels and enlarging the
 markers.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RadvizPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -123,9 +123,10 @@ markers.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">radviz</span><span class="p">(</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sepal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sepal_width&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;petal_length&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;species&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;flowers_radviz.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 3" src="../../_images/radviz-3.svg" /></p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">class_feature</span></code> accepts a numeric feature too, exactly like
 <a class="reference internal" href="parallel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parallel()</span></code></span></a>’s Example 4.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numeric_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -138,6 +139,7 @@ markers.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numeric_class</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">radviz</span><span class="p">({</span><span class="s">&quot;x1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x3&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;code&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 4" src="../../_images/radviz-4.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -198,11 +200,8 @@ the same family.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -216,16 +215,6 @@ the same family.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="pie.html" title="previous chapter">DataFramePlotAccessor::pie</a></li>
-      <li>Next: <a href="scatter.html" title="next chapter">DataFramePlotAccessor::scatter</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

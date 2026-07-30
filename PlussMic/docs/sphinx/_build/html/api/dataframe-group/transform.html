@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -85,10 +85,26 @@ the broadcasted grouped output features.</p>
 <span class="w">                      </span><span class="p">.</span><span class="n">transform</span><span class="p">({</span>
 <span class="w">                          </span><span class="p">{</span><span class="s">&quot;amount_mean&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
 <span class="w">                      </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">city_mean</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Rows 0 and 1 receive the same broadcasted <code class="docutils literal notranslate"><span class="pre">amount_mean</span></code>; rows 2 and 3 receive the
-other one.</p>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | amount_mean
+------------------
+0    | 90         
+1    | 90         
+2    | 45         
+3    | 45         
+------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>Rows <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> (both <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>) receive the same broadcasted <code class="docutils literal notranslate"><span class="pre">amount_mean</span></code>
+(<code class="docutils literal notranslate"><span class="pre">(100</span> <span class="pre">+</span> <span class="pre">80)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">90</span></code>); rows <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code>) receive the other one
+(<code class="docutils literal notranslate"><span class="pre">(50</span> <span class="pre">+</span> <span class="pre">40)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">45</span></code>). The row order and row count exactly match <code class="docutils literal notranslate"><span class="pre">sales</span></code> — only the
+key column (<code class="docutils literal notranslate"><span class="pre">city</span></code>) and the original <code class="docutils literal notranslate"><span class="pre">amount</span></code> column are gone.</p>
 <p>Example 2. Broadcast several grouped signals at once.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
 <span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
@@ -97,10 +113,27 @@ other one.</p>
 <span class="w">                      </span><span class="p">{</span><span class="s">&quot;amount_max&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Max</span><span class="p">},</span>
 <span class="w">                      </span><span class="p">{</span><span class="s">&quot;n&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
 <span class="w">                  </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stats</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================================
+     | amount_mean  amount_max  n   
+------------------------------------
+0    | 90           100         2   
+1    | 90           100         2   
+2    | 45           50          2   
+3    | 45           50          2   
+------------------------------------
+[4 cs x 3 feat]
 </pre></div>
 </div>
 <p>That produces a row-aligned grouped feature block you can join back mentally with the
-source row space without doing an explicit merge.</p>
+source row space without doing an explicit merge. <code class="docutils literal notranslate"><span class="pre">n</span></code> counts rows per group (<code class="docutils literal notranslate"><span class="pre">2</span></code> for
+each city here), broadcast just like the numeric aggregates.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

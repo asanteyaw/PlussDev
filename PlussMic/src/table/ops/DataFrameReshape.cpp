@@ -160,7 +160,7 @@ std::string normalize_case_label(std::string raw) {
 }
 
 std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
-  if (!axis.is_valid(row)) {
+  if (!detail::valid_at(axis, row)) {
     return {};
   }
   switch (axis.kind()) {
@@ -220,7 +220,7 @@ Thread null_singleton_like(const Thread& reference) {
 }
 
 std::string axis_value_key(const Thread& values, std::int64_t row) {
-  return values.is_valid(row) ? case_label_from_axis(values, row) : std::string("NULL");
+  return detail::valid_at(values, row) ? case_label_from_axis(values, row) : std::string("NULL");
 }
 
 } // namespace
@@ -254,7 +254,7 @@ DataFrameView DataFrame::transpose(bool render) const {
     std::vector<std::string> values;
     values.reserve(static_cast<std::size_t>(cols));
     for (std::int64_t c = 0; c < cols; ++c) {
-      if (!src_columns[static_cast<std::size_t>(c)].is_valid(r)) {
+      if (!detail::valid_at(src_columns[static_cast<std::size_t>(c)], r)) {
         values.emplace_back("NULL");
       } else {
         values.emplace_back(src_notes[static_cast<std::size_t>(c)].at(r));

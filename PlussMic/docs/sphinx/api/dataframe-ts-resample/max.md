@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 372526832cb4 -->
 
 # DataFrameTsResampler::max
 

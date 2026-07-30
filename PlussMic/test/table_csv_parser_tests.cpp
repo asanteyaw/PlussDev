@@ -773,9 +773,51 @@ void test_dataframe_equals_and_reflected_logicals() {
 
   expect(exact.eq(rounded).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, false}),
          "eq should remain elementwise exact even for tiny floating differences");
+  expect((exact == rounded).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, false}),
+         "operator==(DataFrame, DataFrame) should delegate to eq(frame)");
   expect(!exact.equals(rounded), "equals(frame) should remain strict whole-frame equality");
   expect(exact.equals(rounded, 1e-6, 1e-6),
          "equals(frame, atol, rtol) should tolerate tiny floating differences");
+  expect((exact < 1.5).features("x").as_series().to_vec<bool>() == std::vector<bool>({true, false}),
+         "operator<(DataFrame, scalar) should delegate to lt(scalar)");
+  expect((1.5 <= exact).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+         "reflected scalar/DataFrame compare should invert through the dataframe surface");
+
+  const auto feature_threshold = pluss::table::Thread(pluss::make_series(std::vector<double>{1.5}));
+  expect((exact >= feature_threshold).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+         "operator>=(DataFrame, Thread) should delegate to ge(thread) on the default feature axis");
+  expect((feature_threshold < exact).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+         "reflected Thread/DataFrame compare should preserve the dataframe feature-axis contract");
+
+  const auto dates_left = DataFrame(
+      {
+          {"Date", pluss::table::Thread(pluss::make_timeline({
+              "2024-01-01",
+              "2024-01-02",
+          }))},
+          {"Date2", pluss::table::Thread(pluss::make_timeline({
+              "2024-02-01",
+              "2024-02-03",
+          }))},
+      },
+      pluss::table::Thread(pluss::make_note({"r0", "r1"})));
+  const auto dates_right = DataFrame(
+      {
+          {"StockDate", pluss::table::Thread(pluss::make_timeline({
+              "2024-01-01",
+              "2024-01-05",
+          }))},
+          {"RequestDate", pluss::table::Thread(pluss::make_timeline({
+              "2024-02-01",
+              "2024-02-02",
+          }))},
+      },
+      pluss::table::Thread(pluss::make_note({"r0", "r1"})));
+  const auto temporal_cmp = dates_left == dates_right;
+  expect(temporal_cmp.features("Date").as_series().to_vec<bool>() == std::vector<bool>({true, false}),
+         "operator==(DataFrame, DataFrame) should support Timeline feature comparisons");
+  expect(temporal_cmp.features("Date2").as_series().to_vec<bool>() == std::vector<bool>({true, false}),
+         "operator==(DataFrame, DataFrame) should compare each Timeline feature positionally");
 
   const auto left = DataFrame(
                         {{"flag", pluss::table::Thread(pluss::make_series(std::vector<bool>{true, false}))}},
@@ -1178,6 +1220,180 @@ void test_temporal_save_csv_preserves_human_readable_dates() {
          fmt::format("save_csv should persist formatted timeline text; got [{}]", saved));
   expect(saved.find("5395830287000004") == std::string::npos,
          "save_csv should not persist raw timeline epoch nanos");
+}
+
+void test_temporal_string_compare_uses_timeline_semantics() {
+  const DataFrame typed({
+      {"Date", pluss::table::Thread(pluss::make_timeline({
+          "1995-12-31",
+          "1996-01-01",
+          "1996-01-02",
+          "1997-06-30",
+      }))},
+      {"value", pluss::table::Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+  });
+
+  const auto by_string = typed.filter(typed.features("Date") >= "1996-01-01");
+  const auto by_timeline = typed.filter(typed.features("Date") >= pluss::make_timeline("1996-01-01"));
+  expect(by_string.ncases() == 3,
+         "Timeline >= ISO date string should use temporal semantics rather than lexicographic text compare");
+  expect(by_string.ncases() == by_timeline.ncases(),
+         "Timeline >= ISO date string should match Timeline >= scalar Timeline");
+
+  expect_throw(
+      [&]() {
+        (void)(typed.features("Date") >= "not-a-date");
+      },
+      "Timeline compare against invalid string literal should fail instead of silently comparing text");
+}
+
+void test_temporal_save_reload_filter_matches_scalar_timeline() {
+  DataFrame raw({
+      {"Date", pluss::table::Thread(pluss::make_note({
+                   "19951231",
+                   "19960101",
+                   "19960102",
+                   "19960201",
+                   "19970101",
+               }))},
+      {"ret", pluss::table::Thread(pluss::make_series(std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5}))},
+  });
+
+  DataFrame typed = raw;
+  typed.set("Date") =
+      raw.features({"Date"})
+          .cast(pluss::table::ThreadCastOptions{
+              .format = "%Y%m%d",
+              .invalid = pluss::table::ParseInvalid::Null,
+          })
+          .timeline();
+
+  const auto out_path = write_temp_csv("saved_timeline_filter_compare", "");
+  typed.save_csv(out_path.string());
+
+  const auto reloaded = DataFrame::load_csv(out_path.string());
+  expect(reloaded.features("Date").kind() == ThreadKind::Timeline,
+         "reloaded saved ISO date column should infer back as Timeline");
+
+  const auto by_string = reloaded.filter(reloaded.features("Date") >= "1996-01-01");
+  const auto by_timeline = reloaded.filter(reloaded.features("Date") >= pluss::make_timeline("1996-01-01"));
+  expect(by_string.ncases() == 4,
+         "reloaded Timeline >= ISO date string should retain the expected row count");
+  expect(by_string.ncases() == by_timeline.ncases(),
+         "reloaded Timeline >= ISO date string should match scalar Timeline filtering");
+}
+
+void test_dataframe_lvalue_name_range_surfaces() {
+  const auto value_valid = pluss::make_series(std::vector<bool>{true, false, true, true});
+  const DataFrame df(
+      {
+          {"grp", pluss::table::Thread(pluss::make_note({"a", "a", "b", "b"}))},
+          {"city", pluss::table::Thread(pluss::make_note({"x", "x", "y", "z"}))},
+          {"value", pluss::table::Thread(pluss::make_series(std::vector<double>{1.0, 0.0, 3.0, 4.0}), value_valid)},
+          {"other", pluss::table::Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      },
+      pluss::table::Thread(pluss::make_note({"r0", "r1", "r2", "r3"})));
+
+  const std::vector<std::string> drop_cols{"other"};
+  const auto dropped = df.drop(drop_cols);
+  expect(dropped.nfeatures() == 3 && !dropped.get("other").has_value(),
+         "drop(vector<string>) should accept lvalue feature-name ranges");
+
+  const std::vector<std::string> value_cols{"value"};
+  const auto null_mask = df.isnull(value_cols).features("value").as_series().to_vec<bool>();
+  expect(null_mask == std::vector<bool>({false, true, false, false}),
+         "isnull(vector<string>) should project selected features from an lvalue range");
+
+  const auto filled = df.fillnull(9.0, value_cols);
+  expect(filled.features("value").as_series().to_vec<double>() == std::vector<double>({1.0, 9.0, 3.0, 4.0}),
+         "fillnull(vector<string>) should accept lvalue feature-name ranges");
+
+  const auto replaced = df.replace(4.0, 7.0, value_cols);
+  expect(replaced.features("value").as_series().to_vec<double>() == std::vector<double>({1.0, 0.0, 3.0, 7.0}),
+         "replace(vector<string>) should accept lvalue feature-name ranges");
+
+  const auto dropped_null = df.dropnull(value_cols);
+  expect(dropped_null.ncases() == 3,
+         "dropnull(vector<string>) should accept lvalue feature-name ranges");
+
+  const std::vector<std::string> group_keys{"grp"};
+  const auto grouped = df.group().by(group_keys).agg({
+      {"sum_value", "value", DataFrame::GroupOp::Sum},
+      {"count_value", "value", DataFrame::GroupOp::Count},
+  });
+  expect(grouped.ncases() == 2 && grouped.nfeatures() == 3,
+         "group().by(vector<string>) should accept lvalue key ranges");
+  expect(grouped.features("sum_value").as_series().to_vec<double>() == std::vector<double>({1.0, 7.0}),
+         "group().by(vector<string>) should preserve grouped aggregation semantics");
+}
+
+void test_atlas_and_nexus_lvalue_name_range_surfaces() {
+  const auto loan = DataFrame({
+      {"id", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 2}))},
+      {"amount", pluss::table::Thread(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+      {"status", pluss::table::Thread(pluss::make_note({"good", "bad"}))},
+  });
+  const auto account = DataFrame({
+      {"id", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{1, 2}))},
+      {"balance", pluss::table::Thread(pluss::make_series(std::vector<double>{500.0, 300.0}))},
+      {"opened", pluss::table::Thread(pluss::make_timeline({"2024-01-01", "2024-01-02"}))},
+  });
+
+  const auto atlas = pluss::table::Atlas(
+      std::vector<DataFrame>{loan, loan.title("loan_copy")},
+      pluss::table::Thread(pluss::make_note({"loan", "loan_copy"})));
+  const std::vector<std::string> atlas_features{"id", "amount"};
+  const auto atlas_selected = atlas.features(atlas_features);
+  expect(atlas_selected.nfeatures() == 2,
+         "Atlas::features(vector<string>) should accept lvalue feature-name ranges");
+  expect(atlas_selected.frame(0).get("amount").has_value() && !atlas_selected.frame(0).get("status").has_value(),
+         "Atlas::features(vector<string>) should project selected features");
+
+  pluss::table::Relationship rel;
+  rel.name = "loan_account";
+  rel.left_table = "loan";
+  rel.right_table = "account";
+  rel.keys = {{"id", "id"}};
+  rel.cardinality = pluss::table::RelationshipCardinality::OneToOne;
+
+  auto nx = pluss::table::Nexus({
+                                    {"loan", loan},
+                                    {"account", account},
+                                })
+                .links(rel);
+
+  const std::vector<std::string> table_keys{"loan"};
+  const auto nx_selected = nx.select(table_keys);
+  expect(nx_selected.ntables() == 1 && nx_selected.has("loan") && !nx_selected.has("account"),
+         "Nexus::select(vector<string>) should accept lvalue key ranges");
+
+  const std::vector<std::string> drop_keys{"account"};
+  const auto nx_dropped = nx.drop(drop_keys);
+  expect(nx_dropped.ntables() == 1 && nx_dropped.has("loan") && !nx_dropped.has("account"),
+         "Nexus::drop(vector<string>) should accept lvalue key ranges");
+
+  const std::vector<std::string> key_cols{"id"};
+  expect(nx.validate_keys("loan", key_cols),
+         "Nexus::validate_keys(vector<string>) should accept lvalue key ranges");
+  expect(nx.detect_duplicates("loan", key_cols).ncases() == 0,
+         "Nexus::detect_duplicates(vector<string>) should accept lvalue key ranges");
+  expect(nx.duplicates("loan", key_cols).ncases() == 0,
+         "Nexus::duplicates(vector<string>) should accept lvalue key ranges");
+
+  const std::vector<std::string> pulled_fields{"loan.amount", "account.balance"};
+  const auto pulled = nx.pull("loan", pulled_fields);
+  expect(pulled.get("amount").has_value() && pulled.get("account_balance").has_value(),
+         "Nexus::pull(vector<string>) should accept lvalue field ranges");
+
+  const auto atlas_from_nx = nx.to_atlas(table_keys);
+  expect(atlas_from_nx.depth() == 1 && atlas_from_nx.frame(0).get("amount").has_value(),
+         "Nexus::to_atlas(vector<string>) should accept lvalue key ranges");
+
+  const std::vector<std::string> picked{"id", "amount", "balance"};
+  const std::vector<std::string> dropped_features{"id"};
+  const auto queried = nx.from("loan").join("account").pick(picked).drop(dropped_features).collect();
+  expect(queried.get("amount").has_value() && queried.get("balance").has_value() && !queried.get("id").has_value(),
+         "NexusQuery::pick/drop(vector<string>) should accept lvalue feature-name ranges");
 }
 
 void test_transpose_shape_and_axes() {
@@ -1757,8 +1973,10 @@ void test_versatile_dataframe_families() {
       {"B", pluss::table::Thread(pluss::make_series({100.0, 200.0}))},
   }, pluss::make_note({"r1", "r2"}));
   const auto aligned_labels = align_base.label().align(pluss::table::Thread(pluss::make_note({"r2", "missing", "r1"})));
-  expect(aligned_labels.ncases() == 3 && aligned_labels.features("A").is_valid(0) &&
-             !aligned_labels.features("A").is_valid(1) && aligned_labels.features("A").is_valid(2),
+  expect(aligned_labels.ncases() == 3 &&
+             pluss::table::detail::valid_at(aligned_labels.features("A"), 0) &&
+             !pluss::table::detail::valid_at(aligned_labels.features("A"), 1) &&
+             pluss::table::detail::valid_at(aligned_labels.features("A"), 2),
          "label().align should insert nulls for missing case labels");
   const auto aligned_label_vals = aligned_labels.features("A").as_series().to_vec<double>();
   expect(std::fabs(aligned_label_vals[0] - 20.0) < 1e-9 && std::fabs(aligned_label_vals[2] - 10.0) < 1e-9,
@@ -1770,7 +1988,8 @@ void test_versatile_dataframe_families() {
   expect(align_filled.features()[0] == "B" && align_filled.features()[1] == "C" &&
              align_filled.features()[2] == "A",
          "align should conform feature labels and preserve requested order");
-  expect(align_filled.features("C").is_valid(0) && align_filled.features("C").is_valid(1),
+  expect(pluss::table::detail::valid_at(align_filled.features("C"), 0) &&
+             pluss::table::detail::valid_at(align_filled.features("C"), 1),
          "align(fill) should fill entirely missing numeric features");
   const auto filled_a = align_filled.features("A").as_series().to_vec<double>();
   expect(std::fabs(filled_a[0] - 20.0) < 1e-9 && std::fabs(filled_a[1]) < 1e-9,
@@ -4312,8 +4531,8 @@ void test_nexus_pull_surface() {
              pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0) == 5.0 &&
              pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(1) == 10.0 &&
              pulled.features("events_metric_value_max").as_series().to_vec<double>(0) == 120.0 &&
-             !pulled.features("events_spend_sum").is_valid(2) &&
-             !pulled.features("events_metric_value_max").is_valid(2) &&
+             !pluss::table::detail::valid_at(pulled.features("events_spend_sum"), 2) &&
+             !pluss::table::detail::valid_at(pulled.features("events_metric_value_max"), 2) &&
              pulled.features("events_spend_sum_30d").as_series().to_vec<double>(0) !=
                  pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0),
          "Nexus::pull should aggregate one-to-many related rows back to root grain, including dotted feature names and explicit root-relative windows");
@@ -4628,6 +4847,10 @@ int main(int argc, char** argv) {
       {"parquet_save_and_load_parity", test_parquet_save_and_load_parity},
       {"feature_value_cases_values_and_save_defaults", test_feature_value_cases_values_and_save_defaults},
       {"temporal_save_csv_preserves_human_readable_dates", test_temporal_save_csv_preserves_human_readable_dates},
+      {"temporal_string_compare_uses_timeline_semantics", test_temporal_string_compare_uses_timeline_semantics},
+      {"temporal_save_reload_filter_matches_scalar_timeline", test_temporal_save_reload_filter_matches_scalar_timeline},
+      {"dataframe_lvalue_name_range_surfaces", test_dataframe_lvalue_name_range_surfaces},
+      {"atlas_and_nexus_lvalue_name_range_surfaces", test_atlas_and_nexus_lvalue_name_range_surfaces},
       {"transpose_shape_and_axes", test_transpose_shape_and_axes},
       {"squeeze_unsqueeze_bridge", test_squeeze_unsqueeze_bridge},
       {"parallel_engine_matches_serial_engine", test_parallel_engine_matches_serial_engine},

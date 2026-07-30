@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d4f594332d82 -->
 
 # Thread::rxor
 

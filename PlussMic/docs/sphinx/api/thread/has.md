@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fc3432d66c1c -->
+
 # Thread::has
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,96 +8,150 @@
 ## Signatures
 
 ```cpp
-Thread::has(const char* value) -> Thread
-
-Thread::has(const Thread& values) -> Thread
-
-Thread::has(double value) -> Thread
-
-Thread::has(std::string_view value) -> Thread
+Thread::has(double value) const -> Thread
+Thread::has(std::string_view value) const -> Thread
+Thread::has(const char* value) const -> Thread
+Thread::has(const Thread& values) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+A row-wise membership test — despite the name suggesting a single "does this thread
+contain X anywhere" answer, `has()` returns one boolean **per row**, not one boolean for
+the whole thread.
+
+The scalar overloads (`double`, `std::string_view`, `const char*`) are a direct alias for
+[`eq()`](eq.md): `has(value)` is exactly `eq(value)`, testing each row against the one
+value. The `Thread`-argument overload is the more useful form in practice — it's an `isin`
+style test: row `i` is `true` if it equals **any** value in `values`, checked by ORing
+together one `has(scalar)` call per (valid) entry of `values`.
+
+```{important} has(const Thread&) is per-row "is this value in the candidate set", not a global "does this thread contain any of these"
+`thread.has(candidates)` returns a `Thread` the same length as `thread` — row `i` tells you
+whether `thread`'s row `i` matches one of `candidates`' values, not whether `candidates`
+appears anywhere in `thread` as a whole. This is the `isin`/membership pattern common to
+most table libraries. Invalid rows in `candidates` are skipped (never contribute a match).
+```
 
 ## Parameters
 
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+**value** (`double` / `std::string_view` / `const char*`)
+    A single scalar to test every row against — equivalent to [`eq(value)`](eq.md).
 
-**values**
-    Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
+**values** (`const Thread&`)
+    A set of candidate values (typically a short, `Note`- or `Series`-kind thread) — each
+    row of `*this` is tested against every entry of `values`, matching if it equals *any*
+    of them.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A `Series`-kind thread of `Bool` values, one membership result per row.
 
 ## Examples
 
-Example 1. Apply `has` to the current thread using explicit `value` arguments.
+Example 1. Test a numeric thread against one scalar — identical to `eq(20.0)`.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.has("demo");
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.has(20.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  false
+ptype: Series
 ```
-Example 2. Apply `has` to the current thread using explicit `values` arguments.
+
+Example 2. Test a `Note`-backed thread against one text scalar.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+auto names = Thread(pluss::make_note({"Ada", "Bola", "Chen"}));
 
-auto out = thread.has(other);
+auto out = names.has("Bola");
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  false
+ptype: Series
 ```
-Example 3. Apply `has` to the current thread using explicit `value` arguments.
+
+Example 3. `isin`-style membership against a short candidate set of numeric values.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto candidates = Thread(pluss::make_series({20.0, 40.0}));
 
-auto out = thread.has(10.0);
+auto out = scores.has(candidates);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  false
+1  true
+2  false
+3  true
+ptype: Series
 ```
-Example 4. Apply `has` to the current thread using explicit `value` arguments.
+
+Example 4. The same `isin`-style membership test, with a `Note`-backed candidate set —
+useful for allowlist/denylist-style row filtering.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto names = Thread(pluss::make_note({"Ada", "Bola", "Chen", "Ada"}));
+auto allowed = Thread(pluss::make_note({"Ada", "Chen"}));
 
-auto out = thread.has("demo");
+auto out = names.has(allowed);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  true
+1  false
+2  true
+3  true
+ptype: Series
 ```
 
+## Notes
+
+- The scalar overloads are a pure alias for [`eq()`](eq.md) — prefer whichever name reads
+  better at the call site.
+- The `Thread`-argument overload is the genuinely distinct behavior: a per-row `isin` test
+  against a candidate set, not a whole-thread containment check.
+- Invalid rows in the `values` candidate set are skipped and never produce a match; an
+  invalid row in `*this` is compared normally against each candidate (matching
+  [`compare()`](compare.md)'s general rule that invalid rows just compare `false`).
+
+## See Also
+
+- [`Thread::eq`](eq.md): the scalar-comparison method `has(scalar)` is an alias for.
+- [`Thread::compare`](compare.md): the general comparison surface underlying `eq()`.
+- [`DataFrame::filter`](../dataframe/filter.md): use `has()`'s boolean result as a row mask.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="gt.html">
     <span class="label">Previous</span>
     <span class="title">gt</span>
   </a>
-  <a class="next-link" href="has_display_name.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">has_display_name</span>
+    <span class="title">head</span>
   </a>
 </div>

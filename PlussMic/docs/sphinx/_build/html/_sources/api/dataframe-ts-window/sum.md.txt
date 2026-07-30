@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8a80f14b9ae5 -->
 
 # DataFrameTsWindowAccessor::sum
 

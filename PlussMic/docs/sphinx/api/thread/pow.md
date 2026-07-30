@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9e56b2fa78e1 -->
 
 # Thread::pow
 
@@ -88,9 +89,9 @@ ptype: Series
   mechanics.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="percentiles.html">
+  <a class="prev-link" href="plot.html">
     <span class="label">Previous</span>
-    <span class="title">percentiles</span>
+    <span class="title">plot</span>
   </a>
   <a class="next-link" href="prod.html">
     <span class="label">Next</span>

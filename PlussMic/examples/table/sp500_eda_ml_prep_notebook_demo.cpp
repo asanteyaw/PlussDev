@@ -46,8 +46,8 @@ int main() {
 
   // Feature extraction
   df.set({"Year", "Month", "DayOfWeek", "DailyRange", "OpenCloseSpread", "LogVolume"}) = {
-      df.features("Date").year(),
-      df.features("Date").month(),
+      df.features("Date").tl().year(),
+      df.features("Date").tl().month(),
       df.features("Date").as_timeline().strftime("%A"),
       df.features("High") - df.features("Low"),
       df.features("Close") - df.features("Open"),

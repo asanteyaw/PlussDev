@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -91,10 +91,25 @@ output column per <code class="docutils literal notranslate"><span class="pre">G
 <span class="w">                    </span><span class="p">{</span><span class="s">&quot;amount_mean&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
 <span class="w">                    </span><span class="p">{</span><span class="s">&quot;status_mode&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mode</span><span class="p">},</span>
 <span class="w">                </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================================================
+     | region  loans  amount_sum  amount_mean  status_mode
+----------------------------------------------------------
+0    | North   2      350         175          good       
+1    | South   2      200         100          bad        
+----------------------------------------------------------
+[2 cs x 5 feat]
 </pre></div>
 </div>
 <p>That single call mixes row count, numeric reduction, and categorical mode under one
-stable grouping plan.</p>
+stable grouping plan. <code class="docutils literal notranslate"><span class="pre">South</span></code>’s <code class="docutils literal notranslate"><span class="pre">status</span></code> values are <code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code>, tied at one
+occurrence each; <code class="docutils literal notranslate"><span class="pre">status_mode</span></code> picks <code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> because it was seen first (row <code class="docutils literal notranslate"><span class="pre">2</span></code>), not
+because it sorts first alphabetically — the same first-occurrence tie-break
+<a class="reference internal" href="../thread/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a> uses.</p>
 <p>Example 2. Let output names be inferred.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loans</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
 <span class="w">                </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">})</span>
@@ -102,22 +117,58 @@ stable grouping plan.</p>
 <span class="w">                    </span><span class="p">{</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Min</span><span class="p">},</span>
 <span class="w">                    </span><span class="p">{</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Max</span><span class="p">},</span>
 <span class="w">                </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================================
+     | region  amount_min  amount_max
+-------------------------------------
+0    | North   100         250       
+1    | South   80          120       
+-------------------------------------
+[2 cs x 3 feat]
 </pre></div>
 </div>
 <p>When <code class="docutils literal notranslate"><span class="pre">output</span></code> is left empty, Pluss generates a deterministic name from the source
-feature and the operation.</p>
+feature and the operation: <code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code> + <code class="docutils literal notranslate"><span class="pre">GroupOp::Min</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;amount_min&quot;</span></code>, and
+likewise for <code class="docutils literal notranslate"><span class="pre">&quot;amount_max&quot;</span></code>.</p>
 <p>Example 3. Aggregate by case-label levels.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loans</span><span class="p">.</span><span class="n">set_label</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2023.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2024.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2023.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2024.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">250.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">set_label</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
-<span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">})</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">}})</span>
 <span class="w">                  </span><span class="p">.</span><span class="n">agg</span><span class="p">({</span>
 <span class="w">                      </span><span class="p">{</span><span class="s">&quot;amount_sum&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
 <span class="w">                  </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================
+     | region  year  amount_sum
+-------------------------------
+0    | North   2023  100       
+1    | North   2024  250       
+2    | South   2023  80        
+3    | South   2024  120       
+-------------------------------
+[4 cs x 3 feat]
 </pre></div>
 </div>
 <p>The grouped result still comes back as a normal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>; the only difference is
-that the grouping key came from the case axis rather than an ordinary feature.</p>
+that the grouping key came from the case axis rather than an ordinary feature. Here
+every <code class="docutils literal notranslate"><span class="pre">(region,</span> <span class="pre">year)</span></code> pair is already unique, so each “group” has exactly one row
+and <code class="docutils literal notranslate"><span class="pre">amount_sum</span></code> just echoes the original <code class="docutils literal notranslate"><span class="pre">amount</span></code> value.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -127,7 +178,10 @@ that the grouping key came from the case axis rather than an ordinary feature.</
 <li><p><code class="docutils literal notranslate"><span class="pre">agg(...)</span></code> is the right surface when you want row count explicitly beside other
 aggregates. For example:
 <code class="docutils literal notranslate"><span class="pre">{&quot;n&quot;,</span> <span class="pre">&quot;&quot;,</span> <span class="pre">GroupOp::Count}</span></code> and <code class="docutils literal notranslate"><span class="pre">{&quot;avg_amount&quot;,</span> <span class="pre">&quot;amount&quot;,</span> <span class="pre">GroupOp::Mean}</span></code>.</p></li>
-<li><p>Group keys always lead the result. Aggregated outputs follow them.</p></li>
+<li><p>Group keys always lead the result. Aggregated outputs follow them, in the order
+their <code class="docutils literal notranslate"><span class="pre">GroupSpec</span></code> entries were given.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GroupOp::Mode</span></code> (and every other tie-sensitive grouped op) breaks ties by
+first-occurrence order within the group, not alphabetically or numerically.</p></li>
 <li><p>Today only <code class="docutils literal notranslate"><span class="pre">GroupLayout::Flat</span></code> is supported.</p></li>
 </ul>
 </section>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d908c6aef83f -->
 
 # Thread::corr_with
 
@@ -24,9 +25,9 @@ underlying [`corr()`](corr.md) computation itself doesn't come out to a finite
 number — for example, zero variance on either side (every observed value
 tied, under any of `Pearson`/`Spearman`/`KendallTau`) produces a `NaN`
 correlation, and that `NaN` is caught and reflected in
-`.thread().is_valid(0)` rather than silently passing through as a "valid"
+`.thread().notnull()` rather than silently passing through as a "valid"
 result. You never need to separately guard against a `NaN` hiding behind a
-`true` validity flag — check `.thread().is_valid(0)` and trust it.
+`true` validity flag — check the scalar validity mask and trust it.
 ```
 
 ## Parameters
@@ -73,7 +74,7 @@ Example 2. Below `min_count` valid pairs, the result is marked invalid.
 auto small = Thread(pluss::make_series({1.0, 2.0}));
 auto small_other = Thread(pluss::make_series({3.0, 4.0}));
 auto out2 = small.corr_with(small_other, ThreadCorrMethod::Pearson, 5);
-std::cout << out2.thread().is_valid(0);
+std::cout << out2.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output
@@ -83,13 +84,14 @@ false
 ```
 
 Example 3. Zero variance on the Pearson path is caught by the validity check
-— `is_valid(0)` is `false`, not just a `NaN` value hiding behind `true`.
+— the scalar validity mask is `false`, not just a `NaN` value hiding behind
+`true`.
 
 ```cpp
 auto constant = Thread(pluss::make_series({5.0, 5.0, 5.0}));
 auto varying = Thread(pluss::make_series({1.0, 2.0, 3.0}));
 auto out3 = constant.corr_with(varying, ThreadCorrMethod::Pearson, 1);
-std::cout << out3.thread().is_valid(0);
+std::cout << out3.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output
@@ -104,7 +106,7 @@ caught too, not just the Pearson path.
 
 ```cpp
 auto out4 = constant.corr_with(varying, ThreadCorrMethod::KendallTau, 1);
-std::cout << out4.thread().is_valid(0);
+std::cout << out4.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output

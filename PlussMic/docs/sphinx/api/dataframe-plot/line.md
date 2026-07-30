@@ -120,14 +120,14 @@ auto sales = DataFrame({
 });
 
 auto chart = sales.plot().line("amount", "month");
-chart.save_svg("monthly_amount.svg");
+chart.show();
 ```
 
 `sales.plot()` enters the accessor with no shared options; `.line("amount", "month")` draws
 `amount` on the y-axis against the text feature `month` on the x-axis (rendered as four
 evenly spaced categorical positions labeled `"Jan"`..`"Apr"`), producing a single unlabeled
-(no-legend, since there's only one y-feature) line trace. `save_svg` is what actually writes
-pixels — nothing above it touches disk.
+(no-legend, since there's only one y-feature) line trace. `chart.show()` is what actually
+opens the figure — nothing above it renders anything on its own.
 
 ![Output of Example 1](img/line-1.svg)
 
@@ -168,7 +168,7 @@ auto untitled = DataFrame({
 }, Thread(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
 
 auto chart = untitled.plot().line("amount");
-chart.save_svg("by_case.svg");
+chart.show();
 ```
 
 `untitled` was built with explicit row labels (`"Q1"`..`"Q4"`) and no `month`-style feature
@@ -216,12 +216,12 @@ line_options.line_width = 2.5;
 line_options.y_limit_method = pluss::pl::LimitMethod::Tight;
 
 auto chart = sales.plot().line("amount", "month", line_options);
-chart.save_png("monthly_amount.png", /*dpi=*/300);
+chart.show();
 ```
 
 The line is drawn slightly translucent (`alpha = 0.85`), thicker (`line_width = 2.5`), and
 the y-axis is fit tightly to the data's actual min/max instead of the default padded
-margin. `save_png` additionally takes an explicit DPI for the rasterized output.
+margin.
 
 ![Output of Example 6](img/line-6.svg)
 

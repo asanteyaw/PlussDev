@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9e2b05366704 -->
 
 # Thread::mode
 
@@ -188,8 +189,8 @@ Thread::mode: no values
     <span class="label">Previous</span>
     <span class="title">mod</span>
   </a>
-  <a class="next-link" href="month.html">
+  <a class="next-link" href="mul.html">
     <span class="label">Next</span>
-    <span class="title">month</span>
+    <span class="title">mul</span>
   </a>
 </div>

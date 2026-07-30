@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 13c902750c9f -->
 
 # DataFrameTsWindowAccessor::count
 

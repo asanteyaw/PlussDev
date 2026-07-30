@@ -1,12 +1,12 @@
 # Lymph Full API Reference
 
-Lymph method-centric reference, organized around the public API surface.
+Lymph method-centric reference generated from public headers.
 Each page follows **API Signature -> Inputs -> Output -> Options -> Examples (with expected outputs)**.
 Options/enums are documented under the methods that consume them.
 
-- Method pages: **135**
-- Data-type pages: **26**
-- Overloads covered: **180**
+- Method pages: **125**
+- Data-type pages: **27**
+- Overloads covered: **169**
 
 ## Function and Method Reference
 

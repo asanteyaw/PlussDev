@@ -15,11 +15,6 @@ ThreadTimelineAccessor::month() const -> Thread
 Replaces the bound thread with its calendar month (`1`-`12`), as a numeric
 `Series`.
 
-```{note} Also available as a direct Thread method
-`Thread::month()` exists directly (no `.tl()` needed) and produces the
-identical result.
-```
-
 ## Parameters
 
 `None`
@@ -63,7 +58,6 @@ ptype: Series
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, not a sentinel month number.
 - Reads the local calendar month relative to the thread's current timezone.
-- Identical to calling [`Thread::month()`](../thread/month.md) directly.
 
 ## See Also
 

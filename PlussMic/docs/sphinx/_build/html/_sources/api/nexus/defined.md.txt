@@ -126,8 +126,8 @@ might have handed the workspace off elsewhere.
     <span class="label">Previous</span>
     <span class="title">deduce</span>
   </a>
-  <a class="next-link" href="dloc.html">
+  <a class="next-link" href="detect_duplicates.html">
     <span class="label">Next</span>
-    <span class="title">dloc</span>
+    <span class="title">detect_duplicates</span>
   </a>
 </div>

@@ -311,7 +311,8 @@ bool extract_numeric_value(const pluss::Series& s, std::int64_t idx, double& out
 }
 
 std::optional<double> numeric_at(const Thread& t, std::int64_t row) {
-  if (!t.is_valid(row) || t.kind() != ThreadKind::Series) {
+  const auto valid = t.notnull().as_series().to_vec<bool>();
+  if (!valid[static_cast<std::size_t>(row)] || t.kind() != ThreadKind::Series) {
     return std::nullopt;
   }
   double out = 0.0;
@@ -322,7 +323,8 @@ std::optional<double> numeric_at(const Thread& t, std::int64_t row) {
 }
 
 bool bool_at(const Thread& t, std::int64_t row, bool default_value = false) {
-  if (!t.is_valid(row) || t.kind() != ThreadKind::Series) {
+  const auto valid = t.notnull().as_series().to_vec<bool>();
+  if (!valid[static_cast<std::size_t>(row)] || t.kind() != ThreadKind::Series) {
     return default_value;
   }
   double x = 0.0;
@@ -333,7 +335,8 @@ bool bool_at(const Thread& t, std::int64_t row, bool default_value = false) {
 }
 
 std::optional<std::string> note_at(const Thread& t, std::int64_t row) {
-  if (!t.is_valid(row) || t.kind() != ThreadKind::Note) {
+  const auto valid = t.notnull().as_series().to_vec<bool>();
+  if (!valid[static_cast<std::size_t>(row)] || t.kind() != ThreadKind::Note) {
     return std::nullopt;
   }
   return std::string(t.as_note().at(row));

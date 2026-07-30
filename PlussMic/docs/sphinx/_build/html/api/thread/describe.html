@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Thread::display_name" href="display_name.html" />
+    <link rel="next" title="Thread::distinct" href="distinct.html" />
     <link rel="prev" title="Thread::defined" href="defined.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 266bffcc153c -->
 <section id="thread-describe">
 <h1>Thread::describe<a class="headerlink" href="#thread-describe" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -62,7 +63,8 @@ exact per-column counterpart of that method, not a separately implemented
 calculation.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind</strong>: a frequency-oriented summary instead — <code class="docutils literal notranslate"><span class="pre">count</span></code> (non-missing
 entries), <code class="docutils literal notranslate"><span class="pre">unique</span></code> (distinct non-missing values), <code class="docutils literal notranslate"><span class="pre">top</span></code> (the most frequent
-value, ties broken alphabetically), <code class="docutils literal notranslate"><span class="pre">freq</span></code> (that value’s count).</p></li>
+value, ties kept in first-occurrence order via <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a>, not
+alphabetical order), <code class="docutils literal notranslate"><span class="pre">freq</span></code> (that value’s count).</p></li>
 <li><p><strong>Anything else</strong> (<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, non-numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>): throws —
 <code class="docutils literal notranslate"><span class="pre">describe()</span></code> has no defined summary for those payload kinds.</p></li>
 </ul>
@@ -77,7 +79,7 @@ only; has no effect on what an explicit <code class="docutils literal notranslat
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ThreadView</span></code>
 A summary view with one entry per statistic, labeled by statistic name. It is
-given a display name — the source thread’s own <a class="reference internal" href="display_name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">display_name</span></code></span></a>
+given a display name — the source thread’s own <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a>
 if it has one, or <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> otherwise — so the render footer always reads
 <code class="docutils literal notranslate"><span class="pre">Name:</span> <span class="pre">{name},</span> <span class="pre">ptype:</span> <span class="pre">{kind}</span></code> rather than the plain <code class="docutils literal notranslate"><span class="pre">ptype:</span> <span class="pre">{kind}</span></code> a default
 thread shows.</p>
@@ -151,8 +153,11 @@ unique  3
 Name: value, ptype: Note
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> are tied at two occurrences each; ties break
-alphabetically, so <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> (not <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code>) is reported as <code class="docutils literal notranslate"><span class="pre">top</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> are tied at two occurrences each. <code class="docutils literal notranslate"><span class="pre">top</span></code> comes from
+<a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> internally, whose tie-break keeps whichever value was
+<strong>first seen</strong> in the source data — <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> (row <code class="docutils literal notranslate"><span class="pre">0</span></code>) before <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> (row
+<code class="docutils literal notranslate"><span class="pre">1</span></code>) — not alphabetical order. The two happen to agree here since <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>
+is both first-seen and alphabetically first; that isn’t true in general.</p>
 <p>Example 4. Any other payload kind throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -177,7 +182,8 @@ alphabetically, so <code class="docutils literal notranslate"><span class="pre">
 exactly — <code class="docutils literal notranslate"><span class="pre">std</span></code> uses <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> (sample standard deviation), and quartiles use
 linear interpolation between the two closest ranks, so <code class="docutils literal notranslate"><span class="pre">50%</span></code> coincides with the
 median exactly, including for even-sized samples.</p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads, ties for <code class="docutils literal notranslate"><span class="pre">top</span></code> break alphabetically by value.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads, <code class="docutils literal notranslate"><span class="pre">top</span></code> comes from <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a>; ties for
+<code class="docutils literal notranslate"><span class="pre">top</span></code> keep first-occurrence order, not alphabetical order.</p></li>
 <li><p>The returned view always has a display name (<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> if the source thread
 didn’t already have one), so the render footer reads <code class="docutils literal notranslate"><span class="pre">Name:</span> <span class="pre">...,</span> <span class="pre">ptype:</span> <span class="pre">...</span></code>.</p></li>
 <li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> and <code class="docutils literal notranslate"><span class="pre">Note</span></code> payloads; <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, and
@@ -200,9 +206,9 @@ directly instead of the full summary.</p></li>
     <span class="label">Previous</span>
     <span class="title">defined</span>
   </a>
-  <a class="next-link" href="display_name.html">
+  <a class="next-link" href="distinct.html">
     <span class="label">Next</span>
-    <span class="title">display_name</span>
+    <span class="title">distinct</span>
   </a>
 </div>
 </section>
@@ -257,7 +263,7 @@ directly instead of the full summary.</p></li>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
       <li>Previous: <a href="defined.html" title="previous chapter">Thread::defined</a></li>
-      <li>Next: <a href="display_name.html" title="next chapter">Thread::display_name</a></li>
+      <li>Next: <a href="distinct.html" title="next chapter">Thread::distinct</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

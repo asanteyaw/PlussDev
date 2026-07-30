@@ -1,7 +1,7 @@
 # Lymph Full API Reference: Method Index
 
-Total method pages: **135**
-Total data-type pages: **26**
+Total method pages: **125**
+Total data-type pages: **27**
 
 ## Data Types
 
@@ -17,6 +17,7 @@ api/type-cluster-factory
 api/type-crossvalidationreport
 api/type-decompose-factory
 api/type-ensemble-factory
+api/type-foldbatchpair
 api/type-frameholdoutsplit
 api/type-kernel-factory
 api/type-linear-factory
@@ -52,6 +53,7 @@ api/method-candidate-candidate
 api/method-categoryindexer-features
 api/method-categoryindexer-learned
 api/method-categoryindexer-summary
+api/method-class-mix
 api/method-classification-summary
 api/method-compare-series
 api/method-confusion-table
@@ -82,11 +84,6 @@ api/method-multilinearmodel-infer-scores
 api/method-multilinearmodel-trained
 api/method-objective-rank-series
 api/method-objective-series
-api/method-online-factory-encoded-param-table
-api/method-online-factory-has-ledger
-api/method-online-factory-objective-rank-series
-api/method-online-factory-objective-series
-api/method-online-factory-tune-ledger
 api/method-onlinelinearclassifier-core
 api/method-onlinelinearclassifier-onlinelinearclassifier
 api/method-onlinelinearclassifier-seen-samples
@@ -100,20 +97,7 @@ api/method-outlierisolator-learned
 api/method-outlierisolator-summary
 api/method-output-render
 api/method-pipeline
-api/method-prep-categoryindexer-learn
-api/method-prep-categoryindexer-learn-map
-api/method-prep-categoryindexer-map
-api/method-prep-outlierisolator-filter-inliers
-api/method-prep-outlierisolator-infer
-api/method-prep-outlierisolator-learn
-api/method-prep-outlierisolator-learn-infer
-api/method-prep-outlierisolator-score-samples
-api/method-prep-simpleimputer-learn
-api/method-prep-simpleimputer-learn-map
-api/method-prep-simpleimputer-map
-api/method-prep-standardscaler-learn
-api/method-prep-standardscaler-learn-map
-api/method-prep-standardscaler-map
+api/method-resolve-training-weights
 api/method-simple-imputer-strategy-name
 api/method-simpleimputer-features
 api/method-simpleimputer-learned
@@ -125,6 +109,13 @@ api/method-take-features
 api/method-temporal-features
 api/method-to-csr
 api/method-tune-ledger
+api/method-tuneresult-best
+api/method-tuneresult-encoded-param-table
+api/method-tuneresult-has-ledger
+api/method-tuneresult-objective-rank-series
+api/method-tuneresult-objective-series
+api/method-tuneresult-topk
+api/method-tuneresult-tune-ledger
 api/method-variance-prune
 api/method-workflow-coeff
 api/method-workflow-dependence-curve

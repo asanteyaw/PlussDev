@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,24 +48,62 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Sums each non-key value feature within each group.</p>
+<p>Sums each non-key value feature within each group — the grouped convenience terminal
+equivalent to calling <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with a <code class="docutils literal notranslate"><span class="pre">GroupOp::Sum</span></code> spec for every
+remaining value feature.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">})</span>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>This method takes no parameters.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per group. The group key column(s) come first, followed by one
+<code class="docutils literal notranslate"><span class="pre">{feature}_sum</span></code> column per non-key value feature.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Sum both remaining value features per city.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
 <span class="w">               </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>This yields grouped columns such as <code class="docutils literal notranslate"><span class="pre">amount_sum</span></code> and <code class="docutils literal notranslate"><span class="pre">units_sum</span></code>.</p>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================
+     | city   amount_sum  units_sum
+-----------------------------------
+0    | Accra  180         3        
+1    | Tema   90          4        
+-----------------------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>’s two rows sum to <code class="docutils literal notranslate"><span class="pre">amount_sum</span> <span class="pre">=</span> <span class="pre">100</span> <span class="pre">+</span> <span class="pre">80</span> <span class="pre">=</span> <span class="pre">180</span></code> and
+<code class="docutils literal notranslate"><span class="pre">units_sum</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">+</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">3</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> sums to <code class="docutils literal notranslate"><span class="pre">50</span> <span class="pre">+</span> <span class="pre">40</span> <span class="pre">=</span> <span class="pre">90</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">+</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">4</span></code>.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Intended for additive value features.</p></li>
+<li><p>Intended for additive value features; summing non-numeric features throws, the
+same as <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with <code class="docutils literal notranslate"><span class="pre">GroupOp::Sum</span></code>.</p></li>
 <li><p>Equivalent in spirit to <code class="docutils literal notranslate"><span class="pre">agg({{&quot;&quot;,</span> <span class="pre">&quot;amount&quot;,</span> <span class="pre">GroupOp::Sum},</span> <span class="pre">...})</span></code>, but with
-automatic spec generation for the current value features.</p></li>
+automatic spec generation (and automatic <code class="docutils literal notranslate"><span class="pre">{feature}_sum</span></code> naming) for every current
+value feature.</p></li>
+<li><p>A group where the value feature is entirely null sums to null, not <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

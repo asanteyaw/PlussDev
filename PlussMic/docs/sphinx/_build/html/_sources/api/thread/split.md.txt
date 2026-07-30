@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e0b7a23804b5 -->
 
 # Thread::split
 
@@ -271,9 +272,9 @@ Thread::split: expected Note payload
   its output columns.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="arrange.html">
+  <a class="prev-link" href="slice.html">
     <span class="label">Previous</span>
-    <span class="title">arrange</span>
+    <span class="title">slice</span>
   </a>
   <a class="next-link" href="starts.html">
     <span class="label">Next</span>

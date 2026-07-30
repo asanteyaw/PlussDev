@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 72a75eb7a1fc -->
 
 # DataFrameTsResampler::sum
 

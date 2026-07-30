@@ -40,11 +40,11 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | Row operations | `head`, `tail`, `view`, `shift`, `slice`, `take`, `filter`, `arrange`, `distinct` |
 | Numeric | `abs`, `clip`, `log`, `exp`, reductions |
 | Text | `lower`, `replace`, `contains` |
-| Time | `year`, `month`, `day`, `hour`, `to_note_weekday`, `ts` |
-| Compare | `compare`, `btw`, `compare_rows` |
+| Time | `tl`, `tl().year`, `tl().month`, `tl().day`, `tl().hour`, `tl().weekday_name`, `ts` |
+| Compare | `compare`, `btw` |
 | Cast | `cast`, `astype` |
 | Payload | `as_series`, `as_note`, `as_timeline`, `as_timeindex` |
-| Display | `show`, `with_display_labels`, `with_display_name` |
+| Display | `show`, `with_display_labels`, `name`, `named`, `unname` |
 
 See [Thread API Reference](../thread_api_reference.md).
 

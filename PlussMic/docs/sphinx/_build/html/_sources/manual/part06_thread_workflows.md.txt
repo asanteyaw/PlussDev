@@ -88,14 +88,13 @@ thread.unique();
 thread.size();
 thread.kind();
 thread.dtype();
-thread.is_valid(0);
 thread.isnull();
 thread.notnull();
 ```
 
 `dtype()` reports the payload dtype, such as `float64` or `utf8`. It does
-not tell you whether the thread has missing values. Use `isnull()`,
-`notnull()`, or `is_valid(row)` for that.
+not tell you whether the thread has missing values. Use `isnull()` or
+`notnull()` for that.
 
 Display and debug methods:
 
@@ -554,24 +553,24 @@ contains check is performed on the lowercased values, so it matches both
 Timeline and TimeIndex payloads support calendar extraction:
 
 ```cpp
-auto years = dates.year();
-auto months = dates.month();
-auto days = dates.day();
-auto hours = dates.hour();
-auto weekdays = dates.to_note_weekday();
+auto years = dates.tl().year();
+auto months = dates.tl().month();
+auto days = dates.tl().day();
+auto hours = dates.tl().hour();
+auto weekdays = dates.tl().weekday_name();
 ```
 
 These return Threads so they can be inserted back into a DataFrame:
 
 ```cpp
-auto enriched = df.set("year", df.features("timestamp").year());
+df.set("year") = df.features("timestamp").tl().year();
 ```
 
 If you need to parse string dates, cast a Note-backed Thread to Timeline first:
 
 ```cpp
-auto timeline = text_dates.cast(pluss::table::ThreadCastTarget::Timeline);
-auto months = timeline.month();
+auto timeline = text_dates.cast().timeline();
+auto months = timeline.tl().month();
 ```
 
 ## Display labels and names
@@ -580,7 +579,7 @@ Display metadata is useful for presentation, but it should not be treated as
 schema truth.
 
 ```cpp
-auto named = thread.with_display_name("balance");
+auto named = thread.name("balance");
 auto labeled = named.with_display_labels(labels);
 
 named.show();

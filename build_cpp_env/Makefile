@@ -5678,6 +5678,19 @@ plussmic_table_gap_benchmark/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build
 .PHONY : plussmic_table_gap_benchmark/fast
 
+#=============================================================================
+# Target rules for targets named plussmic_bundle_gap_benchmark
+
+# Build rule for target.
+plussmic_bundle_gap_benchmark: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_bundle_gap_benchmark
+.PHONY : plussmic_bundle_gap_benchmark
+
+# fast build rule for target.
+plussmic_bundle_gap_benchmark/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build
+.PHONY : plussmic_bundle_gap_benchmark/fast
+
 PlussAI/Ice/core/callback.o: PlussAI/Ice/core/callback.cpp.o
 .PHONY : PlussAI/Ice/core/callback.o
 
@@ -9324,6 +9337,7 @@ help:
 	@echo "... plussma_ts_vecm_raw_demo"
 	@echo "... plussmic_atlas_plot_demo"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
+	@echo "... plussmic_bundle_gap_benchmark"
 	@echo "... plussmic_bundle_model_demo"
 	@echo "... plussmic_bundle_model_tests"
 	@echo "... plussmic_csv_engine_bench"

@@ -62,6 +62,11 @@ Nexus& Nexus::inject_(const Atlas& atlas) {
 
 Atlas Nexus::to_atlas(std::initializer_list<std::string_view> selected_keys,
                       std::optional<Thread> labels) const {
+  return to_atlas(pluss::msharp::RangeView::Of<std::string_view>(selected_keys), std::move(labels));
+}
+
+Atlas Nexus::to_atlas(pluss::msharp::RangeView::Of<std::string_view> selected_keys,
+                      std::optional<Thread> labels) const {
   const auto owned = normalize_requested_keys(selected_keys, "Nexus::to_atlas");
   const auto& src = impl_ref_();
   std::vector<DataFrame> out;

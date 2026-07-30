@@ -172,9 +172,9 @@ Nexus::flow: callback returned undefined Nexus
 - [`Nexus::map_frames`](map_frames.md): functional table-by-table mapping.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="empty.html">
+  <a class="prev-link" href="fingerprint.html">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">fingerprint</span>
   </a>
   <a class="next-link" href="frame.html">
     <span class="label">Next</span>

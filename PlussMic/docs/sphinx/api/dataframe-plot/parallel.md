@@ -87,12 +87,14 @@ auto flowers = DataFrame({
 });
 
 auto chart = flowers.plot().parallel();
-chart.save_svg("flowers_parallel.svg");
+chart.show();
 ```
 
 `parallel()` with no arguments uses `sepal_length`, `sepal_width`, and `petal_length` (the
 three `Series`-kind features) as axes; `species` (Note-kind) is excluded from the axes
 since it isn't numeric.
+
+![Output of Example 1](img/parallel-1.svg)
 
 Example 2. An explicit feature subset, colored by a class feature.
 
@@ -104,6 +106,8 @@ chart.show();
 Each row's line is colored/grouped by its `species` value; a legend labeled with each
 distinct species appears (since `show_legend` defaults to `true`).
 
+![Output of Example 2](img/parallel-2.svg)
+
 Example 3. An explicit `ParallelPlotOptions`, with custom axis labels and reduced
 transparency for a small dataset where overplotting isn't a concern.
 
@@ -114,12 +118,14 @@ options.alpha = 0.7;
 options.normalize = false;
 
 auto chart = flowers.plot().parallel({"sepal_length", "sepal_width", "petal_length"}, "species", options);
-chart.save_png("flowers_parallel.png");
+chart.show();
 ```
 
 `normalize = false` plots each axis on its own raw numeric scale instead of a normalized
 `0..1`-style range — meaningful here since `sepal_length`/`sepal_width`/`petal_length` are
 all already in centimeters and comparable.
+
+![Output of Example 3](img/parallel-3.svg)
 
 Example 4. `class_feature` accepts a numeric feature too — unlike `scatter()`'s
 `hue_feature`, there's no type restriction here.
@@ -137,6 +143,8 @@ auto chart = numeric_class.plot().parallel({"x1", "x2"}, "code");
 `code` is a plain numeric `Series`, but `parallel()` still accepts it as `class_feature` —
 its values are cast to text first (`"1"`, `"2"`), so rows with `code == 1.0` and `code ==
 2.0` become two distinctly colored classes.
+
+![Output of Example 4](img/parallel-4.svg)
 
 ## Notes
 

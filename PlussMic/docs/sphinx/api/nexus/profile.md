@@ -196,12 +196,12 @@ std::cout << broken_profile.features("key_duplicate_rows").as_series().to_vec<st
   declared.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ntables.html">
+  <a class="prev-link" href="plan.html">
     <span class="label">Previous</span>
-    <span class="title">ntables</span>
+    <span class="title">plan</span>
   </a>
-  <a class="next-link" href="rename.html">
+  <a class="next-link" href="pull.html">
     <span class="label">Next</span>
-    <span class="title">rename</span>
+    <span class="title">pull</span>
   </a>
 </div>

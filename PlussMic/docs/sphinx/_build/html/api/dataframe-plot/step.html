@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::violin" href="violin.html" />
-    <link rel="prev" title="DataFramePlotAccessor::scatter_matrix" href="scatter_matrix.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -110,12 +108,13 @@ A figure with one pane containing one step trace per requested y-feature.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rates</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">(</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tier&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;price_by_tier.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">price</span></code> is drawn as a step function against the categorical <code class="docutils literal notranslate"><span class="pre">tier</span></code> axis — visually
 emphasizing that the price is constant within a tier and jumps at tier boundaries, rather
 than implying a continuous interpolation between tiers.</p>
+<p><img alt="Output of Example 1" src="../../_images/step-1.svg" /></p>
 <p>Example 2. Multiple y-features via <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>, sharing one x-axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rates</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">({</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;limit&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;tier&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
@@ -123,34 +122,39 @@ than implying a continuous interpolation between tiers.</p>
 </div>
 <p>Two step traces (<code class="docutils literal notranslate"><span class="pre">price</span></code> and <code class="docutils literal notranslate"><span class="pre">limit</span></code>) share the <code class="docutils literal notranslate"><span class="pre">tier</span></code> x-axis on one pane; a legend appears
 automatically since more than one y-feature was requested.</p>
+<p><img alt="Output of Example 2" src="../../_images/step-2.svg" /></p>
 <p>Example 3. The same multi-feature call via a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_names</span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;limit&quot;</span><span class="p">};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rates</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y_names</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;tier&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;tiers.pdf&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 3" src="../../_images/step-3.svg" /></p>
 <p>Example 4. No <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>: falls back to the frame’s row labels, exactly as
 <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s Example 3 demonstrates.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rates</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">(</span><span class="s">&quot;price&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;price_by_case.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>With no <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> and no <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> configured on the accessor, the x-axis
 becomes <code class="docutils literal notranslate"><span class="pre">rates</span></code>’ own row labels (the default <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code> case index here, since
 <code class="docutils literal notranslate"><span class="pre">rates</span></code> was constructed without explicit row labels), titled <code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code>.</p>
+<p><img alt="Output of Example 4" src="../../_images/step-4.svg" /></p>
 <p>Example 5. An explicit <code class="docutils literal notranslate"><span class="pre">StepPlotOptions</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">StepPlotOptions</span><span class="w"> </span><span class="n">step_options</span><span class="p">;</span>
 <span class="n">step_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span><span class="p">;</span>
 <span class="n">step_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rates</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">(</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tier&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">step_options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;price_step.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/step-5.svg" /></p>
 <p>Example 6. Multiple y-features with an explicit options object.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rates</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">({</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;limit&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;tier&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">step_options</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 6" src="../../_images/step-6.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -208,11 +212,8 @@ canonical explanation of this accessor’s shared x-axis and <code class="docuti
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -226,16 +227,6 @@ canonical explanation of this accessor’s shared x-axis and <code class="docuti
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="scatter_matrix.html" title="previous chapter">DataFramePlotAccessor::scatter_matrix</a></li>
-      <li>Next: <a href="violin.html" title="next chapter">DataFramePlotAccessor::violin</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

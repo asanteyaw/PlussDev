@@ -58,6 +58,8 @@ Option semantics used by this method:
     Option field used by this method.
   - `Series parameter_upper_bounds = Series::undefined()`
     Option field used by this method.
+  - `BalanceTarget balance{}`
+    Learning-rate step size.
 
 ## Examples
 

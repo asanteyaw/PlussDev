@@ -56,6 +56,10 @@ public:
   Atlas features(std::string_view feature) const;
   Atlas features(std::initializer_list<std::string_view> features) const;
   Atlas features(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  Atlas features(const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return this->features(names); });
+  }
   AtlasLabelAccessor label() const;
   AtlasPlotAccessor plot() const;
   AtlasPlotAccessor plot(const AtlasPlotOptions& options) const;

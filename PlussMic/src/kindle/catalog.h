@@ -5,13 +5,16 @@
 #include <initializer_list>
 #include <iosfwd>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "common/StringViewNameRange.h"
 #include "MSharp/IntrusivePtr.h"
 #include "loader/Config.h"
 #include "loader/CsvLoader.h"
@@ -45,6 +48,14 @@ constexpr KeyToken operator""_k(const char* s, std::size_t n) noexcept {
 namespace detail {
 class CatalogImpl;
 }
+
+class CatalogKeyAccessor;
+class CatalogKeyAxisAccessor;
+class CatalogCastAccessor;
+class CatalogNoteAccessor;
+class CatalogTimelineAccessor;
+class CatalogTimeSeriesAccessor;
+class CatalogGroupBuilder;
 
 enum class Align : std::uint8_t {
   Strict = 0,
@@ -144,15 +155,16 @@ public:
   bool empty() const;
 
   const std::vector<std::string>& keys() const;
+  CatalogKeyAccessor keys(std::string_view key) const;
+  CatalogKeyAccessor keys(std::span<const std::string_view> field_names) const;
+  CatalogKeyAccessor keys(std::initializer_list<std::string_view> field_names) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  CatalogKeyAccessor keys(const NameRange& field_names) const;
+  CatalogKeyAxisAccessor keyaxis() const;
+  CatalogGroupBuilder group() const;
   bool has(std::string_view key) const;
   Stream at(std::string_view key) const;
   std::optional<Stream> get(std::string_view key) const;
-
-  // Kind projections.
-  Catalog series() const;
-  Catalog note() const;
-  Catalog timeline() const;
-  Catalog timeindex() const;
 
   // Vectorized stream delegation.
   Catalog head(std::int64_t n) const;
@@ -166,10 +178,20 @@ public:
   Catalog where(const pluss::Series& condition) const;
   Catalog query(const QueryFn& fn) const;
   Catalog masked_select(const pluss::Series& mask) const;
+  Catalog select(std::span<const std::string_view> field_names) const;
   Catalog select(std::initializer_list<std::string_view> field_names) const;
   Catalog select(const std::vector<std::string>& field_names) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  Catalog select(const NameRange& field_names) const {
+    return pluss::detail::with_name_span(field_names, [&](auto names) { return select(names); });
+  }
   Catalog drop(std::string_view field_name) const;
+  Catalog drop(std::span<const std::string_view> field_names) const;
   Catalog drop(const std::vector<std::string>& field_names) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  Catalog drop(const NameRange& field_names) const {
+    return pluss::detail::with_name_span(field_names, [&](auto names) { return drop(names); });
+  }
   Catalog rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const;
   Catalog rename(std::string_view from, std::string_view to) const;
   Catalog& rename_(std::string_view from, std::string_view to);
@@ -177,39 +199,29 @@ public:
   Catalog sort(std::string_view by_field, bool ascending = true) const;
   Catalog sort_by(const std::vector<std::string>& fields,
                   const std::vector<bool>& ascending = {}) const;
-  std::unordered_map<std::string, Catalog> group_by(std::string_view key_field) const;
-  Catalog fillnull(double value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog fillnull(std::string_view value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog fillnull(const char* value, std::initializer_list<std::string_view> keys = {}) const {
-    return fillnull(std::string_view{value != nullptr ? value : ""}, keys);
+  Catalog fillnull(double value) const;
+  Catalog fillnull(std::string_view value) const;
+  Catalog fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
   }
-  Catalog fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const;
-  Catalog dropnull(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog ffill(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog bfill(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog isnull(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog notnull(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog invalid(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog cast(std::initializer_list<std::string_view> keys,
-               pluss::table::ThreadCastTarget target,
+  Catalog fillnull(const pluss::Timeline& value) const;
+  Catalog fillnull(const pluss::TimeIndex& value) const;
+  Catalog dropnull() const;
+  Catalog ffill() const;
+  Catalog bfill() const;
+  Catalog isnull() const;
+  Catalog notnull() const;
+  Catalog invalid() const;
+  Catalog cast(pluss::table::ThreadCastTarget target,
                const pluss::table::ThreadCastOptions& options = {}) const;
-  Catalog astype(std::initializer_list<std::string_view> keys,
-                 pluss::codem::ScalarType dtype) const;
+  Catalog astype(pluss::codem::ScalarType dtype) const;
   Stream sum(std::string_view field) const;
   Stream mean(std::string_view field) const;
   Stream min(std::string_view field) const;
   Stream max(std::string_view field) const;
-  Stream distinct(std::string_view key, DistinctOptions options = {}) const;
   Catalog distinct(DistinctOptions options = {}) const;
-  Catalog distinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) const;
-  Stream freq(std::string_view key, FreqOptions options = {}) const;
   Catalog freq(FreqOptions options = {}) const;
-  Catalog freq(std::initializer_list<std::string_view> keys,
-               FreqOptions options = {}) const;
-  Stream ndistinct(std::string_view key, DistinctOptions options = {}) const;
   Catalog ndistinct(DistinctOptions options = {}) const;
-  Catalog ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options = {}) const;
   Catalog merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const;
   Catalog apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const;
   Catalog& apply_(std::string_view field, const std::function<Stream(const Stream&)>& func);
@@ -271,6 +283,221 @@ private:
 
   pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl_{nullptr};
 };
+
+class CatalogKeyAccessor {
+public:
+  CatalogKeyAccessor(Catalog base, std::vector<std::string> keys);
+
+  CatalogCastAccessor cast() const;
+  CatalogCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  CatalogNoteAccessor nt() const;
+  CatalogTimelineAccessor tl() const;
+  CatalogTimeSeriesAccessor ts() const;
+
+  Catalog fillnull(double value) const;
+  Catalog fillnull(std::string_view value) const;
+  Catalog fillnull(const char* value) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""});
+  }
+  Catalog fillnull(const pluss::Timeline& value) const;
+  Catalog fillnull(const pluss::TimeIndex& value) const;
+  Catalog dropnull() const;
+  Catalog ffill() const;
+  Catalog bfill() const;
+  Catalog isnull() const;
+  Catalog notnull() const;
+  Catalog invalid() const;
+  Catalog distinct(DistinctOptions options = {}) const;
+  Catalog freq(FreqOptions options = {}) const;
+  Catalog ndistinct(DistinctOptions options = {}) const;
+  Catalog astype(pluss::codem::ScalarType dtype) const;
+
+private:
+  template <class Fn>
+  Catalog map_selected_(Fn&& fn) const;
+
+  Catalog base_{};
+  std::vector<std::string> keys_{};
+
+  friend class CatalogCastAccessor;
+  friend class CatalogKeyAxisAccessor;
+  friend class CatalogNoteAccessor;
+  friend class CatalogTimelineAccessor;
+  friend class CatalogTimeSeriesAccessor;
+};
+
+class CatalogKeyAxisAccessor {
+public:
+  explicit CatalogKeyAxisAccessor(Catalog base);
+
+  Catalog like(std::string_view needle, bool case_sensitive = true) const;
+  Catalog match(std::string_view pattern) const;
+  Catalog series() const;
+  Catalog note() const;
+  Catalog timeline() const;
+  Catalog timeindex() const;
+  Catalog prefix(std::string_view prefix) const;
+  Catalog suffix(std::string_view suffix) const;
+
+private:
+  Catalog base_{};
+};
+
+class CatalogCastAccessor {
+public:
+  CatalogCastAccessor(Catalog base,
+                      std::vector<std::string> keys,
+                      pluss::table::ThreadCastOptions options = {});
+
+  Catalog series() const;
+  Catalog note() const;
+  Catalog timeline() const;
+  Catalog timeindex() const;
+
+private:
+  CatalogKeyAccessor keysel_;
+  pluss::table::ThreadCastOptions options_{};
+};
+
+class CatalogNoteAccessor {
+public:
+  CatalogNoteAccessor(Catalog base, std::vector<std::string> keys);
+
+  Catalog strip() const;
+  Catalog strip(std::string_view chars) const;
+  Catalog lstrip() const;
+  Catalog lstrip(std::string_view chars) const;
+  Catalog rstrip() const;
+  Catalog rstrip(std::string_view chars) const;
+  Catalog lower() const;
+  Catalog upper() const;
+  Catalog casefold() const;
+  Catalog titlecase() const;
+  Catalog length() const;
+  Catalog starts(std::string_view prefix) const;
+  Catalog ends(std::string_view suffix) const;
+  Catalog has(std::string_view needle,
+              const pluss::table::TextOptions& options = {}) const;
+  Catalog count(std::string_view pattern) const;
+  Catalog count(std::string_view pattern,
+                const pluss::table::TextOptions& options) const;
+  Catalog matches(std::string_view pattern, bool full = false) const;
+  Catalog fullmatch(std::string_view pattern) const;
+  std::unordered_map<std::string, pluss::table::DataFrame> findall(std::string_view pattern) const;
+  std::unordered_map<std::string, pluss::table::DataFrame> findall(
+      std::string_view pattern,
+      const pluss::table::TextOptions& options) const;
+  std::unordered_map<std::string, pluss::table::DataFrame> split(
+      std::string_view delimiter,
+      std::int64_t limit = -1,
+      std::string prefix = "part") const;
+  std::unordered_map<std::string, pluss::table::DataFrame> split(
+      std::string_view pattern,
+      const pluss::table::TextOptions& options) const;
+  std::unordered_map<std::string, pluss::table::DataFrame> partition(
+      std::string_view separator,
+      std::string prefix = "part") const;
+  Catalog pad(std::int64_t width,
+              pluss::table::TextAlign align = pluss::table::TextAlign::Left,
+              char fill = ' ') const;
+  Catalog chars(std::int64_t start,
+                std::optional<std::int64_t> stop = std::nullopt,
+                std::int64_t step = 1) const;
+  Catalog normalize(pluss::table::UnicodeForm form = pluss::table::UnicodeForm::NFC) const;
+  Catalog encode(std::string_view encoding = "base64") const;
+  std::unordered_map<std::string, pluss::table::DataFrame> indicate(
+      std::string_view delimiter = "|",
+      std::string prefix = "") const;
+  Catalog replace(std::string_view from, std::string_view to) const;
+  Catalog replace(std::string_view from,
+                  std::string_view to,
+                  const pluss::table::TextOptions& options) const;
+
+private:
+  CatalogKeyAccessor keysel_;
+};
+
+class CatalogTimelineAccessor {
+public:
+  CatalogTimelineAccessor(Catalog base, std::vector<std::string> keys);
+
+  Catalog isnat() const;
+  Catalog valid() const;
+  Catalog year() const;
+  Catalog month() const;
+  Catalog day() const;
+  Catalog hour() const;
+  Catalog minute() const;
+  Catalog second() const;
+  Catalog weekday() const;
+  Catalog yearday() const;
+  Catalog quarter() const;
+  Catalog week() const;
+  Catalog weekend() const;
+  Catalog month_start() const;
+  Catalog month_end() const;
+  Catalog leap() const;
+  Catalog weekday_name() const;
+  Catalog month_name() const;
+  Catalog fmt(std::string_view pattern) const;
+  Catalog iso() const;
+  Catalog epoch(pluss::table::TimeUnit unit = pluss::table::TimeUnit::Nanos) const;
+  Catalog floor(std::string_view unit) const;
+  Catalog ceil(std::string_view unit) const;
+  Catalog round(std::string_view unit) const;
+  Catalog date() const;
+  Catalog time() const;
+  Catalog shift(std::int64_t periods, std::string_view freq) const;
+  Catalog period(std::string_view freq) const;
+  Catalog tz(std::string_view name) const;
+  Catalog localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
+  Catalog utc() const;
+  Catalog index(bool require_sorted = true) const;
+
+private:
+  CatalogKeyAccessor keysel_;
+};
+
+class CatalogTimeSeriesAccessor {
+public:
+  CatalogTimeSeriesAccessor(Catalog base, std::vector<std::string> keys);
+
+  Catalog returns(std::int64_t periods = 1) const;
+  Catalog log_returns(std::int64_t periods = 1) const;
+  Catalog diff(std::int64_t periods = 1) const;
+  Catalog lag(std::int64_t periods = 1) const;
+  Catalog lead(std::int64_t periods = 1) const;
+  Catalog rolling(std::int64_t window,
+                  pluss::table::WindowStatistic statistic = pluss::table::WindowStatistic::Mean,
+                  const pluss::table::WindowOptions& options = {}) const;
+
+private:
+  CatalogKeyAccessor keysel_;
+};
+
+class CatalogGroupBuilder {
+public:
+  explicit CatalogGroupBuilder(Catalog base);
+
+  std::unordered_map<std::string, Catalog> by(std::string_view key) const;
+
+private:
+  Catalog base_{};
+};
+
+template <class Fn>
+Catalog CatalogKeyAccessor::map_selected_(Fn&& fn) const {
+  Catalog out = base_;
+  for (const auto& key : keys_) {
+    out.set_(key, std::forward<Fn>(fn)(base_.at(key)));
+  }
+  return out;
+}
+
+template <pluss::detail::StringViewNameRange NameRange>
+CatalogKeyAccessor Catalog::keys(const NameRange& field_names) const {
+  return pluss::detail::with_name_span(field_names, [&](auto names) { return keys(names); });
+}
 
 std::ostream& operator<<(std::ostream& os, const Catalog& catalog);
 

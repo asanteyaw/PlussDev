@@ -15,11 +15,6 @@ ThreadTimelineAccessor::hour() const -> Thread
 Replaces the bound thread with its hour-of-day (`0`-`23`), as a numeric
 `Series`.
 
-```{note} Also available as a direct Thread method
-`Thread::hour()` exists directly (no `.tl()` needed) and produces the
-identical result.
-```
-
 ## Parameters
 
 `None`
@@ -65,7 +60,6 @@ ptype: Series
 - Reads the local hour relative to the thread's current timezone; changing
   timezone with [`tz()`](tz.md) changes what `hour()` reports for the same
   underlying instant.
-- Identical to calling [`Thread::hour()`](../thread/hour.md) directly.
 
 ## See Also
 

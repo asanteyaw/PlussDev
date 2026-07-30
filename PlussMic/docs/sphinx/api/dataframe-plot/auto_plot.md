@@ -95,11 +95,13 @@ auto monthly = DataFrame({
 }, Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
 
 auto chart = monthly.plot().auto_plot();
-chart.save_svg("monthly_auto.svg");
+chart.show();
 ```
 
 Row labels are Note-kind and there are only 4 rows (`≤ 16`), so this is equivalent to
 `monthly.plot().bar("revenue")`.
+
+![Output of Example 1](img/auto_plot-1.svg)
 
 Example 2. One numeric feature, default (numeric) row axis: routes to `line()`.
 
@@ -114,6 +116,8 @@ chart.show();
 
 No row labels were provided, so `trend`'s row axis defaults to a plain numeric case index
 (not labeled-kind) — this is equivalent to `trend.plot().line("temperature")`.
+
+![Output of Example 2](img/auto_plot-2.svg)
 
 Example 3. Two numeric features (default/empty `features`), with a hue-capable feature
 elsewhere in the frame: routes to `scatter()` with that feature as hue.
@@ -133,6 +137,8 @@ chart.save_pdf("flowers_auto.pdf");
 left at its default empty value, so this is equivalent to
 `flowers.plot().scatter("sepal_length", "petal_length", "species")`.
 
+![Output of Example 3](img/auto_plot-3.svg)
+
 Example 4. The same two numeric features, but requested explicitly: the hue-scatter rule is
 skipped even though `species` still exists.
 
@@ -146,6 +152,8 @@ for hue-selection purposes. (`flowers` has no explicit row labels here, so its r
 the default numeric index, and this particular example actually falls all the way through
 to rule 5's scatter-matrix fallback.)
 
+![Output of Example 4](img/auto_plot-4.svg)
+
 Example 5. Two non-negative features, labeled row axis, few rows: routes to `bar_stacked()`.
 
 ```cpp
@@ -155,11 +163,13 @@ auto budget = DataFrame({
 }, Thread(pluss::make_note({"Q1", "Q2", "Q3"})));
 
 auto chart = budget.plot().auto_plot();
-chart.save_png("budget_auto.png");
+chart.show();
 ```
 
 Both features are all-nonnegative, the row axis is labeled, and there are only 3 rows
 (`≤ 12`) — equivalent to `budget.plot().bar_stacked({"engineering", "sales"})`.
+
+![Output of Example 5](img/auto_plot-5.svg)
 
 Example 6. The same shape but with more than 12 rows: routes to `area_stacked()` instead.
 
@@ -175,6 +185,8 @@ auto chart = wide_budget.plot().auto_plot();
 
 Still all-nonnegative and labeled, but now 20 rows (`> 12`) — equivalent to
 `wide_budget.plot().area_stacked({"engineering", "sales"})`.
+
+![Output of Example 6](img/auto_plot-6.svg)
 
 Example 7. Three numeric features, no labeled axis, more than 24 rows: routes to a
 multi-feature `line()`.
@@ -194,12 +206,14 @@ auto series = DataFrame({
 });
 
 auto chart = series.plot().auto_plot();
-chart.save_svg("series_auto.svg");
+chart.show();
 ```
 
 No row labels (default numeric index) but 30 rows (`> 24`) makes `prefer_index_plot()` true
 regardless; 3 features fits within rule 4's `≤ 4` cap — equivalent to
 `series.plot().line({"a", "b", "c"})`.
+
+![Output of Example 7](img/auto_plot-7.svg)
 
 Example 8. Five numeric features, few rows, no other rule matching first: routes to a
 scatter-matrix.
@@ -221,6 +235,8 @@ chart.show();
 `metrics.plot().scatter_matrix({"m1", "m2", "m3", "m4", "m5"})`. (`m4` contains negative
 values, which would have disqualified rules 3 and 4 anyway even at a smaller feature count.)
 
+![Output of Example 8](img/auto_plot-8.svg)
+
 Example 9. More than five numeric features: routes to a correlation heatmap.
 
 ```cpp
@@ -239,6 +255,8 @@ chart.save_pdf("wide_metrics_auto.pdf");
 
 6 features exceeds rule 5's `≤ 5` cap, so routing falls all the way to the final rule —
 equivalent to `wide_metrics.plot().corr_heatmap({"m1", ..., "m6"})`.
+
+![Output of Example 9](img/auto_plot-9.svg)
 
 Example 10. A non-numeric feature name in an explicit request throws, same as
 [`box()`](box.md).

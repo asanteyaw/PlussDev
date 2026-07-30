@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f343545e9767 -->
 
 # Thread::var
 
@@ -109,7 +110,7 @@ the result is valid. Check validity through `.thread()` first.
 ```cpp
 auto small = Thread(pluss::make_series({10.0, 20.0}));
 auto out4 = small.var(StatisticOptions{.ddof = 1, .min_count = 5});
-std::cout << out4.thread().is_valid(0);
+std::cout << out4.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output
@@ -123,7 +124,7 @@ single-entry result thread is marked invalid at position `0` — no exception is
 thrown, but `.to_dbl()` would still hand back whatever number the arithmetic
 happened to produce underneath (`50`, in this case: `Series`/`ThreadValue`
 printing has no concept of nullness, only the wrapping `Thread`'s own validity
-mask does). Always check `.thread().is_valid(0)` (or wrap the result and use
+mask does). Always check the scalar validity mask (or wrap the result and use
 [`isnull()`](isnull.md)) before trusting a `StatisticOptions`-gated result.
 
 ## Notes

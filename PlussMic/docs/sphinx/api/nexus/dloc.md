@@ -77,9 +77,9 @@ true
   positional overloads.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="defined.html">
+  <a class="prev-link" href="detect_orphans.html">
     <span class="label">Previous</span>
-    <span class="title">defined</span>
+    <span class="title">detect_orphans</span>
   </a>
   <a class="next-link" href="drop.html">
     <span class="label">Next</span>

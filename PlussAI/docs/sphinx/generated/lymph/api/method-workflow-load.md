@@ -41,7 +41,6 @@ load returned Workflow
 
 ```cpp
     auto best = std::move(tuned.best_workflow);
-    best.learn_(train_x, train_y, train_options);
     const auto test_metrics = best.assess(test_x, test_y, assess_options);
     std::cout << "test metrics [rmse, r2, mae]: " << test_metrics.rmse << " " << test_metrics.r2 << " " << test_metrics.mae << "\n";
 

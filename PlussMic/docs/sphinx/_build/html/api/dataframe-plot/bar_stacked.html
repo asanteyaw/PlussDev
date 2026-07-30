@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::bootstrap" href="bootstrap.html" />
-    <link rel="prev" title="DataFramePlotAccessor::bar" href="bar.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -107,11 +105,12 @@ on the cumulative total of the ones before it.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">breakdown</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bar_stacked</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;returns_cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;breakdown_stacked.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Each city gets one bar whose bottom segment is <code class="docutils literal notranslate"><span class="pre">sales</span></code> and whose top segment (stacked above
 it) reaches <code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">+</span> <span class="pre">returns_cost</span></code>.</p>
+<p><img alt="Output of Example 1" src="../../_images/bar_stacked-1.svg" /></p>
 <p>Example 2. Three features stacked, via a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">parts_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
@@ -126,24 +125,28 @@ it) reaches <code class="docutils literal notranslate"><span class="pre">sales</
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/bar_stacked-2.svg" /></p>
 <p>Example 3. No <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>: falls back to the frame’s own row labels, as with every other
 chart method on this accessor — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s Example 3.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">breakdown</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bar_stacked</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;returns_cost&quot;</span><span class="p">});</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 3" src="../../_images/bar_stacked-3.svg" /></p>
 <p>Example 4. An explicit <code class="docutils literal notranslate"><span class="pre">BarStackedPlotOptions</span></code>, raising opacity toward a fully solid look.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BarStackedPlotOptions</span><span class="w"> </span><span class="n">stacked_options</span><span class="p">;</span>
 <span class="n">stacked_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
 <span class="n">stacked_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.2</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">breakdown</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bar_stacked</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;returns_cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">stacked_options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;breakdown_stacked.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 4" src="../../_images/bar_stacked-4.svg" /></p>
 <p>Example 5. The <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> overload with an explicit options object.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">breakdown</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bar_stacked</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;returns_cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">stacked_options</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/bar_stacked-5.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -204,11 +207,8 @@ shared mechanics.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -222,16 +222,6 @@ shared mechanics.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="bar.html" title="previous chapter">DataFramePlotAccessor::bar</a></li>
-      <li>Next: <a href="bootstrap.html" title="next chapter">DataFramePlotAccessor::bootstrap</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

@@ -130,6 +130,29 @@ void style_trace(Trace& trace,
   }
 }
 
+template <class X, class Y>
+void add_scatter_fit_line_(Pane& pane,
+                           X&& x,
+                           Y&& y,
+                           std::size_t color_index,
+                           const ScatterPlotOptions& options,
+                           std::optional<std::string> label = std::nullopt) {
+  if (!options.fit_line) {
+    return;
+  }
+  flash::RegPlotOptions reg_options;
+  reg_options.show_scatter = false;
+  reg_options.show_fit = true;
+  reg_options.show_ci = options.fit_ci;
+  reg_options.confidence_level = options.fit_confidence_level;
+  reg_options.order = options.fit_order;
+  auto& fit_trace = flash::regplot(pane, std::forward<X>(x), std::forward<Y>(y), reg_options);
+  fit_trace.stroke(color_for_index(color_index));
+  if (label.has_value()) {
+    fit_trace.label(*label);
+  }
+}
+
 pluss::pl::ViolinOptions to_core_violin_options(const ViolinPlotOptions& options) {
   pluss::pl::ViolinOptions out;
   out.width = options.width;
@@ -1307,6 +1330,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(
     auto& trace = flash::scatterplot(pane, axis.values, y_values);
     trace.label(std::string(y_feature));
     style_trace(trace, 0, options.alpha, options.line_width);
+    add_scatter_fit_line_(pane, axis.values, y_values, 0, options);
     return fig;
   }
 
@@ -1320,6 +1344,8 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(
     auto& trace = flash::scatterplot(pane, grouped.x[group_index], grouped.y[group_index]);
     trace.label(grouped.labels[group_index]);
     style_trace(trace, group_index, options.alpha, options.line_width);
+    add_scatter_fit_line_(pane, grouped.x[group_index], grouped.y[group_index], group_index, options,
+                          grouped.labels[group_index] + " fit");
   }
   return fig;
 }

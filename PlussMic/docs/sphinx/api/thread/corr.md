@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5ecd2f8f8472 -->
 
 # Thread::corr
 
@@ -161,9 +162,9 @@ true
   built on.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="compare_rows.html">
+  <a class="prev-link" href="compare.html">
     <span class="label">Previous</span>
-    <span class="title">compare_rows</span>
+    <span class="title">compare</span>
   </a>
   <a class="next-link" href="corr_with.html">
     <span class="label">Next</span>

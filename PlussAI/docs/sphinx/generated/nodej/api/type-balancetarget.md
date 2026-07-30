@@ -23,6 +23,12 @@ Public fields on this type:
 - `BalanceTargetKind kind = BalanceTargetKind::Keep`
 - `double ratio = 1.0`
 - `Series counts = Series::undefined()`
+- `BalanceGrowthKind growth = BalanceGrowthKind::ReuseRows`
+- `std::int64_t neighbors = 5`
+- `BalanceCleanKind clean = BalanceCleanKind::None`
+- `std::int64_t clean_neighbors = 3`
+- `BalanceCleanVote clean_vote = BalanceCleanVote::AnyDisagreement`
+- `bool protect_small_classes = true`
 
 ## Examples
 

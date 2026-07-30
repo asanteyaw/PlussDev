@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ab3ce5b30a9d -->
+
 # Thread::between
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,144 +8,122 @@
 ## Signatures
 
 ```cpp
-Thread::between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) -> Thread
-
-Thread::between(const Thread& lo, const Thread& hi, bool inclusive = true) -> Thread
-
-Thread::between(double a, double b, bool include_left, bool include_right) -> Thread
-
-Thread::between(double a, double b, bool inclusive = false) -> Thread
-
-Thread::between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) -> Thread
-
-Thread::between(std::string_view lo, std::string_view hi, bool inclusive = true) -> Thread
+Thread::between(double a, double b, bool inclusive = false) const -> Thread
+Thread::between(double a, double b, bool include_left, bool include_right) const -> Thread
+Thread::between(std::string_view lo, std::string_view hi, bool inclusive = true) const -> Thread
+Thread::between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const -> Thread
+Thread::between(const Thread& lo, const Thread& hi, bool inclusive = true) const -> Thread
+Thread::between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+A pure alias for [`btw()`](btw.md) — every `between()` overload forwards directly to the
+identically-shaped `btw()` overload, with the exact same parameter meanings and the exact
+same per-overload defaults for `inclusive`. Use whichever name reads better at the call
+site; there is no behavioral difference.
+
+```{important} Same default asymmetry as btw()
+Like `btw()`, the numeric-scalar overload defaults to `inclusive = false` (open interval),
+while the temporal/text-scalar and rowwise-`Thread` overloads default to `inclusive = true`
+(closed interval). See [`btw()`](btw.md)'s important callout for the full explanation —
+everything there applies here unchanged.
+```
 
 ## Parameters
 
-**lo**
-    Lower/upper boundary used by this overload.
-
-**hi**
-    Lower/upper boundary used by this overload.
-
-**include_left**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-**include_right**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-**inclusive**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-**a**
-    Lower/upper boundary used by this overload.
-
-**b**
-    Lower/upper boundary used by this overload.
+See [`Thread::btw`](btw.md) — `between()` takes the identical parameter set
+(`a`/`b` or `lo`/`hi`, and `inclusive` or `include_left`/`include_right`) with identical
+meanings.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    A `Series`-kind thread of `Bool` values, one interval-membership result per row —
+    identical to what the equivalent `btw()` call would return.
 
 ## Examples
 
-Example 1. Apply `between` to the current thread using explicit `lo, hi, include_left, include_right` arguments.
+Example 1. Numeric bounds with the default `inclusive` (open interval, same default as
+`btw()`).
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0}));
-auto lo = pluss::table::Thread(pluss::make_series({40.0, 60.0, 80.0}));
-auto hi = pluss::table::Thread(pluss::make_series({50.0, 70.0, 81.0}));
+using namespace pluss::table;
 
-auto out = thread.between(lo, hi, true);
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.between(10.0, 30.0);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[true, true, false]
+0  false
+1  true
+2  false
+ptype: Series
 ```
-Example 2. Apply `between` to the current thread using explicit `lo, hi, inclusive` arguments.
+
+Example 2. Rowwise lower and upper bound threads, with shared inclusion.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0}));
-auto lo = pluss::table::Thread(pluss::make_series({40.0, 60.0, 80.0}));
-auto hi = pluss::table::Thread(pluss::make_series({50.0, 70.0, 81.0}));
+auto values = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto lower = Thread(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
+auto upper = Thread(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
 
-auto out = thread.between(lo, hi, true);
+auto out = values.between(lower, upper, true);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[true, true, false]
+0  true
+1  true
+2  false
+3  true
+4  true
+ptype: Series
 ```
-Example 3. Apply `between` to the current thread using explicit `a, b, include_left, include_right` arguments.
+
+Example 3. Temporal scalar bounds with the default `inclusive` (closed interval here,
+the opposite default from the numeric overload — see the important callout above).
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0, 101.0}));
-
-auto out = thread.between(50.0, 100.0, true);
-```
-
-### Output
-
-```text
-[false, true, true, false]
-```
-Example 4. Apply `between` to the current thread using explicit `a, b, inclusive` arguments.
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0, 101.0}));
-
-auto out = thread.between(50.0, 100.0, true);
-```
-
-### Output
-
-```text
-[false, true, true, false]
-```
-Example 5. Apply `between` to the current thread using explicit `lo, hi, include_left, include_right` arguments.
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_timeline({
+auto dates = Thread(pluss::make_timeline({
     "2024-01-05T09:00:00Z",
     "2024-01-18T12:00:00Z",
     "2024-02-02T08:00:00Z",
 }));
 
-auto out = thread.between("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
+auto out = dates.between("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z");
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-[true, true, false]
-```
-Example 6. Apply `between` to the current thread using explicit `lo, hi, inclusive` arguments.
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_timeline({
-    "2024-01-05T09:00:00Z",
-    "2024-01-18T12:00:00Z",
-    "2024-02-02T08:00:00Z",
-}));
-
-auto out = thread.between("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
+0  true
+1  true
+2  false
+ptype: Series
 ```
 
-### Output
+## Notes
 
-```text
-[true, true, false]
-```
+- `between()` is exactly `btw()` under a different name — every overload, every default,
+  and every edge case documented on [`btw()`](btw.md) (including the swap-if-inverted
+  behavior and the throw on a mismatched payload kind) applies here unchanged.
+- Prefer whichever of `between()`/`btw()` matches the vocabulary of the surrounding code;
+  there's no performance or behavioral reason to pick one over the other.
 
+## See Also
+
+- [`Thread::btw`](btw.md): the full documentation this page mirrors — including the
+  numeric-vs-temporal default asymmetry, the bound-swap behavior, and the throw case.
+- [`Thread::compare`](compare.md): the general comparison surface both `between()` and
+  `btw()` are built from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="astype.html">

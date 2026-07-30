@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,43 +36,142 @@
 
           <div class="body" role="main">
             
-  <section id="thread-flow">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b36546114f2d -->
+<section id="thread-flow">
 <h1>Thread::flow<a class="headerlink" href="#thread-flow" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">flow</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">flow</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a cumulative directional summary across the thread values.</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> <strong>exactly once</strong>, passing the entire current thread, and returns exactly what
+<code class="docutils literal notranslate"><span class="pre">fn</span></code> returns — with no size or shape validation at all. It’s the least restrictive of the
+whole-thread functional escape hatches: <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a> does the same single call but
+checks the result’s size against a <code class="docutils literal notranslate"><span class="pre">ResultShape</span></code>; <code class="docutils literal notranslate"><span class="pre">flow()</span></code> skips that check entirely and
+only confirms the callback isn’t empty and that it returned a defined <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
+<p>Reach for <code class="docutils literal notranslate"><span class="pre">flow()</span></code> when you want to drop into a pipeline stage that changes row count
+arbitrarily (filtering, expanding, reducing) and don’t want a shape check getting in the
+way; reach for <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a> instead when you want that check as a lightweight
+assertion on your own transform’s contract.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>No size validation whatsoever — unlike fold()
+<code class="docutils literal notranslate"><span class="pre">flow()</span></code>’s callback can return a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> of any length, including a different length than
+the input. This is the key difference from <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>, which validates the result
+size against its <code class="docutils literal notranslate"><span class="pre">shape</span></code> parameter. If you want that safety net, use <code class="docutils literal notranslate"><span class="pre">fold()</span></code> instead.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>fn</strong>
-Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
+<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Thread(const</span> <span class="pre">Thread&amp;)&gt;&amp;</span></code>)
+Called exactly once with <code class="docutils literal notranslate"><span class="pre">*this</span></code>. Must return a defined <code class="docutils literal notranslate"><span class="pre">Thread</span></code> of any length; must
+not be empty.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+Exactly what <code class="docutils literal notranslate"><span class="pre">fn</span></code> returned, unmodified.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">flow</span></code> to the current thread using explicit <code class="docutils literal notranslate"><span class="pre">fn</span></code> arguments.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">}));</span>
+<p>Example 1. Reduce the whole thread to a single summary value — <code class="docutils literal notranslate"><span class="pre">flow()</span></code> places no
+restriction on the result’s length, so this “changes shape” without issue.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">flow</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">flow</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">t</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">to_dbl</span><span class="p">()}));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  60
+ptype: Series
 </pre></div>
 </div>
+<p>Example 2. Return a result with a <em>different</em> row count than the input — something
+<a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Reduce</span></code>/<code class="docutils literal notranslate"><span class="pre">Preserve</span></code> shapes would reject, but <code class="docutils literal notranslate"><span class="pre">flow()</span></code> accepts without
+complaint.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">flow</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1
+1  2
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. An empty callback throws immediately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">empty_fn</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">flow</span><span class="p">(</span><span class="n">empty_fn</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::flow: callback is empty
+</pre></div>
+</div>
+<p>Example 4. Returning a default-constructed (undefined) <code class="docutils literal notranslate"><span class="pre">Thread</span></code> throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">flow</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Thread</span><span class="p">{};</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::flow: callback returned an undefined Thread
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> is called exactly once, with the whole thread — not once per row. Use
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> for genuine row-by-row iteration.</p></li>
+<li><p>No size or shape validation on the result — this is the one real difference from
+<a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>. Use <code class="docutils literal notranslate"><span class="pre">fold()</span></code> instead if you want that check.</p></li>
+<li><p>The only two failure modes are an empty callback and a callback that returns an
+undefined <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — anything else, at any length, passes through.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fold</span></code></span></a>: the same “call <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the whole thread” shape, plus a
+<code class="docutils literal notranslate"><span class="pre">ResultShape</span></code> size check on the result.</p></li>
+<li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::map</span></code></span></a>: the row-by-row counterpart — calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> once per valid row
+instead of once for the whole thread.</p></li>
+<li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::transform</span></code></span></a>: the dispatcher that forwards to <code class="docutils literal notranslate"><span class="pre">map()</span></code> or <code class="docutils literal notranslate"><span class="pre">fold()</span></code>
+depending on which overload you call — <code class="docutils literal notranslate"><span class="pre">flow()</span></code> is not one of its targets.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="floordiv.html">
     <span class="label">Previous</span>
@@ -83,7 +182,6 @@ Value produced by this call.</p>
     <span class="title">fold</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

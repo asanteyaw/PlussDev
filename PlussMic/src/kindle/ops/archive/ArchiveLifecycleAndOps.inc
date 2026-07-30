@@ -168,11 +168,6 @@ std::tuple<std::int64_t, std::int64_t, std::int64_t> Archive::shape() const {
 
 bool Archive::empty() const { return depth() == 0; }
 
-const std::optional<Stream>& Archive::depth_labels() const {
-  PLUSS_CHECK(defined(), "Archive: undefined handle");
-  return impl_ref_().depth_labels_;
-}
-
 Catalog Archive::catalog(std::int64_t i) const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   const auto idx = normalize_index(i, depth());
@@ -238,64 +233,6 @@ Archive Archive::slice_depth(std::int64_t start, std::int64_t stop) const {
   return Archive(std::move(out), std::move(out_labels));
 }
 
-Archive Archive::sort_depth(bool ascending, bool nulls_last) const {
-  PLUSS_CHECK(defined(), "Archive: undefined handle");
-  std::vector<std::int64_t> idx(static_cast<std::size_t>(depth()));
-  std::iota(idx.begin(), idx.end(), 0);
-
-  if (impl_ref_().depth_labels_.has_value()) {
-    const auto labels = impl_ref_().depth_labels_->to_thread();
-    std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
-      const auto cmp = labels.compare_rows(a, b, nulls_last);
-      return ascending ? (cmp < 0) : (cmp > 0);
-    });
-  } else if (!ascending) {
-    std::reverse(idx.begin(), idx.end());
-  }
-
-  std::vector<Catalog> out;
-  out.reserve(idx.size());
-  for (const auto i : idx) {
-    out.push_back(impl_ref_().catalogs_[static_cast<std::size_t>(i)]);
-  }
-
-  std::optional<Stream> out_labels = std::nullopt;
-  if (impl_ref_().depth_labels_.has_value()) {
-    out_labels = impl_ref_().depth_labels_->take(idx);
-  }
-  return Archive(std::move(out), std::move(out_labels));
-}
-
-Archive Archive::relabel_depth(const Stream& labels) const {
-  PLUSS_CHECK(defined(), "Archive: undefined handle");
-  return Archive(impl_ref_().catalogs_, labels);
-}
-
-Archive Archive::align_depth(const Stream& labels) const {
-  PLUSS_CHECK(defined(), "Archive: undefined handle");
-  PLUSS_CHECK(impl_ref_().depth_labels_.has_value(),
-              "Archive::align_depth: current archive has no depth labels");
-  PLUSS_CHECK(labels.defined(), "Archive::align_depth: labels are undefined");
-
-  std::unordered_map<std::string, std::int64_t> pos;
-  pos.reserve(static_cast<std::size_t>(depth()));
-  for (std::int64_t i = 0; i < depth(); ++i) {
-    const auto key = label_string_at(*impl_ref_().depth_labels_, i);
-    const auto inserted = pos.emplace(key, i).second;
-    PLUSS_CHECK(inserted, "Archive::align_depth: duplicate current depth label '" + key + "'");
-  }
-
-  std::vector<Catalog> out;
-  out.reserve(static_cast<std::size_t>(labels.size()));
-  for (std::int64_t i = 0; i < labels.size(); ++i) {
-    const auto key = label_string_at(labels, i);
-    const auto it = pos.find(key);
-    PLUSS_CHECK(it != pos.end(), "Archive::align_depth: label not found '" + key + "'");
-    out.push_back(impl_ref_().catalogs_[static_cast<std::size_t>(it->second)]);
-  }
-  return Archive(std::move(out), labels);
-}
-
 Archive Archive::map_catalogs(const std::function<Catalog(const Catalog&)>& fn) const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   PLUSS_CHECK(static_cast<bool>(fn), "Archive::map_catalogs: mapper function is empty");
@@ -321,16 +258,24 @@ bool Archive::has(std::string_view key) const {
   return true;
 }
 
-Archive Archive::select(std::initializer_list<std::string_view> keys) const {
+Archive Archive::select(std::span<const std::string_view> keys) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.select(keys); });
+}
+
+Archive Archive::select(std::initializer_list<std::string_view> keys) const {
+  return select(std::span<const std::string_view>(keys.begin(), keys.size()));
 }
 
 Archive Archive::select(const std::vector<std::string>& keys) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.select(keys); });
 }
 
-Archive Archive::drop(std::initializer_list<std::string_view> keys) const {
+Archive Archive::drop(std::span<const std::string_view> keys) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.drop(keys); });
+}
+
+Archive Archive::drop(std::initializer_list<std::string_view> keys) const {
+  return drop(std::span<const std::string_view>(keys.begin(), keys.size()));
 }
 
 Archive Archive::drop(const std::vector<std::string>& keys) const {
@@ -345,79 +290,65 @@ Archive Archive::rename(std::string_view from, std::string_view to) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.rename(from, to); });
 }
 
-Archive Archive::fillnull(double value, std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+Archive Archive::fillnull(double value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value); });
 }
 
-Archive Archive::fillnull(std::string_view value, std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+Archive Archive::fillnull(std::string_view value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value); });
 }
 
-Archive Archive::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+Archive Archive::fillnull(const pluss::Timeline& value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value); });
 }
 
-Archive Archive::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value, keys); });
+Archive Archive::fillnull(const pluss::TimeIndex& value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value); });
 }
 
-Archive Archive::dropnull(std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.dropnull(keys); });
+Archive Archive::dropnull() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.dropnull(); });
 }
 
-Archive Archive::ffill(std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.ffill(keys); });
+Archive Archive::ffill() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.ffill(); });
 }
 
-Archive Archive::bfill(std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.bfill(keys); });
+Archive Archive::bfill() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.bfill(); });
 }
 
-Archive Archive::isnull(std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.isnull(keys); });
+Archive Archive::isnull() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.isnull(); });
 }
 
-Archive Archive::notnull(std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.notnull(keys); });
+Archive Archive::notnull() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.notnull(); });
 }
 
-Archive Archive::invalid(std::initializer_list<std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.invalid(keys); });
+Archive Archive::invalid() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.invalid(); });
 }
 
-Archive Archive::cast(std::initializer_list<std::string_view> keys,
-                      pluss::table::ThreadCastTarget target,
+Archive Archive::cast(pluss::table::ThreadCastTarget target,
                       const pluss::table::ThreadCastOptions& options) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.cast(keys, target, options); });
+  return map_catalogs([&](const Catalog& catalog) { return catalog.cast(target, options); });
 }
 
-Archive Archive::astype(std::initializer_list<std::string_view> keys,
-                        pluss::codem::ScalarType dtype) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.astype(keys, dtype); });
+Archive Archive::astype(pluss::codem::ScalarType dtype) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.astype(dtype); });
 }
 
 Archive Archive::distinct(DistinctOptions options) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.distinct(options); });
 }
 
-Archive Archive::distinct(std::initializer_list<std::string_view> keys, DistinctOptions options) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.distinct(keys, options); });
-}
-
 Archive Archive::freq(FreqOptions options) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.freq(options); });
 }
 
-Archive Archive::freq(std::initializer_list<std::string_view> keys, FreqOptions options) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.freq(keys, options); });
-}
-
 Archive Archive::ndistinct(DistinctOptions options) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.ndistinct(options); });
-}
-
-Archive Archive::ndistinct(std::initializer_list<std::string_view> keys, DistinctOptions options) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.ndistinct(keys, options); });
 }
 
 pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {

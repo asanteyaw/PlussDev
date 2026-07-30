@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ThreadNoteAccessor::count &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ThreadNoteAccessor::encode" href="encode.html" />
+    <link rel="prev" title="ThreadNoteAccessor::chars" href="chars.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="threadnoteaccessor-count">
+<h1>ThreadNoteAccessor::count<a class="headerlink" href="#threadnoteaccessor-count" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_note_accessor_api_reference.html"><span class="doc std std-doc">Back to ThreadNoteAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadNoteAccessor</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">ThreadNoteAccessor</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Counts non-overlapping occurrences of <code class="docutils literal notranslate"><span class="pre">pattern</span></code> in each cell of the bound thread,
+replacing each cell with an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> — the payload kind changes from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>, same as <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a>.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>The single-argument overload defaults to REGEX mode, not literal
+This is the single easiest mistake to make on this accessor. <code class="docutils literal notranslate"><span class="pre">count(pattern)</span></code> with
+no <code class="docutils literal notranslate"><span class="pre">options</span></code> is <strong>not</strong> the literal-text search you might expect from
+<a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a>’s single-argument default — internally it calls the two-argument
+overload with <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code>. That means any regex metacharacter in <code class="docutils literal notranslate"><span class="pre">pattern</span></code>
+(<code class="docutils literal notranslate"><span class="pre">.</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code>, <code class="docutils literal notranslate"><span class="pre">(</span></code>, <code class="docutils literal notranslate"><span class="pre">)</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">]</span></code>, and so on) is interpreted as a pattern
+instruction, not a literal character. Counting literal periods, parentheses, or other
+punctuation with the single-argument overload will silently produce the wrong number
+— see Example 1, where <code class="docutils literal notranslate"><span class="pre">count(&quot;.&quot;)</span></code> counts <em>every character</em> in each cell, not the
+count of literal dots. Pass <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">false}</span></code> explicitly (or escape the pattern)
+whenever the search text might contain characters regex would interpret specially.</p>
+</div>
+<p>The two-argument overload takes an explicit <code class="docutils literal notranslate"><span class="pre">TextOptions</span></code>, letting you choose
+<code class="docutils literal notranslate"><span class="pre">regex</span></code> and <code class="docutils literal notranslate"><span class="pre">case_sensitive</span></code> independently, and cap the count with <code class="docutils literal notranslate"><span class="pre">limit</span></code> (default
+<code class="docutils literal notranslate"><span class="pre">-1</span></code>, meaning unlimited):</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">TextOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">regex</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">case_sensitive</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="p">{</span><span class="mi">-1</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="p">{</span><span class="s">&quot;part&quot;</span><span class="p">};</span><span class="w">  </span><span class="c1">// unused by count()</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Matches never overlap: once a match is found, scanning resumes right after it, so
+<code class="docutils literal notranslate"><span class="pre">count(&quot;aa&quot;)</span></code> on <code class="docutils literal notranslate"><span class="pre">&quot;aaaa&quot;</span></code> reports <code class="docutils literal notranslate"><span class="pre">2</span></code>, not <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The text to count — a regular expression pattern under the single-argument overload
+(see the warning above), or literal/regex text under the two-argument overload
+depending on <code class="docutils literal notranslate"><span class="pre">options.regex</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code>, two-argument overload only)</p>
+<p><code class="docutils literal notranslate"><span class="pre">options.regex</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">pattern</span></code> as a regex instead of literal
+text. <code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>): ASCII-fold both sides before
+comparing (literal mode) or compile with <code class="docutils literal notranslate"><span class="pre">std::regex::icase</span></code> (regex mode) when
+<code class="docutils literal notranslate"><span class="pre">false</span></code>. <code class="docutils literal notranslate"><span class="pre">options.limit</span></code> (default <code class="docutils literal notranslate"><span class="pre">-1</span></code>): stop counting once this many matches have
+been found; <code class="docutils literal notranslate"><span class="pre">-1</span></code> means no cap.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) thread, same length as the bound thread, holding
+each cell’s match count.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The headline gotcha: <code class="docutils literal notranslate"><span class="pre">count(&quot;.&quot;)</span></code> under the single-argument overload
+counts <em>every character</em>, because <code class="docutils literal notranslate"><span class="pre">.</span></code> is the regex wildcard — compare against the
+same call with <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">false}</span></code>, which counts actual literal dots.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a.b.c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no dots&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">notes</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  banana
+1  a.b.c
+2  no dots
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output-single-argument-count-regex-mode">
+<h3>Output (single-argument <code class="docutils literal notranslate"><span class="pre">count(&quot;.&quot;)</span></code>, regex mode)<a class="headerlink" href="#output-single-argument-count-regex-mode" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  6
+1  5
+2  7
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+</section>
+<section id="output-count-regex-false-literal-mode">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">count(&quot;.&quot;,</span> <span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">false})</span></code>, literal mode)<a class="headerlink" href="#output-count-regex-false-literal-mode" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  0
+1  2
+2  0
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Under regex mode, <code class="docutils literal notranslate"><span class="pre">.</span></code> matches any single character, so each row’s count is just that
+row’s character count (<code class="docutils literal notranslate"><span class="pre">&quot;banana&quot;</span></code> is 6 characters, <code class="docutils literal notranslate"><span class="pre">&quot;a.b.c&quot;</span></code> is 5, <code class="docutils literal notranslate"><span class="pre">&quot;no</span> <span class="pre">dots&quot;</span></code> is 7).
+Under literal mode, the count is the number of actual <code class="docutils literal notranslate"><span class="pre">.</span></code> characters: two in
+<code class="docutils literal notranslate"><span class="pre">&quot;a.b.c&quot;</span></code>, zero elsewhere.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the count — useful when you only care whether a cell has “at
+least N” occurrences, not the exact total.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">repeats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ababab&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;aaaa&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;xyz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">repeats</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2
+1  2
+2  0
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;ababab&quot;</span></code> actually contains <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code> three times and <code class="docutils literal notranslate"><span class="pre">&quot;aaaa&quot;</span></code> four times, but both are
+reported as <code class="docutils literal notranslate"><span class="pre">2</span></code> — counting stops the moment the limit is reached, rather than
+continuing and clamping the final number.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The single-argument overload defaults to <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code> — see the danger
+callout above. This is the opposite default from <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a>’s
+single-argument overload, which defaults to literal mode.</p></li>
+<li><p>Matches are always non-overlapping: after a match, scanning resumes immediately
+past it.</p></li>
+<li><p>Changes the bound thread’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>).</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> is part of <code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> but has no effect on <code class="docutils literal notranslate"><span class="pre">count()</span></code> — it’s
+only meaningful to <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a> and <a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">indicate()</span></code></span></a>.</p></li>
+<li><p>Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadNoteAccessor::has</span></code></span></a>: a related pattern-search method whose
+single-argument default is literal — the mirror image of <code class="docutils literal notranslate"><span class="pre">count()</span></code>’s gotcha.</p></li>
+<li><p><a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadNoteAccessor::findall</span></code></span></a>: returns the actual matched
+substrings (one Thread per match position) instead of just a count.</p></li>
+<li><p><a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadNoteAccessor::length</span></code></span></a>: the other method on this accessor that
+turns text into an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> Series.</p></li>
+<li><p><a class="reference internal" href="../dataframe-note/count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::count</span></code></span></a>: the multi-feature
+counterpart, sharing this exact regex-by-default gotcha.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="chars.html">
+    <span class="label">Previous</span>
+    <span class="title">chars</span>
+  </a>
+  <a class="next-link" href="encode.html">
+    <span class="label">Next</span>
+    <span class="title">encode</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_note_accessor_api_reference.html">ThreadNoteAccessor API Reference</a><ul>
+      <li>Previous: <a href="chars.html" title="previous chapter">ThreadNoteAccessor::chars</a></li>
+      <li>Next: <a href="encode.html" title="next chapter">ThreadNoteAccessor::encode</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread-note/count.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

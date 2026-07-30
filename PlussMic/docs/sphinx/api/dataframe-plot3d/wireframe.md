@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ed81fb36d786 -->
 
 # DataFramePlot3DAccessor::wireframe
 
@@ -86,12 +87,16 @@ auto chart = readings.plot3d().wireframe("hour", "depth_m", "temp_c");
 chart.save_svg("temp_wireframe.svg");
 ```
 
+![Output of Example 1](img/wireframe-1.svg)
+
 Example 2. A different aggregation (`Min`).
 
 ```cpp
 auto chart = readings.plot3d().wireframe("hour", "depth_m", "temp_c", DataFrame::GroupOp::Min);
 chart.show();
 ```
+
+![Output of Example 2](img/wireframe-2.svg)
 
 Example 3. The `Wireframe` trace preset, tuned for mesh-edge rendering.
 
@@ -102,6 +107,8 @@ options.trace.preset = pluss::pl::flash::TracePreset3D::Wireframe;
 auto chart = readings.plot3d().wireframe("hour", "depth_m", "temp_c", DataFrame::GroupOp::Mean, options);
 chart.save_pdf("temp_wireframe_styled.pdf");
 ```
+
+![Output of Example 3](img/wireframe-3.svg)
 
 Example 4. A categorical `x_feature`, falling back to positional x-coordinates exactly
 like [`surface()`](surface.md)'s Example 3.
@@ -114,8 +121,10 @@ auto tagged = DataFrame({
 });
 
 auto chart = tagged.plot3d().wireframe("site", "depth_m", "temp_c");
-chart.save_png("site_wireframe.png");
+chart.show();
 ```
+
+![Output of Example 4](img/wireframe-4.svg)
 
 Example 5. An unsupported aggregation op throws, identically to `surface()`.
 

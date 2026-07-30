@@ -38,6 +38,8 @@ Option semantics used by this method:
     Option field used by this method.
   - `bool shuffle = true`
     Option field used by this method.
+  - `std::int64_t max_parallel = 0`
+    Option field used by this method.
   - `std::uint64_t random_state = 0`
     Random seed for reproducible behavior.
   - `bool deterministic = true`

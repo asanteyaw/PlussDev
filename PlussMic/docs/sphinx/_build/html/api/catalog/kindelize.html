@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Catalog::kindelize &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Catalog::load" href="load.html" />
+    <link rel="prev" title="Catalog::keys" href="keys.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3a280380f04b -->
+<section id="catalog-kindelize">
+<h1>Catalog::kindelize<a class="headerlink" href="#catalog-kindelize" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">kindelize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">KindelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">KindelizePolicy</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">attach_labels</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">materialize_label</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">label_key</span><span class="p">{</span><span class="s">&quot;_label&quot;</span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><strong>A <code class="docutils literal notranslate"><span class="pre">static</span></code> factory method</strong> — call it as <code class="docutils literal notranslate"><span class="pre">Catalog::kindelize(...)</span></code>, not
+<code class="docutils literal notranslate"><span class="pre">catalog.kindelize(...)</span></code>. Converts a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> into a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>, one stream per feature.
+This is the inverse of <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a>/<a class="reference internal" href="to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_table()</span></code></span></a>, which go
+the other direction (<code class="docutils literal notranslate"><span class="pre">Catalog</span></code> → <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>).</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>frame</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;</span></code>)
+The source frame. Must be defined.</p>
+<p><strong>policy</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">KindelizePolicy&amp;</span></code>, optional)
+<code class="docutils literal notranslate"><span class="pre">attach_labels</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>) carries the frame’s case-label axis into each
+resulting stream’s own label. <code class="docutils literal notranslate"><span class="pre">materialize_label</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>) additionally adds
+the case-label axis as its own stream, named <code class="docutils literal notranslate"><span class="pre">label_key</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;_label&quot;</span></code>).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+A new catalog with one stream per feature in <code class="docutils literal notranslate"><span class="pre">frame</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Convert a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> (round-tripped through <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a> here
+for a self-contained example) back into a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">tabelize</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">back</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="o">::</span><span class="n">kindelize</span><span class="p">(</span><span class="n">frame</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">back</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=2
+keys: [id, city]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[float64]  | 3       | [1, 2, 3]                                        
+city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
+========================================================================================================================
+</pre></div>
+</div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">materialize_label</span> <span class="pre">=</span> <span class="pre">true</span></code> adds the frame’s case-label axis as its own stream.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">tabelize</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">KindelizePolicy</span><span class="w"> </span><span class="n">policy</span><span class="p">;</span>
+<span class="n">policy</span><span class="p">.</span><span class="n">materialize_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="o">::</span><span class="n">kindelize</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span><span class="w"> </span><span class="n">policy</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=3
+keys: [id, city, _label]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[float64]  | 3       | [1, 2, 3]                                        
+city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
+_label                   | Series       | Series[int64]    | 3       | [0, 1, 2]                                        
+========================================================================================================================
+</pre></div>
+</div>
+<p>Since the round-tripped frame had a default positional case-label axis, the materialized
+<code class="docutils literal notranslate"><span class="pre">_label</span></code> stream is just <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2]</span></code> — this is more useful when the frame’s label axis
+carries meaningful values (e.g. after <a class="reference internal" href="load_csv_with_key.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv_with_key()</span></code></span></a>).</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code> is <code class="docutils literal notranslate"><span class="pre">static</span></code> — call it on the class, not an instance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attach_labels</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>) affects each resulting stream’s own label metadata, not
+whether a visible <code class="docutils literal notranslate"><span class="pre">_label</span></code> stream appears — that’s controlled separately by
+<code class="docutils literal notranslate"><span class="pre">materialize_label</span></code>.</p></li>
+<li><p>Requires a defined <code class="docutils literal notranslate"><span class="pre">frame</span></code>; throws otherwise.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize</span></code></span></a> / <a class="reference internal" href="to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::to_table</span></code></span></a>: the inverse
+direction, <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> → <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
+<li><p><a class="reference internal" href="load_csv_with_key.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::load_csv_with_key</span></code></span></a>: uses this same
+<code class="docutils literal notranslate"><span class="pre">materialize_label</span></code> mechanism internally to expose a loaded CSV’s key column.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="keys.html">
+    <span class="label">Previous</span>
+    <span class="title">keys</span>
+  </a>
+  <a class="next-link" href="load.html">
+    <span class="label">Next</span>
+    <span class="title">load</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
+      <li>Previous: <a href="keys.html" title="previous chapter">Catalog::keys</a></li>
+      <li>Next: <a href="load.html" title="next chapter">Catalog::load</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog/kindelize.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

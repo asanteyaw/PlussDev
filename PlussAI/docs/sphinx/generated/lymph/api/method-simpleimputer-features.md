@@ -90,8 +90,8 @@ data=[0.63710967] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, pl
       {"target", pluss::table::Thread(y)},
   });
 
-  const auto numeric = housing.series_features().features();
-  const auto categorical = housing.note_features().features();
+  const auto numeric = housing.feataxis().series().features();
+  const auto categorical = housing.feataxis().note().features();
 
   pluss::ai::nodej::DataFrameBatchOptions data_options{};
   data_options.feature_names = {"median_income", "ocean_proximity", "target"};

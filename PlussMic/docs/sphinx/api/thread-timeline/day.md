@@ -15,13 +15,6 @@ ThreadTimelineAccessor::day() const -> Thread
 Replaces the bound thread with its day-of-month (`1`-`31`), as a numeric
 `Series`.
 
-```{note} Also available as a direct Thread method
-`Thread::day()` exists directly (no `.tl()` needed) and produces the identical
-result — the accessor form exists mainly for consistency with the other 29
-calendar/time methods that have **no** direct-method equivalent (`minute()`,
-`weekday()`, `quarter()`, and so on).
-```
-
 ## Parameters
 
 `None`
@@ -65,7 +58,6 @@ ptype: Series
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`.
 - Reads the local calendar day relative to the thread's current timezone.
-- Identical to calling [`Thread::day()`](../thread/day.md) directly.
 
 ## See Also
 

@@ -77,12 +77,12 @@ customers orders
   yourself.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="inject.html">
+  <a class="prev-link" href="join.html">
     <span class="label">Previous</span>
-    <span class="title">inject</span>
+    <span class="title">join</span>
   </a>
-  <a class="next-link" href="map_frames.html">
+  <a class="next-link" href="links.html">
     <span class="label">Next</span>
-    <span class="title">map_frames</span>
+    <span class="title">links</span>
   </a>
 </div>

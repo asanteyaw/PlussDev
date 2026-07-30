@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f33d14840abc -->
 
 # Thread::percentiles
 
@@ -170,8 +171,8 @@ Thread::percentiles: points must be in [0, 1]
     <span class="label">Previous</span>
     <span class="title">partition</span>
   </a>
-  <a class="next-link" href="pow.html">
+  <a class="next-link" href="plot.html">
     <span class="label">Next</span>
-    <span class="title">pow</span>
+    <span class="title">plot</span>
   </a>
 </div>

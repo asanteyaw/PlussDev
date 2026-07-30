@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 54dc8cc06f06 -->
 
 # DataFrameTsAccessor::rolling_block
 

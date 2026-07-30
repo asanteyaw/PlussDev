@@ -80,12 +80,14 @@ auto scores = DataFrame({
 });
 
 auto chart = scores.plot().box();
-chart.save_svg("scores_box.svg");
+chart.show();
 ```
 
 `box()` with no arguments summarizes both `midterm` and `final` (the two `Series`-kind
 features) as two side-by-side boxes; `cohort` (Note-kind) is silently excluded since it
 isn't numeric.
+
+![Output of Example 1](img/box-1.svg)
 
 Example 2. An explicit feature subset, via `initializer_list`.
 
@@ -97,6 +99,8 @@ chart.show();
 Same result as Example 1 here, but written explicitly — useful when the frame has more
 numeric features than you want summarized together.
 
+![Output of Example 2](img/box-2.svg)
+
 Example 3. The same explicit subset via a reusable `RangeView`.
 
 ```cpp
@@ -104,6 +108,8 @@ std::vector<std::string_view> names{"midterm", "final"};
 auto chart = scores.plot().box(pluss::msharp::RangeView::Of<std::string_view>(names));
 chart.save_pdf("scores_box.pdf");
 ```
+
+![Output of Example 3](img/box-3.svg)
 
 Example 4. An explicit `BoxPlotOptions`.
 
@@ -113,8 +119,10 @@ box_options.alpha = 0.8;
 box_options.line_width = 1.6;
 
 auto chart = scores.plot().box({"midterm", "final"}, box_options);
-chart.save_png("scores_box.png");
+chart.show();
 ```
+
+![Output of Example 4](img/box-4.svg)
 
 Example 5. A feature that isn't numeric throws immediately.
 

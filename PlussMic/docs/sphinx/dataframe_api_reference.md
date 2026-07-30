@@ -20,8 +20,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 - `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
 - `label()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
 - `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
-- `cast()` -> [`DataFrameCastAccessor`](dataframe_cast_accessor_api_reference.md)
-- `group()` -> [`DataFrameGroupBuilder`](dataframe_group_accessor_api_reference.md)
 - `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
 - `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
 
@@ -35,6 +33,7 @@ api/dataframe/aggregate
 api/dataframe/align
 api/dataframe/all
 api/dataframe/any
+api/dataframe/arrange
 api/dataframe/assign
 api/dataframe/astype
 api/dataframe/bfill
@@ -128,8 +127,8 @@ api/dataframe/ncases
 api/dataframe/ndistinct
 api/dataframe/ne
 api/dataframe/nfeatures
-api/dataframe/nt
 api/dataframe/notnull
+api/dataframe/nt
 api/dataframe/observe
 api/dataframe/percentiles
 api/dataframe/pivot
@@ -181,7 +180,6 @@ api/dataframe/show
 api/dataframe/shuffle
 api/dataframe/skew
 api/dataframe/slice
-api/dataframe/arrange
 api/dataframe/sql
 api/dataframe/stack
 api/dataframe/std

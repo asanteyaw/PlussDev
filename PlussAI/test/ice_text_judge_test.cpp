@@ -46,9 +46,6 @@ using pluss::ai::ice::models::TextJudgeTrainOptions;
 bool run_ice_text_judge_checks(std::ostream* err = nullptr) {
   TextJudgeOptions model_options{};
   model_options.width = 24;
-  model_options.num_layers = 2;
-  model_options.num_heads = 4;
-  model_options.feedforward_width = 48;
   model_options.dropout = 0.0;
   model_options.seed = 9;
 
@@ -140,6 +137,70 @@ bool run_ice_text_judge_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+bool run_ice_text_judge_punctuation_checks(std::ostream* err = nullptr) {
+  TextJudgeOptions model_options{};
+  model_options.width = 16;
+  model_options.use_lemmas = false;
+  model_options.skip_punct = false;
+  model_options.lowercase = true;
+  model_options.dropout = 0.0;
+  model_options.seed = 21;
+
+  TextJudgeTrainOptions train_options{};
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 40;
+  train_options.validation.split_ratio = 0.25;
+  train_options.validation.monitor = "val_accuracy";
+  train_options.validation.every_n_epochs = 2;
+  train_options.validation.start_from_epoch = 1;
+  train_options.loop_regularization.early_stopping = true;
+  train_options.loop_regularization.patience = 4;
+  train_options.loop_regularization.restore_best_weights = true;
+  train_options.seed = 33;
+
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("alpha !");
+    labels.push_back("excited");
+    texts.push_back("alpha ?");
+    labels.push_back("curious");
+  }
+
+  TextJudge model(model_options);
+  model.learn(texts, labels, train_options);
+
+  const auto preds = model.predict(std::vector<std::string>{"alpha !", "alpha ?"});
+  if (preds.size() != 2 ||
+      preds[0].label != "excited" ||
+      preds[1].label != "curious") {
+    if (err) {
+      *err << "ice TextJudge should honor skip_punct=false; got "
+           << preds[0].label << " and " << preds[1].label << "\n";
+    }
+    return false;
+  }
+
+  const auto tmp =
+      std::filesystem::temp_directory_path() / "ice_text_judge_punct_roundtrip.bin";
+  model.save(tmp.string());
+  const auto restored = TextJudge::load(tmp.string());
+  std::filesystem::remove(tmp);
+
+  const auto restored_preds = restored.predict(std::vector<std::string>{"alpha !", "alpha ?"});
+  if (restored_preds.size() != 2 ||
+      restored_preds[0].label != "excited" ||
+      restored_preds[1].label != "curious") {
+    if (err) {
+      *err << "ice TextJudge save/load should preserve punctuation-sensitive behavior; got "
+           << restored_preds[0].label << " and " << restored_preds[1].label << "\n";
+    }
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -148,9 +209,18 @@ TEST_CASE("ice TextJudge trains and round-trips", "[ai][ice][nlp]") {
     FAIL("ice TextJudge checks failed");
   }
 }
+
+TEST_CASE("ice TextJudge preserves punctuation-sensitive sequence settings", "[ai][ice][nlp]") {
+  if (!run_ice_text_judge_punctuation_checks(&std::cerr)) {
+    FAIL("ice TextJudge punctuation checks failed");
+  }
+}
 #else
 int main() {
   if (!run_ice_text_judge_checks(&std::cerr)) {
+    return 1;
+  }
+  if (!run_ice_text_judge_punctuation_checks(&std::cerr)) {
     return 1;
   }
   std::cout << "ice TextJudge checks passed\n";

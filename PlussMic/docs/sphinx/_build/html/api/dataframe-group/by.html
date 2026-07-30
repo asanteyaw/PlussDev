@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -90,47 +90,106 @@ and the <code class="docutils literal notranslate"><span class="pre">GroupOption
 <span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">}).</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================
+     | city   amount_sum  units_sum
+-----------------------------------
+0    | Accra  180         3        
+1    | Tema   90          4        
+-----------------------------------
+[2 cs x 3 feat]
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">by({&quot;city&quot;})</span></code> says “rows with the same <code class="docutils literal notranslate"><span class="pre">city</span></code> belong to the same group”. The actual
 work still happens at <code class="docutils literal notranslate"><span class="pre">.sum()</span></code>.</p>
 <p>Example 2. Group by several ordinary features at once.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tea&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tea&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Coffee&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tea&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">agg</span><span class="p">({</span>
 <span class="w">                   </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
 <span class="w">                   </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
 <span class="w">               </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Now the group key is the full tuple <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code>, not either feature on its own.</p>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================================
+     | city   product  orders  revenue
+--------------------------------------
+0    | Accra  Coffee   1       30     
+1    | Accra  Tea      2       180    
+2    | Tema   Tea      1       50     
+--------------------------------------
+[3 cs x 4 feat]
+</pre></div>
+</div>
+<p>Now the group key is the full tuple <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code>, not either feature on its own.
+<code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Tea)</span></code> occurs on rows <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, so <code class="docutils literal notranslate"><span class="pre">orders</span></code> is <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">revenue</span></code> sums both
+amounts (<code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">+</span> <span class="pre">80</span> <span class="pre">=</span> <span class="pre">180</span></code>). With <code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">=</span> <span class="pre">true</span></code>, the three groups print in ascending
+key order — <code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Coffee)</span></code> before <code class="docutils literal notranslate"><span class="pre">(Accra,</span> <span class="pre">Tea)</span></code> before <code class="docutils literal notranslate"><span class="pre">(Tema,</span> <span class="pre">Tea)</span></code> — rather than
+the order each combination first appeared.</p>
 <p>Example 3. Group by case-label levels instead of ordinary columns.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">set_label</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2023.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2024.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2023.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2024.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">250.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">set_label</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
-<span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">}})</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">})</span>
 <span class="w">                  </span><span class="p">.</span><span class="n">agg</span><span class="p">({</span>
-<span class="w">                      </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
+<span class="w">                      </span><span class="p">{</span><span class="s">&quot;amount_sum&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
 <span class="w">                  </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>This is useful when the grouping identity already lives on the case axis and you do
-not want to materialize it as ordinary columns first.</p>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
+     | region  amount_sum
+-------------------------
+0    | North   350       
+1    | South   200       
+-------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">set_label({&quot;region&quot;,</span> <span class="pre">&quot;year&quot;})</span></code> moves those two ordinary columns onto the case axis
+as a two-level case label. <code class="docutils literal notranslate"><span class="pre">LabelGroup{.label</span> <span class="pre">=</span> <span class="pre">&quot;region&quot;}</span></code> then groups by only the
+<code class="docutils literal notranslate"><span class="pre">region</span></code> level of that composite label, ignoring <code class="docutils literal notranslate"><span class="pre">year</span></code> entirely — so both <code class="docutils literal notranslate"><span class="pre">North</span></code>
+rows (from 2023 and 2024) collapse into one group, and likewise for <code class="docutils literal notranslate"><span class="pre">South</span></code>. This is
+useful when the grouping identity already lives on the case axis and you do not want
+to materialize it as ordinary columns first.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The initializer-list and <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overloads are semantically the same; the
+<li><p>The initializer-list and <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> forms are semantically the same; the
 <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> form is for dynamic key lists.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">LabelGroup</span></code> is stricter than ordinary key lists: it requires the source frame to
 already have case labels, and it rejects “both <code class="docutils literal notranslate"><span class="pre">label</span></code> and <code class="docutils literal notranslate"><span class="pre">names</span></code>” at once.</p></li>
 <li><p>Group order is not chosen by <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> alone. It also depends on the <code class="docutils literal notranslate"><span class="pre">sort</span></code> option
-captured earlier by <code class="docutils literal notranslate"><span class="pre">group(...)</span></code>.</p></li>
+captured earlier by <code class="docutils literal notranslate"><span class="pre">group(...)</span></code>: unsorted groups appear in first-occurrence order;
+sorted groups appear in ascending key order.</p></li>
 </ul>
 </section>
 <section id="see-also">

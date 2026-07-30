@@ -400,8 +400,8 @@ void test_selection_first_note_tl_and_ts_time_rolling() {
                     .timeline();
   expect(parsed.features("date_text").kind() == ThreadKind::Timeline,
          "cast(Timeline) should parse selected text feature into Timeline");
-  expect(parsed.features("date_text").is_valid(0), "valid parsed date should stay valid");
-  expect(!parsed.features("date_text").is_valid(1), "invalid parsed date should become null when requested");
+  expect(pluss::table::detail::valid_at(parsed.features("date_text"), 0), "valid parsed date should stay valid");
+  expect(!pluss::table::detail::valid_at(parsed.features("date_text"), 1), "invalid parsed date should become null when requested");
 
   const std::vector<std::string_view> iso{
       "2024-01-01T00:00:00Z",

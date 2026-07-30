@@ -146,12 +146,12 @@ customers, orders, payments, refunds
 - [`Nexus::keys`](keys.md): inspect the order `tail()` slices from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="summary.html">
+  <a class="prev-link" href="table_meta.html">
     <span class="label">Previous</span>
-    <span class="title">summary</span>
+    <span class="title">table_meta</span>
   </a>
-  <a class="next-link" href="unique.html">
+  <a class="next-link" href="to_atlas.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">to_atlas</span>
   </a>
 </div>

@@ -447,6 +447,14 @@ DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) cons
   return out;
 }
 
+DataFrame DataFrame::assign(std::string_view name, const Thread& value) const {
+  return assign({std::pair<std::string, Thread>{std::string(name), value}});
+}
+
+DataFrame DataFrame::assign(std::string_view name, const std::function<Thread(const DataFrame&)>& expr) const {
+  return assign({DeriveSpec{.feature = std::string(name), .expr = expr}});
+}
+
 Thread DataFrame::transform(
     const std::function<ThreadValue(const DataFrame&)>& fn,
     Axis axis) const {

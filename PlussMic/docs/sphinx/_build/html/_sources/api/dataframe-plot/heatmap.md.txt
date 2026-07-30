@@ -102,11 +102,13 @@ auto readings = DataFrame({
 }, Thread(pluss::make_note({"Mon", "Tue", "Wed", "Thu"})));
 
 auto chart = readings.plot().heatmap({"temp_c", "humidity_%"});
-chart.save_svg("readings_heatmap.svg");
+chart.show();
 ```
 
 Two rows (`"temp_c"`, `"humidity_%"`), four columns (`"Mon"`..`"Thu"`, from `readings`' own
 row labels) — the raw values placed directly into the matrix.
+
+![Output of Example 1](img/heatmap-1.svg)
 
 Example 2. Direct mode with `annotate_levels = true`, printing each value on its cell.
 
@@ -117,6 +119,8 @@ options.annotate_levels = true;
 auto chart = readings.plot().heatmap({"temp_c", "humidity_%"}, options);
 chart.show();
 ```
+
+![Output of Example 2](img/heatmap-2.svg)
 
 Example 3. Grouped mode: long-format rows pivoted into a case-by-feature matrix, aggregated
 by mean (the default `op`).
@@ -138,6 +142,8 @@ values (`"Midterm"`, `"Final"`) become columns; each cell is the mean `score` fo
 campus/exam pair — here, each combination happens to have exactly one matching row, so the
 "mean" is just that row's own value.
 
+![Output of Example 3](img/heatmap-3.svg)
+
 Example 4. Grouped mode with a different aggregation (`Count`) and explicit options.
 
 ```cpp
@@ -146,11 +152,13 @@ annotate_options.annotate_levels = true;
 
 auto chart = exam_rows.plot().heatmap(
     "campus", "exam", "score", DataFrame::GroupOp::Count, annotate_options);
-chart.save_png("exam_counts.png");
+chart.show();
 ```
 
 Each cell now shows how many rows contributed to it (`1` for every campus/exam pair in this
 small example), rather than the mean score.
+
+![Output of Example 4](img/heatmap-4.svg)
 
 Example 5. Direct mode with an empty feature list throws — unlike several other methods on
 this accessor, `heatmap()`'s direct-mode overload has no "infer everything" shorthand.

@@ -150,8 +150,8 @@ Nexus::apply_all: callback returned undefined DataFrame
     <span class="label">Previous</span>
     <span class="title">apply</span>
   </a>
-  <a class="next-link" href="deduce.html">
+  <a class="next-link" href="audit.html">
     <span class="label">Next</span>
-    <span class="title">deduce</span>
+    <span class="title">audit</span>
   </a>
 </div>

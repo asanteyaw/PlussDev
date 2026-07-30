@@ -81,8 +81,8 @@ orders: 3 cases, 3 features
     <span class="label">Previous</span>
     <span class="title">frame</span>
   </a>
-  <a class="next-link" href="get.html">
+  <a class="next-link" href="from.html">
     <span class="label">Next</span>
-    <span class="title">get</span>
+    <span class="title">from</span>
   </a>
 </div>

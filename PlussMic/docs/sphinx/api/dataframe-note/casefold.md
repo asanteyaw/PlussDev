@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: eb2d5db76c5c -->
 
 # DataFrameNoteAccessor::casefold
 

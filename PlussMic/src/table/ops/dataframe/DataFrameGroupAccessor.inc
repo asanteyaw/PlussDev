@@ -281,3 +281,74 @@ DataFrame DataFrameGrouped::max() const { return terminal_(DataFrame::GroupOp::M
 DataFrame DataFrameGrouped::std() const { return terminal_(DataFrame::GroupOp::Std); }
 DataFrame DataFrameGrouped::var() const { return terminal_(DataFrame::GroupOp::Var); }
 DataFrame DataFrameGrouped::mode() const { return terminal_(DataFrame::GroupOp::Mode); }
+
+DataFrame DataFrameGrouped::mode_ties(std::string_view feature, std::string_view output) const {
+  PLUSS_CHECK(options_.layout == DataFrame::GroupLayout::Flat,
+              "DataFrameGrouped::mode_ties: only Flat layout is currently supported");
+  PLUSS_CHECK(!feature.empty(), "DataFrameGrouped::mode_ties: feature is required");
+
+  const auto& keyed = keyed_frame_cached_();
+  const auto& state = state_cached_();
+  const auto value = keyed.features(feature);
+  const bool is_note = value.kind() == ThreadKind::Note;
+
+  const auto note_ties = is_note ? group_note_mode_ties_(value, state)
+                                 : std::vector<std::vector<std::string>>{};
+  const auto numeric_ties = is_note ? std::vector<std::vector<double>>{}
+                                    : group_numeric_mode_ties_(value, state);
+
+  // Walk groups in *output* order, expanding each group into one row per
+  // tied value (or exactly one null row if it had no observed values at
+  // all) — every other grouped terminal guarantees one row per group, and
+  // this keeps that guarantee even though the row *count* is no longer
+  // fixed at exactly one.
+  std::vector<std::int64_t> expanded_positions;
+  std::vector<std::string> note_out;
+  std::vector<double> numeric_out;
+  std::vector<bool> valid_out;
+
+  for (std::int64_t pos = 0; pos < state.ngroups; ++pos) {
+    const auto group_id = state.order[static_cast<std::size_t>(pos)];
+    if (is_note) {
+      const auto& tied = note_ties[static_cast<std::size_t>(group_id)];
+      if (tied.empty()) {
+        expanded_positions.push_back(pos);
+        note_out.emplace_back();
+        valid_out.push_back(false);
+      } else {
+        for (const auto& candidate : tied) {
+          expanded_positions.push_back(pos);
+          note_out.push_back(candidate);
+          valid_out.push_back(true);
+        }
+      }
+    } else {
+      const auto& tied = numeric_ties[static_cast<std::size_t>(group_id)];
+      if (tied.empty()) {
+        expanded_positions.push_back(pos);
+        numeric_out.push_back(0.0);
+        valid_out.push_back(false);
+      } else {
+        for (const auto candidate : tied) {
+          expanded_positions.push_back(pos);
+          numeric_out.push_back(candidate);
+          valid_out.push_back(true);
+        }
+      }
+    }
+  }
+
+  auto out_cols = group_key_columns_expanded_(state, expanded_positions);
+
+  const auto out_name = !output.empty() ? std::string(output)
+                                        : fmt::format("{}_mode_ties", feature);
+  const bool any_null = std::any_of(
+      valid_out.begin(), valid_out.end(), [](bool v) { return !v; });
+
+  Thread value_col = is_note
+      ? (any_null ? group_note_thread_(note_out, valid_out) : group_note_thread_(note_out))
+      : (any_null ? group_f64_thread_(numeric_out, valid_out) : group_f64_thread_(numeric_out));
+  out_cols.emplace_back(out_name, std::move(value_col));
+
+  return DataFrame(std::move(out_cols)).title(frame_.title());
+}

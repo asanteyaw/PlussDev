@@ -76,6 +76,7 @@ struct LemmatizerOptions {
 struct TextCatOptions {
   bool lowercase = true;
   bool use_lemmas = true;
+  bool skip_punct = true;
   std::int64_t max_features = 4096;
   std::int64_t min_document_frequency = 1;
   std::int64_t max_iterations = 400;
@@ -91,6 +92,8 @@ struct TextCatOptions {
   SequenceHead sequence_head = SequenceHead::Transformer;
   SequencePooling sequence_pooling = SequencePooling::Mean;
   std::int64_t sequence_width = 64;
+  double sequence_learning_rate = 5e-2;
+  double sequence_dropout = 0.0;
   std::uint64_t sequence_seed = 0;
   QuantizationHint quantization = QuantizationHint::None;
   DistillationHint distillation = DistillationHint::None;

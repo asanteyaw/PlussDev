@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 266bffcc153c -->
 
 # Thread::describe
 
@@ -26,7 +27,8 @@ the payload kind:
   calculation.
 - **`Note`-kind**: a frequency-oriented summary instead — `count` (non-missing
   entries), `unique` (distinct non-missing values), `top` (the most frequent
-  value, ties broken alphabetically), `freq` (that value's count).
+  value, ties kept in first-occurrence order via [`freq()`](freq.md), not
+  alphabetical order), `freq` (that value's count).
 - **Anything else** (`Timeline`, `TimeIndex`, non-numeric `Series`): throws —
   `describe()` has no defined summary for those payload kinds.
 
@@ -40,7 +42,7 @@ the payload kind:
 
 `ThreadView`
     A summary view with one entry per statistic, labeled by statistic name. It is
-    given a display name — the source thread's own [`display_name`](display_name.md)
+    given a display name — the source thread's own [`name()`](name.md)
     if it has one, or `"value"` otherwise — so the render footer always reads
     `Name: {name}, ptype: {kind}` rather than the plain `ptype: {kind}` a default
     thread shows.
@@ -123,8 +125,11 @@ unique  3
 Name: value, ptype: Note
 ```
 
-`"Accra"` and `"Tema"` are tied at two occurrences each; ties break
-alphabetically, so `"Accra"` (not `"Tema"`) is reported as `top`.
+`"Accra"` and `"Tema"` are tied at two occurrences each. `top` comes from
+[`freq()`](freq.md) internally, whose tie-break keeps whichever value was
+**first seen** in the source data — `"Accra"` (row `0`) before `"Tema"` (row
+`1`) — not alphabetical order. The two happen to agree here since `"Accra"`
+is both first-seen and alphabetically first; that isn't true in general.
 
 Example 4. Any other payload kind throws.
 
@@ -149,7 +154,8 @@ Thread::describe supports numeric Series and Note payloads
   exactly — `std` uses `n - 1` (sample standard deviation), and quartiles use
   linear interpolation between the two closest ranks, so `50%` coincides with the
   median exactly, including for even-sized samples.
-- For `Note`-kind threads, ties for `top` break alphabetically by value.
+- For `Note`-kind threads, `top` comes from [`freq()`](freq.md); ties for
+  `top` keep first-occurrence order, not alphabetical order.
 - The returned view always has a display name (`"value"` if the source thread
   didn't already have one), so the render footer reads `Name: ..., ptype: ...`.
 - Restricted to numeric `Series` and `Note` payloads; `Timeline`, `TimeIndex`, and
@@ -171,8 +177,8 @@ Thread::describe supports numeric Series and Note payloads
     <span class="label">Previous</span>
     <span class="title">defined</span>
   </a>
-  <a class="next-link" href="display_name.html">
+  <a class="next-link" href="distinct.html">
     <span class="label">Next</span>
-    <span class="title">display_name</span>
+    <span class="title">distinct</span>
   </a>
 </div>

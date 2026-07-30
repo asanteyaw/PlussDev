@@ -172,12 +172,12 @@ Nexus::select: unknown key 'missing'
 - [`Nexus::keys`](keys.md): inspect the final order after projection.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="scan.html">
+  <a class="prev-link" href="schema.html">
     <span class="label">Previous</span>
-    <span class="title">scan</span>
+    <span class="title">schema</span>
   </a>
-  <a class="next-link" href="size.html">
+  <a class="next-link" href="set_table_meta.html">
     <span class="label">Next</span>
-    <span class="title">size</span>
+    <span class="title">set_table_meta</span>
   </a>
 </div>

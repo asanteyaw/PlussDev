@@ -36,6 +36,10 @@
     return `${title}(${args.join(", ")})`;
   }
 
+  // Recovers the site's project name from the page <title>, which Sphinx
+  // renders as "<page title> — <project>  documentation" (or just
+  // "<project>  documentation" on the index page itself). This keeps the
+  // topbar brand correct per-site without hardcoding any one package's name.
   function siteBrandFromTitle() {
     const raw = document.title || "";
     const parts = raw.split("—").map((p) => p.trim()).filter(Boolean);
@@ -45,6 +49,10 @@
     return candidate || "Pluss";
   }
 
+  // Sphinx exposes the relative path back to this site's root as
+  // DOCUMENTATION_OPTIONS.URL_ROOT (e.g. "../../" from a nested API page).
+  // Using it means topbar links resolve correctly no matter how deep the
+  // current page is nested.
   function urlRoot() {
     if (window.DOCUMENTATION_OPTIONS && typeof window.DOCUMENTATION_OPTIONS.URL_ROOT === "string") {
       return window.DOCUMENTATION_OPTIONS.URL_ROOT;
@@ -69,6 +77,9 @@
     links.className = "top-links";
     topbar.appendChild(links);
 
+    // Deliberately small and fixed: this site's own in-page sidebar already
+    // carries the detailed navigation (method list, section list, etc.), so
+    // the topbar only needs to get you Home or into the API reference.
     const navItems = [
       { href: `${root}index.html`, label: "Home", match: "index.html" },
       { href: `${root}api_reference.html`, label: "API Reference", match: "api_reference.html" },
@@ -108,15 +119,41 @@
       const groupTitleNode = root.parentElement
         ? root.parentElement.querySelector(":scope > h1, :scope > h2")
         : null;
-      const groupTitle = cleanHeadingText(text(groupTitleNode)) || "Methods";
+      const fallbackGroup = cleanHeadingText(text(groupTitleNode)) || "Methods";
 
-      const methodSections = Array.from(root.children).filter((node) => {
-        return node.tagName === "SECTION" && node.querySelector(":scope > h3");
+      const container = root.parentElement || root;
+      const isAfterRoot = (node) => {
+        if (node === root) {
+          return false;
+        }
+        if (root.contains(node)) {
+          return true;
+        }
+        const rel = root.compareDocumentPosition(node);
+        return Boolean(rel & Node.DOCUMENT_POSITION_FOLLOWING);
+      };
+
+      const methodSections = Array.from(container.querySelectorAll("section")).filter((node) => {
+        return node.querySelector(":scope > h3") && isAfterRoot(node);
       });
+
+      const groupForSection = (section) => {
+        let current = section.parentElement;
+        while (current && current !== root) {
+          if (current.tagName === "SECTION") {
+            const h2 = current.querySelector(":scope > h2");
+            if (h2) {
+              return cleanHeadingText(text(h2)) || fallbackGroup;
+            }
+          }
+          current = current.parentElement;
+        }
+        return fallbackGroup;
+      };
 
       methodSections.forEach((section, index) => {
         if (!section.id) {
-          section.id = `method-${groupTitle.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
+          section.id = `method-${fallbackGroup.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
         }
         const h3 = section.querySelector(":scope > h3");
         const codeTitle = h3 ? h3.querySelector("code") : null;
@@ -128,7 +165,7 @@
           id: section.id,
           title: title || "method",
           overloadLabel,
-          group: groupTitle,
+          group: groupForSection(section),
         });
       });
     });
@@ -136,6 +173,20 @@
     if (!methodItems.length) {
       return null;
     }
+
+    methodItems.sort((a, b) => {
+      const ta = (a.title || "").toLowerCase();
+      const tb = (b.title || "").toLowerCase();
+      if (ta !== tb) {
+        return ta.localeCompare(tb);
+      }
+      const oa = (a.overloadLabel || "").toLowerCase();
+      const ob = (b.overloadLabel || "").toLowerCase();
+      if (oa !== ob) {
+        return oa.localeCompare(ob);
+      }
+      return (a.id || "").localeCompare(b.id || "");
+    });
 
     document.body.classList.add("has-method-sidebar");
 
@@ -159,7 +210,7 @@
       // Hide API section chrome before first method (title/intro text) so method appears first.
       let reachedMethod = false;
       Array.from(root.children).forEach((child) => {
-        if (child.tagName === "SECTION" && child.querySelector(":scope > h3")) {
+        if (child.tagName === "SECTION" && child.querySelector("h3")) {
           reachedMethod = true;
           return;
         }
@@ -286,14 +337,21 @@
   function buildSectionSidebar() {
     const documentRoot = document.querySelector("div.document");
     const bodywrapper = document.querySelector(".bodywrapper");
-    const pageRoot = document.querySelector("div.body > section");
-    if (!documentRoot || !bodywrapper || !pageRoot) {
+    if (!documentRoot || !bodywrapper) {
       return null;
     }
 
-    const sections = Array.from(pageRoot.children).filter((node) => {
-      return node.tagName === "SECTION" && node.querySelector(":scope > h2");
+    const pageRoots = Array.from(document.querySelectorAll("div.body > section"));
+    const pageRoot = pageRoots.find((root) => {
+      return Array.from(root.children).some((node) => {
+        return node.tagName === "SECTION" && node.querySelector(":scope > h2");
+      });
     });
+    if (!pageRoot) {
+      return null;
+    }
+
+    const sections = Array.from(pageRoot.children).filter((node) => node.tagName === "SECTION" && node.querySelector(":scope > h2"));
     if (!sections.length) {
       return null;
     }
@@ -512,6 +570,19 @@
     buildTopbar();
     const methodNav = buildMethodSidebar();
     const sectionNav = methodNav ? null : buildSectionSidebar();
+
+    // Safety fallback: never leave the left rail empty.
+    if (document.body.classList.contains("has-method-sidebar")) {
+      const navCount = document.querySelectorAll("#pluss-method-sidebar .method-nav a").length;
+      if (navCount === 0) {
+        const sidebar = document.getElementById("pluss-method-sidebar");
+        if (sidebar) {
+          sidebar.remove();
+        }
+        document.body.classList.remove("has-method-sidebar");
+      }
+    }
+
     buildPrevNext(methodNav || sectionNav);
   });
 })();

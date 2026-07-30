@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::hist" href="hist.html" />
-    <link rel="prev" title="DataFramePlotAccessor::density" href="density.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -125,11 +123,12 @@ A figure with one pane containing a single heatmap trace.</p>
 <span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">heatmap</span><span class="p">({</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity_%&quot;</span><span class="p">});</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;readings_heatmap.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Two rows (<code class="docutils literal notranslate"><span class="pre">&quot;temp_c&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;humidity_%&quot;</span></code>), four columns (<code class="docutils literal notranslate"><span class="pre">&quot;Mon&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Thu&quot;</span></code>, from <code class="docutils literal notranslate"><span class="pre">readings</span></code>’ own
 row labels) — the raw values placed directly into the matrix.</p>
+<p><img alt="Output of Example 1" src="../../_images/heatmap-1.svg" /></p>
 <p>Example 2. Direct mode with <code class="docutils literal notranslate"><span class="pre">annotate_levels</span> <span class="pre">=</span> <span class="pre">true</span></code>, printing each value on its cell.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">HeatmapPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">annotate_levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -138,6 +137,7 @@ row labels) — the raw values placed directly into the matrix.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/heatmap-2.svg" /></p>
 <p>Example 3. Grouped mode: long-format rows pivoted into a case-by-feature matrix, aggregated
 by mean (the default <code class="docutils literal notranslate"><span class="pre">op</span></code>).</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">exam_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -155,17 +155,19 @@ by mean (the default <code class="docutils literal notranslate"><span class="pre
 values (<code class="docutils literal notranslate"><span class="pre">&quot;Midterm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Final&quot;</span></code>) become columns; each cell is the mean <code class="docutils literal notranslate"><span class="pre">score</span></code> for that
 campus/exam pair — here, each combination happens to have exactly one matching row, so the
 “mean” is just that row’s own value.</p>
+<p><img alt="Output of Example 3" src="../../_images/heatmap-3.svg" /></p>
 <p>Example 4. Grouped mode with a different aggregation (<code class="docutils literal notranslate"><span class="pre">Count</span></code>) and explicit options.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">HeatmapPlotOptions</span><span class="w"> </span><span class="n">annotate_options</span><span class="p">;</span>
 <span class="n">annotate_options</span><span class="p">.</span><span class="n">annotate_levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exam_rows</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">heatmap</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;campus&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;exam&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">,</span><span class="w"> </span><span class="n">annotate_options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;exam_counts.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Each cell now shows how many rows contributed to it (<code class="docutils literal notranslate"><span class="pre">1</span></code> for every campus/exam pair in this
 small example), rather than the mean score.</p>
+<p><img alt="Output of Example 4" src="../../_images/heatmap-4.svg" /></p>
 <p>Example 5. Direct mode with an empty feature list throws — unlike several other methods on
 this accessor, <code class="docutils literal notranslate"><span class="pre">heatmap()</span></code>’s direct-mode overload has no “infer everything” shorthand.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -242,11 +244,8 @@ aggregation view, contrasted with this method’s two-dimensional grid.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -260,16 +259,6 @@ aggregation view, contrasted with this method’s two-dimensional grid.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="density.html" title="previous chapter">DataFramePlotAccessor::density</a></li>
-      <li>Next: <a href="hist.html" title="next chapter">DataFramePlotAccessor::hist</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

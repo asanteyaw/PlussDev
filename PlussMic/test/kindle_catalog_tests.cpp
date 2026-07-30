@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -187,6 +188,91 @@ void test_stream_methods() {
          "Stream::ndistinct(city) mismatch");
 }
 
+void test_stream_accessors() {
+  const auto catalog = make_base_catalog();
+  const auto text = catalog.at("text");
+  const auto lower = text.nt().lower();
+  expect(lower.kind() == StreamKind::Note, "Stream::nt().lower should keep Note kind");
+  expect(std::string(lower.as_note().at(0)) == "heavy rain", "Stream::nt().lower value mismatch");
+
+  const auto timestamp = catalog.at("timestamp");
+  const auto year = timestamp.tl().year();
+  expect(year.kind() == StreamKind::Series, "Stream::tl().year should yield Series");
+  expect(year.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
+         "Stream::tl().year values mismatch");
+
+  const auto ids_as_note = catalog.at("id").cast().note();
+  expect(ids_as_note.kind() == StreamKind::Note, "Stream::cast().note should convert Series to Note");
+
+  const std::array<std::int64_t, 1> shape2{2};
+  const auto date_text = Stream(pluss::make_note(std::vector<std::string>{"2024-01-01", "2024-01-02"}, shape2));
+  const auto parsed = date_text.cast({.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null}).timeline();
+  expect(parsed.kind() == StreamKind::Timeline, "Stream::cast(options).timeline should parse Note dates");
+
+  const auto metric = catalog.at("metric").fillnull(0.0);
+  const auto lagged = metric.ts().lag(1);
+  expect(lagged.kind() == StreamKind::Series, "Stream::ts().lag should yield Series");
+  expect(lagged.size() == metric.size(), "Stream::ts().lag should preserve length");
+  expect(lagged.has_label(), "Stream::ts().lag should preserve labels");
+
+  const auto label_values = metric.lbl().values();
+  expect(label_values.kind() == StreamKind::Note, "Stream::lbl().values should expose label payload");
+  expect(label_values.size() == metric.size(), "Stream::lbl().values size mismatch");
+  const auto relabeled = metric.lbl().set(
+      Stream(pluss::make_note(std::vector<std::string>{"a", "b", "c", "d", "e"}, std::array<std::int64_t, 1>{5})));
+  expect(relabeled.has_label(), "Stream::lbl().set should attach labels");
+  const auto reset = relabeled.lbl().reset();
+  expect(!reset.has_label(), "Stream::lbl().reset should clear labels");
+
+  auto fig = metric.plot().line();
+  (void)fig;
+}
+
+void test_catalog_accessors() {
+  const auto base = make_base_catalog();
+
+  const auto lower = base.keys({"text"}).nt().lower();
+  expect(lower.at("text").kind() == StreamKind::Note, "Catalog::keys().nt().lower should keep Note kind");
+  expect(std::string(lower.at("text").as_note().at(0)) == "heavy rain",
+         "Catalog::keys().nt().lower value mismatch");
+
+  const auto year = base.keys({"timestamp"}).tl().year();
+  expect(year.at("timestamp").kind() == StreamKind::Series,
+         "Catalog::keys().tl().year should yield Series");
+  expect(year.at("timestamp").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
+         "Catalog::keys().tl().year values mismatch");
+
+  const auto filled = base.keys({"metric"}).fillnull(0.0);
+  expect(filled.at("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+         "Catalog::keys().fillnull should preserve valid values and replace only null rows");
+
+  const auto dropped = base.keys({"metric"}).dropnull();
+  expect(dropped.nrecords() == 3, "Catalog::keys().dropnull should drop rows by selected key mask");
+  expect(dropped.at("id").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({3, 2, 5}),
+         "Catalog::keys().dropnull should filter every stream with the shared selected mask");
+
+  const auto lagged = base.keys({"metric"}).ts().lag(1);
+  expect(lagged.at("metric").kind() == StreamKind::Series,
+         "Catalog::keys().ts().lag should keep Series kind");
+  expect(lagged.at("metric").size() == base.at("metric").size(),
+         "Catalog::keys().ts().lag should preserve selected stream length");
+
+  const auto ids_as_note = base.keys({"id"}).cast().note();
+  expect(ids_as_note.at("id").kind() == StreamKind::Note,
+         "Catalog::keys().cast().note should convert selected Series streams");
+
+  const std::array<std::int64_t, 1> shape2{2};
+  const auto note_dates = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"date_text", Stream(pluss::make_note(std::vector<std::string>{"2024-03-01", "2024-03-02"}, shape2))},
+  });
+  const auto parsed = note_dates.cast(
+      pluss::table::ThreadCastTarget::Timeline,
+      pluss::table::ThreadCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null});
+  expect(parsed.at("date_text").kind() == StreamKind::Timeline,
+         "Catalog::cast({}, Timeline, options) should forward full parse options");
+}
+
 void test_catalog_construction_and_selection() {
   const auto base = make_base_catalog();
   expect(base.size() == base.nkeys(), "Catalog::size should match nkeys");
@@ -221,10 +307,30 @@ void test_catalog_construction_and_selection() {
   expect(via_pairs.nkeys() == 2, "pair constructor mismatch");
   expect(via_vector.nkeys() == 2, "vector constructor mismatch");
 
-  expect(base.series().nkeys() == 2, "series projection mismatch");
-  expect(base.note().nkeys() == 2, "note projection mismatch");
-  expect(base.timeline().nkeys() == 2, "timeline projection should include Timeline + TimeIndex");
-  expect(base.timeindex().nkeys() == 1, "timeindex projection mismatch");
+  expect(base.keyaxis().series().nkeys() == 2, "series projection mismatch");
+  expect(base.keyaxis().note().nkeys() == 2, "note projection mismatch");
+  expect(base.keyaxis().timeline().nkeys() == 2, "timeline projection should include Timeline + TimeIndex");
+  expect(base.keyaxis().timeindex().nkeys() == 1, "timeindex projection mismatch");
+  expect(base.keyaxis().like("time").nkeys() == 2, "keyaxis().like should select matching keys");
+  expect(base.keyaxis().match("time_index").nkeys() == 1 && base.keyaxis().match("time_index").has("time_index"),
+         "keyaxis().match should regex-select keys");
+  const auto prefixed = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"src_id", base.at("id")},
+      {"src_city", base.at("city")},
+      {"stamp", base.at("timestamp")},
+  });
+  expect(prefixed.keyaxis().prefix("src_").nkeys() == 2, "keyaxis().prefix should filter matching keys");
+  expect(prefixed.keyaxis().prefix("src_").has("src_id"), "keyaxis().prefix should keep prefixed keys");
+  expect(!prefixed.keyaxis().prefix("src_").has("stamp"), "keyaxis().prefix should exclude non-matching keys");
+
+  const auto suffixed = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"id_raw", base.at("id")},
+      {"city_raw", base.at("city")},
+      {"timestamp", base.at("timestamp")},
+  });
+  expect(suffixed.keyaxis().suffix("_raw").nkeys() == 2, "keyaxis().suffix should filter matching keys");
+  expect(suffixed.keyaxis().suffix("_raw").has("id_raw"), "keyaxis().suffix should keep suffixed keys");
+  expect(!suffixed.keyaxis().suffix("_raw").has("timestamp"), "keyaxis().suffix should exclude non-matching keys");
 
   const auto h = base.head(2);
   const auto t = base.tail(2);
@@ -315,18 +421,18 @@ void test_catalog_sort_group_missing() {
   const auto sorted_by = base.sort_by({"city", "id"}, {true, false});
   expect(sorted_by.nrecords() == 5, "sort_by should preserve record count");
 
-  const auto groups = base.group_by("city");
+  const auto groups = base.group().by("city");
   expect(groups.size() == 3, "group_by(city) should produce 3 buckets");
   expect(groups.find("Accra") != groups.end(), "group_by(city) missing Accra");
   expect(groups.at("Accra").nrecords() == 2, "Accra group record count mismatch");
 
-  const auto filled = base.fillnull(0.0, {"metric"});
-  const auto dropped = base.dropnull({"metric"});
-  const auto ffilled = base.ffill({"metric"});
-  const auto bfilled = base.bfill({"metric"});
-  const auto nulls = base.isnull({"metric"});
-  const auto not_nulls = base.notnull({"metric"});
-  const auto invalid = base.invalid({"metric"});
+  const auto filled = base.keys({"metric"}).fillnull(0.0);
+  const auto dropped = base.keys({"metric"}).dropnull();
+  const auto ffilled = base.keys({"metric"}).ffill();
+  const auto bfilled = base.keys({"metric"}).bfill();
+  const auto nulls = base.keys({"metric"}).isnull();
+  const auto not_nulls = base.keys({"metric"}).notnull();
+  const auto invalid = base.keys({"metric"}).invalid();
   expect(filled.nrecords() == 5, "fillnull should not change record count");
   expect(filled.at("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog::fillnull(double, keys) should preserve valid values and replace only null rows");
@@ -360,60 +466,100 @@ void test_catalog_sort_group_missing() {
               bool_mask({true, false, true, false}))},
   });
 
-  const auto note_filled = mixed_missing.fillnull("missing", {"note_col"});
+  const auto note_filled = mixed_missing.keys({"note_col"}).fillnull("missing");
   expect(std::string(note_filled.at("note_col").as_note().at(1)) == "missing",
          "Catalog::fillnull(string, keys) should replace null Note values");
   expect(!pluss::kindle::detail::has_validity_mask(note_filled.at("note_col")),
          "Catalog::fillnull(string, keys) should clear Note mask when fully resolved");
+  const auto note_untouched_by_double = mixed_missing.keys({"note_col"}).fillnull(0.0);
+  expect(pluss::kindle::detail::has_validity_mask(note_untouched_by_double.at("note_col")),
+         "Catalog::fillnull(double, keys) should skip Note streams instead of throwing");
+  expect(std::string(note_untouched_by_double.at("note_col").as_note().at(0)) == "a",
+         "Catalog::fillnull(double, keys) should leave Note payload untouched");
 
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
-  const auto ts_filled = mixed_missing.fillnull(ts_fill, {"ts_col"});
+  const auto ts_filled = mixed_missing.keys({"ts_col"}).fillnull(ts_fill);
   const auto ts_ticks = ts_filled.at("ts_col").as_timeline().to_epoch_nanos_vector();
   const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "Catalog::fillnull(Timeline, keys) should replace null Timeline values");
   expect(!pluss::kindle::detail::has_validity_mask(ts_filled.at("ts_col")),
          "Catalog::fillnull(Timeline, keys) should clear Timeline mask when fully resolved");
+  const auto ts_untouched_by_string = mixed_missing.keys({"ts_col"}).fillnull("missing");
+  expect(pluss::kindle::detail::has_validity_mask(ts_untouched_by_string.at("ts_col")),
+         "Catalog::fillnull(string, keys) should skip Timeline streams instead of throwing");
 
   const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
-  const auto ti_filled = mixed_missing.fillnull(ti_fill, {"ti_col"});
+  const auto ti_filled = mixed_missing.keys({"ti_col"}).fillnull(ti_fill);
   const auto ti_ticks = ti_filled.at("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
   const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "Catalog::fillnull(TimeIndex, keys) should replace null TimeIndex values");
   expect(!pluss::kindle::detail::has_validity_mask(ti_filled.at("ti_col")),
          "Catalog::fillnull(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
+  const auto ti_filled_by_timeline = mixed_missing.keys({"ti_col"}).fillnull(ts_fill);
+  const auto ti_from_timeline_ticks = ti_filled_by_timeline.at("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
+  expect(ti_from_timeline_ticks[1] == ts_fill_tick && ti_from_timeline_ticks[3] == ts_fill_tick,
+         "Catalog::fillnull(Timeline, keys) should also fill TimeIndex streams");
 
-  const auto id_as_note = base.cast({"id"}, pluss::table::ThreadCastTarget::Note);
-  const auto ts_as_series = base.cast(
-      {"timestamp"}, pluss::table::ThreadCastTarget::Series,
-      pluss::table::ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64});
-  const auto ts_as_ti = base.cast({"timestamp"}, pluss::table::ThreadCastTarget::TimeIndex);
-  const auto id_as_f64 = base.astype({"id"}, pluss::codem::ScalarType::Float64);
+  const auto id_as_note = base.keys({"id"}).cast().note();
+  const auto ts_as_series = base.keys({"timestamp"}).cast(
+      pluss::table::ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
+  const auto ts_as_ti = base.keys({"timestamp"}).cast().timeindex();
+  const auto id_as_f64 = base.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
   expect(id_as_note.at("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
   expect(ts_as_series.at("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
   expect(ts_as_ti.at("timestamp").kind() == StreamKind::TimeIndex, "cast(TimeIndex) timestamp kind mismatch");
   expect(id_as_f64.at("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "astype(id,float64) scalar type mismatch");
 
-  const auto city_distinct = base.distinct("city");
+  const auto city_distinct = base.at("city").distinct();
   expect(city_distinct.size() == 3, "Catalog::distinct(key) should delegate to Stream::distinct");
-  const auto selected_distinct = base.distinct({"city"});
+  const auto selected_distinct = base.keys({"city"}).distinct();
   expect(selected_distinct.at("city").size() == 3, "Catalog::distinct(keys) should transform selected key");
   expect(selected_distinct.at("id").size() == base.at("id").size(),
          "Catalog::distinct(keys) should preserve unselected keys");
 
-  const auto city_freq = base.freq("city");
+  const auto city_freq = base.at("city").freq();
   expect(city_freq.size() == 3, "Catalog::freq(key) should delegate to Stream::freq");
   expect(city_freq.has_label(), "Catalog::freq(key) result should carry value labels");
-  const auto selected_freq = base.freq({"city"}, {.top = 2});
+  const auto selected_freq = base.keys({"city"}).freq({.top = 2});
   expect(selected_freq.at("city").size() == 2, "Catalog::freq(keys, top_n) should limit selected frequency");
 
-  const auto city_ndistinct = base.ndistinct("city");
+  const auto city_ndistinct = base.at("city").ndistinct();
   expect(static_cast<std::int64_t>(scalar_stream_to_double(city_ndistinct)) == 3,
          "Catalog::ndistinct(key) mismatch");
   const auto all_ndistinct = base.ndistinct();
   expect(all_ndistinct.nrecords() == 1, "Catalog::ndistinct() should return scalar streams");
+}
+
+void test_catalog_and_archive_lvalue_name_ranges() {
+  const auto base = make_base_catalog();
+  const std::vector<std::string> keys{"id", "city"};
+  const auto selected = base.select(keys);
+  expect(selected.nkeys() == 2, "Catalog lvalue select should accept reusable key vectors");
+
+  const std::vector<std::string> metric{"metric"};
+  const auto filled = base.keys(metric).fillnull(0.0);
+  expect(filled.at("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+         "Catalog lvalue fillnull should delegate to selected keys");
+
+  const auto casted = base.keys(keys).cast().note();
+  expect(casted.at("id").kind() == StreamKind::Note, "Catalog lvalue cast should delegate to selected keys");
+
+  const auto f0 = make_base_frame().slice(0, 3);
+  const auto f1 = make_base_frame().slice(2, 5);
+  const auto labels = pluss::table::Thread(
+      pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
+  const pluss::table::Atlas atlas({f0, f1}, labels);
+  const auto archive = pluss::kindle::Archive::kindelize(atlas);
+
+  const auto archive_selected = archive.select(keys);
+  expect(archive_selected.catalog(0).nkeys() == 2, "Archive lvalue select should delegate to Catalog");
+
+  const auto archive_freq = archive.keys(std::vector<std::string>{"city"}).freq({.top = 1});
+  expect(archive_freq.catalog(0).at("city").size() == 1,
+         "Archive lvalue freq should delegate to Catalog");
 }
 
 void test_catalog_aggregates_apply_text_merge() {
@@ -510,6 +656,14 @@ void test_catalog_mutation_tabelize_io() {
 
   expect(!base.to_string().empty(), "to_string should not be empty");
   expect(!base.to_json().empty(), "to_json should not be empty");
+  expect(base.to_json().find("\"_type\": \"Catalog\"") != std::string::npos,
+         "Catalog::to_json should emit a Catalog JSON object");
+  expect(base.to_json().find("\"streams\"") != std::string::npos,
+         "Catalog::to_json should include stream entries");
+  expect(base.at("id").to_json().find("\"_type\": \"Stream\"") != std::string::npos,
+         "Stream::to_json should emit a Stream JSON object");
+  expect(base.at("id").to_json().find("\"values\"") != std::string::npos,
+         "Stream::to_json should include values");
 
   std::int64_t iter_count = 0;
   for (const auto& key : base) {
@@ -616,29 +770,28 @@ void test_archive_to_table_bridge() {
   expect(archive.shape() == std::make_tuple<std::int64_t, std::int64_t, std::int64_t>(2, 3, 6),
          "Archive::shape should be (depth, max records, max keys)");
   expect(archive.has("city") && !archive.has("missing"), "Archive::has should require key in every catalog");
+  expect(archive.label().has(), "Archive::label().has should detect depth labels");
+  expect(archive.label().values().size() == archive.depth(), "Archive::label().values size mismatch");
   expect(archive.dloc(0).nkeys() == 6, "Archive::dloc key count mismatch");
   expect(archive.loc("batch_b").nkeys() == 6, "Archive::loc(string) key count mismatch");
   expect(archive.head(1).depth() == 1, "Archive::head depth mismatch");
   expect(archive.tail(1).depth() == 1, "Archive::tail depth mismatch");
   expect(archive.slice_depth(0, 1).depth() == 1, "Archive::slice_depth mismatch");
 
-  const auto sorted_desc = archive.sort_depth(false);
-  const auto sorted_labels = sorted_desc.depth_labels()
-                                 ->to_thread()
-                                 .cast()
-                                 .note()
-                                 .as_note();
+  const auto sorted_desc = archive.label().sort(false);
+  const auto sorted_labels = sorted_desc.label().values().to_thread().cast().note().as_note();
   expect(std::string(sorted_labels.at(0)) == "batch_b", "Archive::sort_depth(desc) label mismatch");
 
-  const auto relabeled = archive.relabel_depth(
+  const auto relabeled = archive.label().set(
       Stream(pluss::make_note(std::vector<std::string>{"A", "B"}, std::array<std::int64_t, 1>{2})));
-  expect(relabeled.depth_labels().has_value(), "Archive::relabel_depth should set labels");
+  expect(relabeled.label().has(), "Archive::label().set should set labels");
 
-  const auto aligned = archive.align_depth(
+  const auto aligned = archive.label().align(
       Stream(pluss::make_note(std::vector<std::string>{"batch_b", "batch_a"}, std::array<std::int64_t, 1>{2})));
   const auto aligned_first = aligned.catalog(0).at("id").as_series().to_vec<std::int64_t>();
   expect(aligned_first == f1.features("id").as_series().to_vec<std::int64_t>(),
-         "Archive::align_depth should reorder catalogs");
+         "Archive::label().align should reorder catalogs");
+  expect(!relabeled.label().reset().label().has(), "Archive::label().reset should clear labels");
 
   const auto mapped = archive.map_catalogs([](const Catalog& c) { return c.select({"id", "city"}); });
   expect(mapped.catalog(0).nkeys() == 2, "Archive::map_catalogs should transform each catalog");
@@ -652,12 +805,47 @@ void test_archive_to_table_bridge() {
   expect(selected.catalog(0).nkeys() == 2, "Archive::select should delegate to catalogs");
   expect(dropped.catalog(0).nkeys() == 5, "Archive::drop should delegate to catalogs");
   expect(renamed.catalog(0).has("town"), "Archive::rename should delegate to catalogs");
+  expect(archive.keyaxis().series().catalog(0).nkeys() == 2, "Archive::keyaxis().series projection mismatch");
+  expect(archive.keyaxis().like("time").catalog(0).nkeys() == 2, "Archive::keyaxis().like selection mismatch");
+  const auto& cat0 = archive.catalog(0);
+  const auto archive_prefixed = pluss::kindle::Archive({
+      Catalog(std::vector<std::pair<std::string, Stream>>{
+          {"src_id", cat0.at("id")},
+          {"src_city", cat0.at("city")},
+          {"stamp", cat0.at("timestamp")},
+      }),
+      Catalog(std::vector<std::pair<std::string, Stream>>{
+          {"src_id", cat0.at("id")},
+          {"src_city", cat0.at("city")},
+          {"stamp", cat0.at("timestamp")},
+      }),
+  });
+  expect(archive_prefixed.keyaxis().prefix("src_").catalog(0).nkeys() == 2,
+         "Archive::keyaxis().prefix should filter matching keys");
+  expect(!archive_prefixed.keyaxis().prefix("src_").catalog(0).has("stamp"),
+         "Archive::keyaxis().prefix should exclude non-matching keys");
+  const auto archive_suffixed = pluss::kindle::Archive({
+      Catalog(std::vector<std::pair<std::string, Stream>>{
+          {"id_raw", cat0.at("id")},
+          {"city_raw", cat0.at("city")},
+          {"timestamp", cat0.at("timestamp")},
+      }),
+      Catalog(std::vector<std::pair<std::string, Stream>>{
+          {"id_raw", cat0.at("id")},
+          {"city_raw", cat0.at("city")},
+          {"timestamp", cat0.at("timestamp")},
+      }),
+  });
+  expect(archive_suffixed.keyaxis().suffix("_raw").catalog(0).nkeys() == 2,
+         "Archive::keyaxis().suffix should filter matching keys");
+  expect(!archive_suffixed.keyaxis().suffix("_raw").catalog(0).has("timestamp"),
+         "Archive::keyaxis().suffix should exclude non-matching keys");
 
-  const auto filled = archive.fillnull(0.0, {"metric"});
-  const auto dropped_null = archive.dropnull({"metric"});
-  const auto nulls = archive.isnull({"metric"});
-  const auto notnulls = archive.notnull({"metric"});
-  const auto invalid = archive.invalid({"metric"});
+  const auto filled = archive.keys({"metric"}).fillnull(0.0);
+  const auto dropped_null = archive.keys({"metric"}).dropnull();
+  const auto nulls = archive.keys({"metric"}).isnull();
+  const auto notnulls = archive.keys({"metric"}).notnull();
+  const auto invalid = archive.keys({"metric"}).invalid();
   expect(filled.catalog(0).at("metric").as_series().to_vec<double>()[1] == 0.0,
          "Archive::fillnull should delegate to catalogs");
   expect(dropped_null.catalog(0).nrecords() == 2 && dropped_null.catalog(1).nrecords() == 2,
@@ -669,19 +857,19 @@ void test_archive_to_table_bridge() {
   expect(invalid.catalog(0).at("metric").kind() == StreamKind::Series,
          "Archive::invalid should return boolean streams");
 
-  const auto casted = archive.cast({"id"}, pluss::table::ThreadCastTarget::Note);
-  const auto typed = archive.astype({"id"}, pluss::codem::ScalarType::Float64);
-  expect(casted.catalog(0).at("id").kind() == StreamKind::Note, "Archive::cast should delegate to catalogs");
+  const auto casted = archive.keys({"id"}).cast().note();
+  const auto typed = archive.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
+  expect(casted.catalog(0).at("id").kind() == StreamKind::Note, "Archive::keys().cast should delegate to catalogs");
   expect(typed.catalog(0).at("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
-         "Archive::astype should delegate to catalogs");
+         "Archive::keys().astype should delegate to catalogs");
 
-  const auto distinct = archive.distinct({"city"});
-  const auto freq = archive.freq({"city"}, {.top = 1});
-  const auto ndistinct = archive.ndistinct({"city"});
-  expect(distinct.catalog(0).at("city").size() == 2, "Archive::distinct(keys) should delegate to catalogs");
-  expect(freq.catalog(0).at("city").size() == 1, "Archive::freq(keys) should delegate to catalogs");
+  const auto distinct = archive.keys({"city"}).distinct();
+  const auto freq = archive.keys({"city"}).freq({.top = 1});
+  const auto ndistinct = archive.keys({"city"}).ndistinct();
+  expect(distinct.catalog(0).at("city").size() == 2, "Archive::keys().distinct should delegate to catalogs");
+  expect(freq.catalog(0).at("city").size() == 1, "Archive::keys().freq should delegate to catalogs");
   expect(ndistinct.catalog(0).at("city").size() == 1,
-         "Archive::ndistinct(keys) should produce scalar streams for selected keys");
+         "Archive::keys().ndistinct should produce scalar streams for selected keys");
 
   const auto atlas_a = archive.tabelize();
   const auto atlas_b = archive.to_table({}, false);
@@ -693,11 +881,15 @@ void test_archive_to_table_bridge() {
 } // namespace
 
 int main() {
+  ::setenv("PLUSS_ERROR_NATIVE_TRACE", "0", 0);
   try {
     test_stream_methods();
+    test_stream_accessors();
+    test_catalog_accessors();
     test_catalog_construction_and_selection();
     test_catalog_label_alignment();
     test_catalog_sort_group_missing();
+    test_catalog_and_archive_lvalue_name_ranges();
     test_catalog_aggregates_apply_text_merge();
     test_catalog_mutation_tabelize_io();
     test_archive_to_table_bridge();

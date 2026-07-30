@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,27 +50,79 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Counts non-null observed values per group for the current non-key value features.</p>
 <p>This is the grouped convenience terminal for “how many observed entries does each
-value feature contribute inside each group?”</p>
+value feature contribute inside each group?” — a shortcut for calling
+<a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with a <code class="docutils literal notranslate"><span class="pre">GroupOp::Count</span></code> spec for every remaining value feature.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>This method takes no parameters.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per group. The group key column(s) come first, followed by one
+<code class="docutils literal notranslate"><span class="pre">{feature}_count</span></code> column per non-key value feature still present on the frame —
+or, if no value features remain, a single column literally named <code class="docutils literal notranslate"><span class="pre">count</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Count observed values per city, with one missing <code class="docutils literal notranslate"><span class="pre">amount</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
 <span class="w">               </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">count</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>That yields one row per city with <code class="docutils literal notranslate"><span class="pre">amount_count</span></code> and <code class="docutils literal notranslate"><span class="pre">units_count</span></code>.</p>
+<section id="output-sales">
+<h3>Output (sales)<a class="headerlink" href="#output-sales" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================
+     | city   amount  units
+---------------------------
+0    | Accra  100     2    
+1    | Accra  NULL    1    
+2    | Tema   50      3    
+3    | Tema   40      1    
+---------------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-out">
+<h3>Output (out)<a class="headerlink" href="#output-out" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================================
+     | city   amount_count  units_count
+---------------------------------------
+0    | Accra  1             2          
+1    | Tema   2             2          
+---------------------------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> has two rows, but one <code class="docutils literal notranslate"><span class="pre">amount</span></code> value is <code class="docutils literal notranslate"><span class="pre">NaN</span></code> (missing), so
+<code class="docutils literal notranslate"><span class="pre">amount_count</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, not <code class="docutils literal notranslate"><span class="pre">2</span></code>. <code class="docutils literal notranslate"><span class="pre">units_count</span></code> is unaffected because neither of
+<code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>’s <code class="docutils literal notranslate"><span class="pre">units</span></code> values is missing.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Convenience terminals exclude ordinary grouping keys from the value side before
-aggregating.</p></li>
+aggregating — narrow with <a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a> first
+if the source frame has columns you do not want counted.</p></li>
 <li><p>If no non-key value features remain, <code class="docutils literal notranslate"><span class="pre">.count()</span></code> still returns an explicit row-count
-column named <code class="docutils literal notranslate"><span class="pre">count</span></code>.</p></li>
+column named <code class="docutils literal notranslate"><span class="pre">count</span></code>, counting rows rather than any particular feature’s non-null
+entries.</p></li>
 <li><p>If you need row count beside other explicit grouped metrics, prefer
 <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with <code class="docutils literal notranslate"><span class="pre">{&quot;n&quot;,</span> <span class="pre">&quot;&quot;,</span> <span class="pre">GroupOp::Count}</span></code>.</p></li>
 </ul>

@@ -84,24 +84,6 @@ Stream Stream::ndistinct(DistinctOptions options) const {
   return Stream::from_thread(to_thread().ndistinct(options.dropnull).thread());
 }
 
-Stream Stream::cast(pluss::table::ThreadCastTarget target,
-                    std::optional<pluss::codem::ScalarType> series_dtype) const {
-  PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) {
-    switch (target) {
-      case pluss::table::ThreadCastTarget::Series:
-        return t.cast({.series_dtype = series_dtype}).series();
-      case pluss::table::ThreadCastTarget::Note:
-        return t.cast().note();
-      case pluss::table::ThreadCastTarget::Timeline:
-        return t.cast().timeline();
-      case pluss::table::ThreadCastTarget::TimeIndex:
-        return t.cast().timeindex();
-    }
-    return t;
-  });
-}
-
 Stream Stream::astype(pluss::codem::ScalarType dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.astype(dtype); });
@@ -170,7 +152,112 @@ std::string Stream::to_string() const {
 }
 
 std::string Stream::to_json() const {
-  return display::render(*this);
+  if (!defined()) return "{ \"_type\": \"Stream\", \"defined\": false }";
+
+  std::ostringstream oss;
+  oss << "{\n";
+  oss << "  \"_type\": \"Stream\",\n";
+  oss << "  \"defined\": true,\n";
+  oss << "  \"kind\": \"" << ptype() << "\",\n";
+  oss << "  \"dtype\": \"" << json_escape(dtype()) << "\",\n";
+  oss << "  \"size\": " << size() << ",\n";
+  oss << "  \"values\": [";
+
+  switch (kind()) {
+    case StreamKind::Series: {
+      const auto& s = as_series();
+      if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
+        const auto values = s.to_vec<bool>();
+        for (std::size_t i = 0; i < values.size(); ++i) {
+          if (i == 0) oss << "\n";
+          oss << "    " << (values[i] ? "true" : "false");
+          if (i + 1 < values.size()) oss << ",";
+          oss << "\n";
+        }
+      } else if (s.scalar_type() == pluss::codem::ScalarType::Int64) {
+        const auto values = s.to_vec<std::int64_t>();
+        for (std::size_t i = 0; i < values.size(); ++i) {
+          if (i == 0) oss << "\n";
+          oss << "    " << values[i];
+          if (i + 1 < values.size()) oss << ",";
+          oss << "\n";
+        }
+      } else {
+        const auto values = s.to(pluss::codem::ScalarType::Float64).to_vec<double>();
+        for (std::size_t i = 0; i < values.size(); ++i) {
+          if (i == 0) oss << "\n";
+          oss << "    " << values[i];
+          if (i + 1 < values.size()) oss << ",";
+          oss << "\n";
+        }
+      }
+      break;
+    }
+    case StreamKind::Note: {
+      const auto& note = as_note();
+      for (std::int64_t i = 0; i < note.numel(); ++i) {
+        if (i == 0) oss << "\n";
+        oss << "    \"" << json_escape(note.at(i)) << "\"";
+        if (i + 1 < note.numel()) oss << ",";
+        oss << "\n";
+      }
+      break;
+    }
+    case StreamKind::Timeline: {
+      const auto values = as_timeline().to_epoch_nanos_vector();
+      for (std::size_t i = 0; i < values.size(); ++i) {
+        if (i == 0) oss << "\n";
+        oss << "    " << values[i];
+        if (i + 1 < values.size()) oss << ",";
+        oss << "\n";
+      }
+      break;
+    }
+    case StreamKind::TimeIndex: {
+      const auto values = as_timeindex().timeline().to_epoch_nanos_vector();
+      for (std::size_t i = 0; i < values.size(); ++i) {
+        if (i == 0) oss << "\n";
+        oss << "    " << values[i];
+        if (i + 1 < values.size()) oss << ",";
+        oss << "\n";
+      }
+      break;
+    }
+  }
+
+  if (size() > 0) oss << "  ";
+  oss << "]";
+
+  if (detail::has_validity_mask(*this)) {
+    const auto valid = detail::validity_mask(*this)->to_vec<bool>();
+    oss << ",\n";
+    oss << "  \"validity\": [";
+    for (std::size_t i = 0; i < valid.size(); ++i) {
+      if (i == 0) oss << "\n";
+      oss << "    " << (valid[i] ? "true" : "false");
+      if (i + 1 < valid.size()) oss << ",";
+      oss << "\n";
+    }
+    if (!valid.empty()) oss << "  ";
+    oss << "]";
+  }
+
+  if (has_label()) {
+    const auto label_values = label()->cast().note().as_note();
+    oss << ",\n";
+    oss << "  \"labels\": [";
+    for (std::int64_t i = 0; i < label_values.numel(); ++i) {
+      if (i == 0) oss << "\n";
+      oss << "    \"" << json_escape(label_values.at(i)) << "\"";
+      if (i + 1 < label_values.numel()) oss << ",";
+      oss << "\n";
+    }
+    if (label_values.numel() > 0) oss << "  ";
+    oss << "]";
+  }
+
+  oss << "\n}";
+  return oss.str();
 }
 
 void Stream::show(std::ostream& os) const { display::print(os, *this); }

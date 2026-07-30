@@ -84,12 +84,14 @@ auto scores = DataFrame({
 });
 
 auto chart = scores.plot().bootstrap("score");
-chart.save_svg("score_bootstrap.svg");
+chart.show();
 ```
 
 300 resamples of 8 values each (drawn with replacement from the original 8), each resample's
 mean computed and histogrammed into 24 bins (the default); the reference line marks the
 original data's actual mean.
+
+![Output of Example 1](img/bootstrap-1.svg)
 
 Example 2. Bootstrapping the median instead of the mean.
 
@@ -100,6 +102,8 @@ options.statistic = BootstrapStatistic::Median;
 auto chart = scores.plot().bootstrap("score", options);
 chart.show();
 ```
+
+![Output of Example 2](img/bootstrap-2.svg)
 
 Example 3. Bootstrapping the standard deviation, with more resamples and a fixed seed for
 reproducibility.
@@ -117,6 +121,8 @@ chart.save_pdf("score_bootstrap_std.pdf");
 Running this call twice with `seed = 42` produces the identical histogram both times, since
 every resample's random draw is deterministically derived from `seed`.
 
+![Output of Example 3](img/bootstrap-3.svg)
+
 Example 4. An explicit `sample_size` smaller than the original data — each resample draws
 fewer rows than the full feature has.
 
@@ -125,11 +131,13 @@ BootstrapPlotOptions small_draws;
 small_draws.sample_size = 4;
 
 auto chart = scores.plot().bootstrap("score", small_draws);
-chart.save_png("score_bootstrap_small.png");
+chart.show();
 ```
 
 Each of the 300 resamples now draws only 4 values (with replacement) instead of 8, producing
 a wider sampling distribution than the same-size default would.
+
+![Output of Example 4](img/bootstrap-4.svg)
 
 Example 5. Coarser histogram resolution and a fewer-samples run.
 
@@ -140,6 +148,8 @@ coarse.bins = 10;
 
 auto chart = scores.plot().bootstrap("score", coarse);
 ```
+
+![Output of Example 5](img/bootstrap-5.svg)
 
 Example 6. Fewer than two rows throws.
 

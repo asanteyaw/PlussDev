@@ -194,12 +194,12 @@ invalid 2
 - [`Nexus::summary`](summary.md): compact inventory only, with no audit detail.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rename.html">
+  <a class="prev-link" href="save.html">
     <span class="label">Previous</span>
-    <span class="title">rename</span>
+    <span class="title">save</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="schema.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">schema</span>
   </a>
 </div>

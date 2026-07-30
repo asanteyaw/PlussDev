@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 53a7ae31299c -->
 
 # DataFrame::rpow
 

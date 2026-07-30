@@ -1,13 +1,14 @@
 # NodeJ Full API Reference: Method Index
 
-Total method pages: **172**
-Total data-type pages: **37**
+Total method pages: **177**
+Total data-type pages: **39**
 
 ## Data Types
 
 ```{toctree}
 :maxdepth: 1
 
+api/type-balanceplan
 api/type-balancetarget
 api/type-classmix
 api/type-classreport
@@ -26,6 +27,7 @@ api/type-foldassessresult
 api/type-indexsplit
 api/type-isolationtree
 api/type-labeledbatch
+api/type-lexiconmapperstate
 api/type-modelspec
 api/type-permuteimpactreport
 api/type-randomstate
@@ -118,6 +120,9 @@ api/method-frequencyencoder-trained
 api/method-functiontransformer-dump-state
 api/method-functiontransformer-load-state
 api/method-functiontransformer-trained
+api/method-hashmapper-map-dense
+api/method-hashmapper-map-sparse
+api/method-hashmapper-options
 api/method-iterativeimputer-dump-state
 api/method-iterativeimputer-load-state
 api/method-iterativeimputer-trained
@@ -127,9 +132,11 @@ api/method-labeledbatch-has-weights
 api/method-labelencoder-dump-state
 api/method-labelencoder-load-state
 api/method-labelencoder-trained
+api/method-lexiconmapper-dump-state
 api/method-lexiconmapper-feature-count
 api/method-lexiconmapper-learn
 api/method-lexiconmapper-learned
+api/method-lexiconmapper-load-state
 api/method-lexiconmapper-map-dense
 api/method-lexiconmapper-map-sparse
 api/method-lexiconmapper-vocabulary

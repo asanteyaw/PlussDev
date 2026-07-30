@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7cc6b0a60905 -->
 
 # DataFrameLabelAccessor::drop
 

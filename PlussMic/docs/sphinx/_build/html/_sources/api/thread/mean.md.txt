@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5fb78a428872 -->
 
 # Thread::mean
 

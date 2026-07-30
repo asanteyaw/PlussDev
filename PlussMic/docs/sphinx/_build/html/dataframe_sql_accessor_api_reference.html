@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=f0e02664"></script>
+    <script src="_static/api_nav.js?v=f9ac45ee"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,40 +36,16 @@
 
           <div class="body" role="main">
             
-  <!-- pluss-hand-authored -->
-<section id="dataframesqlaccessor-api-reference">
+  <section id="dataframesqlaccessor-api-reference">
 <h1>DataFrameSqlAccessor API Reference<a class="headerlink" href="#dataframesqlaccessor-api-reference" title="Link to this heading">¶</a></h1>
-<p>This page documents the public SQL accessor returned by <code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code> /
-<code class="docutils literal notranslate"><span class="pre">DataFrame::sql(SqlOptions)</span></code>.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The table is named df, not self
-Every statement addresses the frame <code class="docutils literal notranslate"><span class="pre">sql()</span></code> was called on as <strong><code class="docutils literal notranslate"><span class="pre">df</span></code></strong> —
-<code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FROM</span> <span class="pre">df</span> <span class="pre">...</span></code>. There is no <code class="docutils literal notranslate"><span class="pre">self</span></code> keyword; if you’ve seen <code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">self</span></code>
-in older notes or examples, that name never existed in the implementation and
-will fail to resolve.</p>
-</div>
-<p>PlussMic’s embedded SQL is a small, deliberately limited dialect, not a general
-SQL engine: one <code class="docutils literal notranslate"><span class="pre">SELECT</span></code>, an optional single <code class="docutils literal notranslate"><span class="pre">INNER</span> <span class="pre">JOIN</span></code>, a <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause that
-is itself just a <a class="reference internal" href="api/dataframe/query.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::query</span></code></span></a> expression, at
-most one <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> key, and <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code>. There is no <code class="docutils literal notranslate"><span class="pre">GROUP</span> <span class="pre">BY</span></code>, no
-aggregate functions, no subqueries, no <code class="docutils literal notranslate"><span class="pre">UNION</span></code>, no multi-column <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code>, and
-no <code class="docutils literal notranslate"><span class="pre">LEFT</span> <span class="pre">JOIN</span></code> (the parser explicitly rejects it — see
-<a class="reference internal" href="#notes-execute">Notes</a>). Anything beyond that grammar is a parse error, not a
-silent best-effort interpretation.</p>
+<p>This page documents the public SQL accessor returned by <code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code>.</p>
 <section id="how-to-use-this-page">
 <h2>How To Use This Page<a class="headerlink" href="#how-to-use-this-page" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Methods are grouped alphabetically so you can jump quickly from the left rail.</p></li>
-<li><p>Each method section starts with the public signature(s), then explains what
-the method does, how each parameter changes behavior, and what the call
-returns.</p></li>
-<li><p>Examples build on one running dataset (<code class="docutils literal notranslate"><span class="pre">orders</span></code>, and a second frame
-<code class="docutils literal notranslate"><span class="pre">managers</span></code> for the JOIN examples) so you can compare outputs directly
-instead of re-reading a new setup every time.</p></li>
-<li><p>Each example is followed immediately by verified output hand-traced against
-<code class="docutils literal notranslate"><span class="pre">DataFrameSql.cpp</span></code>, so the result shape is visible before you move to the
-next one.</p></li>
+<li><p>Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.</p></li>
+<li><p>Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.</p></li>
+<li><p>Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.</p></li>
 </ul>
 </section>
 <section id="e">
@@ -78,455 +54,52 @@ next one.</p></li>
 <h3><code class="docutils literal notranslate"><span class="pre">execute</span></code><a class="headerlink" href="#execute" title="Link to this heading">¶</a></h3>
 <section id="signature">
 <h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlAccessor</span><span class="o">::</span><span class="n">execute</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlAccessor</span><span class="o">::</span><span class="n">execute</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h4>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h4>
-<p>Renders any <code class="docutils literal notranslate"><span class="pre">{name}</span></code>/<code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> template placeholders into the statement text,
-parses the result as a single <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statement (or reuses a cached parse —
-see the plan-cache note below), executes it against <code class="docutils literal notranslate"><span class="pre">df</span></code> (the frame <code class="docutils literal notranslate"><span class="pre">sql()</span></code>
-was called on) and any additional <code class="docutils literal notranslate"><span class="pre">sources</span></code>, and returns the projected rows as
-a brand-new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. Execution proceeds in a fixed pipeline: resolve <code class="docutils literal notranslate"><span class="pre">FROM</span></code>
-source → apply <code class="docutils literal notranslate"><span class="pre">JOIN</span></code> (if any) → apply <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> (if any) → apply <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> (if
-any) → apply the <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> projection → apply <code class="docutils literal notranslate"><span class="pre">OFFSET</span></code>/<code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> → apply
-<code class="docutils literal notranslate"><span class="pre">max_result_rows</span></code> truncation. Resource limits (<code class="docutils literal notranslate"><span class="pre">max_intermediate_rows</span></code>,
-<code class="docutils literal notranslate"><span class="pre">memory_budget_mb</span></code>, <code class="docutils literal notranslate"><span class="pre">timeout_ms</span></code>) are checked at every one of those stages,
-not just at the end.</p>
+<p>Runs a SQL query against the current frame and returns the result as a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 </section>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
-<p><strong>statement</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
-<p>The SQL text. Supported grammar:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SELECT &lt;* | col[, col ...][ AS alias]&gt;
-FROM &lt;source&gt;[ AS alias]
-[INNER JOIN &lt;source&gt;[ AS alias] ON &lt;left&gt; = &lt;right&gt;]
-[WHERE &lt;query()-expression&gt;]
-[ORDER BY &lt;one column&gt; [ASC|DESC] [NULLS FIRST|LAST]]
-[LIMIT &lt;n&gt;]
-[OFFSET &lt;n&gt;]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">source</span></code> is <code class="docutils literal notranslate"><span class="pre">df</span></code> (the calling frame) or a name bound via
-<code class="docutils literal notranslate"><span class="pre">SqlOptions::sources</span></code>. <code class="docutils literal notranslate"><span class="pre">&lt;left&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;right&gt;</span></code> in a JOIN’s <code class="docutils literal notranslate"><span class="pre">ON</span></code> clause are bare or
-dotted (<code class="docutils literal notranslate"><span class="pre">alias.column</span></code>) identifiers separated by <code class="docutils literal notranslate"><span class="pre">=</span></code> with spaces around it —
-<code class="docutils literal notranslate"><span class="pre">region</span> <span class="pre">=</span> <span class="pre">m.region</span></code>, not <code class="docutils literal notranslate"><span class="pre">region=m.region</span></code> (the tokenizer only splits on
-whitespace/quotes/punctuation, so <code class="docutils literal notranslate"><span class="pre">=</span></code> glued to its neighbors becomes one
-unparsable word). At least one side of <code class="docutils literal notranslate"><span class="pre">ON</span></code> must reference the joined
-source’s own alias/name.</p>
+<p><strong>statement</strong>
+SQL query text run against the current frame. The frame is exposed to the statement as <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </section>
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-A new, freshly materialized frame — the projected, filtered, ordered,
-sliced result. Row case labels are whatever the last case-label-affecting
-stage produced (see the per-example notes below; a plain <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> keeps the
-original labels of the surviving rows, a <code class="docutils literal notranslate"><span class="pre">JOIN</span></code> always resets to a fresh
-<code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> index, per <a class="reference internal" href="api/dataframe/unify.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">unify</span></code></span></a>).</p>
+Value produced by this call.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
-<p>The dataset used throughout:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}))},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">}))},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">250.0</span><span class="p">}))}});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-0     | 1   east    100  
-1     | 2   west    200  
-2     | 3   east    150  
-3     | 4   north   90   
-4     | 5   west    250  
--------------------------
-[5 cs x 3 feat]
-</pre></div>
-</div>
-<p>Example 1. A plain <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> with a <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause — the clause body is handed
-directly to <a class="reference internal" href="api/dataframe/query.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">query()</span></code></span></a>, so anything valid there is
-valid here.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, region, sales FROM df WHERE sales &gt; 95&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; 95&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h5>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-0     | 1   east    100  
-1     | 2   west    200  
-2     | 3   east    150  
-4     | 5   west    250  
--------------------------
-[4 cs x 3 feat]
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">4</span> <span class="pre">/</span> <span class="pre">90</span></code> row fails <code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">&gt;</span> <span class="pre">95</span></code> and is dropped. The surviving rows keep
-their <strong>original</strong> case labels (<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">4</span></code> — <code class="docutils literal notranslate"><span class="pre">3</span></code> is simply missing,
-not renumbered), because a bare <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> with no <code class="docutils literal notranslate"><span class="pre">JOIN</span></code> never touches the case
-axis.</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">AS</span></code> renames a projected column; <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">...</span> <span class="pre">DESC</span></code> sorts on it by
-its <strong>source</strong> name, not the output alias.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, sales AS amount FROM df ORDER BY sales DESC&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales
+1   100.0
+2   120.0
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h5>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
-      | id  amount
-------------------
-4     | 5   250   
-1     | 2   200   
-2     | 3   150   
-0     | 1   100   
-3     | 4   90    
-------------------
-[5 cs x 2 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">sales</span></code> is projected out under the name <code class="docutils literal notranslate"><span class="pre">amount</span></code>, but the <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">sales</span></code>
-clause still refers to the underlying column — <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">amount</span></code> would fail
-here since the projection hasn’t happened yet when <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> runs (ordering
-happens before the final <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> projection in the pipeline). Case labels
-travel with their rows through the sort (<code class="docutils literal notranslate"><span class="pre">4</span></code> now leads, since <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">5</span></code> had the
-highest <code class="docutils literal notranslate"><span class="pre">sales</span></code>).</p>
-<p>Example 3. Scalar template parameters — <code class="docutils literal notranslate"><span class="pre">{name}</span></code> placeholders are substituted
-with rendered SQL literals (quoted/escaped for strings, bare for numbers)
-<strong>before</strong> parsing, so they behave exactly as if you’d typed the literal
-yourself.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;west&quot;</span><span class="p">)},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;min_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">}},</span>
-<span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">opts</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT id, region, sales FROM df WHERE region = {region} AND sales &gt;= {min_sales}&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
-</pre></div>
-</div>
 </section>
-<section id="id2">
-<h5>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-1     | 2   west    200  
-4     | 5   west    250  
--------------------------
-[2 cs x 3 feat]
-</pre></div>
-</div>
-<p>The rendered statement is literally
-<code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">id,</span> <span class="pre">region,</span> <span class="pre">sales</span> <span class="pre">FROM</span> <span class="pre">df</span> <span class="pre">WHERE</span> <span class="pre">region</span> <span class="pre">=</span> <span class="pre">'west'</span> <span class="pre">AND</span> <span class="pre">sales</span> <span class="pre">&gt;=</span> <span class="pre">100</span></code> —
-<code class="docutils literal notranslate"><span class="pre">{region}</span></code> became a quoted string literal, <code class="docutils literal notranslate"><span class="pre">{min_sales}</span></code> a bare number. By
-default (<code class="docutils literal notranslate"><span class="pre">MissingParamPolicy::Error</span></code>), leaving out either key from <code class="docutils literal notranslate"><span class="pre">params</span></code>
-throws instead of silently proceeding; passing
-<code class="docutils literal notranslate"><span class="pre">MissingParamPolicy::Null</span></code> renders the literal token <code class="docutils literal notranslate"><span class="pre">null</span></code> in its place
-instead (useful for building templates once and letting some placeholders
-resolve to SQL <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in certain calls — but you’re then responsible for
-writing a <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> expression that tolerates a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> literal on that side).</p>
-<p>Example 4. Identifier template parameters — <code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> placeholders are
-substituted with a backtick-quoted identifier, letting a column name itself be
-data-driven (a scalar <code class="docutils literal notranslate"><span class="pre">{name}</span></code> can never do this — it always renders a
-<em>value</em>, never a bare column reference).</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">opts2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">identifier_params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;sort_col&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">}},</span>
-<span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">opts2</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT id, region, sales FROM df ORDER BY {@sort_col} ASC&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id3">
-<h5>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-3     | 4   north   90   
-0     | 1   east    100  
-2     | 3   east    150  
-1     | 2   west    200  
-4     | 5   west    250  
--------------------------
-[5 cs x 3 feat]
-</pre></div>
-</div>
-<p>The rendered statement becomes <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">`sales`</span> <span class="pre">ASC</span></code> — the backtick
-quoting is what lets the substituted identifier survive tokenizing even if it
-happened to collide with a keyword. Unlike <code class="docutils literal notranslate"><span class="pre">{name}</span></code>, <code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> values are
-validated to contain only identifier-safe characters (letters, digits, <code class="docutils literal notranslate"><span class="pre">_</span></code>,
-<code class="docutils literal notranslate"><span class="pre">.</span></code>) and throw immediately if not.</p>
-<p>Example 5. The <code class="docutils literal notranslate"><span class="pre">case</span></code> pseudo-column (<code class="docutils literal notranslate"><span class="pre">SqlOptions::case_axis_aliases</span></code>, default
-<code class="docutils literal notranslate"><span class="pre">{&quot;case&quot;}</span></code>) projects the row’s own case-label value as an ordinary output
-column, combined with <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT case, id, sales FROM df ORDER BY id DESC LIMIT 2 OFFSET 1&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out5</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id4">
-<h5>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
-      | case  id  sales
------------------------
-3     | 3     4   90   
-2     | 2     3   150  
------------------------
-[2 cs x 3 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">id</span> <span class="pre">DESC</span></code> puts <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">5</span></code> first, <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">1</span></code> last; <code class="docutils literal notranslate"><span class="pre">OFFSET</span> <span class="pre">1</span></code> then skips
-<code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">5</span></code>, and <code class="docutils literal notranslate"><span class="pre">LIMIT</span> <span class="pre">2</span></code> keeps the next two (<code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">4</span></code>, <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">3</span></code>). <code class="docutils literal notranslate"><span class="pre">case</span></code> only means
-“project the case axis” when no <em>real</em> column named <code class="docutils literal notranslate"><span class="pre">case</span></code> exists — if
-<code class="docutils literal notranslate"><span class="pre">orders</span></code> had an actual <code class="docutils literal notranslate"><span class="pre">case</span></code> feature, <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">case</span></code> would return that column
-instead, ordinary-column names always take priority over the pseudo-column
-alias.</p>
-<p>Example 6. <code class="docutils literal notranslate"><span class="pre">INNER</span> <span class="pre">JOIN</span> <span class="pre">...</span> <span class="pre">AS</span> <span class="pre">...</span> <span class="pre">ON</span> <span class="pre">...</span> <span class="pre">=</span> <span class="pre">...</span></code> — the only join PlussMic’s SQL
-supports, built on <a class="reference internal" href="api/dataframe/unify.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code></span></a> underneath.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">managers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">}))},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;manager&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Frey&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Okafor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Lund&quot;</span><span class="p">}))}});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">managers</span><span class="p">;</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
-      | region  manager
------------------------
-0     | east    Frey   
-1     | west    Okafor 
-2     | north   Lund   
------------------------
-[3 cs x 2 feat]
-</pre></div>
-</div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">opts3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{.</span><span class="n">sources</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;managers&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">managers</span><span class="p">}}};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out6</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">opts3</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT id, region, sales, m.manager FROM df &quot;</span>
-<span class="w">    </span><span class="s">&quot;INNER JOIN managers AS m ON region = m.region &quot;</span>
-<span class="w">    </span><span class="s">&quot;ORDER BY id ASC&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out6</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id5">
-<h5>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================================
-      | id  region  sales  m.manager
-------------------------------------
-0     | 1   east    100    Frey     
-1     | 2   west    200    Okafor   
-2     | 3   east    150    Frey     
-3     | 4   north   90     Lund     
-4     | 5   west    250    Okafor   
-------------------------------------
-[5 cs x 4 feat]
-</pre></div>
-</div>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>A joined-in source is prefixed <em>before</em> the key column is deduplicated
-<code class="docutils literal notranslate"><span class="pre">managers</span></code>’ columns are all renamed with an <code class="docutils literal notranslate"><span class="pre">m.</span></code> prefix — including its own
-<code class="docutils literal notranslate"><span class="pre">region</span></code> key — before the join key match happens. Deduplication (dropping the
-right side’s copy of a shared key) only fires when the left and right key
-<strong>names</strong> are exactly equal after that prefixing. Here the left key is
-<code class="docutils literal notranslate"><span class="pre">region</span></code> and the right key is <code class="docutils literal notranslate"><span class="pre">m.region</span></code> — different names — so <strong>both</strong>
-survive. <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span></code> after this join would show <code class="docutils literal notranslate"><span class="pre">region</span></code> <em>and</em> <code class="docutils literal notranslate"><span class="pre">m.region</span></code> as
-two separate, value-identical columns:</p>
-</div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out6b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">opts3</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT * FROM df INNER JOIN managers AS m ON region = m.region ORDER BY id ASC&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out6b</span><span class="p">;</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==============================================
-      | id  region  sales  m.region  m.manager
-----------------------------------------------
-0     | 1   east    100    east      Frey     
-1     | 2   west    200    west      Okafor   
-2     | 3   east    150    east      Frey     
-3     | 4   north   90     north     Lund     
-4     | 5   west    250    west      Okafor   
-----------------------------------------------
-[5 cs x 5 feat]
-</pre></div>
-</div>
-<p>Every <code class="docutils literal notranslate"><span class="pre">orders</span></code> region has exactly one <code class="docutils literal notranslate"><span class="pre">managers</span></code> match, so no rows fan out and
-no rows drop — but note the case labels reset to a fresh <code class="docutils literal notranslate"><span class="pre">0..4</span></code>: <code class="docutils literal notranslate"><span class="pre">unify()</span></code>
-never preserves either input’s case labels, <code class="docutils literal notranslate"><span class="pre">JOIN</span></code> inherits that unconditionally.</p>
-<p>Example 7. <code class="docutils literal notranslate"><span class="pre">SqlOptions::collision_policy</span></code> — what happens when two projected
-columns land on the same output name. Same statement, three policies.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dup_sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;SELECT id AS x, region AS x FROM df&quot;</span><span class="p">;</span>
-
-<span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{}).</span><span class="n">execute</span><span class="p">(</span><span class="n">dup_sql</span><span class="p">);</span><span class="w">  </span><span class="c1">// Error (default)</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="output-collisionpolicy-error-the-default">
-<h5>Output (<code class="docutils literal notranslate"><span class="pre">CollisionPolicy::Error</span></code>, the default)<a class="headerlink" href="#output-collisionpolicy-error-the-default" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::sql().execute: duplicate projected column name &#39;x&#39;
-</pre></div>
-</div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">suffix_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">collision_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="o">::</span><span class="n">CollisionPolicy</span><span class="o">::</span><span class="n">Suffix</span><span class="p">,</span>
-<span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out_suffix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">suffix_opts</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span><span class="n">dup_sql</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_suffix</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="output-collisionpolicy-suffix">
-<h5>Output (<code class="docutils literal notranslate"><span class="pre">CollisionPolicy::Suffix</span></code>)<a class="headerlink" href="#output-collisionpolicy-suffix" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================
-      | x  x_2  
-----------------
-0     | 1  east 
-1     | 2  west 
-2     | 3  east 
-3     | 4  north
-4     | 5  west 
-----------------
-[5 cs x 2 feat]
-</pre></div>
-</div>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">overwrite_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">collision_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="o">::</span><span class="n">CollisionPolicy</span><span class="o">::</span><span class="n">Overwrite</span><span class="p">,</span>
-<span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out_overwrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">overwrite_opts</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span><span class="n">dup_sql</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_overwrite</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="output-collisionpolicy-overwrite">
-<h5>Output (<code class="docutils literal notranslate"><span class="pre">CollisionPolicy::Overwrite</span></code>)<a class="headerlink" href="#output-collisionpolicy-overwrite" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
-      | x    
--------------
-0     | east 
-1     | west 
-2     | east 
-3     | north
-4     | west 
--------------
-[5 cs x 1 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">Suffix</span></code> keeps both, renaming the second to <code class="docutils literal notranslate"><span class="pre">x_2</span></code> (then <code class="docutils literal notranslate"><span class="pre">x_3</span></code>, and so on, if
-still taken). <code class="docutils literal notranslate"><span class="pre">Overwrite</span></code> keeps only the <em>last</em> projection under that name —
-<code class="docutils literal notranslate"><span class="pre">id</span></code>’s values are computed and then thrown away the instant <code class="docutils literal notranslate"><span class="pre">region</span> <span class="pre">AS</span> <span class="pre">x</span></code> is
-projected — so plan the projection order accordingly if you rely on this
-mode.</p>
-<p>Example 8. Resource limits: <code class="docutils literal notranslate"><span class="pre">max_result_rows</span></code> truncates silently;
-<code class="docutils literal notranslate"><span class="pre">max_intermediate_rows</span></code> throws. These are not the same kind of guard.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">trunc_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{.</span><span class="n">max_result_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out8</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">trunc_opts</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT id, sales FROM df ORDER BY sales DESC&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out8</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id6">
-<h5>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
-      | id  sales
------------------
-4     | 5   250  
-1     | 2   200  
------------------
-[2 cs x 2 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">max_result_rows</span></code> slices the <em>final</em>, already-ordered result down to its
-first N rows — it never throws, it just silently keeps less than you might
-expect if you forget it’s set.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">strict_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{.</span><span class="n">max_intermediate_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">};</span>
-<span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">strict_opts</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM df&quot;</span><span class="p">);</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="id7">
-<h5>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::sql().execute: initial rows exceed configured limit
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">max_intermediate_rows</span></code> is checked at <em>every</em> pipeline stage (right after
-resolving the source, after the join, after <code class="docutils literal notranslate"><span class="pre">WHERE</span></code>, after <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code>, after
-the projection) — here <code class="docutils literal notranslate"><span class="pre">orders</span></code> itself already has 5 rows before anything
-else runs, so it fails immediately at the “initial” checkpoint, before
-<code class="docutils literal notranslate"><span class="pre">WHERE</span></code>/<code class="docutils literal notranslate"><span class="pre">JOIN</span></code>/<code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> ever get a chance to shrink it.</p>
-<p>Example 9. <code class="docutils literal notranslate"><span class="pre">includes_calling_frame</span></code> — the statement must actually touch the
-frame you called <code class="docutils literal notranslate"><span class="pre">.sql()</span></code> on somewhere in its <code class="docutils literal notranslate"><span class="pre">FROM</span></code>/<code class="docutils literal notranslate"><span class="pre">JOIN</span></code> chain.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">side_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="p">{.</span><span class="n">sources</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;managers&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">managers</span><span class="p">}}};</span>
-<span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">(</span><span class="n">side_opts</span><span class="p">).</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT * FROM managers&quot;</span><span class="p">);</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="id8">
-<h5>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::sql().execute: calling dataframe source is not part of FROM/JOIN sources
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">orders.sql(...)</span></code> is only a <em>handle</em> — the query still has to reference <code class="docutils literal notranslate"><span class="pre">df</span></code>
-(directly, or transitively via a <code class="docutils literal notranslate"><span class="pre">JOIN</span></code>) somewhere. Querying only a bound
-<code class="docutils literal notranslate"><span class="pre">sources</span></code> entry with no <code class="docutils literal notranslate"><span class="pre">df</span></code> in sight is rejected outright, even though the
-bound frame is perfectly queryable on its own via its <em>own</em> <code class="docutils literal notranslate"><span class="pre">.sql()</span></code> call.</p>
-</section>
-</section>
-<section id="notes">
-<span id="notes-execute"></span><h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
+<section id="practical-behavior">
+<h4>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">LEFT</span> <span class="pre">JOIN</span></code> is parsed but explicitly rejected —
-<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::sql().execute:</span> <span class="pre">LEFT</span> <span class="pre">JOIN</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">supported</span> <span class="pre">yet</span> <span class="pre">(use</span> <span class="pre">INNER</span> <span class="pre">JOIN)&quot;</span></code>.
-There is no working substitute inside SQL text; drop to
-<a class="reference internal" href="api/dataframe/unify.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code></span></a> directly (<code class="docutils literal notranslate"><span class="pre">how</span> <span class="pre">=</span> <span class="pre">&quot;keep_left&quot;</span></code>)
-if you need it, then continue in SQL against the result via a bound source.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> accepts exactly one column; there is no multi-column tiebreaker
-and no expression, only a bare (optionally qualified) identifier plus
-optional <code class="docutils literal notranslate"><span class="pre">ASC</span></code>/<code class="docutils literal notranslate"><span class="pre">DESC</span></code> and <code class="docutils literal notranslate"><span class="pre">NULLS</span> <span class="pre">FIRST</span></code>/<code class="docutils literal notranslate"><span class="pre">NULLS</span> <span class="pre">LAST</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SqlOptions::result_mode</span> <span class="pre">=</span> <span class="pre">ResultMode::Chunked</span></code> currently has <strong>no
-execution effect</strong> — <code class="docutils literal notranslate"><span class="pre">execute()</span></code> still returns a fully materialized
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> either way, and merely emits a diagnostic warning noting the
-request was ignored. There is no streaming/chunked execution path yet.</p></li>
-<li><p>Diagnostics (<code class="docutils literal notranslate"><span class="pre">diagnostics_explain</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_profile</span></code>,
-<code class="docutils literal notranslate"><span class="pre">diagnostics_trace_tokens</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_trace_plan</span></code>) never appear in the
-returned <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or on <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> — they are emitted through
-PlussMic’s internal warning log (<code class="docutils literal notranslate"><span class="pre">pluss::codem::warn</span></code>), a side channel
-separate from the result value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enable_plan_cache</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>) memoizes the <em>parsed plan</em> keyed by the
-exact rendered statement text (after <code class="docutils literal notranslate"><span class="pre">{}</span></code>/<code class="docutils literal notranslate"><span class="pre">{&#64;}</span></code> substitution) — a statement
-re-rendered to the same text skips re-parsing automatically, with no
-<code class="docutils literal notranslate"><span class="pre">prepare()</span></code> required. This is why <code class="docutils literal notranslate"><span class="pre">prepare()</span></code>/<code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code> (see
-<a class="reference internal" href="dataframe_sql_prepared_api_reference.html"><span class="std std-doc">its reference page</span></a>) offers no
-extra parsing-performance win beyond what repeated identical SQL text
-already gets for free — its value is purely the ergonomics of not
-re-typing/re-templating the same statement text at every call site.</p></li>
-<li><p>The primary table name is always <code class="docutils literal notranslate"><span class="pre">df</span></code>, case-insensitively. Passing anything
-else as the un-joined <code class="docutils literal notranslate"><span class="pre">FROM</span></code> source only works if it’s a name bound via
-<code class="docutils literal notranslate"><span class="pre">SqlOptions::sources</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">execute(statement)</span></code> runs the SQL immediately against the current frame.</p></li>
+<li><p>The current frame is exposed inside the statement as <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></li>
+<li><p>Use this for one-off queries. Use <code class="docutils literal notranslate"><span class="pre">prepare(...)</span></code> when the same statement shape will be executed repeatedly with different parameter values.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="#prepare">
@@ -541,150 +114,52 @@ else as the un-joined <code class="docutils literal notranslate"><span class="pr
 <h2>P<a class="headerlink" href="#p" title="Link to this heading">¶</a></h2>
 <section id="prepare">
 <h3><code class="docutils literal notranslate"><span class="pre">prepare</span></code><a class="headerlink" href="#prepare" title="Link to this heading">¶</a></h3>
-<section id="id9">
-<h4>Signature<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlAccessor</span><span class="o">::</span><span class="n">prepare</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSqlPrepared</span>
+<section id="id1">
+<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlAccessor</span><span class="o">::</span><span class="n">prepare</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSqlPrepared</span>
 </pre></div>
 </div>
 </section>
-<section id="id10">
-<h4>What It Does<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p>Stores the given statement text verbatim, together with a copy of this
-accessor’s current frame and <code class="docutils literal notranslate"><span class="pre">SqlOptions</span></code>, inside a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code>
-value. <strong>No parsing or validation happens at <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> time</strong> — the text is
-only tokenized/parsed the first time it’s actually rendered and executed (via
-<code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared::execute(...)</span></code>). <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> exists purely so a
-statement’s <em>text</em> can be built once and reused across several calls with
-different scalar/identifier bindings, without retyping (or re-templating) it
-each time.</p>
+<section id="id2">
+<h4>What It Does<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<p>Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.</p>
 </section>
-<section id="id11">
-<h4>Parameters<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
-<p><strong>statement</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
-<p>The (optionally parameterized) SQL text to store. May contain <code class="docutils literal notranslate"><span class="pre">{name}</span></code> /
-<code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> placeholders exactly like <code class="docutils literal notranslate"><span class="pre">execute()</span></code>’s argument — they’re just not
-resolved until the prepared value is actually executed.</p>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<p><strong>statement</strong>
+Parameterized SQL statement template. Use placeholders such as <code class="docutils literal notranslate"><span class="pre">{min_sales}</span></code> when you plan to bind values later.</p>
 </section>
-<section id="id12">
-<h4>Returns<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h4>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code>
-A reusable handle bound to this frame, this accessor’s <code class="docutils literal notranslate"><span class="pre">SqlOptions</span></code>, and
-the given statement text. See its own
-<a class="reference internal" href="dataframe_sql_prepared_api_reference.html"><span class="std std-doc">API reference</span></a> for the three
-<code class="docutils literal notranslate"><span class="pre">execute()</span></code> overloads it exposes.</p>
+Value produced by this call.</p>
 </section>
-<section id="id13">
-<h4>Examples<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h4>
-<p>Example 1. Prepare a plain, unparameterized statement and run it with
-<code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared::execute()</span></code> — no placeholders, no bindings, just a
-stored statement you can re-run without retyping it.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span><span class="s">&quot;SELECT id, region, sales FROM df WHERE sales &gt;= 100&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-</pre></div>
-</div>
-<section id="id14">
-<h5>Output<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-0     | 1   east    100  
-1     | 2   west    200  
-2     | 3   east    150  
-4     | 5   west    250  
--------------------------
-[4 cs x 3 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">4</span> <span class="pre">/</span> <span class="pre">90</span></code> fails <code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">&gt;=</span> <span class="pre">100</span></code> and drops — identical to what
-<code class="docutils literal notranslate"><span class="pre">orders.sql().execute(...)</span></code> would produce with that same text in one shot.
-<code class="docutils literal notranslate"><span class="pre">prepare()</span></code> changed nothing about the query itself, only when the text gets
-typed.</p>
-<p>Example 2. The real reason to reach for <code class="docutils literal notranslate"><span class="pre">prepare()</span></code>: bind a placeholder with
-<code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared::execute(params)</span></code> and reuse the <strong>same</strong> prepared value
-with different values, with no re-templating.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">region_stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;SELECT id, region, sales FROM df WHERE region = {region}&quot;</span><span class="p">);</span>
+<section id="id5">
+<h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">east</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">region_stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;east&quot;</span><span class="p">)}});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">east</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">west</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">region_stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;west&quot;</span><span class="p">)}});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">west</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">prepare</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="id6">
+<h5>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h5>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Prepared statement ready
 </pre></div>
 </div>
 </section>
-<section id="output-region-east">
-<h5>Output (<code class="docutils literal notranslate"><span class="pre">region</span> <span class="pre">=</span> <span class="pre">&quot;east&quot;</span></code>)<a class="headerlink" href="#output-region-east" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-0     | 1   east    100  
-2     | 3   east    150  
--------------------------
-[2 cs x 3 feat]
-</pre></div>
-</div>
 </section>
-<section id="output-region-west-same-region-stmt">
-<h5>Output (<code class="docutils literal notranslate"><span class="pre">region</span> <span class="pre">=</span> <span class="pre">&quot;west&quot;</span></code>, same <code class="docutils literal notranslate"><span class="pre">region_stmt</span></code>)<a class="headerlink" href="#output-region-west-same-region-stmt" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
-      | id  region  sales
--------------------------
-1     | 2   west    200  
-4     | 5   west    250  
--------------------------
-[2 cs x 3 feat]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">region_stmt</span></code> itself is never modified by either call — each <code class="docutils literal notranslate"><span class="pre">execute(...)</span></code>
-takes a private copy of the base options, merges in that call’s <code class="docutils literal notranslate"><span class="pre">params</span></code>, and
-discards the copy afterward. This is what <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> is actually for: build
-the statement’s shape once (a loop over regions, a repeated per-request query
-with a user-supplied filter, and so on), and vary only the bound values.</p>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> performs no validation up front — a placeholder left
-unbound is only ever caught inside <code class="docutils literal notranslate"><span class="pre">execute()</span></code>, at the point it’s rendered.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">needs_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span><span class="s">&quot;SELECT id FROM df WHERE region = {region}&quot;</span><span class="p">);</span>
-<span class="c1">// needs_param exists fine here -- nothing has been parsed or checked yet.</span>
-
-<span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">needs_param</span><span class="p">.</span><span class="n">execute</span><span class="p">();</span><span class="w">  </span><span class="c1">// no {region} binding supplied</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="id15">
-<h5>Output<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::sql().execute: SQL params missing key &#39;region&#39;
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">prepare()</span></code> happily stored the text verbatim with no complaint; the missing
-<code class="docutils literal notranslate"><span class="pre">{region}</span></code> binding is only discovered — and only enforced against
-<code class="docutils literal notranslate"><span class="pre">MissingParamPolicy</span></code> (<code class="docutils literal notranslate"><span class="pre">Error</span></code> by default, the throw seen here) — the moment
-some <code class="docutils literal notranslate"><span class="pre">execute(...)</span></code> call actually tries to render it.</p>
-<p>See the <a class="reference internal" href="dataframe_sql_prepared_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code> API reference</span></a>
-for the full breadth of what <code class="docutils literal notranslate"><span class="pre">execute(...)</span></code> supports beyond these three
-examples: combined scalar <strong>and</strong> identifier bindings in one call,
-<code class="docutils literal notranslate"><span class="pre">reject_unused_params</span></code> catching a typo’d key, and a prepared statement that
-carries a <code class="docutils literal notranslate"><span class="pre">JOIN</span></code>’s bound <code class="docutils literal notranslate"><span class="pre">sources</span></code> from <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> time.</p>
-</section>
-</section>
-<section id="id16">
-<h4>Notes<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
+<section id="id7">
+<h4>Practical Behavior<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">prepare()</span></code> never throws on a malformed or under-parameterized template by
-itself — every check (unknown placeholder keys, missing required params,
-unused params under <code class="docutils literal notranslate"><span class="pre">reject_unused_params</span></code>, the SQL grammar itself) happens
-inside the <code class="docutils literal notranslate"><span class="pre">execute()</span></code> call that follows, every time it’s called.</p></li>
-<li><p>The captured <code class="docutils literal notranslate"><span class="pre">SqlOptions</span></code> (<code class="docutils literal notranslate"><span class="pre">sources</span></code>, <code class="docutils literal notranslate"><span class="pre">collision_policy</span></code>,
-<code class="docutils literal notranslate"><span class="pre">missing_param_policy</span></code>, resource limits, and so on) come from <strong>whichever
-accessor <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> was called on</strong> — <code class="docutils literal notranslate"><span class="pre">frame.sql(options).prepare(stmt)</span></code>
-bakes <code class="docutils literal notranslate"><span class="pre">options</span></code> in as the base for every future execution; only <code class="docutils literal notranslate"><span class="pre">params</span></code>
-and <code class="docutils literal notranslate"><span class="pre">identifier_params</span></code> can still be layered on per-call, via
-<code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared::execute(...)</span></code>’s arguments.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prepare(statement)</span></code> captures a parameterized SQL template and returns a reusable prepared helper.</p></li>
+<li><p>Use placeholders such as <code class="docutils literal notranslate"><span class="pre">{min_sales}</span></code> for value parameters you will bind later.</p></li>
+<li><p>Prepared execution is the better path when you want repeated queries without rebuilding the statement each time.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#execute">

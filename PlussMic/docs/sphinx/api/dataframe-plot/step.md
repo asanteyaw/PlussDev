@@ -85,12 +85,14 @@ auto rates = DataFrame({
 });
 
 auto chart = rates.plot().step("price", "tier");
-chart.save_svg("price_by_tier.svg");
+chart.show();
 ```
 
 `price` is drawn as a step function against the categorical `tier` axis — visually
 emphasizing that the price is constant within a tier and jumps at tier boundaries, rather
 than implying a continuous interpolation between tiers.
+
+![Output of Example 1](img/step-1.svg)
 
 Example 2. Multiple y-features via `initializer_list`, sharing one x-axis.
 
@@ -102,6 +104,8 @@ chart.show();
 Two step traces (`price` and `limit`) share the `tier` x-axis on one pane; a legend appears
 automatically since more than one y-feature was requested.
 
+![Output of Example 2](img/step-2.svg)
+
 Example 3. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
@@ -110,17 +114,21 @@ auto chart = rates.plot().step(pluss::msharp::RangeView::Of<std::string_view>(y_
 chart.save_pdf("tiers.pdf");
 ```
 
+![Output of Example 3](img/step-3.svg)
+
 Example 4. No `x_feature`: falls back to the frame's row labels, exactly as
 [`line()`](line.md)'s Example 3 demonstrates.
 
 ```cpp
 auto chart = rates.plot().step("price");
-chart.save_svg("price_by_case.svg");
+chart.show();
 ```
 
 With no `x_feature` and no `default_x_feature` configured on the accessor, the x-axis
 becomes `rates`' own row labels (the default `0`, `1`, `2`, `3` case index here, since
 `rates` was constructed without explicit row labels), titled `"case"`.
+
+![Output of Example 4](img/step-4.svg)
 
 Example 5. An explicit `StepPlotOptions`.
 
@@ -130,14 +138,18 @@ step_options.alpha = 0.8;
 step_options.line_width = 2.0;
 
 auto chart = rates.plot().step("price", "tier", step_options);
-chart.save_png("price_step.png");
+chart.show();
 ```
+
+![Output of Example 5](img/step-5.svg)
 
 Example 6. Multiple y-features with an explicit options object.
 
 ```cpp
 auto chart = rates.plot().step({"price", "limit"}, "tier", step_options);
 ```
+
+![Output of Example 6](img/step-6.svg)
 
 ## Notes
 

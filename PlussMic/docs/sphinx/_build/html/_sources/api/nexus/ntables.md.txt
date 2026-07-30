@@ -88,12 +88,12 @@ std::cout << biz.ntables();
 - [`Nexus::keys`](keys.md): the table names themselves, in the same count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="names.html">
+  <a class="prev-link" href="nrelationships.html">
     <span class="label">Previous</span>
-    <span class="title">names</span>
+    <span class="title">nrelationships</span>
   </a>
-  <a class="next-link" href="profile.html">
+  <a class="next-link" href="orphans.html">
     <span class="label">Next</span>
-    <span class="title">profile</span>
+    <span class="title">orphans</span>
   </a>
 </div>

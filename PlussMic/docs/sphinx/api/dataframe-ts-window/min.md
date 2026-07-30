@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b3dc40f00687 -->
 
 # DataFrameTsWindowAccessor::min
 

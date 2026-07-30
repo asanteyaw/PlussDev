@@ -70,8 +70,6 @@ int main() {
   print_block("COMPARE_THREAD",
               scores.compare(scores_other, ThreadBinaryCompareOp::Ne).to_string());
 
-  std::cout << "COMPARE_ROWS\n" << duplicated.compare_rows(0, 2, true) << "\n\n";
-
   print_block("CONTAINS", names.nt().has("A").to_string());
 
   std::cout << "CORR_PEARSON\n" << scores.corr(scores_other, ThreadCorrMethod::Pearson) << "\n\n";
@@ -82,7 +80,7 @@ int main() {
   std::cout << "COUNT_FALSE\n" << Thread(make_series(std::vector<bool>{true, false, true, true})).count(false).to_str() << "\n\n";
   std::cout << "COVAR\n" << scores.covar(scores_other).to_str() << "\n\n";
 
-  print_block("DAY", dates.day().to_string());
+  print_block("DAY", dates.tl().day().to_string());
   std::cout << "DEFINED\n" << (scores.defined() ? "true" : "false") << "\n\n";
   print_block("DESCRIBE_SERIES", scores.describe(false).to_string());
   print_block("DESCRIBE_NOTE", duplicated.describe(false).to_string());

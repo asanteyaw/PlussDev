@@ -199,6 +199,35 @@ void test_scatter_heatmap_and_validation() {
   expect(fig_scatter.panes().front().traces().front().kind() == TraceKind::Cloud,
          "plot().scatter should emit cloud trace");
 
+  pluss::table::ScatterPlotOptions no_fit_options;
+  const auto fig_scatter_no_fit = df.plot().scatter("x", "y", std::nullopt, no_fit_options);
+  expect(fig_scatter_no_fit.panes().front().trace_count() == 1,
+         "plot().scatter with fit_line=false (default) should emit only the cloud trace");
+
+  pluss::table::ScatterPlotOptions fit_options;
+  fit_options.fit_line = true;
+  const auto fig_scatter_fit = df.plot().scatter("x", "y", std::nullopt, fit_options);
+  expect(fig_scatter_fit.panes().front().trace_count() == 2,
+         "plot().scatter with fit_line=true should add a fit trace");
+  expect(fig_scatter_fit.panes().front().traces().back().kind() == TraceKind::Trend,
+         "plot().scatter with fit_line=true should emit a trend trace for the fit line");
+
+  const auto fig_scatter_fit_hue = df.plot().scatter("x", "y", "grp", fit_options);
+  expect(fig_scatter_fit_hue.panes().front().trace_count() == 4,
+         "plot().scatter with fit_line=true and hue should add one fit trace per hue group");
+
+  expect_throw(
+      [&]() {
+        pluss::table::ScatterPlotOptions bad_fit_options;
+        bad_fit_options.fit_line = true;
+        const auto single_row = DataFrame({
+            {"x", Thread(pluss::make_series(std::vector<double>{0.0}))},
+            {"y", Thread(pluss::make_series(std::vector<double>{1.0}))},
+        });
+        (void)single_row.plot().scatter("x", "y", std::nullopt, bad_fit_options);
+      },
+      "plot().scatter with fit_line=true and fewer than two points should throw");
+
   const auto surface = DataFrame({
       {"maturity", Thread(pluss::make_note({"1M", "1M", "3M", "3M"}))},
       {"delta_bucket", Thread(pluss::make_note({"25P", "ATM", "25P", "ATM"}))},

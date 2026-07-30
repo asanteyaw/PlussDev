@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 189e4dae0f26 -->
 
 # Thread::sample
 

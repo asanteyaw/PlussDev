@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 912efca41ceb -->
+
 # Thread::as_series
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +8,24 @@
 ## Signature
 
 ```cpp
-Thread::as_series() -> const pluss::Series&
+Thread::as_series() const -> const pluss::Series&
 ```
 
-Expose the underlying `pluss::Series` payload directly.
+## What It Does
 
-`Thread::as_series()` is the numeric escape hatch when you want the full Series surface rather than the curated Thread surface. It is especially useful for direct arithmetic chains, native Series reductions, or specialized kernels that already live below the table layer.
+Exposes the underlying `pluss::Series` payload directly, by reference — the numeric escape
+hatch for when you need the full `Series` surface (native reductions, elementwise
+arithmetic, kernels that live below the table layer) rather than the curated subset
+`Thread` re-exposes as its own methods. Requires the thread to be `Series`-kind; calling it
+on a `Note`/`Timeline`/`TimeIndex` thread throws.
+
+```{important} Returns a reference, not a copy — and does not rewrap into Thread
+`as_series()` hands back `const pluss::Series&`, not a `Thread`. It does no rewrapping and
+performs no computation of its own. If you run `Series`-level operations and want the
+result usable by `Thread`-only methods again afterward, wrap it explicitly:
+`Thread(scores.as_series() + 5.0)`. Forgetting this step is a common way to end up with a
+`pluss::Series` where a `Thread` was expected.
+```
 
 ## Parameters
 
@@ -19,22 +34,12 @@ Expose the underlying `pluss::Series` payload directly.
 ## Returns
 
 `const pluss::Series&`
-    Reference to the underlying series payload.
-
-## See Also
-
-- <a href="astype.html"><code>Thread::astype</code></a>: keep the operation on the Thread surface when you only need dtype conversion.
-- <a href="as_note.html"><code>Thread::as_note</code></a>: switch to the text payload instead of the numeric one.
-
-## Notes
-
-This method returns the underlying payload reference. It does not automatically rewrap the result into `Thread`.
-
-If you want to call a Thread-only method after Series work, wrap the result back as `Thread(series_result)`.
+    A reference to the underlying series payload, valid as long as the `Thread` itself
+    stays alive.
 
 ## Examples
 
-Example 1. Use the Series payload for arithmetic, then wrap the result back into a Thread.
+Example 1. Drop to `Series` for arithmetic, then wrap the result back into a `Thread`.
 
 ```cpp
 using namespace pluss::table;
@@ -42,6 +47,7 @@ using namespace pluss::table;
 auto scores = Thread(pluss::make_series({-2.5, 0.0, 3.5}));
 
 auto out = Thread(scores.as_series() + 5.0);
+std::cout << out;
 ```
 
 ### Output
@@ -53,7 +59,39 @@ auto out = Thread(scores.as_series() + 5.0);
 ptype: Series
 ```
 
+Example 2. Calling `as_series()` on a non-`Series` thread throws.
 
+```cpp
+auto names = Thread(pluss::make_note({"Ada", "Bola"}));
+try {
+  const auto& bad = names.as_series();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread: payload is not Series
+```
+
+## Notes
+
+- Returns a reference into the thread's own storage — no copy, no allocation.
+- Requires `Series`-kind; throws on every other payload kind.
+- The result does not automatically become a `Thread` again — wrap it explicitly with
+  `Thread(...)` when a `Thread`-only API needs it back.
+
+## See Also
+
+- [`Thread::as_note`](as_note.md) / [`as_timeline`](as_timeline.md) /
+  [`as_timeindex`](as_timeindex.md): the equivalent escape hatch for the other three
+  payload kinds.
+- [`Thread::astype`](astype.md): stay on the `Thread` surface for a plain scalar-dtype
+  conversion, instead of dropping to `Series` directly.
+- [`Thread::kind`](kind.md): check the payload kind before calling a kind-specific
+  accessor like this one.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="as_note.html">

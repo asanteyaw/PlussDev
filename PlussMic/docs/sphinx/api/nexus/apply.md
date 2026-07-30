@@ -189,9 +189,9 @@ Nexus::apply: callback returned undefined DataFrame
   callback.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../nexus_api_reference.html">
+  <a class="prev-link" href="add_relationship.html">
     <span class="label">Previous</span>
-    <span class="title">Nexus API</span>
+    <span class="title">add_relationship</span>
   </a>
   <a class="next-link" href="apply_all.html">
     <span class="label">Next</span>

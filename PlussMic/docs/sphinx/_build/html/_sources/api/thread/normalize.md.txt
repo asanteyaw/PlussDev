@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8aadbf103e1b -->
 
 # Thread::normalize
 
@@ -171,8 +172,8 @@ Thread::normalize: expected Note payload
     <span class="label">Previous</span>
     <span class="title">ne</span>
   </a>
-  <a class="next-link" href="note.html">
+  <a class="next-link" href="notnull.html">
     <span class="label">Next</span>
-    <span class="title">note</span>
+    <span class="title">notnull</span>
   </a>
 </div>

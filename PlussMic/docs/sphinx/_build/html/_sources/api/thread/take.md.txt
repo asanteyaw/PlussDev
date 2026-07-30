@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d5a04fa6102a -->
 
 # Thread::take
 
@@ -110,8 +111,8 @@ Thread: index out of bounds
     <span class="label">Previous</span>
     <span class="title">tail</span>
   </a>
-  <a class="next-link" href="tally.html">
+  <a class="next-link" href="titlecase.html">
     <span class="label">Next</span>
-    <span class="title">tally</span>
+    <span class="title">titlecase</span>
   </a>
 </div>

@@ -287,17 +287,5 @@ Catalog& Catalog::set_(std::initializer_list<NamedStream> items) {
 }
 
 Catalog Catalog::drop(std::initializer_list<std::string_view> keys_drop) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  const auto drop_keys = normalize_names(keys_drop);
-  std::unordered_set<std::string> drop_set(drop_keys.begin(), drop_keys.end());
-
-  std::vector<std::pair<std::string, Stream>> kept;
-  kept.reserve(static_cast<std::size_t>(nstreams()));
-  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    const auto& k = impl_ref_().keys_[i];
-    if (drop_set.find(k) == drop_set.end()) {
-      kept.emplace_back(k, impl_ref_().streams_[i]);
-    }
-  }
-  return Catalog(std::move(kept));
+  return drop(std::span<const std::string_view>(keys_drop.begin(), keys_drop.size()));
 }

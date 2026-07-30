@@ -7,6 +7,7 @@
 #include <numeric>
 #include <ostream>
 #include <random>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -23,6 +24,19 @@ namespace pluss::bundle {
 namespace {
 
 std::vector<std::string> normalize_names(std::initializer_list<std::string_view> keys) {
+  std::vector<std::string> out;
+  out.reserve(keys.size());
+  std::unordered_set<std::string> seen;
+  for (auto sv : keys) {
+    std::string key(sv);
+    PLUSS_CHECK(!key.empty(), "Registry: key cannot be empty");
+    PLUSS_CHECK(seen.insert(key).second, "Registry: duplicate key '" + key + "'");
+    out.push_back(std::move(key));
+  }
+  return out;
+}
+
+std::vector<std::string> normalize_names(std::span<const std::string_view> keys) {
   std::vector<std::string> out;
   out.reserve(keys.size());
   std::unordered_set<std::string> seen;
@@ -220,6 +234,7 @@ public:
 
 
 #include "bundle/ops/registry/RegistryLifecycleAndOps.inc"
+#include "bundle/ops/registry/RegistryAccessors.inc"
 #include "bundle/ops/registry/RegistryInteropAndRender.inc"
 
 } // namespace pluss::bundle

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: caec046f4baa -->
 
 # DataFramePlot3DAccessor::line
 
@@ -171,6 +172,8 @@ chart.save_svg("path3d.svg");
 Four points are connected in row order: `(1,4,2) → (2,3,5) → (3,5,4) → (4,2,6)` — not
 sorted by `x` or any other axis first.
 
+![Output of Example 1](img/line-1.svg)
+
 Example 2. A `Line3DPlotOptions` with a scene preset for a presentation-style camera and
 theme.
 
@@ -181,6 +184,8 @@ options.scene.preset = pluss::pl::flash::ScenePreset3D::Presentation;
 auto chart = points.plot3d().line("x", "y", "z", options);
 chart.show();
 ```
+
+![Output of Example 2](img/line-2.svg)
 
 Example 3. Overriding just the camera angle with an explicit `Camera3DOptions`, leaving
 the theme and lighting at their pane defaults.
@@ -195,8 +200,10 @@ options.scene.camera = pluss::pl::flash::Camera3DOptions{
 };
 
 auto chart = points.plot3d().line("x", "y", "z", options);
-chart.save_png("path3d_camera.png");
+chart.show();
 ```
+
+![Output of Example 3](img/line-3.svg)
 
 Example 4. A trace preset (`Path`, tuned for line traces) combined with an explicit
 `line_width` override — the preset sets shading/lighting/material/width, and the explicit
@@ -210,6 +217,8 @@ options.trace.line_width = 3.5F;
 auto chart = points.plot3d().line("x", "y", "z", options);
 chart.save_pdf("path3d_styled.pdf");
 ```
+
+![Output of Example 4](img/line-4.svg)
 
 Example 5. Both a `camera_preset` and an explicit `camera` set together — the explicit
 `camera` applies last and wins, since it's later in the fixed layering order.
@@ -225,6 +234,8 @@ auto chart = points.plot3d().line("x", "y", "z", options);
 The final camera angle is `(azimuth = 60.0, elevation = 15.0)` from the explicit `camera`
 field — the `TopDown` preset's `(0.0, 90.0)` angle is set first, then immediately
 overridden.
+
+![Output of Example 5](img/line-5.svg)
 
 Example 6. A `Timeline` feature used directly as an axis — converted to epoch
 nanoseconds, per the note above.
@@ -243,6 +254,8 @@ auto chart = readings.plot3d().line("measured_at", "depth_m", "temp_c");
 range compared to `depth_m`/`temp_c`, so the pane's own auto-scaling handles the disparity;
 this call does not reformat the x-axis into calendar tick labels the way the 2D accessor's
 Timeline-aware axis labeling does.
+
+![Output of Example 6](img/line-6.svg)
 
 ## Notes
 

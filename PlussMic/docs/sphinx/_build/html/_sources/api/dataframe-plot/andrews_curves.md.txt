@@ -76,8 +76,10 @@ auto flowers = DataFrame({
 });
 
 auto chart = flowers.plot().andrews_curves();
-chart.save_svg("flowers_andrews.svg");
+chart.show();
 ```
+
+![Output of Example 1](img/andrews_curves-1.svg)
 
 Example 2. An explicit feature subset, colored by class.
 
@@ -86,6 +88,8 @@ auto chart = flowers.plot().andrews_curves(
     {"sepal_length", "sepal_width", "petal_length"}, "species");
 chart.show();
 ```
+
+![Output of Example 2](img/andrews_curves-2.svg)
 
 Example 3. An explicit `AndrewsCurvesPlotOptions`, with a finer curve resolution and a cap
 on how many rows are drawn.
@@ -98,8 +102,10 @@ options.alpha = 0.5;
 
 auto chart = flowers.plot().andrews_curves(
     {"sepal_length", "sepal_width", "petal_length"}, "species", options);
-chart.save_png("flowers_andrews.png");
+chart.show();
 ```
+
+![Output of Example 3](img/andrews_curves-3.svg)
 
 Example 4. `class_feature` accepts a numeric feature too, exactly like
 [`parallel()`](parallel.md)'s Example 4.
@@ -113,6 +119,8 @@ auto numeric_class = DataFrame({
 
 auto chart = numeric_class.plot().andrews_curves({"x1", "x2"}, "code");
 ```
+
+![Output of Example 4](img/andrews_curves-4.svg)
 
 ## Notes
 

@@ -174,8 +174,8 @@ Nexus::drop: unknown key 'missing'
     <span class="label">Previous</span>
     <span class="title">dloc</span>
   </a>
-  <a class="next-link" href="empty.html">
+  <a class="next-link" href="duplicates.html">
     <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">duplicates</span>
   </a>
 </div>

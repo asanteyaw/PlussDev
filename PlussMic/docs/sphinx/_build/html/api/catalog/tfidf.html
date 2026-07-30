@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Catalog::tfidf &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Catalog::to_json" href="to_json.html" />
+    <link rel="prev" title="Catalog::text_preprocess" href="text_preprocess.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 57913c05170b -->
+<section id="catalog-tfidf">
+<h1>Catalog::tfidf<a class="headerlink" href="#catalog-tfidf" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">tfidf</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">field</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes a per-row TF-IDF vector norm for a text field, and appends the result as a new
+numeric stream, <code class="docutils literal notranslate"><span class="pre">&quot;&lt;field&gt;_tfidf_norm&quot;</span></code>, via <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> — every original stream,
+including <code class="docutils literal notranslate"><span class="pre">field</span></code> itself, is preserved. Each row’s term frequencies are weighted by inverse
+document frequency across the whole field (smoothed: <code class="docutils literal notranslate"><span class="pre">log((n</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">(df</span> <span class="pre">+</span> <span class="pre">1))</span> <span class="pre">+</span> <span class="pre">1</span></code>), then
+the resulting weighted-term vector is reduced to its Euclidean norm — one number
+summarizing how distinctive that row’s vocabulary is relative to the rest of the field, not
+a full per-term TF-IDF vector.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>field</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The text stream to compute TF-IDF norms for. Must already exist.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+The original catalog with a new stream, <code class="docutils literal notranslate"><span class="pre">&quot;&lt;field&gt;_tfidf_norm&quot;</span></code>, appended.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Compute a TF-IDF norm per row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;text&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;heavy rain on road&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;clear weather downtown&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;storm warning issued&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">tfidf</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=2
+keys: [text, text_tfidf_norm]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+text                     | Note         | Note             | 3       | [heavy rain on road, clear weather downtown, sto~
+text_tfidf_norm          | Series       | Series[float64]  | 3       | [0.84657359028, 0.977538980474, 0.977538980474]  
+========================================================================================================================
+</pre></div>
+</div>
+<p>Every word in this small corpus is unique to its own row, so all three rows get a
+similarly high (but not identical, due to differing word counts) norm.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Adds one new stream via <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> rather than replacing the catalog’s
+structure.</p></li>
+<li><p>The result is a single per-row <strong>norm</strong>, not the full per-term TF-IDF vector — use it as
+a row-level “distinctiveness” score, not as feature columns per vocabulary term.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">field</span></code> must already exist, or the call throws.</p></li>
+<li><p>IDF uses add-one smoothing (<code class="docutils literal notranslate"><span class="pre">log((n</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">(df</span> <span class="pre">+</span> <span class="pre">1))</span> <span class="pre">+</span> <span class="pre">1</span></code>) so a term appearing in every
+row still gets a nonzero weight.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="compute_similarity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::compute_similarity</span></code></span></a>: a related bag-of-words text
+metric, comparing two fields directly instead of summarizing one.</p></li>
+<li><p><a class="reference internal" href="extract_keywords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::extract_keywords</span></code></span></a>: raw term frequencies across the
+field, without IDF weighting.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="text_preprocess.html">
+    <span class="label">Previous</span>
+    <span class="title">text_preprocess</span>
+  </a>
+  <a class="next-link" href="to_json.html">
+    <span class="label">Next</span>
+    <span class="title">to_json</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
+      <li>Previous: <a href="text_preprocess.html" title="previous chapter">Catalog::text_preprocess</a></li>
+      <li>Next: <a href="to_json.html" title="next chapter">Catalog::to_json</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog/tfidf.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

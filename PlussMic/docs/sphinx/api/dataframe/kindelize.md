@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 21934c3a7eb6 -->
 
 # DataFrame::kindelize
 

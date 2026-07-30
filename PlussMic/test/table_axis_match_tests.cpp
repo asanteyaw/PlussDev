@@ -727,8 +727,8 @@ void test_hierarchical_case_axis_engine() {
       collision_right,
       pluss::table::AlignOptions{.align = pluss::table::AlignBy::Both});
   expect(collision.ncases() == 2 &&
-             !collision.features("value").is_valid(0) &&
-             !collision.features("value").is_valid(1),
+             !pluss::table::detail::valid_at(collision.features("value"), 0) &&
+             !pluss::table::detail::valid_at(collision.features("value"), 1),
          "structured case alignment should use typed level tuples, not flattened display labels");
 }
 

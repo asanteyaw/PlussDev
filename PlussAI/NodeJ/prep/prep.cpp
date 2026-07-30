@@ -292,7 +292,7 @@ struct DenseMatrix {
       constexpr std::uint64_t fnv_prime = 1099511628211ULL;
       std::vector<double> hashed(static_cast<std::size_t>(rows), std::numeric_limits<double>::quiet_NaN());
       for (std::int64_t i = 0; i < rows; ++i) {
-        if (!thread.is_valid(i)) continue;
+        if (!pluss::table::detail::valid_at(thread, i)) continue;
         std::uint64_t h = fnv_offset;
         const std::string_view token = thread.as_note().at(i);
         for (unsigned char ch : token) {
@@ -327,7 +327,7 @@ struct DenseMatrix {
     auto host = feature.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
     bool touched = false;
     for (std::int64_t i = 0; i < rows; ++i) {
-      if (!thread.is_valid(i)) {
+      if (!pluss::table::detail::valid_at(thread, i)) {
         host[static_cast<std::size_t>(i)] = std::numeric_limits<double>::quiet_NaN();
         touched = true;
       }

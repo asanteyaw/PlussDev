@@ -12,6 +12,22 @@ namespace pluss::kindle {
 
 namespace {
 
+std::string json_escape(std::string_view in) {
+  std::string out;
+  out.reserve(in.size() + 8);
+  for (char c : in) {
+    switch (c) {
+      case '\\': out += "\\\\"; break;
+      case '"': out += "\\\""; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default: out.push_back(c); break;
+    }
+  }
+  return out;
+}
+
 pluss::table::DataFrame catalog_to_io_frame(const Catalog& catalog) {
   TabelizePolicy policy;
   policy.align = Align::Outer;
@@ -92,7 +108,38 @@ std::string Catalog::to_string() const {
 }
 
 std::string Catalog::to_json() const {
-  return display::render(*this);
+  if (!defined()) return "{ \"_type\": \"Catalog\", \"defined\": false }";
+
+  std::ostringstream oss;
+  oss << "{\n";
+  oss << "  \"_type\": \"Catalog\",\n";
+  oss << "  \"defined\": true,\n";
+  oss << "  \"nkeys\": " << nkeys() << ",\n";
+  oss << "  \"nrecords\": " << nrecords() << ",\n";
+  oss << "  \"keys\": [";
+  const auto& names = keys();
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    if (i == 0) oss << "\n";
+    oss << "    \"" << json_escape(names[i]) << "\"";
+    if (i + 1 < names.size()) oss << ",";
+    oss << "\n";
+  }
+  if (!names.empty()) oss << "  ";
+  oss << "],\n";
+  oss << "  \"streams\": [";
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    if (i == 0) oss << "\n";
+    oss << "    {\n";
+    oss << "      \"key\": \"" << json_escape(names[i]) << "\",\n";
+    oss << "      \"value\": " << at(names[i]).to_json() << "\n";
+    oss << "    }";
+    if (i + 1 < names.size()) oss << ",";
+    oss << "\n";
+  }
+  if (!names.empty()) oss << "  ";
+  oss << "]\n";
+  oss << "}";
+  return oss.str();
 }
 
 void Catalog::show(std::ostream& os) const { display::print(os, *this); }

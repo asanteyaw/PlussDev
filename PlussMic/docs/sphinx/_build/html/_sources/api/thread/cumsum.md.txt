@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9a7510884e0c -->
 
 # Thread::cumsum
 
@@ -117,8 +118,8 @@ ptype: Series
     <span class="label">Previous</span>
     <span class="title">cumprod</span>
   </a>
-  <a class="next-link" href="day.html">
+  <a class="next-link" href="defined.html">
     <span class="label">Next</span>
-    <span class="title">day</span>
+    <span class="title">defined</span>
   </a>
 </div>

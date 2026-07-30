@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: cfd259b0a4f6 -->
+<!-- pluss-signature-hash: b17db301675f -->
 
 # DataFrame::arrange
 
@@ -11,6 +11,11 @@
 DataFrame::arrange(pluss::RangeView<ArrangeSpec> specs) const -> DataFrame
 
 DataFrame::arrange(pluss::RangeView<std::string_view> features,
+                   bool ascending = true,
+                   bool nulls_last = true) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::arrange(const NameRange& features,
                    bool ascending = true,
                    bool nulls_last = true) const -> DataFrame
 ```
@@ -35,7 +40,10 @@ over later ones, the same way a SQL `ORDER BY a DESC, b ASC` works.
 
 **features** (`pluss::RangeView<std::string_view>`)
 
-Feature names to sort by, in priority order, for the simple overload.
+Feature names to sort by, in priority order, for the simple overload. Any container of
+`std::string_view`-convertible names (`std::vector<std::string>`, `std::set<std::string>`,
+and similar) works too, via a generic template overload — not just a braced list or an
+explicit `RangeView`.
 
 **ascending** (`bool`, default `true`)
 

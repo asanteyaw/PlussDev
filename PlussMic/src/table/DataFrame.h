@@ -48,6 +48,31 @@ template <class T>
 struct IsInitializerList<std::initializer_list<T>> : std::true_type {};
 template <class T>
 inline constexpr bool IsInitializerListV = IsInitializerList<std::remove_cvref_t<T>>::value;
+
+template <class NameRange>
+concept StringViewNameRange =
+    std::ranges::input_range<NameRange> &&
+    !std::is_convertible_v<NameRange, std::string_view> &&
+    !IsInitializerListV<NameRange> &&
+    !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> &&
+    std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>;
+
+inline auto stack_name_view(const StackArray<std::string_view>& names) {
+  return pluss::msharp::RangeView::Of<std::string_view>(names.data().values);
+}
+
+template <StringViewNameRange NameRange, class Fn>
+decltype(auto) with_stack_name_view(const NameRange& names, Fn&& fn) {
+  auto owned = StackArray<std::string_view>(names);
+  return std::forward<Fn>(fn)(stack_name_view(owned));
+}
+
+template <StringViewNameRange LeftRange, StringViewNameRange RightRange, class Fn>
+decltype(auto) with_stack_name_views(const LeftRange& left, const RightRange& right, Fn&& fn) {
+  auto owned_left = StackArray<std::string_view>(left);
+  auto owned_right = StackArray<std::string_view>(right);
+  return std::forward<Fn>(fn)(stack_name_view(owned_left), stack_name_view(owned_right));
+}
 }
 
 namespace detail {
@@ -791,21 +816,11 @@ public:
   DataFrame features(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame features(StackArray<std::string_view> names);
   DataFrame features(StackArray<std::string_view> names) const;
-  template <class NameRange>
-    requires(std::ranges::input_range<NameRange> &&
-             !std::is_convertible_v<NameRange, std::string_view> &&
-             !detail::IsInitializerListV<NameRange> &&
-             !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> &&
-             std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>)
+  template <detail::StringViewNameRange NameRange>
   DataFrame features(const NameRange& names) {
     return features(StackArray<std::string_view>(names));
   }
-  template <class NameRange>
-    requires(std::ranges::input_range<NameRange> &&
-             !std::is_convertible_v<NameRange, std::string_view> &&
-             !detail::IsInitializerListV<NameRange> &&
-             !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> &&
-             std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>)
+  template <detail::StringViewNameRange NameRange>
   DataFrame features(const NameRange& names) const {
     return features(StackArray<std::string_view>(names));
   }
@@ -823,7 +838,17 @@ public:
                   std::string_view anchor_feature,
                   bool after = false) const;
   DataFrame drop(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame drop(const NameRange& names) const {
+    auto owned = StackArray<std::string_view>(names);
+    return drop(detail::stack_name_view(owned));
+  }
   DataFrame reorder(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame reorder(const NameRange& names) const {
+    auto owned = StackArray<std::string_view>(names);
+    return reorder(detail::stack_name_view(owned));
+  }
   DataFrame reorder(const ReorderSpec& spec) const;
   DataFrame reorder(pluss::RangeView<ReorderSpec> specs) const;
   DataFrame reorder(std::initializer_list<ReorderSpec> specs) const {
@@ -836,6 +861,13 @@ public:
   DataFrame arrange(pluss::msharp::RangeView::Of<std::string_view> features,
                     bool ascending = true,
                     bool nulls_last = true) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame arrange(const NameRange& features,
+                    bool ascending = true,
+                    bool nulls_last = true) const {
+    auto owned = StackArray<std::string_view>(features);
+    return arrange(detail::stack_name_view(owned), ascending, nulls_last);
+  }
   DataFrame arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const;
   DataFrame top(std::string_view feature, std::int64_t n) const;
   DataFrame bottom(std::string_view feature, std::int64_t n) const;
@@ -859,6 +891,31 @@ public:
                   std::string_view how = "common",
                   std::string right_suffix = "_right",
                   std::string_view validate = "many_to_many") const;
+  template <detail::StringViewNameRange LeftRange>
+  DataFrame unify(const LeftRange& left_on,
+                  const DataFrame& right,
+                  std::string_view how = "common",
+                  std::string right_suffix = "_right",
+                  std::string_view validate = "many_to_many") const {
+    auto owned_left = StackArray<std::string_view>(left_on);
+    return unify(detail::stack_name_view(owned_left), right, {}, how, std::move(right_suffix), validate);
+  }
+  template <detail::StringViewNameRange LeftRange, detail::StringViewNameRange RightRange>
+  DataFrame unify(const LeftRange& left_on,
+                  const DataFrame& right,
+                  const RightRange& right_on,
+                  std::string_view how = "common",
+                  std::string right_suffix = "_right",
+                  std::string_view validate = "many_to_many") const {
+    auto owned_left = StackArray<std::string_view>(left_on);
+    auto owned_right = StackArray<std::string_view>(right_on);
+    return unify(detail::stack_name_view(owned_left),
+                 right,
+                 detail::stack_name_view(owned_right),
+                 how,
+                 std::move(right_suffix),
+                 validate);
+  }
   DataFrame unify(std::initializer_list<std::string_view> left_on,
                   const DataFrame& right,
                   std::initializer_list<std::string_view> right_on = {},
@@ -884,6 +941,16 @@ public:
   LetSlot set(std::string_view name, const AlignOptions& options);
   LetSlots set(pluss::msharp::RangeView::Of<std::string_view> names);
   LetSlots set(pluss::msharp::RangeView::Of<std::string_view> names, const AlignOptions& options);
+  template <detail::StringViewNameRange NameRange>
+  LetSlots set(const NameRange& names) {
+    auto owned = StackArray<std::string_view>(names);
+    return set(detail::stack_name_view(owned));
+  }
+  template <detail::StringViewNameRange NameRange>
+  LetSlots set(const NameRange& names, const AlignOptions& options) {
+    auto owned = StackArray<std::string_view>(names);
+    return set(detail::stack_name_view(owned), options);
+  }
   LetSlots set(std::initializer_list<std::string_view> names) {
     return set(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
@@ -904,6 +971,11 @@ public:
     return rename(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(renames));
   }
   DataFrame rename(pluss::msharp::RangeView::Of<std::string_view> feature_names) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame rename(const NameRange& feature_names) const {
+    auto owned = StackArray<std::string_view>(feature_names);
+    return rename(detail::stack_name_view(owned));
+  }
   DataFrame rename(std::initializer_list<const char*> feature_names) const;
   DataFrame& rename_(std::string_view old_name, std::string new_name);
   DataFrame conform(const DataFrame& other) const;
@@ -940,6 +1012,8 @@ public:
   DataFrame filter(const Thread& bool_mask) const;
   DataFrame filter(const Thread& bool_mask, const AlignOptions& options) const;
   DataFrame query(std::string_view expression) const;
+  DataFrame assign(std::string_view name, const Thread& value) const;
+  DataFrame assign(std::string_view name, const std::function<Thread(const DataFrame&)>& expr) const;
   DataFrame assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const;
   DataFrame map(
@@ -1190,6 +1264,13 @@ public:
   DataFrame drop_duplicates(pluss::msharp::RangeView::Of<std::string_view> features,
                             bool keep_first = true,
                             bool keep_last = false) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame drop_duplicates(const NameRange& features,
+                            bool keep_first = true,
+                            bool keep_last = false) const {
+    auto owned = StackArray<std::string_view>(features);
+    return drop_duplicates(detail::stack_name_view(owned), keep_first, keep_last);
+  }
   DataFrameView corr(CorrMethod method, bool render = false) const;
   DataFrameView corr(bool render = false) const;
   DataFrameView covar(const StatisticOptions& options = {}, bool render = false) const;
@@ -1227,34 +1308,82 @@ public:
   DataFrame isnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame notnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame invalid(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame isnull(const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return isnull(names); });
+  }
+  template <detail::StringViewNameRange NameRange>
+  DataFrame notnull(const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return notnull(names); });
+  }
+  template <detail::StringViewNameRange NameRange>
+  DataFrame invalid(const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return invalid(names); });
+  }
   DataFrame astype(
       std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const;
   DataFrame astype(
       pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const;
   DataFrame fillnull(double value) const;
   DataFrame fillnull(double value, pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame fillnull(double value, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return fillnull(value, names); });
+  }
   DataFrame fillnull(std::string_view value) const;
   DataFrame fillnull(std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame fillnull(std::string_view value, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return fillnull(value, names); });
+  }
   DataFrame fillnull(const char* value) const {
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   DataFrame fillnull(const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const {
     return fillnull(std::string_view{value != nullptr ? value : ""}, features);
   }
+  template <detail::StringViewNameRange NameRange>
+  DataFrame fillnull(const char* value, const NameRange& features) const {
+    return fillnull(std::string_view{value != nullptr ? value : ""}, features);
+  }
   DataFrame fillnull(const pluss::Timeline& value) const;
   DataFrame fillnull(const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame fillnull(const pluss::Timeline& value, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return fillnull(value, names); });
+  }
   DataFrame fillnull(const pluss::TimeIndex& value) const;
   DataFrame fillnull(const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame fillnull(const pluss::TimeIndex& value, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return fillnull(value, names); });
+  }
   DataFrame fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) const;
   DataFrame fillnull(std::initializer_list<FillSpec> specs) const {
     return fillnull(pluss::msharp::RangeView::Of<FillSpec>(specs));
   }
   DataFrame replace(double from, double to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(double from, double to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(double from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(double from, pluss::null_t to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(pluss::null_t from, double to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(pluss::null_t from, double to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(std::string_view from,
                     std::string_view to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(std::string_view from, std::string_view to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const char* from,
                     const char* to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const {
@@ -1265,9 +1394,17 @@ public:
   DataFrame replace(std::string_view from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(std::string_view from, pluss::null_t to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(pluss::null_t from,
                     std::string_view to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(pluss::null_t from, std::string_view to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const char* from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const {
@@ -1281,39 +1418,87 @@ public:
   DataFrame replace(const pluss::Series& from,
                     const pluss::Series& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::Series& from, const pluss::Series& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::Series& from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::Series& from, pluss::null_t to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(pluss::null_t from,
                     const pluss::Series& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(pluss::null_t from, const pluss::Series& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::Note& from,
                     const pluss::Note& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::Note& from, const pluss::Note& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::Note& from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::Note& from, pluss::null_t to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(pluss::null_t from,
                     const pluss::Note& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(pluss::null_t from, const pluss::Note& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::Timeline& from,
                     const pluss::Timeline& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::Timeline& from, const pluss::Timeline& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::Timeline& from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::Timeline& from, pluss::null_t to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(pluss::null_t from,
                     const pluss::Timeline& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(pluss::null_t from, const pluss::Timeline& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::TimeIndex& from,
                     const pluss::TimeIndex& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(const pluss::TimeIndex& from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(const pluss::TimeIndex& from, pluss::null_t to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame replace(pluss::null_t from,
                     const pluss::TimeIndex& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame replace(pluss::null_t from, const pluss::TimeIndex& to, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
+  }
   DataFrame& fillnull_(double value);
   DataFrame& fillnull_(std::string_view value);
   DataFrame& fillnull_(const char* value) {
@@ -1367,6 +1552,11 @@ public:
   }
   DataFrame dropnull(pluss::msharp::RangeView::Of<std::string_view> features = {},
                      bool all = false) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame dropnull(const NameRange& features, bool all = false) const {
+    auto owned = StackArray<std::string_view>(features);
+    return dropnull(detail::stack_name_view(owned), all);
+  }
   DataFrame dropnull(const DropOptions& options) const;
   DataFrame ffill(std::int64_t limit = -1) const;
   DataFrame ffill(const FillOptions& options) const;
@@ -1374,15 +1564,31 @@ public:
   DataFrame bfill(const FillOptions& options) const;
   DataFrame interp(pluss::msharp::RangeView::Of<std::string_view> features = {},
                    std::int64_t limit = -1) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame interp(const NameRange& features, std::int64_t limit = -1) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return interp(names, limit); });
+  }
   DataFrame interp(const FillOptions& options) const;
   DataFrame mask(const Thread& bool_mask,
                  pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame mask(const Thread& bool_mask, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return mask(bool_mask, names); });
+  }
   DataFrame mask(const Thread& bool_mask,
                  const AlignOptions& options,
                  pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame mask(const Thread& bool_mask, const AlignOptions& options, const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return mask(bool_mask, options, names); });
+  }
   DataFrame mask(const Thread& bool_mask,
                  pluss::msharp::RangeView::Of<std::string_view> features,
                  const AlignOptions& options) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame mask(const Thread& bool_mask, const NameRange& features, const AlignOptions& options) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return mask(bool_mask, names, options); });
+  }
   DataFrameView describe(bool render = false) const;
   DataFrameView transpose(bool render = false) const;
   DataFrame lengthen(
@@ -1391,6 +1597,16 @@ public:
       std::string feature_name = "feature",
       std::string value_name = "value",
       bool fresh_cases = true) const;
+  template <detail::StringViewNameRange IdRange, detail::StringViewNameRange ValueRange>
+  DataFrame lengthen(const IdRange& id_features,
+                     const ValueRange& value_features,
+                     std::string feature_name = "feature",
+                     std::string value_name = "value",
+                     bool fresh_cases = true) const {
+    return detail::with_stack_name_views(id_features, value_features, [&](auto ids, auto values) {
+      return lengthen(ids, values, std::move(feature_name), std::move(value_name), fresh_cases);
+    });
+  }
   CategoryEncoding factor(std::string_view feature,
                           bool ordered = false,
                           bool sort_levels = false) const;
@@ -1399,6 +1615,11 @@ public:
                    const EncodeOptions& options = {}) const;
   DataFrameView tally(std::int64_t top_n = 0, bool dropnull = true, bool render = false) const;
   DataFrameView tally(pluss::msharp::RangeView::Of<std::string_view> features,
+                      std::int64_t top_n = 0,
+                      bool dropnull = true,
+                      bool render = false) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrameView tally(const NameRange& features,
                       std::int64_t top_n = 0,
                       bool dropnull = true,
                       bool render = false) const;
@@ -1661,6 +1882,14 @@ public:
   DataFrame set(pluss::msharp::RangeView::Of<std::string_view> feature_names,
                 bool drop_features = true,
                 std::string_view separator = "\x1F") const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame set(const NameRange& feature_names,
+                bool drop_features = true,
+                std::string_view separator = "\x1F") const {
+    return detail::with_stack_name_view(feature_names, [&](auto names) {
+      return set(names, drop_features, separator);
+    });
+  }
   DataFrame set(const DataFrame::SetLabelOptions& options) const;
 
   DataFrame reset(std::string case_feature = {}) const;
@@ -1684,10 +1913,22 @@ public:
   DataFrame rename(std::initializer_list<DataFrame::LabelRename> renames) const;
   DataFrame order(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame order(std::initializer_list<std::string_view> names) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame order(const NameRange& names) const {
+    return detail::with_stack_name_view(names, [&](auto values) { return order(values); });
+  }
   DataFrame names(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame names(std::initializer_list<std::string_view> names) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame names(const NameRange& names_) const {
+    return detail::with_stack_name_view(names_, [&](auto values) { return names(values); });
+  }
   DataFrame drop(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame drop(std::initializer_list<std::string_view> names) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame drop(const NameRange& names) const {
+    return detail::with_stack_name_view(names, [&](auto values) { return drop(values); });
+  }
   DataFrame drop(const DataFrame::LabelDropOptions& options) const;
   Thread duplicated(pluss::msharp::RangeView::Of<std::string_view> names,
                     bool keep_first = true,
@@ -1695,9 +1936,21 @@ public:
   Thread duplicated(std::initializer_list<std::string_view> names,
                     bool keep_first = true,
                     bool keep_last = false) const;
+  template <detail::StringViewNameRange NameRange>
+  Thread duplicated(const NameRange& names,
+                    bool keep_first = true,
+                    bool keep_last = false) const {
+    return detail::with_stack_name_view(names, [&](auto values) {
+      return duplicated(values, keep_first, keep_last);
+    });
+  }
   Thread duplicated(bool keep_first = true, bool keep_last = false) const;
   Thread repeated(pluss::msharp::RangeView::Of<std::string_view> names) const;
   Thread repeated(std::initializer_list<std::string_view> names) const;
+  template <detail::StringViewNameRange NameRange>
+  Thread repeated(const NameRange& names) const {
+    return detail::with_stack_name_view(names, [&](auto values) { return repeated(values); });
+  }
   Thread repeated() const;
   Thread distinct(bool dropnull = true) const;
   Thread freq(std::int64_t top_n = 0, bool dropnull = true) const;
@@ -1767,6 +2020,8 @@ public:
 
   DataFrameGrouped by(std::initializer_list<std::string_view> keys) const;
   DataFrameGrouped by(pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrameGrouped by(const NameRange& keys) const;
   DataFrameGrouped by(const DataFrame::LabelGroup& keys) const;
 
 private:
@@ -1800,6 +2055,16 @@ public:
   DataFrame std() const;
   DataFrame var() const;
   DataFrame mode() const;
+
+  // Standalone terminal: unlike every op above, a group with a tie can
+  // legitimately produce more than one output row, so this cannot be
+  // expressed as a GroupSpec/agg() operation (agg()/transform() require
+  // exactly one output row per group across every spec in the same call).
+  // Ties are broken by returning every tied value, sorted ascending, one
+  // row per tied value; a group with zero observed values still produces
+  // exactly one row, with a null value, matching every other terminal's
+  // one-row-per-group guarantee.
+  DataFrame mode_ties(std::string_view feature, std::string_view output = "") const;
 
 private:
   DataFrame keyed_frame_(std::vector<std::string>& key_names) const;
@@ -2160,6 +2425,23 @@ class DataFrameTsResampler {
   TsOptions ts_options_{};
 };
 
+template <detail::StringViewNameRange NameRange>
+inline DataFrameView DataFrame::tally(const NameRange& features,
+                                      std::int64_t top_n,
+                                      bool dropnull,
+                                      bool render) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return tally(names, top_n, dropnull, render);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrameGrouped DataFrameGroupBuilder::by(const NameRange& keys) const {
+  return detail::with_stack_name_view(keys, [&](auto values) {
+    return by(values);
+  });
+}
+
 DataFrame operator+(const DataFrame& lhs, double rhs);
 DataFrame operator+(double lhs, const DataFrame& rhs);
 DataFrame operator+(const DataFrame& lhs, const DataFrame& rhs);
@@ -2185,6 +2467,60 @@ DataFrame operator%(double lhs, const DataFrame& rhs);
 DataFrame operator%(const DataFrame& lhs, const DataFrame& rhs);
 DataFrame operator%(const DataFrame& lhs, const Thread& rhs);
 DataFrame operator%(const Thread& lhs, const DataFrame& rhs);
+DataFrame operator==(const DataFrame& lhs, double rhs);
+DataFrame operator==(double lhs, const DataFrame& rhs);
+DataFrame operator==(const DataFrame& lhs, std::string_view rhs);
+DataFrame operator==(std::string_view lhs, const DataFrame& rhs);
+DataFrame operator==(const DataFrame& lhs, const char* rhs);
+DataFrame operator==(const char* lhs, const DataFrame& rhs);
+DataFrame operator==(const DataFrame& lhs, const DataFrame& rhs);
+DataFrame operator==(const DataFrame& lhs, const Thread& rhs);
+DataFrame operator==(const Thread& lhs, const DataFrame& rhs);
+DataFrame operator!=(const DataFrame& lhs, double rhs);
+DataFrame operator!=(double lhs, const DataFrame& rhs);
+DataFrame operator!=(const DataFrame& lhs, std::string_view rhs);
+DataFrame operator!=(std::string_view lhs, const DataFrame& rhs);
+DataFrame operator!=(const DataFrame& lhs, const char* rhs);
+DataFrame operator!=(const char* lhs, const DataFrame& rhs);
+DataFrame operator!=(const DataFrame& lhs, const DataFrame& rhs);
+DataFrame operator!=(const DataFrame& lhs, const Thread& rhs);
+DataFrame operator!=(const Thread& lhs, const DataFrame& rhs);
+DataFrame operator<(const DataFrame& lhs, double rhs);
+DataFrame operator<(double lhs, const DataFrame& rhs);
+DataFrame operator<(const DataFrame& lhs, std::string_view rhs);
+DataFrame operator<(std::string_view lhs, const DataFrame& rhs);
+DataFrame operator<(const DataFrame& lhs, const char* rhs);
+DataFrame operator<(const char* lhs, const DataFrame& rhs);
+DataFrame operator<(const DataFrame& lhs, const DataFrame& rhs);
+DataFrame operator<(const DataFrame& lhs, const Thread& rhs);
+DataFrame operator<(const Thread& lhs, const DataFrame& rhs);
+DataFrame operator<=(const DataFrame& lhs, double rhs);
+DataFrame operator<=(double lhs, const DataFrame& rhs);
+DataFrame operator<=(const DataFrame& lhs, std::string_view rhs);
+DataFrame operator<=(std::string_view lhs, const DataFrame& rhs);
+DataFrame operator<=(const DataFrame& lhs, const char* rhs);
+DataFrame operator<=(const char* lhs, const DataFrame& rhs);
+DataFrame operator<=(const DataFrame& lhs, const DataFrame& rhs);
+DataFrame operator<=(const DataFrame& lhs, const Thread& rhs);
+DataFrame operator<=(const Thread& lhs, const DataFrame& rhs);
+DataFrame operator>(const DataFrame& lhs, double rhs);
+DataFrame operator>(double lhs, const DataFrame& rhs);
+DataFrame operator>(const DataFrame& lhs, std::string_view rhs);
+DataFrame operator>(std::string_view lhs, const DataFrame& rhs);
+DataFrame operator>(const DataFrame& lhs, const char* rhs);
+DataFrame operator>(const char* lhs, const DataFrame& rhs);
+DataFrame operator>(const DataFrame& lhs, const DataFrame& rhs);
+DataFrame operator>(const DataFrame& lhs, const Thread& rhs);
+DataFrame operator>(const Thread& lhs, const DataFrame& rhs);
+DataFrame operator>=(const DataFrame& lhs, double rhs);
+DataFrame operator>=(double lhs, const DataFrame& rhs);
+DataFrame operator>=(const DataFrame& lhs, std::string_view rhs);
+DataFrame operator>=(std::string_view lhs, const DataFrame& rhs);
+DataFrame operator>=(const DataFrame& lhs, const char* rhs);
+DataFrame operator>=(const char* lhs, const DataFrame& rhs);
+DataFrame operator>=(const DataFrame& lhs, const DataFrame& rhs);
+DataFrame operator>=(const DataFrame& lhs, const Thread& rhs);
+DataFrame operator>=(const Thread& lhs, const DataFrame& rhs);
 
 } // namespace pluss::table
 

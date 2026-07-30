@@ -16,7 +16,7 @@ DataFrameGrouped::transform(std::initializer_list<DataFrame::GroupSpec> specs) c
 Computes grouped reductions, then **broadcasts the result back to every row in the
 original group** instead of collapsing to one row per group.
 
-This is the grouped “decorate each row with a group statistic” surface. Common uses:
+This is the grouped "decorate each row with a group statistic" surface. Common uses:
 
 - add region mean amount to every row in that region
 - add per-customer transaction count to each transaction
@@ -52,10 +52,27 @@ auto city_mean = sales.group()
                       .transform({
                           {"amount_mean", "amount", DataFrame::GroupOp::Mean},
                       });
+std::cout << city_mean;
 ```
 
-Rows 0 and 1 receive the same broadcasted `amount_mean`; rows 2 and 3 receive the
-other one.
+### Output
+
+```text
+==================
+     | amount_mean
+------------------
+0    | 90         
+1    | 90         
+2    | 45         
+3    | 45         
+------------------
+[4 cs x 1 feat]
+```
+
+Rows `0` and `1` (both `"Accra"`) receive the same broadcasted `amount_mean`
+(`(100 + 80) / 2 = 90`); rows `2` and `3` (`"Tema"`) receive the other one
+(`(50 + 40) / 2 = 45`). The row order and row count exactly match `sales` — only the
+key column (`city`) and the original `amount` column are gone.
 
 Example 2. Broadcast several grouped signals at once.
 
@@ -67,10 +84,26 @@ auto stats = sales.group()
                       {"amount_max", "amount", DataFrame::GroupOp::Max},
                       {"n", "", DataFrame::GroupOp::Count},
                   });
+std::cout << stats;
+```
+
+### Output
+
+```text
+====================================
+     | amount_mean  amount_max  n   
+------------------------------------
+0    | 90           100         2   
+1    | 90           100         2   
+2    | 45           50          2   
+3    | 45           50          2   
+------------------------------------
+[4 cs x 3 feat]
 ```
 
 That produces a row-aligned grouped feature block you can join back mentally with the
-source row space without doing an explicit merge.
+source row space without doing an explicit merge. `n` counts rows per group (`2` for
+each city here), broadcast just like the numeric aggregates.
 
 ## Notes
 

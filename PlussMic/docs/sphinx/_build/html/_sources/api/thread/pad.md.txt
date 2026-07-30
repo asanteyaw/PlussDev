@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ad69abd1864c -->
 
 # Thread::pad
 
@@ -227,9 +228,9 @@ Thread::pad: expected Note payload
 - [`Thread::strip`](strip.md): removes characters instead of adding them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="numeric_binary.html">
+  <a class="prev-link" href="nt.html">
     <span class="label">Previous</span>
-    <span class="title">numeric_binary</span>
+    <span class="title">nt</span>
   </a>
   <a class="next-link" href="partition.html">
     <span class="label">Next</span>

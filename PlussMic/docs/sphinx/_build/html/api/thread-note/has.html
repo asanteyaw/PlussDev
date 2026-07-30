@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ThreadNoteAccessor::has &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ThreadNoteAccessor::indicate" href="indicate.html" />
+    <link rel="prev" title="ThreadNoteAccessor::fullmatch" href="fullmatch.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="threadnoteaccessor-has">
+<h1>ThreadNoteAccessor::has<a class="headerlink" href="#threadnoteaccessor-has" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_note_accessor_api_reference.html"><span class="doc std std-doc">Back to ThreadNoteAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadNoteAccessor</span><span class="o">::</span><span class="n">has</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Checks each cell of the bound thread for the presence of <code class="docutils literal notranslate"><span class="pre">needle</span></code> anywhere in the
+cell, replacing each cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>. It’s the general substring/pattern search on
+this accessor — where <a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts()</span></code></span></a> and <a class="reference internal" href="ends.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends()</span></code></span></a> only check the
+two ends of the string, <code class="docutils literal notranslate"><span class="pre">has()</span></code> looks everywhere, and it can be switched between a
+plain literal search and a regular-expression search via <code class="docutils literal notranslate"><span class="pre">options</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> (namespace-scope in <code class="docutils literal notranslate"><span class="pre">Thread.h</span></code>, used unqualified) has four fields,
+though only two matter to <code class="docutils literal notranslate"><span class="pre">has()</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">TextOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">regex</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">case_sensitive</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="p">{</span><span class="mi">-1</span><span class="p">};</span><span class="w">      </span><span class="c1">// unused by has()</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="p">{</span><span class="s">&quot;part&quot;</span><span class="p">};</span><span class="w">  </span><span class="c1">// unused by has()</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>That default (<code class="docutils literal notranslate"><span class="pre">{}</span></code>) makes a bare <code class="docutils literal notranslate"><span class="pre">has(needle)</span></code> call a <strong>literal, case-sensitive
+substring search</strong> — <code class="docutils literal notranslate"><span class="pre">needle</span></code> is matched character-for-character, not compiled as a
+pattern.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Different from count()/findall()’s single-argument default
+<code class="docutils literal notranslate"><span class="pre">has(needle)</span></code> with no <code class="docutils literal notranslate"><span class="pre">options</span></code> searches <em>literally</em>. This is easy to confuse with
+<a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a> and <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>, whose single-argument overloads
+default internally to <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code> instead — so <code class="docutils literal notranslate"><span class="pre">has(pattern)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">count(pattern)</span></code> treat the exact same string differently unless you pass <code class="docutils literal notranslate"><span class="pre">options</span></code>
+explicitly. If a pattern with regex metacharacters (<code class="docutils literal notranslate"><span class="pre">.</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">(</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, and so
+on) doesn’t seem to be matching under <code class="docutils literal notranslate"><span class="pre">has()</span></code>, this default is the first thing to
+check — pass <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code> explicitly to search by pattern instead of literal
+text.</p>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">options.regex</span> <span class="pre">=</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">needle</span></code> is compiled as an ECMAScript regular
+expression and each cell is tested with <code class="docutils literal notranslate"><span class="pre">regex_search</span></code> — a <em>contains</em> semantics,
+matching anywhere in the cell, not anchored to the whole string (contrast
+<a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>, which requires the whole cell to match).</p>
+<p><code class="docutils literal notranslate"><span class="pre">case_sensitive</span> <span class="pre">=</span> <span class="pre">false</span></code> works in both modes: for literal search it ASCII-folds both
+the needle and the haystack before comparing; for regex search it compiles the
+pattern with the <code class="docutils literal notranslate"><span class="pre">std::regex::icase</span></code> flag.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>needle</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The text to search for — a literal substring by default, or a regular expression
+pattern when <code class="docutils literal notranslate"><span class="pre">options.regex</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">options.regex</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">needle</span></code> as a regex pattern instead of
+literal text. <code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>): when <code class="docutils literal notranslate"><span class="pre">false</span></code>, the search
+ignores case.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as the bound thread: <code class="docutils literal notranslate"><span class="pre">true</span></code>
+where the cell contains a match, <code class="docutils literal notranslate"><span class="pre">false</span></code> where it doesn’t.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default call: literal, case-sensitive substring search.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">logs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ERROR: disk full&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;warning: low memory&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;INFO: restart ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">logs</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logs</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;ERROR&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  ERROR: disk full
+1  warning: low memory
+2  INFO: restart ok
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
+1  false
+2  false
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Only row 0 contains the exact literal text <code class="docutils literal notranslate"><span class="pre">&quot;ERROR&quot;</span></code>. Row 3 was constructed invalid
+and stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> regardless of what text happens to sit underneath it.</p>
+<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">case_sensitive</span></code> toggle.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logs</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logs</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">case_sensitive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-default-case-sensitive">
+<h3>Output (default, case-sensitive)<a class="headerlink" href="#output-default-case-sensitive" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
+1  false
+2  false
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+</section>
+<section id="output-case-sensitive-false">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">case_sensitive</span> <span class="pre">=</span> <span class="pre">false</span></code>)<a class="headerlink" href="#output-case-sensitive-false" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  true
+1  false
+2  false
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. Regex mode: search by pattern instead of literal text.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logs</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">has</span><span class="p">(</span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\d+</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  false
+1  false
+2  false
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>None of the sample rows contain a digit, so every valid row is <code class="docutils literal notranslate"><span class="pre">false</span></code> — included
+to show the call shape.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Default <code class="docutils literal notranslate"><span class="pre">TextOptions{}</span></code> means literal, case-sensitive — unlike
+<a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a> and <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>, whose single-argument
+overloads default to regex mode. See the warning above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">regex</span> <span class="pre">=</span> <span class="pre">true</span></code> uses <em>contains</em> semantics — for a whole-cell match use
+<a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>, and for a start-anchored pattern use
+<a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matches()</span></code></span></a>.</p></li>
+<li><p>An invalid pattern under <code class="docutils literal notranslate"><span class="pre">options.regex</span> <span class="pre">=</span> <span class="pre">true</span></code> throws at the point <code class="docutils literal notranslate"><span class="pre">has()</span></code> is
+called.</p></li>
+<li><p>Changes the payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadNoteAccessor::starts</span></code></span></a> / <a class="reference internal" href="ends.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends()</span></code></span></a>: narrower,
+options-free checks anchored to one end of the cell.</p></li>
+<li><p><a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadNoteAccessor::matches</span></code></span></a> / <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>:
+regex-only checks anchored to the start, or to the whole cell.</p></li>
+<li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadNoteAccessor::count</span></code></span></a> / <a class="reference internal" href="findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">findall()</span></code></span></a>: related
+pattern-search methods whose single-argument default is the <em>opposite</em> of
+<code class="docutils literal notranslate"><span class="pre">has()</span></code>’s.</p></li>
+<li><p><a class="reference internal" href="../dataframe-note/has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::has</span></code></span></a>: the multi-feature
+counterpart.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fullmatch.html">
+    <span class="label">Previous</span>
+    <span class="title">fullmatch</span>
+  </a>
+  <a class="next-link" href="indicate.html">
+    <span class="label">Next</span>
+    <span class="title">indicate</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_note_accessor_api_reference.html">ThreadNoteAccessor API Reference</a><ul>
+      <li>Previous: <a href="fullmatch.html" title="previous chapter">ThreadNoteAccessor::fullmatch</a></li>
+      <li>Next: <a href="indicate.html" title="next chapter">ThreadNoteAccessor::indicate</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread-note/has.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

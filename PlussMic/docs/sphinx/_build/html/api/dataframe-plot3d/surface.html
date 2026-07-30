@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a1dacd94eed0 -->
 <section id="dataframeplot3daccessor-surface">
 <h1>DataFramePlot3DAccessor::surface<a class="headerlink" href="#dataframeplot3daccessor-surface" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_plot3d_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFramePlot3DAccessor API Reference</span></a></p>
@@ -145,11 +146,13 @@ aggregated grid.</p>
 values (<code class="docutils literal notranslate"><span class="pre">10.0</span></code>, <code class="docutils literal notranslate"><span class="pre">20.0</span></code>, <code class="docutils literal notranslate"><span class="pre">30.0</span></code>) become y-rows; each cell is the mean <code class="docutils literal notranslate"><span class="pre">temp_c</span></code> for that
 hour/depth combination — here, each combination happens to have exactly one matching row,
 so the “mean” is just that row’s own value.</p>
+<p><img alt="Output of Example 1" src="../../_images/surface-1.svg" /></p>
 <p>Example 2. A different aggregation (<code class="docutils literal notranslate"><span class="pre">Max</span></code>).</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Max</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/surface-2.svg" /></p>
 <p>Example 3. A categorical <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>: falls back to evenly spaced positional x-coordinates
 instead of parsed numeric values.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -164,6 +167,7 @@ instead of parsed numeric values.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">site</span></code>’s two values (<code class="docutils literal notranslate"><span class="pre">&quot;north&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;south&quot;</span></code>) don’t parse as numbers, so the x-axis places
 them at positions <code class="docutils literal notranslate"><span class="pre">0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">1.0</span></code> instead of any meaningful numeric spacing.</p>
+<p><img alt="Output of Example 3" src="../../_images/surface-3.svg" /></p>
 <p>Example 4. Missing <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> combinations fill to zero.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sparse</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
@@ -172,12 +176,13 @@ them at positions <code class="docutils literal notranslate"><span class="pre">0
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sparse</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;sparse_surface.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The pivot grid is 2×2 (<code class="docutils literal notranslate"><span class="pre">x</span></code> values <code class="docutils literal notranslate"><span class="pre">1.0</span></code>/<code class="docutils literal notranslate"><span class="pre">2.0</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> values <code class="docutils literal notranslate"><span class="pre">1.0</span></code>/<code class="docutils literal notranslate"><span class="pre">2.0</span></code>), but only the
 <code class="docutils literal notranslate"><span class="pre">(1.0,</span> <span class="pre">1.0)</span></code> and <code class="docutils literal notranslate"><span class="pre">(2.0,</span> <span class="pre">2.0)</span></code> cells have matching rows; the other two cells (<code class="docutils literal notranslate"><span class="pre">(1.0,</span> <span class="pre">2.0)</span></code>
 and <code class="docutils literal notranslate"><span class="pre">(2.0,</span> <span class="pre">1.0)</span></code>) have no matching data and render at height <code class="docutils literal notranslate"><span class="pre">0</span></code>, not as gaps.</p>
+<p><img alt="Output of Example 4" src="../../_images/surface-4.svg" /></p>
 <p>Example 5. An unsupported aggregation op throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Std</span><span class="p">);</span>
@@ -198,6 +203,7 @@ and <code class="docutils literal notranslate"><span class="pre">(2.0,</span> <s
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 6" src="../../_images/surface-6.svg" /></p>
 </section>
 </section>
 <section id="notes">

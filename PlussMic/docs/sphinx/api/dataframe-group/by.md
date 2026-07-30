@@ -60,52 +60,111 @@ using namespace pluss::table;
 auto sales = DataFrame({
     {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
     {"amount", Thread(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
-    {"units", Thread(pluss::make_series({2, 1, 3, 1}))},
+    {"units", Thread(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
 });
 
 auto grouped = sales.group({.dropnull = true}).by({"city"});
 auto out = grouped.sum();
+std::cout << out;
 ```
 
-`by({"city"})` says “rows with the same `city` belong to the same group”. The actual
+### Output
+
+```text
+===================================
+     | city   amount_sum  units_sum
+-----------------------------------
+0    | Accra  180         3        
+1    | Tema   90          4        
+-----------------------------------
+[2 cs x 3 feat]
+```
+
+`by({"city"})` says "rows with the same `city` belong to the same group". The actual
 work still happens at `.sum()`.
 
 Example 2. Group by several ordinary features at once.
 
 ```cpp
-auto out = sales.group({.sort = true})
+auto orders = DataFrame({
+    {"city", Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema"}))},
+    {"product", Thread(pluss::make_note({"Tea", "Tea", "Coffee", "Tea"}))},
+    {"amount", Thread(pluss::make_series({100.0, 80.0, 30.0, 50.0}))},
+});
+
+auto out = orders.group({.sort = true})
                .by({"city", "product"})
                .agg({
                    {"orders", "", DataFrame::GroupOp::Count},
                    {"revenue", "amount", DataFrame::GroupOp::Sum},
                });
+std::cout << out;
+```
+
+### Output
+
+```text
+======================================
+     | city   product  orders  revenue
+--------------------------------------
+0    | Accra  Coffee   1       30     
+1    | Accra  Tea      2       180    
+2    | Tema   Tea      1       50     
+--------------------------------------
+[3 cs x 4 feat]
 ```
 
 Now the group key is the full tuple `(city, product)`, not either feature on its own.
+`(Accra, Tea)` occurs on rows `0` and `1`, so `orders` is `2` and `revenue` sums both
+amounts (`100 + 80 = 180`). With `sort = true`, the three groups print in ascending
+key order — `(Accra, Coffee)` before `(Accra, Tea)` before `(Tema, Tea)` — rather than
+the order each combination first appeared.
 
 Example 3. Group by case-label levels instead of ordinary columns.
 
 ```cpp
-auto indexed = sales.set_label({"region", "year"});
+auto indexed = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
+    {"year", Thread(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
+    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+}).set_label({"region", "year"});
 
 auto out = indexed.group()
-                  .by(DataFrame::LabelGroup{.names = {"region", "year"}})
+                  .by(DataFrame::LabelGroup{.label = "region"})
                   .agg({
-                      {"revenue", "amount", DataFrame::GroupOp::Sum},
+                      {"amount_sum", "amount", DataFrame::GroupOp::Sum},
                   });
+std::cout << out;
 ```
 
-This is useful when the grouping identity already lives on the case axis and you do
-not want to materialize it as ordinary columns first.
+### Output
+
+```text
+=========================
+     | region  amount_sum
+-------------------------
+0    | North   350       
+1    | South   200       
+-------------------------
+[2 cs x 2 feat]
+```
+
+`set_label({"region", "year"})` moves those two ordinary columns onto the case axis
+as a two-level case label. `LabelGroup{.label = "region"}` then groups by only the
+`region` level of that composite label, ignoring `year` entirely — so both `North`
+rows (from 2023 and 2024) collapse into one group, and likewise for `South`. This is
+useful when the grouping identity already lives on the case axis and you do not want
+to materialize it as ordinary columns first.
 
 ## Notes
 
-- The initializer-list and `RangeView` overloads are semantically the same; the
+- The initializer-list and `RangeView` forms are semantically the same; the
   `RangeView` form is for dynamic key lists.
 - `LabelGroup` is stricter than ordinary key lists: it requires the source frame to
-  already have case labels, and it rejects “both `label` and `names`” at once.
+  already have case labels, and it rejects "both `label` and `names`" at once.
 - Group order is not chosen by `by(...)` alone. It also depends on the `sort` option
-  captured earlier by `group(...)`.
+  captured earlier by `group(...)`: unsorted groups appear in first-occurrence order;
+  sorted groups appear in ascending key order.
 
 ## See Also
 

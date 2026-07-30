@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameGrouped::mode_ties &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameGrouped::ndistinct" href="ndistinct.html" />
+    <link rel="prev" title="DataFrameGrouped::mode" href="mode.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="dataframegrouped-mode-ties">
+<h1>DataFrameGrouped::mode_ties<a class="headerlink" href="#dataframegrouped-mode-ties" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_group_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameGroupBuilder API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">mode_ties</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns <strong>every</strong> value tied for the highest count within each group, instead of the
+single winner <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> picks. This is a standalone terminal, not a
+<code class="docutils literal notranslate"><span class="pre">GroupSpec</span></code>/<a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> operation — a tie can legitimately produce more than
+one output row for a group, and <code class="docutils literal notranslate"><span class="pre">agg()</span></code>/<code class="docutils literal notranslate"><span class="pre">transform()</span></code> depend on every spec in a
+single call agreeing on exactly one row per group, so this can’t be expressed as a
+spec alongside them.</p>
+<p>Ties are broken by sorting the tied values themselves in ascending order (not by
+which one was observed first) — this deliberately does <em>not</em> reuse the
+first-occurrence tie-break <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> and <a class="reference internal" href="../thread/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a>
+use, because those pick one arbitrary winner among many distinct values, while this
+method already returns the full tied set: ordering that set by value is a property of
+the values themselves, independent of how the source rows happened to be ordered,
+which makes the result reproducible even if the input row order changes.</p>
+<p>A group with zero observed (non-null) values for <code class="docutils literal notranslate"><span class="pre">feature</span></code> still produces exactly
+one row, with a null value — the same one-row-per-group-at-minimum guarantee every
+other grouped terminal makes, even though this method’s row count is not fixed at
+exactly one.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The single value feature to compute tied modes for. Unlike the zero-argument
+terminals (<a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a>, <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>, <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a>, and so
+on), this method never applies itself to every remaining value feature at once —
+combining several features’ tie sets would require an arbitrary cross-product rule,
+so it is intentionally scoped to one feature per call. Call it once per feature and
+join the results if you need several.</p>
+<p><strong>output</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, optional)</p>
+<p>Output column name. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;{feature}_mode_ties&quot;</span></code> when empty — deliberately
+distinct from <code class="docutils literal notranslate"><span class="pre">mode()</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;{feature}_mode&quot;</span></code> default, so the two are hard to confuse
+even skimming a schema.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per <strong>tied value</strong>, not one row per group. The group key column(s)
+come first, followed by one output column holding the tied value for that row.
+A group contributes as many rows as it has tied values, or exactly one null row
+if it had no observed values at all.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Contrast with <code class="docutils literal notranslate"><span class="pre">mode()</span></code>: no tie stays one row, a tie becomes two.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">loans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;good&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;good&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bad&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;good&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loans</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loans</span><span class="p">.</span><span class="n">group</span><span class="p">().</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">}).</span><span class="n">mode_ties</span><span class="p">(</span><span class="s">&quot;status&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-loans">
+<h3>Output (loans)<a class="headerlink" href="#output-loans" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | region  status
+---------------------
+0    | North   good  
+1    | North   good  
+2    | South   bad   
+3    | South   good  
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-out">
+<h3>Output (out)<a class="headerlink" href="#output-out" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================
+     | region  status_mode_ties
+-------------------------------
+0    | North   good            
+1    | South   bad             
+2    | South   good            
+-------------------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;North&quot;</span></code>’s two statuses are both <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code>, so it contributes exactly one row.
+<code class="docutils literal notranslate"><span class="pre">&quot;South&quot;</span></code> is tied between <code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code> (one occurrence each), so it
+contributes two rows — both tied values, sorted ascending (<code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> before
+<code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code>) — rather than <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a>’s single first-occurrence pick of
+<code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> for the same data.</p>
+<p>Example 2. A group with no observed values still produces one row, with a null.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bad&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;good&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">group</span><span class="p">().</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">}).</span><span class="n">mode_ties</span><span class="p">(</span><span class="s">&quot;status&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-readings">
+<h3>Output (readings)<a class="headerlink" href="#output-readings" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | region  status
+---------------------
+0    | North   NULL  
+1    | North   NULL  
+2    | South   bad   
+3    | South   good  
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output (out)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================
+     | region  status_mode_ties
+-------------------------------
+0    | North   NULL            
+1    | South   bad             
+2    | South   good            
+-------------------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;North&quot;</span></code> has no valid <code class="docutils literal notranslate"><span class="pre">status</span></code> values at all, so it still contributes exactly one
+row — with a null value, not zero rows. Dropping the group entirely instead would
+break the invariant every other grouped terminal relies on: that every group key
+appears at least once in the output, which matters if downstream code joins this
+result back onto a full list of groups.</p>
+<p>Example 3. Works on numeric value features too, not just <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings3</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings3</span><span class="p">.</span><span class="n">group</span><span class="p">().</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">}).</span><span class="n">mode_ties</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-readings3">
+<h3>Output (readings3)<a class="headerlink" href="#output-readings3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | region  amount
+---------------------
+0    | A       10    
+1    | A       20    
+2    | A       20    
+3    | B       5     
+4    | B       5     
+5    | B       9     
+6    | B       9     
+---------------------
+[7 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-out3">
+<h3>Output (out3)<a class="headerlink" href="#output-out3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================
+     | region  amount_mode_ties
+-------------------------------
+0    | A       20              
+1    | B       5               
+2    | B       9               
+-------------------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code>’s <code class="docutils literal notranslate"><span class="pre">20</span></code> appears twice against <code class="docutils literal notranslate"><span class="pre">10</span></code>’s one occurrence, so <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> has a single,
+unambiguous mode. <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> is tied between <code class="docutils literal notranslate"><span class="pre">5</span></code> and <code class="docutils literal notranslate"><span class="pre">9</span></code> (two occurrences each), so it
+contributes both, sorted ascending numerically — not lexicographically, which
+matters once values reach double digits (<code class="docutils literal notranslate"><span class="pre">&quot;9&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;20&quot;</span></code> as strings, but <code class="docutils literal notranslate"><span class="pre">9</span> <span class="pre">&lt;</span> <span class="pre">20</span></code> as
+numbers; this method always sorts by the latter for numeric features).</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>This is a standalone method, not composable with <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> or
+<a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a> in the same call — those require a fixed one-row-
+per-group shape across every spec, which a variable-length tie set cannot satisfy.</p></li>
+<li><p>Ties are sorted ascending by value, not by first-occurrence order — a deliberate
+difference from <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> and <a class="reference internal" href="../thread/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a>,
+justified by this method returning the whole tied set rather than picking one
+winner from it.</p></li>
+<li><p>Supports the same value-feature kinds as <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">Note</span></code> and numeric
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span></code> is not a parameter here — it inherits from the <code class="docutils literal notranslate"><span class="pre">GroupOptions</span></code> already
+captured by <a class="reference internal" href="../dataframe/group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a>, the same as every other grouped
+terminal.</p></li>
+<li><p>Scoped to exactly one feature per call, unlike the zero-argument convenience
+terminals — this is intentional, not a limitation to be lifted later, since
+combining several features’ tie sets has no single obviously-correct behavior.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::mode</span></code></span></a>: the single-winner counterpart this method
+complements.</p></li>
+<li><p><a class="reference internal" href="../thread/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::freq()</span></code></span></a>: the same first-occurrence tie-break
+<code class="docutils literal notranslate"><span class="pre">mode()</span></code> uses, explained in full.</p></li>
+<li><p><a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::agg</span></code></span></a>: the fixed-one-row-per-group terminal this
+method cannot be expressed through.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="mode.html">
+    <span class="label">Previous</span>
+    <span class="title">mode</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_group_accessor_api_reference.html">DataFrameGroupBuilder API Reference</a><ul>
+      <li>Previous: <a href="mode.html" title="previous chapter">DataFrameGrouped::mode</a></li>
+      <li>Next: <a href="ndistinct.html" title="next chapter">DataFrameGrouped::ndistinct</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-group/mode_ties.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

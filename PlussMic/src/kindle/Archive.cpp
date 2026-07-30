@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "CodeM/core/Errors.h"
@@ -34,6 +35,7 @@ public:
 
 
 #include "kindle/ops/archive/ArchiveLifecycleAndOps.inc"
+#include "kindle/ops/archive/ArchiveAccessors.inc"
 #include "kindle/ops/archive/ArchiveInternals.inc"
 
 } // namespace pluss::kindle

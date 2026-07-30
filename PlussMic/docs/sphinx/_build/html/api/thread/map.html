@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,42 +36,172 @@
 
           <div class="body" role="main">
             
-  <section id="thread-map">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 94a75367f25a -->
+<section id="thread-map">
 <h1>Thread::map<a class="headerlink" href="#thread-map" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">map</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">map</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with <code class="docutils literal notranslate"><span class="pre">_</span></code> perform the change in place.</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> once <strong>per row</strong>, each time with a single-row <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> wrapping that row’s
+value, and stitches the per-row results back into one new <code class="docutils literal notranslate"><span class="pre">Thread</span></code> of the same length. This
+is the row-by-row functional surface on <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — reach for it when the transformation
+genuinely needs to run in scalar terms (branching on the value, building a different kind
+of result per row) rather than as a vectorized <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> operation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> is a thin single-row wrapper: read the value out with <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.to_str()</span></code>, <code class="docutils literal notranslate"><span class="pre">.as_series()</span></code>, etc., and build the return value by wrapping a fresh one-row
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> back into a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> — <code class="docutils literal notranslate"><span class="pre">ThreadValue(Thread(...))</span></code>.</p>
+<p>Invalid (<code class="docutils literal notranslate"><span class="pre">NULL</span></code>) rows are <strong>not</strong> passed to <code class="docutils literal notranslate"><span class="pre">fn</span></code> at all — they’re skipped and carried
+through as <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the output, at whatever payload kind the <em>other</em> rows established.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Every row’s callback result must share the same payload kind
+The first valid row’s result establishes the output kind (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>). If a later row’s result has a different kind, <code class="docutils literal notranslate"><span class="pre">map()</span></code> throws — see Example 4.
+If every row is invalid, <code class="docutils literal notranslate"><span class="pre">fn</span></code> is never called at all and <code class="docutils literal notranslate"><span class="pre">map()</span></code> returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>fn</strong>
-Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
+<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;ThreadValue(const</span> <span class="pre">ThreadValue&amp;)&gt;&amp;</span></code>)
+Called once per valid row with that row’s value wrapped as a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>. Must return
+a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> wrapping exactly one row, of a consistent payload kind across all calls.
+Must not be empty — see Example 5.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+A new thread of the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, built by concatenating each row’s callback
+result. <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows are preserved without invoking <code class="docutils literal notranslate"><span class="pre">fn</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply a user function and inspect the transformed result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Double each numeric value, row by row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">map</span><span class="p">({});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">map</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  40
+2  60
+ptype: Series
 </pre></div>
 </div>
+<p>Example 2. Turn each text value into its own length, as a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread — the
+callback can change payload kind entirely, as long as every row agrees on the new kind.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;chen&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">map</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">to_str</span><span class="p">();</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">text</span><span class="p">.</span><span class="n">size</span><span class="p">())})));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  3
+1  4
+2  4
+ptype: Note
+</pre></div>
+</div>
+<p>Example 3. Invalid rows are skipped — <code class="docutils literal notranslate"><span class="pre">fn</span></code> never sees them, and they stay <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the
+output.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span><span class="w">  </span><span class="c1">// row 1 is NULL</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">map</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">100.0</span><span class="p">})));</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  101
+1  NULL
+2  103
+ptype: Series
+</pre></div>
+</div>
+<p>Example 4. Returning a different payload kind for different rows throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">map</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1.5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">()})));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">})));</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::map: output kinds must be consistent
+</pre></div>
+</div>
+<p>Example 5. An empty (default-constructed) <code class="docutils literal notranslate"><span class="pre">std::function</span></code> throws immediately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">empty_fn</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">empty_fn</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::map: callback is empty
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Runs row by row, calling <code class="docutils literal notranslate"><span class="pre">fn</span></code> once per <strong>valid</strong> row — this is meaningfully slower than a
+vectorized <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code> operation for large threads; prefer the vectorized surface
+(arithmetic, <a class="reference internal" href="compare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">compare</span></code></span></a>, <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast</span></code></span></a>, text methods) when it covers what
+you need.</p></li>
+<li><p>Invalid rows never reach <code class="docutils literal notranslate"><span class="pre">fn</span></code> and are preserved as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, at whatever kind the valid rows
+established.</p></li>
+<li><p>All valid rows’ results must share one payload kind — see the important callout above.</p></li>
+<li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::transform</span></code></span></a>’s single-argument <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-returning overload is
+a pure alias for <code class="docutils literal notranslate"><span class="pre">map()</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::transform</span></code></span></a>: dispatches to <code class="docutils literal notranslate"><span class="pre">map()</span></code> for the <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>-callback
+overload, and to <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold</span></code></span></a> for the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-callback overload.</p></li>
+<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fold</span></code></span></a> / <a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::flow</span></code></span></a>: whole-thread (not per-row)
+functional transforms — call <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the entire thread instead of once per row.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lxor.html">
     <span class="label">Previous</span>
@@ -82,7 +212,6 @@ Value produced by this call.</p>
     <span class="title">matches</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

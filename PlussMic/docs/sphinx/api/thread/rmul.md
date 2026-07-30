@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7beb95acf263 -->
 
 # Thread::rmul
 

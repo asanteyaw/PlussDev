@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dc609e9ebb3d -->
 
 # DataFrameTsResampler::mean
 

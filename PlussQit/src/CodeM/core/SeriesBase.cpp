@@ -29,12 +29,19 @@ pluss::msharp::RangeView::Int SeriesBase::strides() const {
   return pluss::msharp::RangeView::Int{impl_->strides()};
 }
 std::int64_t SeriesBase::dim() const { return static_cast<std::int64_t>(sizes().size()); }
-std::int64_t SeriesBase::numel() const { return impl_->numel(); }
-bool SeriesBase::is_contiguous() const { return impl_->is_contiguous(); }
+std::int64_t SeriesBase::numel() const {
+  if (!defined()) throw_error("SeriesBase: undefined");
+  return impl_->numel();
+}
+bool SeriesBase::is_contiguous() const {
+  if (!defined()) throw_error("SeriesBase: undefined");
+  return impl_->is_contiguous();
+}
 Series SeriesBase::pos(std::int64_t index) const {
   if (!defined()) throw_error("Series::pos: undefined");
   if (dim() != 1) throw_error("Series::pos: expected 1-D Series for scalar selection");
   const auto size0 = sizes()[0];
+  if (index < 0) index += size0;
   if (index < 0 || index >= size0) throw_error("Series::pos: index out of range");
   const Series self = ops_internal::SeriesFactoryAccess::wrap(impl_);
   return self.select(0, index);
@@ -44,6 +51,8 @@ Series SeriesBase::pos(std::int64_t row, std::int64_t col) const {
   if (dim() != 2) throw_error("Series::pos: expected 2-D Series for scalar selection");
   const auto nrows = sizes()[0];
   const auto ncols = sizes()[1];
+  if (row < 0) row += nrows;
+  if (col < 0) col += ncols;
   if (row < 0 || row >= nrows || col < 0 || col >= ncols) {
     throw_error("Series::pos: index out of range");
   }
@@ -56,6 +65,9 @@ Series SeriesBase::pos(std::int64_t i, std::int64_t j, std::int64_t k) const {
   const auto n0 = sizes()[0];
   const auto n1 = sizes()[1];
   const auto n2 = sizes()[2];
+  if (i < 0) i += n0;
+  if (j < 0) j += n1;
+  if (k < 0) k += n2;
   if (i < 0 || i >= n0 || j < 0 || j >= n1 || k < 0 || k >= n2) {
     throw_error("Series::pos: index out of range");
   }

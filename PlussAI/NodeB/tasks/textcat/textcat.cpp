@@ -49,11 +49,14 @@ std::vector<std::string> build_feature_docs(const std::vector<Doc>& docs,
 // (which joins terms into a single tf-idf-ready string for the Classic
 // backend's `LexiconMapper`) since the Sequence backend needs a per-token
 // id sequence instead.
-[[nodiscard]] std::vector<std::string> select_terms(const Doc& doc, bool use_lemmas, bool lowercase) {
+[[nodiscard]] std::vector<std::string> select_terms(const Doc& doc,
+                                                    bool use_lemmas,
+                                                    bool lowercase,
+                                                    bool skip_punct) {
   std::vector<std::string> terms;
   terms.reserve(doc.tokens.size());
   for (const auto& token : doc.tokens) {
-    if (token.is_punct) continue;
+    if (skip_punct && token.is_punct) continue;
     const std::string_view piece =
         (use_lemmas && !token.lemma.empty()) ? std::string_view(token.lemma)
                                              : std::string_view(token.orth);
@@ -315,7 +318,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     std::vector<std::vector<std::string>> doc_terms{};
     doc_terms.reserve(docs.size());
     for (const auto& doc : docs) {
-      doc_terms.push_back(select_terms(doc, options_.use_lemmas, options_.lowercase));
+      doc_terms.push_back(select_terms(doc, options_.use_lemmas, options_.lowercase, options_.skip_punct));
     }
     auto vocab = build_sequence_vocab(doc_terms);
     if (vocab.vocabulary.empty()) {
@@ -362,7 +365,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     std::vector<Series*> parameters{&embedding_weights, &cls_weight, &cls_bias};
     pluss::ai::ice::TrainOptions optimizer_options{};
     optimizer_options.optimizer = pluss::ai::ice::OptimizerKind::Adam;
-    optimizer_options.learning_rate = 0.05;
+    optimizer_options.learning_rate = options_.sequence_learning_rate;
     auto optimizer = pluss::ai::ice::make_optimizer(parameters, optimizer_options);
 
     double previous_loss = std::numeric_limits<double>::infinity();
@@ -463,7 +466,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     std::vector<std::vector<std::string>> doc_terms;
     doc_terms.reserve(docs.size());
     for (const auto& doc : docs) {
-      doc_terms.push_back(select_terms(doc, options_.use_lemmas, options_.lowercase));
+      doc_terms.push_back(select_terms(doc, options_.use_lemmas, options_.lowercase, options_.skip_punct));
     }
     auto vocab = build_sequence_vocab(doc_terms);
     if (vocab.vocabulary.empty()) {
@@ -503,7 +506,12 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     double previous_loss = std::numeric_limits<double>::infinity();
     try {
       for (std::int64_t iter = 0; iter < options_.max_iterations; ++iter) {
-        const Series pooled = pool_docs(embedding_weights, doc_ids);      // [docs, width]
+        Series pooled = pool_docs(embedding_weights, doc_ids);            // [docs, width]
+        pooled = pluss::ai::dropout(
+            pooled,
+            options_.sequence_dropout,
+            /*training=*/options_.sequence_dropout > 0.0,
+            options_.sequence_seed + static_cast<std::uint64_t>(iter));
         const Series logits = pooled.matmul(cls_weight).add(cls_bias);    // [docs, classes]
         const Series loss = pluss::nn::losses::CrossEntropy(logits, y_series);
 
@@ -571,7 +579,7 @@ void TextCatStage::apply(Doc& doc) const {
 
   if (options_.backend == TaskBackend::Sequence) {
     if (impl_->sequence_vocabulary.empty() || impl_->sequence_cls_bias.empty()) return;
-    const auto terms = select_terms(doc, options_.use_lemmas, options_.lowercase);
+    const auto terms = select_terms(doc, options_.use_lemmas, options_.lowercase, options_.skip_punct);
     const auto width = static_cast<std::size_t>(options_.sequence_width);
     std::vector<double> pooled(width, 0.0);
     std::int64_t count = 0;
@@ -653,6 +661,7 @@ std::vector<std::string> TextCatStage::dump_state_lines() const {
   std::vector<std::string> lines{
       std::string("lowercase=") + (options_.lowercase ? "1" : "0"),
       std::string("use_lemmas=") + (options_.use_lemmas ? "1" : "0"),
+      std::string("skip_punct=") + (options_.skip_punct ? "1" : "0"),
       "max_features=" + std::to_string(options_.max_features),
       "min_document_frequency=" + std::to_string(options_.min_document_frequency),
       "max_iterations=" + std::to_string(options_.max_iterations),
@@ -663,6 +672,8 @@ std::vector<std::string> TextCatStage::dump_state_lines() const {
       "sequence_head=" + std::string(detail::to_string(options_.sequence_head)),
       "sequence_pooling=" + std::string(detail::to_string(options_.sequence_pooling)),
       "sequence_width=" + std::to_string(options_.sequence_width),
+      "sequence_learning_rate=" + std::to_string(options_.sequence_learning_rate),
+      "sequence_dropout=" + std::to_string(options_.sequence_dropout),
       "sequence_seed=" + std::to_string(options_.sequence_seed),
       "quantization=" + std::string(detail::to_string(options_.quantization)),
       "distillation=" + std::string(detail::to_string(options_.distillation)),
@@ -751,6 +762,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
     const std::string_view value = line.substr(eq + 1);
     if (key == "lowercase") { options_.lowercase = value == "1"; continue; }
     if (key == "use_lemmas") { options_.use_lemmas = value == "1"; continue; }
+    if (key == "skip_punct") { options_.skip_punct = value == "1"; continue; }
     if (key == "multi_label") { options_.multi_label = value == "1"; continue; }
     if (key == "multi_label_threshold") { options_.multi_label_threshold = std::stod(std::string(value)); continue; }
     if (key == "max_features") { options_.max_features = std::stoll(std::string(value)); continue; }
@@ -761,6 +773,8 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
     if (key == "sequence_head") { options_.sequence_head = detail::parse_sequence_head(value); continue; }
     if (key == "sequence_pooling") { options_.sequence_pooling = detail::parse_sequence_pooling(value); continue; }
     if (key == "sequence_width") { options_.sequence_width = std::stoll(std::string(value)); continue; }
+    if (key == "sequence_learning_rate") { options_.sequence_learning_rate = std::stod(std::string(value)); continue; }
+    if (key == "sequence_dropout") { options_.sequence_dropout = std::stod(std::string(value)); continue; }
     if (key == "sequence_seed") { options_.sequence_seed = static_cast<std::uint64_t>(std::stoull(std::string(value))); continue; }
     if (key == "quantization") { options_.quantization = detail::parse_quantization_hint(value); continue; }
     if (key == "distillation") { options_.distillation = detail::parse_distillation_hint(value); continue; }

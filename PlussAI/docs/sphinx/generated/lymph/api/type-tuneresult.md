@@ -22,6 +22,7 @@ Public fields on this type:
 
 - `TuneReport report{}`
 - `Workflow best_workflow{}`
+- `std::vector<Workflow> fitted{}`
 
 ## Examples
 

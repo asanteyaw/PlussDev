@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8c8582289a30 -->
 
 # DataFrameTsAccessor::lag
 

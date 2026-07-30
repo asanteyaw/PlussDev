@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 8f0854b2b89a -->
+<!-- pluss-signature-hash: c7d49206cbc1 -->
 
 # DataFrame::fillnull
 
@@ -10,17 +10,27 @@
 ```cpp
 DataFrame::fillnull(double value) const -> DataFrame
 DataFrame::fillnull(double value, pluss::RangeView<std::string_view> features) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+DataFrame::fillnull(double value, const NameRange& features) const -> DataFrame
 
 DataFrame::fillnull(std::string_view value) const -> DataFrame
 DataFrame::fillnull(std::string_view value, pluss::RangeView<std::string_view> features) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+DataFrame::fillnull(std::string_view value, const NameRange& features) const -> DataFrame
 DataFrame::fillnull(const char* value) const -> DataFrame
 DataFrame::fillnull(const char* value, pluss::RangeView<std::string_view> features) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+DataFrame::fillnull(const char* value, const NameRange& features) const -> DataFrame
 
 DataFrame::fillnull(const pluss::Timeline& value) const -> DataFrame
 DataFrame::fillnull(const pluss::Timeline& value, pluss::RangeView<std::string_view> features) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+DataFrame::fillnull(const pluss::Timeline& value, const NameRange& features) const -> DataFrame
 
 DataFrame::fillnull(const pluss::TimeIndex& value) const -> DataFrame
 DataFrame::fillnull(const pluss::TimeIndex& value, pluss::RangeView<std::string_view> features) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+DataFrame::fillnull(const pluss::TimeIndex& value, const NameRange& features) const -> DataFrame
 
 DataFrame::fillnull(pluss::RangeView<FillSpec> specs) const -> DataFrame
 DataFrame::fillnull(std::initializer_list<FillSpec> specs) const -> DataFrame
@@ -62,7 +72,10 @@ entries.
 Restricts the fill to an explicit subset of feature names. Omit this parameter (the
 single-argument overloads) to apply the fill to every eligible feature on the frame.
 Passing a feature name whose dtype does not match `value`'s type is not an error — that
-feature is simply left unaffected, same as if it had been excluded.
+feature is simply left unaffected, same as if it had been excluded. Any container of
+`std::string_view`-convertible names (`std::vector<std::string>`, `std::set<std::string>`,
+and similar) works too, via a generic template overload — not just a braced list or an
+explicit `RangeView`.
 
 **specs** (`pluss::RangeView<FillSpec>` / `std::initializer_list<FillSpec>`)
 

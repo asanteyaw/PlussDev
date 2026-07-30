@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b6f27cc624b1 -->
 <section id="thread-fillnull">
 <h1>Thread::fillnull_<a class="headerlink" href="#thread-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -54,8 +55,8 @@
 <p>The mutating counterpart to <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>: fills <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells with
 <code class="docutils literal notranslate"><span class="pre">value</span></code> and updates <code class="docutils literal notranslate"><span class="pre">*this</span></code> in place, returning a reference to it, instead of
 returning a new <code class="docutils literal notranslate"><span class="pre">Thread</span></code>. Copy-on-write applies — if this thread’s storage is shared
-with another <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (see <a class="reference internal" href="shares_payload_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shares_payload_with()</span></code></span></a>), the
-mutation clones the storage first, so the other thread is unaffected.</p>
+with another <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (from a copy via the copy constructor or <code class="docutils literal notranslate"><span class="pre">operator=</span></code>), the
+mutation clones the storage first, so the other thread is unaffected. See Example 2.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Only the double overload is genuinely in-place
@@ -93,7 +94,6 @@ A reference to <code class="docutils literal notranslate"><span class="pre">*thi
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
 1  0
 2  30
-
 ptype: Series
 </pre></div>
 </div>
@@ -112,11 +112,10 @@ ptype: Series
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1
 1  NULL
-
 ptype: Series
+
 0  1
 1  99
-
 ptype: Series
 </pre></div>
 </div>
@@ -142,9 +141,8 @@ detached <code class="docutils literal notranslate"><span class="pre">copy</span
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Copy-on-write: mutating a thread that shares storage with another detaches it
-first, leaving the other thread untouched. See Example 2 and
-<a class="reference internal" href="shares_payload_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shares_payload_with()</span></code></span></a>.</p></li>
+<li><p>Copy-on-write: mutating a thread that shares storage with another (from a copy)
+detaches it first, leaving the other thread untouched. See Example 2.</p></li>
 <li><p>Only the <code class="docutils literal notranslate"><span class="pre">double</span></code> overload mutates storage directly; the others reassign <code class="docutils literal notranslate"><span class="pre">*this</span></code>
 via the functional <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>. See the note above.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload’s error message includes the underscore:
@@ -156,8 +154,6 @@ differs from the functional form’s own message for the same overload.</p></li>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::fillnull</span></code></span></a>: the functional (non-mutating) form.</p></li>
-<li><p><a class="reference internal" href="shares_payload_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::shares_payload_with</span></code></span></a>: check storage sharing
-directly.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fillnull.html">

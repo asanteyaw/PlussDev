@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 340bb16da4e0 -->
 
 # Thread::nt
 
@@ -128,12 +129,12 @@ immediately at the `.tl()` call itself rather than waiting for a method call.
   every selected feature to already be `Note`-kind and validates eagerly.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="normalize.html">
+  <a class="prev-link" href="notnull.html">
     <span class="label">Previous</span>
-    <span class="title">normalize</span>
-  </a>
-  <a class="next-link" href="notnull.html">
-    <span class="label">Next</span>
     <span class="title">notnull</span>
+  </a>
+  <a class="next-link" href="pad.html">
+    <span class="label">Next</span>
+    <span class="title">pad</span>
   </a>
 </div>

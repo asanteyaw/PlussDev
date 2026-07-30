@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::lag" href="lag.html" />
-    <link rel="prev" title="DataFramePlotAccessor::heatmap" href="heatmap.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -120,16 +118,18 @@ for several.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">hist</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;midterm_hist.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>One pane, one histogram, 20 bins (the literal default, and <code class="docutils literal notranslate"><span class="pre">default_bins</span></code> was never
 customized on this accessor so there’s no ambiguity here).</p>
+<p><img alt="Output of Example 1" src="../../_images/hist-1.svg" /></p>
 <p>Example 2. A single feature with an explicit bin count.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">hist</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/hist-2.svg" /></p>
 <p>Example 3. Every numeric feature in the frame, no explicit list — since <code class="docutils literal notranslate"><span class="pre">exams</span></code> has two
 numeric features, this produces a <strong>mosaic</strong> of two panes, not one overlaid pane.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">hist</span><span class="p">();</span>
@@ -139,16 +139,19 @@ numeric features, this produces a <strong>mosaic</strong> of two panes, not one 
 <p><code class="docutils literal notranslate"><span class="pre">midterm</span></code> and <code class="docutils literal notranslate"><span class="pre">final</span></code> each get their own pane, roughly arranged in a square-ish grid
 (<code class="docutils literal notranslate"><span class="pre">ceil(sqrt(2))</span> <span class="pre">=</span> <span class="pre">2</span></code> columns here, so a 1-row-by-2-column layout), each labeled with its own
 feature name on the x-axis and <code class="docutils literal notranslate"><span class="pre">&quot;count&quot;</span></code> on the y-axis.</p>
+<p><img alt="Output of Example 3" src="../../_images/hist-3.svg" /></p>
 <p>Example 4. An explicit multi-feature list via <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>, with a shared bin count
 applied to every pane in the mosaic.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">hist</span><span class="p">({</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">},</span><span class="w"> </span><span class="mi">15</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 4" src="../../_images/hist-4.svg" /></p>
 <p>Example 5. The same multi-feature call via a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">hist</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">names</span><span class="p">),</span><span class="w"> </span><span class="mi">15</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/hist-5.svg" /></p>
 <p>Example 6. An explicit <code class="docutils literal notranslate"><span class="pre">HistPlotOptions</span></code>, tuning opacity and stroke in addition to bins.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">HistPlotOptions</span><span class="w"> </span><span class="n">hist_options</span><span class="p">;</span>
 <span class="n">hist_options</span><span class="p">.</span><span class="n">bins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
@@ -156,9 +159,10 @@ applied to every pane in the mosaic.</p>
 <span class="n">hist_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.4</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">hist</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">hist_options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;midterm_hist.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 6" src="../../_images/hist-6.svg" /></p>
 <p>Example 7. The <code class="docutils literal notranslate"><span class="pre">bins</span> <span class="pre">==</span> <span class="pre">20</span></code> ambiguity from the danger box above, made concrete.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">plot_options</span><span class="p">;</span>
 <span class="n">plot_options</span><span class="p">.</span><span class="n">default_bins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
@@ -171,6 +175,10 @@ applied to every pane in the mosaic.</p>
 <p>Both <code class="docutils literal notranslate"><span class="pre">explicit_20</span></code> and <code class="docutils literal notranslate"><span class="pre">implicit_20</span></code> actually render with <strong>8</strong> bins, not 20 — because
 <code class="docutils literal notranslate"><span class="pre">resolve_bins()</span></code> cannot tell the two calls apart. Both hit the “still at the signature
 default” branch and fall back to <code class="docutils literal notranslate"><span class="pre">plot_options.default_bins</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">explicit_20</span></code>:</p>
+<p><img alt="Output of Example 7, explicit_20" src="../../_images/hist-7-a.svg" /></p>
+<p><code class="docutils literal notranslate"><span class="pre">implicit_20</span></code>:</p>
+<p><img alt="Output of Example 7, implicit_20" src="../../_images/hist-7-b.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -233,11 +241,8 @@ summaries, both single-pane regardless of feature count.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -251,16 +256,6 @@ summaries, both single-pane regardless of feature count.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="heatmap.html" title="previous chapter">DataFramePlotAccessor::heatmap</a></li>
-      <li>Next: <a href="lag.html" title="next chapter">DataFramePlotAccessor::lag</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

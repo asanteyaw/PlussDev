@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::observe" href="observe.html" />
-    <link rel="prev" title="DataFrame::note" href="note.html" />
+    <link rel="next" title="DataFrame::nt" href="nt.html" />
+    <link rel="prev" title="DataFrame::nfeatures" href="nfeatures.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -37,13 +37,16 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 94e4332077eb -->
+<!-- pluss-signature-hash: 4e71b03b0d08 -->
 <section id="dataframe-notnull">
 <h1>DataFrame::notnull<a class="headerlink" href="#dataframe-notnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">notnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">notnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -60,7 +63,10 @@ sites (building a mask to <code class="docutils literal notranslate"><span class
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default empty)</p>
 <p>Feature names to check. Leave empty to check every feature on the frame; pass a subset
-to restrict the resulting mask to just those columns.</p>
+to restrict the resulting mask to just those columns. Any container of
+<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>-convertible names (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">std::set&lt;std::string&gt;</span></code>,
+and similar) works too, via a generic template overload — not just a braced list or an
+explicit <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -184,8 +190,8 @@ without building the mask yourself first.</p></li>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
-      <li>Previous: <a href="note.html" title="previous chapter">DataFrame::note</a></li>
-      <li>Next: <a href="observe.html" title="next chapter">DataFrame::observe</a></li>
+      <li>Previous: <a href="nfeatures.html" title="previous chapter">DataFrame::nfeatures</a></li>
+      <li>Next: <a href="nt.html" title="next chapter">DataFrame::nt</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

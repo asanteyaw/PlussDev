@@ -139,7 +139,7 @@ std::string ts_group_key_at_(const std::vector<Thread>& cpu_groups, std::int64_t
   std::string key;
   for (const auto& group : cpu_groups) {
     key.push_back('\2');
-    if (group.is_valid(row)) {
+    if (detail::valid_at(group, row)) {
       key.push_back('\1');
       key += thread_scalar_string_at(group, row);
     } else {

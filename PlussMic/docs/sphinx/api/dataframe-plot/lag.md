@@ -73,12 +73,14 @@ auto readings = DataFrame({
 });
 
 auto chart = readings.plot().lag("level");
-chart.save_svg("level_lag1.svg");
+chart.show();
 ```
 
 With `n = 8` rows and `lag = 1`, `usable = 7` points are plotted: `(10.0, 10.5)`, `(10.5,
 11.0)`, ..., `(11.3, 11.8)` — a tight, mostly increasing sequence suggests strong positive
 lag-1 autocorrelation.
+
+![Output of Example 1](img/lag-1.svg)
 
 Example 2. An explicit `LagPlotOptions` with a larger lag.
 
@@ -93,6 +95,8 @@ chart.show();
 With `lag = 3`, `usable = 8 - 3 = 5` points are plotted: `(10.0, 10.8)`, `(10.5, 11.2)`,
 `(11.0, 11.5)`, `(10.8, 11.3)`, `(11.2, 11.8)`.
 
+![Output of Example 2](img/lag-2.svg)
+
 Example 3. A `lag` request larger than the data supports is silently clamped, not thrown.
 
 ```cpp
@@ -104,6 +108,8 @@ auto chart = readings.plot().lag("level", oversized);
 
 With only 8 rows, `lag` is clamped to `n - 1 = 7`, leaving exactly one usable point: `(x[0],
 x[7])`, i.e. `(10.0, 11.8)`.
+
+![Output of Example 3](img/lag-3.svg)
 
 Example 4. `max_points` subsampling on a larger series.
 
@@ -127,6 +133,8 @@ chart.save_pdf("trend_lag.pdf");
 `usable = 4999` points would otherwise be plotted; capped to roughly `500` by taking every
 10th point (`step = ceil(4999 / 500) = 10`), not a random sample.
 
+![Output of Example 4](img/lag-4.svg)
+
 Example 5. Larger markers and a thicker outline.
 
 ```cpp
@@ -135,8 +143,10 @@ styled.marker_area = 40.0;
 styled.trace_width = 1.5F;
 
 auto chart = readings.plot().lag("level", styled);
-chart.save_png("level_lag_styled.png");
+chart.show();
 ```
+
+![Output of Example 5](img/lag-5.svg)
 
 Example 6. Fewer than two rows throws.
 

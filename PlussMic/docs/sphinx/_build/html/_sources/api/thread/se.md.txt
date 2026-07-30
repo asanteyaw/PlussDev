@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4bc6a156c47e -->
 
 # Thread::se
 
@@ -20,7 +21,7 @@ throws rather than silently computing something else. Like the
 `StatisticOptions` overload of `var()`, this method returns a result marked
 *invalid* (rather than throwing) when the observed count is below
 `min_count` — see [`Thread::sum`'s note](sum.md) on why you should check
-`.thread().is_valid(0)` rather than trust the printed number in that case.
+the scalar validity mask rather than trust the printed number in that case.
 
 ## Parameters
 
@@ -81,7 +82,7 @@ thrown.
 ```cpp
 auto small = Thread(pluss::make_series({10.0, 20.0}));
 auto out3 = small.se(ErrorTarget::Mean, StatisticOptions{.ddof = 1, .min_count = 5});
-std::cout << out3.thread().is_valid(0);
+std::cout << out3.thread().notnull().as_series().to_vec<bool>()[0];
 ```
 
 ### Output
@@ -96,7 +97,7 @@ false
   `"Thread::se: only ErrorTarget::Mean is implemented in this pass"`.
 - Below `min_count`, the result is marked invalid rather than thrown — see the
   important caveat on [`Thread::sum`'s page](sum.md) about checking
-  `.thread().is_valid(0)` rather than trusting the printed number.
+  the scalar validity mask rather than trusting the printed number.
 - Restricted to numeric `Series` payloads; anything else throws
   `"Thread::se: expected a real numeric Series Thread"`.
 

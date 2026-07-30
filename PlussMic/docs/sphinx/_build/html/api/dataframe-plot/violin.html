@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlot3DAccessor API Reference" href="../../dataframe_plot3d_accessor_api_reference.html" />
-    <link rel="prev" title="DataFramePlotAccessor::step" href="step.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -132,9 +130,10 @@ or one violin per distinct group value (value/group mode).</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">violin</span><span class="p">();</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;scores_violin.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 1" src="../../_images/violin-1.svg" /></p>
 <p>Example 2. Feature-list mode, explicit subset via <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>, with options.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ViolinPlotOptions</span><span class="w"> </span><span class="n">violin_options</span><span class="p">;</span>
 <span class="n">violin_options</span><span class="p">.</span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">ViolinInner</span><span class="o">::</span><span class="n">Quartile</span><span class="p">;</span>
@@ -144,6 +143,7 @@ or one violin per distinct group value (value/group mode).</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/violin-2.svg" /></p>
 <p>Example 3. Value/group mode with a text-like group feature: one violin per distinct
 category.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -157,6 +157,7 @@ category.</p>
 </div>
 <p>Two violins are drawn — one for section <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code>’s three scores, one for section <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code>’s three
 scores — with <code class="docutils literal notranslate"><span class="pre">section</span></code>’s own distinct text values as the x-axis labels.</p>
+<p><img alt="Output of Example 3" src="../../_images/violin-3.svg" /></p>
 <p>Example 4. Value/group mode with a numeric group feature — see the important callout above
 for why this is rarely what’s actually wanted unless the numeric column really is a
 small-cardinality code.</p>
@@ -166,12 +167,13 @@ small-cardinality code.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">coded</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">violin</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tier_code&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;score_by_tier_code.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">tier_code</span></code> is a plain numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not text-like — <code class="docutils literal notranslate"><span class="pre">violin()</span></code> still accepts it
 (unlike <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>’s hue, which would throw), using its two distinct values (<code class="docutils literal notranslate"><span class="pre">1.0</span></code>, <code class="docutils literal notranslate"><span class="pre">2.0</span></code>)
 directly as the two violin positions.</p>
+<p><img alt="Output of Example 4" src="../../_images/violin-4.svg" /></p>
 <p>Example 5. Value/group mode with an explicit <code class="docutils literal notranslate"><span class="pre">ViolinPlotOptions</span></code>, including a half-sided
 violin.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ViolinPlotOptions</span><span class="w"> </span><span class="n">half_options</span><span class="p">;</span>
@@ -179,9 +181,10 @@ violin.</p>
 <span class="n">half_options</span><span class="p">.</span><span class="n">bw_adjust</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">violin</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;section&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">half_options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;score_by_section.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/violin-5.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -241,11 +244,8 @@ requirement, contrasted with this method’s more permissive <code class="docuti
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -259,16 +259,6 @@ requirement, contrasted with this method’s more permissive <code class="docuti
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="step.html" title="previous chapter">DataFramePlotAccessor::step</a></li>
-      <li>Next: <a href="../../dataframe_plot3d_accessor_api_reference.html" title="next chapter">DataFramePlot3DAccessor API Reference</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

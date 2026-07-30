@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e5385a51ccd6 -->
 
 # Thread::casefold
 

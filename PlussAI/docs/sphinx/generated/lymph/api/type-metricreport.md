@@ -26,7 +26,11 @@ Public fields on this type:
 - `Series balanced_accuracy = Series::undefined()`
 - `Series precision = Series::undefined()`
 - `Series recall = Series::undefined()`
+- `Series sensitivity = Series::undefined()`
 - `Series f1 = Series::undefined()`
+- `Series specificity = Series::undefined()`
+- `Series geometric_mean = Series::undefined()`
+- `Series balance_quality = Series::undefined()`
 - `Series roc_auc = Series::undefined()`
 - `Series logloss = Series::undefined()`
 - `Series mse = Series::undefined()`

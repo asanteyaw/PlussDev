@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f8db4a5aa396 -->
+
 # Thread::as_timeindex
 
 [Back to Thread API Reference](../../thread_api_reference)
@@ -5,12 +8,23 @@
 ## Signature
 
 ```cpp
-Thread::as_timeindex() -> const pluss::TimeIndex&
+Thread::as_timeindex() const -> const pluss::TimeIndex&
 ```
 
-Expose the underlying `pluss::TimeIndex` payload directly.
+## What It Does
 
-`Thread::as_timeindex()` is the indexed-temporal escape hatch for resampling, calendar bucketing, and time-index-specific kernels that live below the Thread surface.
+Exposes the underlying `pluss::TimeIndex` payload directly, by reference — the
+indexed-temporal escape hatch for resampling, calendar bucketing, and other
+`TimeIndex`-specific operations that don't have a `Thread`-surface equivalent. Requires the
+thread to be `TimeIndex`-kind; every other payload kind throws.
+
+`TimeIndex` is distinct from [`Timeline`](as_timeline.md): a `TimeIndex` additionally
+tracks whether its timestamps are sorted, which unlocks resampling-style operations
+(bucketing counts/aggregates into fixed calendar windows) that a plain `Timeline` doesn't
+support directly.
+
+Same reference/no-rewrap contract as [`as_series()`](as_series.md) — see that page's
+important callout for the full explanation.
 
 ## Parameters
 
@@ -19,22 +33,13 @@ Expose the underlying `pluss::TimeIndex` payload directly.
 ## Returns
 
 `const pluss::TimeIndex&`
-    Reference to the underlying indexed temporal payload.
-
-## See Also
-
-- <a href="as_timeline.html"><code>Thread::as_timeline</code></a>: expose a timeline payload instead of a time index.
-- <a href="../dataframe/ts.html"><code>DataFrame::ts</code></a>: open the time-series surface for full-frame resampling.
-
-## Notes
-
-This method is useful when the operation you want exists on `TimeIndex` but not on `Thread`.
-
-Wrap the result back into `Thread(...)` if a downstream table API expects a thread again.
+    A reference to the underlying indexed-temporal payload, valid as long as the `Thread`
+    itself stays alive.
 
 ## Examples
 
-Example 1. Use the TimeIndex payload for daily resample counts and wrap the result back into a Thread.
+Example 1. Drop to `TimeIndex` for a daily resample count, then wrap the result back into
+a `Thread`.
 
 ```cpp
 using namespace pluss::table;
@@ -47,6 +52,7 @@ auto ticks = Thread(pluss::make_timeindex({
 }, true));
 
 auto out = Thread(ticks.as_timeindex().resample_count("D", 1));
+std::cout << out;
 ```
 
 ### Output
@@ -57,7 +63,46 @@ auto out = Thread(ticks.as_timeindex().resample_count("D", 1));
 ptype: Series
 ```
 
+Three ticks fall on `2024-01-01`, one on `2024-01-02` — `resample_count("D", 1)` buckets
+by whole day and counts each bucket's rows.
 
+Example 2. Calling `as_timeindex()` on a non-`TimeIndex` thread throws — including on a
+plain `Timeline` thread, even though the two kinds are closely related.
+
+```cpp
+auto stamps = Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
+try {
+  const auto& bad = stamps.as_timeindex();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread: payload is not TimeIndex
+```
+
+## Notes
+
+- Returns a reference into the thread's own storage — no copy, no allocation.
+- Requires `TimeIndex`-kind specifically; a `Timeline`-kind thread does **not**
+  satisfy this — construct with `pluss::make_timeindex(...)` (or cast via
+  [`cast()`](cast.md)`.timeindex()`) to get a `TimeIndex`-kind thread.
+- The result does not automatically become a `Thread` again — wrap it explicitly with
+  `Thread(...)` when a `Thread`-only API needs it back.
+
+## See Also
+
+- [`Thread::as_timeline`](as_timeline.md): the escape hatch for the non-indexed temporal
+  payload kind.
+- [`Thread::as_series`](as_series.md): the numeric escape hatch, including the full
+  reference/no-rewrap explanation.
+- [`Thread::cast`](cast.md): convert between payload kinds (including `Timeline` →
+  `TimeIndex`) rather than just viewing the current one.
+- [`DataFrame::ts`](../dataframe/ts.md): the frame-level time-series surface, for
+  resampling an entire `DataFrame` rather than one `Thread`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="as_series.html">

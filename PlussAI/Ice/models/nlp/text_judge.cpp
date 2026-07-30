@@ -4,11 +4,13 @@
 #include "pluss/ai/nodeb/tokenize.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <limits>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -29,7 +31,7 @@ using nodeb::Workflow;
 using StringMap = std::unordered_map<std::string, std::string>;
 
 constexpr std::string_view kMagic = "pluss_ice_text_judge";
-constexpr std::int64_t kSchema = 2;
+constexpr std::int64_t kSchema = 3;
 
 [[nodiscard]] std::vector<std::string> materialize_strings_(
     pluss::msharp::RangeView::Of<std::string_view> values) {
@@ -73,14 +75,20 @@ constexpr std::int64_t kSchema = 2;
 }
 
 [[nodiscard]] TextCatOptions textcat_options_(const TextJudgeOptions& model_options,
-                                              const TextJudgeTrainOptions& train_options) {
+                                              const TextJudgeTrainOptions& train_options,
+                                              std::int64_t iterations) {
   TextCatOptions options{};
   options.lowercase = model_options.lowercase;
   options.use_lemmas = model_options.use_lemmas;
+  options.skip_punct = model_options.skip_punct;
   options.backend = TaskBackend::Sequence;
   options.sequence_width = model_options.width;
+  options.sequence_learning_rate = train_options.learning_rate;
+  options.sequence_dropout = train_options.architecture_regularization.dropout > 0.0
+                                 ? train_options.architecture_regularization.dropout
+                                 : model_options.dropout;
   options.sequence_seed = model_options.seed;
-  options.max_iterations = std::max<std::int64_t>(32, train_options.execution.max_epochs);
+  options.max_iterations = std::max<std::int64_t>(1, iterations);
   options.tolerance = std::max(1e-8, train_options.loop_regularization.min_delta);
   return options;
 }
@@ -88,8 +96,42 @@ constexpr std::int64_t kSchema = 2;
 [[nodiscard]] TrainOptions nodeb_train_options_(const TextJudgeTrainOptions& options) {
   TrainOptions out{};
   out.random.seed = options.seed;
-  out.random.deterministic = true;
+  out.random.deterministic = options.execution.deterministic;
   return out;
+}
+
+[[nodiscard]] std::string lower_ascii_(std::string_view in) {
+  std::string out(in);
+  std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
+    return static_cast<char>(std::tolower(c));
+  });
+  return out;
+}
+
+[[nodiscard]] MonitorDirection resolve_monitor_direction_(const ValidationPolicy& validation) {
+  if (validation.direction != MonitorDirection::Auto) {
+    return validation.direction;
+  }
+  const std::string monitor = lower_ascii_(validation.monitor);
+  if (monitor.find("acc") != std::string::npos || monitor.find("auc") != std::string::npos ||
+      monitor.find("f1") != std::string::npos || monitor.find("precision") != std::string::npos ||
+      monitor.find("recall") != std::string::npos || monitor.find("map") != std::string::npos ||
+      monitor.find("ndcg") != std::string::npos || monitor.find("score") != std::string::npos) {
+    return MonitorDirection::Max;
+  }
+  return MonitorDirection::Min;
+}
+
+[[nodiscard]] bool monitor_improved_(double current,
+                                     double best,
+                                     const ValidationPolicy& validation,
+                                     double min_delta) {
+  switch (resolve_monitor_direction_(validation)) {
+    case MonitorDirection::Min: return current < best - min_delta;
+    case MonitorDirection::Max: return current > best + min_delta;
+    case MonitorDirection::Auto: break;
+  }
+  PLUSS_FAIL("pluss::ai::ice::models::TextJudge: unreachable monitor direction.");
 }
 
 void write_kv_(std::ostringstream& out, std::string_view key, std::string_view value) {
@@ -171,8 +213,82 @@ void validate_model_options_(const TextJudgeOptions& options) {
 }
 
 void validate_train_options_(const TextJudgeTrainOptions& options) {
-  PLUSS_CHECK(options.execution.max_epochs > 0,
-              "pluss::ai::ice::models::TextJudge: execution.max_epochs must be positive.");
+  PLUSS_CHECK(options.learning_rate > 0.0 &&
+                  options.execution.max_epochs > 0 &&
+                  options.validation.every_n_epochs > 0 &&
+                  options.validation.start_from_epoch >= 0,
+              "pluss::ai::ice::models::TextJudge: learning_rate, execution.max_epochs, "
+              "validation.every_n_epochs must be positive and validation.start_from_epoch "
+              "must be non-negative.");
+}
+
+[[nodiscard]] std::pair<std::vector<std::int64_t>, std::vector<std::int64_t>>
+split_labeled_indices_(pluss::msharp::RangeView::Of<std::string_view> labels,
+                       double holdout_ratio,
+                       bool shuffle,
+                       std::uint64_t seed) {
+  const auto count = static_cast<std::int64_t>(labels.size());
+  if (count <= 1 || holdout_ratio <= 0.0) {
+    std::vector<std::int64_t> all(static_cast<std::size_t>(count));
+    std::iota(all.begin(), all.end(), 0);
+    return {std::move(all), {}};
+  }
+
+  std::vector<std::string> label_order{};
+  std::unordered_map<std::string, std::vector<std::int64_t>> groups{};
+  label_order.reserve(labels.size());
+  for (std::int64_t i = 0; i < count; ++i) {
+    const std::string label(labels[static_cast<std::size_t>(i)]);
+    if (!groups.contains(label)) {
+      label_order.push_back(label);
+      groups.emplace(label, std::vector<std::int64_t>{});
+    }
+    groups[label].push_back(i);
+  }
+
+  std::vector<std::int64_t> train_ids{};
+  std::vector<std::int64_t> val_ids{};
+  train_ids.reserve(static_cast<std::size_t>(count));
+  val_ids.reserve(static_cast<std::size_t>(count));
+  std::mt19937_64 rng(seed);
+  for (const auto& label : label_order) {
+    auto& ids = groups[label];
+    if (shuffle) {
+      std::shuffle(ids.begin(), ids.end(), rng);
+    }
+    const auto holdout = std::clamp<std::int64_t>(
+        static_cast<std::int64_t>(std::llround(static_cast<double>(ids.size()) * holdout_ratio)),
+        0,
+        static_cast<std::int64_t>(ids.size()) - 1);
+    const auto split = static_cast<std::size_t>(static_cast<std::int64_t>(ids.size()) - holdout);
+    train_ids.insert(train_ids.end(), ids.begin(), ids.begin() + static_cast<std::ptrdiff_t>(split));
+    val_ids.insert(val_ids.end(), ids.begin() + static_cast<std::ptrdiff_t>(split), ids.end());
+  }
+  if (shuffle) {
+    std::shuffle(train_ids.begin(), train_ids.end(), rng);
+    std::shuffle(val_ids.begin(), val_ids.end(), rng);
+  }
+  return {std::move(train_ids), std::move(val_ids)};
+}
+
+template <class T>
+[[nodiscard]] std::vector<T> gather_by_index_(const std::vector<T>& values,
+                                              const std::vector<std::int64_t>& indices) {
+  std::vector<T> out{};
+  out.reserve(indices.size());
+  for (const auto idx : indices) {
+    out.push_back(values[static_cast<std::size_t>(idx)]);
+  }
+  return out;
+}
+
+[[nodiscard]] double choose_metric_(const TextJudgeReport& report,
+                                    const ValidationPolicy& validation) {
+  const std::string monitor = lower_ascii_(validation.monitor);
+  if (monitor.find("acc") != std::string::npos || monitor.find("score") != std::string::npos) {
+    return report.accuracy;
+  }
+  return report.loss;
 }
 
 void validate_labeled_docs_(const std::vector<Doc>& docs,
@@ -248,11 +364,8 @@ void TextJudge::learn(const std::vector<Doc>& docs,
   validate_labeled_docs_(docs, labels);
 
   auto fresh_impl = std::make_shared<Impl>();
-  fresh_impl->stage = TextCatStage(textcat_options_(options_, options));
-  fresh_impl->stage.learn(docs, labels, nodeb_train_options_(options));
-
-  for (std::size_t i = 0; i < labels.size(); ++i) {
-    const std::string label(labels[i]);
+  const auto all_labels = materialize_strings_(labels);
+  for (const auto& label : all_labels) {
     if (!fresh_impl->label_to_index.contains(label)) {
       fresh_impl->label_to_index.emplace(label, static_cast<std::int64_t>(fresh_impl->label_values.size()));
       fresh_impl->label_values.push_back(label);
@@ -260,6 +373,91 @@ void TextJudge::learn(const std::vector<Doc>& docs,
   }
   PLUSS_CHECK(fresh_impl->label_values.size() >= 2,
               "pluss::ai::ice::models::TextJudge: expected at least two distinct labels.");
+
+  const auto [train_ids, val_ids] = split_labeled_indices_(labels,
+                                                           options.validation.split_ratio,
+                                                           options.shuffle,
+                                                           options.seed);
+  const bool use_validation =
+      options.validation.split_ratio > 0.0 && !val_ids.empty() && val_ids.size() < docs.size();
+  PLUSS_CHECK(!use_validation || !train_ids.empty(),
+              "pluss::ai::ice::models::TextJudge: validation.split_ratio leaves an empty training split.");
+  const auto train_docs = use_validation ? gather_by_index_(docs, train_ids) : docs;
+  const auto train_labels = use_validation ? gather_by_index_(all_labels, train_ids) : all_labels;
+  const auto val_docs = use_validation ? gather_by_index_(docs, val_ids) : std::vector<Doc>{};
+  const auto val_labels = use_validation ? gather_by_index_(all_labels, val_ids) : std::vector<std::string>{};
+
+  auto train_stage = [&](std::int64_t iterations) {
+    TextCatStage stage(textcat_options_(options_, options, iterations));
+    std::vector<std::string_view> train_label_views{};
+    train_label_views.reserve(train_labels.size());
+    for (const auto& label : train_labels) train_label_views.push_back(label);
+    stage.learn(train_docs,
+                pluss::msharp::RangeView::Of<std::string_view>(train_label_views),
+                nodeb_train_options_(options));
+    return stage;
+  };
+
+  if (!use_validation) {
+    fresh_impl->stage = train_stage(options.execution.max_epochs);
+    fresh_impl->trained = true;
+    impl_ = std::move(fresh_impl);
+    return;
+  }
+
+  std::optional<std::vector<std::string>> best_snapshot = std::nullopt;
+  double best_metric = resolve_monitor_direction_(options.validation) == MonitorDirection::Min
+                           ? std::numeric_limits<double>::infinity()
+                           : -std::numeric_limits<double>::infinity();
+  std::int64_t stale = 0;
+  TextCatStage last_stage(textcat_options_(options_, options, 1));
+  bool have_last = false;
+
+  for (std::int64_t epoch = 0; epoch < options.execution.max_epochs; ++epoch) {
+    const auto trained_epochs = epoch + 1;
+    const bool should_validate =
+        epoch >= options.validation.start_from_epoch &&
+        ((epoch - options.validation.start_from_epoch) % options.validation.every_n_epochs == 0);
+    if (!should_validate && trained_epochs != options.execution.max_epochs) {
+      continue;
+    }
+
+    last_stage = train_stage(trained_epochs);
+    have_last = true;
+    std::vector<std::string_view> val_label_views{};
+    val_label_views.reserve(val_labels.size());
+    for (const auto& label : val_labels) val_label_views.push_back(label);
+    const auto report = assess_impl_(last_stage,
+                                     val_docs,
+                                     pluss::msharp::RangeView::Of<std::string_view>(val_label_views),
+                                     static_cast<std::int64_t>(fresh_impl->label_values.size()));
+    const double current_metric = choose_metric_(report, options.validation);
+    if (!best_snapshot.has_value() ||
+        monitor_improved_(current_metric, best_metric, options.validation, options.loop_regularization.min_delta)) {
+      best_metric = current_metric;
+      stale = 0;
+      best_snapshot = last_stage.dump_state_lines();
+    } else {
+      ++stale;
+      if (options.loop_regularization.early_stopping &&
+          stale >= options.loop_regularization.patience) {
+        break;
+      }
+    }
+  }
+
+  PLUSS_CHECK(have_last,
+              "pluss::ai::ice::models::TextJudge: validation loop produced no trained stage.");
+  if (options.loop_regularization.restore_best_weights && best_snapshot.has_value()) {
+    fresh_impl->stage = TextCatStage(textcat_options_(options_, options, 1));
+    std::vector<std::string_view> best_views{};
+    best_views.reserve(best_snapshot->size());
+    for (const auto& line : *best_snapshot) best_views.push_back(line);
+    fresh_impl->stage.load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(best_views));
+  } else {
+    fresh_impl->stage = std::move(last_stage);
+  }
+
   fresh_impl->trained = true;
   impl_ = std::move(fresh_impl);
 }
@@ -344,11 +542,7 @@ void TextJudge::save(std::string_view filepath) const {
   out << kMagic << '\n';
   write_num_(out, "schema", kSchema);
   write_num_(out, "width", options_.width);
-  write_num_(out, "num_layers", options_.num_layers);
-  write_num_(out, "num_heads", options_.num_heads);
-  write_num_(out, "feedforward_width", options_.feedforward_width);
   write_num_(out, "dropout", options_.dropout);
-  write_num_(out, "max_positions", options_.max_positions);
   write_bool_(out, "use_lemmas", options_.use_lemmas);
   write_bool_(out, "skip_punct", options_.skip_punct);
   write_bool_(out, "lowercase", options_.lowercase);
@@ -388,16 +582,13 @@ TextJudge TextJudge::load(std::string_view filepath) {
   std::ostringstream body{};
   body << file.rdbuf();
   const auto kv = parse_body_(body.str());
-  PLUSS_CHECK(require_i64_(kv, "schema") == kSchema,
+  const auto schema = require_i64_(kv, "schema");
+  PLUSS_CHECK(schema == 2 || schema == kSchema,
               "pluss::ai::ice::models::TextJudge::load: unsupported schema.");
 
   TextJudgeOptions options{};
   options.width = require_i64_(kv, "width");
-  options.num_layers = require_i64_(kv, "num_layers");
-  options.num_heads = require_i64_(kv, "num_heads");
-  options.feedforward_width = require_i64_(kv, "feedforward_width");
   options.dropout = require_f64_(kv, "dropout");
-  options.max_positions = require_i64_(kv, "max_positions");
   options.use_lemmas = require_bool_(kv, "use_lemmas");
   options.skip_punct = require_bool_(kv, "skip_punct");
   options.lowercase = require_bool_(kv, "lowercase");
@@ -408,7 +599,7 @@ TextJudge TextJudge::load(std::string_view filepath) {
 
   TextJudge model(options);
   auto restored = std::make_shared<Impl>();
-  restored->stage = TextCatStage(textcat_options_(options, TextJudgeTrainOptions{}));
+  restored->stage = TextCatStage(textcat_options_(options, TextJudgeTrainOptions{}, 1));
   const auto stage_lines = collect_indexed_(kv, "stage", require_i64_(kv, "stage_count"));
   std::vector<std::string_view> stage_views{};
   stage_views.reserve(stage_lines.size());

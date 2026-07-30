@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::pie" href="pie.html" />
-    <link rel="prev" title="DataFramePlotAccessor::line" href="line.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -109,12 +107,13 @@ trace per row.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">parallel</span><span class="p">();</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;flowers_parallel.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">parallel()</span></code> with no arguments uses <code class="docutils literal notranslate"><span class="pre">sepal_length</span></code>, <code class="docutils literal notranslate"><span class="pre">sepal_width</span></code>, and <code class="docutils literal notranslate"><span class="pre">petal_length</span></code> (the
 three <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind features) as axes; <code class="docutils literal notranslate"><span class="pre">species</span></code> (Note-kind) is excluded from the axes
 since it isn’t numeric.</p>
+<p><img alt="Output of Example 1" src="../../_images/parallel-1.svg" /></p>
 <p>Example 2. An explicit feature subset, colored by a class feature.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">parallel</span><span class="p">({</span><span class="s">&quot;sepal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sepal_width&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;petal_length&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;species&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
@@ -122,6 +121,7 @@ since it isn’t numeric.</p>
 </div>
 <p>Each row’s line is colored/grouped by its <code class="docutils literal notranslate"><span class="pre">species</span></code> value; a legend labeled with each
 distinct species appears (since <code class="docutils literal notranslate"><span class="pre">show_legend</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code>).</p>
+<p><img alt="Output of Example 2" src="../../_images/parallel-2.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">ParallelPlotOptions</span></code>, with custom axis labels and reduced
 transparency for a small dataset where overplotting isn’t a concern.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ParallelPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -130,12 +130,13 @@ transparency for a small dataset where overplotting isn’t a concern.</p>
 <span class="n">options</span><span class="p">.</span><span class="n">normalize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">parallel</span><span class="p">({</span><span class="s">&quot;sepal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sepal_width&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;petal_length&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;species&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;flowers_parallel.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">normalize</span> <span class="pre">=</span> <span class="pre">false</span></code> plots each axis on its own raw numeric scale instead of a normalized
 <code class="docutils literal notranslate"><span class="pre">0..1</span></code>-style range — meaningful here since <code class="docutils literal notranslate"><span class="pre">sepal_length</span></code>/<code class="docutils literal notranslate"><span class="pre">sepal_width</span></code>/<code class="docutils literal notranslate"><span class="pre">petal_length</span></code> are
 all already in centimeters and comparable.</p>
+<p><img alt="Output of Example 3" src="../../_images/parallel-3.svg" /></p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">class_feature</span></code> accepts a numeric feature too — unlike <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>’s
 <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code>, there’s no type restriction here.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numeric_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -149,6 +150,7 @@ all already in centimeters and comparable.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">code</span></code> is a plain numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>, but <code class="docutils literal notranslate"><span class="pre">parallel()</span></code> still accepts it as <code class="docutils literal notranslate"><span class="pre">class_feature</span></code> —
 its values are cast to text first (<code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;2&quot;</span></code>), so rows with <code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">==</span> <span class="pre">1.0</span></code> and <code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">==</span> <span class="pre">2.0</span></code> become two distinctly colored classes.</p>
+<p><img alt="Output of Example 4" src="../../_images/parallel-4.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -212,11 +214,8 @@ instead of one line per row across every axis at once.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -230,16 +229,6 @@ instead of one line per row across every axis at once.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="line.html" title="previous chapter">DataFramePlotAccessor::line</a></li>
-      <li>Next: <a href="pie.html" title="next chapter">DataFramePlotAccessor::pie</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f13f4de64b8f -->
 
 # Thread::shift
 
@@ -134,9 +135,9 @@ position, not from the shift itself vacating it.
   without introducing `NULL`s.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="shares_payload_with.html">
+  <a class="prev-link" href="shape.html">
     <span class="label">Previous</span>
-    <span class="title">shares_payload_with</span>
+    <span class="title">shape</span>
   </a>
   <a class="next-link" href="show.html">
     <span class="label">Next</span>

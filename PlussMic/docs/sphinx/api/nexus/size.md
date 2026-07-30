@@ -71,12 +71,12 @@ std::cout << biz.size() << " " << biz.ntables();
 - [`Nexus::ntables`](ntables.md): the canonical name for this same value.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="select.html">
+  <a class="prev-link" href="show.html">
     <span class="label">Previous</span>
-    <span class="title">select</span>
+    <span class="title">show</span>
   </a>
-  <a class="next-link" href="summary.html">
+  <a class="next-link" href="store.html">
     <span class="label">Next</span>
-    <span class="title">summary</span>
+    <span class="title">store</span>
   </a>
 </div>

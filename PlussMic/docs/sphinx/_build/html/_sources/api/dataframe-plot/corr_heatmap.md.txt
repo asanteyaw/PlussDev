@@ -62,12 +62,14 @@ auto metrics = DataFrame({
 });
 
 auto chart = metrics.plot().corr_heatmap();
-chart.save_svg("metrics_corr.svg");
+chart.show();
 ```
 
 A 3×3 heatmap: `revenue`, `cost`, and `headcount`, each pairwise correlation coefficient
 annotated on its cell by default (`annotate_levels` defaults to `true` here, unlike plain
 `heatmap()`).
+
+![Output of Example 1](img/corr_heatmap-1.svg)
 
 Example 2. An explicit feature subset, restricting the matrix to two features.
 
@@ -79,6 +81,8 @@ chart.show();
 A 2×2 matrix — the diagonal cells are each feature's correlation with itself (always `1.0`)
 and the two off-diagonal cells are `revenue` vs `cost`'s correlation, mirrored across the
 diagonal.
+
+![Output of Example 2](img/corr_heatmap-2.svg)
 
 Example 3. An explicit `CorrHeatmapPlotOptions`, disabling the value annotations and using
 a borderless style.
@@ -95,6 +99,8 @@ chart.save_pdf("metrics_corr.pdf");
 Passing `{}` explicitly (rather than omitting the argument) still triggers the "every
 numeric feature" inference — the empty-list rule doesn't depend on whether the empty list
 was the default or spelled out.
+
+![Output of Example 3](img/corr_heatmap-3.svg)
 
 Example 4. A feature that isn't numeric throws, same as every method sharing this
 `features`-validation rule.

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 44c70fa1d0a5 -->
 
 # DataFrameTsAccessor::expanding
 

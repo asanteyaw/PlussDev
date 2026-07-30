@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d2d2b9cfc2cd -->
 
 # Thread::chars
 
@@ -225,8 +226,8 @@ Thread::chars: expected Note payload
     <span class="label">Previous</span>
     <span class="title">cast</span>
   </a>
-  <a class="next-link" href="clear_display_name.html">
+  <a class="next-link" href="clip.html">
     <span class="label">Next</span>
-    <span class="title">clear_display_name</span>
+    <span class="title">clip</span>
   </a>
 </div>

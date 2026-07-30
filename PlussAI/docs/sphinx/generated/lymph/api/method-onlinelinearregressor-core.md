@@ -50,7 +50,7 @@ core returned ::pluss::ai::nodej::online::OnlineLinearRegressor&
 
   //========== schema normalization ========
   // This section gives consistent names and explicit core column dtypes.
-  DataFrame frame = raw.rename_features({
+  DataFrame frame = raw.rename({
       {"dteday", "date"},
       {"holiday", "is_holiday"},
       {"workingday", "is_workingday"},

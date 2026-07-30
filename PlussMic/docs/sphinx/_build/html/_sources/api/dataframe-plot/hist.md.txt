@@ -94,11 +94,13 @@ auto exams = DataFrame({
 });
 
 auto chart = exams.plot().hist("midterm");
-chart.save_svg("midterm_hist.svg");
+chart.show();
 ```
 
 One pane, one histogram, 20 bins (the literal default, and `default_bins` was never
 customized on this accessor so there's no ambiguity here).
+
+![Output of Example 1](img/hist-1.svg)
 
 Example 2. A single feature with an explicit bin count.
 
@@ -106,6 +108,8 @@ Example 2. A single feature with an explicit bin count.
 auto chart = exams.plot().hist("midterm", 12);
 chart.show();
 ```
+
+![Output of Example 2](img/hist-2.svg)
 
 Example 3. Every numeric feature in the frame, no explicit list — since `exams` has two
 numeric features, this produces a **mosaic** of two panes, not one overlaid pane.
@@ -119,6 +123,8 @@ chart.save_pdf("all_hist.pdf");
 (`ceil(sqrt(2)) = 2` columns here, so a 1-row-by-2-column layout), each labeled with its own
 feature name on the x-axis and `"count"` on the y-axis.
 
+![Output of Example 3](img/hist-3.svg)
+
 Example 4. An explicit multi-feature list via `initializer_list`, with a shared bin count
 applied to every pane in the mosaic.
 
@@ -126,12 +132,16 @@ applied to every pane in the mosaic.
 auto chart = exams.plot().hist({"midterm", "final"}, 15);
 ```
 
+![Output of Example 4](img/hist-4.svg)
+
 Example 5. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> names{"midterm", "final"};
 auto chart = exams.plot().hist(pluss::msharp::RangeView::Of<std::string_view>(names), 15);
 ```
+
+![Output of Example 5](img/hist-5.svg)
 
 Example 6. An explicit `HistPlotOptions`, tuning opacity and stroke in addition to bins.
 
@@ -142,8 +152,10 @@ hist_options.alpha = 0.8;
 hist_options.line_width = 1.4;
 
 auto chart = exams.plot().hist("midterm", hist_options);
-chart.save_png("midterm_hist.png");
+chart.show();
 ```
+
+![Output of Example 6](img/hist-6.svg)
 
 Example 7. The `bins == 20` ambiguity from the danger box above, made concrete.
 
@@ -159,6 +171,14 @@ auto implicit_20 = plot.hist("midterm");      // ...same as leaving it at the de
 Both `explicit_20` and `implicit_20` actually render with **8** bins, not 20 — because
 `resolve_bins()` cannot tell the two calls apart. Both hit the "still at the signature
 default" branch and fall back to `plot_options.default_bins`.
+
+`explicit_20`:
+
+![Output of Example 7, explicit_20](img/hist-7-a.svg)
+
+`implicit_20`:
+
+![Output of Example 7, implicit_20](img/hist-7-b.svg)
 
 ## Notes
 

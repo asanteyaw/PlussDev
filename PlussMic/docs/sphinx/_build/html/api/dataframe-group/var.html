@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,16 +48,64 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes grouped sample variance for each non-key value feature.</p>
+<p>Computes grouped sample variance (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> denominator) for each non-key value
+feature — the grouped convenience terminal equivalent to calling <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a>
+with a <code class="docutils literal notranslate"><span class="pre">GroupOp::Var</span></code> spec for every remaining value feature. Like <a class="reference internal" href="std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std()</span></code></span></a>,
+a group needs at least <strong>two</strong> observed values to produce a defined variance; a
+group with zero or one observed value produces null instead of <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">})</span>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>This method takes no parameters.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per group. The group key column(s) come first, followed by one
+<code class="docutils literal notranslate"><span class="pre">{feature}_var</span></code> column per non-key value feature.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. One region with three observations, one with a single observation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">loans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loans</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
-<span class="w">               </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
+<span class="w">               </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">})</span>
 <span class="w">               </span><span class="p">.</span><span class="n">var</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================
+     | region  amount_var
+-------------------------
+0    | North   100       
+1    | South   NULL      
+-------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;North&quot;</span></code>’s three values (<code class="docutils literal notranslate"><span class="pre">10,</span> <span class="pre">20,</span> <span class="pre">30</span></code>, mean <code class="docutils literal notranslate"><span class="pre">20</span></code>) have squared deviations
+<code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">100</span> <span class="pre">=</span> <span class="pre">200</span></code>; dividing by <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">2</span></code> gives a sample variance of <code class="docutils literal notranslate"><span class="pre">100</span></code> — the
+square of the <code class="docutils literal notranslate"><span class="pre">10</span></code> reported by <a class="reference internal" href="std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std()</span></code></span></a> on the same data. <code class="docutils literal notranslate"><span class="pre">&quot;South&quot;</span></code> has only
+one value, so <code class="docutils literal notranslate"><span class="pre">amount_var</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, not <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">var()</span></code> and <code class="docutils literal notranslate"><span class="pre">std()</span></code> are related by <code class="docutils literal notranslate"><span class="pre">std</span> <span class="pre">=</span> <span class="pre">sqrt(var)</span></code>; both null out under the same
+condition (fewer than two observed values in the group).</p></li>
+<li><p>Use it only on value features where variance is meaningful (numeric, additive
+quantities).</p></li>
+</ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>

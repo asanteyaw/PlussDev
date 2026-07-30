@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0b6bfec7c004 -->
 
 # Thread::rpow
 

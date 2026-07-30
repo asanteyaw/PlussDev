@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -24,6 +25,106 @@ namespace {
 template <typename T>
 bool all_type(const std::vector<Slot::Value>& values) {
   return std::all_of(values.begin(), values.end(), [](const auto& v) { return std::holds_alternative<T>(v); });
+}
+
+struct SlotProfile {
+  SlotKind kind{SlotKind::Empty};
+  bool has_null{false};
+  bool stream_compatible{false};
+};
+
+SlotKind slot_kind_of_value(const Slot::Value& value) {
+  return std::visit(
+      [](const auto& v) -> SlotKind {
+        using T = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<T, std::monostate>) return SlotKind::Null;
+        if constexpr (std::is_same_v<T, pluss::Series>) return SlotKind::Series;
+        if constexpr (std::is_same_v<T, pluss::Note>) return SlotKind::Note;
+        if constexpr (std::is_same_v<T, pluss::Timeline>) return SlotKind::Timeline;
+        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return SlotKind::TimeIndex;
+        return SlotKind::Mixed;
+      },
+      value);
+}
+
+bool slot_value_scalar_like(const Slot::Value& value) {
+  return std::visit(
+      [](const auto& v) -> bool {
+        using T = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<T, std::monostate>) return false;
+        if constexpr (std::is_same_v<T, pluss::Series>) return v.numel() == 1;
+        if constexpr (std::is_same_v<T, pluss::Note>) return v.numel() == 1;
+        if constexpr (std::is_same_v<T, pluss::Timeline>) return v.numel() == 1;
+        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return v.size() == 1;
+        return false;
+      },
+      value);
+}
+
+SlotProfile analyze_slot(const std::vector<Slot::Value>& values) {
+  if (values.empty()) {
+    return SlotProfile{.kind = SlotKind::Empty, .has_null = false, .stream_compatible = true};
+  }
+
+  std::optional<SlotKind> seen_kind;
+  std::optional<pluss::codem::ScalarType> series_dtype;
+  bool has_null = false;
+  bool scalar_like = true;
+
+  for (const auto& value : values) {
+    const auto value_kind = slot_kind_of_value(value);
+    if (value_kind == SlotKind::Null) {
+      has_null = true;
+      continue;
+    }
+    if (!seen_kind.has_value()) {
+      seen_kind = value_kind;
+    } else if (*seen_kind != value_kind) {
+      return SlotProfile{.kind = SlotKind::Mixed, .has_null = has_null, .stream_compatible = false};
+    }
+
+    scalar_like = scalar_like && slot_value_scalar_like(value);
+    if (value_kind == SlotKind::Series) {
+      const auto& s = std::get<pluss::Series>(value);
+      if (!series_dtype.has_value()) {
+        series_dtype = s.scalar_type();
+      } else if (*series_dtype != s.scalar_type()) {
+        return SlotProfile{.kind = SlotKind::Series, .has_null = has_null, .stream_compatible = false};
+      }
+    }
+  }
+
+  if (!seen_kind.has_value()) {
+    return SlotProfile{.kind = SlotKind::Null, .has_null = true, .stream_compatible = false};
+  }
+
+  return SlotProfile{
+      .kind = *seen_kind,
+      .has_null = has_null,
+      .stream_compatible = !has_null && scalar_like};
+}
+
+std::string slot_kind_name(SlotKind kind) {
+  switch (kind) {
+    case SlotKind::Empty: return "Empty";
+    case SlotKind::Null: return "Null";
+    case SlotKind::Series: return "Series";
+    case SlotKind::Note: return "Note";
+    case SlotKind::Timeline: return "Timeline";
+    case SlotKind::TimeIndex: return "TimeIndex";
+    case SlotKind::Mixed: return "Mixed";
+  }
+  return "Unknown";
+}
+
+SlotKind slot_kind_from_stream_kind(pluss::kindle::StreamKind kind) {
+  switch (kind) {
+    case pluss::kindle::StreamKind::Series: return SlotKind::Series;
+    case pluss::kindle::StreamKind::Note: return SlotKind::Note;
+    case pluss::kindle::StreamKind::Timeline: return SlotKind::Timeline;
+    case pluss::kindle::StreamKind::TimeIndex: return SlotKind::TimeIndex;
+  }
+  return SlotKind::Mixed;
 }
 
 std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::int64_t stop, std::int64_t size) {
@@ -80,7 +181,159 @@ std::string value_type_name(const Slot::Value& value) {
 }
 
 Slot::Value bool_slot_value(bool value) {
-  return pluss::make_series(value, pluss::codem::ScalarType::Bool);
+  static const pluss::Series* false_scalar = [] {
+    auto s = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+    reinterpret_cast<bool*>(s.raw_data())[0] = false;
+    return new pluss::Series(std::move(s));
+  }();
+  static const pluss::Series* true_scalar = [] {
+    auto s = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+    reinterpret_cast<bool*>(s.raw_data())[0] = true;
+    return new pluss::Series(std::move(s));
+  }();
+  return value ? *true_scalar : *false_scalar;
+}
+
+pluss::Series validity_mask_from_valid(const std::vector<bool>& valid) {
+  const auto n = static_cast<std::int64_t>(valid.size());
+  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto* out = reinterpret_cast<bool*>(mask.raw_data());
+  for (std::int64_t i = 0; i < n; ++i) out[i] = valid[static_cast<std::size_t>(i)];
+  return mask;
+}
+
+pluss::kindle::Stream slot_family_stream(const Slot& slot,
+                                         SlotKind required_kind,
+                                         std::string_view where) {
+  PLUSS_CHECK(slot.defined(), "Slot: undefined handle");
+  PLUSS_CHECK(required_kind == SlotKind::Series ||
+                  required_kind == SlotKind::Note ||
+                  required_kind == SlotKind::Timeline ||
+                  required_kind == SlotKind::TimeIndex,
+              "Slot accessor: unsupported required family");
+  PLUSS_CHECK(slot.kind() == required_kind,
+              std::string(where) + ": slot kind must be " + slot_kind_name(required_kind));
+
+  const auto n = slot.size();
+  std::vector<bool> valid(static_cast<std::size_t>(n), true);
+  bool has_null = false;
+
+  switch (required_kind) {
+    case SlotKind::Series: {
+      const auto first_it = std::find_if(slot.values().begin(), slot.values().end(), [](const auto& value) {
+        return std::holds_alternative<pluss::Series>(value);
+      });
+      PLUSS_CHECK(first_it != slot.values().end(),
+                  std::string(where) + ": Series slot has no concrete Series values");
+      const auto& first = std::get<pluss::Series>(*first_it);
+      const auto dtype = first.scalar_type();
+      if (dtype == pluss::codem::ScalarType::Bool) {
+        std::vector<bool> out(static_cast<std::size_t>(n), false);
+        for (std::int64_t i = 0; i < n; ++i) {
+          const auto& value = slot.at(i);
+          if (std::holds_alternative<std::monostate>(value)) {
+            has_null = true;
+            valid[static_cast<std::size_t>(i)] = false;
+            continue;
+          }
+          const auto& s = std::get<pluss::Series>(value);
+          PLUSS_CHECK(s.numel() == 1, std::string(where) + ": Series values must be scalar-like");
+          out[static_cast<std::size_t>(i)] = s.to_vec<bool>()[0];
+        }
+        return pluss::kindle::Stream(
+            pluss::make_series(out, {n}),
+            has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
+      }
+      if (dtype == pluss::codem::ScalarType::Int64) {
+        std::vector<std::int64_t> out(static_cast<std::size_t>(n), 0);
+        for (std::int64_t i = 0; i < n; ++i) {
+          const auto& value = slot.at(i);
+          if (std::holds_alternative<std::monostate>(value)) {
+            has_null = true;
+            valid[static_cast<std::size_t>(i)] = false;
+            continue;
+          }
+          const auto& s = std::get<pluss::Series>(value);
+          PLUSS_CHECK(s.numel() == 1, std::string(where) + ": Series values must be scalar-like");
+          out[static_cast<std::size_t>(i)] = s.to(pluss::codem::ScalarType::Int64).to_vec<std::int64_t>()[0];
+        }
+        return pluss::kindle::Stream(
+            pluss::make_series(out, {n}),
+            has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
+      }
+      std::vector<double> out(static_cast<std::size_t>(n), 0.0);
+      for (std::int64_t i = 0; i < n; ++i) {
+        const auto& value = slot.at(i);
+        if (std::holds_alternative<std::monostate>(value)) {
+          has_null = true;
+          valid[static_cast<std::size_t>(i)] = false;
+          continue;
+        }
+        const auto& s = std::get<pluss::Series>(value);
+        PLUSS_CHECK(s.numel() == 1, std::string(where) + ": Series values must be scalar-like");
+        out[static_cast<std::size_t>(i)] = s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+      }
+      return pluss::kindle::Stream(
+          pluss::make_series(out, {n}, dtype),
+          has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
+    }
+    case SlotKind::Note: {
+      std::vector<std::string> out(static_cast<std::size_t>(n));
+      for (std::int64_t i = 0; i < n; ++i) {
+        const auto& value = slot.at(i);
+        if (std::holds_alternative<std::monostate>(value)) {
+          has_null = true;
+          valid[static_cast<std::size_t>(i)] = false;
+          continue;
+        }
+        const auto& note = std::get<pluss::Note>(value);
+        PLUSS_CHECK(note.numel() == 1, std::string(where) + ": Note values must be scalar-like");
+        out[static_cast<std::size_t>(i)] = std::string(note.at(0));
+      }
+      return pluss::kindle::Stream(
+          pluss::make_note(out),
+          has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
+    }
+    case SlotKind::Timeline: {
+      std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
+      for (std::int64_t i = 0; i < n; ++i) {
+        const auto& value = slot.at(i);
+        if (std::holds_alternative<std::monostate>(value)) {
+          has_null = true;
+          valid[static_cast<std::size_t>(i)] = false;
+          continue;
+        }
+        const auto& ts = std::get<pluss::Timeline>(value);
+        PLUSS_CHECK(ts.numel() == 1, std::string(where) + ": Timeline values must be scalar-like");
+        ticks[static_cast<std::size_t>(i)] = ts.to_epoch_nanos_vector()[0];
+      }
+      return pluss::kindle::Stream(
+          pluss::from_epoch_nanos(ticks, {n}),
+          has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
+    }
+    case SlotKind::TimeIndex: {
+      std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
+      for (std::int64_t i = 0; i < n; ++i) {
+        const auto& value = slot.at(i);
+        if (std::holds_alternative<std::monostate>(value)) {
+          has_null = true;
+          valid[static_cast<std::size_t>(i)] = false;
+          continue;
+        }
+        const auto& index = std::get<pluss::TimeIndex>(value);
+        PLUSS_CHECK(index.size() == 1, std::string(where) + ": TimeIndex values must be scalar-like");
+        ticks[static_cast<std::size_t>(i)] = index.timeline().to_epoch_nanos_vector()[0];
+      }
+      return pluss::kindle::Stream(
+          pluss::make_timeindex(ticks, false),
+          has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
+    }
+    case SlotKind::Empty:
+    case SlotKind::Null:
+    case SlotKind::Mixed:
+      break;
+  }
+  PLUSS_FAIL("Slot accessor: unsupported slot family");
 }
 
 pluss::table::Thread thread_from_slot_value(const Slot::Value& value) {
@@ -216,11 +469,9 @@ Slot::Value scalar_fill_value_for_target(pluss::table::ThreadCastTarget target,
   PLUSS_FAIL("Slot::fillnull: unsupported target");
 }
 
-template <class FillFn>
 Slot fill_slot_nulls(const Slot& slot,
                      pluss::table::ThreadCastTarget target,
                      std::string_view where,
-                     FillFn&& fill_fn,
                      Slot::Value monostate_fill) {
   PLUSS_CHECK(slot.defined(), "Slot: undefined handle");
   std::vector<Slot::Value> out;
@@ -231,8 +482,6 @@ Slot fill_slot_nulls(const Slot& slot,
     }
     if (std::holds_alternative<std::monostate>(value)) {
       out.push_back(monostate_fill);
-    } else if (target == pluss::table::ThreadCastTarget::Series) {
-      out.push_back(fill_fn(thread_from_slot_value(value)));
     } else {
       out.push_back(value);
     }
@@ -300,12 +549,27 @@ public:
   SlotImpl() = default;
   explicit SlotImpl(std::vector<Slot::Value> values) : values_(std::move(values)) {}
 
+  void invalidate_profile() noexcept { profile_cache_.reset(); }
+
   std::vector<Slot::Value> values_{};
+  mutable std::optional<SlotProfile> profile_cache_{};
 };
 } // namespace detail
 
+namespace {
+
+const SlotProfile& slot_profile(const detail::SlotImpl& impl) {
+  if (!impl.profile_cache_.has_value()) {
+    impl.profile_cache_ = analyze_slot(impl.values_);
+  }
+  return *impl.profile_cache_;
+}
+
+} // namespace
+
 
 #include "bundle/ops/slot/SlotLifecycleAndOps.inc"
+#include "bundle/ops/slot/SlotAccessors.inc"
 #include "bundle/ops/slot/SlotInteropAndRender.inc"
 
 } // namespace pluss::bundle

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 53aa5c738567 -->
 
 # Thread::titlecase
 
@@ -103,9 +104,9 @@ column.
   `titlecase()` result.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tally.html">
+  <a class="prev-link" href="take.html">
     <span class="label">Previous</span>
-    <span class="title">tally</span>
+    <span class="title">take</span>
   </a>
   <a class="next-link" href="tl.html">
     <span class="label">Next</span>

@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::step" href="step.html" />
-    <link rel="prev" title="DataFramePlotAccessor::scatter" href="scatter.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -111,11 +109,12 @@ A figure containing the full grid of pairwise panes.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">();</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;metrics_pairs.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>A 3×3 grid: six off-diagonal scatter cells (<code class="docutils literal notranslate"><span class="pre">revenue</span></code>×<code class="docutils literal notranslate"><span class="pre">cost</span></code>, <code class="docutils literal notranslate"><span class="pre">revenue</span></code>×<code class="docutils literal notranslate"><span class="pre">headcount</span></code>,
 <code class="docutils literal notranslate"><span class="pre">cost</span></code>×<code class="docutils literal notranslate"><span class="pre">headcount</span></code>, each appearing twice, mirrored) plus three diagonal histogram cells.</p>
+<p><img alt="Output of Example 1" src="../../_images/scatter_matrix-1.svg" /></p>
 <p>Example 2. An explicit feature subset via <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">names</span><span class="p">));</span>
@@ -124,23 +123,26 @@ A figure containing the full grid of pairwise panes.</p>
 </div>
 <p>A 2×2 grid: two off-diagonal scatter cells (mirror images of the same <code class="docutils literal notranslate"><span class="pre">revenue</span></code> vs <code class="docutils literal notranslate"><span class="pre">cost</span></code>
 relationship) plus two diagonal histograms.</p>
+<p><img alt="Output of Example 2" src="../../_images/scatter_matrix-2.svg" /></p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">triangle</span> <span class="pre">=</span> <span class="pre">Lower</span></code>: only the lower triangle and diagonal are drawn.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">({},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ScatterMatrixTriangle</span><span class="o">::</span><span class="n">Lower</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;metrics_lower.pdf&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Each pairwise relationship now appears exactly once instead of twice.</p>
+<p><img alt="Output of Example 3" src="../../_images/scatter_matrix-3.svg" /></p>
 <p>Example 4. An explicit <code class="docutils literal notranslate"><span class="pre">ScatterMatrixPlotOptions</span></code>, using the <code class="docutils literal notranslate"><span class="pre">corner</span></code> shorthand instead of
 setting <code class="docutils literal notranslate"><span class="pre">pair.triangle</span></code> directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterMatrixPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">corner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">({},</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;metrics_corner.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Since <code class="docutils literal notranslate"><span class="pre">options.pair.triangle</span></code> was left at its default <code class="docutils literal notranslate"><span class="pre">Full</span></code>, <code class="docutils literal notranslate"><span class="pre">corner</span> <span class="pre">=</span> <span class="pre">true</span></code> switches it to
 <code class="docutils literal notranslate"><span class="pre">Lower</span></code> automatically — equivalent to Example 3, but expressed through the <code class="docutils literal notranslate"><span class="pre">corner</span></code> flag.</p>
+<p><img alt="Output of Example 4" src="../../_images/scatter_matrix-4.svg" /></p>
 <p>Example 5. Reaching into the underlying <code class="docutils literal notranslate"><span class="pre">PairPlotOptions</span></code> for a field this accessor doesn’t
 wrap directly — here, switching the diagonal cells from histograms to density curves.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterMatrixPlotOptions</span><span class="w"> </span><span class="n">density_diag</span><span class="p">;</span>
@@ -149,6 +151,7 @@ wrap directly — here, switching the diagonal cells from histograms to density 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">({},</span><span class="w"> </span><span class="n">density_diag</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/scatter_matrix-5.svg" /></p>
 <p>Example 6. Fewer than two numeric features throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">single</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
@@ -230,11 +233,8 @@ multivariate-relationship views for more than two features at once.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -248,16 +248,6 @@ multivariate-relationship views for more than two features at once.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="scatter.html" title="previous chapter">DataFramePlotAccessor::scatter</a></li>
-      <li>Next: <a href="step.html" title="next chapter">DataFramePlotAccessor::step</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

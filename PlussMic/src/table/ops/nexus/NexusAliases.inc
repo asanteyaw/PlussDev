@@ -39,6 +39,11 @@ DataFrame Nexus::duplicates(std::string_view table,
   return detect_duplicates(table, keys);
 }
 
+DataFrame Nexus::duplicates(std::string_view table,
+                            pluss::msharp::RangeView::Of<std::string_view> keys) const {
+  return detect_duplicates(table, keys);
+}
+
 bool Nexus::check(std::string_view name) const {
   return validate_relationship(name);
 }

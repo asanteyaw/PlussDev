@@ -16,7 +16,11 @@ This page documents the full public `Registry` surface for named bundle slots.
 #### Signatures
 
 ```cpp
+Registry::apply(const NameRange& keys, const std::function<Slot(const Slot&)>& fn) -> template <pluss::detail::StringViewNameRange NameRange> Registry
+
 Registry::apply(std::initializer_list<std::string_view> keys, const std::function<Slot(const Slot&)>& fn) -> Registry
+
+Registry::apply(std::span<const std::string_view> keys, const std::function<Slot(const Slot&)>& fn) -> Registry
 
 Registry::apply(std::string_view key, const std::function<Slot(const Slot&)>& fn) -> Registry
 ```
@@ -38,12 +42,37 @@ Applies a function to one or more named slots and returns the updated registry.
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> Registry`
+    Value produced by this call.
+
 `Registry`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Apply a user function and inspect the transformed result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.apply("ids", [](const pluss::bundle::Slot& slot) { return slot; });
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```
+Example 2. Pass several feature names inline.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -65,7 +94,29 @@ out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
-Example 2. Apply a user function and inspect the transformed result.
+Example 3. Apply a user function and inspect the transformed result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.apply("ids", [](const pluss::bundle::Slot& slot) { return slot; });
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```
+Example 4. Apply a user function and inspect the transformed result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -106,7 +157,11 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 #### Signatures
 
 ```cpp
+Registry::apply_(const NameRange& keys, const std::function<Slot(const Slot&)>& fn) -> template <pluss::detail::StringViewNameRange NameRange> Registry&
+
 Registry::apply_(std::initializer_list<std::string_view> keys, const std::function<Slot(const Slot&)>& fn) -> Registry&
+
+Registry::apply_(std::span<const std::string_view> keys, const std::function<Slot(const Slot&)>& fn) -> Registry&
 
 Registry::apply_(std::string_view key, const std::function<Slot(const Slot&)>& fn) -> Registry&
 ```
@@ -128,12 +183,37 @@ Applies a function to one or more named slots in place.
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> Registry&`
+    Value produced by this call.
+
 `Registry&`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Apply a user function and inspect the transformed result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+rg.apply_("ids", [](const pluss::bundle::Slot& slot) { return slot; });
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```
+Example 2. Pass several feature names inline.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -155,7 +235,29 @@ out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
-Example 2. Apply a user function and inspect the transformed result.
+Example 3. Apply a user function and inspect the transformed result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+rg.apply_("ids", [](const pluss::bundle::Slot& slot) { return slot; });
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```
+Example 4. Apply a user function and inspect the transformed result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -304,63 +406,6 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">apply_all</span>
   </a>
-  <a class="next-link" href="#at">
-    <span class="label">Next</span>
-    <span class="title">at</span>
-  </a>
-</div>
-
-### `at`
-
-#### Signature
-
-```cpp
-Registry::at(std::string_view key) -> Slot
-```
-
-#### What It Does
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.at("ids");
-```
-
-##### Output
-
-```text
-Slot([Series(1), Series(2), Series(3)])
-```
-
-#### Practical Behavior
-
-- `at(key)` fetches one named slot from the registry.
-- Use it when you want direct slot access before applying slot-level transforms.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_kindle">
-    <span class="label">Previous</span>
-    <span class="title">as_kindle</span>
-  </a>
   <a class="next-link" href="#begin">
     <span class="label">Next</span>
     <span class="title">begin</span>
@@ -411,9 +456,9 @@ for (const auto& key : rg) {
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#at">
+  <a class="prev-link" href="#as_kindle">
     <span class="label">Previous</span>
-    <span class="title">at</span>
+    <span class="title">as_kindle</span>
   </a>
   <a class="next-link" href="#clear">
     <span class="label">Next</span>
@@ -861,6 +906,57 @@ true
     <span class="label">Previous</span>
     <span class="title">concat_values_</span>
   </a>
+  <a class="next-link" href="#distinct">
+    <span class="label">Next</span>
+    <span class="title">distinct</span>
+  </a>
+</div>
+
+### `distinct`
+
+#### Signature
+
+```cpp
+Registry::distinct(pluss::kindle::DistinctOptions options = {}) -> Registry
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.distinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
   <a class="next-link" href="#drop">
     <span class="label">Next</span>
     <span class="title">drop</span>
@@ -872,9 +968,13 @@ true
 #### Signatures
 
 ```cpp
+Registry::drop(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> Registry
+
 Registry::drop(const std::vector<std::string>& keys) -> Registry
 
 Registry::drop(std::initializer_list<std::string_view> keys) -> Registry
+
+Registry::drop(std::span<const std::string_view> keys) -> Registry
 
 Registry::drop(std::string_view key) -> Registry
 ```
@@ -893,12 +993,36 @@ Removes the named slots and keeps the remaining registry structure intact.
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> Registry`
+    Value produced by this call.
+
 `Registry`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several names together from a standard string container.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.drop({"city"});
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+```
+Example 2. Pass several names together from a standard string container.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -920,7 +1044,7 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 ```
-Example 2. Pass several feature names inline.
+Example 3. Pass several feature names inline.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -941,7 +1065,28 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 ```
-Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.drop({"city"});
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+```
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -969,27 +1114,27 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 - Unknown keys throw immediately.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#defined">
+  <a class="prev-link" href="#distinct">
     <span class="label">Previous</span>
-    <span class="title">defined</span>
+    <span class="title">distinct</span>
   </a>
-  <a class="next-link" href="#drop_empty_slots">
+  <a class="next-link" href="#drop_empty">
     <span class="label">Next</span>
-    <span class="title">drop_empty_slots</span>
+    <span class="title">drop_empty</span>
   </a>
 </div>
 
-### `drop_empty_slots`
+### `drop_empty`
 
 #### Signature
 
 ```cpp
-Registry::drop_empty_slots() -> Registry
+Registry::drop_empty() -> Registry
 ```
 
 #### What It Does
 
-Removes slots whose payload is empty and returns the reduced registry.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -1007,53 +1152,39 @@ Example 1. Call the simplest overload.
 ```cpp
 auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"empty", pluss::bundle::Slot({})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.drop_empty_slots();
+auto out = rg.drop_empty();
 ```
 
 ##### Output
 
 ```text
-rg.head():
-ids    -> Slot([Series(1), Series(2), Series(3)])
-empty  -> Slot([])
-city   -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+The call completes and returns the contract described under Output.
 ```
-
-#### Practical Behavior
-
-- These methods remove slots whose payload is empty.
-- Non-empty slots are passed through unchanged.
-
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#drop">
     <span class="label">Previous</span>
     <span class="title">drop</span>
   </a>
-  <a class="next-link" href="#drop_empty_slots_">
+  <a class="next-link" href="#drop_empty_">
     <span class="label">Next</span>
-    <span class="title">drop_empty_slots_</span>
+    <span class="title">drop_empty_</span>
   </a>
 </div>
 
-### `drop_empty_slots_`
+### `drop_empty_`
 
 #### Signature
 
 ```cpp
-Registry::drop_empty_slots_() -> Registry&
+Registry::drop_empty_() -> Registry&
 ```
 
 #### What It Does
 
-Removes empty slots in place.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -1071,11 +1202,10 @@ Example 1. Call the simplest overload.
 ```cpp
 auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"empty", pluss::bundle::Slot({})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-rg.drop_empty_slots_();
+auto out = rg.drop_empty_();
 ```
 
 ##### Output
@@ -1083,16 +1213,60 @@ rg.drop_empty_slots_();
 ```text
 The call completes and returns the contract described under Output.
 ```
-
-#### Practical Behavior
-
-- These methods remove slots whose payload is empty.
-- Non-empty slots are passed through unchanged.
-
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#drop_empty_slots">
+  <a class="prev-link" href="#drop_empty">
     <span class="label">Previous</span>
-    <span class="title">drop_empty_slots</span>
+    <span class="title">drop_empty</span>
+  </a>
+  <a class="next-link" href="#dropnull">
+    <span class="label">Next</span>
+    <span class="title">dropnull</span>
+  </a>
+</div>
+
+### `dropnull`
+
+#### Signature
+
+```cpp
+Registry::dropnull() -> Registry
+```
+
+#### What It Does
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.dropnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#drop_empty_">
+    <span class="label">Previous</span>
+    <span class="title">drop_empty_</span>
   </a>
   <a class="next-link" href="#empty">
     <span class="label">Next</span>
@@ -1142,9 +1316,9 @@ auto out = rg.empty();
 false
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#drop_empty_slots_">
+  <a class="prev-link" href="#dropnull">
     <span class="label">Previous</span>
-    <span class="title">drop_empty_slots_</span>
+    <span class="title">dropnull</span>
   </a>
   <a class="next-link" href="#end">
     <span class="label">Next</span>
@@ -1249,25 +1423,25 @@ no error
     <span class="label">Previous</span>
     <span class="title">end</span>
   </a>
-  <a class="next-link" href="#field_names">
+  <a class="next-link" href="#fieldaxis">
     <span class="label">Next</span>
-    <span class="title">field_names</span>
+    <span class="title">fieldaxis</span>
   </a>
 </div>
 
 ## F
 
-### `field_names`
+### `fieldaxis`
 
 #### Signature
 
 ```cpp
-Registry::field_names() -> const std::vector<std::string>&
+Registry::fieldaxis() -> RegistryFieldAxisAccessor
 ```
 
 #### What It Does
 
-Returns the current labels used to address fields, slots, rows, or depth items.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -1275,8 +1449,76 @@ Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Returns
 
+`RegistryFieldAxisAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fieldaxis();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ensure_stream_compatible">
+    <span class="label">Previous</span>
+    <span class="title">ensure_stream_compatible</span>
+  </a>
+  <a class="next-link" href="#fields">
+    <span class="label">Next</span>
+    <span class="title">fields</span>
+  </a>
+</div>
+
+### `fields`
+
+#### Signatures
+
+```cpp
+Registry::fields() -> const std::vector<std::string>&
+
+Registry::fields(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> RegistryFieldAccessor
+
+Registry::fields(std::initializer_list<std::string_view> keys) -> RegistryFieldAccessor
+
+Registry::fields(std::span<const std::string_view> keys) -> RegistryFieldAccessor
+
+Registry::fields(std::string_view key) -> RegistryFieldAccessor
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+**key**
+    Name of the target slot or stream.
+
+#### Returns
+
 `const std::vector<std::string>&`
     Borrowed list of names.
+
+`template <pluss::detail::StringViewNameRange NameRange> RegistryFieldAccessor`
+    Value produced by this call.
+
+`RegistryFieldAccessor`
+    Value produced by this call.
 
 #### Examples
 
@@ -1288,18 +1530,205 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.field_names();
+auto out = rg.fields();
 ```
 
 ##### Output
 
 ```text
-["ids", "city"]
+The call completes and returns the contract described under Output.
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fields();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Pass several feature names inline.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fields();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fields();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fields();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#ensure_stream_compatible">
+  <a class="prev-link" href="#fieldaxis">
     <span class="label">Previous</span>
-    <span class="title">ensure_stream_compatible</span>
+    <span class="title">fieldaxis</span>
+  </a>
+  <a class="next-link" href="#fillnull">
+    <span class="label">Next</span>
+    <span class="title">fillnull</span>
+  </a>
+</div>
+
+### `fillnull`
+
+#### Signatures
+
+```cpp
+Registry::fillnull(const char* value) -> Registry
+
+Registry::fillnull(const pluss::TimeIndex& value) -> Registry
+
+Registry::fillnull(const pluss::Timeline& value) -> Registry
+
+Registry::fillnull(double value) -> Registry
+
+Registry::fillnull(std::string_view value) -> Registry
+```
+
+#### What It Does
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Parameters
+
+**value**
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#fields">
+    <span class="label">Previous</span>
+    <span class="title">fields</span>
   </a>
   <a class="next-link" href="#filter_values">
     <span class="label">Next</span>
@@ -1357,9 +1786,9 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#field_names">
+  <a class="prev-link" href="#fillnull">
     <span class="label">Previous</span>
-    <span class="title">field_names</span>
+    <span class="title">fillnull</span>
   </a>
   <a class="next-link" href="#filter_values_">
     <span class="label">Next</span>
@@ -1421,6 +1850,57 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
     <span class="label">Previous</span>
     <span class="title">filter_values</span>
   </a>
+  <a class="next-link" href="#freq">
+    <span class="label">Next</span>
+    <span class="title">freq</span>
+  </a>
+</div>
+
+### `freq`
+
+#### Signature
+
+```cpp
+Registry::freq(pluss::kindle::FreqOptions options = {}) -> Registry
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.freq();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter_values_">
+    <span class="label">Previous</span>
+    <span class="title">filter_values_</span>
+  </a>
   <a class="next-link" href="#from_kindle">
     <span class="label">Next</span>
     <span class="title">from_kindle</span>
@@ -1473,9 +1953,9 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#filter_values_">
+  <a class="prev-link" href="#freq">
     <span class="label">Previous</span>
-    <span class="title">filter_values_</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="#get">
     <span class="label">Next</span>
@@ -1530,57 +2010,6 @@ Slot([Series(1), Series(2), Series(3)])
     <span class="label">Previous</span>
     <span class="title">from_kindle</span>
   </a>
-  <a class="next-link" href="#get_slot">
-    <span class="label">Next</span>
-    <span class="title">get_slot</span>
-  </a>
-</div>
-
-### `get_slot`
-
-#### Signature
-
-```cpp
-Registry::get_slot(std::string_view key) -> std::optional<Slot>
-```
-
-#### What It Does
-
-Returns one named slot from the registry.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-#### Returns
-
-`std::optional<Slot>`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.get_slot("ids");
-```
-
-##### Output
-
-```text
-Slot([Series(1), Series(2), Series(3)])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#get">
-    <span class="label">Previous</span>
-    <span class="title">get</span>
-  </a>
   <a class="next-link" href="#has">
     <span class="label">Next</span>
     <span class="title">has</span>
@@ -1630,9 +2059,9 @@ auto out = rg.has("ids");
 true
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#get_slot">
+  <a class="prev-link" href="#get">
     <span class="label">Previous</span>
-    <span class="title">get_slot</span>
+    <span class="title">get</span>
   </a>
   <a class="next-link" href="#has_all">
     <span class="label">Next</span>
@@ -1642,10 +2071,14 @@ true
 
 ### `has_all`
 
-#### Signature
+#### Signatures
 
 ```cpp
+Registry::has_all(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> bool
+
 Registry::has_all(std::initializer_list<std::string_view> keys) -> bool
+
+Registry::has_all(std::span<const std::string_view> keys) -> bool
 ```
 
 #### What It Does
@@ -1659,12 +2092,47 @@ Checks whether every requested slot name exists.
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> bool`
+    Value produced by this call.
+
 `bool`
     Boolean status or membership result.
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.has_all({"ids", "city"});
+```
+
+##### Output
+
+```text
+true
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.has_all({"ids", "city"});
+```
+
+##### Output
+
+```text
+true
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -1693,10 +2161,14 @@ true
 
 ### `has_any`
 
-#### Signature
+#### Signatures
 
 ```cpp
+Registry::has_any(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> bool
+
 Registry::has_any(std::initializer_list<std::string_view> keys) -> bool
+
+Registry::has_any(std::span<const std::string_view> keys) -> bool
 ```
 
 #### What It Does
@@ -1710,12 +2182,47 @@ Checks whether at least one requested slot name exists.
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> bool`
+    Value produced by this call.
+
 `bool`
     Boolean status or membership result.
 
 #### Examples
 
-Example 1. Pass several feature names inline.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.has_any({"ids", "city"});
+```
+
+##### Output
+
+```text
+true
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.has_any({"ids", "city"});
+```
+
+##### Output
+
+```text
+true
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -1735,57 +2242,6 @@ true
   <a class="prev-link" href="#has_all">
     <span class="label">Previous</span>
     <span class="title">has_all</span>
-  </a>
-  <a class="next-link" href="#has_slot">
-    <span class="label">Next</span>
-    <span class="title">has_slot</span>
-  </a>
-</div>
-
-### `has_slot`
-
-#### Signature
-
-```cpp
-Registry::has_slot(std::string_view key) -> bool
-```
-
-#### What It Does
-
-Checks whether a named slot exists.
-
-#### Parameters
-
-**key**
-    Name of the target slot or stream.
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.has_slot("ids");
-```
-
-##### Output
-
-```text
-true
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#has_any">
-    <span class="label">Previous</span>
-    <span class="title">has_any</span>
   </a>
   <a class="next-link" href="#head">
     <span class="label">Next</span>
@@ -1840,17 +2296,67 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#has_slot">
+  <a class="prev-link" href="#has_any">
     <span class="label">Previous</span>
-    <span class="title">has_slot</span>
+    <span class="title">has_any</span>
+  </a>
+  <a class="next-link" href="#invalid">
+    <span class="label">Next</span>
+    <span class="title">invalid</span>
+  </a>
+</div>
+
+## I
+
+### `invalid`
+
+#### Signature
+
+```cpp
+Registry::invalid() -> Registry
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.invalid();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
   </a>
   <a class="next-link" href="#is_stream_compatible">
     <span class="label">Next</span>
     <span class="title">is_stream_compatible</span>
   </a>
 </div>
-
-## I
 
 ### `is_stream_compatible`
 
@@ -1892,29 +2398,27 @@ auto out = rg.is_stream_compatible();
 true
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#head">
+  <a class="prev-link" href="#invalid">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">invalid</span>
   </a>
-  <a class="next-link" href="#keys">
+  <a class="next-link" href="#isnull">
     <span class="label">Next</span>
-    <span class="title">keys</span>
+    <span class="title">isnull</span>
   </a>
 </div>
 
-## K
-
-### `keys`
+### `isnull`
 
 #### Signature
 
 ```cpp
-Registry::keys() -> const std::vector<std::string>&
+Registry::isnull() -> Registry
 ```
 
 #### What It Does
 
-Returns the current labels used to address fields, slots, rows, or depth items.
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
 #### Parameters
 
@@ -1922,12 +2426,12 @@ Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Returns
 
-`const std::vector<std::string>&`
-    Borrowed list of names.
+`Registry`
+    Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several names together from a standard string container.
+Example 1. Call the simplest overload.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -1935,13 +2439,13 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.keys();
+auto out = rg.isnull();
 ```
 
 ##### Output
 
 ```text
-["ids", "city"]
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#is_stream_compatible">
@@ -1953,6 +2457,8 @@ auto out = rg.keys();
     <span class="title">kindelize</span>
   </a>
 </div>
+
+## K
 
 ### `kindelize`
 
@@ -1996,9 +2502,9 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#keys">
+  <a class="prev-link" href="#isnull">
     <span class="label">Previous</span>
-    <span class="title">keys</span>
+    <span class="title">isnull</span>
   </a>
   <a class="next-link" href="#load">
     <span class="label">Next</span>
@@ -2549,13 +3055,217 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">map</span>
   </a>
+  <a class="next-link" href="#max">
+    <span class="label">Next</span>
+    <span class="title">max</span>
+  </a>
+</div>
+
+### `max`
+
+#### Signature
+
+```cpp
+Registry::max(std::string_view field) -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+**field**
+    Name of the target stream in the catalog.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `max` and inspect the resulting summary value or summary object.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.max();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#map_">
+    <span class="label">Previous</span>
+    <span class="title">map_</span>
+  </a>
+  <a class="next-link" href="#mean">
+    <span class="label">Next</span>
+    <span class="title">mean</span>
+  </a>
+</div>
+
+### `mean`
+
+#### Signature
+
+```cpp
+Registry::mean(std::string_view field) -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+**field**
+    Name of the target stream in the catalog.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `mean` and inspect the resulting summary value or summary object.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.mean();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#max">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
+  <a class="next-link" href="#min">
+    <span class="label">Next</span>
+    <span class="title">min</span>
+  </a>
+</div>
+
+### `min`
+
+#### Signature
+
+```cpp
+Registry::min(std::string_view field) -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+**field**
+    Name of the target stream in the catalog.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `min` and inspect the resulting summary value or summary object.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.min();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#mean">
+    <span class="label">Previous</span>
+    <span class="title">mean</span>
+  </a>
+  <a class="next-link" href="#ndistinct">
+    <span class="label">Next</span>
+    <span class="title">ndistinct</span>
+  </a>
+</div>
+
+## N
+
+### `ndistinct`
+
+#### Signature
+
+```cpp
+Registry::ndistinct(pluss::kindle::DistinctOptions options = {}) -> Registry
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.ndistinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#min">
+    <span class="label">Previous</span>
+    <span class="title">min</span>
+  </a>
   <a class="next-link" href="#nfields">
     <span class="label">Next</span>
     <span class="title">nfields</span>
   </a>
 </div>
-
-## N
 
 ### `nfields`
 
@@ -2597,27 +3307,27 @@ auto out = rg.nfields();
 2
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#map_">
+  <a class="prev-link" href="#ndistinct">
     <span class="label">Previous</span>
-    <span class="title">map_</span>
+    <span class="title">ndistinct</span>
   </a>
-  <a class="next-link" href="#nslots">
+  <a class="next-link" href="#notnull">
     <span class="label">Next</span>
-    <span class="title">nslots</span>
+    <span class="title">notnull</span>
   </a>
 </div>
 
-### `nslots`
+### `notnull`
 
 #### Signature
 
 ```cpp
-Registry::nslots() -> std::int64_t
+Registry::notnull() -> Registry
 ```
 
 #### What It Does
 
-Returns a size/count summary for the current object without changing it.
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
 #### Parameters
 
@@ -2625,8 +3335,8 @@ Returns a size/count summary for the current object without changing it.
 
 #### Returns
 
-`std::int64_t`
-    Integer count, size, or positional result.
+`Registry`
+    Value produced by this call.
 
 #### Examples
 
@@ -2638,13 +3348,13 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.nslots();
+auto out = rg.notnull();
 ```
 
 ##### Output
 
 ```text
-2
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#nfields">
@@ -2709,9 +3419,9 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#nslots">
+  <a class="prev-link" href="#notnull">
     <span class="label">Previous</span>
-    <span class="title">nslots</span>
+    <span class="title">notnull</span>
   </a>
   <a class="next-link" href="#push_">
     <span class="label">Next</span>
@@ -3551,11 +4261,15 @@ saved: out.*
 #### Signatures
 
 ```cpp
+Registry::select(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> Registry
+
 Registry::select(const std::vector<std::string>& keys) -> Registry
 
 Registry::select(std::initializer_list<std::string_view> keys) -> Registry
 
-Registry::select(std::string_view key) -> Registry
+Registry::select(std::span<const std::string_view> keys) -> Registry
+
+Registry::select(std::string_view key) -> Slot
 ```
 
 #### What It Does
@@ -3572,12 +4286,40 @@ Keeps only the named slots and preserves their shared positional alignment.
 
 #### Returns
 
+`template <pluss::detail::StringViewNameRange NameRange> Registry`
+    Value produced by this call.
+
 `Registry`
+    Value produced by this call.
+
+`Slot`
     Value produced by this call.
 
 #### Examples
 
-Example 1. Pass several names together from a standard string container.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.select({"ids"});
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```
+Example 2. Pass several names together from a standard string container.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -3600,7 +4342,7 @@ out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
-Example 2. Pass several feature names inline.
+Example 3. Pass several feature names inline.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -3622,7 +4364,29 @@ out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
-Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.select({"ids"});
+```
+
+##### Output
+
+```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -3649,25 +4413,32 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
     <span class="label">Previous</span>
     <span class="title">save_txt</span>
   </a>
-  <a class="next-link" href="#set_slot">
+  <a class="next-link" href="#set">
     <span class="label">Next</span>
-    <span class="title">set_slot</span>
+    <span class="title">set</span>
   </a>
 </div>
 
-### `set_slot`
+### `set`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Registry::set_slot(std::string_view key, const Slot& value) -> Registry
+Registry::set(std::initializer_list<std::pair<std::string, Slot>> items) -> Registry
+
+Registry::set(std::initializer_list<std::pair<std::string_view, Slot>> items) -> Registry
+
+Registry::set(std::string_view key, const Slot& value) -> Registry
 ```
 
 #### What It Does
 
-Adds or replaces one named slot and returns the updated registry.
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
 
 #### Parameters
+
+**items**
+    Inline collection passed directly at the call site.
 
 **key**
     Name of the target slot or stream.
@@ -3690,44 +4461,77 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.set_slot("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));
+auto out = rg.set();
 ```
 
 ##### Output
 
 ```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+The call completes and returns the contract described under Output.
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.set();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.set();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#select">
     <span class="label">Previous</span>
     <span class="title">select</span>
   </a>
-  <a class="next-link" href="#set_slot_">
+  <a class="next-link" href="#set_">
     <span class="label">Next</span>
-    <span class="title">set_slot_</span>
+    <span class="title">set_</span>
   </a>
 </div>
 
-### `set_slot_`
+### `set_`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Registry::set_slot_(std::string_view key, const Slot& value) -> Registry&
+Registry::set_(std::initializer_list<std::pair<std::string, Slot>> items) -> Registry&
+
+Registry::set_(std::initializer_list<std::pair<std::string_view, Slot>> items) -> Registry&
+
+Registry::set_(std::string_view key, const Slot& value) -> Registry&
 ```
 
 #### What It Does
 
-Adds or replaces one named slot in place.
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
 
 #### Parameters
+
+**items**
+    Inline collection passed directly at the call site.
 
 **key**
     Name of the target slot or stream.
@@ -3750,80 +4554,13 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-rg.set_slot_("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));
+auto out = rg.set_();
 ```
 
 ##### Output
 
 ```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_slot">
-    <span class="label">Previous</span>
-    <span class="title">set_slot</span>
-  </a>
-  <a class="next-link" href="#set_slots">
-    <span class="label">Next</span>
-    <span class="title">set_slots</span>
-  </a>
-</div>
-
-### `set_slots`
-
-#### Signatures
-
-```cpp
-Registry::set_slots(std::initializer_list<std::pair<std::string, Slot>> items) -> Registry
-
-Registry::set_slots(std::initializer_list<std::pair<std::string_view, Slot>> items) -> Registry
-```
-
-#### What It Does
-
-Adds or replaces several named slots in one call and returns the updated registry.
-
-#### Parameters
-
-**items**
-    Inline collection passed directly at the call site.
-
-#### Returns
-
-`Registry`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.set_slots({
-    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
-});
-```
-
-##### Output
-
-```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+The call completes and returns the contract described under Output.
 ```
 Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
@@ -3833,60 +4570,15 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.set_slots({
-    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
-});
+auto out = rg.set_();
 ```
 
 ##### Output
 
 ```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+The call completes and returns the contract described under Output.
 ```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_slot_">
-    <span class="label">Previous</span>
-    <span class="title">set_slot_</span>
-  </a>
-  <a class="next-link" href="#set_slots_">
-    <span class="label">Next</span>
-    <span class="title">set_slots_</span>
-  </a>
-</div>
-
-### `set_slots_`
-
-#### Signatures
-
-```cpp
-Registry::set_slots_(std::initializer_list<std::pair<std::string, Slot>> items) -> Registry&
-
-Registry::set_slots_(std::initializer_list<std::pair<std::string_view, Slot>> items) -> Registry&
-```
-
-#### What It Does
-
-Adds or replaces several named slots in place.
-
-#### Parameters
-
-**items**
-    Inline collection passed directly at the call site.
-
-#### Returns
-
-`Registry&`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -3894,50 +4586,18 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-rg.set_slots_({
-    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
-});
+auto out = rg.set_();
 ```
 
 ##### Output
 
 ```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-rg.set_slots_({
-    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
-});
-```
-
-##### Output
-
-```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_slots">
+  <a class="prev-link" href="#set">
     <span class="label">Previous</span>
-    <span class="title">set_slots</span>
+    <span class="title">set</span>
   </a>
   <a class="next-link" href="#shape">
     <span class="label">Next</span>
@@ -3985,9 +4645,9 @@ auto out = rg.shape();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#set_slots_">
+  <a class="prev-link" href="#set_">
     <span class="label">Previous</span>
-    <span class="title">set_slots_</span>
+    <span class="title">set_</span>
   </a>
   <a class="next-link" href="#show">
     <span class="label">Next</span>
@@ -4092,6 +4752,56 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">show</span>
   </a>
+  <a class="next-link" href="#sizes">
+    <span class="label">Next</span>
+    <span class="title">sizes</span>
+  </a>
+</div>
+
+### `sizes`
+
+#### Signature
+
+```cpp
+Registry::sizes() -> std::unordered_map<std::string, std::int64_t>
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::unordered_map<std::string, std::int64_t>`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.sizes();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#size">
+    <span class="label">Previous</span>
+    <span class="title">size</span>
+  </a>
   <a class="next-link" href="#slice">
     <span class="label">Next</span>
     <span class="title">slice</span>
@@ -4148,32 +4858,32 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#size">
+  <a class="prev-link" href="#sizes">
     <span class="label">Previous</span>
-    <span class="title">size</span>
+    <span class="title">sizes</span>
   </a>
-  <a class="next-link" href="#slot">
+  <a class="next-link" href="#sum">
     <span class="label">Next</span>
-    <span class="title">slot</span>
+    <span class="title">sum</span>
   </a>
 </div>
 
-### `slot`
+### `sum`
 
 #### Signature
 
 ```cpp
-Registry::slot(std::string_view key) -> Slot
+Registry::sum(std::string_view field) -> Slot
 ```
 
 #### What It Does
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Use this when you want a summary view instead of carrying the full input forward unchanged.
 
 #### Parameters
 
-**key**
-    Name of the target slot or stream.
+**field**
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -4182,7 +4892,7 @@ Fetches one value, member, or slice from the current object without changing the
 
 #### Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Compute `sum` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -4190,118 +4900,18 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.slot("ids");
+auto out = rg.sum();
 ```
 
 ##### Output
 
 ```text
-Slot([Series(1), Series(2), Series(3)])
+The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#slice">
     <span class="label">Previous</span>
     <span class="title">slice</span>
-  </a>
-  <a class="next-link" href="#slot_sizes">
-    <span class="label">Next</span>
-    <span class="title">slot_sizes</span>
-  </a>
-</div>
-
-### `slot_sizes`
-
-#### Signature
-
-```cpp
-Registry::slot_sizes() -> std::unordered_map<std::string, std::int64_t>
-```
-
-#### What It Does
-
-Returns the current length of each slot.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::unordered_map<std::string, std::int64_t>`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.slot_sizes();
-```
-
-##### Output
-
-```text
-{"ids": 3, "city": 3}
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#slot">
-    <span class="label">Previous</span>
-    <span class="title">slot</span>
-  </a>
-  <a class="next-link" href="#slots">
-    <span class="label">Next</span>
-    <span class="title">slots</span>
-  </a>
-</div>
-
-### `slots`
-
-#### Signature
-
-```cpp
-Registry::slots() -> std::vector<Slot>
-```
-
-#### What It Does
-
-Materializes the current members as a collection you can inspect or reuse elsewhere.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::vector<Slot>`
-    Materialized collection of slot objects.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.slots();
-```
-
-##### Output
-
-```text
-[Slot(ids), Slot(city)]
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#slot_sizes">
-    <span class="label">Previous</span>
-    <span class="title">slot_sizes</span>
   </a>
   <a class="next-link" href="#tail">
     <span class="label">Next</span>
@@ -4358,9 +4968,9 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#slots">
+  <a class="prev-link" href="#sum">
     <span class="label">Previous</span>
-    <span class="title">slots</span>
+    <span class="title">sum</span>
   </a>
   <a class="next-link" href="#take">
     <span class="label">Next</span>

@@ -14,11 +14,12 @@ ROOT = pathlib.Path('/Users/yawasante/software/cxx/PlussDev')
 DOCS = ROOT / 'PlussMic/docs/sphinx'
 API_CONTENT = DOCS / 'api_content'
 PER_METHOD_CLASSES = {
-    'DataFrame', 'Thread',
+    'DataFrame', 'Thread', 'Catalog', 'Stream', 'Archive', 'Atlas',
     'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
     'DataFrameFeatureAxisAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
     'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
-    'TimeSeriesAccessor', 'DataFrameCastAccessor',
+    'TimeSeriesAccessor', 'DataFrameCastAccessor', 'ThreadPlotAccessor',
+    'AtlasLabelAccessor', 'AtlasTimelineAccessor',
 }
 GENERIC_CSV_PATH = "path/to/data.csv"
 GENERIC_XLSX_PATH = "path/to/data.xlsx"
@@ -31,6 +32,20 @@ GENERIC_OUTPUT_JSON_PATH = "path/to/output.json"
 GENERIC_OUTPUT_PARQUET_PATH = "path/to/output.parquet"
 GENERIC_OUTPUT_TXT_PATH = "path/to/output.txt"
 API_NAV_JS = DOCS / '_static' / 'api_nav.js'
+MANUAL_API_NAV = {
+    'Nexus': {
+        'title': 'Nexus',
+        'slug': 'nexus',
+        'landing': 'nexus_api_reference.html',
+        'index': DOCS / 'nexus_api_reference.md',
+    },
+    'NexusQuery': {
+        'title': 'NexusQuery',
+        'slug': 'nexus-query',
+        'landing': 'nexus_query_api_reference.html',
+        'index': DOCS / 'nexus_query_api_reference.md',
+    },
+}
 
 @dataclass
 class Method:
@@ -179,12 +194,36 @@ CLASS_CONFIG = {
         'intro': 'This page documents the public time-series accessor returned by `Thread::ts()`.',
         'binder': 'ts()',
     },
+    'ThreadPlotAccessor': {
+        'header': ROOT / 'PlussMic/src/table/plot/DataFramePlot.h',
+        'output': DOCS / 'thread_plot_api_reference.md',
+        'title': 'ThreadPlotAccessor API Reference',
+        'subtitle': 'Practical ThreadPlotAccessor API Reference',
+        'intro': 'This page documents the public plotting accessor returned by `Thread::plot()`.',
+        'binder': 'plot()',
+    },
     'Atlas': {
         'header': ROOT / 'PlussMic/src/table/Atlas.h',
         'output': DOCS / 'atlas_api_reference.md',
         'title': 'Atlas API Reference',
         'subtitle': 'Practical Atlas API Reference',
         'intro': 'This page documents the full public `Atlas` surface for frame-stack workflows.',
+    },
+    'AtlasLabelAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Atlas.h',
+        'output': DOCS / 'atlas_label_accessor_api_reference.md',
+        'title': 'AtlasLabelAccessor API Reference',
+        'subtitle': 'Practical AtlasLabelAccessor API Reference',
+        'intro': 'This page documents the public depth-label accessor returned by `Atlas::label()`.',
+        'binder': 'label()',
+    },
+    'AtlasTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Atlas.h',
+        'output': DOCS / 'atlas_timeline_accessor_api_reference.md',
+        'title': 'AtlasTimelineAccessor API Reference',
+        'subtitle': 'Practical AtlasTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Atlas::tl()`, applied frame-by-frame across the stack.',
+        'binder': 'tl()',
     },
     'Stream': {
         'header': ROOT / 'PlussMic/src/kindle/Stream.h',
@@ -233,6 +272,12 @@ CLASS_CONFIG = {
 METHOD_PAGE_DIR = {
     'DataFrame': 'dataframe',
     'Thread': 'thread',
+    'Catalog': 'catalog',
+    'Stream': 'stream',
+    'Archive': 'archive',
+    'Atlas': 'atlas',
+    'AtlasLabelAccessor': 'atlas-label',
+    'AtlasTimelineAccessor': 'atlas-timeline',
     'DataFrameNoteAccessor': 'dataframe-note',
     'DataFrameTimelineAccessor': 'dataframe-timeline',
     'DataFrameLabelAccessor': 'dataframe-label',
@@ -244,6 +289,7 @@ METHOD_PAGE_DIR = {
     'DataFrameGroupBuilder': 'dataframe-group',
     'TimeSeriesAccessor': 'thread-ts',
     'DataFrameCastAccessor': 'dataframe-cast',
+    'ThreadPlotAccessor': 'thread-plot',
 }
 
 # Maps a class to the accessor classes it exposes, so their landing pages can
@@ -263,6 +309,14 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
     'DataFrameTsAccessor': [
         'DataFrameTsWindowAccessor',
         'DataFrameTsResampler',
+    ],
+    'Thread': [
+        'TimeSeriesAccessor',
+        'ThreadPlotAccessor',
+    ],
+    'Atlas': [
+        'AtlasLabelAccessor',
+        'AtlasTimelineAccessor',
     ],
 }
 
@@ -778,6 +832,24 @@ def ordered_method_names(methods: list[Method]) -> list[str]:
     for name in grouped_names:
         by_letter.setdefault(name[0].upper(), []).append(name)
     return [name for letter in sorted(by_letter.keys()) for name in by_letter[letter]]
+
+
+def parse_hidden_toctree_entries(index_path: pathlib.Path) -> list[str]:
+    text = index_path.read_text(encoding='utf-8')
+    match = re.search(r'```{toctree}(.*?)```', text, re.S)
+    if not match:
+        raise RuntimeError(f'No toctree found in {index_path}')
+    entries: list[str] = []
+    for raw_line in match.group(1).splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(':'):
+            continue
+        entries.append(line)
+    return entries
+
+
+def manual_nav_methods(index_path: pathlib.Path) -> list[str]:
+    return [pathlib.Path(entry).name for entry in parse_hidden_toctree_entries(index_path)]
 
 
 def method_page_root(class_name: str) -> pathlib.Path:
@@ -1922,7 +1994,6 @@ def generic_note(class_name: str, method: Method) -> str:
             'btw': 'Builds a boolean mask telling you whether each row falls between lower and upper bounds.',
             'casefold': 'Applies Unicode-aware case folding to note-backed text values.',
             'clip': 'Clamps numeric values to the supplied lower and upper bounds.',
-            'compare_rows': 'Compares two positions inside the same thread and returns the comparison result.',
             'corr': 'Computes the correlation between two numeric threads.',
             'corr_with': 'Computes one correlation value between this numeric thread and another numeric thread.',
             'covar': 'Computes the covariance between two numeric threads.',
@@ -1944,7 +2015,6 @@ def generic_note(class_name: str, method: Method) -> str:
             'head': 'Returns the first `n` entries of the thread.',
             'indicate': 'Returns a boolean indicator thread showing which entries satisfy the requested predicate.',
             'interp': 'Interpolates missing numeric values inside the thread.',
-            'is_valid': 'Checks whether the value at one position is marked valid by the thread validity mask.',
             'kind': 'Returns which payload kind this thread currently stores, such as Series, Note, Timeline, or TimeIndex.',
             'kurtosis': 'Computes sample kurtosis of a numeric thread.',
             'length': 'Returns the element count of the current thread.',
@@ -1970,7 +2040,6 @@ def generic_note(class_name: str, method: Method) -> str:
             'series': 'Returns the current payload as a numeric series object.',
             'scan': 'Computes a cumulative statistic such as running sum, product, min, or max down the thread.',
             'se': 'Returns the standard error summary for a numeric thread.',
-            'shares_payload_with': 'Reports whether two threads point at the same underlying payload storage.',
             'slice': 'Returns a contiguous slice `[start, stop)` of the thread.',
             'skew': 'Returns sample skewness of a numeric thread.',
             'arrange': 'Reorders thread entries by their values while keeping the payload type unchanged.',
@@ -5334,7 +5403,7 @@ id  sales  city
         return DF_BASE_OUT if ret.startswith('DataFrame') else ''
 
     if class_name == 'Thread':
-        if n in {'defined', 'unique', 'is_valid'}:
+        if n in {'defined', 'unique'}:
             return 'true'
         if n == 'size':
             return '3'
@@ -5387,14 +5456,13 @@ id  sales  city
             return THREAD_CORR_OUT
         if n in {'sum', 'mean', 'min', 'max', 'var', 'std'}:
             return '20.0'
-        if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'}:
+        if n in {'to_note_weekday'}:
             return '[2024, 2024, 2024]' if n == 'year' else '[1, 2, 3]'
-        if n in {'numeric_binary', 'compare', 'compare_rows'}:
+        if n in {'numeric_binary', 'compare'}:
             if n == 'numeric_binary':
                 return '[20.0, 30.0, 40.0]'
             if n == 'compare':
                 return THREAD_COMPARE_SCALAR_OUT if 'const Thread&' not in method.signature else '[false, true, false]'
-            return '1'
         if n in {'to_string'}:
             return THREAD_SERIES_OUT
         if n == 'show':
@@ -6102,6 +6170,29 @@ def ts_resampler_accessor_base() -> str:
     return ts_accessor_base() + '\n' + 'auto resampler = ts.resample("ts", "1D");'
 
 
+def thread_plot_accessor_base() -> str:
+    return """auto revenue = pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}));
+auto plot = revenue.plot();"""
+
+
+def atlas_label_accessor_base() -> str:
+    return """auto q1 = pluss::table::DataFrame({\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
+auto q2 = pluss::table::DataFrame({\"sales\", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({\"2024Q1\", \"2024Q2\"})));
+auto labels = atlas.label();"""
+
+
+def atlas_timeline_accessor_base() -> str:
+    return """auto q1 = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({\"2024-01-01T09:10:00Z\", \"2024-01-01T09:40:00Z\"}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({\"2024-01-02T09:10:00Z\", \"2024-01-02T09:40:00Z\"}))},
+});
+auto atlas = pluss::table::Atlas({q1, q2});
+auto timelines = atlas.tl();"""
+
+
 ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'DataFrameNoteAccessor': note_accessor_base,
     'DataFrameTimelineAccessor': timeline_accessor_base,
@@ -6111,6 +6202,9 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'DataFrameTsAccessor': ts_accessor_base,
     'DataFrameTsWindowAccessor': ts_window_accessor_base,
     'DataFrameTsResampler': ts_resampler_accessor_base,
+    'ThreadPlotAccessor': thread_plot_accessor_base,
+    'AtlasLabelAccessor': atlas_label_accessor_base,
+    'AtlasTimelineAccessor': atlas_timeline_accessor_base,
 }
 
 ACCESSOR_STUB_VAR: dict[str, str] = {
@@ -6122,6 +6216,9 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'DataFrameTsAccessor': 'ts',
     'DataFrameTsWindowAccessor': 'window',
     'DataFrameTsResampler': 'resampler',
+    'ThreadPlotAccessor': 'plot',
+    'AtlasLabelAccessor': 'labels',
+    'AtlasTimelineAccessor': 'timelines',
 }
 
 
@@ -7579,8 +7676,6 @@ def example_for(class_name: str, method: Method) -> str:
                 'auto target = pluss::table::Thread(pluss::make_note({"s3", "s1", "s2"}));\n\n'
                 'auto out = thread.align(target);'
             )
-        if n == 'is_valid':
-            return thread_series() + '\n\nauto out = thread.is_valid(0);'
         if n in {'isnull','notnull','isnan','isfinite','abs','log','exp','dropnull','ffill','bfill','sum','mean','min','max'}:
             if n == 'dropnull':
                 return (
@@ -7669,13 +7764,11 @@ def example_for(class_name: str, method: Method) -> str:
                     return 'auto thread = pluss::table::Thread(pluss::make_note({"#203930", "##7788", "4455##"}));\n\nauto out = thread.rstrip("#");'
                 return thread_note() + '\n\nauto out = thread.rstrip();'
             return thread_note() + '\n\nauto out = thread.lower();'
-        if n in {'year','month','day','hour','to_note_weekday'}:
+        if n in {'to_note_weekday'}:
             return thread_time() + f'\n\nauto out = thread.{n}();'
-        if n in {'numeric_binary','compare','compare_rows'}:
+        if n in {'numeric_binary','compare'}:
             if n == 'numeric_binary':
                 return thread_series() + '\n\nauto out = thread.numeric_binary(10.0, pluss::table::ThreadBinaryMathOp::Add, false);'
-            if n == 'compare_rows':
-                return thread_series() + '\n\nauto out = thread.compare_rows(0, 1, true);'
             if 'const Thread&' in sig:
                 return thread_series() + '\n\nauto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));\nauto out = thread.compare(other, pluss::table::ThreadBinaryCompareOp::Gt);'
             return thread_series() + '\n\nauto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);'
@@ -9418,6 +9511,13 @@ def write_api_nav_manifest(extracted: dict[str, list[Method]]) -> None:
             'landing': f"{cfg['output'].stem}.html",
             'methods': ordered_method_names(extracted.get(class_name, [])),
         }
+    for class_name, cfg in MANUAL_API_NAV.items():
+        payload[class_name] = {
+            'title': cfg['title'],
+            'slug': cfg['slug'],
+            'landing': cfg['landing'],
+            'methods': manual_nav_methods(cfg['index']),
+        }
     API_NAV_JS.write_text(f'window.PLUSS_API_NAV = {json.dumps(payload, indent=2)};\n')
 
 
@@ -9446,9 +9546,23 @@ def main(argv: list[str] | None = None) -> int:
     accept_set = set(args.accept)
 
     extracted: dict[str, list[Method]] = {}
+    skipped_classes: set[str] = set()
     for class_name, cfg in CLASS_CONFIG.items():
-        methods = extract_methods(class_name, cfg['header'])
+        try:
+            methods = extract_methods(class_name, cfg['header'])
+        except (FileNotFoundError, RuntimeError) as exc:
+            print(f'[generate_api_reference] skipping {class_name}: {exc}', file=sys.stderr)
+            skipped_classes.add(class_name)
+            continue
         methods = [m for m in methods if m.name not in {'begin', 'end'} or class_name in {'Catalog', 'Registry'}]
+        if class_name == 'Stream':
+            # nt()/tl()/ts()/plot() are entry points into StreamNoteAccessor/
+            # StreamTimelineAccessor/StreamTimeSeriesAccessor/StreamPlotAccessor --
+            # each too large (or, for plot(), not verifiable via stdout capture) to
+            # document in this phase. Deliberately out of scope, same as Catalog's
+            # equivalent CatalogNoteAccessor/CatalogTimelineAccessor/
+            # CatalogTimeSeriesAccessor entry points never getting pages at all.
+            methods = [m for m in methods if m.name not in {'nt', 'tl', 'ts', 'plot'}]
         extracted[class_name] = methods
 
     write_api_nav_manifest(extracted)
@@ -9457,64 +9571,70 @@ def main(argv: list[str] | None = None) -> int:
     all_drifted: list[str] = []
 
     for class_name, cfg in CLASS_CONFIG.items():
+        if class_name in skipped_classes:
+            continue
         methods = extracted[class_name]
-        if class_name in PER_METHOD_CLASSES:
-            full_page = build_page(class_name, methods)
-            chunks = extract_method_chunks(full_page)
-            ordered_names = ordered_method_names(methods)
-            by_name = group_methods_by_name(methods)
-            page_root = method_page_root(class_name)
-            page_root.mkdir(parents=True, exist_ok=True)
-            live_pages = {method_page_doc_path(class_name, name).name for name in ordered_names}
-            for stale in page_root.glob('*.md'):
-                if stale.name not in live_pages and not is_hand_authored(stale):
-                    stale.unlink()
-            skipped_hand_authored = []
-            written = 0
-            for idx, name in enumerate(ordered_names):
-                prev_name = ordered_names[idx - 1] if idx > 0 else None
-                next_name = ordered_names[idx + 1] if idx < len(ordered_names) - 1 else None
-                chunk = chunks.get(name, '')
-                doc_path = method_page_doc_path(class_name, name)
-                if is_hand_authored(doc_path):
-                    skipped_hand_authored.append(name)
-                    current_hash = compute_signature_hash(by_name[name])
-                    stored_hash = read_stored_signature_hash(doc_path)
-                    qualified = f'{class_name}::{name}'
-                    if qualified in accept_set:
-                        write_stored_signature_hash(doc_path, current_hash)
-                        print(f'  accepted new signature baseline for {qualified}')
-                    elif stored_hash is None:
-                        # First time this page carries the marker: adopt the
-                        # current header signature as the verified baseline.
-                        write_stored_signature_hash(doc_path, current_hash)
-                    elif stored_hash != current_hash:
-                        all_drifted.append(qualified)
-                    continue
-                doc_path.write_text(
-                    build_method_page_markdown(
-                        class_name,
-                        name,
-                        chunk,
-                        prev_name,
-                        next_name,
-                        known_methods,
+        try:
+            if class_name in PER_METHOD_CLASSES:
+                full_page = build_page(class_name, methods)
+                chunks = extract_method_chunks(full_page)
+                ordered_names = ordered_method_names(methods)
+                by_name = group_methods_by_name(methods)
+                page_root = method_page_root(class_name)
+                page_root.mkdir(parents=True, exist_ok=True)
+                live_pages = {method_page_doc_path(class_name, name).name for name in ordered_names}
+                for stale in page_root.glob('*.md'):
+                    if stale.name not in live_pages and not is_hand_authored(stale):
+                        stale.unlink()
+                skipped_hand_authored = []
+                written = 0
+                for idx, name in enumerate(ordered_names):
+                    prev_name = ordered_names[idx - 1] if idx > 0 else None
+                    next_name = ordered_names[idx + 1] if idx < len(ordered_names) - 1 else None
+                    chunk = chunks.get(name, '')
+                    doc_path = method_page_doc_path(class_name, name)
+                    if is_hand_authored(doc_path):
+                        skipped_hand_authored.append(name)
+                        current_hash = compute_signature_hash(by_name[name])
+                        stored_hash = read_stored_signature_hash(doc_path)
+                        qualified = f'{class_name}::{name}'
+                        if qualified in accept_set:
+                            write_stored_signature_hash(doc_path, current_hash)
+                            print(f'  accepted new signature baseline for {qualified}')
+                        elif stored_hash is None:
+                            # First time this page carries the marker: adopt the
+                            # current header signature as the verified baseline.
+                            write_stored_signature_hash(doc_path, current_hash)
+                        elif stored_hash != current_hash:
+                            all_drifted.append(qualified)
+                        continue
+                    doc_path.write_text(
+                        build_method_page_markdown(
+                            class_name,
+                            name,
+                            chunk,
+                            prev_name,
+                            next_name,
+                            known_methods,
+                        )
                     )
-                )
-                written += 1
-            if skipped_hand_authored:
+                    written += 1
+                if skipped_hand_authored:
+                    print(
+                        f'{class_name}: preserved {len(skipped_hand_authored)} hand-authored page(s): '
+                        f'{", ".join(skipped_hand_authored)}'
+                    )
+                cfg['output'].write_text(build_method_index_page(class_name, methods))
                 print(
-                    f'{class_name}: preserved {len(skipped_hand_authored)} hand-authored page(s): '
-                    f'{", ".join(skipped_hand_authored)}'
+                    f'{class_name}: wrote {written} method page(s), '
+                    f'preserved {len(skipped_hand_authored)} -> {cfg["output"].name}'
                 )
-            cfg['output'].write_text(build_method_index_page(class_name, methods))
-            print(
-                f'{class_name}: wrote {written} method page(s), '
-                f'preserved {len(skipped_hand_authored)} -> {cfg["output"].name}'
-            )
-        else:
-            cfg['output'].write_text(build_page(class_name, methods))
-            print(f'{class_name}: wrote {len(methods)} methods -> {cfg["output"].name}')
+            else:
+                cfg['output'].write_text(build_page(class_name, methods))
+                print(f'{class_name}: wrote {len(methods)} methods -> {cfg["output"].name}')
+        except Exception as exc:
+            print(f'[generate_api_reference] skipping {class_name} generation: {exc}', file=sys.stderr)
+            continue
 
     if all_drifted:
         print('')

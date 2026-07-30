@@ -98,12 +98,12 @@ a table count — `defined() == false` alone is enough to satisfy `empty()`.
 - [`Nexus::ntables`](ntables.md): the exact table count, when a boolean isn't enough.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop.html">
+  <a class="prev-link" href="duplicates.html">
     <span class="label">Previous</span>
-    <span class="title">drop</span>
+    <span class="title">duplicates</span>
   </a>
-  <a class="next-link" href="flow.html">
+  <a class="next-link" href="fingerprint.html">
     <span class="label">Next</span>
-    <span class="title">flow</span>
+    <span class="title">fingerprint</span>
   </a>
 </div>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e2f6ab7a4dc3 -->
 
 # Thread::mul
 
@@ -111,12 +112,12 @@ a non-integral or negative scalar (like `2.5` or `-1.0`) throws
   mechanics.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="month.html">
+  <a class="prev-link" href="mode.html">
     <span class="label">Previous</span>
-    <span class="title">month</span>
+    <span class="title">mode</span>
   </a>
-  <a class="next-link" href="ncases.html">
+  <a class="next-link" href="name.html">
     <span class="label">Next</span>
-    <span class="title">ncases</span>
+    <span class="title">name</span>
   </a>
 </div>

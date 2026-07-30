@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5ae6f36f52c2 -->
 
 # DataFrameTsAccessor::returns
 

@@ -304,6 +304,44 @@ plussmic_table_gap_benchmark/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build
 .PHONY : plussmic_table_gap_benchmark/fast
 
+# Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule
+
+# Convenience name for target.
+plussmic_bundle_gap_benchmark: PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule
+.PHONY : plussmic_bundle_gap_benchmark
+
+# fast build rule for target.
+plussmic_bundle_gap_benchmark/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build
+.PHONY : plussmic_bundle_gap_benchmark/fast
+
+bundle_gap_benchmark.o: bundle_gap_benchmark.cpp.o
+.PHONY : bundle_gap_benchmark.o
+
+# target to build an object file
+bundle_gap_benchmark.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/bundle_gap_benchmark.cpp.o
+.PHONY : bundle_gap_benchmark.cpp.o
+
+bundle_gap_benchmark.i: bundle_gap_benchmark.cpp.i
+.PHONY : bundle_gap_benchmark.i
+
+# target to preprocess a source file
+bundle_gap_benchmark.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/bundle_gap_benchmark.cpp.i
+.PHONY : bundle_gap_benchmark.cpp.i
+
+bundle_gap_benchmark.s: bundle_gap_benchmark.cpp.s
+.PHONY : bundle_gap_benchmark.s
+
+# target to generate assembly for a file
+bundle_gap_benchmark.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/bundle_gap_benchmark.cpp.s
+.PHONY : bundle_gap_benchmark.cpp.s
+
 bundle_model_tests.o: bundle_model_tests.cpp.o
 .PHONY : bundle_model_tests.o
 
@@ -511,6 +549,7 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussmic_bundle_gap_benchmark"
 	@echo "... plussmic_bundle_model_tests"
 	@echo "... plussmic_kindle_catalog_tests"
 	@echo "... plussmic_table_axis_match_tests"
@@ -519,6 +558,9 @@ help:
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
+	@echo "... bundle_gap_benchmark.o"
+	@echo "... bundle_gap_benchmark.i"
+	@echo "... bundle_gap_benchmark.s"
 	@echo "... bundle_model_tests.o"
 	@echo "... bundle_model_tests.i"
 	@echo "... bundle_model_tests.s"

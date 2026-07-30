@@ -507,7 +507,7 @@ void prep::prep_before_thread_fit_(OneHotEncoder& wrapper, const pluss::table::T
   wrapper.category_labels_by_key_.clear();
   if (feature.kind() != pluss::table::ThreadKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
-    if (!feature.is_valid(i)) continue;
+    if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
     const auto key = prep_key_for_value_(prep_note_hash_value_(token));
     if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
@@ -520,7 +520,7 @@ void prep::prep_before_thread_fit_(FrequencyEncoder& wrapper, const pluss::table
   wrapper.category_labels_by_key_.clear();
   if (feature.kind() != pluss::table::ThreadKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
-    if (!feature.is_valid(i)) continue;
+    if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
     const auto key = prep_key_for_value_(prep_note_hash_value_(token));
     if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
@@ -533,7 +533,7 @@ void prep::prep_before_thread_fit_(OrdinalEncoder& wrapper, const pluss::table::
   wrapper.category_labels_by_key_.clear();
   if (feature.kind() != pluss::table::ThreadKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
-    if (!feature.is_valid(i)) continue;
+    if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
     const auto key = prep_key_for_value_(prep_note_hash_value_(token));
     if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
@@ -546,7 +546,7 @@ void prep::prep_before_thread_fit_(LabelEncoder& wrapper, const pluss::table::Th
   wrapper.category_labels_by_key_.clear();
   if (feature.kind() != pluss::table::ThreadKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
-    if (!feature.is_valid(i)) continue;
+    if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
     const auto key = prep_key_for_value_(prep_note_hash_value_(token));
     if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {

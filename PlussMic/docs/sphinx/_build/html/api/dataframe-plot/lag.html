@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::line" href="line.html" />
-    <link rel="prev" title="DataFramePlotAccessor::hist" href="hist.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -99,11 +97,12 @@ the series.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;level_lag1.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">8</span></code> rows and <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">7</span></code> points are plotted: <code class="docutils literal notranslate"><span class="pre">(10.0,</span> <span class="pre">10.5)</span></code>, <code class="docutils literal notranslate"><span class="pre">(10.5,</span> <span class="pre">11.0)</span></code>, …, <code class="docutils literal notranslate"><span class="pre">(11.3,</span> <span class="pre">11.8)</span></code> — a tight, mostly increasing sequence suggests strong positive
 lag-1 autocorrelation.</p>
+<p><img alt="Output of Example 1" src="../../_images/lag-1.svg" /></p>
 <p>Example 2. An explicit <code class="docutils literal notranslate"><span class="pre">LagPlotOptions</span></code> with a larger lag.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
@@ -114,6 +113,7 @@ lag-1 autocorrelation.</p>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">8</span> <span class="pre">-</span> <span class="pre">3</span> <span class="pre">=</span> <span class="pre">5</span></code> points are plotted: <code class="docutils literal notranslate"><span class="pre">(10.0,</span> <span class="pre">10.8)</span></code>, <code class="docutils literal notranslate"><span class="pre">(10.5,</span> <span class="pre">11.2)</span></code>,
 <code class="docutils literal notranslate"><span class="pre">(11.0,</span> <span class="pre">11.5)</span></code>, <code class="docutils literal notranslate"><span class="pre">(10.8,</span> <span class="pre">11.3)</span></code>, <code class="docutils literal notranslate"><span class="pre">(11.2,</span> <span class="pre">11.8)</span></code>.</p>
+<p><img alt="Output of Example 2" src="../../_images/lag-2.svg" /></p>
 <p>Example 3. A <code class="docutils literal notranslate"><span class="pre">lag</span></code> request larger than the data supports is silently clamped, not thrown.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">oversized</span><span class="p">;</span>
 <span class="n">oversized</span><span class="p">.</span><span class="n">lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span>
@@ -122,6 +122,7 @@ lag-1 autocorrelation.</p>
 </pre></div>
 </div>
 <p>With only 8 rows, <code class="docutils literal notranslate"><span class="pre">lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">7</span></code>, leaving exactly one usable point: <code class="docutils literal notranslate"><span class="pre">(x[0],</span> <span class="pre">x[7])</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(10.0,</span> <span class="pre">11.8)</span></code>.</p>
+<p><img alt="Output of Example 3" src="../../_images/lag-3.svg" /></p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">max_points</span></code> subsampling on a larger series.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">long_series</span><span class="p">;</span>
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5000</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -141,15 +142,17 @@ lag-1 autocorrelation.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">usable</span> <span class="pre">=</span> <span class="pre">4999</span></code> points would otherwise be plotted; capped to roughly <code class="docutils literal notranslate"><span class="pre">500</span></code> by taking every
 10th point (<code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">=</span> <span class="pre">ceil(4999</span> <span class="pre">/</span> <span class="pre">500)</span> <span class="pre">=</span> <span class="pre">10</span></code>), not a random sample.</p>
+<p><img alt="Output of Example 4" src="../../_images/lag-4.svg" /></p>
 <p>Example 5. Larger markers and a thicker outline.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LagPlotOptions</span><span class="w"> </span><span class="n">styled</span><span class="p">;</span>
 <span class="n">styled</span><span class="p">.</span><span class="n">marker_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">40.0</span><span class="p">;</span>
 <span class="n">styled</span><span class="p">.</span><span class="n">trace_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.5F</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">styled</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;level_lag_styled.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/lag-5.svg" /></p>
 <p>Example 6. Fewer than two rows throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">single_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;level&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}))},</span>
@@ -230,11 +233,8 @@ this method specializes for a series against its own lagged copy.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -248,16 +248,6 @@ this method specializes for a series against its own lagged copy.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="hist.html" title="previous chapter">DataFramePlotAccessor::hist</a></li>
-      <li>Next: <a href="line.html" title="next chapter">DataFramePlotAccessor::line</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

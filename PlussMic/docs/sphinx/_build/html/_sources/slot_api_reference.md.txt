@@ -48,6 +48,54 @@ auto out = slot.as_kindle();
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
+  <a class="next-link" href="#astype">
+    <span class="label">Next</span>
+    <span class="title">astype</span>
+  </a>
+</div>
+
+### `astype`
+
+#### Signature
+
+```cpp
+Slot::astype(pluss::ScalarType dtype) -> Slot
+```
+
+#### What It Does
+
+This changes the semantic or numeric type so later operations route through the correct implementation path.
+
+#### Parameters
+
+**dtype**
+    Target scalar dtype used by this conversion overload.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.astype();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_kindle">
+    <span class="label">Previous</span>
+    <span class="title">as_kindle</span>
+  </a>
   <a class="next-link" href="#at">
     <span class="label">Next</span>
     <span class="title">at</span>
@@ -92,17 +140,80 @@ auto out = slot.at(0);
 Series(1)
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_kindle">
+  <a class="prev-link" href="#astype">
     <span class="label">Previous</span>
-    <span class="title">as_kindle</span>
+    <span class="title">astype</span>
+  </a>
+  <a class="next-link" href="#cast">
+    <span class="label">Next</span>
+    <span class="title">cast</span>
+  </a>
+</div>
+
+## C
+
+### `cast`
+
+#### Signatures
+
+```cpp
+Slot::cast() -> SlotCastAccessor
+
+Slot::cast(const pluss::table::ThreadCastOptions& options) -> SlotCastAccessor
+```
+
+#### What It Does
+
+This changes the semantic or numeric type so later operations route through the correct implementation path.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`SlotCastAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.cast();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Pass an explicit options object to control the operation.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.cast();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#at">
+    <span class="label">Previous</span>
+    <span class="title">at</span>
   </a>
   <a class="next-link" href="#concat">
     <span class="label">Next</span>
     <span class="title">concat</span>
   </a>
 </div>
-
-## C
 
 ### `concat`
 
@@ -143,9 +254,9 @@ auto out = slot.concat(other);
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#at">
+  <a class="prev-link" href="#cast">
     <span class="label">Previous</span>
-    <span class="title">at</span>
+    <span class="title">cast</span>
   </a>
   <a class="next-link" href="#defined">
     <span class="label">Next</span>
@@ -196,6 +307,101 @@ true
     <span class="label">Previous</span>
     <span class="title">concat</span>
   </a>
+  <a class="next-link" href="#distinct">
+    <span class="label">Next</span>
+    <span class="title">distinct</span>
+  </a>
+</div>
+
+### `distinct`
+
+#### Signature
+
+```cpp
+Slot::distinct(pluss::kindle::DistinctOptions options = {}) -> Slot
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.distinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#dropnull">
+    <span class="label">Next</span>
+    <span class="title">dropnull</span>
+  </a>
+</div>
+
+### `dropnull`
+
+#### Signature
+
+```cpp
+Slot::dropnull() -> Slot
+```
+
+#### What It Does
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.dropnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#distinct">
+    <span class="label">Previous</span>
+    <span class="title">distinct</span>
+  </a>
   <a class="next-link" href="#empty">
     <span class="label">Next</span>
     <span class="title">empty</span>
@@ -241,17 +447,173 @@ auto out = slot.empty();
 false
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#defined">
+  <a class="prev-link" href="#dropnull">
     <span class="label">Previous</span>
-    <span class="title">defined</span>
+    <span class="title">dropnull</span>
+  </a>
+  <a class="next-link" href="#ensure_stream_compatible">
+    <span class="label">Next</span>
+    <span class="title">ensure_stream_compatible</span>
+  </a>
+</div>
+
+### `ensure_stream_compatible`
+
+#### Signature
+
+```cpp
+Slot::ensure_stream_compatible(std::string_view where = "Slot") -> void
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**where**
+    Filter expression or selector string interpreted by this overload.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.ensure_stream_compatible();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#empty">
+    <span class="label">Previous</span>
+    <span class="title">empty</span>
+  </a>
+  <a class="next-link" href="#fillnull">
+    <span class="label">Next</span>
+    <span class="title">fillnull</span>
+  </a>
+</div>
+
+## F
+
+### `fillnull`
+
+#### Signatures
+
+```cpp
+Slot::fillnull(const char* value) -> Slot
+
+Slot::fillnull(const pluss::TimeIndex& value) -> Slot
+
+Slot::fillnull(const pluss::Timeline& value) -> Slot
+
+Slot::fillnull(double value) -> Slot
+
+Slot::fillnull(std::string_view value) -> Slot
+```
+
+#### What It Does
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Parameters
+
+**value**
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.fillnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ensure_stream_compatible">
+    <span class="label">Previous</span>
+    <span class="title">ensure_stream_compatible</span>
   </a>
   <a class="next-link" href="#filter">
     <span class="label">Next</span>
     <span class="title">filter</span>
   </a>
 </div>
-
-## F
 
 ### `filter`
 
@@ -291,9 +653,57 @@ auto out = slot.filter([](const pluss::bundle::Slot::Value& value) { return std:
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#empty">
+  <a class="prev-link" href="#fillnull">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">fillnull</span>
+  </a>
+  <a class="next-link" href="#freq">
+    <span class="label">Next</span>
+    <span class="title">freq</span>
+  </a>
+</div>
+
+### `freq`
+
+#### Signature
+
+```cpp
+Slot::freq(pluss::kindle::FreqOptions options = {}) -> Slot
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.freq();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter">
+    <span class="label">Previous</span>
+    <span class="title">filter</span>
   </a>
   <a class="next-link" href="#from_kindle">
     <span class="label">Next</span>
@@ -339,9 +749,9 @@ auto out = pluss::bundle::Slot::from_kindle(stream);
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#filter">
+  <a class="prev-link" href="#freq">
     <span class="label">Previous</span>
-    <span class="title">filter</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="#head">
     <span class="label">Next</span>
@@ -393,13 +803,203 @@ Slot([Series(1), Series(2), Series(3)])
     <span class="label">Previous</span>
     <span class="title">from_kindle</span>
   </a>
+  <a class="next-link" href="#invalid">
+    <span class="label">Next</span>
+    <span class="title">invalid</span>
+  </a>
+</div>
+
+## I
+
+### `invalid`
+
+#### Signature
+
+```cpp
+Slot::invalid() -> Slot
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.invalid();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="#is_stream_compatible">
+    <span class="label">Next</span>
+    <span class="title">is_stream_compatible</span>
+  </a>
+</div>
+
+### `is_stream_compatible`
+
+#### Signature
+
+```cpp
+Slot::is_stream_compatible() -> bool
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.is_stream_compatible();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#invalid">
+    <span class="label">Previous</span>
+    <span class="title">invalid</span>
+  </a>
+  <a class="next-link" href="#isnull">
+    <span class="label">Next</span>
+    <span class="title">isnull</span>
+  </a>
+</div>
+
+### `isnull`
+
+#### Signature
+
+```cpp
+Slot::isnull() -> Slot
+```
+
+#### What It Does
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.isnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#is_stream_compatible">
+    <span class="label">Previous</span>
+    <span class="title">is_stream_compatible</span>
+  </a>
+  <a class="next-link" href="#kind">
+    <span class="label">Next</span>
+    <span class="title">kind</span>
+  </a>
+</div>
+
+## K
+
+### `kind`
+
+#### Signature
+
+```cpp
+Slot::kind() -> SlotKind
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`SlotKind`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Inspect the `kind` property of the current object.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.kind();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#isnull">
+    <span class="label">Previous</span>
+    <span class="title">isnull</span>
+  </a>
   <a class="next-link" href="#kindelize">
     <span class="label">Next</span>
     <span class="title">kindelize</span>
   </a>
 </div>
-
-## K
 
 ### `kindelize`
 
@@ -438,9 +1038,296 @@ auto out = slot.kindelize();
 Series([10.0, 20.0, 30.0])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#head">
+  <a class="prev-link" href="#kind">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">kind</span>
+  </a>
+  <a class="next-link" href="#max">
+    <span class="label">Next</span>
+    <span class="title">max</span>
+  </a>
+</div>
+
+## M
+
+### `max`
+
+#### Signature
+
+```cpp
+Slot::max() -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `max` and inspect the resulting summary value or summary object.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.max();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
+  </a>
+  <a class="next-link" href="#mean">
+    <span class="label">Next</span>
+    <span class="title">mean</span>
+  </a>
+</div>
+
+### `mean`
+
+#### Signature
+
+```cpp
+Slot::mean() -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `mean` and inspect the resulting summary value or summary object.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.mean();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#max">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
+  <a class="next-link" href="#min">
+    <span class="label">Next</span>
+    <span class="title">min</span>
+  </a>
+</div>
+
+### `min`
+
+#### Signature
+
+```cpp
+Slot::min() -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `min` and inspect the resulting summary value or summary object.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.min();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#mean">
+    <span class="label">Previous</span>
+    <span class="title">mean</span>
+  </a>
+  <a class="next-link" href="#ndistinct">
+    <span class="label">Next</span>
+    <span class="title">ndistinct</span>
+  </a>
+</div>
+
+## N
+
+### `ndistinct`
+
+#### Signature
+
+```cpp
+Slot::ndistinct(pluss::kindle::DistinctOptions options = {}) -> Slot
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.ndistinct();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#min">
+    <span class="label">Previous</span>
+    <span class="title">min</span>
+  </a>
+  <a class="next-link" href="#notnull">
+    <span class="label">Next</span>
+    <span class="title">notnull</span>
+  </a>
+</div>
+
+### `notnull`
+
+#### Signature
+
+```cpp
+Slot::notnull() -> Slot
+```
+
+#### What It Does
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.notnull();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ndistinct">
+    <span class="label">Previous</span>
+    <span class="title">ndistinct</span>
+  </a>
+  <a class="next-link" href="#nt">
+    <span class="label">Next</span>
+    <span class="title">nt</span>
+  </a>
+</div>
+
+### `nt`
+
+#### Signature
+
+```cpp
+Slot::nt() -> SlotNoteAccessor
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`SlotNoteAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.nt();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#notnull">
+    <span class="label">Previous</span>
+    <span class="title">notnull</span>
   </a>
   <a class="next-link" href="#ptype">
     <span class="label">Next</span>
@@ -487,9 +1374,9 @@ auto out = slot.ptype();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#kindelize">
+  <a class="prev-link" href="#nt">
     <span class="label">Previous</span>
-    <span class="title">kindelize</span>
+    <span class="title">nt</span>
   </a>
   <a class="next-link" href="#push">
     <span class="label">Next</span>
@@ -782,6 +1669,53 @@ Slot([Series(1), Series(2), Series(3)])
     <span class="label">Previous</span>
     <span class="title">size</span>
   </a>
+  <a class="next-link" href="#sum">
+    <span class="label">Next</span>
+    <span class="title">sum</span>
+  </a>
+</div>
+
+### `sum`
+
+#### Signature
+
+```cpp
+Slot::sum() -> Slot
+```
+
+#### What It Does
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Slot`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Compute `sum` and inspect the resulting summary value or summary object.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.sum();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#slice">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
   <a class="next-link" href="#tail">
     <span class="label">Next</span>
     <span class="title">tail</span>
@@ -828,9 +1762,9 @@ auto out = slot.tail(2);
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#slice">
+  <a class="prev-link" href="#sum">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">sum</span>
   </a>
   <a class="next-link" href="#take">
     <span class="label">Next</span>
@@ -881,6 +1815,53 @@ Slot([Series(1), Series(2), Series(3)])
     <span class="label">Previous</span>
     <span class="title">tail</span>
   </a>
+  <a class="next-link" href="#tl">
+    <span class="label">Next</span>
+    <span class="title">tl</span>
+  </a>
+</div>
+
+### `tl`
+
+#### Signature
+
+```cpp
+Slot::tl() -> SlotTimelineAccessor
+```
+
+#### What It Does
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`SlotTimelineAccessor`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+
+auto out = slot.tl();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#take">
+    <span class="label">Previous</span>
+    <span class="title">take</span>
+  </a>
   <a class="next-link" href="#to_json">
     <span class="label">Next</span>
     <span class="title">to_json</span>
@@ -924,9 +1905,9 @@ auto out = slot.to_json();
 Slot([Series(1), Series(2), Series(3)])
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#take">
+  <a class="prev-link" href="#tl">
     <span class="label">Previous</span>
-    <span class="title">take</span>
+    <span class="title">tl</span>
   </a>
   <a class="next-link" href="#to_kindle">
     <span class="label">Next</span>

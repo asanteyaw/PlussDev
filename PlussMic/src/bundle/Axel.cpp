@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ostream>
 #include <sstream>
+#include <unordered_set>
 #include <utility>
 
 #include "CodeM/core/Errors.h"
@@ -11,6 +12,19 @@
 namespace pluss::bundle {
 
 namespace {
+
+std::vector<std::string> normalize_names(std::span<const std::string_view> keys) {
+  std::vector<std::string> out;
+  out.reserve(keys.size());
+  std::unordered_set<std::string> seen;
+  for (auto sv : keys) {
+    std::string key(sv);
+    PLUSS_CHECK(!key.empty(), "Axel: field cannot be empty");
+    PLUSS_CHECK(seen.insert(key).second, "Axel: duplicate field '" + key + "'");
+    out.push_back(std::move(key));
+  }
+  return out;
+}
 
 std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::int64_t stop, std::int64_t size) {
   std::int64_t s = start < 0 ? start + size : start;
@@ -60,6 +74,7 @@ public:
 
 
 #include "bundle/ops/axel/AxelLifecycleAndOps.inc"
+#include "bundle/ops/axel/AxelAccessors.inc"
 #include "bundle/ops/axel/AxelRenderAndInternals.inc"
 
 } // namespace pluss::bundle

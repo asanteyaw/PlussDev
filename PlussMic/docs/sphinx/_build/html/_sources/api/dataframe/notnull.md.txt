@@ -1,14 +1,17 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 94e4332077eb -->
+<!-- pluss-signature-hash: 4e71b03b0d08 -->
 
 # DataFrame::notnull
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrame::notnull(pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::notnull(const NameRange& features) const -> DataFrame
 ```
 
 ## What It Does
@@ -25,7 +28,10 @@ sites (building a mask to `filter()` on, for instance).
 **features** (`pluss::RangeView<std::string_view>`, default empty)
 
 Feature names to check. Leave empty to check every feature on the frame; pass a subset
-to restrict the resulting mask to just those columns.
+to restrict the resulting mask to just those columns. Any container of
+`std::string_view`-convertible names (`std::vector<std::string>`, `std::set<std::string>`,
+and similar) works too, via a generic template overload — not just a braced list or an
+explicit `RangeView`.
 
 ## Returns
 

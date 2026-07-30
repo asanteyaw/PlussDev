@@ -535,7 +535,7 @@ NexusPullField parse_pull_field(std::string_view root,
 }
 
 std::vector<NexusPullField> parse_pull_fields(std::string_view root,
-                                              std::initializer_list<std::string_view> fields,
+                                              pluss::msharp::RangeView::Of<std::string_view> fields,
                                               std::string_view where) {
   PLUSS_CHECK(fields.size() > 0, std::string(where) + ": at least one field is required");
   std::vector<NexusPullField> out;
@@ -887,6 +887,11 @@ DataFrame Nexus::join(std::string_view left, std::string_view right, const JoinS
 
 DataFrame Nexus::pull(std::string_view root,
                       std::initializer_list<std::string_view> fields) const {
+  return pull(root, pluss::msharp::RangeView::Of<std::string_view>(fields));
+}
+
+DataFrame Nexus::pull(std::string_view root,
+                      pluss::msharp::RangeView::Of<std::string_view> fields) const {
   const auto& src = impl_ref_();
   require_known_table(src, root, "Nexus::pull");
   const auto parsed = parse_pull_fields(root, fields, "Nexus::pull");

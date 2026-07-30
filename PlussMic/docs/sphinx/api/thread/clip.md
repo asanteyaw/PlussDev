@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 10c191976efb -->
 
 # Thread::clip
 
@@ -87,9 +88,9 @@ Thread::clip is only valid for Series payload
 - [`Thread::btw`](btw.md): test membership in a range, rather than clamping into it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clear_display_name.html">
+  <a class="prev-link" href="chars.html">
     <span class="label">Previous</span>
-    <span class="title">clear_display_name</span>
+    <span class="title">chars</span>
   </a>
   <a class="next-link" href="compare.html">
     <span class="label">Next</span>

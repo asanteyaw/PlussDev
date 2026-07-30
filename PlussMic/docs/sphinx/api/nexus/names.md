@@ -73,12 +73,12 @@ since it's a plain `bool`) — `names()` returns the very same underlying data a
 - [`Nexus::keys`](keys.md): the canonical name for this same method.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="map_frames.html">
+  <a class="prev-link" href="meta.html">
     <span class="label">Previous</span>
-    <span class="title">map_frames</span>
+    <span class="title">meta</span>
   </a>
-  <a class="next-link" href="ntables.html">
+  <a class="next-link" href="neighbors.html">
     <span class="label">Next</span>
-    <span class="title">ntables</span>
+    <span class="title">neighbors</span>
   </a>
 </div>

@@ -73,8 +73,10 @@ auto exams = DataFrame({
 });
 
 auto chart = exams.plot().density("midterm");
-chart.save_svg("midterm_density.svg");
+chart.show();
 ```
+
+![Output of Example 1](img/density-1.svg)
 
 Example 2. A single feature with an explicit point count.
 
@@ -85,6 +87,8 @@ chart.show();
 
 Higher `points` gives a smoother-looking curve at higher compute cost; lower `points`
 (clamped to a minimum of 16) gives a coarser one.
+
+![Output of Example 2](img/density-2.svg)
 
 Example 3. Two features, overlaid on the same pane, via `initializer_list`.
 
@@ -97,12 +101,16 @@ Both curves share one pane and one set of axes; a legend labeled `"midterm"`/`"f
 appears automatically since more than one feature was requested — contrast
 [`hist()`](hist.md), which would instead place these on two separate panes.
 
+![Output of Example 3](img/density-3.svg)
+
 Example 4. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> names{"midterm", "final"};
 auto chart = exams.plot().density(pluss::msharp::RangeView::Of<std::string_view>(names));
 ```
+
+![Output of Example 4](img/density-4.svg)
 
 Example 5. An explicit `DensityPlotOptions`.
 
@@ -113,14 +121,18 @@ density_options.alpha = 0.7;
 density_options.line_width = 2.0;
 
 auto chart = exams.plot().density("midterm", density_options);
-chart.save_png("midterm_density.png");
+chart.show();
 ```
+
+![Output of Example 5](img/density-5.svg)
 
 Example 6. Multiple features with an explicit options object.
 
 ```cpp
 auto chart = exams.plot().density({"midterm", "final"}, density_options);
 ```
+
+![Output of Example 6](img/density-6.svg)
 
 ## Notes
 

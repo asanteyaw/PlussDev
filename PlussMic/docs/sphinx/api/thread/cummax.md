@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6457be418e0b -->
 
 # Thread::cummax
 

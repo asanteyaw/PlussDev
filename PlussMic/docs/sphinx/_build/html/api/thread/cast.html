@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,54 +36,96 @@
 
           <div class="body" role="main">
             
-  <section id="thread-cast">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b5a8285603fe -->
+<section id="thread-cast">
 <h1>Thread::cast<a class="headerlink" href="#thread-cast" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-
-<span class="n">Thread</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;</span><span class="w"> </span><span class="n">series_dtype</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">cast</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadCastAccessor</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadCastAccessor</span>
 </pre></div>
 </div>
-<p>Cast the current thread into another payload family or numeric dtype.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Thread::cast(...)</span></code> is the direct typed-column casting surface behind many table-level conversions.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>target</strong></p>
-<p>Requested target payload family such as <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
-<p><strong>options</strong></p>
-<p>Structured cast policy.</p>
-<p>Use this when you need to control details such as:</p>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Enters the casting accessor — <code class="docutils literal notranslate"><span class="pre">cast()</span></code> itself performs no conversion; it binds the
+current thread (and, optionally, a <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> policy) and hands back a
+<code class="docutils literal notranslate"><span class="pre">ThreadCastAccessor</span></code> whose four methods each convert to one target payload family:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ThreadCastAccessor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="n">series</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="nf">note</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="nf">timeline</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="nf">timeindex</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Calling the target that matches the source thread’s own <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind()</span></code></span></a> is always a
+cheap identity — <code class="docutils literal notranslate"><span class="pre">Thread(...).cast().series()</span></code> on an already-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread just
+returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged (subject to <code class="docutils literal notranslate"><span class="pre">options.series_dtype</span></code>, if you’re also asking for a
+different numeric dtype). Converting <em>between</em> kinds follows these rules:</p>
 <ul class="simple">
-<li><p>numeric dtype selection,</p></li>
-<li><p>invalid parse handling,</p></li>
-<li><p>other target-specific cast behavior.</p></li>
+<li><p><strong>→ <code class="docutils literal notranslate"><span class="pre">series()</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> sources become their epoch-nanosecond integer
+ticks (as <code class="docutils literal notranslate"><span class="pre">Int64</span></code>, further converted to <code class="docutils literal notranslate"><span class="pre">options.series_dtype</span></code> if set). <code class="docutils literal notranslate"><span class="pre">Note</span></code> sources
+are parsed as numbers (<code class="docutils literal notranslate"><span class="pre">Float64</span></code> by default, or <code class="docutils literal notranslate"><span class="pre">Bool</span></code> if <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> is <code class="docutils literal notranslate"><span class="pre">Bool</span></code>,
+using permissive true/false-like text matching).</p></li>
+<li><p><strong>→ <code class="docutils literal notranslate"><span class="pre">note()</span></code></strong>: every other kind is formatted as text — <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> as ISO
+strings, <code class="docutils literal notranslate"><span class="pre">Series</span></code> via each scalar’s own text representation.</p></li>
+<li><p><strong>→ <code class="docutils literal notranslate"><span class="pre">timeline()</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> sources are unwrapped directly. <code class="docutils literal notranslate"><span class="pre">Series</span></code> sources must be
+numeric and are interpreted either as epoch-nanosecond ticks or, when every valid value
+looks like an 8-digit <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> integer, as calendar dates. <code class="docutils literal notranslate"><span class="pre">Note</span></code> sources are parsed as
+ISO-ish datetime text (or via <code class="docutils literal notranslate"><span class="pre">options.format</span></code>, if set).</p></li>
+<li><p><strong>→ <code class="docutils literal notranslate"><span class="pre">timeindex()</span></code></strong>: delegates to <code class="docutils literal notranslate"><span class="pre">timeline()</span></code> first, then wraps the result as an
+(unsorted-tolerant) <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p></li>
 </ul>
-<p><strong>series_dtype</strong></p>
-<p>Optional scalar dtype used when the target is <code class="docutils literal notranslate"><span class="pre">ThreadCastTarget::Series</span></code>.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Cast thread with the requested target family or dtype.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="as_series.html"><code>Thread::as_series</code></a>, <a href="as_note.html"><code>Thread::as_note</code></a>: direct typed access without changing the payload.</p></li>
-<li><p><a href="../dataframe/cast.html"><code>DataFrame::cast</code></a>: cast selected frame features in one call.</p></li>
-</ul>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Cast note-backed numeric text into a numeric series by naming the target dtype directly.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>ThreadCastOptions::invalid only actually takes effect for the Timeline target</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ThreadCastOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;</span><span class="w"> </span><span class="n">series_dtype</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">format</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">ParseInvalid</span><span class="w"> </span><span class="n">invalid</span><span class="p">{</span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Raise</span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">invalid</span></code> (<code class="docutils literal notranslate"><span class="pre">Raise</span></code> or <code class="docutils literal notranslate"><span class="pre">Null</span></code>) is meant to choose what happens when a <code class="docutils literal notranslate"><span class="pre">Note</span></code> value can’t be
+parsed. In the current implementation, that choice is only actually consulted by the
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> (and, transitively, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>) target: <code class="docutils literal notranslate"><span class="pre">Raise</span></code> (the default) throws on the
+first unparseable value there, <code class="docutils literal notranslate"><span class="pre">Null</span></code> marks it invalid instead. For the <strong><code class="docutils literal notranslate"><span class="pre">Series</span></code></strong>
+target, unparseable <code class="docutils literal notranslate"><span class="pre">Note</span></code> text is <strong>always</strong> silently marked <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — <code class="docutils literal notranslate"><span class="pre">invalid</span></code> is never
+consulted at all, regardless of which value you set it to. See Examples 3 and 4 for both
+sides of this.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Parameters
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3.0&quot;</span><span class="p">}))</span>
-<span class="w">               </span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+**options** (`const ThreadCastOptions&amp;`, optional)
+    `series_dtype` picks the concrete numeric dtype for a `series()` conversion (defaults
+    to `Float64`, or effectively `Bool` when you explicitly request it). `format`, if
+    non-empty, is a strptime-style pattern used to parse `Note` text for a `timeline()`
+    (or `timeindex()`) conversion instead of the default ISO-ish parser. `invalid` chooses
+    `Raise`-vs-`Null` behavior — see the important callout above for exactly which target
+    actually honors it.
+
+## Returns
+
+`ThreadCastAccessor`
+    A lightweight accessor bound to the current thread (and `options`, if given). Each of
+    its four methods performs one conversion and returns a `Thread`.
+
+## Examples
+
+Example 1. Parse numeric text into a `Series`, using the default `Float64` dtype.
+
+```cpp
+using namespace pluss::table;
+
+auto texts = Thread(pluss::make_note({&quot;1.0&quot;, &quot;2.0&quot;, &quot;3.0&quot;}));
+
+auto out = texts.cast().series();
+std::cout &lt;&lt; out;
 </pre></div>
 </div>
 <section id="output">
@@ -94,27 +136,110 @@ Cast thread with the requested target family or dtype.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> when invalid text should become null instead of throwing.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
+<p>Example 2. Request a specific <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> via <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">;</span>
 
-<span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;4.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;oops&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;6.0&quot;</span><span class="p">}))</span>
-<span class="w">               </span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3&quot;</span><span class="p">})).</span><span class="n">cast</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">series</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">dtype</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1
+1  2
+2  3
+ptype: Series
+
+int64
+</pre></div>
+</div>
+<p>Example 3. Unparseable <code class="docutils literal notranslate"><span class="pre">Note</span></code> text becomes <code class="docutils literal notranslate"><span class="pre">NULL</span></code> when casting to <code class="docutils literal notranslate"><span class="pre">Series</span></code> — this happens
+<strong>regardless</strong> of <code class="docutils literal notranslate"><span class="pre">options.invalid</span></code>, even at its <code class="docutils literal notranslate"><span class="pre">Raise</span></code> default. See the important
+callout above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">messy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;4.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;oops&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;6.0&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">messy</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">series</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  4
-1  NA
+1  NULL
 2  6
 ptype: Series
 </pre></div>
 </div>
+<p>Example 4. The same unparseable-text scenario, but casting to <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> instead — here,
+<code class="docutils literal notranslate"><span class="pre">options.invalid</span></code>’s default <code class="docutils literal notranslate"><span class="pre">Raise</span></code> actually does throw. The message comes from the
+underlying datetime parser, not a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-specific wrapper.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">bad_dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;not a date&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bad_dates</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">timeline</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">null_on_invalid</span><span class="p">;</span>
+<span class="n">null_on_invalid</span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bad_dates</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">null_on_invalid</span><span class="p">).</span><span class="n">timeline</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>moment: failed to parse datetime
+0  2024-01-01
+1  NULL
+ptype: Timeline
+</pre></div>
+</div>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">ParseInvalid::Null</span></code> avoids the throw and marks the unparseable row
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> instead.</p>
+<p>Example 5. Cast a numeric thread to text with <code class="docutils literal notranslate"><span class="pre">note()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">note</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1.5
+1  2.5
+ptype: Note
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cast()</span></code> alone performs no conversion — it only binds an accessor; the actual work
+happens in <code class="docutils literal notranslate"><span class="pre">.series()</span></code>/<code class="docutils literal notranslate"><span class="pre">.note()</span></code>/<code class="docutils literal notranslate"><span class="pre">.timeline()</span></code>/<code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ThreadCastOptions::invalid</span></code> only actually affects the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> targets —
+see the important callout above. <code class="docutils literal notranslate"><span class="pre">astype()</span></code>, which delegates to <code class="docutils literal notranslate"><span class="pre">cast().series()</span></code>
+internally, inherits this same “always null on unparseable text” behavior.</p></li>
+<li><p>Converting to a thread’s own current kind is a cheap identity (subject to
+<code class="docutils literal notranslate"><span class="pre">series_dtype</span></code>, if a different numeric dtype is also requested).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::astype</span></code></span></a>: the single-argument shorthand for
+<code class="docutils literal notranslate"><span class="pre">cast(options).series()</span></code>.</p></li>
+<li><p><a class="reference internal" href="as_series.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::as_series</span></code></span></a> / <a class="reference internal" href="as_note.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_note</span></code></span></a> /
+<a class="reference internal" href="as_timeline.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_timeline</span></code></span></a> / <a class="reference internal" href="as_timeindex.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_timeindex</span></code></span></a>: view the current
+payload without converting it, throwing if the kind doesn’t already match.</p></li>
+<li><p><a class="reference internal" href="../dataframe/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cast</span></code></span></a>: cast several frame features in one call.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="casefold.html">
     <span class="label">Previous</span>
@@ -125,7 +250,6 @@ ptype: Series
     <span class="title">chars</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

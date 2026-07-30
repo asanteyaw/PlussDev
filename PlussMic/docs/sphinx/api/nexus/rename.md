@@ -202,12 +202,12 @@ Nexus::rename: target key already exists 'payments'
 - [`Nexus::select`](select.md): project and reorder tables without renaming them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="profile.html">
+  <a class="prev-link" href="relationships.html">
     <span class="label">Previous</span>
-    <span class="title">profile</span>
+    <span class="title">relationships</span>
   </a>
-  <a class="next-link" href="scan.html">
+  <a class="next-link" href="run.html">
     <span class="label">Next</span>
-    <span class="title">scan</span>
+    <span class="title">run</span>
   </a>
 </div>

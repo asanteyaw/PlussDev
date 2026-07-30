@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 717d741ca30d -->
 
 # DataFrameTimelineAccessor::weekday
 

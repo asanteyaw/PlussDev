@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3685d9f2e68b -->
 
 # Thread::defined
 
@@ -96,13 +97,11 @@ Thread: undefined handle
 
 - [`Thread::isnull`](isnull.md) / [`Thread::notnull`](notnull.md): per-cell validity,
   as opposed to this method's whole-object validity.
-- [`Thread::shares_payload_with`](shares_payload_with.md): a related object-identity
-  check, comparing two defined threads' underlying storage.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="day.html">
+  <a class="prev-link" href="cumsum.html">
     <span class="label">Previous</span>
-    <span class="title">day</span>
+    <span class="title">cumsum</span>
   </a>
   <a class="next-link" href="describe.html">
     <span class="label">Next</span>

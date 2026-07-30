@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1ef3d7a86725 -->
+<!-- pluss-signature-hash: 2f2cb13e0e11 -->
 
 # DataFrame::interp
 
@@ -9,6 +9,9 @@
 
 ```cpp
 DataFrame::interp(pluss::RangeView<std::string_view> features = {}, std::int64_t limit = -1) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::interp(const NameRange& features, std::int64_t limit = -1) const -> DataFrame
 
 DataFrame::interp(const FillOptions& options) const -> DataFrame
 ```
@@ -31,7 +34,10 @@ A leading or trailing run of nulls with no observed value on *both* sides is lef
 **features** (`pluss::RangeView<std::string_view>`, optional)
 
 Feature subset to interpolate. Leave empty (the default) to target every numeric
-`Series` feature on the frame automatically.
+`Series` feature on the frame automatically. Any container of `std::string_view`-
+convertible names (`std::vector<std::string>`, `std::set<std::string>`, and similar)
+works too, via a generic template overload — not just a braced list or an explicit
+`RangeView`.
 
 **limit** (`std::int64_t`, default `-1`)
 

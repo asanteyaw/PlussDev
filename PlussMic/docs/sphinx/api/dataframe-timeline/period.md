@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e224bcb5fed6 -->
 
 # DataFrameTimelineAccessor::period
 

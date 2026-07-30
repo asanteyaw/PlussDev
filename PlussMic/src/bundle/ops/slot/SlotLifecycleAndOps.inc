@@ -27,6 +27,11 @@ std::pair<std::int64_t, std::int64_t> Slot::shape() const {
   return {size(), 1};
 }
 
+SlotKind Slot::kind() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  return slot_profile(impl_ref_()).kind;
+}
+
 std::string Slot::ptype() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (values().empty()) {
@@ -64,7 +69,9 @@ Slot Slot::push(const Value& value) const {
 
 Slot& Slot::push_(const Value& value) {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  mut_impl_().values_.push_back(value);
+  auto& impl = mut_impl_();
+  impl.values_.push_back(value);
+  impl.invalidate_profile();
   return *this;
 }
 
@@ -145,44 +152,41 @@ std::unordered_map<std::string, std::int64_t> Slot::type_counts() const {
 
 Slot Slot::isnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  try {
+  if (is_stream_compatible()) {
     return Slot::from_kindle(to_kindle().isnull());
-  } catch (const std::exception&) {
-    std::vector<Value> out;
-    out.reserve(values().size());
-    for (const auto& value : values()) {
-      out.push_back(bool_slot_value(slot_value_isnull(value)));
-    }
-    return Slot(std::move(out));
   }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(slot_value_isnull(value)));
+  }
+  return Slot(std::move(out));
 }
 
 Slot Slot::notnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  try {
+  if (is_stream_compatible()) {
     return Slot::from_kindle(to_kindle().notnull());
-  } catch (const std::exception&) {
-    std::vector<Value> out;
-    out.reserve(values().size());
-    for (const auto& value : values()) {
-      out.push_back(bool_slot_value(!slot_value_isnull(value)));
-    }
-    return Slot(std::move(out));
   }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(!slot_value_isnull(value)));
+  }
+  return Slot(std::move(out));
 }
 
 Slot Slot::invalid() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  try {
+  if (is_stream_compatible()) {
     return Slot::from_kindle(to_kindle().invalid());
-  } catch (const std::exception&) {
-    std::vector<Value> out;
-    out.reserve(values().size());
-    for (const auto& value : values()) {
-      out.push_back(bool_slot_value(slot_value_invalid(value)));
-    }
-    return Slot(std::move(out));
   }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(slot_value_invalid(value)));
+  }
+  return Slot(std::move(out));
 }
 
 Slot Slot::fillnull(double value) const {
@@ -190,7 +194,6 @@ Slot Slot::fillnull(double value) const {
       *this,
       pluss::table::ThreadCastTarget::Series,
       "Slot::fillnull(double)",
-      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_series(); },
       scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Series, value, {}, nullptr, nullptr));
 }
 
@@ -199,7 +202,6 @@ Slot Slot::fillnull(std::string_view value) const {
       *this,
       pluss::table::ThreadCastTarget::Note,
       "Slot::fillnull(string)",
-      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_note(); },
       scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Note, 0.0, value, nullptr, nullptr));
 }
 
@@ -208,7 +210,6 @@ Slot Slot::fillnull(const pluss::Timeline& value) const {
       *this,
       pluss::table::ThreadCastTarget::Timeline,
       "Slot::fillnull(Timeline)",
-      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_timeline(); },
       scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Timeline, 0.0, {}, &value, nullptr));
 }
 
@@ -217,23 +218,21 @@ Slot Slot::fillnull(const pluss::TimeIndex& value) const {
       *this,
       pluss::table::ThreadCastTarget::TimeIndex,
       "Slot::fillnull(TimeIndex)",
-      [&](const pluss::table::Thread& t) -> Value { return t.fillnull(value).as_timeindex(); },
       scalar_fill_value_for_target(pluss::table::ThreadCastTarget::TimeIndex, 0.0, {}, nullptr, &value));
 }
 
 Slot Slot::dropnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  try {
+  if (is_stream_compatible()) {
     return Slot::from_kindle(to_kindle().dropnull());
-  } catch (const std::exception&) {
-    std::vector<Value> out;
-    out.reserve(values().size());
-    for (const auto& value : values()) {
-      const bool missing = slot_value_isnull(value);
-      if (!missing) out.push_back(value);
-    }
-    return Slot(std::move(out));
   }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    const bool missing = slot_value_isnull(value);
+    if (!missing) out.push_back(value);
+  }
+  return Slot(std::move(out));
 }
 
 Slot Slot::distinct(pluss::kindle::DistinctOptions options) const {
@@ -248,22 +247,113 @@ Slot Slot::ndistinct(pluss::kindle::DistinctOptions options) const {
   return Slot::from_kindle(to_kindle().ndistinct(options));
 }
 
+SlotCastAccessor Slot::cast() const {
+  return SlotCastAccessor(*this, {});
+}
+
+SlotCastAccessor Slot::cast(const pluss::table::ThreadCastOptions& options) const {
+  return SlotCastAccessor(*this, options);
+}
+
+SlotNoteAccessor Slot::nt() const {
+  return SlotNoteAccessor(*this);
+}
+
+SlotTimelineAccessor Slot::tl() const {
+  return SlotTimelineAccessor(*this);
+}
+
 Slot Slot::cast(pluss::table::ThreadCastTarget target,
                 const pluss::table::ThreadCastOptions& options) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return Slot::from_kindle(to_kindle().cast(target, options));
+  }
   if (target == pluss::table::ThreadCastTarget::Note) {
     std::vector<Value> out;
     out.reserve(values().size());
     for (const auto& value : values()) out.push_back(slot_value_to_note(value));
     return Slot(std::move(out));
   }
-  std::vector<Value> out;
-  out.reserve(values().size());
-  for (const auto& value : values()) {
+
+  struct SeriesBatch {
+    pluss::codem::ScalarType dtype{};
+    std::vector<std::int64_t> positions{};
+    std::vector<Value> values{};
+  };
+
+  std::vector<SeriesBatch> series_batches;
+  std::vector<std::int64_t> note_positions;
+  std::vector<Value> note_values;
+  std::vector<std::int64_t> timeline_positions;
+  std::vector<Value> timeline_values;
+  std::vector<std::int64_t> timeindex_positions;
+  std::vector<Value> timeindex_values;
+  std::vector<std::int64_t> slow_positions;
+
+  std::vector<Value> out(static_cast<std::size_t>(size()), std::monostate{});
+
+  for (std::int64_t i = 0; i < size(); ++i) {
+    const auto& value = at(i);
     if (std::holds_alternative<std::monostate>(value)) {
-      out.push_back(std::monostate{});
       continue;
     }
+    if (!slot_value_scalar_like(value)) {
+      slow_positions.push_back(i);
+      continue;
+    }
+
+    switch (slot_kind_of_value(value)) {
+      case SlotKind::Series: {
+        const auto dtype = std::get<pluss::Series>(value).scalar_type();
+        auto it = std::find_if(series_batches.begin(), series_batches.end(),
+                               [&](const SeriesBatch& batch) { return batch.dtype == dtype; });
+        if (it == series_batches.end()) {
+          series_batches.push_back(SeriesBatch{.dtype = dtype});
+          it = std::prev(series_batches.end());
+        }
+        it->positions.push_back(i);
+        it->values.push_back(value);
+        break;
+      }
+      case SlotKind::Note:
+        note_positions.push_back(i);
+        note_values.push_back(value);
+        break;
+      case SlotKind::Timeline:
+        timeline_positions.push_back(i);
+        timeline_values.push_back(value);
+        break;
+      case SlotKind::TimeIndex:
+        timeindex_positions.push_back(i);
+        timeindex_values.push_back(value);
+        break;
+      case SlotKind::Empty:
+      case SlotKind::Null:
+      case SlotKind::Mixed:
+        slow_positions.push_back(i);
+        break;
+    }
+  }
+
+  auto scatter_casted = [&](const std::vector<std::int64_t>& positions, std::vector<Value> values_batch) {
+    if (positions.empty()) return;
+    auto casted = Slot::from_kindle(Slot(std::move(values_batch)).to_kindle().cast(target, options));
+    const auto& casted_values = casted.values();
+    for (std::size_t j = 0; j < positions.size(); ++j) {
+      out[static_cast<std::size_t>(positions[j])] = casted_values[j];
+    }
+  };
+
+  for (auto& batch : series_batches) {
+    scatter_casted(batch.positions, std::move(batch.values));
+  }
+  scatter_casted(note_positions, std::move(note_values));
+  scatter_casted(timeline_positions, std::move(timeline_values));
+  scatter_casted(timeindex_positions, std::move(timeindex_values));
+
+  for (const auto pos : slow_positions) {
+    const auto& value = at(pos);
     const auto casted = [&]() {
       const auto thread = thread_from_slot_value(value);
       switch (target) {
@@ -278,7 +368,7 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
       }
       return thread;
     }();
-    out.push_back(slot_value_from_thread_payload(casted));
+    out[static_cast<std::size_t>(pos)] = slot_value_from_thread_payload(casted);
   }
   return Slot(std::move(out));
 }
@@ -304,23 +394,36 @@ Slot Slot::max() const {
   return Slot::from_kindle(to_kindle().max());
 }
 
+bool Slot::is_stream_compatible() const {
+  if (!defined()) return false;
+  return slot_profile(impl_ref_()).stream_compatible;
+}
+
+void Slot::ensure_stream_compatible(std::string_view where) const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  const auto& profile = slot_profile(impl_ref_());
+  PLUSS_CHECK(profile.stream_compatible,
+              std::string(where.empty() ? "Slot" : where) +
+                  ": slot is not stream-compatible (kind=" + slot_kind_name(profile.kind) + ")");
+}
+
 pluss::kindle::Stream Slot::to_kindle() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (empty()) return pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{}));
+  const auto& profile = slot_profile(impl_ref_());
+  if (profile.kind == SlotKind::Empty) {
+    return pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{}));
+  }
+  PLUSS_CHECK(profile.stream_compatible,
+              "Slot::to_kindle: slot is not stream-compatible (kind=" + slot_kind_name(profile.kind) + ")");
 
-  if (all_type<pluss::Series>(values())) {
+  if (profile.kind == SlotKind::Series) {
     if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Series>(values().front()));
 
     const auto dtype = std::get<pluss::Series>(values().front()).scalar_type();
     if (dtype == pluss::codem::ScalarType::Bool) {
       std::vector<bool> out;
       out.reserve(values().size());
-      for (const auto& v : values()) {
-        const auto& s = std::get<pluss::Series>(v);
-        PLUSS_CHECK(s.scalar_type() == dtype, "Slot::to_kindle: mixed Series dtypes are not stream-compatible");
-        PLUSS_CHECK(s.numel() == 1, "Slot::to_kindle: Series values must be scalar-like (numel==1)");
-        out.push_back(s.to_vec<bool>()[0]);
-      }
+      for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).to_vec<bool>()[0]);
       const auto n = static_cast<std::int64_t>(out.size());
       auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
       auto* p = reinterpret_cast<bool*>(s.raw_data());
@@ -330,67 +433,47 @@ pluss::kindle::Stream Slot::to_kindle() const {
     if (dtype == pluss::codem::ScalarType::Int64) {
       std::vector<std::int64_t> out;
       out.reserve(values().size());
-      for (const auto& v : values()) {
-        const auto& s = std::get<pluss::Series>(v);
-        PLUSS_CHECK(s.scalar_type() == dtype, "Slot::to_kindle: mixed Series dtypes are not stream-compatible");
-        PLUSS_CHECK(s.numel() == 1, "Slot::to_kindle: Series values must be scalar-like (numel==1)");
-        out.push_back(s.to_vec<std::int64_t>()[0]);
-      }
+      for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0]);
       return pluss::kindle::Stream(pluss::make_series(out, {static_cast<std::int64_t>(out.size())}));
     }
 
     std::vector<double> out;
     out.reserve(values().size());
     for (const auto& v : values()) {
-      const auto& s = std::get<pluss::Series>(v);
-      PLUSS_CHECK(s.scalar_type() == dtype, "Slot::to_kindle: mixed Series dtypes are not stream-compatible");
-      PLUSS_CHECK(s.numel() == 1, "Slot::to_kindle: Series values must be scalar-like (numel==1)");
-      out.push_back(s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0]);
+      out.push_back(std::get<pluss::Series>(v).to(pluss::codem::ScalarType::Float64).to_vec<double>()[0]);
     }
     auto merged = pluss::make_series(out, {static_cast<std::int64_t>(out.size())});
     if (dtype != pluss::codem::ScalarType::Float64) merged = merged.to(dtype);
     return pluss::kindle::Stream(merged);
   }
 
-  if (all_type<pluss::Note>(values())) {
+  if (profile.kind == SlotKind::Note) {
     if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Note>(values().front()));
     std::vector<std::string> out;
     out.reserve(values().size());
-    for (const auto& v : values()) {
-      const auto& n = std::get<pluss::Note>(v);
-      PLUSS_CHECK(n.numel() == 1, "Slot::to_kindle: Note values must be scalar-like (numel==1)");
-      out.emplace_back(n.at(0));
-    }
+    for (const auto& v : values()) out.emplace_back(std::get<pluss::Note>(v).at(0));
     return pluss::kindle::Stream(pluss::make_note(out));
   }
 
-  if (all_type<pluss::Timeline>(values())) {
+  if (profile.kind == SlotKind::Timeline) {
     if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Timeline>(values().front()));
     std::vector<std::int64_t> ticks;
     ticks.reserve(values().size());
-    for (const auto& v : values()) {
-      const auto& t = std::get<pluss::Timeline>(v);
-      PLUSS_CHECK(t.numel() == 1, "Slot::to_kindle: Timeline values must be scalar-like (numel==1)");
-      ticks.push_back(t.to_epoch_nanos_vector()[0]);
-    }
+    for (const auto& v : values()) ticks.push_back(std::get<pluss::Timeline>(v).to_epoch_nanos_vector()[0]);
     return pluss::kindle::Stream(pluss::from_epoch_nanos(
         ticks,
         std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())}));
   }
 
-  if (all_type<pluss::TimeIndex>(values())) {
+  if (profile.kind == SlotKind::TimeIndex) {
     if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::TimeIndex>(values().front()));
     std::vector<std::int64_t> ticks;
     ticks.reserve(values().size());
-    for (const auto& v : values()) {
-      const auto& t = std::get<pluss::TimeIndex>(v);
-      PLUSS_CHECK(t.size() == 1, "Slot::to_kindle: TimeIndex values must be scalar-like (size==1)");
-      ticks.push_back(t.timeline().to_epoch_nanos_vector()[0]);
-    }
+    for (const auto& v : values()) ticks.push_back(std::get<pluss::TimeIndex>(v).timeline().to_epoch_nanos_vector()[0]);
     return pluss::kindle::Stream(pluss::make_timeindex(ticks, false));
   }
 
-  throw pluss::Error("Slot::to_kindle: heterogeneous slot is not stream-compatible");
+  throw pluss::Error("Slot::to_kindle: unsupported slot kind");
 }
 
 pluss::kindle::Stream Slot::kindelize() const {

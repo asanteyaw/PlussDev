@@ -68,6 +68,16 @@ IGNORED_PATH_PARTS = {
 }
 # Prefixes for any directory literally named "build*" (build, build-tests, ...)
 IGNORED_DIR_PREFIXES = ("build",)
+MIRRORED_DOC_SUFFIXES = {
+    ".md",
+    ".svg",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".pdf",
+}
 
 # The canonical copy of the shared chrome (topbar, sidebars, prev/next nav,
 # card-grid landing page CSS) lives at the repo root's docs/sphinx/_static/.
@@ -90,7 +100,7 @@ def _is_ignored(path: Path) -> bool:
     for part in path.parts:
         if part in IGNORED_PATH_PARTS:
             return True
-        if any(part.startswith(prefix) and part != "docs" for prefix in IGNORED_DIR_PREFIXES):
+        if "." not in part and any(part.startswith(prefix) and part != "docs" for prefix in IGNORED_DIR_PREFIXES):
             return True
     return False
 
@@ -129,17 +139,24 @@ def find_local_doc_sources(scan_root: Path, into: Path) -> list[tuple[Path, str]
     return sources
 
 
-def plan_markdown_tree(source: Path, slug: str) -> list[tuple[Path, Path]]:
-    """Return [(source_file, dest_relpath_under_local_dir), ...] without
-    touching the filesystem, so the caller can compute a full picture of what
-    _local/ *should* contain before deleting or copying anything.
+def plan_docs_tree(source: Path, slug: str) -> list[tuple[Path, Path]]:
+    """Return [(source_file, dest_relpath_under_local_dir), ...] for markdown
+    plus doc assets that pages reference relative to themselves.
+
+    The root/site `_local/` mirror must carry not only the `.md` sources but
+    also nearby images/PDFs, otherwise the aggregated site renders the text of
+    a page while silently breaking its figures.
     """
     plan = []
-    for md_file in sorted(source.rglob("*.md")):
-        rel = md_file.relative_to(source)
-        if _is_ignored(rel):
+    for source_file in sorted(source.rglob("*")):
+        if not source_file.is_file():
             continue
-        plan.append((md_file, Path(slug) / rel))
+        rel = source_file.relative_to(source)
+        if _is_ignored(rel.parent):
+            continue
+        if source_file.suffix.lower() not in MIRRORED_DOC_SUFFIXES:
+            continue
+        plan.append((source_file, Path(slug) / rel))
     return plan
 
 
@@ -277,7 +294,7 @@ def main() -> int:
             if not claim_slug(slug, source_dir):
                 collision = True
                 continue
-            plan = plan_markdown_tree(source_dir, slug)
+            plan = plan_docs_tree(source_dir, slug)
             if not plan:
                 continue
             full_plan.extend(plan)
@@ -296,7 +313,7 @@ def main() -> int:
         if not claim_slug(slug, hub):
             collision = True
             continue
-        plan = plan_markdown_tree(hub, slug)
+        plan = plan_docs_tree(hub, slug)
         full_plan.extend(plan)
         total_sources += 1
         manifest_lines.append(f"- `{slug}` <- `{hub}` ({len(plan)} file(s))")

@@ -223,7 +223,7 @@ std::size_t level_index_(const detail::DataFrameImpl& src, std::string_view leve
 std::string case_tuple_key_(const detail::CaseAxis& axis, std::int64_t row) {
   std::string key;
   for (const auto& level : axis.levels) {
-    key += level.values.is_valid(row) ? thread_scalar_string_at(level.values, row) : std::string("NULL");
+    key += detail::valid_at(level.values, row) ? thread_scalar_string_at(level.values, row) : std::string("NULL");
     key.append("\x1E", 1);
   }
   return key;
@@ -241,7 +241,7 @@ std::vector<std::string> composite_case_labels_(const detail::CaseAxis& axis,
         label.append(separator.data(), separator.size());
       }
       const auto& values = axis.levels[i].values;
-      label += values.is_valid(row) ? thread_scalar_string_at(values, row) : std::string("NULL");
+      label += detail::valid_at(values, row) ? thread_scalar_string_at(values, row) : std::string("NULL");
     }
     labels.push_back(std::move(label));
   }
@@ -288,7 +288,7 @@ std::vector<std::string> selected_label_keys_(const detail::DataFrameImpl& src,
     std::vector<std::string> keys;
     keys.reserve(static_cast<std::size_t>(flat_labels.size()));
     for (std::int64_t row = 0; row < flat_labels.size(); ++row) {
-      keys.push_back(flat_labels.is_valid(row) ? thread_scalar_string_at(flat_labels, row) : std::string{"NULL"});
+      keys.push_back(detail::valid_at(flat_labels, row) ? thread_scalar_string_at(flat_labels, row) : std::string{"NULL"});
     }
     return keys;
   }
@@ -305,7 +305,7 @@ std::vector<std::string> selected_label_keys_(const detail::DataFrameImpl& src,
     for (const auto position : positions) {
       if (!key.empty()) key.append("\x1E", 1);
       const auto& values = src.case_axis_.levels[position].values;
-      key += values.is_valid(row) ? thread_scalar_string_at(values, row) : std::string{"NULL"};
+      key += detail::valid_at(values, row) ? thread_scalar_string_at(values, row) : std::string{"NULL"};
     }
     keys.push_back(std::move(key));
   }
@@ -813,7 +813,7 @@ DataFrame DataFrameLabelAccessor::swap(std::string_view left, std::string_view r
 bool DataFrameLabelAccessor::monotonic(bool ascending, bool strict, bool nulls_last) const {
   const auto labels = frame_.label().values();
   for (std::int64_t row = 1; row < labels.size(); ++row) {
-    const auto cmp = labels.compare_rows(row - 1, row, nulls_last);
+    const auto cmp = detail::compare_rows(labels, row - 1, row, nulls_last);
     if (ascending) {
       if (strict ? cmp >= 0 : cmp > 0) {
         return false;
@@ -835,7 +835,7 @@ std::int64_t DataFrameLabelAccessor::depth() const {
     bool sorted = true;
     for (std::int64_t row = 1; row < src.nrows_ && sorted; ++row) {
       for (std::size_t level = 0; level < prefix; ++level) {
-        const auto cmp = src.case_axis_.levels[level].values.compare_rows(row - 1, row, true);
+        const auto cmp = detail::compare_rows(src.case_axis_.levels[level].values, row - 1, row, true);
         if (cmp < 0) {
           break;
         }
@@ -862,7 +862,7 @@ DataFrame DataFrameLabelAccessor::codes() const {
     std::vector<std::int64_t> codes;
     codes.reserve(static_cast<std::size_t>(labels.size()));
     for (std::int64_t row = 0; row < labels.size(); ++row) {
-      const auto key = labels.is_valid(row) ? thread_scalar_string_at(labels, row) : std::string{"NULL"};
+      const auto key = detail::valid_at(labels, row) ? thread_scalar_string_at(labels, row) : std::string{"NULL"};
       auto [it, inserted] = code_by_value.emplace(key, static_cast<std::int64_t>(code_by_value.size()));
       codes.push_back(it->second);
     }
@@ -874,7 +874,7 @@ DataFrame DataFrameLabelAccessor::codes() const {
       std::vector<std::int64_t> codes;
       codes.reserve(static_cast<std::size_t>(level.values.size()));
       for (std::int64_t row = 0; row < level.values.size(); ++row) {
-        const auto key = level.values.is_valid(row) ? thread_scalar_string_at(level.values, row) : std::string{"NULL"};
+        const auto key = detail::valid_at(level.values, row) ? thread_scalar_string_at(level.values, row) : std::string{"NULL"};
         auto [it, inserted] = code_by_value.emplace(key, static_cast<std::int64_t>(code_by_value.size()));
         codes.push_back(it->second);
       }
@@ -900,7 +900,7 @@ DataFrame DataFrameLabelAccessor::levels() const {
     std::vector<std::string> values;
     values.reserve(static_cast<std::size_t>(distinct.size()));
     for (std::int64_t row = 0; row < distinct.size(); ++row) {
-      values.push_back(distinct.is_valid(row) ? thread_scalar_string_at(distinct, row) : std::string{"NULL"});
+      values.push_back(detail::valid_at(distinct, row) ? thread_scalar_string_at(distinct, row) : std::string{"NULL"});
     }
     max_size = std::max(max_size, values.size());
     level_values.push_back(std::move(values));
@@ -952,7 +952,7 @@ DataFrame DataFrame::case_study(const CasePick& pick) const {
     bool match = true;
     for (std::size_t i = 0; i < level_indices.size(); ++i) {
       const auto& column = src.case_axis_.levels[level_indices[i]].values;
-      const auto observed = column.is_valid(row) ? thread_scalar_string_at(column, row) : std::string("NULL");
+      const auto observed = detail::valid_at(column, row) ? thread_scalar_string_at(column, row) : std::string("NULL");
       if (observed != values[i]) {
         match = false;
         break;
@@ -1322,10 +1322,10 @@ bool same_flat_cases_for_select_(const Thread& lhs, const Thread& rhs) {
     return false;
   }
   for (std::int64_t row = 0; row < lhs.size(); ++row) {
-    if (lhs.is_valid(row) != rhs.is_valid(row)) {
+    if (detail::valid_at(lhs, row) != detail::valid_at(rhs, row)) {
       return false;
     }
-    if (lhs.is_valid(row) && thread_scalar_string_at(lhs, row) != thread_scalar_string_at(rhs, row)) {
+    if (detail::valid_at(lhs, row) && thread_scalar_string_at(lhs, row) != thread_scalar_string_at(rhs, row)) {
       return false;
     }
   }
@@ -1952,7 +1952,7 @@ DataFrame DataFrame::sort_caselbl(bool ascending, bool nulls_last) const {
   std::iota(idx.begin(), idx.end(), 0);
   const auto& case_axis = case_labels_();
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
-    const auto cmp = case_axis.compare_rows(a, b, nulls_last);
+    const auto cmp = detail::compare_rows(case_axis, a, b, nulls_last);
     return ascending ? (cmp < 0) : (cmp > 0);
   });
   return take(idx);
@@ -1974,7 +1974,7 @@ DataFrame DataFrame::sort_caselbl(const SortLabelOptions& options) const {
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
     for (const auto level_idx : level_indices) {
       const auto& level_values = src.case_axis_.levels[level_idx].values;
-      const auto cmp = level_values.compare_rows(a, b, options.nulls_last);
+      const auto cmp = detail::compare_rows(level_values, a, b, options.nulls_last);
       if (cmp != 0) {
         return options.ascending ? (cmp < 0) : (cmp > 0);
       }
@@ -2030,7 +2030,7 @@ pluss::Series DataFrame::repeated_caselbl(pluss::msharp::RangeView::Of<std::stri
     key.reserve(feature_idx.size() * 16);
     for (const auto idx : feature_idx) {
       const auto& col = src.columns_[idx];
-      if (!col.is_valid(r)) {
+      if (!detail::valid_at(col, r)) {
         key.append("\x1D", 1);
       } else {
         key += thread_scalar_string_at(col, r);
@@ -2351,7 +2351,7 @@ Thread remap_align_feature_(const Thread& source,
       if (!present[idx]) {
         valid.push_back(fill.has_value() && out.kind() == ThreadKind::Series);
       } else {
-        valid.push_back(out.is_valid(row));
+        valid.push_back(detail::valid_at(out, row));
       }
     }
     auto validity = bool_series_from_keep(valid);

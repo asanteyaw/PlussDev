@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c3839864dc4c -->
 
 # Thread::slice
 
@@ -104,8 +105,8 @@ ptype: Series
     <span class="label">Previous</span>
     <span class="title">skew</span>
   </a>
-  <a class="next-link" href="arrange.html">
+  <a class="next-link" href="split.html">
     <span class="label">Next</span>
-    <span class="title">arrange</span>
+    <span class="title">split</span>
   </a>
 </div>

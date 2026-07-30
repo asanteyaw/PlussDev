@@ -216,6 +216,10 @@ struct AreaStackedPlotOptions {
 struct ScatterPlotOptions {
   double alpha{0.92};
   double line_width{1.1};
+  bool fit_line{false};
+  std::int64_t fit_order{1};
+  bool fit_ci{false};
+  double fit_confidence_level{0.95};
 };
 
 struct BarStackedPlotOptions {

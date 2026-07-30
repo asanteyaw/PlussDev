@@ -68,6 +68,8 @@ int main() {
   auto score_cost_corr = df.features("score").corr_with(df.features("cost"));
   auto score_cost_dot = df.features("score").matmul(df.features("cost"));
 
+  auto checking_sth = df.features("label").tl();
+
   auto upper_label = df.features("label").nt().upper();
   auto label_lengths = df.features("label").nt().length();
   auto label_matches = df.features("label").nt().matches("[A-Za-z]+");

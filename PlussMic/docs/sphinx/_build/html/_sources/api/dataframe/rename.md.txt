@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 33da707573bd -->
+<!-- pluss-signature-hash: 04a81f09aaf3 -->
 
 # DataFrame::rename
 
@@ -12,6 +12,10 @@ DataFrame::rename(std::string_view old_name, std::string new_name) const -> Data
 DataFrame::rename(pluss::RangeView<std::pair<std::string_view, std::string_view>> renames) const -> DataFrame
 DataFrame::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const -> DataFrame
 DataFrame::rename(pluss::RangeView<std::string_view> feature_names) const -> DataFrame
+
+template <detail::StringViewNameRange NameRange>
+DataFrame::rename(const NameRange& feature_names) const -> DataFrame
+
 DataFrame::rename(std::initializer_list<const char*> feature_names) const -> DataFrame
 ```
 
@@ -53,7 +57,10 @@ A collection of `(old_name, new_name)` pairs, applied together. Features not nam
 `std::initializer_list<const char*>`)
 
 A full replacement name list, applied **positionally** to every feature on the frame,
-left to right. Must have exactly `nfeatures()` entries.
+left to right. Must have exactly `nfeatures()` entries. Any container of
+`std::string_view`-convertible names (`std::vector<std::string>`, `std::set<std::string>`,
+and similar) works too, via a generic template overload — not just a braced list or an
+explicit `RangeView`.
 
 ## Returns
 

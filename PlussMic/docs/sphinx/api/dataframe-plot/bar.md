@@ -89,10 +89,12 @@ auto sales = DataFrame({
 });
 
 auto chart = sales.plot().bar("amount", "city");
-chart.save_svg("sales_by_city.svg");
+chart.show();
 ```
 
 One bar per city, no legend (single y-feature).
+
+![Output of Example 1](img/bar-1.svg)
 
 Example 2. Two y-features, grouped (side-by-side) bars sharing each x position.
 
@@ -111,6 +113,8 @@ Each student gets two narrower bars side by side (`midterm`, `final`) instead of
 per-group bar width automatically shrinks to fit both within that student's axis slot. A
 legend labeled `"midterm"`/`"final"` is shown automatically.
 
+![Output of Example 2](img/bar-2.svg)
+
 Example 3. The same grouped call via a reusable `RangeView`.
 
 ```cpp
@@ -119,12 +123,16 @@ auto chart = exams.plot().bar(pluss::msharp::RangeView::Of<std::string_view>(y_n
 chart.save_pdf("exams.pdf");
 ```
 
+![Output of Example 3](img/bar-3.svg)
+
 Example 4. No `x_feature`: falls back to the frame's own row labels, exactly like every
 other chart method on this accessor — see [`line()`](line.md)'s Example 3.
 
 ```cpp
 auto chart = sales.plot().bar("amount");
 ```
+
+![Output of Example 4](img/bar-4.svg)
 
 Example 5. `horizontal = true` — bars extend sideways, category axis runs vertically.
 
@@ -133,8 +141,10 @@ BarPlotOptions horizontal_options;
 horizontal_options.horizontal = true;
 
 auto chart = sales.plot().bar("amount", "city", horizontal_options);
-chart.save_png("sales_horizontal.png");
+chart.show();
 ```
+
+![Output of Example 5](img/bar-5.svg)
 
 Example 6. `ci_enabled = true` — rows sharing the same category are aggregated into a mean
 bar with a confidence-interval whisker.
@@ -150,12 +160,14 @@ ci_options.ci_enabled = true;
 ci_options.ci_level = 0.90;
 
 auto chart = repeated.plot().bar("amount", "city", ci_options);
-chart.save_svg("sales_with_ci.svg");
+chart.show();
 ```
 
 `"Accra"`'s three rows are aggregated into one bar at the mean of `300, 320, 340 = 320`,
 with a 90% confidence-interval whisker computed from those three samples; `"Tema"`'s two
 rows aggregate to a bar at `180` with its own (wider, since fewer samples) whisker.
+
+![Output of Example 6](img/bar-6.svg)
 
 ## Notes
 

@@ -220,7 +220,7 @@ Thread display_thread(const Thread& t) {
 }
 
 std::string thread_value_at(const Thread& t, std::int64_t row) {
-  if (!t.is_valid(row)) {
+  if (!detail::valid_at(t, row)) {
     return "NULL";
   }
 
@@ -1526,7 +1526,7 @@ class DataFrameVirtualTableModel final
       return {};
     }
     const auto& source = columns_[static_cast<std::size_t>(column)];
-    const bool missing = !source.is_valid(row);
+    const bool missing = !detail::valid_at(source, row);
     return pluss::view::VirtualTableCell{
         .text = missing ? std::string("NULL") : thread_value_at(source, row),
         .missing = missing,

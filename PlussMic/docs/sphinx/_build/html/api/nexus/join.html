@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Nexus::join &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nexus::keys" href="keys.html" />
+    <link rel="prev" title="Nexus::inject" href="inject.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="nexus-join">
+<h1>Nexus::join<a class="headerlink" href="#nexus-join" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_api_reference.html"><span class="doc std std-doc">Back to Nexus API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">JoinSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Joins two tables already in the workspace, one hop at a time, and returns the joined
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> directly — no relationship graph traversal, no multi-table plan, just
+<code class="docutils literal notranslate"><span class="pre">left.unify(...)</span></code> under the hood using whatever <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code> you provide. This is the
+lowest-level joining primitive on <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>; <a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize()</span></code></span></a> is the version
+that chains several <code class="docutils literal notranslate"><span class="pre">join()</span></code>-style steps together from a <a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">JoinPlan</span></code></span></a>, and
+<a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a> (via <a class="reference internal" href="from.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from()</span></code></span></a>) is the fluent,
+higher-level way to build that chain without constructing a <code class="docutils literal notranslate"><span class="pre">JoinPlan</span></code> by hand.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">JoinSpec</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">JoinHow</span><span class="w"> </span><span class="n">how</span><span class="p">{</span><span class="n">JoinHow</span><span class="o">::</span><span class="n">Inner</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">right_suffix</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">RelationshipCardinality</span><span class="o">&gt;</span><span class="w"> </span><span class="n">validate</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">relationship_name</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">result_name</span><span class="p">{};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">keys</span></code> lists <code class="docutils literal notranslate"><span class="pre">(left_feature,</span> <span class="pre">right_feature)</span></code> pairs to join on. <code class="docutils literal notranslate"><span class="pre">how</span></code> picks the join
+semantics (<code class="docutils literal notranslate"><span class="pre">Inner</span></code>, <code class="docutils literal notranslate"><span class="pre">Left</span></code>, <code class="docutils literal notranslate"><span class="pre">Right</span></code>, <code class="docutils literal notranslate"><span class="pre">Outer</span></code>, <code class="docutils literal notranslate"><span class="pre">Cross</span></code>, <code class="docutils literal notranslate"><span class="pre">LeftOnly</span></code>, <code class="docutils literal notranslate"><span class="pre">RightOnly</span></code> — see
+<code class="docutils literal notranslate"><span class="pre">join_how_string</span></code> in <a class="reference internal" href="../dataframe/unify.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code></span></a>’s own reference for what
+each produces). <code class="docutils literal notranslate"><span class="pre">right_suffix</span></code> disambiguates overlapping non-key column names from the
+right table (defaults to <code class="docutils literal notranslate"><span class="pre">&quot;_&quot;</span> <span class="pre">+</span> <span class="pre">right</span></code> when empty). <code class="docutils literal notranslate"><span class="pre">validate</span></code> optionally checks the join’s
+actual cardinality against an expectation, throwing if it doesn’t match. <code class="docutils literal notranslate"><span class="pre">result_name</span></code>
+becomes the returned frame’s title (defaults to <code class="docutils literal notranslate"><span class="pre">left</span> <span class="pre">+</span> <span class="pre">&quot;_&quot;</span> <span class="pre">+</span> <span class="pre">right</span></code>).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>relationship_name resolves keys/validate from a declared Relationship instead
+Setting <code class="docutils literal notranslate"><span class="pre">spec.relationship_name</span></code> to a declared relationship’s name looks that relationship
+up and, <strong>only for fields you left unset</strong>, fills in <code class="docutils literal notranslate"><span class="pre">keys</span></code> (from the relationship’s own
+<code class="docutils literal notranslate"><span class="pre">keys</span></code>, oriented correctly regardless of which side <code class="docutils literal notranslate"><span class="pre">left</span></code>/<code class="docutils literal notranslate"><span class="pre">right</span></code> are) and <code class="docutils literal notranslate"><span class="pre">validate</span></code>
+(from the relationship’s <code class="docutils literal notranslate"><span class="pre">cardinality</span></code>). If you set <code class="docutils literal notranslate"><span class="pre">keys</span></code> explicitly <em>and</em> also give
+<code class="docutils literal notranslate"><span class="pre">relationship_name</span></code>, your explicit <code class="docutils literal notranslate"><span class="pre">keys</span></code> win — the relationship is only consulted for
+<code class="docutils literal notranslate"><span class="pre">cardinality</span></code>-based <code class="docutils literal notranslate"><span class="pre">validate</span></code> in that case. If two or more relationships connect the same
+table pair and you don’t name one explicitly, the call throws — see Example 3.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>left</strong> / <strong>right</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The two tables to join, in that role order. Both must already exist in the workspace.</p>
+<p><strong>spec</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">JoinSpec&amp;</span></code>)
+The join configuration — see above. For <code class="docutils literal notranslate"><span class="pre">spec.how</span> <span class="pre">==</span> <span class="pre">JoinHow::Cross</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code> must be
+empty and <code class="docutils literal notranslate"><span class="pre">relationship_name</span></code> must not be set (a cross join has no join keys by
+definition).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+The joined result, titled <code class="docutils literal notranslate"><span class="pre">spec.result_name</span></code> if given, otherwise <code class="docutils literal notranslate"><span class="pre">left</span> <span class="pre">+</span> <span class="pre">&quot;_&quot;</span> <span class="pre">+</span> <span class="pre">right</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. An explicit <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code> with keys spelled out directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">JoinSpec</span><span class="w"> </span><span class="n">spec</span><span class="p">;</span>
+<span class="n">spec</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
+<span class="n">spec</span><span class="p">.</span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JoinHow</span><span class="o">::</span><span class="n">Left</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">spec</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">joined</span><span class="p">.</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">joined</span><span class="p">.</span><span class="n">nfeatures</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3 4
+</pre></div>
+</div>
+<p>Example 2. The same join, driven by a declared relationship’s <code class="docutils literal notranslate"><span class="pre">keys</span></code> instead of spelling
+them out.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Relationship</span><span class="w"> </span><span class="n">rel</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders_to_customers&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">ManyToOne</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">linked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
+
+<span class="n">JoinSpec</span><span class="w"> </span><span class="n">via_relationship</span><span class="p">;</span>
+<span class="n">via_relationship</span><span class="p">.</span><span class="n">relationship_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders_to_customers&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">joined2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">via_relationship</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">joined2</span><span class="p">.</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">joined2</span><span class="p">.</span><span class="n">nfeatures</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3 4
+</pre></div>
+</div>
+<p>Example 3. Unlike <a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery::join</span></code></span></a>, which
+auto-detects a relationship connecting two tables when you don’t specify one,
+<code class="docutils literal notranslate"><span class="pre">Nexus::join()</span></code> never guesses — a <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code> with neither <code class="docutils literal notranslate"><span class="pre">keys</span></code> nor <code class="docutils literal notranslate"><span class="pre">relationship_name</span></code>
+set always throws, even when a relationship declaration would have made the join
+unambiguous.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">JoinSpec</span><span class="w"> </span><span class="n">empty</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">empty</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::join: join keys cannot be empty
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Delegates directly to <code class="docutils literal notranslate"><span class="pre">left.unify(...)</span></code> internally — everything
+<a class="reference internal" href="../dataframe/unify.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code></span></a> documents about join semantics applies here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">relationship_name</span></code> only fills in fields you left unset on <code class="docutils literal notranslate"><span class="pre">spec</span></code> — see the important
+callout above.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">JoinHow::Cross</span></code> join accepts no <code class="docutils literal notranslate"><span class="pre">keys</span></code> and no <code class="docutils literal notranslate"><span class="pre">relationship_name</span></code>.</p></li>
+<li><p>This is a single hop between two named tables — for a multi-hop chain across several
+tables, see <a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path()</span></code></span></a>/<a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plan()</span></code></span></a>/<a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize()</span></code></span></a>, or
+the fluent <a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a> builder.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::materialize</span></code></span></a>: chains several <code class="docutils literal notranslate"><span class="pre">join()</span></code>-equivalent steps from a
+<code class="docutils literal notranslate"><span class="pre">JoinPlan</span></code>.</p></li>
+<li><p><a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::plan</span></code></span></a> / <a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path</span></code></span></a>: build the multi-hop plan <code class="docutils literal notranslate"><span class="pre">materialize()</span></code>
+consumes.</p></li>
+<li><p><a class="reference internal" href="from.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::from</span></code></span></a>: the fluent, higher-level entry point into the same joining
+machinery.</p></li>
+<li><p><a class="reference internal" href="../dataframe/unify.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code></span></a>: the underlying join primitive.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="inject.html">
+    <span class="label">Previous</span>
+    <span class="title">inject</span>
+  </a>
+  <a class="next-link" href="keys.html">
+    <span class="label">Next</span>
+    <span class="title">keys</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
+      <li>Previous: <a href="inject.html" title="previous chapter">Nexus::inject</a></li>
+      <li>Next: <a href="keys.html" title="next chapter">Nexus::keys</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/nexus/join.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::density" href="density.html" />
-    <link rel="prev" title="DataFramePlotAccessor::brief" href="brief.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -88,12 +86,13 @@ every other.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">corr_heatmap</span><span class="p">();</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;metrics_corr.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>A 3×3 heatmap: <code class="docutils literal notranslate"><span class="pre">revenue</span></code>, <code class="docutils literal notranslate"><span class="pre">cost</span></code>, and <code class="docutils literal notranslate"><span class="pre">headcount</span></code>, each pairwise correlation coefficient
 annotated on its cell by default (<code class="docutils literal notranslate"><span class="pre">annotate_levels</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code> here, unlike plain
 <code class="docutils literal notranslate"><span class="pre">heatmap()</span></code>).</p>
+<p><img alt="Output of Example 1" src="../../_images/corr_heatmap-1.svg" /></p>
 <p>Example 2. An explicit feature subset, restricting the matrix to two features.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">corr_heatmap</span><span class="p">({</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">});</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
@@ -102,6 +101,7 @@ annotated on its cell by default (<code class="docutils literal notranslate"><sp
 <p>A 2×2 matrix — the diagonal cells are each feature’s correlation with itself (always <code class="docutils literal notranslate"><span class="pre">1.0</span></code>)
 and the two off-diagonal cells are <code class="docutils literal notranslate"><span class="pre">revenue</span></code> vs <code class="docutils literal notranslate"><span class="pre">cost</span></code>’s correlation, mirrored across the
 diagonal.</p>
+<p><img alt="Output of Example 2" src="../../_images/corr_heatmap-2.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">CorrHeatmapPlotOptions</span></code>, disabling the value annotations and using
 a borderless style.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">CorrHeatmapPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -115,6 +115,7 @@ a borderless style.</p>
 <p>Passing <code class="docutils literal notranslate"><span class="pre">{}</span></code> explicitly (rather than omitting the argument) still triggers the “every
 numeric feature” inference — the empty-list rule doesn’t depend on whether the empty list
 was the default or spelled out.</p>
+<p><img alt="Output of Example 3" src="../../_images/corr_heatmap-3.svg" /></p>
 <p>Example 4. A feature that isn’t numeric throws, same as every method sharing this
 <code class="docutils literal notranslate"><span class="pre">features</span></code>-validation rule.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -196,11 +197,8 @@ instead of a single correlation coefficient per pair.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -214,16 +212,6 @@ instead of a single correlation coefficient per pair.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="brief.html" title="previous chapter">DataFramePlotAccessor::brief</a></li>
-      <li>Next: <a href="density.html" title="next chapter">DataFramePlotAccessor::density</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,68 +36,69 @@
 
           <div class="body" role="main">
             
-  <section id="thread-align">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b8ec3c729916 -->
+<section id="thread-align">
 <h1>Thread::align<a class="headerlink" href="#thread-align" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">target_labels</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">target_labels</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-<p>Realign one thread to a target label thread using positional, case-label, or feature-label rules.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Thread::align(...)</span></code> is the typed column-level alignment surface behind many higher-level DataFrame operations. Use it when you are working with one extracted column directly and you need to reorder or relabel it against another label vector before comparison, arithmetic, export, or manual reconstruction.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Realigns one thread’s values to a target label order — the typed, single-column
+alignment surface behind many higher-level <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> operations. Use it when you’re
+working with one extracted column directly and need to reorder or relabel it against
+another label vector before comparison, arithmetic, export, or manual reconstruction.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">AlignBy</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">      </span><span class="c1">// strict positional alignment — no label-based remapping</span>
+<span class="w">  </span><span class="n">Caselbl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">  </span><span class="c1">// gather by case label</span>
+<span class="w">  </span><span class="n">Feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">  </span><span class="c1">// gather by feature label</span>
+<span class="w">  </span><span class="n">Both</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">     </span><span class="c1">// DataFrame-only; rejected for Thread</span>
+<span class="p">};</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">AlignOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">AlignBy</span><span class="w"> </span><span class="n">align</span><span class="p">{</span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Pos</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fill</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">target_labels</span></code>’ interpretation depends entirely on <code class="docutils literal notranslate"><span class="pre">options.align</span></code>: under <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>, it’s
+the desired case-axis order; under <code class="docutils literal notranslate"><span class="pre">Feature</span></code>, the desired feature-label order; under <code class="docutils literal notranslate"><span class="pre">Pos</span></code>
+(the default), it’s only checked for length compatibility — no label matching happens at
+all, and the thread’s own current values and visible labels pass through unchanged.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Unmatched target labels become NULL unless fill is set
+Under <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>/<code class="docutils literal notranslate"><span class="pre">Feature</span></code> alignment, a <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> entry with no corresponding source
+label produces a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> row in the output — not a thrown error. Set <code class="docutils literal notranslate"><span class="pre">options.fill</span></code> to a
+numeric scalar if you’d rather those gaps came back filled instead. See Examples 1 and 2.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>target_labels</strong></p>
-<p>Target label vector that defines the output order.</p>
-<p>Its interpretation depends on <code class="docutils literal notranslate"><span class="pre">options.align</span></code>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Caselbl</span></code>: treat <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> as the desired case axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Feature</span></code>: treat <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> as the desired feature-label axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code>: validate strict positional compatibility without doing label-based remapping.</p></li>
-</ul>
-<p><strong>options</strong></p>
-<p>Alignment policy.</p>
-<p><code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> exposes two public fields:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">align</span></code>: chooses the matching rule.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code>: strict positional alignment.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Caselbl</span></code>: match by case labels.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Feature</span></code>: match by feature labels.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code>: not supported on <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fill</span></code>: optional numeric fill scalar for newly introduced gaps.</p></li>
-</ul>
+<p><strong>target_labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)
+The target label vector defining the output order — typically a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread
+of label strings (a bare <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> also works, thanks to <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s implicit
+constructor from <code class="docutils literal notranslate"><span class="pre">Note</span></code>). Under <code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code>, only its length matters.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">AlignOptions&amp;</span></code>)
+<code class="docutils literal notranslate"><span class="pre">align</span></code> selects the matching rule (see above); <code class="docutils literal notranslate"><span class="pre">fill</span></code>, if set, supplies a numeric
+scalar for target labels that have no match in the source thread. <code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code> is
+rejected — it’s a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-only concept (aligning both the case axis and the
+feature axis at once), which has no meaning for a single <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-New thread whose values and label provenance reflect the requested alignment mode.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>- `AlignBy::Caselbl` gathers values by case label.
-- `AlignBy::Feature` gathers one value per feature label.
-- `AlignBy::Pos` keeps positional matching strict.
-</pre></div>
-</div>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a href="../dataframe/align.html"><code>DataFrame::align</code></a>: frame-level alignment for several features at once.</p></li>
-<li><p><a href="label.html"><code>Thread::label</code></a>: use <code>label().set(…)</code> to attach explicit labels before aligning by label.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code> is a DataFrame-oriented concept and is rejected for <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">fill</span></code> is omitted, unmatched target labels produce missing output entries. When <code class="docutils literal notranslate"><span class="pre">fill</span></code> is provided, newly introduced numeric gaps are filled with that scalar.</p>
-<p><code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code> does not broadcast. It expects compatible lengths and preserves the current thread’s value order and visible labels.</p>
+A new thread reordered/relabeled per <code class="docutils literal notranslate"><span class="pre">options.align</span></code>, the same length as
+<code class="docutils literal notranslate"><span class="pre">target_labels</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Align by case labels and let unmatched labels stay missing.</p>
+<p>Example 1. Align by case label, leaving an unmatched target label <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
@@ -107,26 +108,27 @@ New thread whose values and label provenance reflect the requested alignment mod
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Caselbl</span><span class="p">}</span>
 <span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>a  20
 b  10
-d  NA
+d  NULL
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Fill newly introduced numeric slots during case-label alignment.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
+<p>Example 2. The same case-label alignment, now with <code class="docutils literal notranslate"><span class="pre">fill</span></code> supplying a value for the
+unmatched <code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code> label instead of leaving it <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
 <span class="w">                   </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">align</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Caselbl</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}</span>
 <span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -138,16 +140,16 @@ d  0
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. Align a one-value-per-feature thread by feature label.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">feature_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}))</span>
+<p>Example 3. Align a one-value-per-feature thread by feature label — useful when a thread
+represents, e.g., one aggregate per column and you need it in a specific column order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">feature_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}))</span>
 <span class="w">                          </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A1&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">feature_thread</span><span class="p">.</span><span class="n">align</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A2&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Feature</span><span class="p">}</span>
 <span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -158,16 +160,17 @@ A2  1.5
 ptype: Series
 </pre></div>
 </div>
-<p>Example 4. Use strict positional alignment when you want no label-based remapping at all.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code> performs no label-based remapping at all — it only validates
+length compatibility, and the thread’s own values and visible labels pass through
+unchanged even though <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> here holds entirely different label text.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
 <span class="w">                   </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">align</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Pos</span><span class="p">}</span>
 <span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -179,6 +182,43 @@ c  30
 ptype: Series
 </pre></div>
 </div>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code> is a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-only concept and throws when requested on a
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}),</span><span class="w"> </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Both</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::align: AlignBy::Both is only valid for DataFrame-to-DataFrame alignment
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code> is rejected on <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — see Example 5. It only makes sense for
+<code class="docutils literal notranslate"><span class="pre">DataFrame::align</span></code>, which can align both axes (case and feature) simultaneously.</p></li>
+<li><p>Unmatched target labels become <code class="docutils literal notranslate"><span class="pre">NULL</span></code> unless <code class="docutils literal notranslate"><span class="pre">options.fill</span></code> is set — see the important
+callout above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code> does not broadcast or remap by label at all; it expects a compatible
+length and preserves the thread’s current value order and visible labels untouched.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dataframe/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::align</span></code></span></a>: frame-level alignment for several features
+at once, including the <code class="docutils literal notranslate"><span class="pre">Both</span></code>-axis mode this method rejects.</p></li>
+<li><p><a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::label</span></code></span></a>: use <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code> to attach explicit case/feature
+labels before aligning by label, as every example above does.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="add.html">
     <span class="label">Previous</span>
@@ -189,7 +229,6 @@ ptype: Series
     <span class="title">all</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

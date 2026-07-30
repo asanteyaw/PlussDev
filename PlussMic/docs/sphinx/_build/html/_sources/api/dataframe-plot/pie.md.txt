@@ -79,11 +79,13 @@ auto budget = DataFrame({
 });
 
 auto chart = budget.plot().pie("spend", "category");
-chart.save_svg("budget_pie.svg");
+chart.show();
 ```
 
 Each slice is labeled with its category name and its percentage of the total `spend`
 (e.g. `"Engineering | 51.2%"`, computed to `precision = 1` decimal place by default).
+
+![Output of Example 1](img/pie-1.svg)
 
 Example 2. No `label_feature`: falls back to the frame's own row labels.
 
@@ -98,6 +100,8 @@ chart.show();
 
 Since `label_feature` is omitted, each slice is labeled with `by_case`'s own row labels
 (`"eng"`, `"sales"`, `"support"`, `"marketing"`) instead of a separate feature column.
+
+![Output of Example 2](img/pie-2.svg)
 
 Example 3. Non-positive and non-finite values are dropped — and the remaining slices'
 percentages are computed against the smaller, filtered total.
@@ -117,6 +121,8 @@ are dropped entirely — they never appear as slices or in the legend. The perce
 are `25.0%` and `75.0%` — computed against `100 + 300 = 400`, not the original four-row
 total.
 
+![Output of Example 3](img/pie-3.svg)
+
 Example 4. `show_value = true` alongside the defaults, and a custom `separator`.
 
 ```cpp
@@ -126,11 +132,13 @@ options.separator = " — ";
 options.precision = 0;
 
 auto chart = budget.plot().pie("spend", "category", options);
-chart.save_png("budget_pie.png");
+chart.show();
 ```
 
 Each slice now shows all three pieces joined by `" — "`: label, percentage, and raw value,
 e.g. `"Engineering — 51% — 420"` (rounded to `precision = 0` decimal places).
+
+![Output of Example 4](img/pie-4.svg)
 
 Example 5. All label text disabled — slices are drawn and colored, but unlabeled.
 
@@ -141,6 +149,8 @@ bare_options.show_percent = false;
 
 auto chart = budget.plot().pie("spend", "category", bare_options);
 ```
+
+![Output of Example 5](img/pie-5.svg)
 
 Example 6. Every row filtered out throws.
 

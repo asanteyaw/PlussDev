@@ -96,6 +96,10 @@ Nexus Nexus::tail(std::int64_t n) const {
 }
 
 Nexus Nexus::select(std::initializer_list<std::string_view> selected_keys) const {
+  return select(pluss::msharp::RangeView::Of<std::string_view>(selected_keys));
+}
+
+Nexus Nexus::select(pluss::msharp::RangeView::Of<std::string_view> selected_keys) const {
   const auto owned = normalize_requested_keys(selected_keys, "Nexus::select");
   const auto& src = impl_ref_();
   std::vector<std::pair<std::string, DataFrame>> out;
@@ -111,6 +115,10 @@ Nexus Nexus::select(std::initializer_list<std::string_view> selected_keys) const
 }
 
 Nexus Nexus::drop(std::initializer_list<std::string_view> dropped_keys) const {
+  return drop(pluss::msharp::RangeView::Of<std::string_view>(dropped_keys));
+}
+
+Nexus Nexus::drop(pluss::msharp::RangeView::Of<std::string_view> dropped_keys) const {
   const auto owned = normalize_requested_keys(dropped_keys, "Nexus::drop");
   const auto& src = impl_ref_();
   std::unordered_set<std::string> to_drop;

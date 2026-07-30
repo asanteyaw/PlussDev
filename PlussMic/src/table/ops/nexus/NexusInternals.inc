@@ -52,6 +52,21 @@ std::vector<std::string> normalize_requested_keys(std::initializer_list<std::str
   return out;
 }
 
+std::vector<std::string> normalize_requested_keys(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                  std::string_view where) {
+  std::vector<std::string> out;
+  out.reserve(keys.size());
+  std::unordered_set<std::string> seen;
+  seen.reserve(keys.size());
+  for (const auto key_sv : keys) {
+    const auto key = std::string(key_sv);
+    PLUSS_CHECK(!key.empty(), std::string(where) + ": key cannot be empty");
+    PLUSS_CHECK(seen.insert(key).second, std::string(where) + ": duplicate key '" + key + "'");
+    out.push_back(key);
+  }
+  return out;
+}
+
 pluss::msharp::intrusive_ptr<detail::NexusImpl> clone_impl(const detail::NexusImpl& src) {
   std::vector<std::pair<std::string, DataFrame>> copied;
   copied.reserve(src.keys_.size());

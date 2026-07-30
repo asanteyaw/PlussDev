@@ -130,7 +130,7 @@ Thread binary_math_scalar(const Thread& lhs, double rhs, ThreadBinaryMathOp op, 
   PLUSS_CHECK(lhs.defined(), std::string(where) + ": Thread is undefined");
   if (lhs.kind() == ThreadKind::Series) {
     ensure_numeric_thread_for_math(lhs, where);
-    return invoke_underlying([&] { return lhs.math_(rhs, op, reverse); }, where, "Series math");
+    return invoke_underlying([&] { return detail::math(lhs, rhs, op, reverse); }, where, "Series math");
   }
 
   if (lhs.kind() == ThreadKind::Note && op == ThreadBinaryMathOp::Mul) {
@@ -160,7 +160,7 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
     ensure_numeric_thread_for_math(left, where);
     ensure_numeric_thread_for_math(right, where);
     return carry_case_labels_(
-        invoke_underlying([&] { return left.math_(right, op); }, where, "Series math"),
+        invoke_underlying([&] { return detail::math(left, right, op); }, where, "Series math"),
         left);
   }
 

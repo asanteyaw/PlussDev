@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9c5abf1d9ab4 -->
 
 # Thread::kind
 

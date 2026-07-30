@@ -19,19 +19,7 @@ Namespace-level API function.
 
 ## Options
 
-Option semantics used by this method:
-
-- `TuneReport` (`struct`):
-  - `std::vector<Trial> trials{}`
-    Option field used by this method.
-  - `std::int64_t best_index = -1`
-    Option field used by this method.
-  - `std::string best_name{}`
-    Option field used by this method.
-  - `MetricKind objective_metric = MetricKind::Accuracy`
-    Selects optimization or evaluation objective.
-  - `TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto`
-    Selects optimization or evaluation objective.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 

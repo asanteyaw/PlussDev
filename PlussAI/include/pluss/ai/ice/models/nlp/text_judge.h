@@ -17,11 +17,7 @@ namespace pluss::ai::ice::models {
 
 struct TextJudgeOptions {
   std::int64_t width = 64;
-  std::int64_t num_layers = 2;
-  std::int64_t num_heads = 4;
-  std::int64_t feedforward_width = 128;
   double dropout = 0.1;
-  std::int64_t max_positions = 4096;
   bool use_lemmas = true;
   bool skip_punct = true;
   bool lowercase = true;

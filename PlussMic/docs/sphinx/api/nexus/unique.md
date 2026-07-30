@@ -121,12 +121,12 @@ clone.
   page demonstrates.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tail.html">
+  <a class="prev-link" href="to_string.html">
     <span class="label">Previous</span>
-    <span class="title">tail</span>
+    <span class="title">to_string</span>
   </a>
-  <a class="next-link" href="../../nexus_api_reference.html">
+  <a class="next-link" href="validate_keys.html">
     <span class="label">Next</span>
-    <span class="title">Nexus API</span>
+    <span class="title">validate_keys</span>
   </a>
 </div>

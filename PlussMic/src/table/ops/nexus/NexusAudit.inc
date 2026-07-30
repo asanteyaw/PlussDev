@@ -224,6 +224,11 @@ bool Nexus::validate_keys(std::string_view table) const {
 
 bool Nexus::validate_keys(std::string_view table,
                           std::initializer_list<std::string_view> keys) const {
+  return validate_keys(table, pluss::msharp::RangeView::Of<std::string_view>(keys));
+}
+
+bool Nexus::validate_keys(std::string_view table,
+                          pluss::msharp::RangeView::Of<std::string_view> keys) const {
   const auto& src = impl_ref_();
   const auto owned = normalize_requested_keys(keys, "Nexus::validate_keys");
   const auto& profile = cached_key_audit_profile(src, frame_ref(src, table, "Nexus::validate_keys"), table, owned, "Nexus::validate_keys");
@@ -239,6 +244,11 @@ DataFrame Nexus::detect_duplicates(std::string_view table) const {
 
 DataFrame Nexus::detect_duplicates(std::string_view table,
                                    std::initializer_list<std::string_view> keys) const {
+  return detect_duplicates(table, pluss::msharp::RangeView::Of<std::string_view>(keys));
+}
+
+DataFrame Nexus::detect_duplicates(std::string_view table,
+                                   pluss::msharp::RangeView::Of<std::string_view> keys) const {
   const auto& src = impl_ref_();
   const auto owned = normalize_requested_keys(keys, "Nexus::detect_duplicates");
   const auto& profile = cached_key_audit_profile(src, frame_ref(src, table, "Nexus::detect_duplicates"), table, owned, "Nexus::detect_duplicates");

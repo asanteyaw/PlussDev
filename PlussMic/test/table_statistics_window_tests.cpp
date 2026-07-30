@@ -798,7 +798,7 @@ void test_statistics() {
   }).mode();
   expect(mixed_modes.features("when").kind() ==
              pluss::table::ThreadKind::Timeline &&
-             !mixed_modes.features("when").is_valid(1),
+             !pluss::table::detail::valid_at(mixed_modes.features("when"), 1),
          "DataFrame mode pads time-like Threads without changing kind");
 
   const auto ranks = DataFrame({
@@ -1198,7 +1198,9 @@ void test_thread_delegation_and_advanced_windows() {
   const auto rhs_values =
       Thread(pluss::make_series(std::vector<double>{1.0, 2.0}));
   const auto ts_sum = lhs_values.ts().add(rhs_values, lhs_axis, rhs_axis);
-  expect(ts_sum.is_valid(0) && !ts_sum.is_valid(1) && ts_sum.is_valid(2),
+  expect(pluss::table::detail::valid_at(ts_sum, 0) &&
+             !pluss::table::detail::valid_at(ts_sum, 1) &&
+             pluss::table::detail::valid_at(ts_sum, 2),
          "Thread ts binary add should null-mark unmatched exact timestamps");
   expect(std::fabs(ts_sum.as_series().to_vec<double>(0) - 12.0) < 1e-9 &&
              std::fabs(ts_sum.as_series().to_vec<double>(2) - 31.0) < 1e-9,
@@ -1213,9 +1215,9 @@ void test_thread_delegation_and_advanced_windows() {
       {"x", rhs_values},
   }).label().set("when", true);
   const auto frame_ts_sum = lhs_frame.features({"x"}).ts().add(rhs_frame);
-  expect(frame_ts_sum.features("x").is_valid(0) &&
-             !frame_ts_sum.features("x").is_valid(1) &&
-             frame_ts_sum.features("x").is_valid(2) &&
+  expect(pluss::table::detail::valid_at(frame_ts_sum.features("x"), 0) &&
+             !pluss::table::detail::valid_at(frame_ts_sum.features("x"), 1) &&
+             pluss::table::detail::valid_at(frame_ts_sum.features("x"), 2) &&
              std::fabs(frame_ts_sum.features("x").as_series().to_vec<double>(0) - 12.0) < 1e-9 &&
              std::fabs(frame_ts_sum.features("x").as_series().to_vec<double>(2) - 31.0) < 1e-9,
          "DataFrame ts binary add should align on time case labels");
@@ -1237,7 +1239,7 @@ void test_thread_delegation_and_advanced_windows() {
                     .ddof = 1,
                     .centered = false,
                     .closure = WindowClosure::Left});
-  expect(!left_closed.is_valid(0),
+  expect(!pluss::table::detail::valid_at(left_closed, 0),
          "left-closed window excludes the current first case");
   near(left_closed.as_series().to_vec<double>(2), 3.0, 1e-9,
        "left-closed window contains prior cases");
@@ -1286,7 +1288,8 @@ void test_thread_delegation_and_advanced_windows() {
        "both-closed time window includes its left boundary");
 
   const auto ewm = source.ts().ewm(0.5, WindowStatistic::Mean, true, true, 3);
-  expect(!ewm.is_valid(1) && ewm.is_valid(2),
+  expect(!pluss::table::detail::valid_at(ewm, 1) &&
+             pluss::table::detail::valid_at(ewm, 2),
          "EWM min_count is enforced");
 }
 
@@ -1380,7 +1383,8 @@ void test_udfs_and_text() {
         ++callback_count;
         return ThreadValue(Thread(value.as_series() * 2.0));
       });
-  expect(callback_count == 2 && !mapped_nullable.is_valid(1),
+  expect(callback_count == 2 &&
+             !pluss::table::detail::valid_at(mapped_nullable, 1),
          "element UDF skips and preserves null values");
 
   const auto frame = DataFrame({

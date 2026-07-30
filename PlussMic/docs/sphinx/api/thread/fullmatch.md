@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a7a135bca270 -->
 
 # Thread::fullmatch
 
@@ -87,9 +88,9 @@ Thread::fullmatch: expected Note payload
   boolean result.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fold.html">
+  <a class="prev-link" href="freq.html">
     <span class="label">Previous</span>
-    <span class="title">fold</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="ge.html">
     <span class="label">Next</span>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a1dacd94eed0 -->
 
 # DataFramePlot3DAccessor::surface
 
@@ -121,12 +122,16 @@ values (`10.0`, `20.0`, `30.0`) become y-rows; each cell is the mean `temp_c` fo
 hour/depth combination — here, each combination happens to have exactly one matching row,
 so the "mean" is just that row's own value.
 
+![Output of Example 1](img/surface-1.svg)
+
 Example 2. A different aggregation (`Max`).
 
 ```cpp
 auto chart = readings.plot3d().surface("hour", "depth_m", "temp_c", DataFrame::GroupOp::Max);
 chart.show();
 ```
+
+![Output of Example 2](img/surface-2.svg)
 
 Example 3. A categorical `x_feature`: falls back to evenly spaced positional x-coordinates
 instead of parsed numeric values.
@@ -145,6 +150,8 @@ chart.save_pdf("site_surface.pdf");
 `site`'s two values (`"north"`, `"south"`) don't parse as numbers, so the x-axis places
 them at positions `0.0` and `1.0` instead of any meaningful numeric spacing.
 
+![Output of Example 3](img/surface-3.svg)
+
 Example 4. Missing `(x, y)` combinations fill to zero.
 
 ```cpp
@@ -155,12 +162,14 @@ auto sparse = DataFrame({
 });
 
 auto chart = sparse.plot3d().surface("x", "y", "z");
-chart.save_png("sparse_surface.png");
+chart.show();
 ```
 
 The pivot grid is 2×2 (`x` values `1.0`/`2.0`, `y` values `1.0`/`2.0`), but only the
 `(1.0, 1.0)` and `(2.0, 2.0)` cells have matching rows; the other two cells (`(1.0, 2.0)`
 and `(2.0, 1.0)`) have no matching data and render at height `0`, not as gaps.
+
+![Output of Example 4](img/surface-4.svg)
 
 Example 5. An unsupported aggregation op throws.
 
@@ -186,6 +195,8 @@ options.scene.preset = pluss::pl::flash::ScenePreset3D::Topology;
 
 auto chart = readings.plot3d().surface("hour", "depth_m", "temp_c", DataFrame::GroupOp::Mean, options);
 ```
+
+![Output of Example 6](img/surface-6.svg)
 
 ## Notes
 

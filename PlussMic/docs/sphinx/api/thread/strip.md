@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6cddd140ebd1 -->
 
 # Thread::strip
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f343545e9767 -->
 <section id="thread-var">
 <h1>Thread::var<a class="headerlink" href="#thread-var" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -134,7 +135,7 @@ the observed count is below <code class="docutils literal notranslate"><span cla
 the result is valid. Check validity through <code class="docutils literal notranslate"><span class="pre">.thread()</span></code> first.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">var</span><span class="p">(</span><span class="n">StatisticOptions</span><span class="p">{.</span><span class="n">ddof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 </section>
@@ -148,7 +149,7 @@ single-entry result thread is marked invalid at position <code class="docutils l
 thrown, but <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code> would still hand back whatever number the arithmetic
 happened to produce underneath (<code class="docutils literal notranslate"><span class="pre">50</span></code>, in this case: <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
 printing has no concept of nullness, only the wrapping <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own validity
-mask does). Always check <code class="docutils literal notranslate"><span class="pre">.thread().is_valid(0)</span></code> (or wrap the result and use
+mask does). Always check the scalar validity mask (or wrap the result and use
 <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>) before trusting a <code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code>-gated result.</p>
 </section>
 </section>

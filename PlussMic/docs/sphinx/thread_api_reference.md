@@ -14,12 +14,10 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 ## Accessors
 
-`Thread` exposes a nested accessor with its own method pages and sidebar:
+`Thread` exposes nested accessors, each with its own method pages and sidebar:
 
-- `nt()` -> [`ThreadNoteAccessor`](thread_note_accessor_api_reference.md)
-- `tl()` -> [`ThreadTimelineAccessor`](thread_timeline_accessor_api_reference.md)
-- `label()` -> [`ThreadLabelAccessor`](thread_label_accessor_api_reference.md)
 - `ts()` -> [`TimeSeriesAccessor`](thread_ts_accessor_api_reference.md)
+- `plot()` -> [`ThreadPlotAccessor`](thread_plot_api_reference.md)
 
 ```{toctree}
 :hidden:
@@ -30,8 +28,8 @@ api/thread/add
 api/thread/align
 api/thread/all
 api/thread/any
-api/thread/arrange
 api/thread/append
+api/thread/arrange
 api/thread/as_note
 api/thread/as_series
 api/thread/as_timeindex
@@ -46,10 +44,8 @@ api/thread/bucketize
 api/thread/casefold
 api/thread/cast
 api/thread/chars
-api/thread/clear_display_name
 api/thread/clip
 api/thread/compare
-api/thread/compare_rows
 api/thread/corr
 api/thread/corr_with
 api/thread/count
@@ -60,10 +56,8 @@ api/thread/cummax
 api/thread/cummin
 api/thread/cumprod
 api/thread/cumsum
-api/thread/day
 api/thread/defined
 api/thread/describe
-api/thread/display_name
 api/thread/distinct
 api/thread/div
 api/thread/dropnull
@@ -81,19 +75,18 @@ api/thread/filter
 api/thread/floordiv
 api/thread/flow
 api/thread/fold
+api/thread/freq
 api/thread/fullmatch
 api/thread/ge
+api/thread/group
 api/thread/gt
 api/thread/has
-api/thread/has_display_name
 api/thread/head
-api/thread/hour
 api/thread/indicate
 api/thread/info
 api/thread/info_string
 api/thread/interp
 api/thread/invalid
-api/thread/is_valid
 api/thread/isfinite
 api/thread/isnan
 api/thread/isnull
@@ -118,18 +111,19 @@ api/thread/median
 api/thread/min
 api/thread/mod
 api/thread/mode
-api/thread/month
 api/thread/mul
+api/thread/name
+api/thread/named
 api/thread/ncases
 api/thread/ndistinct
 api/thread/ne
 api/thread/normalize
-api/thread/nt
 api/thread/notnull
-api/thread/numeric_binary
+api/thread/nt
 api/thread/pad
 api/thread/partition
 api/thread/percentiles
+api/thread/plot
 api/thread/pow
 api/thread/prod
 api/thread/ptype
@@ -155,7 +149,6 @@ api/thread/scan
 api/thread/se
 api/thread/select
 api/thread/shape
-api/thread/shares_payload_with
 api/thread/shift
 api/thread/show
 api/thread/shuffle
@@ -170,21 +163,18 @@ api/thread/sub
 api/thread/sum
 api/thread/tail
 api/thread/take
-api/thread/freq
 api/thread/titlecase
 api/thread/tl
-api/thread/to_note_weekday
 api/thread/to_string
 api/thread/top
 api/thread/transform
 api/thread/truediv
 api/thread/ts
+api/thread/unname
 api/thread/upper
 api/thread/value
 api/thread/var
 api/thread/view
 api/thread/weigh
 api/thread/window
-api/thread/with_display_name
-api/thread/year
 ```

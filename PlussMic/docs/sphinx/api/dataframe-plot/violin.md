@@ -110,8 +110,10 @@ auto scores = DataFrame({
 });
 
 auto chart = scores.plot().violin();
-chart.save_svg("scores_violin.svg");
+chart.show();
 ```
+
+![Output of Example 1](img/violin-1.svg)
 
 Example 2. Feature-list mode, explicit subset via `initializer_list`, with options.
 
@@ -123,6 +125,8 @@ violin_options.scale = pluss::pl::ViolinScale::Count;
 auto chart = scores.plot().violin({"midterm", "final"}, violin_options);
 chart.show();
 ```
+
+![Output of Example 2](img/violin-2.svg)
 
 Example 3. Value/group mode with a text-like group feature: one violin per distinct
 category.
@@ -140,6 +144,8 @@ chart.save_pdf("score_by_section.pdf");
 Two violins are drawn — one for section `"A"`'s three scores, one for section `"B"`'s three
 scores — with `section`'s own distinct text values as the x-axis labels.
 
+![Output of Example 3](img/violin-3.svg)
+
 Example 4. Value/group mode with a numeric group feature — see the important callout above
 for why this is rarely what's actually wanted unless the numeric column really is a
 small-cardinality code.
@@ -151,12 +157,14 @@ auto coded = DataFrame({
 });
 
 auto chart = coded.plot().violin("score", "tier_code");
-chart.save_svg("score_by_tier_code.svg");
+chart.show();
 ```
 
 `tier_code` is a plain numeric `Series`, not text-like — `violin()` still accepts it
 (unlike `scatter()`'s hue, which would throw), using its two distinct values (`1.0`, `2.0`)
 directly as the two violin positions.
+
+![Output of Example 4](img/violin-4.svg)
 
 Example 5. Value/group mode with an explicit `ViolinPlotOptions`, including a half-sided
 violin.
@@ -167,8 +175,10 @@ half_options.side = pluss::pl::ViolinSide::Right;
 half_options.bw_adjust = 0.8;
 
 auto chart = grouped.plot().violin("score", "section", half_options);
-chart.save_png("score_by_section.png");
+chart.show();
 ```
+
+![Output of Example 5](img/violin-5.svg)
 
 ## Notes
 

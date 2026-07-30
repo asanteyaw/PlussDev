@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ad7cb44304cd -->
 
 # DataFrameTsAccessor::asfreq
 

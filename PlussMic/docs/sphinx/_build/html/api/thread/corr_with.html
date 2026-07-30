@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d908c6aef83f -->
 <section id="thread-corr-with">
 <h1>Thread::corr_with<a class="headerlink" href="#thread-corr-with" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -61,9 +62,9 @@ underlying <a class="reference internal" href="corr.html"><span class="std std-d
 number — for example, zero variance on either side (every observed value
 tied, under any of <code class="docutils literal notranslate"><span class="pre">Pearson</span></code>/<code class="docutils literal notranslate"><span class="pre">Spearman</span></code>/<code class="docutils literal notranslate"><span class="pre">KendallTau</span></code>) produces a <code class="docutils literal notranslate"><span class="pre">NaN</span></code>
 correlation, and that <code class="docutils literal notranslate"><span class="pre">NaN</span></code> is caught and reflected in
-<code class="docutils literal notranslate"><span class="pre">.thread().is_valid(0)</span></code> rather than silently passing through as a “valid”
+<code class="docutils literal notranslate"><span class="pre">.thread().notnull()</span></code> rather than silently passing through as a “valid”
 result. You never need to separately guard against a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> hiding behind a
-<code class="docutils literal notranslate"><span class="pre">true</span></code> validity flag — check <code class="docutils literal notranslate"><span class="pre">.thread().is_valid(0)</span></code> and trust it.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> validity flag — check the scalar validity mask and trust it.</p>
 </div>
 </section>
 <section id="parameters">
@@ -102,7 +103,7 @@ coefficient.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">small_other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">small_other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadCorrMethod</span><span class="o">::</span><span class="n">Pearson</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 </section>
@@ -112,11 +113,12 @@ coefficient.</p>
 </pre></div>
 </div>
 <p>Example 3. Zero variance on the Pearson path is caught by the validity check
-— <code class="docutils literal notranslate"><span class="pre">is_valid(0)</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>, not just a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> value hiding behind <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+— the scalar validity mask is <code class="docutils literal notranslate"><span class="pre">false</span></code>, not just a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> value hiding behind
+<code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">constant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">varying</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">constant</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">varying</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadCorrMethod</span><span class="o">::</span><span class="n">Pearson</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 </section>
@@ -129,7 +131,7 @@ coefficient.</p>
 rank correlation is <code class="docutils literal notranslate"><span class="pre">NaN</span></code> (every rank on the constant side ties), and that’s
 caught too, not just the Pearson path.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">constant</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">varying</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadCorrMethod</span><span class="o">::</span><span class="n">KendallTau</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">is_valid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 </section>

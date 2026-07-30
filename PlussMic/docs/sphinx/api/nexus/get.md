@@ -100,12 +100,12 @@ disengaged `optional`.
 - [`Nexus::has`](has.md): a presence-only check, without fetching the table.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="frames.html">
+  <a class="prev-link" href="from_atlas.html">
     <span class="label">Previous</span>
-    <span class="title">frames</span>
+    <span class="title">from_atlas</span>
   </a>
-  <a class="next-link" href="has.html">
+  <a class="next-link" href="graph.html">
     <span class="label">Next</span>
-    <span class="title">has</span>
+    <span class="title">graph</span>
   </a>
 </div>

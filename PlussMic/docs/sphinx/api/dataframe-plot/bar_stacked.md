@@ -80,11 +80,13 @@ auto breakdown = DataFrame({
 });
 
 auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city");
-chart.save_svg("breakdown_stacked.svg");
+chart.show();
 ```
 
 Each city gets one bar whose bottom segment is `sales` and whose top segment (stacked above
 it) reaches `sales + returns_cost`.
+
+![Output of Example 1](img/bar_stacked-1.svg)
 
 Example 2. Three features stacked, via a reusable `RangeView`.
 
@@ -102,12 +104,16 @@ auto chart = parts_df.plot().bar_stacked(
 chart.show();
 ```
 
+![Output of Example 2](img/bar_stacked-2.svg)
+
 Example 3. No `x_feature`: falls back to the frame's own row labels, as with every other
 chart method on this accessor — see [`line()`](line.md)'s Example 3.
 
 ```cpp
 auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"});
 ```
+
+![Output of Example 3](img/bar_stacked-3.svg)
 
 Example 4. An explicit `BarStackedPlotOptions`, raising opacity toward a fully solid look.
 
@@ -117,14 +123,18 @@ stacked_options.alpha = 1.0;
 stacked_options.line_width = 1.2;
 
 auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city", stacked_options);
-chart.save_png("breakdown_stacked.png");
+chart.show();
 ```
+
+![Output of Example 4](img/bar_stacked-4.svg)
 
 Example 5. The `initializer_list` overload with an explicit options object.
 
 ```cpp
 auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city", stacked_options);
 ```
+
+![Output of Example 5](img/bar_stacked-5.svg)
 
 ## Notes
 

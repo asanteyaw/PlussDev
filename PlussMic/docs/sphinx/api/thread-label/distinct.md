@@ -62,7 +62,8 @@ excluding it.
 
 ```cpp
 auto with_gap = Thread(pluss::make_series({100.0, 150.0, 200.0, 90.0}))
-                    .label().set(Thread(pluss::make_note({"10", "", "20", "10"})));
+                    .label().set(Thread(pluss::make_note({"10", "x", "20", "10"}),
+                                        pluss::make_series(std::vector<bool>{true, false, true, true})));
 
 std::cout << with_gap.label().distinct();
 std::cout << with_gap.label().distinct(false);

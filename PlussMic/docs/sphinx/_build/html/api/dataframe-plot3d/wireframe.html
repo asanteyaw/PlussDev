@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f0e02664"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame Display And Popup Viewer" href="../../dataframe_display.html" />
+    <link rel="next" title="ThreadPlotAccessor API Reference" href="../../thread_plot_api_reference.html" />
     <link rel="prev" title="DataFramePlot3DAccessor::surface" href="surface.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ed81fb36d786 -->
 <section id="dataframeplot3daccessor-wireframe">
 <h1>DataFramePlot3DAccessor::wireframe<a class="headerlink" href="#dataframeplot3daccessor-wireframe" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_plot3d_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFramePlot3DAccessor API Reference</span></a></p>
@@ -111,11 +112,13 @@ rendered as edges instead of a filled mesh.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;temp_wireframe.svg&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 1" src="../../_images/wireframe-1.svg" /></p>
 <p>Example 2. A different aggregation (<code class="docutils literal notranslate"><span class="pre">Min</span></code>).</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Min</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/wireframe-2.svg" /></p>
 <p>Example 3. The <code class="docutils literal notranslate"><span class="pre">Wireframe</span></code> trace preset, tuned for mesh-edge rendering.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Wireframe3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">trace</span><span class="p">.</span><span class="n">preset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">TracePreset3D</span><span class="o">::</span><span class="n">Wireframe</span><span class="p">;</span>
@@ -124,6 +127,7 @@ rendered as edges instead of a filled mesh.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;temp_wireframe_styled.pdf&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 3" src="../../_images/wireframe-3.svg" /></p>
 <p>Example 4. A categorical <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>, falling back to positional x-coordinates exactly
 like <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s Example 3.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -133,9 +137,10 @@ like <a class="reference internal" href="surface.html"><span class="std std-doc"
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;site&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;site_wireframe.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 4" src="../../_images/wireframe-4.svg" /></p>
 <p>Example 5. An unsupported aggregation op throws, identically to <code class="docutils literal notranslate"><span class="pre">surface()</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mode</span><span class="p">);</span>
@@ -227,7 +232,7 @@ aggregated-value grid, with <code class="docutils literal notranslate"><span cla
   <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
   <li><a href="../../dataframe_plot3d_accessor_api_reference.html">DataFramePlot3DAccessor API Reference</a><ul>
       <li>Previous: <a href="surface.html" title="previous chapter">DataFramePlot3DAccessor::surface</a></li>
-      <li>Next: <a href="../../dataframe_display.html" title="next chapter">DataFrame Display And Popup Viewer</a></li>
+      <li>Next: <a href="../../thread_plot_api_reference.html" title="next chapter">ThreadPlotAccessor API Reference</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

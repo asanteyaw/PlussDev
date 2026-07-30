@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=69cf8a4b"></script>
+    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFramePlotAccessor::box" href="box.html" />
-    <link rel="prev" title="DataFramePlotAccessor::bar_stacked" href="bar_stacked.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -117,12 +115,13 @@ reference line at the statistic computed on the full, original data.</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bootstrap</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;score_bootstrap.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>300 resamples of 8 values each (drawn with replacement from the original 8), each resample’s
 mean computed and histogrammed into 24 bins (the default); the reference line marks the
 original data’s actual mean.</p>
+<p><img alt="Output of Example 1" src="../../_images/bootstrap-1.svg" /></p>
 <p>Example 2. Bootstrapping the median instead of the mean.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BootstrapPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">statistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BootstrapStatistic</span><span class="o">::</span><span class="n">Median</span><span class="p">;</span>
@@ -131,6 +130,7 @@ original data’s actual mean.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 2" src="../../_images/bootstrap-2.svg" /></p>
 <p>Example 3. Bootstrapping the standard deviation, with more resamples and a fixed seed for
 reproducibility.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BootstrapPlotOptions</span><span class="w"> </span><span class="n">std_options</span><span class="p">;</span>
@@ -144,17 +144,19 @@ reproducibility.</p>
 </div>
 <p>Running this call twice with <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">=</span> <span class="pre">42</span></code> produces the identical histogram both times, since
 every resample’s random draw is deterministically derived from <code class="docutils literal notranslate"><span class="pre">seed</span></code>.</p>
+<p><img alt="Output of Example 3" src="../../_images/bootstrap-3.svg" /></p>
 <p>Example 4. An explicit <code class="docutils literal notranslate"><span class="pre">sample_size</span></code> smaller than the original data — each resample draws
 fewer rows than the full feature has.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BootstrapPlotOptions</span><span class="w"> </span><span class="n">small_draws</span><span class="p">;</span>
 <span class="n">small_draws</span><span class="p">.</span><span class="n">sample_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bootstrap</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">small_draws</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_png</span><span class="p">(</span><span class="s">&quot;score_bootstrap_small.png&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Each of the 300 resamples now draws only 4 values (with replacement) instead of 8, producing
 a wider sampling distribution than the same-size default would.</p>
+<p><img alt="Output of Example 4" src="../../_images/bootstrap-4.svg" /></p>
 <p>Example 5. Coarser histogram resolution and a fewer-samples run.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">BootstrapPlotOptions</span><span class="w"> </span><span class="n">coarse</span><span class="p">;</span>
 <span class="n">coarse</span><span class="p">.</span><span class="n">samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">50</span><span class="p">;</span>
@@ -163,6 +165,7 @@ a wider sampling distribution than the same-size default would.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bootstrap</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">coarse</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><img alt="Output of Example 5" src="../../_images/bootstrap-5.svg" /></p>
 <p>Example 6. Fewer than two rows throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">single_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">71.0</span><span class="p">}))},</span>
@@ -242,11 +245,8 @@ specializes for a resampled statistic’s distribution.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -260,16 +260,6 @@ specializes for a resampled statistic’s distribution.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
-  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
-      <li>Previous: <a href="bar_stacked.html" title="previous chapter">DataFramePlotAccessor::bar_stacked</a></li>
-      <li>Next: <a href="box.html" title="next chapter">DataFramePlotAccessor::box</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

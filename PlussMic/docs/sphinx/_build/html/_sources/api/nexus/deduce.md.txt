@@ -215,9 +215,9 @@ Nexus::deduce: min_confidence must be in [0, 1]
   relationship inference.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="apply_all.html">
+  <a class="prev-link" href="check.html">
     <span class="label">Previous</span>
-    <span class="title">apply_all</span>
+    <span class="title">check</span>
   </a>
   <a class="next-link" href="defined.html">
     <span class="label">Next</span>

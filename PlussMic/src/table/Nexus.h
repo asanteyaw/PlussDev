@@ -163,7 +163,17 @@ public:
   Nexus head(std::int64_t n = 5) const;
   Nexus tail(std::int64_t n = 5) const;
   Nexus select(std::initializer_list<std::string_view> keys) const;
+  Nexus select(pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  template <detail::StringViewNameRange NameRange>
+  Nexus select(const NameRange& keys) const {
+    return detail::with_stack_name_view(keys, [&](auto names) { return select(names); });
+  }
   Nexus drop(std::initializer_list<std::string_view> keys) const;
+  Nexus drop(pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  template <detail::StringViewNameRange NameRange>
+  Nexus drop(const NameRange& keys) const {
+    return detail::with_stack_name_view(keys, [&](auto names) { return drop(names); });
+  }
   Nexus rename(std::string_view from, std::string_view to) const;
   Nexus& rename_(std::string_view from, std::string_view to);
 
@@ -214,12 +224,30 @@ public:
   bool validate_keys(std::string_view table) const;
   bool validate_keys(std::string_view table,
                      std::initializer_list<std::string_view> keys) const;
+  bool validate_keys(std::string_view table,
+                     pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  template <detail::StringViewNameRange NameRange>
+  bool validate_keys(std::string_view table, const NameRange& keys) const {
+    return detail::with_stack_name_view(keys, [&](auto names) { return validate_keys(table, names); });
+  }
   DataFrame detect_duplicates(std::string_view table) const;
   DataFrame detect_duplicates(std::string_view table,
                               std::initializer_list<std::string_view> keys) const;
+  DataFrame detect_duplicates(std::string_view table,
+                              pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame detect_duplicates(std::string_view table, const NameRange& keys) const {
+    return detail::with_stack_name_view(keys, [&](auto names) { return detect_duplicates(table, names); });
+  }
   DataFrame duplicates(std::string_view table) const;
   DataFrame duplicates(std::string_view table,
                        std::initializer_list<std::string_view> keys) const;
+  DataFrame duplicates(std::string_view table,
+                       pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame duplicates(std::string_view table, const NameRange& keys) const {
+    return detail::with_stack_name_view(keys, [&](auto names) { return duplicates(table, names); });
+  }
   DataFrame grain_audit(std::string_view table) const;
 
   bool validate_relationship(std::string_view name) const;
@@ -235,6 +263,12 @@ public:
   DataFrame neighbors(std::string_view table) const;
   DataFrame pull(std::string_view root,
                  std::initializer_list<std::string_view> fields) const;
+  DataFrame pull(std::string_view root,
+                 pluss::msharp::RangeView::Of<std::string_view> fields) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame pull(std::string_view root, const NameRange& fields) const {
+    return detail::with_stack_name_view(fields, [&](auto names) { return pull(root, names); });
+  }
   JoinPath path(std::string_view from, std::string_view to) const;
   JoinPlan plan(const JoinPath& path, JoinHow how = JoinHow::Left) const;
   JoinPlan plan(std::string_view from, std::string_view to, JoinHow how = JoinHow::Left) const;
@@ -257,6 +291,12 @@ public:
   static Nexus from_atlas(const Atlas& atlas, const Thread& labels);
   Atlas to_atlas(std::initializer_list<std::string_view> keys,
                  std::optional<Thread> labels = std::nullopt) const;
+  Atlas to_atlas(pluss::msharp::RangeView::Of<std::string_view> keys,
+                 std::optional<Thread> labels = std::nullopt) const;
+  template <detail::StringViewNameRange NameRange>
+  Atlas to_atlas(const NameRange& keys, std::optional<Thread> labels = std::nullopt) const {
+    return detail::with_stack_name_view(keys, [&](auto names) { return to_atlas(names, std::move(labels)); });
+  }
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   void show(const display::DisplayOptions& options = {}) const;
@@ -281,7 +321,17 @@ public:
   NexusQuery join(std::string_view right, const JoinSpec& spec) const;
   NexusQuery via(std::string_view to, JoinHow how = JoinHow::Left) const;
   NexusQuery pick(std::initializer_list<std::string_view> features) const;
+  NexusQuery pick(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  NexusQuery pick(const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return pick(names); });
+  }
   NexusQuery drop(std::initializer_list<std::string_view> features) const;
+  NexusQuery drop(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  NexusQuery drop(const NameRange& features) const {
+    return detail::with_stack_name_view(features, [&](auto names) { return drop(names); });
+  }
   NexusQuery name(std::string_view value) const;
   DataFrame collect() const;
 
