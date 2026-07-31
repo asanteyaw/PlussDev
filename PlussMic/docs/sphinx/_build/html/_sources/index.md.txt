@@ -27,8 +27,8 @@
 
 <div class="pluss-card">
 <span class="card-name">bundle</span>
-<span class="card-model">Slot &middot; Registry &middot; Aisle</span>
-<p class="card-desc">Heterogeneous record containers: a one-dimensional <code>Slot</code>, a <code>Registry</code> of named slots, and an <code>Aisle</code> stack of registries.</p>
+<span class="card-model">Slot &middot; Registry &middot; Axel</span>
+<p class="card-desc">Heterogeneous record containers: a one-dimensional <code>Slot</code>, a <code>Registry</code> of named slots, and an <code>Axel</code> stack of registries.</p>
 </div>
 
 <div class="pluss-card">

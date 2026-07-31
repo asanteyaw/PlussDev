@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0f32cffd3196 -->
+
 # Atlas::align_depth
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,60 +8,97 @@
 ## Signature
 
 ```cpp
-Atlas::align_depth(const Thread& labels) -> Atlas
+Atlas::align_depth(const Thread& labels) const -> Atlas
 ```
 
 ## What It Does
 
-Reorders frames so their depth labels match the supplied label order.
+Returns a new atlas with its frames reordered/filtered to match `labels`, by depth label —
+every entry in `labels` must exist among the atlas's own depth labels, or the call throws.
+The `Atlas` analog of [`Archive::label`](../archive/label.md)`.align()`.
+
+```{important} Throws on any unmatched target label — it does not fill with NULL
+Unlike `Thread::align`/`Stream::lbl().align()` (which fill unmatched positions with `NULL`
+or a supplied `fill` value), `align_depth()` requires every label in `labels` to exist
+among the atlas's own depth labels; a target label with no match throws
+`"Atlas::align_depth: label not found '<label>'"`.
+```
 
 ## Parameters
 
-**labels**
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+**labels** (`const Thread&`)
+    The target depth-label order. Every entry must exist among the atlas's own depth
+    labels.
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas with frames reordered to match `labels`' order.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Reorder frames to an explicit target label order.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"b", "a"})));
 
-auto labels = pluss::table::Thread(pluss::make_note({"baseline", "stress"}));
-auto out = atlas.align_depth(labels);
+auto out = atlas.align_depth(pluss::table::Thread(pluss::make_note({"a", "b"})));
+std::cout << out.dloc(0);
 ```
 
 ### Output
 
 ```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
+===========
+     | id  
+-----------
+0    | 2   
+-----------
+[1 cs x 1 feat]
 ```
 
-## Practical Behavior
+Example 2. An unmatched target label throws instead of producing a `NULL` frame.
 
-- `align_depth(labels)` reorders frames to match the requested depth label order.
-- Use it when two atlases should share the same depth layout before comparison or combination.
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"b", "a"})));
 
+try {
+  atlas.align_depth(pluss::table::Thread(pluss::make_note({"a", "c"})));
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
 
+### Output
+
+```text
+Atlas::align_depth: label not found 'c'
+```
+
+## Notes
+
+- Throws on any unmatched target label — see the important callout above.
+- Requires depth labels to already be set on the atlas.
+
+## See Also
+
+- [`Atlas::sort_depth`](sort_depth.md): reorder by the existing label order, instead of an
+  explicit target.
+- [`Atlas::relabel_depth`](relabel_depth.md): replace labels without reordering frames.
+- [`Archive::label`](../archive/label.md)`.align()`: the depth-stacked-catalog analog of
+  this method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="aggregate_over_frames.html">

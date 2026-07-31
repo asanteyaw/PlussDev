@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 05ca394cae3e -->
+
 # Atlas::kindelize
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,68 +8,83 @@
 ## Signatures
 
 ```cpp
-Atlas::kindelize() -> pluss::kindle::Archive
-
-Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) -> pluss::kindle::Archive
+Atlas::kindelize() const -> pluss::kindle::Archive
+Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const -> pluss::kindle::Archive
 ```
 
 ## What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts the atlas into an `Archive`, one catalog per frame, in the same depth order — the
+inverse of [`tabelize()`](tabelize.md), which goes the other direction (`Archive` →
+`Atlas`). Internally, each frame is converted via
+[`Catalog::kindelize()`](../catalog/kindelize.md), using the same `policy` for every one,
+and the atlas's own depth labels are carried over.
 
 ## Parameters
 
-**policy**
-    Policy object that changes the structural behavior of this overload.
+**policy** (`const pluss::kindle::KindelizePolicy&`, optional)
+    `attach_labels` (default `true`) carries each frame's own case-label axis into its
+    resulting catalog's streams. `materialize_label` (default `false`) additionally adds
+    the case-label axis as its own stream, named `label_key` (default `"_label"`). See
+    [`Catalog::kindelize`](../catalog/kindelize.md) for the full field breakdown.
 
 ## Returns
 
 `pluss::kindle::Archive`
-    Value produced by this call.
+    A new archive with one catalog per frame, carrying over the atlas's own depth labels.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Convert a two-frame atlas into an `Archive`.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({3.0, 4.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
 
-auto out = atlas.kindelize();
+auto archive = atlas.kindelize();
+std::cout << "depth: " << archive.depth() << "\n";
+std::cout << "depth labels carried over: " << archive.label().has() << "\n";
+std::cout << archive.catalog(0);
 ```
 
 ### Output
 
 ```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.kindelize();
+depth: 2
+depth labels carried over: 1
+========================================================================================================================
+kindle::Catalog  keys=1
+keys: [id]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[float64]  | 2       | [1, 2]                                           
+========================================================================================================================
 ```
 
-### Output
+## Notes
 
-```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
+- The atlas's own depth labels are carried over onto the resulting archive's
+  [`label()`](label.md).
+- `policy` is applied uniformly to every frame via
+  [`Catalog::kindelize()`](../catalog/kindelize.md) — see that page for the full field
+  breakdown.
+- Round-trips with [`tabelize()`](tabelize.md):
+  `Atlas::tabelize(atlas.kindelize())` reconstructs an equivalent atlas.
 
+## See Also
+
+- [`Atlas::tabelize`](tabelize.md): the inverse conversion, from `Archive` to `Atlas`.
+- [`Archive::kindelize`](../archive/kindelize.md): the depth-stacked-catalog analog of what
+  this method produces, wrapping [`Catalog::kindelize`](../catalog/kindelize.md) the same
+  way.
+- [`Catalog::kindelize`](../catalog/kindelize.md): the single-frame delegate this method
+  applies to every frame.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="head.html">

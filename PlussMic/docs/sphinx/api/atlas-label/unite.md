@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ced3c4e077ad -->
+
 # AtlasLabelAccessor::unite
 
 [Back to AtlasLabelAccessor API Reference](../../atlas_label_accessor_api_reference)
@@ -5,43 +8,70 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::unite(const Thread& other) -> Thread
+AtlasLabelAccessor::unite(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the set union of the atlas's current depth labels and `other` — every distinct
+label that appears in either, with duplicates collapsed. This is a pure set operation:
+it returns a `Thread` of labels, not a new `Atlas`, and does not touch the bound atlas's
+frames.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+    The other set of labels to union with the atlas's current depth labels.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    The union of the two label sets, named `"unite"`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Union the depth labels of two atlases that only partially overlap.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"2024Q1", "2024Q2"})));
-auto labels = atlas.label();
+auto q1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+});
+auto q3 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+});
+auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
+auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"feb", "mar", "apr"})));
 
-auto out = labels.unite(df.features("load"));
-std::cout << out;
+std::cout << a1.label().unite(a2.label().values());
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  jan
+1  feb
+2  mar
+3  apr
+Name: unite, ptype: Note
 ```
 
+## Notes
+
+- Pure set operation — returns a `Thread`, not an `Atlas`; it doesn't select or reorder
+  the bound atlas's own frames.
+- The result is named `"unite"` regardless of the input `Thread`'s own name.
+
+## See Also
+
+- [`AtlasLabelAccessor::intersect`](intersect.md): the labels present in both sets,
+  rather than either.
+- [`AtlasLabelAccessor::diff`](diff.md) / [`AtlasLabelAccessor::symdiff`](symdiff.md):
+  the one-sided and two-sided complements of this union.
+- [`AtlasLabelAccessor::align`](align.md): apply a target label order to the bound
+  atlas's frames, rather than just computing a label set.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="symdiff.html">

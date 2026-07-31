@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0ce5a85b0e92 -->
+
 # AtlasLabelAccessor::range
 
 [Back to AtlasLabelAccessor API Reference](../../atlas_label_accessor_api_reference)
@@ -5,12 +8,16 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::range() -> Atlas
+AtlasLabelAccessor::range() const -> Atlas
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a copy of the bound atlas with its depth-axis labels replaced by the default
+integer sequence `0, 1, 2, ..., depth() - 1` — equivalent to calling
+[`set()`](set.md) with that sequence explicitly, and functionally identical to
+[`reset()`](reset.md) (both clear any existing depth labels back to the default
+positions).
 
 ## Parameters
 
@@ -19,28 +26,48 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas, identical in frame content, with `0, 1, 2, ...` as its depth labels.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Replace an atlas's depth labels with the default integer sequence.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"2024Q1", "2024Q2"})));
-auto labels = atlas.label();
+auto q1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+});
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
 
-auto out = labels.range();
-std::cout << out;
+auto ranged = atlas.label().range();
+std::cout << ranged.label().values();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  0
+1  1
+ptype: Series
 ```
 
+## Notes
+
+- Behaves the same as [`reset()`](reset.md) — both produce the default `0, 1, 2, ...`
+  integer depth labels. Unlike `reset()`,
+  [`DataFrameLabelAccessor`](../dataframe-label/reset.md) has no equivalent `range()`
+  name for its case-axis accessor — only `reset()` — so this naming is specific to
+  `AtlasLabelAccessor`.
+- The original atlas is left unchanged — `range()` returns a new `Atlas`.
+
+## See Also
+
+- [`AtlasLabelAccessor::reset`](reset.md): the equivalent operation, named to match
+  "clearing" the labels rather than "ranging" them.
+- [`AtlasLabelAccessor::set`](set.md): set the depth labels to any `Thread`, not just the
+  default sequence.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pos.html">

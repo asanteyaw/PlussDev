@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ff0686f0323f -->
+
 # Archive::catalogs
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,12 +8,15 @@
 ## Signature
 
 ```cpp
-Archive::catalogs() -> const std::vector<Catalog>&
+Archive::catalogs() const -> const std::vector<Catalog>&
 ```
 
 ## What It Does
 
-Materializes the current members as a collection you can inspect or reuse elsewhere.
+Returns every catalog in the archive, in depth order, as a `const std::vector<Catalog>&` —
+no copy is made. Use this when you want to iterate the whole archive directly with standard
+`<algorithm>`/range-`for` code instead of going through [`catalog(i)`](catalog.md) one
+index at a time.
 
 ## Parameters
 
@@ -19,32 +25,45 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 ## Returns
 
 `const std::vector<Catalog>&`
-    Borrowed collection of catalogs.
+    Every catalog in the archive, in depth order.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Iterate every catalog directly.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+auto c0 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0})) });
+auto c1 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({3.0, 4.0, 5.0})) });
+auto archive = pluss::kindle::Archive({c0, c1});
 
-auto out = archive.catalogs();
+const auto& cats = archive.catalogs();
+std::cout << "count: " << cats.size() << "\n";
+for (const auto& cat : cats) {
+  std::cout << "nrecords: " << cat.nrecords() << "\n";
+}
 ```
 
 ### Output
 
 ```text
-[Catalog(train), Catalog(test)]
+count: 2
+nrecords: 2
+nrecords: 3
 ```
 
+## Notes
+
+- Returns by `const&` — no copy of the vector or its catalogs is made just to read it.
+- Requires a defined archive; throws `"Archive: undefined handle"` on a default-constructed
+  `Archive()`.
+
+## See Also
+
+- [`Archive::catalog`](catalog.md) / [`Archive::dloc`](dloc.md): fetch one catalog by
+  depth-index instead of the whole vector.
+- [`Archive::depth`](depth.md): the length of the vector this method returns.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="catalog.html">

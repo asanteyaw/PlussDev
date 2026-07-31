@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 634dbd255727 -->
+
 # AtlasTimelineAccessor::shift
 
 [Back to AtlasTimelineAccessor API Reference](../../atlas_timeline_accessor_api_reference)
@@ -5,50 +8,102 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::shift(std::int64_t periods, std::string_view freq) -> Atlas
+AtlasTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const -> Atlas
 ```
 
 ## What It Does
 
-This is part of the time-aware surface and expects timeline or time-index semantics.
+Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with each
+row shifted forward (or backward, if `periods` is negative) by `periods * freq` — the
+same transform [`DataFrame::tl().shift()`](../dataframe-timeline/shift.md) applies to a
+single frame, broadcast across the whole `Atlas` via
+[`map_frames()`](../atlas/map_frames.md). Month/year shifts are calendar-aware: a
+day-of-month that doesn't exist in the target month is clamped down to that month's
+last valid day.
 
 ## Parameters
 
-**periods**
-    Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.
+**periods** (`std::int64_t`)
+    How many `freq` units to shift by. Positive moves forward in time, negative moves
+    backward.
 
-**freq**
-    Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.
+**freq** (`std::string_view`)
+    One of `"y"`/`"yr"`/`"year"`/`"years"`/`"annual"`, `"mo"`/`"mth"`/`"month"`/`"months"`,
+    `"d"`/`"day"`/`"days"`, `"h"`/`"hr"`/`"hour"`/`"hours"`,
+    `"t"`/`"min"`/`"minute"`/`"minutes"`, or `"s"`/`"sec"`/`"second"`/`"seconds"`
+    (case-insensitive). Cannot be empty.
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas, same depth and depth labels as the source, with each frame's time
+    feature shifted by `periods * freq`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Shift a `Timeline` feature forward one calendar month, stacked across two
+frames, showing day-of-month clamping in `frame(0)`.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))},
-});
-auto q2 = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-02T09:10:00Z", "2024-01-02T09:40:00Z"}))},
-});
-auto atlas = pluss::table::Atlas({q1, q2});
-auto timelines = atlas.tl();
+using namespace pluss::table;
 
-auto out = timelines.shift(1, "2D");
-std::cout << out;
+auto q1 = DataFrame({
+    {"ts", Thread(pluss::make_timeline({"2024-01-31T09:15:30Z", "2024-02-29T23:45:00Z"}))},
+});
+auto q2 = DataFrame({
+    {"ts", Thread(pluss::make_timeline({"2024-07-06T14:00:00Z", "2023-03-01T00:00:00Z"}))},
+});
+auto atlas = Atlas({q1, q2});
+
+auto out = atlas.tl().shift(1, "months");
+std::cout << out.frame(0) << "\n" << out.frame(1);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+==========================
+     | ts                 
+--------------------------
+0    | 2024-02-29 09:15:30
+1    | 2024-03-29 23:45:00
+--------------------------
+[2 cs x 1 feat]
+==========================
+     | ts                 
+--------------------------
+0    | 2024-08-06 14:00:00
+1    | 2023-04-01 00:00:00
+--------------------------
+[2 cs x 1 feat]
 ```
 
+`frame(0)`'s January 31st shifted one month forward lands on February 29th (2024 is a
+leap year) — day `31` is clamped down to February's last valid day rather than
+overflowing into March.
+
+## Notes
+
+- `freq` accepts calendar units (`years`/`months`, day-of-month-clamping) and fixed
+  units (`days`/`hours`/`minutes`/`seconds`, exact elapsed-time arithmetic with no
+  clamping) — there's no `"week"` frequency.
+- `freq` cannot be empty, and an unrecognized string throws
+  `"Timeline::shift: unsupported frequency"`.
+- `Atlas::tl()` requires **every** feature on each stacked frame to already be
+  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  one is actually called — see [`Atlas::tl`](../atlas/tl.md).
+- A `NaT` row stays `NaT` regardless of `periods`/`freq`.
+- Each frame is transformed independently — see
+  [`AtlasTimelineAccessor::year`](year.md) for a worked example of this per-frame
+  independence.
+
+## See Also
+
+- [`DataFrameTimelineAccessor::shift`](../dataframe-timeline/shift.md): the
+  single-frame operation this method broadcasts across the stack, with the full set of
+  calendar-clamping and fixed-arithmetic worked examples.
+- [`AtlasTimelineAccessor::span`](span.md): the elapsed distance between two
+  timelines, rather than shifting one by a fixed amount.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="second.html">

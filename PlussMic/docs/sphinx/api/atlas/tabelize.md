@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e82e41676db0 -->
+
 # Atlas::tabelize
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,77 +8,82 @@
 ## Signatures
 
 ```cpp
-Atlas::tabelize(const pluss::kindle::Archive& archive) -> Atlas
-
-Atlas::tabelize(const pluss::kindle::Archive& archive, const pluss::kindle::TabelizePolicy& policy) -> Atlas
+static Atlas Atlas::tabelize(const pluss::kindle::Archive& archive)
+static Atlas Atlas::tabelize(const pluss::kindle::Archive& archive, const pluss::kindle::TabelizePolicy& policy)
 ```
 
 ## What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+**A `static` factory method** — call it as `Atlas::tabelize(...)`, not
+`atlas.tabelize(...)`. Converts an `Archive` into an `Atlas`, one frame per catalog, in the
+same depth order — the inverse of [`kindelize()`](kindelize.md), which goes the other
+direction (`Atlas` → `Archive`). Internally, each catalog is converted via
+[`Catalog::tabelize()`](../catalog/tabelize.md), using the same `policy` for every one, and
+the archive's own depth labels are carried over.
 
 ## Parameters
 
-**archive**
-    Archive payload supplied to this overload.
+**archive** (`const pluss::kindle::Archive&`)
+    The source archive. Must be defined.
 
-**policy**
-    Policy object that changes the structural behavior of this overload.
+**policy** (`const pluss::kindle::TabelizePolicy&`, optional)
+    The same alignment policy [`Catalog::tabelize()`](../catalog/tabelize.md) accepts,
+    applied uniformly to every catalog.
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas with one frame per catalog in `archive`, carrying over the archive's own
+    depth labels.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Convert a two-catalog archive into an `Atlas`.
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});
-auto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});
-auto archive = pluss::kindle::Archive({c0, c1});
-auto out = pluss::table::Atlas::tabelize(archive);
+
+auto c0 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0})) });
+auto c1 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({3.0, 4.0})) });
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"jan", "feb"})));
+
+auto atlas = pluss::table::Atlas::tabelize(archive);
+std::cout << "depth: " << atlas.depth() << "\n";
+std::cout << "depth labels carried over: " << atlas.label().has() << "\n";
+std::cout << atlas.dloc(0);
 ```
 
 ### Output
 
 ```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-using namespace pluss::kindle::literals;
-auto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});
-auto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});
-auto archive = pluss::kindle::Archive({c0, c1});
-auto out = pluss::table::Atlas::tabelize(archive);
+depth: 2
+depth labels carried over: 1
+===========
+     | id  
+-----------
+0    | 1   
+1    | 2   
+-----------
+[2 cs x 1 feat]
 ```
 
-### Output
+## Notes
 
-```text
-frame0:
-sales
-10.0
-20.0
+- A `static` factory — call as `Atlas::tabelize(archive)`, not on an existing instance.
+- The archive's own depth labels are carried over onto the resulting atlas's
+  [`label()`](label.md).
+- `policy` is applied uniformly to every catalog via
+  [`Catalog::tabelize()`](../catalog/tabelize.md) — see that page for the full field
+  breakdown.
 
-frame1:
-sales
-30.0
-40.0
-```
+## See Also
 
+- [`Atlas::kindelize`](kindelize.md): the inverse conversion, from `Atlas` back to
+  `Archive`.
+- [`Archive::tabelize`](../archive/tabelize.md): the depth-stacked-catalog analog of this
+  method, producing this same `Atlas` type directly from an instance method call.
+- [`Catalog::tabelize`](../catalog/tabelize.md): the single-catalog delegate this method
+  applies to every catalog.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="squeeze.html">

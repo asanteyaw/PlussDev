@@ -31,11 +31,10 @@ std::int64_t find_note_label(const Stream& labels, std::string_view key) {
 }
 
 std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
-  const auto values = labels.to_thread()
-                          .cast({.series_dtype = pluss::codem::ScalarType::Int64})
-                          .series()
-                          .as_series()
-                          .to_vec<std::int64_t>();
+  const auto thread = labels.to_thread();
+  PLUSS_CHECK(thread.kind() == pluss::table::ThreadKind::Series,
+              "Archive::loc(int64): depth labels must be numeric Series");
+  const auto values = thread.as_series().to_vec<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (values[static_cast<std::size_t>(i)] == key) {
       return i;

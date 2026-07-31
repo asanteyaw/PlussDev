@@ -90,12 +90,12 @@ Atlas: undefined handle
   `Atlas`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="empty.html">
+  <a class="prev-link" href="defined.html">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">defined</span>
   </a>
-  <a class="next-link" href="ncases.html">
+  <a class="next-link" href="dloc.html">
     <span class="label">Next</span>
-    <span class="title">ncases</span>
+    <span class="title">dloc</span>
   </a>
 </div>

@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0292317d45e7 -->
+
 # AtlasLabelAccessor::has
 
 [Back to AtlasLabelAccessor API Reference](../../atlas_label_accessor_api_reference)
@@ -5,12 +8,13 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::has() -> bool
+AtlasLabelAccessor::has() const -> bool
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Reports whether the bound atlas has depth labels set at all — the same check as
+[`Atlas::label().has()`](../../atlas_api_reference).
 
 ## Parameters
 
@@ -19,28 +23,44 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` if the atlas has depth labels set; `false` otherwise.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. An unlabeled atlas reports `false`; setting labels flips it to `true`.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"2024Q1", "2024Q2"})));
-auto labels = atlas.label();
+auto f0 = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+});
+auto atlas = pluss::table::Atlas({f0});
 
-auto out = labels.has();
-std::cout << out;
+std::cout << "has() before: " << atlas.label().has() << "\n";
+
+auto labeled = atlas.label().set(pluss::table::Thread(pluss::make_note({"jan"})));
+std::cout << "has() after: " << labeled.label().has();
 ```
 
 ### Output
 
 ```text
-true
+has() before: 0
+has() after: 1
 ```
 
+## Notes
+
+- Never throws, regardless of whether depth labels are set.
+- Every other accessor method that reads the depth labels ([`values()`](values.md), and
+  the set-algebra/lookup helpers) requires `has()` to be `true` first — check it before
+  calling them on a possibly-unlabeled atlas.
+
+## See Also
+
+- [`AtlasLabelAccessor::values`](values.md): read the depth labels this method confirms
+  exist.
+- [`AtlasLabelAccessor::set`](set.md) / [`AtlasLabelAccessor::reset`](reset.md): set or
+  clear the depth labels this method checks for.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="find.html">

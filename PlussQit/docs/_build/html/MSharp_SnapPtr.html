@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>MSharp SnapPtr (intrusive reference counting) &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=59a8c7d2" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="NaN / Inf behavior" href="NaN_Inf.html" />
+    <link rel="prev" title="Indexing, index_put, scatter" href="Indexing_Scatter.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="msharp-snapptr-intrusive-reference-counting">
+<h1>MSharp SnapPtr (intrusive reference counting)<a class="headerlink" href="#msharp-snapptr-intrusive-reference-counting" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::msharp::SnapPtr&lt;T&gt;</span></code> is PlussQit’s internal intrusive smart pointer used for
+long-lived shared objects (e.g., <code class="docutils literal notranslate"><span class="pre">codem::SeriesImpl</span></code>).</p>
+<section id="why-snapptr">
+<h2>Why SnapPtr?<a class="headerlink" href="#why-snapptr" title="Link to this heading">¶</a></h2>
+<p>For performance and predictability.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">std::shared_ptr</span></code> typically allocates a separate control block.</p></li>
+<li><p>Intrusive refcounting stores the count <em>inside the object</em>, enabling:</p>
+<ul>
+<li><p>fewer allocations</p></li>
+<li><p>better locality</p></li>
+<li><p>cheaper copies</p></li>
+</ul>
+</li>
+</ul>
+<p>This design is inspired by common industry practice for tensor handles and graph nodes.</p>
+</section>
+<section id="components">
+<h2>Components<a class="headerlink" href="#components" title="Link to this heading">¶</a></h2>
+<section id="refcounted">
+<h3><code class="docutils literal notranslate"><span class="pre">RefCounted</span></code><a class="headerlink" href="#refcounted" title="Link to this heading">¶</a></h3>
+<p>A base class that provides a thread-unsafe (single-threaded) reference count:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">retain()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">release()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_count()</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Note: if you later require cross-thread sharing, swap <code class="docutils literal notranslate"><span class="pre">std::size_t</span></code> to <code class="docutils literal notranslate"><span class="pre">std::atomic&lt;std::size_t&gt;</span></code>.</p>
+</div></blockquote>
+</section>
+<section id="snapptr-t">
+<h3><code class="docutils literal notranslate"><span class="pre">SnapPtr&lt;T&gt;</span></code><a class="headerlink" href="#snapptr-t" title="Link to this heading">¶</a></h3>
+<p>A pointer that calls <code class="docutils literal notranslate"><span class="pre">retain/release</span></code> appropriately.</p>
+</section>
+<section id="make-snap-t-args">
+<h3><code class="docutils literal notranslate"><span class="pre">make_snap&lt;T&gt;(args...)</span></code><a class="headerlink" href="#make-snap-t-args" title="Link to this heading">¶</a></h3>
+<p>Allocates with <code class="docutils literal notranslate"><span class="pre">new</span></code> and returns a <code class="docutils literal notranslate"><span class="pre">SnapPtr</span></code> <strong>without</strong> an extra retain.</p>
+</section>
+</section>
+<section id="usage-in-codem">
+<h2>Usage in CodeM<a class="headerlink" href="#usage-in-codem" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> holds a <code class="docutils literal notranslate"><span class="pre">SnapPtr&lt;SeriesImpl&gt;</span></code>.
+All <code class="docutils literal notranslate"><span class="pre">Series</span></code> copies are cheap; they share the same underlying implementation object.
+Views share the same underlying <code class="docutils literal notranslate"><span class="pre">Storage</span></code> but may carry different <code class="docutils literal notranslate"><span class="pre">sizes/strides/storage_offset</span></code>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MSharp SnapPtr (intrusive reference counting)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why-snapptr">Why SnapPtr?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#components">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage-in-codem">Usage in CodeM</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Indexing_Scatter.html" title="previous chapter">Indexing, index_put, scatter</a></li>
+      <li>Next: <a href="NaN_Inf.html" title="next chapter">NaN / Inf behavior</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/MSharp_SnapPtr.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

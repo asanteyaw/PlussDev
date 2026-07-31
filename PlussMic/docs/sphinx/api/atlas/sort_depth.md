@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d98a09cd6cd3 -->
+
 # Atlas::sort_depth
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,57 +8,77 @@
 ## Signature
 
 ```cpp
-Atlas::sort_depth(bool ascending = true, bool nulls_last = true) -> Atlas
+Atlas::sort_depth(bool ascending = true, bool nulls_last = true) const -> Atlas
 ```
 
 ## What It Does
 
-Sorts frames by their current depth labels.
+Returns a new atlas with its frames reordered by depth label — sorting the label axis
+reorders the underlying frames along with it, not just the labels in isolation. The `Atlas`
+analog of [`Archive::label`](../archive/label.md)`.sort()`.
 
 ## Parameters
 
-**ascending**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+**ascending** (`bool`, defaults to `true`)
+    Sort direction for the depth labels.
 
-**nulls_last**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+**nulls_last** (`bool`, defaults to `true`)
+    Whether `NULL` depth labels sort to the end (`true`) or the start (`false`).
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas, same depth, with frames reordered by depth label.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Sort ascending: the frame originally at depth-index 1 (labeled `"a"`) moves to
+depth-index 0.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({100.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({200.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"b", "a"})));
 
-auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"test", "train"})));
-auto out = labeled.sort_depth(true, true);
+auto sorted = atlas.sort_depth();
+std::cout << "sorted labels:\n" << sorted.label().values();
+std::cout << "dloc(0):\n" << sorted.dloc(0);
 ```
 
 ### Output
 
 ```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
+sorted labels:
+0  a
+1  b
+ptype: Note
+dloc(0):
+===========
+     | id  
+-----------
+0    | 200 
+-----------
+[1 cs x 1 feat]
 ```
 
+## Notes
+
+- Reorders the underlying frames together with the label stream — this is a full
+  depth-axis sort, not a label-only sort.
+- Requires depth labels to be set; behavior on an unlabeled atlas mirrors
+  [`Archive::label`](../archive/label.md)'s own requirement.
+
+## See Also
+
+- [`Atlas::relabel_depth`](relabel_depth.md): replace the depth labels entirely, instead of
+  reordering by the existing ones.
+- [`Atlas::align_depth`](align_depth.md): reorder/filter to an explicit target label order.
+- [`Archive::label`](../archive/label.md)`.sort()`: the depth-stacked-catalog analog of
+  this method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="slice_frames.html">

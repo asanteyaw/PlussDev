@@ -4,7 +4,7 @@ PlussMic is organized by public surface first, so you can enter through the exac
 
 - `table` covers tabular analysis surfaces such as `DataFrame`, `Thread`, and `Atlas`.
 - `kindle` covers aligned stream containers such as `Stream`, `Catalog`, and `Archive`.
-- `bundle` covers heterogeneous record containers such as `Slot`, `Registry`, and `Aisle`.
+- `bundle` covers heterogeneous record containers such as `Slot`, `Registry`, and `Axel`.
 - `Plotting` covers plotting and display-oriented helper surfaces.
 
 ```{toctree}

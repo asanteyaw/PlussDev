@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3fc8b8551733 -->
 
 # Archive::catalog
 

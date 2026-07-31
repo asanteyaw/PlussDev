@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8ca53393cd70 -->
+
 # Archive::freq
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,47 +8,85 @@
 ## Signature
 
 ```cpp
-Archive::freq(FreqOptions options = {}) -> Archive
+Archive::freq(FreqOptions options = {}) const -> Archive
+```
+
+```cpp
+struct FreqOptions {
+  std::int64_t top{0};
+  bool dropnull{true};
+};
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a new archive where every catalog is replaced by its own
+[`Catalog::freq()`](../catalog/freq.md) result — each stream reduced to occurrence counts
+per distinct value, per catalog. The distinct **values become the resulting stream's row
+labels**; the counts become the resulting stream's own numeric values.
+`options.top` (default `0`, meaning no limit) caps the result to the `top` most frequent
+values; `options.dropnull` (default `true`) excludes `NULL` from consideration.
 
 ## Parameters
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`FreqOptions`, optional)
+    `top` limits the result to the N most frequent values (`0` = no limit); `dropnull`
+    excludes `NULL` from the counts.
 
 ## Returns
 
 `Archive`
-    Value produced by this call.
+    A new archive, same depth and depth labels as the receiver, with every stream in every
+    catalog replaced by a count-per-distinct-value `Series[int64]` stream, labeled by the
+    original distinct values.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Frequency counts of a text stream — note the distinct values appear as row
+labels, not as the stream's own values.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
 auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+    "region"_k = pluss::kindle::Stream(pluss::make_note({"east", "west", "east", "north"})),
 });
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+auto archive = pluss::kindle::Archive({c0});
 
 auto out = archive.freq();
+std::cout << out.catalog(0).get("region").value();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[int64]  records=3
+label=yes  mask=no  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+east         | 2                                                                                                        
+west         | 1                                                                                                        
+north        | 1                                                                                                        
+========================================================================================================================
 ```
 
+## Notes
+
+- The distinct values become the resulting stream's row **labels** (via
+  [`lbl()`](../stream/lbl.md)); the counts become the numeric `Series[int64]` values — easy
+  to misread if you expect the original values inline like [`distinct()`](distinct.md).
+- Each stream, in every catalog, is reduced independently — resulting streams within one
+  catalog can end up different lengths.
+- Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
+
+## See Also
+
+- [`Archive::distinct`](distinct.md): the distinct values alone, without counts.
+- [`Archive::ndistinct`](ndistinct.md): just the count of distinct values.
+- [`Catalog::freq`](../catalog/freq.md): the single-catalog delegate this method applies to
+  every catalog.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fillnull.html">

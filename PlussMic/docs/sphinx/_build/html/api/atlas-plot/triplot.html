@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>AtlasPlotAccessor::triplot &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: bb9ecfb2c9f1 -->
+<section id="atlasplotaccessor-triplot">
+<h1>AtlasPlotAccessor::triplot<a class="headerlink" href="#atlasplotaccessor-triplot" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../atlas_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to AtlasPlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">triplot</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">triplot</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">TriplotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">triplot</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">triplot</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">TriplotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Selects exactly three numeric features (<code class="docutils literal notranslate"><span class="pre">features</span></code>, if given — otherwise every
+numeric feature on the <em>first</em> bound frame, which must have at least three), flattens
+each selected feature’s values <strong>across every frame in the stack</strong> into one long
+column per feature, and draws a ternary (triangle) plot from the three pooled
+columns.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Ignores the depth axis entirely — pools every frame’s rows together
+Unlike every other method on <code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code> — <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>,
+<a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a>, <a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cloud3()</span></code></span></a>, and the rest all respect
+<code class="docutils literal notranslate"><span class="pre">options_.depth_axis</span></code> to select which frames participate — <code class="docutils literal notranslate"><span class="pre">triplot()</span></code> consults no
+depth-axis option at all. Every frame in <code class="docutils literal notranslate"><span class="pre">frames_</span></code> contributes its rows, concatenated
+together, with no per-frame distinction preserved in the output (no per-frame color
+or legend grouping).</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::pl::flash::TriplotOptions&amp;</span></code>)
+Passed straight through to <code class="docutils literal notranslate"><span class="pre">flash::triplot</span></code>. If <code class="docutils literal notranslate"><span class="pre">options.labels</span></code> is left empty,
+it defaults to the three selected feature names.</p>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default empty)
+Exactly the features to plot — must resolve to (or be explicitly given as)
+exactly three, deduplicated. Left empty, defaults to every numeric feature on
+<code class="docutils literal notranslate"><span class="pre">frames_.front()</span></code>, which must itself have at least three numeric features.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with a single ternary-plot pane, one point per row pooled across every
+frame.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default feature selection: all three numeric features on the first frame,
+pooled across a 5-frame, 5-case-per-frame atlas (25 points total).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frames</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="n">frames</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">40.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mf">44.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mf">46.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mf">48.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;pressure&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1010.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">1011.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">1012.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">1013.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">1014.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">}));</span>
+<span class="p">}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;day1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day5&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">triplot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;triplot_default.svg&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">frames_.front()</span></code> (frame <code class="docutils literal notranslate"><span class="pre">0</span></code>) has exactly three numeric features — <code class="docutils literal notranslate"><span class="pre">temp_c</span></code>,
+<code class="docutils literal notranslate"><span class="pre">humidity</span></code>, <code class="docutils literal notranslate"><span class="pre">pressure</span></code> — so all three are selected automatically. All 5 frames’
+5 rows each are pooled into 25 total points on the triangle, per the important
+callout above; there is no visual grouping by which frame a point came from.</p>
+<p><img alt="Output of Example 1" src="../../_images/triplot-1.svg" /></p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above: this is the one method on <code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>
+that does not respect <code class="docutils literal notranslate"><span class="pre">options_.depth_axis</span></code> — every frame always contributes.</p></li>
+<li><p>Requires at least three numeric features to resolve to (whether auto-selected or
+explicitly named); fewer throws.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.labels</span></code> defaults to the selected feature names when left empty.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::cloud3</span></code></span></a>: also plots raw per-row points across
+three features, but as a 3D scatter respecting <code class="docutils literal notranslate"><span class="pre">depth_axis</span></code>, with one trace per
+frame rather than one pooled point cloud.</p></li>
+<li><p><a class="reference internal" href="../atlas/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::plot</span></code></span></a>: how to enter this accessor.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="surface.html">
+    <span class="label">Previous</span>
+    <span class="title">surface</span>
+  </a>
+  <a class="next-link" href="wireframe.html">
+    <span class="label">Next</span>
+    <span class="title">wireframe</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/atlas-plot/triplot.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

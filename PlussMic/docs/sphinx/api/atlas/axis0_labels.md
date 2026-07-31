@@ -94,12 +94,12 @@ std::cout << atlas.axis0_labels().has_value();
   the stack using these labels.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="column_names.html">
+  <a class="prev-link" href="align_depth.html">
     <span class="label">Previous</span>
-    <span class="title">column_names</span>
+    <span class="title">align_depth</span>
   </a>
-  <a class="next-link" href="frames.html">
+  <a class="next-link" href="column_names.html">
     <span class="label">Next</span>
-    <span class="title">frames</span>
+    <span class="title">column_names</span>
   </a>
 </div>

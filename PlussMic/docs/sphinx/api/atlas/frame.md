@@ -112,12 +112,12 @@ Atlas: frame index out of bounds
   positional index.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="frames.html">
+  <a class="prev-link" href="flow.html">
     <span class="label">Previous</span>
-    <span class="title">frames</span>
+    <span class="title">flow</span>
   </a>
-  <a class="next-link" href="dloc.html">
+  <a class="next-link" href="frames.html">
     <span class="label">Next</span>
-    <span class="title">dloc</span>
+    <span class="title">frames</span>
   </a>
 </div>

@@ -581,7 +581,8 @@ Thread infer_column_thread(const std::string& col_name,
                            std::size_t source_col_index,
                            const std::vector<std::string>& raw_values,
                            const pluss::loader::ReadCsvOptions& options,
-                           const std::unordered_map<std::string, std::string>& dtype_lower) {
+                           const std::unordered_map<std::string, std::string>& dtype_lower,
+                           bool prefer_numeric_over_bool = false) {
   const auto n = raw_values.size();
   std::vector<bool> valid(n, true);
   std::vector<std::string> values = raw_values;
@@ -609,50 +610,58 @@ Thread infer_column_thread(const std::string& col_name,
     }
   }
 
-  {
+  const auto try_bool_block = [&]() -> std::optional<Thread> {
     const bool try_bool = !forced.has_value() || *forced == InferredKind::Bool;
-    if (try_bool) {
-      std::vector<bool> parsed(n, false);
-      bool ok = true;
-      for (std::size_t i = 0; i < n; ++i) {
-        if (!valid[i]) continue;
-        bool v = false;
-        if (!parse_bool_token(values[i], options, v)) {
-          ok = false;
-          break;
-        }
-        parsed[i] = v;
+    if (!try_bool) return std::nullopt;
+    std::vector<bool> parsed(n, false);
+    bool ok = true;
+    for (std::size_t i = 0; i < n; ++i) {
+      if (!valid[i]) continue;
+      bool v = false;
+      if (!parse_bool_token(values[i], options, v)) {
+        ok = false;
+        break;
       }
-      if (ok) {
-        return make_series_thread_bool(parsed, valid);
-      }
-      if (forced.has_value() && *forced == InferredKind::Bool) {
-        PLUSS_FAIL("load_csv: failed to parse bool column '" + col_name + "'");
-      }
+      parsed[i] = v;
     }
-  }
+    if (ok) {
+      return make_series_thread_bool(parsed, valid);
+    }
+    if (forced.has_value() && *forced == InferredKind::Bool) {
+      PLUSS_FAIL("load_csv: failed to parse bool column '" + col_name + "'");
+    }
+    return std::nullopt;
+  };
 
-  {
+  const auto try_i64_block = [&]() -> std::optional<Thread> {
     const bool try_i64 = !forced.has_value() || *forced == InferredKind::Int64;
-    if (try_i64) {
-      std::vector<std::int64_t> parsed(n, 0);
-      bool ok = true;
-      for (std::size_t i = 0; i < n; ++i) {
-        if (!valid[i]) continue;
-        std::int64_t v = 0;
-        if (!parse_int64_token(values[i], options, v)) {
-          ok = false;
-          break;
-        }
-        parsed[i] = v;
+    if (!try_i64) return std::nullopt;
+    std::vector<std::int64_t> parsed(n, 0);
+    bool ok = true;
+    for (std::size_t i = 0; i < n; ++i) {
+      if (!valid[i]) continue;
+      std::int64_t v = 0;
+      if (!parse_int64_token(values[i], options, v)) {
+        ok = false;
+        break;
       }
-      if (ok) {
-        return make_series_thread_i64(parsed, valid);
-      }
-      if (forced.has_value() && *forced == InferredKind::Int64) {
-        PLUSS_FAIL("load_csv: failed to parse int64 column '" + col_name + "'");
-      }
+      parsed[i] = v;
     }
+    if (ok) {
+      return make_series_thread_i64(parsed, valid);
+    }
+    if (forced.has_value() && *forced == InferredKind::Int64) {
+      PLUSS_FAIL("load_csv: failed to parse int64 column '" + col_name + "'");
+    }
+    return std::nullopt;
+  };
+
+  if (prefer_numeric_over_bool) {
+    if (auto t = try_i64_block()) return *t;
+    if (auto t = try_bool_block()) return *t;
+  } else {
+    if (auto t = try_bool_block()) return *t;
+    if (auto t = try_i64_block()) return *t;
   }
 
   {
@@ -692,7 +701,8 @@ Thread infer_column_note_thread(const std::string& col_name,
                                 std::size_t source_col_index,
                                 const pluss::coden::Note& raw_values,
                                 const pluss::loader::ReadCsvOptions& options,
-                                const std::unordered_map<std::string, std::string>& dtype_lower) {
+                                const std::unordered_map<std::string, std::string>& dtype_lower,
+                                bool prefer_numeric_over_bool = false) {
   const auto n = static_cast<std::size_t>(raw_values.numel());
   std::vector<bool> valid(n, true);
 
@@ -718,50 +728,58 @@ Thread infer_column_note_thread(const std::string& col_name,
     }
   }
 
-  {
+  const auto try_bool_block = [&]() -> std::optional<Thread> {
     const bool try_bool = !forced.has_value() || *forced == InferredKind::Bool;
-    if (try_bool) {
-      std::vector<bool> parsed(n, false);
-      bool ok = true;
-      for (std::size_t i = 0; i < n; ++i) {
-        if (!valid[i]) continue;
-        bool v = false;
-        if (!parse_bool_token(raw_values.at(static_cast<std::int64_t>(i)), options, v)) {
-          ok = false;
-          break;
-        }
-        parsed[i] = v;
+    if (!try_bool) return std::nullopt;
+    std::vector<bool> parsed(n, false);
+    bool ok = true;
+    for (std::size_t i = 0; i < n; ++i) {
+      if (!valid[i]) continue;
+      bool v = false;
+      if (!parse_bool_token(raw_values.at(static_cast<std::int64_t>(i)), options, v)) {
+        ok = false;
+        break;
       }
-      if (ok) {
-        return make_series_thread_bool(parsed, valid);
-      }
-      if (forced.has_value() && *forced == InferredKind::Bool) {
-        PLUSS_FAIL("load_csv: failed to parse bool column '" + col_name + "'");
-      }
+      parsed[i] = v;
     }
-  }
+    if (ok) {
+      return make_series_thread_bool(parsed, valid);
+    }
+    if (forced.has_value() && *forced == InferredKind::Bool) {
+      PLUSS_FAIL("load_csv: failed to parse bool column '" + col_name + "'");
+    }
+    return std::nullopt;
+  };
 
-  {
+  const auto try_i64_block = [&]() -> std::optional<Thread> {
     const bool try_i64 = !forced.has_value() || *forced == InferredKind::Int64;
-    if (try_i64) {
-      std::vector<std::int64_t> parsed(n, 0);
-      bool ok = true;
-      for (std::size_t i = 0; i < n; ++i) {
-        if (!valid[i]) continue;
-        std::int64_t v = 0;
-        if (!parse_int64_token(raw_values.at(static_cast<std::int64_t>(i)), options, v)) {
-          ok = false;
-          break;
-        }
-        parsed[i] = v;
+    if (!try_i64) return std::nullopt;
+    std::vector<std::int64_t> parsed(n, 0);
+    bool ok = true;
+    for (std::size_t i = 0; i < n; ++i) {
+      if (!valid[i]) continue;
+      std::int64_t v = 0;
+      if (!parse_int64_token(raw_values.at(static_cast<std::int64_t>(i)), options, v)) {
+        ok = false;
+        break;
       }
-      if (ok) {
-        return make_series_thread_i64(parsed, valid);
-      }
-      if (forced.has_value() && *forced == InferredKind::Int64) {
-        PLUSS_FAIL("load_csv: failed to parse int64 column '" + col_name + "'");
-      }
+      parsed[i] = v;
     }
+    if (ok) {
+      return make_series_thread_i64(parsed, valid);
+    }
+    if (forced.has_value() && *forced == InferredKind::Int64) {
+      PLUSS_FAIL("load_csv: failed to parse int64 column '" + col_name + "'");
+    }
+    return std::nullopt;
+  };
+
+  if (prefer_numeric_over_bool) {
+    if (auto t = try_i64_block()) return *t;
+    if (auto t = try_bool_block()) return *t;
+  } else {
+    if (auto t = try_bool_block()) return *t;
+    if (auto t = try_i64_block()) return *t;
   }
 
   {
@@ -827,22 +845,27 @@ std::unordered_map<std::string, std::string> dtype_lower_from_options(const plus
 pluss::table::Thread infer_thread_from_raw_csv_column(std::string_view col_name,
                                                        std::size_t source_col_index,
                                                        const std::vector<std::string>& raw_values,
-                                                       const pluss::loader::ReadCsvOptions& options) {
+                                                       const pluss::loader::ReadCsvOptions& options,
+                                                       bool prefer_numeric_over_bool) {
   auto dtype_lower = dtype_lower_from_options(options);
-  return infer_column_thread(std::string(col_name), source_col_index, raw_values, options, dtype_lower);
+  return infer_column_thread(std::string(col_name), source_col_index, raw_values, options, dtype_lower,
+                             prefer_numeric_over_bool);
 }
 
 pluss::table::Thread infer_thread_from_raw_csv_column(const pluss::loader::CsvRawColumn& column,
-                                                       const pluss::loader::ReadCsvOptions& options) {
+                                                       const pluss::loader::ReadCsvOptions& options,
+                                                       bool prefer_numeric_over_bool) {
   auto dtype_lower = dtype_lower_from_options(options);
   if (column.note_values.has_value()) {
     return infer_column_note_thread(column.name,
                                     column.source_index,
                                     *column.note_values,
                                     options,
-                                    dtype_lower);
+                                    dtype_lower,
+                                    prefer_numeric_over_bool);
   }
-  return infer_column_thread(column.name, column.source_index, column.values, options, dtype_lower);
+  return infer_column_thread(column.name, column.source_index, column.values, options, dtype_lower,
+                             prefer_numeric_over_bool);
 }
 
 pluss::loader::CsvBatch csv_batch_from_raw_batch(const pluss::loader::CsvRawBatch& raw,

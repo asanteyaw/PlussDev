@@ -88,7 +88,7 @@ See [Atlas API Reference](../atlas_api_reference.md).
 | --- | --- |
 | `Slot` | [Slot API Reference](../slot_api_reference.md) |
 | `Registry` | [Registry API Reference](../registry_api_reference.md) |
-| `Aisle` | [Aisle API Reference](../aisle_api_reference.md) |
+| `Axel` | [Axel API Reference](../axel_api_reference.md) |
 
 ## Example source map
 

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Atlas::unique &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nexus API Reference" href="../../nexus_api_reference.html" />
+    <link rel="prev" title="Atlas::ts" href="ts.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 405866cfe223 -->
+<section id="atlas-unique">
+<h1>Atlas::unique<a class="headerlink" href="#atlas-unique" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../atlas_api_reference.html"><span class="doc std std-doc">Back to Atlas API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reports whether <strong>this <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> handle is the sole owner</strong> of its underlying frame stack —
+a reference-count check on the internal <code class="docutils literal notranslate"><span class="pre">intrusive_ptr</span></code>, not a check on the contained
+frames’ values.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>unique() is about ownership, not distinct values or frames
+<code class="docutils literal notranslate"><span class="pre">unique()</span></code> has nothing to do with whether the stacked frames are distinct from one
+another — an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> built from the same <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> repeated three times still reports
+<code class="docutils literal notranslate"><span class="pre">unique():</span> <span class="pre">true</span></code> if no other <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> handle shares its payload. Conversely, an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+whose frames are all different reports <code class="docutils literal notranslate"><span class="pre">unique():</span> <span class="pre">false</span></code> the moment a copy of the handle
+exists anywhere.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>’s copy constructor is a cheap handle copy (shared ownership, like
+<code class="docutils literal notranslate"><span class="pre">std::shared_ptr</span></code>), not a deep copy of every contained <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — <code class="docutils literal notranslate"><span class="pre">unique()</span></code> tells you
+whether such a sharing copy currently exists. It goes back to <code class="docutils literal notranslate"><span class="pre">true</span></code> once every other
+sharing handle goes out of scope.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> if no other <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> handle currently shares this atlas’s payload; <code class="docutils literal notranslate"><span class="pre">false</span></code> if
+at least one copy exists elsewhere.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A freshly constructed atlas is its own sole owner.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+<p>Example 2. Copying the atlas drops <code class="docutils literal notranslate"><span class="pre">unique()</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> on <em>both</em> handles, for as long
+as both are alive.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;atlas1.unique() before copy: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas1</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas1</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;atlas1.unique() with atlas2 alive: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas1</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;atlas2.unique(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas2</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>atlas1.unique() before copy: 1
+atlas1.unique() with atlas2 alive: 0
+atlas2.unique(): 0
+</pre></div>
+</div>
+<p>Example 3. Once the sharing copy goes out of scope, <code class="docutils literal notranslate"><span class="pre">unique()</span></code> returns to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">});</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">atlas2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas1</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;while atlas2 alive: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas1</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after atlas2 destroyed: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas1</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>while atlas2 alive: 0
+after atlas2 destroyed: 1
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Ownership-sharing check, not a value-distinctness check — see the important callout
+above.</p></li>
+<li><p>Moving an atlas (<code class="docutils literal notranslate"><span class="pre">std::move</span></code>) does <strong>not</strong> create a second owner — the moved-from
+handle is left empty, so the moved-to handle still reports <code class="docutils literal notranslate"><span class="pre">unique():</span> <span class="pre">true</span></code>.</p></li>
+<li><p>Methods that derive a new atlas (e.g. <a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>, <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a>)
+allocate a fresh payload, so the result is its own sole owner, independent of the
+receiver’s <code class="docutils literal notranslate"><span class="pre">unique()</span></code> status.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noexcept</span></code>; safe to call at any time, including on an undefined <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="defined.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::defined</span></code></span></a>: a different ownership-adjacent check — whether the
+handle has a payload at all, regardless of sharing.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ts.html">
+    <span class="label">Previous</span>
+    <span class="title">ts</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../atlas_api_reference.html">Atlas API Reference</a><ul>
+      <li>Previous: <a href="ts.html" title="previous chapter">Atlas::ts</a></li>
+      <li>Next: <a href="../../nexus_api_reference.html" title="next chapter">Nexus API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/atlas/unique.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

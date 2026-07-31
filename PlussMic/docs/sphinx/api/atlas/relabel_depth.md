@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 42cf8b148dcf -->
+
 # Atlas::relabel_depth
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,54 +8,92 @@
 ## Signature
 
 ```cpp
-Atlas::relabel_depth(const Thread& labels) -> Atlas
+Atlas::relabel_depth(const Thread& labels) const -> Atlas
 ```
 
 ## What It Does
 
-Replaces the depth-label axis with the supplied labels while keeping frame contents unchanged.
+Returns a new atlas with `labels` replacing the depth-label axis entirely — `labels` must
+be the same length as the atlas's own depth, or the call throws before any copy is made.
+Unlike [`sort_depth()`](sort_depth.md), this doesn't reorder frames; it only replaces the
+label values attached to each existing depth position.
 
 ## Parameters
 
-**labels**
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+**labels** (`const Thread&`)
+    The new depth-label axis. Must have the same length as the atlas's
+    [`depth()`](depth.md).
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas, same depth and frame order, with `labels` as its new depth-label axis.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Attach fresh depth labels to a previously unlabeled atlas.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto labels = pluss::table::Thread(pluss::make_note({"baseline", "stress"}));
-auto out = atlas.relabel_depth(labels);
+auto out = atlas.relabel_depth(pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+std::cout << "has label: " << out.label().has() << "\n";
+std::cout << out.label().values();
 ```
 
 ### Output
 
 ```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
+has label: 1
+0  jan
+1  feb
+ptype: Note
 ```
 
+Example 2. A length mismatch throws immediately, before the receiver is touched.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+try {
+  atlas.relabel_depth(pluss::table::Thread(pluss::make_note({"only_one"})));
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Atlas: axis0 labels length must equal depth
+```
+
+## Notes
+
+- Requires an exact length match with the atlas's depth — a mismatch throws
+  `"Atlas: axis0 labels length must equal depth"`.
+- Replaces labels only; frame order and content are unaffected. Use
+  [`sort_depth()`](sort_depth.md)/[`align_depth()`](align_depth.md) to also reorder frames.
+
+## See Also
+
+- [`Atlas::sort_depth`](sort_depth.md): reorder frames by the existing labels, instead of
+  replacing them.
+- [`Atlas::align_depth`](align_depth.md): reorder/filter to an explicit target label order.
+- [`Atlas::label`](label.md): the fuller accessor for inspecting, setting, and manipulating
+  depth labels.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="plot.html">

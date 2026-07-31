@@ -325,6 +325,12 @@ Timeline timeline_from_utf8(std::span<const std::string_view> utf8_flat,
   std::vector<std::int64_t> ticks(utf8_flat.size());
   std::transform(utf8_flat.begin(), utf8_flat.end(), ticks.begin(),
                  [](std::string_view sv) {
+                   // An empty (or whitespace-only) string is the documented way to
+                   // request a NaT row from text input -- distinct from a genuinely
+                   // malformed, non-empty string, which still throws below.
+                   if (trim(sv).empty()) {
+                     return Timeline::kNaT;
+                   }
                    const auto p = parse_datetime(sv);
                    CODEM_CHECK(p.ok, "moment: failed to parse datetime");
                    return to_epoch_nanos_utc(p);

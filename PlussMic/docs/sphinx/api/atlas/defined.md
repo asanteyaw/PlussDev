@@ -99,8 +99,12 @@ payload at all."
 - [`Atlas::depth`](depth.md): the frame count, only safe to call once `defined()` is `true`.
 
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="unique.html">
+  <a class="prev-link" href="column_names.html">
+    <span class="label">Previous</span>
+    <span class="title">column_names</span>
+  </a>
+  <a class="next-link" href="depth.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">depth</span>
   </a>
 </div>

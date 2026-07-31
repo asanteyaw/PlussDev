@@ -9,7 +9,7 @@ PlussMic has three related models:
 ```text
 table  -> DataFrame, Thread, Atlas
 kindle -> Stream, Catalog, Archive
-bundle -> Slot, Registry, Aisle
+bundle -> Slot, Registry, Axel
 ```
 
 Most users start with `DataFrame`, because it is the table abstraction used for

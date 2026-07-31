@@ -1,5 +1,6 @@
 #include "kindle/Archive.h"
 
+#include <iostream>
 #include <ostream>
 
 #include "kindle/display/Display.h"
@@ -10,7 +11,7 @@ namespace pluss::kindle {
 pluss::table::Atlas Archive::to_table(const TabelizePolicy& policy, bool render) const {
   auto out = tabelize(policy);
   if (render) {
-    out.show();
+    pluss::table::display::print(std::cout, out, {});
   }
   return out;
 }

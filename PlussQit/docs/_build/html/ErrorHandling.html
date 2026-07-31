@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Error handling and stack traces (C++) &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=59a8c7d2" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Errors and Stack Traces" href="Errors_StackTrace.html" />
+    <link rel="prev" title="Elementwise extras" href="ElementwiseExtras.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="error-handling-and-stack-traces-c">
+<h1>Error handling and stack traces (C++)<a class="headerlink" href="#error-handling-and-stack-traces-c" title="Link to this heading">¶</a></h1>
+<p>PlussQit is a C++ library, so it cannot replicate Python-level tracebacks perfectly.
+However, it provides two practical mechanisms:</p>
+<ol class="arabic simple">
+<li><p><strong>Source location</strong>: error messages include file/line/function at the throw site.</p></li>
+<li><p><strong>Internal stack trace</strong>: internal API entry points can register call frames so errors include a lightweight stack trace.</p></li>
+<li><p><strong>Unified exception type</strong>: API-facing failures are normalized to <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code>.</p></li>
+</ol>
+<section id="internal-usage">
+<h2>Internal usage<a class="headerlink" href="#internal-usage" title="Link to this heading">¶</a></h2>
+<p>Library entry points should add a guard:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">PLUSS_CALL_GUARD</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Then any <code class="docutils literal notranslate"><span class="pre">throw_error(...)</span></code> includes a formatted stack.</p>
+</section>
+<section id="canonical-exception-type">
+<h2>Canonical exception type<a class="headerlink" href="#canonical-exception-type" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code> as the primary catch type in user code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::codem::Error</span></code> remains a compatibility alias to <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">log</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="native-call-trace-modes">
+<h2>Native Call Trace Modes<a class="headerlink" href="#native-call-trace-modes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">throw_error(...)</span></code> now appends a native call trace by default to help pinpoint
+user-site call chains without <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> hunting.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PLUSS_ERROR_NATIVE_TRACE</span></code> unset: full native stack trace (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PLUSS_ERROR_NATIVE_TRACE=focused</span></code>: focused <code class="docutils literal notranslate"><span class="pre">file</span> <span class="pre">-&gt;</span> <span class="pre">pluss</span> <span class="pre">trigger</span></code> view</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PLUSS_ERROR_NATIVE_TRACE=full</span></code>: full native stack trace</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PLUSS_ERROR_NATIVE_TRACE=0</span></code> (or <code class="docutils literal notranslate"><span class="pre">off</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code>): disable native stack trace section</p></li>
+</ul>
+</section>
+<section id="user-code-location">
+<h2>User code location<a class="headerlink" href="#user-code-location" title="Link to this heading">¶</a></h2>
+<p>For APIs where we want to capture the <strong>user</strong> call site, we may add <code class="docutils literal notranslate"><span class="pre">std::source_location</span></code>
+default parameters on public wrappers (especially factories), so the library can report
+where the user invoked the API.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Error handling and stack traces (C++)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#internal-usage">Internal usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#canonical-exception-type">Canonical exception type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#native-call-trace-modes">Native Call Trace Modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-code-location">User code location</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="ElementwiseExtras.html" title="previous chapter">Elementwise extras</a></li>
+      <li>Next: <a href="Errors_StackTrace.html" title="next chapter">Errors and Stack Traces</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/ErrorHandling.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

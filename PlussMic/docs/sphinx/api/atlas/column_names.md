@@ -90,12 +90,12 @@ std::cout << atlas.column_names().size();
   a single frame.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nfeatures.html">
+  <a class="prev-link" href="axis0_labels.html">
     <span class="label">Previous</span>
-    <span class="title">nfeatures</span>
-  </a>
-  <a class="next-link" href="axis0_labels.html">
-    <span class="label">Next</span>
     <span class="title">axis0_labels</span>
+  </a>
+  <a class="next-link" href="defined.html">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
   </a>
 </div>

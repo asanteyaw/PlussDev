@@ -115,6 +115,14 @@ Slot::Value slot_value_from_scalar_thread(const pluss::table::Thread& thread) {
   return std::monostate{};
 }
 
+// Registry::Slot is heterogeneous and cell-by-cell (unlike Catalog's homogeneous
+// columnar Stream), so each raw token is intentionally inferred on its own — a
+// column can legitimately mix a Series-kind value in one row with a Note-kind value
+// in the next. Because each call only sees a single token, it passes
+// prefer_numeric_over_bool=true so an ambiguous digit-only literal like "1"/"0"
+// resolves to Int64 rather than Bool; a whole real column of such tokens has no
+// surrounding context here to fall back on Bool the way Catalog's whole-column
+// inference can.
 Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
                                             std::size_t source_col_index,
                                             std::string_view raw_token,
@@ -124,7 +132,8 @@ Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
       col_name,
       source_col_index,
       one,
-      options);
+      options,
+      /*prefer_numeric_over_bool=*/true);
   if (pluss::table::detail::has_validity_mask(inferred)) {
     const auto valid = pluss::table::detail::validity_mask(inferred)->to_vec<bool>();
     if (valid.size() == 1 && !valid[0]) {

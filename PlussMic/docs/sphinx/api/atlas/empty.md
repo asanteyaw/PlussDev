@@ -101,12 +101,12 @@ empty: 1
   frame count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unique.html">
+  <a class="prev-link" href="dloc.html">
     <span class="label">Previous</span>
-    <span class="title">unique</span>
+    <span class="title">dloc</span>
   </a>
-  <a class="next-link" href="depth.html">
+  <a class="next-link" href="features.html">
     <span class="label">Next</span>
-    <span class="title">depth</span>
+    <span class="title">features</span>
   </a>
 </div>

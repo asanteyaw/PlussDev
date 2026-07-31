@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 675ae73ae8dc -->
+
 # Archive::select
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,119 +8,104 @@
 ## Signatures
 
 ```cpp
-Archive::select(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> Archive
-
-Archive::select(const std::vector<std::string>& keys) -> Archive
-
-Archive::select(std::initializer_list<std::string_view> keys) -> Archive
-
-Archive::select(std::span<const std::string_view> keys) -> Archive
+Archive::select(std::span<const std::string_view> keys) const -> Archive
+Archive::select(std::initializer_list<std::string_view> keys) const -> Archive
+Archive::select(const std::vector<std::string>& keys) const -> Archive
 ```
 
 ## What It Does
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Returns a new archive keeping only the named streams, applied to every catalog. Delegates
+to each catalog's own `Catalog::select()`, so a `keys` entry that doesn't exist in some
+catalog throws that catalog's own `"Catalog::select: unknown key '<name>'"` — same as
+calling [`has()`](has.md) would reveal in advance for a ragged archive. Depth labels (if
+set) are preserved on the result.
 
 ## Parameters
 
-**keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+**keys** (`std::span<const std::string_view>`, `std::initializer_list<std::string_view>`,
+or `const std::vector<std::string>&`)
+    The stream names to keep, applied uniformly to every catalog.
 
 ## Returns
 
-`template <pluss::detail::StringViewNameRange NameRange> Archive`
-    Value produced by this call.
-
 `Archive`
-    Value produced by this call.
+    A new archive, same depth and depth labels as the receiver, with every catalog reduced
+    to just the named streams.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Select a subset of streams with an inline list.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
 auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra"})),
+    "score"_k = pluss::kindle::Stream(pluss::make_series({9.5})),
 });
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+auto archive = pluss::kindle::Archive({c0}, pluss::kindle::Stream(pluss::make_note({"train"})));
 
-auto out = archive.select();
+auto out = archive.select({"id", "score"});
+std::cout << "depth labels preserved: " << out.label().has() << "\n";
+std::cout << out.catalog(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+depth labels preserved: 1
+========================================================================================================================
+kindle::Catalog  keys=2
+keys: [id, score]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[float64]  | 1       | [1]                                              
+score                    | Series       | Series[float64]  | 1       | [9.5]                                            
+========================================================================================================================
 ```
-Example 2. Pass several names together from a standard string container.
+
+Example 2. Selecting a key missing from at least one catalog throws — a common outcome on
+a ragged archive.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
 auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra"})),
 });
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+auto c1 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({2.0})) });
+auto ragged = pluss::kindle::Archive({c0, c1});
 
-auto out = archive.select();
+try {
+  ragged.select({"city"});
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
-```
-Example 3. Pass several feature names inline.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.select();
+Catalog::select: unknown key 'city'
 ```
 
-### Output
+## Notes
 
-```text
-The call completes and returns the contract described under Output.
-```
-Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+- No no-argument overload — `keys` must be supplied explicitly.
+- Throws on any catalog missing a requested key; check with [`has()`](has.md) first on a
+  potentially ragged archive.
+- Depth labels are preserved on the result.
 
-```cpp
-using namespace pluss::kindle::literals;
+## See Also
 
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.select();
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
+- [`Archive::drop`](drop.md): the inverse — remove named streams instead of keeping them.
+- [`Archive::has`](has.md): confirm a key exists in every catalog before selecting it.
+- [`Archive::keyaxis`](keyaxis.md): select by substring/regex/kind instead of an explicit
+  name list.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rename.html">

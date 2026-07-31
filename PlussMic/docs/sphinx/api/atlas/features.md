@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 54543aaa7c0f -->
+
 # Atlas::features
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,114 +8,123 @@
 ## Signatures
 
 ```cpp
-Atlas::features(const NameRange& features) -> template <detail::StringViewNameRange NameRange> Atlas
-
-Atlas::features(pluss::RangeView<std::string_view> features) -> Atlas
-
-Atlas::features(std::initializer_list<std::string_view> features) -> Atlas
-
-Atlas::features(std::string_view feature) -> Atlas
+Atlas::features(std::string_view feature) const -> Atlas
+Atlas::features(std::initializer_list<std::string_view> features) const -> Atlas
+Atlas::features(pluss::msharp::RangeView::Of<std::string_view> features) const -> Atlas
 ```
 
 ## What It Does
 
-Materializes the current members as a collection you can inspect or reuse elsewhere.
+Returns a new atlas keeping only the named feature(s), applied to every frame — delegates
+to each frame's own `DataFrame::features()`, so a name that doesn't exist throws that
+frame's own `"DataFrame::features: unknown column '<name>'"`. Depth and depth labels are
+preserved.
 
 ## Parameters
 
-**features**
-    Feature name(s) that select the target DataFrame columns for the operation.
+**feature** (`std::string_view`, single-feature overload)
+    A single feature name to select.
 
-**feature**
-    Name of the source feature used by the operation.
+**features** (`std::initializer_list<std::string_view>` or
+`pluss::msharp::RangeView::Of<std::string_view>`, multi-feature overloads)
+    Several feature names to select at once.
 
 ## Returns
 
-`template <detail::StringViewNameRange NameRange> Atlas`
-    Value produced by this call.
-
 `Atlas`
-    Value produced by this call.
+    A new atlas, same depth and depth labels as the receiver, with every frame reduced to
+    just the named feature(s).
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Select a single feature from every frame.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
+    {"score", pluss::table::Thread(pluss::make_series({9.5, 8.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({3.0, 4.0}))},
+    {"score", pluss::table::Thread(pluss::make_series({7.5, 6.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
 
-auto out = atlas.features();
+auto out = atlas.features("id");
+std::cout << out.dloc(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+===========
+     | id  
+-----------
+0    | 1   
+1    | 2   
+-----------
+[2 cs x 1 feat]
 ```
-Example 2. Work with a selected feature subset.
+
+Example 2. Select several features with an inline list.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema"}))},
+    {"score", pluss::table::Thread(pluss::make_series({9.5, 8.0}))},
 });
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0});
 
-auto out = atlas.features();
+auto out = atlas.features({"id", "score"});
+std::cout << out.dloc(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+==================
+     | id    score
+------------------
+0    | 1     9.5  
+1    | 2     8    
+------------------
+[2 cs x 2 feat]
 ```
-Example 3. Pass several feature names inline.
+
+Example 3. Selecting a feature missing from a frame throws.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
 });
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0});
 
-auto out = atlas.features();
+try {
+  atlas.features("nope");
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
-```
-Example 4. Work with one named feature.
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.features();
+DataFrame::features: unknown column 'nope'
 ```
 
-### Output
+## Notes
 
-```text
-The call completes and returns the contract described under Output.
-```
+- Throws on any frame missing a requested feature — every frame must have it, since
+  `Atlas` requires the same schema across all frames.
+- Depth and depth labels are preserved on the result.
 
+## See Also
+
+- [`Atlas::map`](map.md): apply a callback to every cell across every feature, instead of
+  selecting a subset.
+- [`DataFrame::features`](../dataframe/features.md): the single-frame delegate this method
+  applies to every frame.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="empty.html">

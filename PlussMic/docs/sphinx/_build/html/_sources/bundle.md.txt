@@ -6,7 +6,7 @@ The bundle model is the heterogeneous record layer:
 
 - `Slot`: sequence of heterogeneous Pluss values
 - `Registry`: named set of slots
-- `Aisle`: depth stack of registries
+- `Axel`: depth stack of registries
 
 Use it when one field can hold different domain types, or when you want a lighter record/batch abstraction than `DataFrame`.
 
@@ -44,17 +44,17 @@ auto renamed = registry.rename({{"city", "location"}});
 auto profiled = registry.type_profiles();
 ```
 
-## Aisle
+## Axel
 
 ```cpp
 auto train = registry;
 auto test = registry.rename({{"city", "city_test"}});
 auto labels = pluss::bundle::Slot({pluss::make_note("train"), pluss::make_note("test")});
 
-auto aisle = pluss::bundle::Aisle({train, test}, labels);
+auto axel = pluss::bundle::Axel({train, test}, labels);
 
-auto first = aisle.head(1);
-auto combined = aisle.concat_depth(first);
+auto first = axel.head(1);
+auto combined = axel.concat_depth(first);
 ```
 
 ## Kindle Bridge
@@ -62,9 +62,9 @@ auto combined = aisle.concat_depth(first);
 ```cpp
 auto stream = ids.to_kindle();
 auto catalog = registry.to_kindle();
-auto archive = aisle.to_kindle();
+auto archive = axel.to_kindle();
 
 auto back_slot = pluss::bundle::Slot::from_kindle(stream);
 auto back_registry = pluss::bundle::Registry::from_kindle(catalog);
-auto back_aisle = pluss::bundle::Aisle::from_kindle(archive);
+auto back_axel = pluss::bundle::Axel::from_kindle(archive);
 ```

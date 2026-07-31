@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f597075c945d -->
+
 # Atlas::tl
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,12 +8,27 @@
 ## Signature
 
 ```cpp
-Atlas::tl() -> AtlasTimelineAccessor
+Atlas::tl() const -> AtlasTimelineAccessor
 ```
 
 ## What It Does
 
-This is part of the time-aware surface and expects timeline or time-index semantics.
+The entry point into the calendar/timestamp-operations accessor, applied across every
+frame in the atlas — extracting year, month, day, weekday, timezone conversion,
+flooring/ceiling to a unit, and more, one method per operation. `tl()` binds the current
+atlas and hands back an `AtlasTimelineAccessor`, documented in full on its own pages (see
+[`AtlasTimelineAccessor` API Reference](../../atlas_timeline_accessor_api_reference)).
+
+```{important} tl() itself never validates — the per-feature check happens lazily, per frame
+Unlike [`DataFrame::tl()`](../dataframe/tl.md) (which throws immediately if any feature on
+the frame isn't `Timeline`/`TimeIndex`-kind), `Atlas::tl()` never throws — it just binds.
+The validation happens later, independently per frame, the first time you actually call a
+method on the returned accessor (e.g. `.year()`). If any frame in the atlas has a
+non-timeline feature at that point, that frame's own `DataFrame::tl()` throws the same
+message [`DataFrame::tl`](../dataframe/tl.md) documents (pointing at
+`df.features({"date"}).tl()` as the fix) — but only when an accessor method is actually
+invoked, not at `tl()`'s own call site.
+```
 
 ## Parameters
 
@@ -19,30 +37,47 @@ This is part of the time-aware surface and expects timeline or time-index semant
 ## Returns
 
 `AtlasTimelineAccessor`
-    Value produced by this call.
+    A binder for the current atlas — call one of its methods to actually perform a
+    calendar/timestamp operation across every frame.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. `tl()` binds without validating; the check happens when a method is called.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))},
 });
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0});
 
-auto out = atlas.tl();
+auto out = atlas.tl().year();
+std::cout << out.dloc(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+===========
+     | ts  
+-----------
+0    | 2024
+-----------
+[1 cs x 1 feat]
 ```
 
+## Notes
+
+- `tl()` alone does no validation — see the important callout above. Narrow to timeline
+  feature(s) first with [`features()`](features.md) if the atlas has other feature kinds
+  present.
+- The full accessor surface is documented separately — see
+  [`AtlasTimelineAccessor` API Reference](../../atlas_timeline_accessor_api_reference).
+
+## See Also
+
+- [`DataFrame::tl`](../dataframe/tl.md): the single-frame delegate, whose eager validation
+  this method's lazy, per-frame validation ultimately relies on.
+- [`Atlas::features`](features.md): narrow to timeline feature(s) before calling `tl()`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tail.html">

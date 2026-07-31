@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -112,7 +112,7 @@ rendered as edges instead of a filled mesh.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;temp_wireframe.svg&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 1" src="../../_images/wireframe-1.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/wireframe-11.svg" /></p>
 <p>Example 2. A different aggregation (<code class="docutils literal notranslate"><span class="pre">Min</span></code>).</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Min</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>

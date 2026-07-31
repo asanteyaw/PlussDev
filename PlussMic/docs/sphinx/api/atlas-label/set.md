@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 81bff079e559 -->
+
 # AtlasLabelAccessor::set
 
 [Back to AtlasLabelAccessor API Reference](../../atlas_label_accessor_api_reference)
@@ -5,43 +8,69 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::set(const Thread& labels) -> Atlas
+AtlasLabelAccessor::set(const Thread& labels) const -> Atlas
 ```
 
 ## What It Does
 
-Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
+Returns a copy of the bound atlas with its depth-axis labels replaced by `labels` —
+the depth-axis counterpart to
+[`DataFrame::label().set()`](../dataframe-label/set.md), which replaces the case-axis
+labels of a single frame instead.
 
 ## Parameters
 
-**labels**
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+**labels** (`const Thread&`)
+    The new depth labels. Its length must equal `depth()`.
 
 ## Returns
 
 `Atlas`
-    Value produced by this call.
+    A new atlas, identical in frame content, with `labels` as its depth-axis labels.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Set depth labels on an atlas that was constructed without any.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"2024Q1", "2024Q2"})));
-auto labels = atlas.label();
+auto q1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+});
+auto atlas = pluss::table::Atlas({q1, q2});
 
-auto out = labels.set(df.features("load"));
-std::cout << out;
+std::cout << "has before: " << atlas.label().has() << "\n";
+
+auto labeled = atlas.label().set(pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+std::cout << labeled.label().values();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+has before: 0
+0  jan
+1  feb
+ptype: Note
 ```
 
+## Notes
+
+- The original atlas is left unchanged — `set()` returns a new `Atlas`, like every other
+  method on this accessor.
+- Passing a `labels` `Thread` whose length doesn't equal `depth()` throws (mirroring
+  [`Atlas::relabel_depth`](../atlas/relabel_depth.md), which this accessor delegates to
+  internally).
+
+## See Also
+
+- [`AtlasLabelAccessor::reset`](reset.md): the inverse — clear the depth labels back to
+  the default integer sequence.
+- [`AtlasLabelAccessor::range`](range.md): reset the labels to `0, 1, 2, ...` explicitly.
+- [`Atlas::relabel_depth`](../atlas/relabel_depth.md): the underlying `Atlas` method this
+  accessor wraps.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="reset.html">

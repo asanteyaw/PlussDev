@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b46761567d97 -->
+
 # Archive::distinct
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,47 +8,78 @@
 ## Signature
 
 ```cpp
-Archive::distinct(DistinctOptions options = {}) -> Archive
+Archive::distinct(DistinctOptions options = {}) const -> Archive
+```
+
+```cpp
+struct DistinctOptions {
+  bool dropnull{true};
+};
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a new archive where every catalog is replaced by its own
+[`Catalog::distinct()`](../catalog/distinct.md) result — each stream reduced to its
+distinct values independently, per catalog. `options.dropnull` (default `true`) controls
+whether a `NULL` counts as one of the distinct values.
 
 ## Parameters
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`DistinctOptions`, optional)
+    `dropnull` (default `true`) excludes `NULL` from the distinct set; set `false` to
+    include it as its own distinct value.
 
 ## Returns
 
 `Archive`
-    Value produced by this call.
+    A new archive, same depth and depth labels as the receiver, with every stream in every
+    catalog reduced to its distinct values.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Distinct values of a text stream and a numeric stream, in the same catalog.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
 auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+    "region"_k = pluss::kindle::Stream(pluss::make_note({"east", "west", "east", "north"})),
+    "score"_k  = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 2.0, 3.0})),
 });
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+auto archive = pluss::kindle::Archive({c0});
 
 auto out = archive.distinct();
+std::cout << out.catalog(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+========================================================================================================================
+kindle::Catalog  keys=2
+keys: [region, score]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+region                   | Note         | Note             | 3       | [east, west, north]                              
+score                    | Series       | Series[float64]  | 3       | [1, 2, 3]                                        
+========================================================================================================================
 ```
 
+## Notes
+
+- Each stream, in every catalog, is reduced to its own distinct values independently — the
+  resulting streams within one catalog can end up different lengths.
+- Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
+
+## See Also
+
+- [`Archive::ndistinct`](ndistinct.md): the count of distinct values, instead of the values
+  themselves.
+- [`Archive::freq`](freq.md): distinct values paired with their occurrence counts.
+- [`Catalog::distinct`](../catalog/distinct.md): the single-catalog delegate this method
+  applies to every catalog.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="depth.html">

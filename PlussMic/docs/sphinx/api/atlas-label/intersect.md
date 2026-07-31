@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a6e6b7ffd2f0 -->
+
 # AtlasLabelAccessor::intersect
 
 [Back to AtlasLabelAccessor API Reference](../../atlas_label_accessor_api_reference)
@@ -5,43 +8,67 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::intersect(const Thread& other) -> Thread
+AtlasLabelAccessor::intersect(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the set intersection of the atlas's current depth labels and `other` — only the
+labels that appear in both. A pure set operation: it returns a `Thread` of labels, not a
+new `Atlas`, and does not touch the bound atlas's frames.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+    The other set of labels to intersect with the atlas's current depth labels.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    The labels present in both sets, named `"intersect"`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Intersect the depth labels of two atlases that only partially overlap.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"2024Q1", "2024Q2"})));
-auto labels = atlas.label();
+auto q1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+});
+auto q3 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+});
+auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
+auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"feb", "mar", "apr"})));
 
-auto out = labels.intersect(df.features("load"));
-std::cout << out;
+std::cout << a1.label().intersect(a2.label().values());
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  feb
+1  mar
+Name: intersect, ptype: Note
 ```
 
+## Notes
+
+- Pure set operation — returns a `Thread`, not an `Atlas`; combine with
+  [`align()`](align.md) if you need to actually subset the bound atlas's frames down to
+  this intersection.
+- The result is named `"intersect"` regardless of the input `Thread`'s own name.
+
+## See Also
+
+- [`AtlasLabelAccessor::unite`](unite.md): the labels present in either set.
+- [`AtlasLabelAccessor::diff`](diff.md) / [`AtlasLabelAccessor::symdiff`](symdiff.md):
+  the complements of this intersection.
+- [`AtlasLabelAccessor::align`](align.md): subset the bound atlas's frames to a specific
+  label set, such as the result of this method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="has.html">

@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f74f0590efb6 -->
+
 # Archive::tabelize
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,57 +8,79 @@
 ## Signature
 
 ```cpp
-Archive::tabelize(const TabelizePolicy& policy = {}) -> pluss::table::Atlas
+Archive::tabelize(const TabelizePolicy& policy = {}) const -> pluss::table::Atlas
 ```
 
 ## What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts the whole archive into a `pluss::table::Atlas` — the depth-stacked table-stack
+analog of `Archive`, the same way a single [`Catalog::tabelize()`](../catalog/tabelize.md)
+produces one `DataFrame`. Each catalog becomes one `DataFrame` in the resulting `Atlas`, in
+the same depth order, using the same `TabelizePolicy` (`align`/`align_by`/`fill`/`dtype`/
+`collision`) documented on [`Catalog::tabelize`](../catalog/tabelize.md), applied
+independently per catalog.
 
 ## Parameters
 
-**policy**
-    Policy object that changes the structural behavior of this overload.
+**policy** (`const TabelizePolicy&`, optional)
+    The same alignment policy [`Catalog::tabelize()`](../catalog/tabelize.md) accepts —
+    see that page for the full breakdown of each field.
 
 ## Returns
 
 `pluss::table::Atlas`
-    Value produced by this call.
+    A depth-stacked `Atlas`, one `DataFrame` per catalog, in the archive's depth order.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Convert a two-catalog archive to an `Atlas`.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
 auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema"})),
 });
 auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+    "id"_k = pluss::kindle::Stream(pluss::make_series({3.0, 4.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Ho", "Sunyani"})),
 });
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"jan", "feb"})));
 
-pluss::kindle::TabelizePolicy policy;
-policy.align = pluss::kindle::AlignPolicy::Inner;
-auto out = archive.tabelize(policy);
+auto atlas = archive.tabelize();
+std::cout << "atlas depth: " << atlas.depth() << "\n";
+std::cout << atlas.dloc(0);
 ```
 
 ### Output
 
 ```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
+atlas depth: 2
+==================
+     | id    city 
+------------------
+0    | 1     Accra
+1    | 2     Tema 
+------------------
+[2 cs x 2 feat]
 ```
 
+## Notes
+
+- One `DataFrame` per catalog, same depth order as the receiver; `Atlas` exposes its own
+  `depth()`/`dloc()`-style access, matching [`Archive::depth`](depth.md)/
+  [`Archive::dloc`](dloc.md)'s own API shape.
+- Each catalog is tabelized independently with the same `policy` — a ragged archive
+  produces `DataFrame`s with different shapes, one per catalog.
+- Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
+
+## See Also
+
+- [`Archive::to_table`](to_table.md): a thin wrapper over this method that can also print
+  the result.
+- [`Catalog::tabelize`](../catalog/tabelize.md): the single-catalog delegate this method
+  applies to every catalog, and the full `TabelizePolicy` field reference.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="slice_depth.html">

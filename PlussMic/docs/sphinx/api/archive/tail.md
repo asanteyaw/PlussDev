@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 86c05ad48be9 -->
+
 # Archive::tail
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,48 +8,74 @@
 ## Signature
 
 ```cpp
-Archive::tail(std::int64_t n = 5) -> Archive
+Archive::tail(std::int64_t n = 5) const -> Archive
 ```
 
 ## What It Does
 
-Returns the last `n` catalogs from the archive depth axis.
+Returns a new archive containing the last `n` catalogs (depth-wise), defaulting to 5 when
+omitted — the mirror of [`head()`](head.md). Same clamping behavior as `head()`:
+requesting more than the archive's depth clamps to the whole archive, and `n <= 0` returns
+an empty archive, rather than throwing.
 
 ## Parameters
 
-**n**
-    Number of rows, entries, or depth items to keep in the preview.
+**n** (`std::int64_t`, defaults to `5`)
+    The number of trailing catalogs to keep.
 
 ## Returns
 
 `Archive`
-    Value produced by this call.
+    A new archive containing at most the last `n` catalogs.
 
 ## Examples
 
-Example 1. Inspect the last part of the current object without changing the source data.
+Example 1. Take the last two catalogs of a multi-catalog archive.
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+std::vector<pluss::kindle::Catalog> cats;
+for (int i = 0; i < 7; ++i) {
+  cats.push_back(pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({double(i)})) }));
+}
+auto archive = pluss::kindle::Archive(cats);
 
-auto out = archive.tail(1);
+auto out = archive.tail(2);
+std::cout << "depth: " << out.depth() << "\n";
+std::cout << "catalog(0):\n" << out.catalog(0);
 ```
 
 ### Output
 
 ```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
+depth: 2
+catalog(0):
+========================================================================================================================
+kindle::Catalog  keys=1
+keys: [id]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[float64]  | 1       | [5]                                              
+========================================================================================================================
 ```
 
+The catalogs returned re-index from depth `0`, same as every other depth-selecting method
+— `catalog(0)` here is the archive's original depth-index `5`, not `0`.
+
+## Notes
+
+- Defaults to `5` when `n` is omitted, unlike [`Stream::tail`](../stream/tail.md)/
+  [`Catalog::tail`](../catalog/tail.md), which have no default.
+- Clamps at both ends rather than throwing, same as [`head()`](head.md).
+- Returns a new `Archive`; the receiver is unmodified.
+
+## See Also
+
+- [`Archive::head`](head.md): the mirror operation, taking the first `n` catalogs.
+- [`Archive::slice_depth`](slice_depth.md): an arbitrary `[start, stop)` depth range instead
+  of a fixed count from the back.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tabelize.html">

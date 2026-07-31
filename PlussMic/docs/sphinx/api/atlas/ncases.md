@@ -85,9 +85,9 @@ Atlas: all frames must have identical row count (strict cube)
 - [`Atlas::column_names`](column_names.md): the names behind `nfeatures()`'s count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="depth.html">
+  <a class="prev-link" href="map_frames.html">
     <span class="label">Previous</span>
-    <span class="title">depth</span>
+    <span class="title">map_frames</span>
   </a>
   <a class="next-link" href="nfeatures.html">
     <span class="label">Next</span>

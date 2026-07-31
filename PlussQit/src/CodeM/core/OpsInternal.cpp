@@ -8984,7 +8984,12 @@ Series Series::clamp_min(const Series& min) const {
   ops_internal::PlatformScope platform_scope{platform()};
   // broadcast min against self
   Series m = (min.scalar_type()==scalar_type()) ? min : min.to(scalar_type());
-  Series cond = this->ge(m);
+  // Series::where(cond, other) selects `other` where cond is true and keeps
+  // `self` where cond is false (see its own doc comment) -- the opposite of
+  // "self when true" naive intuition. clamp_min must keep self where
+  // self >= min and only fall back to min where self < min, so the branch
+  // handed to where() must be true exactly where self is BELOW the floor.
+  Series cond = this->lt(m);
   return this->where(cond, m);
 }
 Series& Series::clamp_min_(const Series& min) {
@@ -9000,7 +9005,11 @@ Series Series::clamp_max(const Series& max) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   Series m = (max.scalar_type()==scalar_type()) ? max : max.to(scalar_type());
-  Series cond = this->le(m);
+  // Same where(cond, other) "true selects other" convention as clamp_min
+  // above: clamp_max must keep self where self <= max and only fall back to
+  // max where self is ABOVE the ceiling, so cond must be true exactly where
+  // self exceeds max.
+  Series cond = this->gt(m);
   return this->where(cond, m);
 }
 Series& Series::clamp_max_(const Series& max) {

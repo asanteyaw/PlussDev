@@ -99,12 +99,12 @@ works here without an `Atlas`-specific equivalent needing to exist.
   one `DataFrame` via a supplied function, without leaving the `Atlas` API.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="axis0_labels.html">
+  <a class="prev-link" href="frame.html">
     <span class="label">Previous</span>
-    <span class="title">axis0_labels</span>
-  </a>
-  <a class="next-link" href="frame.html">
-    <span class="label">Next</span>
     <span class="title">frame</span>
+  </a>
+  <a class="next-link" href="head.html">
+    <span class="label">Next</span>
+    <span class="title">head</span>
   </a>
 </div>

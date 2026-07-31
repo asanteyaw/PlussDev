@@ -19,7 +19,14 @@ PER_METHOD_CLASSES = {
     'DataFrameFeatureAxisAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
     'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
     'TimeSeriesAccessor', 'DataFrameCastAccessor', 'ThreadPlotAccessor',
-    'AtlasLabelAccessor', 'AtlasTimelineAccessor',
+    'AtlasLabelAccessor', 'AtlasTimelineAccessor', 'AtlasTsAccessor',
+    'AtlasTsResampler', 'AtlasPlotAccessor',
+    'Slot', 'Registry', 'Axel',
+    'SlotCastAccessor', 'SlotNoteAccessor', 'SlotTimelineAccessor',
+    'RegistryFieldAccessor', 'RegistryFieldAxisAccessor', 'RegistryCastAccessor',
+    'RegistryNoteAccessor', 'RegistryTimelineAccessor',
+    'AxelFieldAccessor', 'AxelFieldAxisAccessor', 'AxelCastAccessor',
+    'AxelNoteAccessor', 'AxelTimelineAccessor',
 }
 GENERIC_CSV_PATH = "path/to/data.csv"
 GENERIC_XLSX_PATH = "path/to/data.xlsx"
@@ -225,6 +232,30 @@ CLASS_CONFIG = {
         'intro': 'This page documents the public timestamp-feature accessor returned by `Atlas::tl()`, applied frame-by-frame across the stack.',
         'binder': 'tl()',
     },
+    'AtlasTsAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Atlas.h',
+        'output': DOCS / 'atlas_ts_accessor_api_reference.md',
+        'title': 'AtlasTsAccessor API Reference',
+        'subtitle': 'Practical AtlasTsAccessor API Reference',
+        'intro': 'This page documents the public time-series accessor returned by `Atlas::ts()`, applied frame-by-frame across the stack.',
+        'binder': 'ts()',
+    },
+    'AtlasTsResampler': {
+        'header': ROOT / 'PlussMic/src/table/Atlas.h',
+        'output': DOCS / 'atlas_ts_resampler_api_reference.md',
+        'title': 'AtlasTsResampler API Reference',
+        'subtitle': 'Practical AtlasTsResampler API Reference',
+        'intro': 'This page documents the public time-based resampling accessor returned by `Atlas::ts().resample(...)`, applied frame-by-frame across the stack.',
+        'binder': 'ts().resample(...)',
+    },
+    'AtlasPlotAccessor': {
+        'header': ROOT / 'PlussMic/src/table/plot/AtlasPlot.h',
+        'output': DOCS / 'atlas_plot_accessor_api_reference.md',
+        'title': 'AtlasPlotAccessor API Reference',
+        'subtitle': 'Practical AtlasPlotAccessor API Reference',
+        'intro': 'This page documents the public plotting accessor returned by `Atlas::plot()`.',
+        'binder': 'plot()',
+    },
     'Stream': {
         'header': ROOT / 'PlussMic/src/kindle/Stream.h',
         'output': DOCS / 'stream_api_reference.md',
@@ -260,12 +291,116 @@ CLASS_CONFIG = {
         'subtitle': 'Practical Registry API Reference',
         'intro': 'This page documents the full public `Registry` surface for named bundle slots.',
     },
-    'Aisle': {
-        'header': ROOT / 'PlussMic/src/bundle/Aisle.h',
-        'output': DOCS / 'aisle_api_reference.md',
-        'title': 'Aisle API Reference',
-        'subtitle': 'Practical Aisle API Reference',
-        'intro': 'This page documents the full public `Aisle` surface for depth-stacked registries.',
+    'Axel': {
+        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'output': DOCS / 'axel_api_reference.md',
+        'title': 'Axel API Reference',
+        'subtitle': 'Practical Axel API Reference',
+        'intro': 'This page documents the full public `Axel` surface for depth-stacked registries.',
+    },
+    'SlotCastAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'output': DOCS / 'slot_cast_accessor_api_reference.md',
+        'title': 'SlotCastAccessor API Reference',
+        'subtitle': 'Practical SlotCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `Slot::cast()`.',
+        'binder': 'cast()',
+    },
+    'SlotNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'output': DOCS / 'slot_note_accessor_api_reference.md',
+        'title': 'SlotNoteAccessor API Reference',
+        'subtitle': 'Practical SlotNoteAccessor API Reference',
+        'intro': 'This page documents the public text-processing accessor returned by `Slot::nt()`.',
+        'binder': 'nt()',
+    },
+    'SlotTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'output': DOCS / 'slot_timeline_accessor_api_reference.md',
+        'title': 'SlotTimelineAccessor API Reference',
+        'subtitle': 'Practical SlotTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Slot::tl()`.',
+        'binder': 'tl()',
+    },
+    'RegistryFieldAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'output': DOCS / 'registry_field_accessor_api_reference.md',
+        'title': 'RegistryFieldAccessor API Reference',
+        'subtitle': 'Practical RegistryFieldAccessor API Reference',
+        'intro': 'This page documents the public multi-key field accessor returned by `Registry::fields(keys)`.',
+        'binder': 'fields(keys)',
+    },
+    'RegistryFieldAxisAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'output': DOCS / 'registry_fieldaxis_accessor_api_reference.md',
+        'title': 'RegistryFieldAxisAccessor API Reference',
+        'subtitle': 'Practical RegistryFieldAxisAccessor API Reference',
+        'intro': 'This page documents the public field-name-matching accessor returned by `Registry::fieldaxis()`.',
+        'binder': 'fieldaxis()',
+    },
+    'RegistryCastAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'output': DOCS / 'registry_cast_accessor_api_reference.md',
+        'title': 'RegistryCastAccessor API Reference',
+        'subtitle': 'Practical RegistryCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `Registry::fields(keys).cast()`.',
+        'binder': 'fields(keys).cast()',
+    },
+    'RegistryNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'output': DOCS / 'registry_note_accessor_api_reference.md',
+        'title': 'RegistryNoteAccessor API Reference',
+        'subtitle': 'Practical RegistryNoteAccessor API Reference',
+        'intro': 'This page documents the public text-processing accessor returned by `Registry::fields(keys).nt()`.',
+        'binder': 'fields(keys).nt()',
+    },
+    'RegistryTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'output': DOCS / 'registry_timeline_accessor_api_reference.md',
+        'title': 'RegistryTimelineAccessor API Reference',
+        'subtitle': 'Practical RegistryTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Registry::fields(keys).tl()`.',
+        'binder': 'fields(keys).tl()',
+    },
+    'AxelFieldAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'output': DOCS / 'axel_field_accessor_api_reference.md',
+        'title': 'AxelFieldAccessor API Reference',
+        'subtitle': 'Practical AxelFieldAccessor API Reference',
+        'intro': 'This page documents the public multi-key field accessor returned by `Axel::fields(keys)`, applied frame-by-frame across the depth stack.',
+        'binder': 'fields(keys)',
+    },
+    'AxelFieldAxisAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'output': DOCS / 'axel_fieldaxis_accessor_api_reference.md',
+        'title': 'AxelFieldAxisAccessor API Reference',
+        'subtitle': 'Practical AxelFieldAxisAccessor API Reference',
+        'intro': 'This page documents the public field-name-matching accessor returned by `Axel::fieldaxis()`, applied across the depth stack.',
+        'binder': 'fieldaxis()',
+    },
+    'AxelCastAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'output': DOCS / 'axel_cast_accessor_api_reference.md',
+        'title': 'AxelCastAccessor API Reference',
+        'subtitle': 'Practical AxelCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `Axel::fields(keys).cast()`, applied across the depth stack.',
+        'binder': 'fields(keys).cast()',
+    },
+    'AxelNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'output': DOCS / 'axel_note_accessor_api_reference.md',
+        'title': 'AxelNoteAccessor API Reference',
+        'subtitle': 'Practical AxelNoteAccessor API Reference',
+        'intro': 'This page documents the public text-processing accessor returned by `Axel::fields(keys).nt()`, applied across the depth stack.',
+        'binder': 'fields(keys).nt()',
+    },
+    'AxelTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'output': DOCS / 'axel_timeline_accessor_api_reference.md',
+        'title': 'AxelTimelineAccessor API Reference',
+        'subtitle': 'Practical AxelTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Axel::fields(keys).tl()`, applied across the depth stack.',
+        'binder': 'fields(keys).tl()',
     },
 }
 
@@ -278,6 +413,9 @@ METHOD_PAGE_DIR = {
     'Atlas': 'atlas',
     'AtlasLabelAccessor': 'atlas-label',
     'AtlasTimelineAccessor': 'atlas-timeline',
+    'AtlasTsAccessor': 'atlas-ts',
+    'AtlasTsResampler': 'atlas-ts-resample',
+    'AtlasPlotAccessor': 'atlas-plot',
     'DataFrameNoteAccessor': 'dataframe-note',
     'DataFrameTimelineAccessor': 'dataframe-timeline',
     'DataFrameLabelAccessor': 'dataframe-label',
@@ -290,6 +428,22 @@ METHOD_PAGE_DIR = {
     'TimeSeriesAccessor': 'thread-ts',
     'DataFrameCastAccessor': 'dataframe-cast',
     'ThreadPlotAccessor': 'thread-plot',
+    'Slot': 'slot',
+    'Registry': 'registry',
+    'Axel': 'axel',
+    'SlotCastAccessor': 'slot-cast',
+    'SlotNoteAccessor': 'slot-note',
+    'SlotTimelineAccessor': 'slot-timeline',
+    'RegistryFieldAccessor': 'registry-field',
+    'RegistryFieldAxisAccessor': 'registry-fieldaxis',
+    'RegistryCastAccessor': 'registry-cast',
+    'RegistryNoteAccessor': 'registry-note',
+    'RegistryTimelineAccessor': 'registry-timeline',
+    'AxelFieldAccessor': 'axel-field',
+    'AxelFieldAxisAccessor': 'axel-fieldaxis',
+    'AxelCastAccessor': 'axel-cast',
+    'AxelNoteAccessor': 'axel-note',
+    'AxelTimelineAccessor': 'axel-timeline',
 }
 
 # Maps a class to the accessor classes it exposes, so their landing pages can
@@ -317,6 +471,34 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
     'Atlas': [
         'AtlasLabelAccessor',
         'AtlasTimelineAccessor',
+        'AtlasTsAccessor',
+        'AtlasPlotAccessor',
+    ],
+    'AtlasTsAccessor': [
+        'AtlasTsResampler',
+    ],
+    'Slot': [
+        'SlotCastAccessor',
+        'SlotNoteAccessor',
+        'SlotTimelineAccessor',
+    ],
+    'Registry': [
+        'RegistryFieldAccessor',
+        'RegistryFieldAxisAccessor',
+    ],
+    'RegistryFieldAccessor': [
+        'RegistryCastAccessor',
+        'RegistryNoteAccessor',
+        'RegistryTimelineAccessor',
+    ],
+    'Axel': [
+        'AxelFieldAccessor',
+        'AxelFieldAxisAccessor',
+    ],
+    'AxelFieldAccessor': [
+        'AxelCastAccessor',
+        'AxelNoteAccessor',
+        'AxelTimelineAccessor',
     ],
 }
 
@@ -670,7 +852,7 @@ def method_content_path(class_name: str, method_name: str) -> pathlib.Path:
         'Archive': 'kindle/Archive',
         'Slot': 'bundle/Slot',
         'Registry': 'bundle/Registry',
-        'Aisle': 'bundle/Aisle',
+        'Axel': 'bundle/Axel',
     }.get(class_name, class_name)
     return API_CONTENT / namespace / f'{method_name}.toml'
 
@@ -2116,14 +2298,14 @@ def generic_note(class_name: str, method: Method) -> str:
             'sort_depth': 'Sorts catalogs by their current depth labels.',
             'tail': 'Returns the last `n` catalogs from the archive depth axis.',
         },
-        'Aisle': {
-            'apply_slot': 'Applies a slot transform to one named key inside every registry and returns the updated aisle.',
-            'concat_depth': 'Appends the registries from another aisle onto the current depth axis.',
-            'head': 'Returns the first `n` registries from the aisle depth axis.',
-            'map': 'Applies the same function to each registry and returns the transformed aisle.',
-            'select': 'Keeps only the named keys inside every registry in the aisle.',
-            'slice': 'Returns a contiguous depth slice `[start, stop)` from the aisle.',
-            'tail': 'Returns the last `n` registries from the aisle depth axis.',
+        'Axel': {
+            'apply_slot': 'Applies a slot transform to one named key inside every registry and returns the updated axel.',
+            'concat_depth': 'Appends the registries from another axel onto the current depth axis.',
+            'head': 'Returns the first `n` registries from the axel depth axis.',
+            'map': 'Applies the same function to each registry and returns the transformed axel.',
+            'select': 'Keeps only the named keys inside every registry in the axel.',
+            'slice': 'Returns a contiguous depth slice `[start, stop)` from the axel.',
+            'tail': 'Returns the last `n` registries from the axel depth axis.',
         },
         'Slot': {
             'concat': 'Appends the values from another slot and returns the combined slot.',
@@ -2275,7 +2457,7 @@ STRUCTURED_TYPES = {
     'Archive',
     'Slot',
     'Registry',
-    'Aisle',
+    'Axel',
     'ColumnRef',
     'ThreadValue',
 }
@@ -2296,7 +2478,7 @@ def source_var_for(class_name: str) -> str:
         'Archive': 'archive',
         'Slot': 'slot',
         'Registry': 'rg',
-        'Aisle': 'aisle',
+        'Axel': 'axel',
     }[class_name]
 
 
@@ -2329,7 +2511,7 @@ def inspect_code_for_type(type_name: str, var_name: str) -> str:
         return f'{var_name}.show(std::cout);'
     if t == 'Registry':
         return f'{var_name}.show(std::cout);'
-    if t == 'Aisle':
+    if t == 'Axel':
         return f'{var_name}.show(std::cout);'
     if t == 'ColumnRef':
         return f'{var_name}.head(3).show();'
@@ -2355,7 +2537,7 @@ INSPECTABLE_RETURN_PREFIXES = (
     'Archive',
     'Slot',
     'Registry',
-    'Aisle',
+    'Axel',
     'ColumnRef',
     'ThreadValue',
     'pluss::Series',
@@ -4810,7 +4992,7 @@ city   -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])"""
-AISLE_CONCAT_OUT = """depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
+AXEL_CONCAT_OUT = """depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 depth2 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))"""
@@ -4828,7 +5010,7 @@ sales
 ARCHIVE_BASE_OUT = """train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))"""
 ARCHIVE_DLOC_OUT = """metric -> Series([30.0, 40.0])"""
-AISLE_BASE_OUT = """depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
+AXEL_BASE_OUT = """depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))"""
 SLOT_BASE_OUT = "Slot([Series(1), Series(2), Series(3)])"
 
@@ -5790,7 +5972,7 @@ out.label().values():
             return 'no error'
         return ''
 
-    if class_name == 'Aisle':
+    if class_name == 'Axel':
         if n in {'defined', 'unique'}:
             return 'true'
         if n == 'depth':
@@ -5802,15 +5984,15 @@ out.label().values():
         if n in {'labels'}:
             return '["train", "test"]'
         if n == 'concat_depth':
-            return AISLE_CONCAT_OUT
+            return AXEL_CONCAT_OUT
         if n in {'registry', 'head', 'tail', 'slice', 'map', 'select', 'apply_slot'}:
-            return AISLE_BASE_OUT if ret.startswith('Aisle') else REGISTRY_BASE_OUT
+            return AXEL_BASE_OUT if ret.startswith('Axel') else REGISTRY_BASE_OUT
         if n in {'to_kindle', 'as_kindle', 'kindelize'}:
             return ARCHIVE_BASE_OUT
         if n in {'from_kindle'}:
-            return AISLE_BASE_OUT
+            return AXEL_BASE_OUT
         if n in {'to_string', 'to_json', 'show'}:
-            return AISLE_BASE_OUT
+            return AXEL_BASE_OUT
         return ''
 
     if ret in {'bool'}:
@@ -5835,8 +6017,8 @@ out.label().values():
         return STREAM_SERIES_OUT
     if ret in {'Thread&'}:
         return THREAD_SERIES_OUT
-    if ret in {'Aisle&'}:
-        return AISLE_BASE_OUT
+    if ret in {'Axel&'}:
+        return AXEL_BASE_OUT
     if ret in {'Atlas&'}:
         return ATLAS_BASE_OUT
     if ret in {'Archive&'}:
@@ -6070,14 +6252,14 @@ def registry_base() -> str:
 });"""
 
 
-def aisle_base() -> str:
+def axel_base() -> str:
     return """auto r0 = pluss::bundle::Registry({
     {\"ids\", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
 auto r1 = pluss::bundle::Registry({
     {\"ids\", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
 });
-auto aisle = pluss::bundle::Aisle({r0, r1});"""
+auto axel = pluss::bundle::Axel({r0, r1});"""
 
 
 def feature_ref_base() -> str:
@@ -6193,6 +6375,110 @@ auto atlas = pluss::table::Atlas({q1, q2});
 auto timelines = atlas.tl();"""
 
 
+def atlas_ts_accessor_base() -> str:
+    return """auto q1 = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({
+        \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
+    {\"load\", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({
+        \"2024-01-02T09:10:00Z\",\n        \"2024-01-02T09:40:00Z\",\n        \"2024-01-02T10:05:00Z\",\n    }))},
+    {\"load\", pluss::table::Thread(pluss::make_series({12.0, 18.0, 14.0}))},
+});
+auto atlas = pluss::table::Atlas({q1, q2});
+auto ts = atlas.ts();"""
+
+
+def atlas_ts_resampler_accessor_base() -> str:
+    return atlas_ts_accessor_base() + '\n' + 'auto resampler = ts.resample("ts", "1D");'
+
+
+def atlas_plot_accessor_base() -> str:
+    return """auto q1 = pluss::table::DataFrame({
+    {\"x\", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"y\", pluss::table::Thread(pluss::make_series({4.0, 5.0, 6.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {\"x\", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"y\", pluss::table::Thread(pluss::make_series({7.0, 8.0, 9.0}))},
+});
+auto atlas = pluss::table::Atlas({q1, q2});
+auto plot = atlas.plot();"""
+
+
+def slot_cast_accessor_base() -> str:
+    return slot_base() + '\n' + 'auto cast = slot.cast();'
+
+
+def slot_note_accessor_base() -> str:
+    return """auto slot = pluss::bundle::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\")});
+auto notes = slot.nt();"""
+
+
+def slot_timeline_accessor_base() -> str:
+    return """auto slot = pluss::bundle::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")});
+auto timelines = slot.tl();"""
+
+
+def registry_field_accessor_base() -> str:
+    return registry_base() + '\n' + 'auto fields = rg.fields({"ids"});'
+
+
+def registry_fieldaxis_accessor_base() -> str:
+    return registry_base() + '\n' + 'auto fieldaxis = rg.fieldaxis();'
+
+
+def registry_cast_accessor_base() -> str:
+    return registry_base() + '\n' + 'auto cast = rg.fields({"ids"}).cast();'
+
+
+def registry_note_accessor_base() -> str:
+    return registry_base() + '\n' + 'auto notes = rg.fields({"city"}).nt();'
+
+
+def registry_timeline_accessor_base() -> str:
+    return """auto rg = pluss::bundle::Registry({
+    {\"ids\", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {\"ts\", pluss::bundle::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")})},
+});
+auto timelines = rg.fields({\"ts\"}).tl();"""
+
+
+def axel_field_accessor_base() -> str:
+    return axel_base() + '\n' + 'auto fields = axel.fields({"ids"});'
+
+
+def axel_fieldaxis_accessor_base() -> str:
+    return axel_base() + '\n' + 'auto fieldaxis = axel.fieldaxis();'
+
+
+def axel_cast_accessor_base() -> str:
+    return axel_base() + '\n' + 'auto cast = axel.fields({"ids"}).cast();'
+
+
+def axel_note_accessor_base() -> str:
+    return """auto r0 = pluss::bundle::Registry({
+    {\"city\", pluss::bundle::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\")})},
+});
+auto r1 = pluss::bundle::Registry({
+    {\"city\", pluss::bundle::Slot({pluss::make_note(\"Kumasi\"), pluss::make_note(\"Takoradi\")})},
+});
+auto axel = pluss::bundle::Axel({r0, r1});
+auto notes = axel.fields({\"city\"}).nt();"""
+
+
+def axel_timeline_accessor_base() -> str:
+    return """auto r0 = pluss::bundle::Registry({
+    {\"ts\", pluss::bundle::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-01T09:40:00Z\")})},
+});
+auto r1 = pluss::bundle::Registry({
+    {\"ts\", pluss::bundle::Slot({pluss::make_timeline(\"2024-01-02T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")})},
+});
+auto axel = pluss::bundle::Axel({r0, r1});
+auto timelines = axel.fields({\"ts\"}).tl();"""
+
+
 ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'DataFrameNoteAccessor': note_accessor_base,
     'DataFrameTimelineAccessor': timeline_accessor_base,
@@ -6205,6 +6491,22 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'ThreadPlotAccessor': thread_plot_accessor_base,
     'AtlasLabelAccessor': atlas_label_accessor_base,
     'AtlasTimelineAccessor': atlas_timeline_accessor_base,
+    'AtlasTsAccessor': atlas_ts_accessor_base,
+    'AtlasTsResampler': atlas_ts_resampler_accessor_base,
+    'AtlasPlotAccessor': atlas_plot_accessor_base,
+    'SlotCastAccessor': slot_cast_accessor_base,
+    'SlotNoteAccessor': slot_note_accessor_base,
+    'SlotTimelineAccessor': slot_timeline_accessor_base,
+    'RegistryFieldAccessor': registry_field_accessor_base,
+    'RegistryFieldAxisAccessor': registry_fieldaxis_accessor_base,
+    'RegistryCastAccessor': registry_cast_accessor_base,
+    'RegistryNoteAccessor': registry_note_accessor_base,
+    'RegistryTimelineAccessor': registry_timeline_accessor_base,
+    'AxelFieldAccessor': axel_field_accessor_base,
+    'AxelFieldAxisAccessor': axel_fieldaxis_accessor_base,
+    'AxelCastAccessor': axel_cast_accessor_base,
+    'AxelNoteAccessor': axel_note_accessor_base,
+    'AxelTimelineAccessor': axel_timeline_accessor_base,
 }
 
 ACCESSOR_STUB_VAR: dict[str, str] = {
@@ -6219,6 +6521,22 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'ThreadPlotAccessor': 'plot',
     'AtlasLabelAccessor': 'labels',
     'AtlasTimelineAccessor': 'timelines',
+    'AtlasTsAccessor': 'ts',
+    'AtlasTsResampler': 'resampler',
+    'AtlasPlotAccessor': 'plot',
+    'SlotCastAccessor': 'cast',
+    'SlotNoteAccessor': 'notes',
+    'SlotTimelineAccessor': 'timelines',
+    'RegistryFieldAccessor': 'fields',
+    'RegistryFieldAxisAccessor': 'fieldaxis',
+    'RegistryCastAccessor': 'cast',
+    'RegistryNoteAccessor': 'notes',
+    'RegistryTimelineAccessor': 'timelines',
+    'AxelFieldAccessor': 'fields',
+    'AxelFieldAxisAccessor': 'fieldaxis',
+    'AxelCastAccessor': 'cast',
+    'AxelNoteAccessor': 'notes',
+    'AxelTimelineAccessor': 'timelines',
 }
 
 
@@ -8174,24 +8492,24 @@ def example_for(class_name: str, method: Method) -> str:
             return base + f'\n\nauto out = registry.{n}({{"ids", "city"}});'
         return base + f'\n\nauto out = registry.{n}();'
 
-    if class_name == 'Aisle':
-        base = aisle_base()
+    if class_name == 'Axel':
+        base = axel_base()
         if n in {'defined','unique','depth','empty','registries','labels','to_string','to_json'}:
-            return base + f'\n\nauto out = aisle.{n}();'
+            return base + f'\n\nauto out = axel.{n}();'
         if n in {'registry','head','tail','slice','map','select','apply_slot','concat_depth','to_kindle','as_kindle','kindelize','show'}:
-            if n == 'registry': return base + '\n\nauto out = aisle.registry(0);'
-            if n == 'head': return base + '\n\nauto out = aisle.head(1);'
-            if n == 'tail': return base + '\n\nauto out = aisle.tail(1);'
-            if n == 'slice': return base + '\n\nauto out = aisle.slice(0, 1);'
-            if n == 'map': return base + '\n\nauto out = aisle.map([](const pluss::bundle::Registry& registry) { return registry; });'
-            if n == 'select': return base + '\n\nauto out = aisle.select({"ids"});'
-            if n == 'apply_slot': return base + '\n\nauto out = aisle.apply_slot("ids", [](const pluss::bundle::Slot& slot) { return slot; });'
-            if n == 'concat_depth': return base + '\n\nauto out = aisle.concat_depth(aisle);'
-            if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = aisle.{n}();'
-            if n == 'show': return base + '\n\naisle.show(std::cout);'
+            if n == 'registry': return base + '\n\nauto out = axel.registry(0);'
+            if n == 'head': return base + '\n\nauto out = axel.head(1);'
+            if n == 'tail': return base + '\n\nauto out = axel.tail(1);'
+            if n == 'slice': return base + '\n\nauto out = axel.slice(0, 1);'
+            if n == 'map': return base + '\n\nauto out = axel.map([](const pluss::bundle::Registry& registry) { return registry; });'
+            if n == 'select': return base + '\n\nauto out = axel.select({"ids"});'
+            if n == 'apply_slot': return base + '\n\nauto out = axel.apply_slot("ids", [](const pluss::bundle::Slot& slot) { return slot; });'
+            if n == 'concat_depth': return base + '\n\nauto out = axel.concat_depth(axel);'
+            if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = axel.{n}();'
+            if n == 'show': return base + '\n\naxel.show(std::cout);'
         if n == 'from_kindle':
-            return archive_base() + '\n\nauto out = pluss::bundle::Aisle::from_kindle(archive);'
-        return base + f'\n\nauto out = aisle.{n}();'
+            return archive_base() + '\n\nauto out = pluss::bundle::Axel::from_kindle(archive);'
+        return base + f'\n\nauto out = axel.{n}();'
 
     if class_name in ACCESSOR_STUB_BASE:
         return accessor_stub_example(class_name, method)
@@ -8918,20 +9236,20 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'These methods remove slots whose payload is empty.',
                 'Non-empty slots are passed through unchanged.',
             ])
-        if class_name == 'Aisle' and n == 'apply_slot':
+        if class_name == 'Axel' and n == 'apply_slot':
             return bullets('Practical Behavior', [
-                '`apply_slot(key, fn)` walks every registry in the aisle and rewrites that slot only where it exists.',
+                '`apply_slot(key, fn)` walks every registry in the axel and rewrites that slot only where it exists.',
                 'Registries that do not have the requested key are left unchanged.',
             ])
-        if class_name == 'Aisle' and n == 'as_kindle':
+        if class_name == 'Axel' and n == 'as_kindle':
             return bullets('Bridge Behavior', [
-                '`as_kindle()` converts the aisle into the Archive model.',
+                '`as_kindle()` converts the axel into the Archive model.',
                 'Use this when the next workflow is archive/catalog based rather than bundle based.',
             ])
-        if class_name == 'Aisle' and n == 'concat_depth':
+        if class_name == 'Axel' and n == 'concat_depth':
             return bullets('Practical Behavior', [
-                '`concat_depth(other)` appends the other aisle’s registries onto the current depth axis.',
-                'If both aisles have labels, the labels are concatenated too.',
+                '`concat_depth(other)` appends the other axel’s registries onto the current depth axis.',
+                'If both axels have labels, the labels are concatenated too.',
             ])
         if class_name == 'Catalog' and n == 'bfill':
             return [

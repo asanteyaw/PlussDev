@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=f9ac45ee"></script>
+    <script src="_static/api_nav.js?v=a5d59d69"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,7 +44,7 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>: sequence of heterogeneous Pluss values</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>: named set of slots</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Aisle</span></code>: depth stack of registries</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>: depth stack of registries</p></li>
 </ul>
 <p>Use it when one field can hold different domain types, or when you want a lighter record/batch abstraction than <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 </section>
@@ -82,16 +82,16 @@
 </pre></div>
 </div>
 </section>
-<section id="aisle">
-<h2>Aisle<a class="headerlink" href="#aisle" title="Link to this heading">¶</a></h2>
+<section id="axel">
+<h2>Axel<a class="headerlink" href="#axel" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">;</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">rename</span><span class="p">({{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city_test&quot;</span><span class="p">}});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;train&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">)});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">aisle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Aisle</span><span class="p">({</span><span class="n">train</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">train</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aisle</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">combined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aisle</span><span class="p">.</span><span class="n">concat_depth</span><span class="p">(</span><span class="n">first</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">combined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">concat_depth</span><span class="p">(</span><span class="n">first</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -99,11 +99,11 @@
 <h2>Kindle Bridge<a class="headerlink" href="#kindle-bridge" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aisle</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">back_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">back_registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">catalog</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">back_aisle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Aisle</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">archive</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">back_axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">archive</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -145,7 +145,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#when-to-use-bundle-types">When To Use Bundle Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#slot">Slot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#registry">Registry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#aisle">Aisle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#axel">Axel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#kindle-bridge">Kindle Bridge</a></li>
 </ul>
 </li>

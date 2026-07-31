@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Atlas::show &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Atlas::slice_frames" href="slice_frames.html" />
+    <link rel="prev" title="Atlas::relabel_depth" href="relabel_depth.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c92c98fe3f4d -->
+<section id="atlas-show">
+<h1>Atlas::show<a class="headerlink" href="#atlas-show" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../atlas_api_reference.html"><span class="doc std std-doc">Back to Atlas API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
+<span class="n">Atlas</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Writes the atlas’s boxed-table summary — the same rendering <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>
+returns as a string, plus a trailing newline <code class="docutils literal notranslate"><span class="pre">to_string()</span></code> omits. The <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
+overload writes to the given stream; the no-argument overload is meant to write to
+<code class="docutils literal notranslate"><span class="pre">std::cout</span></code> directly.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The no-argument overload is confirmed to hang outside an interactive terminal
+<code class="docutils literal notranslate"><span class="pre">Atlas::show()</span></code> (no <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code> argument) has been directly verified to hang
+indefinitely when run non-interactively (this is the same underlying call
+<a class="reference internal" href="../archive/to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::to_table(policy,</span> <span class="pre">true)</span></code></span></a> used to route through before
+that path was fixed to use a direct <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> print instead). The <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
+overload does <strong>not</strong> exhibit this hang — it prints immediately and returns, verified
+directly. Until the no-argument overload is fixed, always call <code class="docutils literal notranslate"><span class="pre">show(std::cout,</span> <span class="pre">options)</span></code>
+explicitly rather than <code class="docutils literal notranslate"><span class="pre">show(options)</span></code>/<code class="docutils literal notranslate"><span class="pre">show()</span></code>.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>os</strong> (<code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>, two-argument overload)
+The destination stream to write to (e.g. <code class="docutils literal notranslate"><span class="pre">std::cout</span></code>, an <code class="docutils literal notranslate"><span class="pre">std::ostringstream</span></code>). Prefer
+this overload — see the important callout above.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span></code>, optional)
+Rendering options shared with the rest of the display layer.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">void</span></code>
+Writes as a side effect; produces no return value.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Write explicitly to <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> via the <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code> overload — the safe
+form, per the important callout above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;jan&quot;</span><span class="p">})));</span>
+
+<span class="n">atlas</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Atlas(depth=1, rows=2, cols=1)
+frame[0] case=jan
+===========
+     | id  
+-----------
+0    | 1   
+1    | 2   
+-----------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p>Example 2. Capture into an <code class="docutils literal notranslate"><span class="pre">std::ostringstream</span></code>; confirm it’s one byte longer than
+<a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> (the trailing newline).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">ostringstream</span><span class="w"> </span><span class="n">oss</span><span class="p">;</span>
+<span class="n">atlas</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">oss</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;longer than to_string() by: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">oss</span><span class="p">.</span><span class="n">str</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">to_string</span><span class="p">().</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; byte(s)&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>longer than to_string() by: 1 byte(s)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above before ever calling the no-argument overload — use
+<code class="docutils literal notranslate"><span class="pre">show(std::cout,</span> <span class="pre">options)</span></code> instead.</p></li>
+<li><p>One byte longer than <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>: the trailing newline this method
+appends.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::to_string</span></code></span></a>: the same rendering, returned as a string (minus the
+trailing newline) instead of written to a stream.</p></li>
+<li><p><a class="reference internal" href="../archive/show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::show</span></code></span></a>: the depth-stacked-catalog analog of this method
+(single <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code> overload only, no no-argument hang).</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="relabel_depth.html">
+    <span class="label">Previous</span>
+    <span class="title">relabel_depth</span>
+  </a>
+  <a class="next-link" href="slice_frames.html">
+    <span class="label">Next</span>
+    <span class="title">slice_frames</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../atlas_api_reference.html">Atlas API Reference</a><ul>
+      <li>Previous: <a href="relabel_depth.html" title="previous chapter">Atlas::relabel_depth</a></li>
+      <li>Next: <a href="slice_frames.html" title="next chapter">Atlas::slice_frames</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/atlas/show.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

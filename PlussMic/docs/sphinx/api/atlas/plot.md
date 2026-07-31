@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fd312dcc243a -->
+
 # Atlas::plot
 
 [Back to Atlas API Reference](../../atlas_api_reference)
@@ -5,66 +8,63 @@
 ## Signatures
 
 ```cpp
-Atlas::plot() -> AtlasPlotAccessor
-
-Atlas::plot(const AtlasPlotOptions& options) -> AtlasPlotAccessor
+Atlas::plot() const -> AtlasPlotAccessor
+Atlas::plot(const AtlasPlotOptions& options) const -> AtlasPlotAccessor
 ```
 
 ## What It Does
 
-This opens the plotting accessor for the current data object.
+The entry point into the atlas-level plotting accessor — depth-stack-aware charts
+(per-frame line/scatter/etc. via `frames()`, 3D surface/wireframe/point-cloud views across
+depth via `surface()`/`wireframe()`/`cloud3()`, and depth-axis-specific chart types),
+returning `pluss::pl::Studio` figures (or a `DataFramePlotAccessor` for a single selected
+frame via `frames(index)`), the same figure/export mechanics documented on
+[`DataFramePlotAccessor`](../dataframe/plot.md). Every method on the returned
+`AtlasPlotAccessor` has its own page, with real rendered charts, under
+[`AtlasPlotAccessor` API Reference](../../atlas_plot_accessor_api_reference).
 
 ## Parameters
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`const AtlasPlotOptions&`, optional)
+    A bundle of per-chart-type option structs (`figure`, `frames`, `depth_axis`, `surface`,
+    `wireframe`, `cloud3`, `depth`, `depth_compare`, `depth_facet`, `depth_rolling`,
+    `triplot`) — each field configures the corresponding method on the returned accessor.
 
 ## Returns
 
 `AtlasPlotAccessor`
-    Value produced by this call.
+    A binder for the current atlas — call one of its methods to build a specific chart.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. `plot()` binds without rendering; `frames(index)` narrows to a single frame's
+own `DataFramePlotAccessor` for the familiar 2D chart methods.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"sales", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
 });
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
+auto atlas = pluss::table::Atlas({f0});
 
-auto fig = atlas.plot(0).line("sales");
+auto frame_plot = atlas.plot().frames(0);
 ```
 
-### Output
+## Notes
 
-```text
-Figure(line)
-```
-Example 2. Pass an explicit options object to control the operation.
+- `plot()` alone does no work — it only binds the atlas; call one of the returned
+  accessor's methods to actually build a chart.
+- Every method except [`triplot()`](../atlas-plot/triplot.md) respects
+  `options.depth_axis`, selecting and ordering which frames participate —
+  `triplot()` always pools every frame's rows together instead.
 
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
+## See Also
 
-auto fig = atlas.plot(0).line("sales");
-```
-
-### Output
-
-```text
-Figure(line)
-```
-
+- [`AtlasPlotAccessor` API Reference](../../atlas_plot_accessor_api_reference): every
+  chart method on the accessor this call returns, each with a real rendered example.
+- [`DataFrame::plot`](../dataframe/plot.md): the single-frame delegate `frames(index)`
+  narrows down to, and the canonical documentation for `Studio`'s view/save mechanics.
+- [`Atlas::features`](features.md): narrow to specific features before plotting, if a chart
+  method doesn't take a feature selector of its own.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nfeatures.html">

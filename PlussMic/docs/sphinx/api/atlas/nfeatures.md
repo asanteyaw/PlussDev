@@ -100,8 +100,8 @@ Atlas: all frames must have identical feature count
     <span class="label">Previous</span>
     <span class="title">ncases</span>
   </a>
-  <a class="next-link" href="column_names.html">
+  <a class="next-link" href="plot.html">
     <span class="label">Next</span>
-    <span class="title">column_names</span>
+    <span class="title">plot</span>
   </a>
 </div>

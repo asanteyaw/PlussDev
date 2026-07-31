@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 049fcfc26858 -->
+
 # AtlasLabelAccessor::symdiff
 
 [Back to AtlasLabelAccessor API Reference](../../atlas_label_accessor_api_reference)
@@ -5,43 +8,70 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::symdiff(const Thread& other) -> Thread
+AtlasLabelAccessor::symdiff(const Thread& other) const -> Thread
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the symmetric set difference of the atlas's current depth labels and `other` —
+labels present in exactly one of the two sets, excluding anything present in both. A
+pure set operation: it returns a `Thread` of labels, not a new `Atlas`, and does not
+touch the bound atlas's frames.
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Thread&`)
+    The other set of labels to compute the symmetric difference against.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    The labels present in exactly one of the two sets, named `"symdiff"`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Find the depth labels that are unique to one atlas or the other.
 
 ```cpp
-auto q1 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"2024Q1", "2024Q2"})));
-auto labels = atlas.label();
+auto q1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+});
+auto q2 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+});
+auto q3 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+});
+auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
+auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"feb", "mar", "apr"})));
 
-auto out = labels.symdiff(df.features("load"));
-std::cout << out;
+std::cout << a1.label().symdiff(a2.label().values());
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  jan
+1  apr
+Name: symdiff, ptype: Note
 ```
 
+`"jan"` (unique to `a1`) and `"apr"` (unique to `a2`) both appear; `"feb"` and `"mar"`
+(shared by both) are excluded.
+
+## Notes
+
+- Unlike [`diff()`](diff.md), direction doesn't matter — `a.label().symdiff(b)` and the
+  equivalent call the other direction produce the same set of labels (order may differ).
+- Pure set operation — returns a `Thread`, not an `Atlas`.
+
+## See Also
+
+- [`AtlasLabelAccessor::diff`](diff.md): the one-directional (asymmetric) difference.
+- [`AtlasLabelAccessor::intersect`](intersect.md): the complement of this
+  operation — labels present in both sets.
+- [`AtlasLabelAccessor::unite`](unite.md): the labels present in either set, including
+  the ones this method excludes.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sort.html">

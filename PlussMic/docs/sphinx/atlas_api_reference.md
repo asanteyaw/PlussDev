@@ -18,6 +18,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 - `label()` -> [`AtlasLabelAccessor`](atlas_label_accessor_api_reference.md)
 - `tl()` -> [`AtlasTimelineAccessor`](atlas_timeline_accessor_api_reference.md)
+- `ts()` -> [`AtlasTsAccessor`](atlas_ts_accessor_api_reference.md)
+- `plot()` -> [`AtlasPlotAccessor`](atlas_plot_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

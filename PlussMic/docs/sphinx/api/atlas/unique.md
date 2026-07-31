@@ -121,12 +121,8 @@ after atlas2 destroyed: 1
   handle has a payload at all, regardless of sharing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="defined.html">
+  <a class="prev-link" href="ts.html">
     <span class="label">Previous</span>
-    <span class="title">defined</span>
-  </a>
-  <a class="next-link" href="empty.html">
-    <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">ts</span>
   </a>
 </div>

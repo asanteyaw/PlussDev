@@ -221,4 +221,8 @@ Series::index_put_(specs, value, accumulate): accumulate=true is unsupported for
     <span class="label">Previous</span>
     <span class="title">index</span>
   </a>
+  <a class="next-link" href="clamp_max.html">
+    <span class="label">Next</span>
+    <span class="title">clamp_max</span>
+  </a>
 </div>

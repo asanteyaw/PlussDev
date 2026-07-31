@@ -72,12 +72,12 @@ std::cout << atlas.dloc(1);
   positional index.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="frame.html">
+  <a class="prev-link" href="depth.html">
     <span class="label">Previous</span>
-    <span class="title">frame</span>
+    <span class="title">depth</span>
   </a>
-  <a class="next-link" href="features.html">
+  <a class="next-link" href="empty.html">
     <span class="label">Next</span>
-    <span class="title">features</span>
+    <span class="title">empty</span>
   </a>
 </div>

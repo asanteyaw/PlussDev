@@ -19,4 +19,4 @@
 
 ## Bundle Examples
 
-- `PlussMic/examples/bundle/bundle_model_demo.cpp`: `Slot`, `Registry`, and `Aisle` workflows
+- `PlussMic/examples/bundle/bundle_model_demo.cpp`: `Slot`, `Registry`, and `Axel` workflows

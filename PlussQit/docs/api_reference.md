@@ -9,10 +9,22 @@ notes. This page is the curated entry point into them.
 
 ## Method surface
 
-- [Series Methods](Series_Methods.md): the method inventory for `Series`.
-- [Method Index](coden_method_index.md): a cross-referenced index of methods by name.
+- [Series API Reference](sphinx/series_api_reference.md): the per-method reference
+  for `Series` — one page per method, with real, verified examples. The primary
+  entry point; start here.
+- [Series Methods](Series_Methods.md): the naming-philosophy note (method-first vs.
+  free functions, `pile`/`unite` naming deviations).
+- [Method Index](coden_method_index.md): a flat cross-referenced index of the whole
+  surface, documented and not-yet-documented alike.
 - [Reductions](Reductions.md): sum/mean/min/max/std and related reduction behavior.
 - [Statistics](Stats.md): statistical operations available on `Series`.
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+sphinx/series_api_reference
+```
 
 ## Type system and semantics
 

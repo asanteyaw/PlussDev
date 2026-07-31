@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ea90dbb3db25 -->
 
 # Archive::loc
 
@@ -20,24 +21,22 @@ by `label`'s C++ type, and must match the depth labels' own payload kind: the
 `std::string_view` overload for `Note`-kind depth labels, `std::int64_t` for numeric
 (`Series`) depth labels, `pluss::Timeline` for `Timeline`-kind depth labels.
 
-```{important} loc(int64_t) silently mismatches on Note-kind depth labels — confirmed bug
-`loc(std::int64_t)` internally casts the depth-label stream to `Series[int64]` before
-comparing. If the depth labels are actually `Note`-kind (text, e.g. `"train"`/`"test"`),
-that cast can't parse them — each unparseable label silently becomes `0` (a failed
-Note→int64 parse, with the validity mask dropped before comparison), **not** a thrown
-error. The practical, verified effect: on a `Note`-labeled archive, `loc(int64_t{0})`
-always matches the *first* catalog regardless of its actual text label, and every other
-integer throws `"Archive::loc(int64): label not found"` — even though none of the depth
-labels are really the number `0`. This reproduces on the current build; treat
-`loc(int64_t)` as only meaningful for a genuinely numeric-labeled archive (verify with
-[`label().values()`](label.md)'s `kind` first), not as a safe no-op on a text-labeled one.
-```
+`loc(std::int64_t)` requires the depth labels to actually be `Series`-kind (numeric); it
+throws immediately — `"Archive::loc(int64): depth labels must be numeric Series"` — if
+they are `Note`, `Timeline`, or `TimeIndex` instead, rather than attempting to coerce them.
+This was fixed after an earlier build silently mis-parsed `Note`-kind (text) depth labels
+through a lossy numeric-cast path: every unparseable label collapsed to `0` with its
+validity mask dropped, so `loc(int64_t{0})` matched whatever catalog happened to be first
+regardless of its real text label, and every other integer threw `"label not found"` even
+when a label search was fundamentally the wrong operation for a text-labeled archive. The
+fix makes that mismatch fail loudly and immediately instead of guessing.
 
 ## Parameters
 
 **label** (`std::string_view` / `std::int64_t` / `const pluss::Timeline&`)
     The depth label to search for. Its C++ type must match the depth labels' own payload
-    kind — see the important callout above for what happens when it doesn't.
+    kind; `loc(std::int64_t)` throws immediately if the depth labels aren't `Series`-kind
+    rather than attempting to coerce them (see What It Does above).
 
 ## Returns
 
@@ -94,8 +93,8 @@ id                       | Series       | Series[float64]  | 1       | [2]
 ========================================================================================================================
 ```
 
-Example 3. The confirmed `loc(int64_t)` mismatch on a `Note`-labeled archive — see the
-important callout above.
+Example 3. Calling `loc(std::int64_t)` on a `Note`-labeled (text) archive throws
+immediately instead of silently mismatching.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -104,31 +103,22 @@ auto c0 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_se
 auto c1 = pluss::kindle::Catalog({ "id"_k = pluss::kindle::Stream(pluss::make_series({2.0})) });
 auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
 
-std::cout << "loc(0):\n" << archive.loc(std::int64_t(0));
 try {
-  archive.loc(std::int64_t(1));
+  archive.loc(std::int64_t(0));
 } catch (const std::exception& e) {
-  std::cout << "loc(1) threw: " << e.what();
+  std::cout << "loc(0) threw: " << e.what();
 }
 ```
 
 ### Output
 
 ```text
-loc(0):
-========================================================================================================================
-kindle::Catalog  keys=1
-keys: [id]
-------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
-------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[float64]  | 1       | [1]                                              
-========================================================================================================================
-loc(1) threw: Archive::loc(int64): label not found
+loc(0) threw: Archive::loc(int64): depth labels must be numeric Series
 ```
 
-`loc(0)` matched the catalog labeled `"train"` — not because `"0"` is a real label, but
-because of the parse-failure quirk described above.
+`archive`'s depth labels are `Note`-kind (`"train"`/`"test"`), so `loc(std::int64_t)` is
+the wrong overload for this archive regardless of which integer is passed — use
+[`loc(std::string_view)`](loc.md) instead, as in Example 1.
 
 Example 4. `loc(const pluss::Timeline&)` on a `Timeline`-kind depth-labeled archive.
 
@@ -161,9 +151,9 @@ id                       | Series       | Series[float64]  | 1       | [2]
   not set"` otherwise (each overload names itself in the message).
 - A genuinely unmatched label (correct kind, but no such value) throws
   `"Archive::loc(<type>): label not found"`.
-- See the important callout above for `loc(std::int64_t)`'s confirmed silent-mismatch
-  behavior on non-numeric depth labels — check the depth-label kind before relying on this
-  overload.
+- `loc(std::int64_t)` throws `"Archive::loc(int64): depth labels must be numeric Series"`
+  if the depth labels aren't `Series`-kind — check with
+  [`label().values()`](label.md)'s `kind()` first if you're unsure.
 - The `Timeline` overload additionally requires `label` to be a defined, single-element
   `Timeline`; a multi-element or undefined `Timeline` throws before any search happens.
 

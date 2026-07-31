@@ -1,4 +1,4 @@
-# Part XII: Bundle: Slot, Registry, and Aisle
+# Part XII: Bundle: Slot, Registry, and Axel
 
 Bundle is PlussMic's heterogeneous record model. It is useful when values are
 not naturally represented as one typed `Thread`.
@@ -116,11 +116,11 @@ Use `ensure_stream_compatible` when failure should be explicit:
 registry.ensure_stream_compatible("export");
 ```
 
-## Aisle
+## Axel
 
-`Aisle` is the higher collection-oriented bundle type. Use it when you need to
+`Axel` is the higher collection-oriented bundle type. Use it when you need to
 organize registries/slots into a broader bundle workflow. See the
-[Aisle API Reference](../aisle_api_reference.md) for exact constructors and
+[Axel API Reference](../axel_api_reference.md) for exact constructors and
 operations.
 
 ## Bundle conversion strategy

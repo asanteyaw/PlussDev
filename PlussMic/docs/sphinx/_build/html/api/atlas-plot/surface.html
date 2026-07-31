@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>AtlasPlotAccessor::surface &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f4363fda9bad -->
+<section id="atlasplotaccessor-surface">
+<h1>AtlasPlotAccessor::surface<a class="headerlink" href="#atlasplotaccessor-surface" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../atlas_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to AtlasPlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">surface</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">surface</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Surface3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws a continuous 3D surface mesh over a <code class="docutils literal notranslate"><span class="pre">[depth</span> <span class="pre">×</span> <span class="pre">case]</span></code> grid: the case axis
+(each frame’s row position) becomes the grid’s x-axis, the depth axis (which frames
+were selected, via <code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code>) becomes the y-axis, and each cell’s height
+is <code class="docutils literal notranslate"><span class="pre">feature</span></code>’s value at that <code class="docutils literal notranslate"><span class="pre">(case,</span> <span class="pre">frame)</span></code> position. Internally this builds the
+grid via a <code class="docutils literal notranslate"><span class="pre">build_depth_case_grid</span></code> helper shared with <a class="reference internal" href="wireframe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wireframe()</span></code></span></a>,
+then renders it with <code class="docutils literal notranslate"><span class="pre">flash::sheet</span></code> (a filled mesh) instead of <code class="docutils literal notranslate"><span class="pre">wireframe()</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">flash::lattice</span></code> (mesh edges only).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Returns a Studio, not printable output
+Like every method on <code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>, this builds and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> —
+call <code class="docutils literal notranslate"><span class="pre">.show()</span></code>/<code class="docutils literal notranslate"><span class="pre">.save_svg(path)</span></code>/etc. to view or persist it.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The numeric feature supplying each grid cell’s height. Must be present, with a
+matching case count, in every frame <code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code> selects.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Surface3DPlotOptions&amp;</span></code>)
+<code class="docutils literal notranslate"><span class="pre">scene</span></code>/<code class="docutils literal notranslate"><span class="pre">trace</span></code> are the shared <code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>/<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code> structs
+also used by <a class="reference internal" href="wireframe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wireframe()</span></code></span></a>/<a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cloud3()</span></code></span></a> — see
+<a class="reference internal" href="../dataframe-plot3d/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::line</span></code></span></a> for the full field
+breakdown (camera, theme, lighting, shading, material).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one 3D pane containing a single continuous surface mesh over the
+<code class="docutils literal notranslate"><span class="pre">[depth</span> <span class="pre">×</span> <span class="pre">case]</span></code> grid.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A surface over a 5-frame, 5-case-per-frame atlas, where <code class="docutils literal notranslate"><span class="pre">temp_c</span></code> grows
+along both the case axis and the depth axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frames</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="n">frames</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">}));</span>
+<span class="p">}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;day1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day5&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;surface_temp.svg&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Every frame’s <code class="docutils literal notranslate"><span class="pre">temp_c</span></code> values increase from case <code class="docutils literal notranslate"><span class="pre">0</span></code> to case <code class="docutils literal notranslate"><span class="pre">4</span></code> (a rising ramp
+along x), and every frame is itself shifted <code class="docutils literal notranslate"><span class="pre">1.0</span></code> higher than the previous one (a
+rising ramp along y, the depth axis) — the surface tilts upward in both directions
+at once.</p>
+<p><img alt="Output of Example 1" src="../../_images/surface-1.svg" /></p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code> must exist, with the same case count, in every frame <code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code>
+selects — a missing feature or mismatched case count throws.</p></li>
+<li><p>Grid construction is identical to <a class="reference internal" href="wireframe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wireframe()</span></code></span></a>’s — the two
+methods differ only in how the resulting grid is rendered (filled mesh vs. mesh
+edges).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code> (an <code class="docutils literal notranslate"><span class="pre">AtlasDepthAxisOptions</span></code>, shared across every 3D/depth
+method on this accessor) controls which frames form the grid’s y-axis, and in what
+order.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="wireframe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::wireframe</span></code></span></a>: the identical grid construction,
+rendered as mesh edges instead of a filled surface.</p></li>
+<li><p><a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::cloud3</span></code></span></a>: raw per-frame points instead of an
+aggregated grid.</p></li>
+<li><p><a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::surface</span></code></span></a>: the
+single-frame surface method this generalizes across the depth stack (there, the
+grid comes from pivoting two features against each other rather than case-vs-depth).</p></li>
+<li><p><a class="reference internal" href="../atlas/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::plot</span></code></span></a>: how to enter this accessor.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="frames.html">
+    <span class="label">Previous</span>
+    <span class="title">frames</span>
+  </a>
+  <a class="next-link" href="triplot.html">
+    <span class="label">Next</span>
+    <span class="title">triplot</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/atlas-plot/surface.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
