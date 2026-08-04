@@ -14,17 +14,18 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 ## Accessors
 
-`Axel` exposes nested accessors, each with its own method pages and sidebar:
+`Axel` exposes:
 
-- `fields(keys)` -> [`AxelFieldAccessor`](axel_field_accessor_api_reference.md)
+- `fields(keys)` -> `Axel` projection
 - `fieldaxis()` -> [`AxelFieldAxisAccessor`](axel_fieldaxis_accessor_api_reference.md)
+- `cast()`, `nt()`, `tl()` -> nested accessors over the current axel
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
-api/axel/apply_slot
 api/axel/as_kindle
+api/axel/cast
 api/axel/concat_depth
 api/axel/defined
 api/axel/depth
@@ -46,14 +47,15 @@ api/axel/labels
 api/axel/map
 api/axel/ndistinct
 api/axel/notnull
+api/axel/nt
 api/axel/registries
 api/axel/registry
 api/axel/rename
-api/axel/select
 api/axel/show
 api/axel/size
 api/axel/slice
 api/axel/tail
+api/axel/tl
 api/axel/to_json
 api/axel/to_kindle
 api/axel/to_string

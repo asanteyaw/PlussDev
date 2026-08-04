@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c55dd7929cac -->
 
 # Registry::combine
 
@@ -119,7 +120,7 @@ id id_other id_other_2
 
 - [`Registry::rename`](rename.md): rename a field explicitly, if you'd rather
   control collision naming yourself before combining.
-- [`Registry::select`](select.md) / [`Registry::drop`](drop.md): narrow a
+- [`Registry::fields`](fields.md) / [`Registry::drop`](drop.md): narrow a
   registry's fields before combining, to avoid unwanted collisions entirely.
 
 <div class="pluss-inline-prev-next">
@@ -127,8 +128,8 @@ id id_other id_other_2
     <span class="label">Previous</span>
     <span class="title">cloc</span>
   </a>
-  <a class="next-link" href="concat_values.html">
+  <a class="next-link" href="concat.html">
     <span class="label">Next</span>
-    <span class="title">concat_values</span>
+    <span class="title">concat</span>
   </a>
 </div>

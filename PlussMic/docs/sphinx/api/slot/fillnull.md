@@ -100,9 +100,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ensure_stream_compatible.html">
+  <a class="prev-link" href="empty.html">
     <span class="label">Previous</span>
-    <span class="title">ensure_stream_compatible</span>
+    <span class="title">empty</span>
   </a>
   <a class="next-link" href="filter.html">
     <span class="label">Next</span>

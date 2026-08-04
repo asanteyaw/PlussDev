@@ -1,0 +1,181 @@
+
+== ctor_duration_minutes_90 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=5.4000e+12
+
+== ctor_duration_hours_1 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=3.6000e+12
+
+== ctor_duration_days_1 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=8.6400e+13
+
+== ctor_duration_minutes_neg15 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-9.0000e+11
+
+== ctor_timedelta_range_0_10_step2 ==
+dim=1 numel=6
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000e+00, 1.7280e+14, 3.4560e+14, 5.1840e+14, 6.9120e+14, 8.6400e+14]
+
+== ctor_minutes_1d_list ==
+dim=1 numel=4
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[9.0000e+11, 1.8000e+12, 2.7000e+12, 3.6000e+12]
+
+== ctor_hours_nested_2d ==
+dim=2 numel=6
+Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 3.6000e+12 7.2000e+12 ⎤
+⎢ 1.0800e+13 1.4400e+13 ⎥
+⎣ 1.8000e+13 2.1600e+13 ⎦
+
+== ctor_days_flat_plus_shape_2x2 ==
+dim=2 numel=4
+Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 8.6400e+13 1.7280e+14 ⎤
+⎣ 2.5920e+14 3.4560e+14 ⎦
+
+== ctor_make_scalar_3_days ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=2.5920e+14
+
+== ctor_make_1d_hours ==
+dim=1 numel=3
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[3.6000e+12, 7.2000e+12, 1.0800e+13]
+
+== add_90m_plus_1h ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=9.0000e+12
+
+== sub_1d_minus_1h ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=8.2800e+13
+
+== neg_90m ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-5.4000e+12
+
+== mul_1h_times_3 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=1.0800e+13
+
+== div_1d_by_4 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=2.1600e+13
+
+== floordiv_ranged_by_3 ==
+dim=1 numel=6
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000e+00, 5.7600e+13, 1.1520e+14, 1.7280e+14, 2.3040e+14, 2.8800e+14]
+
+== mod_ranged_by_3days_totaldays ==
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 2.0000, 1.0000, 0.0000, 2.0000, 1.0000]
+
+== compound_add_1h_plus_equals_90m ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=9.0000e+12
+
+== compound_add_equals_binary_plus ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== compound_sub_1d_minus_equals_1h ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=8.2800e+13
+
+== compound_sub_equals_binary_minus ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== cmp_eq_1h_90m ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=false
+
+== cmp_lt_1h_90m ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== cmp_ge_1d_1h ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== abs_neg15m ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=9.0000e+11
+
+== sign_neg15m ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-1.0000
+
+== sign_90m ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=1.0000
+
+== clip_ranged_2d_6d ==
+dim=1 numel=6
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[1.7280e+14, 1.7280e+14, 3.4560e+14, 5.1840e+14, 5.1840e+14, 5.1840e+14]
+
+== total_seconds_90m ==
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=5400.0000
+
+== total_minutes_90m ==
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=90.0000
+
+== total_hours_90m ==
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=1.5000
+
+== total_days_ranged ==
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 2.0000, 4.0000, 6.0000, 8.0000, 10.0000]
+
+== isnat_valid ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=false
+
+== isnat_missing ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== fill_nat ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=7.2000e+12
+
+== timeline_plus_duration ==
+Timeline(shape=[], tz=UTC)
+2024-11-01 10:30:00
+
+== timeline_minus_duration ==
+Timeline(shape=[], tz=UTC)
+2024-11-01 07:30:00
+
+== timeline_diff ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=5.4000e+12

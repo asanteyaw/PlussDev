@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9b5f8eccadfc -->
 <section id="registry-map">
 <h1>Registry::map<a class="headerlink" href="#registry-map" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -48,19 +49,16 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>A pure alias for <a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_all()</span></code></span></a> — runs <code class="docutils literal notranslate"><span class="pre">fn</span></code> over every field’s
-<code class="docutils literal notranslate"><span class="pre">Slot</span></code> and returns a new registry with all of them replaced. <code class="docutils literal notranslate"><span class="pre">map()</span></code> exists for
-readability at call sites that read naturally as “map this function over every
-field”; <code class="docutils literal notranslate"><span class="pre">apply_all()</span></code> exists for call sites where “apply to every slot,
-unconditionally” (as opposed to <code class="docutils literal notranslate"><span class="pre">apply()</span></code>’s scoped form) is the clearer framing.
-There is no behavioral difference.</p>
+<p>Runs <code class="docutils literal notranslate"><span class="pre">fn</span></code> over every field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> and returns a new registry with all of them
+replaced.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Same mixed-kind hazard as apply_all()
-Since <code class="docutils literal notranslate"><span class="pre">map()</span></code> is a direct alias, it inherits <code class="docutils literal notranslate"><span class="pre">apply_all()</span></code>’s caveat: <code class="docutils literal notranslate"><span class="pre">fn</span></code> runs on
-every field regardless of value kind, so a callback written only for one kind can
-throw on a field of a different kind. See <a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_all()</span></code></span></a>’s important
-callout.</p>
+<p>Whole-registry transform
+<code class="docutils literal notranslate"><span class="pre">fn</span></code> runs on every field regardless of value kind, so a callback written only for
+one kind can throw on a field of a different kind. <code class="docutils literal notranslate"><span class="pre">Registry</span></code> has no scoped,
+apply-to-named-fields sibling method anymore — to transform just one field, fetch
+it via <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(key)</span></code></span></a>, call <code class="docutils literal notranslate"><span class="pre">fn</span></code> on it directly, and reinsert with
+<a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">rg.set(&quot;population&quot;,</span> <span class="pre">fn(rg.fields(&quot;population&quot;)))</span></code>.</p>
 </div>
 </section>
 <section id="parameters">
@@ -72,12 +70,11 @@ Must return a defined <code class="docutils literal notranslate"><span class="pr
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-A new registry with every field replaced by <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s result — identical to what
-<code class="docutils literal notranslate"><span class="pre">apply_all(fn)</span></code> would return.</p>
+A new registry with every field replaced by <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">map()</span></code> and <code class="docutils literal notranslate"><span class="pre">apply_all()</span></code> produce identical results for the same <code class="docutils literal notranslate"><span class="pre">fn</span></code>.</p>
+<p>Example 1. Apply one transform to every field.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
 <span class="p">});</span>
@@ -96,8 +93,6 @@ A new registry with every field replaced by <code class="docutils literal notran
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Identical to <code class="docutils literal notranslate"><span class="pre">apply_all()</span></code> in every respect — pick whichever name reads better
-at the call site.</p></li>
 <li><p>Never mutates the receiver — returns a new <code class="docutils literal notranslate"><span class="pre">Registry</span></code>; use <a class="reference internal" href="map_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map_()</span></code></span></a>
 for the in-place form.</p></li>
 </ul>
@@ -105,12 +100,13 @@ for the in-place form.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::apply_all</span></code></span></a>: the method this is a pure alias for.</p></li>
 <li><p><a class="reference internal" href="map_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::map_</span></code></span></a>: the in-place counterpart.</p></li>
-<li><p><a class="reference internal" href="apply.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::apply</span></code></span></a>: the scoped counterpart, for transforming only
-named fields.</p></li>
-<li><p><a class="reference internal" href="../catalog/apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::apply_all</span></code></span></a>: the closest equivalent on the
-kindle model — <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> has no <code class="docutils literal notranslate"><span class="pre">map</span></code>/<code class="docutils literal notranslate"><span class="pre">map_</span></code> alias, only <code class="docutils literal notranslate"><span class="pre">apply_all</span></code>.</p></li>
+<li><p><a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields</span></code></span></a> / <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::set</span></code></span></a>: fetch-transform-reinsert
+for scoping a <code class="docutils literal notranslate"><span class="pre">Slot</span> <span class="pre">-&gt;</span> <span class="pre">Slot</span></code> transform to one named field instead of every field.</p></li>
+<li><p><a class="reference internal" href="morph.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::morph</span></code></span></a>: a value-level (not whole-<code class="docutils literal notranslate"><span class="pre">Slot</span></code>) transform, scoped
+to one field.</p></li>
+<li><p><a class="reference internal" href="../catalog/map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::map</span></code></span></a>: the closest equivalent on the
+kindle model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="load_txt.html">

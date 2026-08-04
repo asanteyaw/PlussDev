@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7d28bb7ae2a9 -->
+
 # RegistryNoteAccessor::replace
 
 [Back to RegistryNoteAccessor API Reference](../../registry_note_accessor_api_reference)
@@ -5,70 +8,107 @@
 ## Signatures
 
 ```cpp
-RegistryNoteAccessor::replace(std::string_view from, std::string_view to) -> Registry
+Registry RegistryNoteAccessor::replace(std::string_view from, std::string_view to) const
 
-RegistryNoteAccessor::replace(std::string_view from, std::string_view to, const pluss::table::TextOptions& options) -> Registry
+Registry RegistryNoteAccessor::replace(std::string_view from,
+                                       std::string_view to,
+                                       const pluss::table::TextOptions& options) const
 ```
 
 ## What It Does
 
-This is part of the text-processing surface for note-backed or text-oriented data.
+Replaces occurrences of a substring or regex pattern within each bound
+field's text, returning a new registry with those fields replaced.
+`replace(from, to)` and `replace(from, to, {})` are byte-identical — the
+two-argument overload is a fast path to the same underlying primitive with a
+default-constructed `TextOptions`.
 
 ## Parameters
 
-**from**
-    Boundary or replacement value used by this overload. Its type determines which payload family participates.
+**from** (`std::string_view`)
+    The literal text (or, with `options.regex = true`, the regular
+    expression) to search for.
 
-**to**
-    Boundary or replacement value used by this overload. Its type determines which payload family participates.
+**to** (`std::string_view`)
+    The replacement text. With `options.regex = true`, may contain `$1`,
+    `$2`, ... backreferences to capture groups in `from`.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`pluss::table::TextOptions`, three-argument overload only)
+    `options.regex` (default `false`): treat `from` as a regex instead of
+    literal text. `options.case_sensitive` (default `true`): when `false`,
+    matching ignores case, but `to` is still inserted exactly as given.
+    `options.limit` (default `-1`, unlimited): caps replacements per value;
+    matches never overlap.
 
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    A new registry with every bound field's text replaced; every unbound
+    field unchanged.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Default: literal, case-sensitive, unlimited substring replacement.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"city", pluss::bundle::Slot({pluss::make_note("banana")})},
 });
-auto notes = rg.fields({"city"}).nt();
 
-auto out = notes.replace("units", "units");
-std::cout << out;
+auto out = rg.fields({"city"}).nt().replace("a", "o");
+std::cout << std::get<pluss::Note>(out.fields("city").at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+bonono
 ```
-Example 2. Pass an explicit options object to control the operation.
+
+Every `"a"` is replaced, since matches never overlap and `replace()` keeps
+scanning past each replacement.
+
+Example 2. `case_sensitive = false` matches regardless of case, but `to` is
+still inserted exactly as written.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"city", pluss::bundle::Slot({pluss::make_note("BANANA")})},
 });
-auto notes = rg.fields({"city"}).nt();
 
-auto out = notes.replace("units", "units", {});
-std::cout << out;
+pluss::table::TextOptions opts;
+opts.case_sensitive = false;
+auto out = rg.fields({"city"}).nt().replace("A", "o", opts);
+std::cout << std::get<pluss::Note>(out.fields("city").at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+BoNoNo
 ```
 
+Only the matched `"A"`/`"a"` characters are replaced with the lowercase `"o"`
+given in `to` — the surrounding letters keep their original case.
+
+## Notes
+
+- `replace(from, to)` and `replace(from, to, {})` are byte-identical.
+- Matches never overlap: once a match is replaced, scanning resumes right
+  after it.
+- With `options.regex = true`, `to` may reference capture groups from `from`
+  via `$1`, `$2`, and so on.
+- Requires every bound field to be `Note`-kind — a non-`Note` field throws
+  `"Slot::nt: slot kind must be Note"`.
+
+## See Also
+
+- [`RegistryNoteAccessor::has`](has.md): test for a substring/pattern without
+  changing the text.
+- [`RegistryNoteAccessor::count`](count.md): count matches instead of
+  replacing them.
+- [`Registry::nt`](../registry/nt.md): the entry point this accessor is
+  reached from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pad.html">

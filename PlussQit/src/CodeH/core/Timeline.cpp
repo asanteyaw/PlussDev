@@ -19,6 +19,7 @@
 
 #include "CodeH/core/Offsets.h"
 #include "CodeH/core/TimeZone.h"
+#include "CodeH/core/detail/Int64ScalarOp.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "pluss/coden/note_factory.h"
@@ -855,12 +856,8 @@ pluss::codem::Series impl_searchsorted(const Timeline& a, const Timeline& values
 Timeline impl_add_nanos(const Timeline& a, std::int64_t nanos) {
   check_timeline_core(a.ticks_);
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
-  auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
-  const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
-    const auto v = ap[ao];
-    op[oo] = (v == Timeline::kNaT) ? Timeline::kNaT : (v + nanos);
+  apply_unary_i64_scalar(a.ticks_, out, [nanos](std::int64_t v) -> std::int64_t {
+    return (v == Timeline::kNaT) ? Timeline::kNaT : (v + nanos);
   });
   return Timeline(std::move(out), std::string(a.tz()));
 }

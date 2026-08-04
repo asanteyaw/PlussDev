@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 76c25b5d84d4 -->
 
 # Registry::shape
 
@@ -12,7 +13,7 @@ std::pair<std::int64_t, std::int64_t> Registry::shape() const
 
 ## What It Does
 
-Returns a `(rows, fields)` pair summarizing the registry's overall size in one call
+Returns a `(state, fields)` pair summarizing the registry's overall size in one call
 — the first element is the **longest** field's length (found by scanning every
 slot's [`size()`](../slot/size.md)), the second is [`nfields()`](nfields.md).
 Because it takes the maximum rather than requiring agreement, `shape()` never
@@ -28,7 +29,7 @@ other's length.
 ## Returns
 
 `std::pair<std::int64_t, std::int64_t>`
-    `(longest field's length, nfields())`.
+    `(maxstate(), nfields())`.
 
 ## Examples
 
@@ -40,8 +41,8 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto [rows, fields] = rg.shape();
-std::cout << "(" << rows << ", " << fields << ")";
+auto [state, fields] = rg.shape();
+std::cout << "(" << state << ", " << fields << ")";
 ```
 
 ### Output
@@ -59,8 +60,8 @@ auto ragged = pluss::bundle::Registry({
     {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
-auto [rows, fields] = ragged.shape();
-std::cout << "(" << rows << ", " << fields << ")";
+auto [state, fields] = ragged.shape();
+std::cout << "(" << state << ", " << fields << ")";
 ```
 
 ### Output
@@ -71,16 +72,17 @@ std::cout << "(" << rows << ", " << fields << ")";
 
 ## Notes
 
-- The pair order is `(rows, fields)`, matching typical row-by-column shape
-  conventions — not `(fields, rows)`.
+- The pair order is `(state, fields)`.
 - Never throws on a ragged registry — see Example 2. `Registry` does not require
   fields to share a common length the way `Catalog`'s streams often do.
 - An explicitly empty registry reports `(0, 0)`.
 
 ## See Also
 
-- [`Registry::nfields`](nfields.md) / [`Registry::sizes`](sizes.md): the two kinds
-  of value this method combines — field count, and each field's own length.
+- [`Registry::nstate`](nstate.md) / [`Registry::minstate`](minstate.md) /
+  [`Registry::maxstate`](maxstate.md): the strict and ragged state-count surfaces.
+- [`Registry::nfields`](nfields.md) / [`Registry::sizes`](sizes.md): field count
+  and per-field lengths.
 - [`Catalog::shape`](../catalog/shape.md): the equivalent summary on the kindle
   model.
 

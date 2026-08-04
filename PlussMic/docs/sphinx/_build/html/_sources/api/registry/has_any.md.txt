@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2b286cee873c -->
 
 # Registry::has_any
 
@@ -79,8 +80,8 @@ false
 
 - [`Registry::has`](has.md): the single-key form this method combines with OR.
 - [`Registry::has_all`](has_all.md): the AND-combined counterpart.
-- [`Registry::select`](select.md): fetch multiple fields directly, throwing if any
-  is missing.
+- [`Registry::fields`](fields.md): fetch multiple fields directly (multi-key
+  overload), throwing if any is missing.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="has_all.html">

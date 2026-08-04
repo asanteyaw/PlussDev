@@ -156,7 +156,7 @@ outright rather than silently producing an empty string for every row.
 - `pattern` cannot be empty — an empty pattern throws.
 - `%f` always emits all 9 nanosecond digits, zero-padded — there's no way to
   ask for fewer digits (e.g. milliseconds only) directly; slice the resulting
-  text with [`note()`](../dataframe/note.md) accessor methods if you need
+  text with [`note()`](../../dataframe_note_accessor_api_reference) accessor methods if you need
   fewer digits.
 - `%z` always renders as a signed `HH:MM` offset (e.g. `"+00:00"`), never the
   bare `"Z"` suffix some ISO-8601 tooling uses for UTC.

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fe1cd3c82987 -->
 
 # Registry::tail
 
@@ -46,7 +47,7 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.tail(2);
-auto ids = out.select("id");
+auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
@@ -79,7 +80,7 @@ std::cout << "]";
   model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sum.html">
+  <a class="prev-link" href="slice.html">
     <span class="label">Previous</span>
     <span class="title">sum</span>
   </a>

@@ -145,7 +145,7 @@ auto cleaned = scenarios.map_frames([](const DataFrame& frame) {
 auto catalog = df.kindelize();
 auto registry = pluss::bundle::Registry::from_kindle(catalog);
 
-registry.type_profiles();
+registry.profiles();
 
 auto back = registry.to_kindle().tabelize();
 ```

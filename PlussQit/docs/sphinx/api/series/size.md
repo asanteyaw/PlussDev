@@ -1,8 +1,10 @@
+<!-- pluss-hand-authored -->
+
 # Series::size
 
 [Back to Series API Reference](../../series_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 Series::size(int dim) const -> std::int64_t
@@ -11,51 +13,57 @@ Series::size(std::int64_t dim) const -> std::int64_t
 
 ## What It Does
 
-Returns the extent of one axis in the current logical view.
+Returns the length of one axis in the **current logical shape**.
 
-That last phrase matters. `size()` does not report some original factory shape;
-it reports the shape of the `Series` exactly as it exists at the moment you ask.
-If you transpose, squeeze, unsqueeze, slice, or otherwise reshape a series, the
-answer changes to match that new logical layout.
+That wording matters. `size()` is not reporting how the tensor was originally
+created, and it is not reporting anything about memory order. It answers a much
+more immediate question: "if I index this `Series` right now, how long is axis
+`dim`?"
 
-The `int` overload is only a convenience forwarder for ordinary C++ literals.
-Both overloads have the same runtime behavior.
+So if you transpose, unsqueeze, squeeze, slice, or reshape the tensor first,
+`size()` reflects that new logical view.
+
+The two overloads are only an ergonomics detail. The `int` form exists so plain
+C++ literals like `0` and `-1` resolve naturally; both overloads normalize and
+validate the dimension the same way and both return `std::int64_t`.
 
 ## Parameters
 
 **dim** (`int` or `std::int64_t`)
 
-The axis to query.
+The axis to inspect.
 
-`size()` accepts both positive and negative dimensions:
+`size()` accepts both forward and reverse indexing:
 
 - `0` means the first axis
 - `1` means the second axis
 - `-1` means the last axis
 - `-2` means the second-to-last axis
 
-After negative-dimension normalization, the dimension is bounds-checked. If it
-still falls outside the rank, the call throws `"SeriesBase::size: dim out of range"`.
+Negative dimensions are normalized against the current rank first, then checked.
+If the normalized dimension still falls outside `[0, rank)`, the call throws.
 
 ## Returns
 
 `std::int64_t`
-    The length of the requested axis.
+    The extent of the requested axis.
 
 ## Examples
 
-Example 1. Read the leading axis directly.
+Example 1. Query the leading axis of a rank-3 `Series`.
 
 ```cpp
-auto shape_src = pluss::make_series(
+auto cube = pluss::make_series(
     std::vector<double>{
-        1, 2, 3, 4, 5, 6,
-        7, 8, 9, 10, 11, 12,
-        13, 14, 15, 16, 17, 18,
-        19, 20, 21, 22, 23, 24},
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16,
+        17, 18, 19, 20,
+        21, 22, 23, 24},
     {2, 3, 4});
 
-std::cout << shape_src.size(0);
+std::cout << cube.size(0);
 ```
 
 ### Output
@@ -64,11 +72,11 @@ std::cout << shape_src.size(0);
 2
 ```
 
-Example 2. Negative dimensions read from the back, so `-1` means the trailing
+Example 2. Negative dimensions count from the back, so `-1` means the trailing
 axis.
 
 ```cpp
-std::cout << shape_src.size(-1);
+std::cout << cube.size(-1);
 ```
 
 ### Output
@@ -77,20 +85,34 @@ std::cout << shape_src.size(-1);
 4
 ```
 
+Example 3. `size()` follows the current logical view, not the original factory
+shape.
+
+```cpp
+std::cout << cube.transpose(0, 2).size(1);
+```
+
+### Output
+
+```text
+3
+```
+
+The original shape was `[2, 3, 4]`. After `transpose(0, 2)`, the logical shape
+becomes `[4, 3, 2]`, so axis `1` is now `3`.
+
 ## Notes
 
-- `size()` returns one axis only. If you want the whole shape at once, use
-  [`sizes()`](sizes.md).
-- The result is about the current logical view, not about storage order or
-  contiguity.
-- The return type is always `std::int64_t`, even when you call the `int`
-  overload.
+- `size()` answers one axis at a time. Use [`sizes()`](sizes.md) when you need
+  the full shape in one call.
+- The answer is about logical shape, not about contiguity or strides.
+- Scalars have rank `0`, so they have no valid `dim` to query.
 
 ## See Also
 
-- [`Series::sizes`](sizes.md): borrow the entire shape view in one call.
-- [`Series::reshape`](reshape.md): one of the operations that changes later
-  `size()` answers.
+- [`Series::sizes`](sizes.md): inspect the entire shape at once.
+- [`Series::view`](view.md), [`Series::reshape`](reshape.md): methods that
+  change what later `size()` calls return.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pos.html">

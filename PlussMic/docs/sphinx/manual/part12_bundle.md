@@ -54,14 +54,12 @@ reg.save_json("registry.json");
 Inspect:
 
 ```cpp
-registry.nslots();
 registry.nfields();
-registry.keys();
+registry.fields();
 registry.has("field");
-registry.slot("field");
 registry.get("field");
-registry.slot_sizes();
-registry.type_profiles();
+registry.sizes();
+registry.profiles();
 ```
 
 Select and reshape:
@@ -82,7 +80,7 @@ auto changed = registry.apply("score", [](const pluss::bundle::Slot& slot) {
   return slot;
 });
 
-auto all = registry.apply_all([](const pluss::bundle::Slot& slot) {
+auto all = registry.map([](const pluss::bundle::Slot& slot) {
   return slot;
 });
 ```
@@ -90,7 +88,7 @@ auto all = registry.apply_all([](const pluss::bundle::Slot& slot) {
 Update fields:
 
 ```cpp
-auto with_slot = registry.set_slot("new_field", slot);
+auto with_slot = registry.set("new_field", slot);
 auto pushed = registry.push("events", value);
 ```
 
@@ -100,20 +98,18 @@ Combine:
 auto merged = registry.combine(other, "_other");
 ```
 
-## Stream compatibility
+## Kindle bridge
 
-Some Registry operations require slots that can map cleanly to streams.
+Some Registry operations require slots that can map cleanly to streams. The public
+surface no longer exposes separate compatibility checkers; `to_kindle()` is the
+single contract point.
 
 ```cpp
-if (registry.is_stream_compatible()) {
+try {
   auto catalog = registry.to_kindle();
+} catch (const std::exception& e) {
+  std::cout << e.what();
 }
-```
-
-Use `ensure_stream_compatible` when failure should be explicit:
-
-```cpp
-registry.ensure_stream_compatible("export");
 ```
 
 ## Axel

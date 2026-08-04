@@ -13,7 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::sizes" href="sizes.html" />
@@ -35,11 +36,12 @@
 
           <div class="body" role="main">
             
-  <section id="series-size">
+  <!-- pluss-hand-authored -->
+<section id="series-size">
 <h1>Series::size<a class="headerlink" href="#series-size" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">size</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">size</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
 </pre></div>
@@ -47,45 +49,50 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the extent of one axis in the current logical view.</p>
-<p>That last phrase matters. <code class="docutils literal notranslate"><span class="pre">size()</span></code> does not report some original factory shape;
-it reports the shape of the <code class="docutils literal notranslate"><span class="pre">Series</span></code> exactly as it exists at the moment you ask.
-If you transpose, squeeze, unsqueeze, slice, or otherwise reshape a series, the
-answer changes to match that new logical layout.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">int</span></code> overload is only a convenience forwarder for ordinary C++ literals.
-Both overloads have the same runtime behavior.</p>
+<p>Returns the length of one axis in the <strong>current logical shape</strong>.</p>
+<p>That wording matters. <code class="docutils literal notranslate"><span class="pre">size()</span></code> is not reporting how the tensor was originally
+created, and it is not reporting anything about memory order. It answers a much
+more immediate question: “if I index this <code class="docutils literal notranslate"><span class="pre">Series</span></code> right now, how long is axis
+<code class="docutils literal notranslate"><span class="pre">dim</span></code>?”</p>
+<p>So if you transpose, unsqueeze, squeeze, slice, or reshape the tensor first,
+<code class="docutils literal notranslate"><span class="pre">size()</span></code> reflects that new logical view.</p>
+<p>The two overloads are only an ergonomics detail. The <code class="docutils literal notranslate"><span class="pre">int</span></code> form exists so plain
+C++ literals like <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">-1</span></code> resolve naturally; both overloads normalize and
+validate the dimension the same way and both return <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The axis to query.</p>
-<p><code class="docutils literal notranslate"><span class="pre">size()</span></code> accepts both positive and negative dimensions:</p>
+<p>The axis to inspect.</p>
+<p><code class="docutils literal notranslate"><span class="pre">size()</span></code> accepts both forward and reverse indexing:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> means the first axis</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> means the second axis</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-2</span></code> means the second-to-last axis</p></li>
 </ul>
-<p>After negative-dimension normalization, the dimension is bounds-checked. If it
-still falls outside the rank, the call throws <code class="docutils literal notranslate"><span class="pre">&quot;SeriesBase::size:</span> <span class="pre">dim</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">range&quot;</span></code>.</p>
+<p>Negative dimensions are normalized against the current rank first, then checked.
+If the normalized dimension still falls outside <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">rank)</span></code>, the call throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-The length of the requested axis.</p>
+The extent of the requested axis.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Read the leading axis directly.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">shape_src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<p>Example 1. Query the leading axis of a rank-3 <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">        </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">        </span><span class="mi">1</span><span class="p">,</span><span class="w">  </span><span class="mi">2</span><span class="p">,</span><span class="w">  </span><span class="mi">3</span><span class="p">,</span><span class="w">  </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">5</span><span class="p">,</span><span class="w">  </span><span class="mi">6</span><span class="p">,</span><span class="w">  </span><span class="mi">7</span><span class="p">,</span><span class="w">  </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">9</span><span class="p">,</span><span class="w">  </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shape_src</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
@@ -93,9 +100,9 @@ The length of the requested axis.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
 </pre></div>
 </div>
-<p>Example 2. Negative dimensions read from the back, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the trailing
+<p>Example 2. Negative dimensions count from the back, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the trailing
 axis.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shape_src</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -104,25 +111,36 @@ axis.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>4
 </pre></div>
 </div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">size()</span></code> follows the current logical view, not the original factory
+shape.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">).</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
+</pre></div>
+</div>
+<p>The original shape was <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">3,</span> <span class="pre">4]</span></code>. After <code class="docutils literal notranslate"><span class="pre">transpose(0,</span> <span class="pre">2)</span></code>, the logical shape
+becomes <code class="docutils literal notranslate"><span class="pre">[4,</span> <span class="pre">3,</span> <span class="pre">2]</span></code>, so axis <code class="docutils literal notranslate"><span class="pre">1</span></code> is now <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">size()</span></code> returns one axis only. If you want the whole shape at once, use
-<a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a>.</p></li>
-<li><p>The result is about the current logical view, not about storage order or
-contiguity.</p></li>
-<li><p>The return type is always <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, even when you call the <code class="docutils literal notranslate"><span class="pre">int</span></code>
-overload.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size()</span></code> answers one axis at a time. Use <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a> when you need
+the full shape in one call.</p></li>
+<li><p>The answer is about logical shape, not about contiguity or strides.</p></li>
+<li><p>Scalars have rank <code class="docutils literal notranslate"><span class="pre">0</span></code>, so they have no valid <code class="docutils literal notranslate"><span class="pre">dim</span></code> to query.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sizes</span></code></span></a>: borrow the entire shape view in one call.</p></li>
-<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: one of the operations that changes later
-<code class="docutils literal notranslate"><span class="pre">size()</span></code> answers.</p></li>
+<li><p><a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sizes</span></code></span></a>: inspect the entire shape at once.</p></li>
+<li><p><a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::view</span></code></span></a>, <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: methods that
+change what later <code class="docutils literal notranslate"><span class="pre">size()</span></code> calls return.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pos.html">

@@ -16,9 +16,9 @@ Catalog::set(std::initializer_list<NamedStream> items) const -> Catalog
 ## What It Does
 
 Adds a stream under a new key, or overwrites the stream already at an existing key — an
-upsert, unlike [`select()`](select.md)/[`drop()`](drop.md)/[`rename()`](rename.md), which
-all throw on an unknown key. A new key is appended at the end of the catalog's key order;
-an existing key keeps its original position, with only its stream replaced.
+upsert, unlike [`drop()`](drop.md)/[`rename()`](rename.md), which throw on an unknown
+key. A new key is appended at the end of the catalog's key order; an existing key keeps
+its original position, with only its stream replaced.
 
 ```{important} Braced-list literals can be ambiguous between the two multi-item overloads
 `{"key", stream}`-style braces can match *either* `std::pair<string_view, Stream>` or

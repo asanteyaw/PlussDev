@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,21 @@
 
           <div class="body" role="main">
             
-  <section id="registry-clear">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 15ed8116178f -->
+<section id="registry-clear">
 <h1>Registry::clear_<a class="headerlink" href="#registry-clear" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">clear_</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">clear_</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Removes all slots in place.</p>
+<p>The in-place counterpart to <a class="reference internal" href="clear.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clear()</span></code></span></a> — removes every field from
+this registry directly. The registry remains <strong>defined</strong> afterward, just empty.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,30 +59,43 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry&amp;</span></code>
-Value produced by this call.</p>
+A reference to this registry, now holding zero fields.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Clear a registry in place.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})},</span>
 <span class="p">});</span>
 
 <span class="n">rg</span><span class="p">.</span><span class="n">clear_</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; nfields=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">nfields</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
-
-out.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true nfields=0
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Same defined-but-empty result as <a class="reference internal" href="clear.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clear()</span></code></span></a> — see that page’s
+important callout.</p></li>
+<li><p>Requires a defined registry — throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> on an
+undefined one.</p></li>
+<li><p>Mutates the registry it’s called on and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="clear.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::clear</span></code></span></a>: the non-mutating counterpart.</p></li>
+<li><p><a class="reference internal" href="prune_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::prune_</span></code></span></a>: removes only zero-length fields, rather than
+every field unconditionally.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="clear.html">
     <span class="label">Previous</span>
@@ -90,7 +106,6 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
     <span class="title">cloc</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

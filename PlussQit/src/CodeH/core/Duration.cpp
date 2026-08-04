@@ -22,12 +22,6 @@ static std::vector<std::int64_t> broadcast_simple(std::span<const std::int64_t> 
   return std::vector<std::int64_t>(a.begin(), a.end());
 }
 
-Duration Duration::from_scalar_nanos(std::int64_t nanos) {
-  auto s = pluss::codem::Series::empty({}, pluss::codem::ScalarType::Int64);
-  *reinterpret_cast<std::int64_t*>(s.raw_data()) = nanos;
-  return Duration(std::move(s));
-}
-
 Duration Duration::operator+(const Duration& other) const {
   check_duration_core(nanos_);
   check_duration_core(other.nanos_);

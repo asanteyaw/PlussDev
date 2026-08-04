@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,34 @@
 
           <div class="body" role="main">
             
-  <section id="registry-to-kindle">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7008f3bfdf96 -->
+<section id="registry-to-kindle">
 <h1>Registry::to_kindle<a class="headerlink" href="#registry-to-kindle" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_kindle</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">to_kindle</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+<p>Converts the registry into a <code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code>, the homogeneous-columnar
+counterpart to <code class="docutils literal notranslate"><span class="pre">Registry</span></code>’s heterogeneous, cell-by-cell model. Each field becomes
+a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> stream. This is the explicit bridge every <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method except
+<a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></span></a> uses internally, and the one every other Registry
+<code class="docutils literal notranslate"><span class="pre">save_*</span></code>/<code class="docutils literal notranslate"><span class="pre">is_stream_compatible</span></code>-adjacent important callout in this reference
+points back to.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Requires every field to be stream-compatible
+Every field must hold a single, uniform value kind. A registry with a genuinely
+mixed-type field throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry::to_kindle:</span> <span class="pre">slot</span> <span class="pre">'&lt;name&gt;':</span> <span class="pre">slot</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">stream-compatible</span> <span class="pre">(kind=Mixed)&quot;</span></code> — the surest way to know in advance whether a
+given registry will convert cleanly is to try the conversion (or a <code class="docutils literal notranslate"><span class="pre">save_*</span></code>
+call) inside a <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">catch</span></code>, since there is no public boolean pre-check for
+this on <code class="docutils literal notranslate"><span class="pre">Registry</span></code> itself.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,26 +72,68 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code>
-Value produced by this call.</p>
+A new catalog with one stream per field.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Convert a stream-compatible registry.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;nkeys=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">nkeys</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id     -&gt; Series([1, 2, 3])
-metric -&gt; Series([10.0, 20.0, 30.0])
-city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nkeys=2
 </pre></div>
 </div>
+<p>Example 2. A field with genuinely mixed value kinds throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;mixed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Registry::to_kindle: slot &#39;mixed&#39;: slot is not stream-compatible (kind=Mixed)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>This is the exact check every <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method except <code class="docutils literal notranslate"><span class="pre">save_json()</span></code> performs
+internally — see <a class="reference internal" href="save_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::save_csv</span></code></span></a>’s important callout for
+the propagated error message.</p></li>
+<li><p><a class="reference internal" href="as_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_kindle()</span></code></span></a> and <a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a> are pure
+aliases for this method.</p></li>
+<li><p><a class="reference internal" href="from_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::from_kindle</span></code></span></a> is the inverse conversion.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="from_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::from_kindle</span></code></span></a>: the inverse conversion, from
+<code class="docutils literal notranslate"><span class="pre">Catalog</span></code> back to <code class="docutils literal notranslate"><span class="pre">Registry</span></code>.</p></li>
+<li><p><a class="reference internal" href="as_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::as_kindle</span></code></span></a> / <a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::kindelize</span></code></span></a>:
+pure aliases for this method.</p></li>
+<li><p><a class="reference internal" href="save_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::save_csv</span></code></span></a>: one of several savers that route through
+this conversion.</p></li>
+<li><p><a class="reference internal" href="../slot/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::to_kindle</span></code></span></a>: the per-field conversion this
+method calls for each field.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_json.html">
     <span class="label">Previous</span>
@@ -86,7 +144,6 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
     <span class="title">to_string</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

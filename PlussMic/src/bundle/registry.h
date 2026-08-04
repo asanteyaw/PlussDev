@@ -31,7 +31,6 @@ namespace detail {
 class RegistryImpl;
 }
 
-class RegistryFieldAccessor;
 class RegistryFieldAxisAccessor;
 class RegistryCastAccessor;
 class RegistryNoteAccessor;
@@ -70,17 +69,24 @@ public:
   bool defined() const noexcept;
   bool unique() const noexcept;
 
+  std::int64_t nstate() const;
+  std::int64_t minstate() const;
+  std::int64_t maxstate() const;
   std::int64_t nfields() const;
   std::int64_t size() const;
   std::pair<std::int64_t, std::int64_t> shape() const;
   bool empty() const;
   const std::vector<std::string>& fields() const;
-  RegistryFieldAccessor fields(std::string_view key) const;
-  RegistryFieldAccessor fields(std::span<const std::string_view> keys) const;
-  RegistryFieldAccessor fields(std::initializer_list<std::string_view> keys) const;
+  Slot fields(std::string_view key) const;
+  Registry fields(std::span<const std::string_view> keys) const;
+  Registry fields(std::initializer_list<std::string_view> keys) const;
   template <pluss::detail::StringViewNameRange NameRange>
-  RegistryFieldAccessor fields(const NameRange& keys) const;
+  Registry fields(const NameRange& keys) const;
   RegistryFieldAxisAccessor fieldaxis() const;
+  RegistryCastAccessor cast() const;
+  RegistryCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  RegistryNoteAccessor nt() const;
+  RegistryTimelineAccessor tl() const;
   bool has(std::string_view key) const;
   bool has_all(std::span<const std::string_view> keys) const;
   bool has_all(std::initializer_list<std::string_view> keys) const;
@@ -95,8 +101,6 @@ public:
     return pluss::detail::with_name_span(keys, [&](auto names) { return has_any(names); });
   }
   std::optional<Slot> get(std::string_view key) const;
-  bool is_stream_compatible() const;
-  void ensure_stream_compatible(std::string_view where = "Registry") const;
 
   // Registry-level delegation over slots.
   Registry head(std::int64_t n) const;
@@ -108,14 +112,6 @@ public:
   Registry take(const std::vector<std::int64_t>& indices) const;
   Registry sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
 
-  Registry select(std::span<const std::string_view> keys) const;
-  Registry select(std::initializer_list<std::string_view> keys) const;
-  Registry select(const std::vector<std::string>& keys) const;
-  template <pluss::detail::StringViewNameRange NameRange>
-  Registry select(const NameRange& keys) const {
-    return pluss::detail::with_name_span(keys, [&](auto names) { return select(names); });
-  }
-  Slot select(std::string_view key) const;
   Registry drop(std::span<const std::string_view> keys) const;
   Registry drop(std::initializer_list<std::string_view> keys) const;
   Registry drop(const std::vector<std::string>& keys) const;
@@ -128,36 +124,15 @@ public:
   Registry rename(const std::unordered_map<std::string, std::string>& mapping) const;
   Registry rename(std::string_view from, std::string_view to) const;
   Registry& rename_(std::string_view from, std::string_view to);
-  Registry apply(std::string_view key, const std::function<Slot(const Slot&)>& fn) const;
-  Registry apply(std::span<const std::string_view> keys,
-                 const std::function<Slot(const Slot&)>& fn) const;
-  Registry apply(std::initializer_list<std::string_view> keys,
-                 const std::function<Slot(const Slot&)>& fn) const;
-  template <pluss::detail::StringViewNameRange NameRange>
-  Registry apply(const NameRange& keys,
-                 const std::function<Slot(const Slot&)>& fn) const {
-    return pluss::detail::with_name_span(keys, [&](auto names) { return apply(names, fn); });
-  }
-  Registry& apply_(std::string_view key, const std::function<Slot(const Slot&)>& fn);
-  Registry& apply_(std::span<const std::string_view> keys,
-                   const std::function<Slot(const Slot&)>& fn);
-  Registry& apply_(std::initializer_list<std::string_view> keys,
-                   const std::function<Slot(const Slot&)>& fn);
-  template <pluss::detail::StringViewNameRange NameRange>
-  Registry& apply_(const NameRange& keys,
-                   const std::function<Slot(const Slot&)>& fn) {
-    return pluss::detail::with_name_span(keys, [&](auto names) -> Registry& { return apply_(names, fn); });
-  }
-  Registry apply_all(const std::function<Slot(const Slot&)>& fn) const;
   Registry map(const std::function<Slot(const Slot&)>& fn) const;
   Registry& map_(const std::function<Slot(const Slot&)>& fn);
   std::unordered_map<std::string, std::int64_t> sizes() const;
-  std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> type_profiles() const;
+  std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> profiles() const;
   Registry combine(const Registry& other, std::string suffix = "_other") const;
   Registry clear() const;
   Registry& clear_();
-  Registry drop_empty() const;
-  Registry& drop_empty_();
+  Registry prune() const;
+  Registry& prune_();
 
   Registry isnull() const;
   Registry notnull() const;
@@ -173,10 +148,6 @@ public:
   Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
   Registry freq(pluss::kindle::FreqOptions options = {}) const;
   Registry ndistinct(pluss::kindle::DistinctOptions options = {}) const;
-  Slot sum(std::string_view field) const;
-  Slot mean(std::string_view field) const;
-  Slot min(std::string_view field) const;
-  Slot max(std::string_view field) const;
 
   Registry set(std::string_view key, const Slot& value) const;
   Registry& set_(std::string_view key, const Slot& value);
@@ -186,20 +157,22 @@ public:
   Registry& set_(std::initializer_list<std::pair<std::string, Slot>> items);
   Registry push(std::string_view key, const Slot::Value& value) const;
   Registry& push_(std::string_view key, const Slot::Value& value);
-  Registry push_all(const Slot::Value& value) const;
-  Registry& push_all_(const Slot::Value& value);
-  Registry filter_values(std::string_view key,
-                         const std::function<bool(const Slot::Value&)>& predicate) const;
-  Registry& filter_values_(std::string_view key,
-                           const std::function<bool(const Slot::Value&)>& predicate);
-  Registry transform_values(std::string_view key,
-                            const std::function<Slot::Value(const Slot::Value&)>& fn) const;
-  Registry& transform_values_(std::string_view key,
-                              const std::function<Slot::Value(const Slot::Value&)>& fn);
-  Registry take_values(std::string_view key, std::span<const std::int64_t> indices) const;
-  Registry& take_values_(std::string_view key, std::span<const std::int64_t> indices);
-  Registry concat_values(std::string_view key, const Slot& other) const;
-  Registry& concat_values_(std::string_view key, const Slot& other);
+  Registry push(const Slot::Value& value) const;
+  Registry& push_(const Slot::Value& value);
+  Registry keep(std::string_view key,
+                const std::function<bool(const Slot::Value&)>& predicate) const;
+  Registry& keep_(std::string_view key,
+                  const std::function<bool(const Slot::Value&)>& predicate);
+  Registry morph(std::string_view key,
+                 const std::function<Slot::Value(const Slot::Value&)>& fn) const;
+  Registry& morph_(std::string_view key,
+                   const std::function<Slot::Value(const Slot::Value&)>& fn);
+  Registry take(std::string_view key, std::span<const std::int64_t> indices) const;
+  Registry take(std::string_view key, const std::vector<std::int64_t>& indices) const;
+  Registry& take_(std::string_view key, std::span<const std::int64_t> indices);
+  Registry& take_(std::string_view key, const std::vector<std::int64_t>& indices);
+  Registry concat(std::string_view key, const Slot& other) const;
+  Registry& concat_(std::string_view key, const Slot& other);
 
   // Explicit bridge with kindle model.
   // Use `to_kindle()` to access Catalog-only operations, then convert back with `from_kindle()`.
@@ -237,97 +210,27 @@ private:
   std::int64_t nslots() const;
   const std::vector<std::string>& keys() const;
   const std::vector<std::string>& field_names() const;
+  bool is_stream_compatible() const;
+  void ensure_stream_compatible(std::string_view where = "Registry") const;
   bool has_slot(std::string_view key) const;
   Slot slot(std::string_view key) const;
   std::optional<Slot> get_slot(std::string_view key) const;
   std::vector<Slot> slots() const;
   std::unordered_map<std::string, std::int64_t> slot_sizes() const;
-  Registry drop_empty_slots() const;
-  Registry& drop_empty_slots_();
+  Registry project(std::span<const std::string_view> fields) const;
+  Registry project(const std::vector<std::string>& fields) const;
+  Registry transform_fields(std::span<const std::string_view> fields,
+                            const std::function<Slot(const Slot&)>& fn) const;
   Registry set_slot(std::string_view key, const Slot& value) const;
   Registry& set_slot_(std::string_view key, const Slot& value);
   Registry set_slots(std::initializer_list<std::pair<std::string_view, Slot>> items) const;
   Registry& set_slots_(std::initializer_list<std::pair<std::string_view, Slot>> items);
   Registry set_slots(std::initializer_list<std::pair<std::string, Slot>> items) const;
   Registry& set_slots_(std::initializer_list<std::pair<std::string, Slot>> items);
-  Registry isnull(std::span<const std::string_view> fields) const;
-  Registry isnull(std::initializer_list<std::string_view> fields) const;
-  Registry notnull(std::span<const std::string_view> fields) const;
-  Registry notnull(std::initializer_list<std::string_view> fields) const;
-  Registry invalid(std::span<const std::string_view> fields) const;
-  Registry invalid(std::initializer_list<std::string_view> fields) const;
-  Registry fillnull(double value, std::span<const std::string_view> fields) const;
-  Registry fillnull(double value, std::initializer_list<std::string_view> fields) const;
-  Registry fillnull(std::string_view value, std::span<const std::string_view> fields) const;
-  Registry fillnull(std::string_view value, std::initializer_list<std::string_view> fields) const;
-  Registry fillnull(const pluss::Timeline& value, std::span<const std::string_view> fields) const;
-  Registry fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields) const;
-  Registry fillnull(const pluss::TimeIndex& value, std::span<const std::string_view> fields) const;
-  Registry fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields) const;
-  Registry dropnull(std::span<const std::string_view> fields) const;
-  Registry dropnull(std::initializer_list<std::string_view> fields) const;
-  Registry distinct(std::span<const std::string_view> fields,
-                    pluss::kindle::DistinctOptions options = {}) const;
-  Registry distinct(std::initializer_list<std::string_view> fields,
-                    pluss::kindle::DistinctOptions options = {}) const;
-  Registry freq(std::span<const std::string_view> fields,
-                pluss::kindle::FreqOptions options = {}) const;
-  Registry freq(std::initializer_list<std::string_view> fields,
-                pluss::kindle::FreqOptions options = {}) const;
-  Registry ndistinct(std::span<const std::string_view> fields,
-                     pluss::kindle::DistinctOptions options = {}) const;
-  Registry ndistinct(std::initializer_list<std::string_view> fields,
-                     pluss::kindle::DistinctOptions options = {}) const;
-  Registry cast(std::span<const std::string_view> fields,
-                pluss::table::ThreadCastTarget target,
-                const pluss::table::ThreadCastOptions& options = {}) const;
-  Registry cast(std::initializer_list<std::string_view> fields,
-                pluss::table::ThreadCastTarget target,
-                const pluss::table::ThreadCastOptions& options = {}) const;
-  Registry astype(std::span<const std::string_view> fields,
-                  pluss::codem::ScalarType dtype) const;
-  Registry astype(std::initializer_list<std::string_view> fields,
-                  pluss::codem::ScalarType dtype) const;
   const detail::RegistryImpl& impl_ref_() const;
   detail::RegistryImpl& mut_impl_();
 
   pluss::msharp::intrusive_ptr<detail::RegistryImpl> impl_{nullptr};
-};
-
-class RegistryFieldAccessor {
-public:
-  explicit RegistryFieldAccessor(Registry base, std::vector<std::string> keys);
-
-  RegistryCastAccessor cast() const;
-  RegistryCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
-  RegistryNoteAccessor nt() const;
-  RegistryTimelineAccessor tl() const;
-
-  Registry fillnull(double value) const;
-  Registry fillnull(std::string_view value) const;
-  Registry fillnull(const char* value) const {
-    return fillnull(std::string_view{value != nullptr ? value : ""});
-  }
-  Registry fillnull(const pluss::Timeline& value) const;
-  Registry fillnull(const pluss::TimeIndex& value) const;
-  Registry dropnull() const;
-  Registry isnull() const;
-  Registry notnull() const;
-  Registry invalid() const;
-  Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
-  Registry freq(pluss::kindle::FreqOptions options = {}) const;
-  Registry ndistinct(pluss::kindle::DistinctOptions options = {}) const;
-  Registry astype(pluss::codem::ScalarType dtype) const;
-
-private:
-  friend class RegistryCastAccessor;
-  friend class RegistryNoteAccessor;
-  friend class RegistryTimelineAccessor;
-  template <class Fn>
-  Registry map_selected_(Fn&& fn) const;
-
-  Registry base_{};
-  std::vector<std::string> keys_{};
 };
 
 class RegistryFieldAxisAccessor {
@@ -455,7 +358,7 @@ private:
 std::ostream& operator<<(std::ostream& os, const Registry& registry);
 
 template <pluss::detail::StringViewNameRange NameRange>
-RegistryFieldAccessor Registry::fields(const NameRange& keys) const {
+Registry Registry::fields(const NameRange& keys) const {
   return pluss::detail::with_name_span(keys, [&](auto names) { return fields(names); });
 }
 

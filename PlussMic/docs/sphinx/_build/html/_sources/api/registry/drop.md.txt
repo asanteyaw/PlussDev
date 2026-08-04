@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e67d1621ad06 -->
 
 # Registry::drop
 
@@ -18,13 +19,13 @@ Registry Registry::drop(const NameRange& keys) const
 ## What It Does
 
 Returns a new registry with the named field(s) removed, keeping every other field
-in its original order. The complement of [`select()`](select.md) — `select(keys)`
+in its original order. The complement of [`fields(keys)`](fields.md) — `fields(keys)`
 keeps only the named fields, `drop(keys)` keeps everything *except* them.
 
 ```{important} An unknown key throws — drop() does not silently ignore it
 Every overload validates all requested keys against the registry's fields before
 removing anything: a name that doesn't exist throws `"Registry::drop: unknown key '<name>'"`.
-This is the same fail-fast behavior [`select()`](select.md) has, and the opposite
+This is the same fail-fast behavior [`fields(keys)`](fields.md) has, and the opposite
 of [`has_all()`](has_all.md)/[`has_any()`](has_any.md), which report missing keys
 as `false` rather than throwing.
 ```
@@ -113,9 +114,9 @@ Registry::drop: unknown key 'zzz'
 
 ## See Also
 
-- [`Registry::select`](select.md): the complementary keep-only operation.
-- [`Registry::drop_empty`](drop_empty.md): a related but distinct operation —
-  drops fields by *emptiness*, not by name.
+- [`Registry::fields`](fields.md): the complementary keep-only operation.
+- [`Registry::prune`](prune.md): a related but distinct operation — drops fields
+  by *emptiness*, not by name.
 - [`Registry::has`](has.md) / [`Registry::has_all`](has_all.md): non-throwing
   presence checks, useful for validating keys before calling `drop()` if you're
   unsure they exist.
@@ -127,8 +128,8 @@ Registry::drop: unknown key 'zzz'
     <span class="label">Previous</span>
     <span class="title">distinct</span>
   </a>
-  <a class="next-link" href="drop_empty.html">
+  <a class="next-link" href="dropnull.html">
     <span class="label">Next</span>
-    <span class="title">drop_empty</span>
+    <span class="title">dropnull</span>
   </a>
 </div>

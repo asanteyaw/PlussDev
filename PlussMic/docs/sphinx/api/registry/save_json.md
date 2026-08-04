@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5ed48f7e6bb0 -->
 
 # Registry::save_json
 
@@ -14,13 +15,13 @@ void Registry::save_json(std::string_view filepath, const pluss::loader::Config&
 ## What It Does
 
 Writes the registry to a JSON file. Unlike every other `save_*` method,
-`save_json()` does **not** unconditionally require the registry to be
-stream-compatible — it branches on [`is_stream_compatible()`](is_stream_compatible.md):
+`save_json()` does **not** unconditionally require the registry to bridge cleanly
+into the kindle model:
 
-- **Stream-compatible** (every field holds one uniform value kind): converts via
+- **Uniform field kinds**: converts via
   [`to_kindle()`](to_kindle.md) and writes a row-major array-of-objects JSON, same
   shape as `Catalog::save_json()`.
-- **Not stream-compatible** (some field genuinely mixes value kinds): falls back to
+- **Mixed field kinds**: falls back to
   writing this registry's own [`to_json()`](to_json.md) output directly — the `config`
   parameter is ignored in this path.
 
@@ -38,7 +39,7 @@ registry at all, via its `to_json()` fallback.
 
 **config** (`const pluss::loader::Config&`, optional)
     A generic configuration bundle, translated into the underlying JSON writer
-    options. Ignored when the registry is not stream-compatible (the `to_json()`
+    options. Ignored when the registry takes the `to_json()`
     fallback path).
 
 ## Returns
@@ -91,8 +92,6 @@ auto mixed = pluss::bundle::Registry({
     {"mixed", pluss::bundle::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
 });
 
-std::cout << "is_stream_compatible: " << mixed.is_stream_compatible() << "\n";
-
 mixed.save_json("mixed.json");
 
 std::ifstream saved("mixed.json");
@@ -102,7 +101,6 @@ std::cout << saved.rdbuf();
 ### Output
 
 ```text
-is_stream_compatible: 0
 {
   "_type": "Registry",
   "defined": true,
@@ -140,7 +138,7 @@ ambiguous first value; see [`Registry::to_json`](to_json.md) for details.
 
 - The only `save_*` method that can succeed on a genuinely heterogeneous registry —
   see the important callout above.
-- The stream-compatible path's JSON shape matches
+- The uniform-kind path's JSON shape matches
   [`Catalog::save_json`](../catalog/save_json.md).
 - The fallback path's shape matches [`Registry::to_json`](to_json.md) exactly, since
   it writes that method's output verbatim.
@@ -153,10 +151,8 @@ ambiguous first value; see [`Registry::to_json`](to_json.md) for details.
 
 - [`Registry::load_json`](load_json.md): the read-side counterpart for the
   stream-compatible shape.
-- [`Registry::to_json`](to_json.md): the per-value output this method falls back to
-  for heterogeneous registries.
-- [`Registry::is_stream_compatible`](is_stream_compatible.md): the check that decides
-  which path this method takes.
+- [`Registry::to_json`](to_json.md): the per-value output this method falls back
+  to for heterogeneous registries.
 - [`Catalog::save_json`](../catalog/save_json.md): the equivalent saver on the
   kindle model.
 

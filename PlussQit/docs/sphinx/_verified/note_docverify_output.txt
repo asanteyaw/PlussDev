@@ -1,0 +1,164 @@
+== lower ==
+lower:
+  [0]   ada lovelace  
+  [1] 	grace hopper	
+  [2] linus
+== lower_strip ==
+lower_strip:
+  [0] ada lovelace
+  [1] grace hopper
+  [2] linus
+== strip ==
+strip:
+  [0] Ada Lovelace
+  [1] GRACE HOPPER
+  [2] Linus
+== strip_hash_space ==
+strip_hash_space:
+  [0] alpha
+  [1] beta
+  [2] gamma
+== strip_boundary_only ==
+strip_boundary_only:
+  [0] alpha#beta
+  [1] gamma
+== contains_exam ==
+contains_exam: 0 1 0
+== contains_exam_lower ==
+contains_exam_lower: 1 1 0
+== lengths_bytes ==
+lengths_bytes: 9 10 4
+== lengths_bytes_strip ==
+lengths_bytes_strip: 6 2
+== replace ==
+replace:
+  [0] mark: 75
+  [1] mark: 88
+  [2] pending
+== replace_underscore ==
+replace_underscore:
+  [0] Ada Lovelace
+  [1] Grace Hopper
+  [2] Linus
+== replace_then_contains ==
+replace_then_contains:
+  [0] exam_1
+  [1] exam_2
+  [2] final_exam
+== replace_then_contains_mask ==
+replace_then_contains_mask: 0 0 0
+== remove_all ==
+remove_all:
+  [0] alpha  
+  [1]  only
+== remove_all_strip ==
+remove_all_strip:
+  [0] alpha
+  [1] beta
+== remove_all_marker ==
+remove_all_marker:
+  [0] 001-id
+  [1] 204
+== quote ==
+quote:
+  [0] "alpha beta beta"
+  [1] "already"
+== quote_strip ==
+quote_strip:
+  [0] "spaced"
+  [1] ""
+== quote_display ==
+quote_display:
+  [0] "Ada Lovelace"
+  [1] "Grace Hopper"
+== split_whitespace ==
+split_whitespace tokens: [alpha] [beta] [gamma] [delta] [epsilon] [zeta]
+split_whitespace offsets: 0 3 6
+== split_whitespace_limit1 ==
+split_whitespace_limit1 tokens: [alpha] [beta gamma] [delta] [epsilon]
+split_whitespace_limit1 offsets: 0 2 4
+== split_whitespace_strip ==
+split_whitespace_strip tokens: [Ada] [Lovelace] [Grace] [Hopper]
+split_whitespace_strip offsets: 0 2 4
+== split_lines ==
+split_lines tokens: [line1] [line2] [solo]
+split_lines offsets: 0 2 3
+== split_lines_keep ==
+split_lines_keep tokens: [line1
+] [line2
+] [solo]
+split_lines_keep offsets: 0 2 3
+== split_comma_limit1 ==
+split_comma_limit1 tokens: [A] [b;c] [x] [y,z]
+split_comma_limit1 offsets: 0 2 4
+== split_colon ==
+split_colon tokens: [k] [v] [w] [id] [42]
+split_colon offsets: 0 3 5
+== split_arrow ==
+split_arrow tokens: [left] [right] [keep] [watch]
+split_arrow offsets: 0 2 4
+== regex_findall_digits ==
+regex_findall_digits tokens: [17] [2026] [08] [02] [204] [18] [30]
+regex_findall_digits offsets: 0 4 7
+== regex_findall_caps ==
+regex_findall_caps tokens: [AX] [BY]
+regex_findall_caps offsets: 0 1 2
+== regex_findall_tags ==
+regex_findall_tags tokens: [#alpha] [#beta]
+regex_findall_tags offsets: 0 1 2
+== tokenize_words ==
+tokenize_words tokens: [One] [Two] [A] [b] [c]
+tokenize_words offsets: 0 2 5
+== tokenize_words_lower ==
+tokenize_words_lower tokens: [ada] [lovelace] [grace] [hopper]
+tokenize_words_lower offsets: 0 2 4
+== tokenize_words_punct ==
+tokenize_words_punct tokens: [price] [12] [50] [paid] [ref] [A-17]
+tokenize_words_punct offsets: 0 4 6
+== nlp_remove_urls ==
+nlp_remove_urls:
+  [0] Visit and email team@pluss.dev
+  [1] Mirror for release notes
+== nlp_remove_urls_contains_http ==
+nlp_remove_urls_contains_http: 0 0
+== tex_escape ==
+tex_escape:
+  [0] Price is 50\% of \$x+y\$
+  [1] Use \textbackslash{}alpha and \textbackslash{}beta.
+== tex_escape_plain ==
+tex_escape_plain:
+  [0] chapter title
+  [1] plain text
+== tex_to_text ==
+tex_to_text:
+  [0] Text bold and . link
+== tex_to_text_inline ==
+tex_to_text_inline:
+  [0] Hello
+== nlp_mask_pii ==
+nlp_mask_pii:
+  [0] Email [EMAIL] at [TIME] on [DATE], pay [CUR] to [MENTION] [HASHTAG]
+  [1] Backup contact: [EMAIL]
+== nlp_mask_pii_contains_email ==
+nlp_mask_pii_contains_email: 1 1
+== base64_encode ==
+base64_encode:
+  [0] SGkh
+== base64_roundtrip ==
+base64_roundtrip:
+  [0] Hi!
+== base64_encode_batch ==
+base64_encode_batch:
+  [0] SGkh
+  [1] UGx1c3M=
+== url_encode ==
+url_encode:
+  [0] a%20b%2Bc
+== url_roundtrip ==
+url_roundtrip:
+  [0] a b+c
+== url_encode_batch ==
+url_encode_batch:
+  [0] a%20b%2Bc
+  [1] x%2Fy
+== end ==

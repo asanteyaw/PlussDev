@@ -349,7 +349,7 @@ void test_generated_timeindex_dataframe_family() {
   expect_eq_vec(rs.to_vec<double>(), std::vector<double>{3.0, 7.0},
                 "generated resample_agg(sum)");
 
-  const auto window = pluss::duration_hours(1);
+  const auto window = pluss::duration::hours(1);
   const auto roll = idx.rolling_agg(values, window, "sum");
   expect_eq_vec(roll.to_vec<double>(), std::vector<double>{1.0, 3.0, 6.0, 9.0},
                 "generated rolling_agg(sum)");

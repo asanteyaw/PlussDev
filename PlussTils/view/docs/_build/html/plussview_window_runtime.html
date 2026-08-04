@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>PlussTilsView In-House Window Runtime &#8212; PlussTils  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=59a8c7d2" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="PlussTilsView Architecture (Foundation)" href="plussview_architecture.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="plusstilsview-in-house-window-runtime">
+<h1>PlussTilsView In-House Window Runtime<a class="headerlink" href="#plusstilsview-in-house-window-runtime" title="Link to this heading">¶</a></h1>
+<section id="runtime-contract">
+<h2>Runtime contract<a class="headerlink" href="#runtime-contract" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">PlussWebView</span></code> parses HTML, lays out the document, paints a software-rendered
+pixel canvas, and presents that canvas in an operating-system window. It does
+not delegate HTML rendering or scrolling to WebKit.</p>
+<p>Select it through <code class="docutils literal notranslate"><span class="pre">HtmlWindowOptions::backend_preference</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">view</span><span class="o">::</span><span class="n">HtmlWindowOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">backend_preference</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">view</span><span class="o">::</span><span class="n">BackendPreference</span><span class="o">::</span><span class="n">PlussWebViewOnly</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">view</span><span class="o">::</span><span class="n">show_html_window</span><span class="p">(</span><span class="n">html</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="scrolling-behavior">
+<h2>Scrolling behavior<a class="headerlink" href="#scrolling-behavior" title="Link to this heading">¶</a></h2>
+<p>The in-house viewer exposes independent two-axis scroll regions for the
+document and for every rendered table.</p>
+<ul class="simple">
+<li><p>A trackpad scroll preserves the platform’s precise pixel delta.</p></li>
+<li><p>A wheel notch advances by a stable 40-pixel line step.</p></li>
+<li><p>The region under the pointer receives the input.</p></li>
+<li><p>When a nested table reaches an edge, unused movement continues into the
+document.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Shift</span></code> plus a vertical wheel scrolls horizontally.</p></li>
+<li><p>Horizontal and vertical scrollbar tracks support page clicks.</p></li>
+<li><p>Scrollbar thumbs support direct dragging.</p></li>
+<li><p>Dragging table or document content pans it on both axes.</p></li>
+<li><p>Table positions remain independent and survive temporary removal from the
+visible layout.</p></li>
+<li><p>Resizing clamps every offset to the new content boundary.</p></li>
+</ul>
+<p>Keyboard commands are <code class="docutils literal notranslate"><span class="pre">Up</span></code>, <code class="docutils literal notranslate"><span class="pre">Down</span></code>, <code class="docutils literal notranslate"><span class="pre">Left</span></code>, <code class="docutils literal notranslate"><span class="pre">Right</span></code>, <code class="docutils literal notranslate"><span class="pre">Page</span> <span class="pre">Up</span></code>, <code class="docutils literal notranslate"><span class="pre">Page</span> <span class="pre">Down</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Home</span></code>, and <code class="docutils literal notranslate"><span class="pre">End</span></code>. Keyboard input targets the region beneath the most recent
+pointer position and otherwise targets the document.</p>
+</section>
+<section id="runtime-components">
+<h2>Runtime components<a class="headerlink" href="#runtime-components" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Scene</span></code> stores renderer commands.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PixelCanvas</span></code> owns the RGBA frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SoftwareRenderer</span></code> rasterizes scenes with nested clipping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ViewerRuntime</span></code> owns canvas configuration and frame submission.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HtmlScrollModel</span></code> owns floating-point offsets, nested routing, edge
+propagation, keyboard navigation, and pointer dragging.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IWindowShell</span></code> carries resize, pointer, text, and shortcut events.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CocoaWindowShell</span></code> is the current native shell implementation.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">HtmlRenderStats</span></code> is the contract between layout and input. It publishes
+document overflow, table scroll regions, and track/thumb rectangles after
+every layout. <code class="docutils literal notranslate"><span class="pre">HtmlScrollModel::update_metrics()</span></code> consumes those values and
+clamps state before the next frame.</p>
+</section>
+<section id="validation">
+<h2>Validation<a class="headerlink" href="#validation" title="Link to this heading">¶</a></h2>
+<p>Build and run the focused regression suite:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>--build<span class="w"> </span>build_cpp_env<span class="w"> </span>--target<span class="w"> </span>plussview_html_scroll_tests
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build_cpp_env<span class="w"> </span>-R<span class="w"> </span>plussview_html_scroll_tests<span class="w"> </span>--output-on-failure
+</pre></div>
+</div>
+<p>The suite covers horizontal and vertical document overflow, nested edge
+propagation, multiple independent tables, anonymous table identity, precise
+and notched input, Shift-wheel mapping, track clicks, thumb dragging, content
+dragging, keyboard navigation, resize clamping, and visible frame changes.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">plusstils_view_inhouse_scroll_showcase</span></code> target opens the real
+<code class="docutils literal notranslate"><span class="pre">PlussWebViewOnly</span></code> Cocoa path with wide and tall document content plus two
+independently scrollable tables.</p>
+</section>
+<section id="remaining-platform-gaps">
+<h2>Remaining platform gaps<a class="headerlink" href="#remaining-platform-gaps" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Linux and Windows still need in-house native shell adapters.</p></li>
+<li><p>Text shaping and font fallback do not yet cover the full Unicode surface.</p></li>
+<li><p>The software renderer is CPU-based; there is no GPU compositor.</p></li>
+</ol>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussTils</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussTils API Reference</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussTils API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plussview_architecture.html">PlussTilsView Architecture (Foundation)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PlussTilsView In-House Window Runtime</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#runtime-contract">Runtime contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scrolling-behavior">Scrolling behavior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#runtime-components">Runtime components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation">Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#remaining-platform-gaps">Remaining platform gaps</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="plussview_architecture.html" title="previous chapter">PlussTilsView Architecture (Foundation)</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/plussview_window_runtime.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

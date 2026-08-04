@@ -12,6 +12,19 @@ notes. This page is the curated entry point into them.
 - [Series API Reference](sphinx/series_api_reference.md): the per-method reference
   for `Series` — one page per method, with real, verified examples. The primary
   entry point; start here.
+- [Note API Reference](sphinx/note_api_reference.md): the handwritten per-method
+  reference for `Note` — the vectorized text object for cleanup, tokenization,
+  regex work, NLP-style text preprocessing, and TeX-aware transforms.
+- [Timeline API Reference](sphinx/timeline_api_reference.md): the handwritten
+  per-method reference for `Timeline` — the general temporal payload for scalar,
+  vector, and N-D time data.
+- [Duration API Reference](sphinx/duration_api_reference.md): the handwritten
+  per-method reference for `Duration` — the elapsed-time counterpart to
+  `Timeline`, for `Timeline - Timeline` results and `Timeline ± Duration`
+  arithmetic.
+- [TimeIndex API Reference](sphinx/timeindex_api_reference.md): the handwritten
+  per-method reference for `TimeIndex` — the 1D temporal axis object for search,
+  slicing, resampling, rolling windows, and alignment.
 - [Series Methods](Series_Methods.md): the naming-philosophy note (method-first vs.
   free functions, `pile`/`unite` naming deviations).
 - [Method Index](coden_method_index.md): a flat cross-referenced index of the whole
@@ -24,6 +37,10 @@ notes. This page is the curated entry point into them.
 :maxdepth: 1
 
 sphinx/series_api_reference
+sphinx/note_api_reference
+sphinx/timeline_api_reference
+sphinx/duration_api_reference
+sphinx/timeindex_api_reference
 ```
 
 ## Type system and semantics

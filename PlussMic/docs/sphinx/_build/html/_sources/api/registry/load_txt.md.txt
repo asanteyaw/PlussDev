@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 624d39e09431 -->
 
 # Registry::load_txt
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4f64cbbbcca2 -->
 <section id="registry-save-csv">
 <h1>Registry::save_csv<a class="headerlink" href="#registry-save-csv" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -116,15 +117,16 @@ Writes the file as a side effect; produces no return value.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Registry::save_as: slot &#39;mixed&#39;: slot is not stream-compatible (kind=Mixed)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Registry::to_kindle: slot &#39;mixed&#39;: slot is not stream-compatible (kind=Mixed)
 </pre></div>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>The throw message says “save_as”, not “save_csv”
-Every <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method except <code class="docutils literal notranslate"><span class="pre">save_json()</span></code> routes through the same internal
-helper, which reports the error under the name <code class="docutils literal notranslate"><span class="pre">&quot;Registry::save_as&quot;</span></code> regardless of
-which <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method was actually called.</p>
+<p>The throw message says “to_kindle”, not “save_csv”
+Every <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method except <code class="docutils literal notranslate"><span class="pre">save_json()</span></code> routes through
+<a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> internally, so the stream-compatibility check
+reports the error under the name <code class="docutils literal notranslate"><span class="pre">&quot;Registry::to_kindle&quot;</span></code> regardless of which
+<code class="docutils literal notranslate"><span class="pre">save_*</span></code> method was actually called.</p>
 </div>
 </section>
 </section>

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 21815157b626 -->
 <section id="registry-sample">
 <h1>Registry::sample<a class="headerlink" href="#registry-sample" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -93,9 +94,9 @@ index list across all fields.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">);</span>
 
 <span class="kt">bool</span><span class="w"> </span><span class="n">same_ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">first</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">first</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span>
-<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">second</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">first</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">first</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">second</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">same_ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
@@ -148,9 +149,8 @@ debugging).</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::take</span></code></span></a>: the underlying selection mechanism <code class="docutils literal notranslate"><span class="pre">sample()</span></code> builds
 its shuffled index list for.</p></li>
-<li><p><a class="reference internal" href="is_stream_compatible.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::is_stream_compatible</span></code></span></a>: a related but
-distinct per-field uniformity check — value-kind uniformity, not length
-uniformity.</p></li>
+<li><p><a class="reference internal" href="profiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::profiles</span></code></span></a>: inspect per-field type composition when
+you want to understand kind uniformity rather than length uniformity.</p></li>
 <li><p><a class="reference internal" href="../catalog/sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::sample</span></code></span></a>: the equivalent operation on the
 kindle model.</p></li>
 </ul>

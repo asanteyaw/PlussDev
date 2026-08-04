@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e960a909b7a3 -->
 
 # Registry::save_as
 

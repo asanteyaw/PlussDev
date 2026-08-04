@@ -1,0 +1,140 @@
+<!-- pluss-hand-authored -->
+
+# Series::flatten
+
+[Back to Series API Reference](../../series_api_reference)
+
+## Signature
+
+```cpp
+Series::flatten() const -> Series
+Series::flatten(std::int64_t start_dim) const -> Series
+Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const -> Series
+```
+
+## What It Does
+
+Collapses a contiguous range of axes into one axis.
+
+`flatten()` is a shape-composition helper, not a data-dependent transform. It
+is implemented by building the target shape and delegating to
+[`reshape()`](reshape.md), which means it inherits `reshape()`'s policy:
+
+- if the current layout can be reinterpreted directly, the result is a view
+- if not, a contiguous materialization happens first
+
+That is why `flatten()` works on both contiguous and non-contiguous inputs while
+still preserving the logical value order of the input it was given.
+
+## Parameters
+
+**start_dim** (`std::int64_t`)
+
+The first axis to include in the flattened range. Defaults to `0`.
+
+**end_dim** (`std::int64_t`)
+
+The last axis to include in the flattened range. Defaults to `-1`, meaning the
+last axis.
+
+Both parameters accept negative indexing. After normalization:
+
+- both must be valid axis indices
+- `start_dim` must be less than or equal to `end_dim`
+
+## Returns
+
+`Series`
+    A `Series` whose selected axis range has been replaced by one axis whose
+    length is the product of the removed axes' lengths.
+
+## Gradient
+
+`flatten()` is differentiable. Backward reshapes the outgoing sensitivity back
+to the original shape.
+
+This is exactly what you want from a pure shape op: the sensitivity keeps the
+same element ordering, just expressed again under the original rank.
+
+## Examples
+
+Example 1. The zero-argument overload flattens the whole series.
+
+```cpp
+auto cube = pluss::make_series(
+    std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
+std::cout << cube.flatten();
+```
+
+### Output
+
+```text
+pluss::Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[1, 2, 3, 4, 5, 6, 7, 8]
+```
+
+All three axes collapse into one length-`8` axis.
+
+Example 2. The one-argument overload keeps the leading axes and flattens from
+`start_dim` to the end.
+
+```cpp
+std::cout << cube.flatten(1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[1, 2, 3, 4],
+  [5, 6, 7, 8]]
+```
+
+Axis `0` stays intact. Axes `1` and `2` are multiplied together into one axis
+of length `4`.
+
+Example 3. On a non-contiguous input, `flatten()` preserves logical order, not
+the parent's original physical layout.
+
+```cpp
+std::cout << cube.transpose(0, 1).flatten(1, 2);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[1, 2, 5, 6],
+  [3, 4, 7, 8]]
+```
+
+That output reflects the transposed logical view first, then the flatten. This
+is the practical consequence of `flatten()` delegating through
+[`reshape()`](reshape.md): if a copy is needed, the copy is made from the
+current logical ordering of the input, not from some earlier parent layout.
+
+## Notes
+
+- `flatten()` is a reshape-style op, not an indexing op.
+- The default overload is equivalent to flattening from axis `0` through the
+  last axis.
+- Non-contiguous inputs are supported through the same fallback policy as
+  [`reshape()`](reshape.md).
+
+## See Also
+
+- [`Series::reshape`](reshape.md): the more general shape-change primitive that
+  `flatten()` builds on.
+- [`Series::squeeze`](squeeze.md): remove size-`1` axes instead of multiplying a
+  whole axis range together.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="squeeze.html">
+    <span class="label">Previous</span>
+    <span class="title">squeeze</span>
+  </a>
+  <a class="next-link" href="unite.html">
+    <span class="label">Next</span>
+    <span class="title">unite</span>
+  </a>
+</div>

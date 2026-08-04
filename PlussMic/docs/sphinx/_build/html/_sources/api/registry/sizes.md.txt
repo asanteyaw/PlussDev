@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0b677115c844 -->
 
 # Registry::sizes
 
@@ -65,7 +66,7 @@ b: 2
   field count in one call, rather than every field's individual length.
 - [`Registry::size`](size.md) / [`Registry::nfields`](nfields.md): the field-count
   methods this one is not to be confused with.
-- [`Registry::type_profiles`](type_profiles.md): the per-field *type* breakdown,
+- [`Registry::profiles`](profiles.md): the per-field *type* breakdown,
   a related but distinct summary.
 
 <div class="pluss-inline-prev-next">

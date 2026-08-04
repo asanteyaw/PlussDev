@@ -67,7 +67,7 @@ becomes `Note`.
 
 ## See Also
 
-- [`Catalog::load_csv_with_key`](load_csv_with_key.md): the same CSV loading, plus
+- [`Catalog::load_labeled`](load_labeled.md): the same CSV loading, plus
   promoting one column to the case-label axis.
 - [`Catalog::load`](load.md): the format-dispatching entry point this method backs.
 - [`Catalog::save_csv`](save_csv.md): the write-side counterpart.
@@ -77,8 +77,8 @@ becomes `Note`.
     <span class="label">Previous</span>
     <span class="title">load</span>
   </a>
-  <a class="next-link" href="load_csv_with_key.html">
+  <a class="next-link" href="load_labeled.html">
     <span class="label">Next</span>
-    <span class="title">load_csv_with_key</span>
+    <span class="title">load_labeled</span>
   </a>
 </div>

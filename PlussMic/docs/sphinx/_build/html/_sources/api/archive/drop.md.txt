@@ -16,10 +16,11 @@ Archive::drop(const std::vector<std::string>& keys) const -> Archive
 ## What It Does
 
 Returns a new archive with the named streams removed, applied to every catalog — the
-inverse of [`select()`](select.md). Delegates to each catalog's own `Catalog::drop()`, so
-(perhaps surprisingly) a `keys` entry that doesn't exist in some catalog still throws that
-catalog's own `"Catalog::drop: unknown key '<name>'"` rather than silently skipping it.
-Depth labels (if set) are preserved on the result.
+inverse of projecting keys with [`keys(...)`](keys.md). Delegates to each
+catalog's own `Catalog::drop()`, so (perhaps surprisingly) a `keys` entry that doesn't
+exist in some catalog still throws that catalog's own `"Catalog::drop: unknown key
+'<name>'"` rather than silently skipping it. Depth labels (if set) are preserved on the
+result.
 
 ```{important} Dropping an already-absent key throws — this is not a tolerant no-op
 Unlike some "drop if present" APIs, `Archive::drop()` requires every named key to actually
@@ -106,7 +107,7 @@ Catalog::drop: unknown key 'city'
 
 ## See Also
 
-- [`Archive::select`](select.md): the inverse — keep named streams instead of removing them.
+- [`Archive::keys`](keys.md): keep named streams instead of removing them.
 - [`Archive::has`](has.md): confirm a key exists in every catalog before dropping it.
 
 <div class="pluss-inline-prev-next">

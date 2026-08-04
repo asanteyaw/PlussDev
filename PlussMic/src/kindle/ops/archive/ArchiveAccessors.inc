@@ -19,11 +19,12 @@ ArchiveLabelAccessor Archive::label() const {
   return ArchiveLabelAccessor(*this);
 }
 
-ArchiveKeyAccessor Archive::keys(std::span<const std::string_view> keys) const {
-  return ArchiveKeyAccessor(*this, normalize_archive_keys(keys));
+Archive Archive::keys(std::span<const std::string_view> keys) const {
+  const auto selected = normalize_archive_keys(keys);
+  return map_catalogs([&](const Catalog& catalog) { return catalog.keys(selected); });
 }
 
-ArchiveKeyAccessor Archive::keys(std::initializer_list<std::string_view> keys) const {
+Archive Archive::keys(std::initializer_list<std::string_view> keys) const {
   return this->keys(std::span<const std::string_view>(keys.begin(), keys.size()));
 }
 
@@ -142,6 +143,7 @@ Archive ArchiveKeyAxisAccessor::suffix(std::string_view suffix) const {
 ArchiveKeyAccessor::ArchiveKeyAccessor(Archive archive, std::vector<std::string> keys)
     : archive_(std::move(archive)), keys_(std::move(keys)) {
   PLUSS_CHECK(archive_.defined(), "Archive::keys: undefined handle");
+  if (archive_.empty()) return;
   PLUSS_CHECK(!keys_.empty(), "Archive::keys: at least one key is required");
   for (const auto& key : keys_) {
     PLUSS_CHECK(archive_.has(key), "Archive::keys: unknown key '" + key + "'");

@@ -52,12 +52,8 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="apply_slot.html">
-    <span class="label">Previous</span>
-    <span class="title">apply_slot</span>
-  </a>
-  <a class="next-link" href="concat_depth.html">
+  <a class="next-link" href="cast.html">
     <span class="label">Next</span>
-    <span class="title">concat_depth</span>
+    <span class="title">cast</span>
   </a>
 </div>

@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2c0222ae3185 -->
+
 # Registry::as_kindle
 
 [Back to Registry API Reference](../../registry_api_reference)
@@ -5,12 +8,16 @@
 ## Signature
 
 ```cpp
-Registry::as_kindle() -> pluss::kindle::Catalog
+pluss::kindle::Catalog Registry::as_kindle() const
 ```
 
 ## What It Does
 
-Converts or reinterprets the current payload as another public Pluss type so downstream operations route through the right text, numeric, or temporal surface.
+A pure alias for [`to_kindle()`](to_kindle.md) — converts the registry into a
+`pluss::kindle::Catalog`. `as_kindle()` exists for call sites that read
+naturally as "treat this as a kindle-model object"; `to_kindle()` exists for the
+more literal "convert to kindle" framing. There is no behavioral difference,
+including the same stream-compatibility requirement.
 
 ## Parameters
 
@@ -19,41 +26,40 @@ Converts or reinterprets the current payload as another public Pluss type so dow
 ## Returns
 
 `pluss::kindle::Catalog`
-    Value produced by this call.
+    A new catalog with one stream per field — identical to what `to_kindle()`
+    would return.
 
 ## Examples
 
-Example 1. Convert the current object into the `kindle` representation before continuing with another type-specific workflow.
+Example 1. `as_kindle()` and `to_kindle()` produce equivalent catalogs.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
 });
 
-auto out = rg.as_kindle();
+std::cout << rg.as_kindle().nkeys();
 ```
 
 ### Output
 
 ```text
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+1
 ```
 
-## Bridge Behavior
+## Notes
 
-- `as_kindle()` converts the registry into the Kindle/Catalog model.
-- Use this when the next operation is stream-oriented rather than bundle-oriented.
+- Identical to `to_kindle()` in every respect, including throwing on a
+  non-stream-compatible field.
 
+## See Also
 
+- [`Registry::to_kindle`](to_kindle.md): the method this is a pure alias for.
+- [`Registry::kindelize`](kindelize.md): another pure alias for the same
+  method.
+- [`Registry::from_kindle`](from_kindle.md): the inverse conversion.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="apply_all.html">
-    <span class="label">Previous</span>
-    <span class="title">apply_all</span>
-  </a>
   <a class="next-link" href="begin.html">
     <span class="label">Next</span>
     <span class="title">begin</span>

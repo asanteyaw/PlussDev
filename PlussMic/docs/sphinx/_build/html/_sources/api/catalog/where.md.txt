@@ -72,7 +72,6 @@ city                     | Note         | Note             | 3       | [Accra, K
 
 - [`Catalog::filter`](filter.md): the method this is an alias for — see that page for the
   full documentation.
-- [`Catalog::masked_select`](masked_select.md): another alias for the same method.
 - [`Catalog::query`](query.md): build the mask from a callback instead of constructing it
   beforehand.
 

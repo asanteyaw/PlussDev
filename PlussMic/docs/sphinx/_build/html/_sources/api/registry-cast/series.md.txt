@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: add01b15668a -->
+
 # RegistryCastAccessor::series
 
 [Back to RegistryCastAccessor API Reference](../../registry_cast_accessor_api_reference)
@@ -5,12 +8,20 @@
 ## Signature
 
 ```cpp
-RegistryCastAccessor::series() -> Registry
+Registry RegistryCastAccessor::series() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Casts every bound field's values to `Series`-kind and returns a new registry
+with those fields replaced.
+
+```{important} Unparseable text becomes null, not a throw
+Casting a `Note` value that can't be parsed as numeric (e.g. `"Accra"`) doesn't
+throw — it silently becomes a null value (`std::monostate`) in the resulting
+field. Check [`Registry::isnull`](../registry/isnull.md) after casting if you
+need to detect values that failed to convert.
+```
 
 ## Parameters
 
@@ -19,29 +30,73 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    A new registry with every bound field cast to `Series`-kind; every
+    unbound field unchanged.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Cast a `Note` field of numeric-looking text to `Series`.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_note("1"), pluss::make_note("2")})},
 });
-auto cast = rg.fields({"ids"}).cast();
 
-auto out = cast.series();
-std::cout << out;
+auto out = rg.fields({"id"}).cast().series();
+auto ids = out.fields("id");
+std::cout << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0] << " ";
+std::cout << std::get<pluss::Series>(ids.at(1)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+1 2
 ```
 
+Example 2. Unparseable text becomes null rather than throwing — see the
+important callout above.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+});
+
+auto out = rg.fields({"city"}).cast().series();
+std::cout << out.fields("city").to_json();
+```
+
+### Output
+
+```text
+{
+  "_type": "Slot",
+  "defined": true,
+  "size": 2,
+  "values": [
+    null,
+    null
+  ]
+}
+```
+
+## Notes
+
+- Bound via [`Registry::cast()`](../registry/cast.md) — remember that entry
+  point binds *every* field of the registry it's called on, so scope it with
+  [`fields(keys)`](../registry/fields.md) first if you only want to cast some
+  fields.
+- See the important callout above for the silent-null behavior on unparseable
+  text.
+
+## See Also
+
+- [`RegistryCastAccessor::note`](note.md): the inverse direction, casting
+  numeric fields to text.
+- [`Registry::cast`](../registry/cast.md): the entry point this accessor is
+  reached from.
+- [`Slot::cast`](../slot/cast.md): the per-field casting this method applies
+  across every bound field.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="note.html">

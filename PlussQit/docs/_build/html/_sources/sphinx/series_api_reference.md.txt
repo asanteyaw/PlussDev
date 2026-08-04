@@ -28,6 +28,19 @@ factories, then the autograd-sensitive family) rather than alphabetically. Every
 page here is real, hand-verified prose — nothing below is a mechanically generated
 stub.
 
+The current handwritten shape and slice/indexing cluster now covers:
+
+- shape introspection: `size`, `sizes`
+- view reshaping: `view`, `reshape`, `transpose`, `permute`, `unsqueeze`,
+  `squeeze`, `flatten`
+- combine/build primitives: `unite`, `pile`
+- basic and dynamic selection: `pos`, `slice`, `traverse_slice`, `block`,
+  `extract`, `index`
+- selector writes: `traverse_put_`, `traverse_put`, `extract_put`,
+  `extract_put_`, `index_put`, `index_put_`
+- flat gather/scatter primitives: `take`, `put_`
+- elementwise comparison/bounds helpers and a few load-bearing utility ops
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -37,13 +50,26 @@ api/series/size
 api/series/sizes
 api/series/view
 api/series/reshape
+api/series/transpose
+api/series/permute
+api/series/unsqueeze
+api/series/squeeze
+api/series/flatten
+api/series/unite
+api/series/pile
 api/series/slice
+api/series/traverse_slice
+api/series/traverse_put_
+api/series/traverse_put
 api/series/block
 api/series/extract
 api/series/extract_put
 api/series/extract_put_
 api/series/index
+api/series/index_put
 api/series/index_put_
+api/series/take
+api/series/put_
 api/series/clamp_max
 api/series/clamp_min
 api/series/copy_

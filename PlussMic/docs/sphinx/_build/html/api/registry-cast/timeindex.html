@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,18 +34,23 @@
 
           <div class="body" role="main">
             
-  <section id="registrycastaccessor-timeindex">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 16cb0bc0a5d8 -->
+<section id="registrycastaccessor-timeindex">
 <h1>RegistryCastAccessor::timeindex<a class="headerlink" href="#registrycastaccessor-timeindex" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_cast_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryCastAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RegistryCastAccessor</span><span class="o">::</span><span class="n">timeindex</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">RegistryCastAccessor</span><span class="o">::</span><span class="n">timeindex</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Casts every bound field’s values to <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind and returns a new
+registry with those fields replaced. Behaves the same as
+<a class="reference internal" href="timeline.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">timeline()</span></code></span></a>, including throwing (rather than nulling) on
+unparseable text.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -54,26 +59,75 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry with every bound field cast to <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind; every
+unbound field unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Cast a <code class="docutils literal notranslate"><span class="pre">Note</span></code> field of date-looking text to <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;created_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;2024-01-01&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;2024-01-02&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ids&quot;</span><span class="p">}).</span><span class="n">cast</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cast</span><span class="p">.</span><span class="n">timeindex</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;created_at&quot;</span><span class="p">}).</span><span class="n">cast</span><span class="p">().</span><span class="n">timeindex</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;created_at&quot;</span><span class="p">).</span><span class="n">to_json</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Slot&quot;,
+  &quot;defined&quot;: true,
+  &quot;size&quot;: 2,
+  &quot;values&quot;: [
+    &quot;TimeIndex[size=1]&quot;,
+    &quot;TimeIndex[size=1]&quot;
+  ]
+}
 </pre></div>
 </div>
+<p>Example 2. Text that doesn’t parse as a datetime throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">cast</span><span class="p">().</span><span class="n">timeindex</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>moment: failed to parse datetime
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Bound via <a class="reference internal" href="../registry/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::cast()</span></code></span></a> — remember that entry
+point binds <em>every</em> field of the registry it’s called on, so scope it with
+<a class="reference internal" href="../registry/fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(keys)</span></code></span></a> first if you only want to cast some
+fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>’s <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> type tag reports <code class="docutils literal notranslate"><span class="pre">&quot;TimeIndex[size=N]&quot;</span></code>, distinct
+from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;Timeline[numel=N]&quot;</span></code> — a small naming difference between
+the two datetime kinds.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="timeline.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryCastAccessor::timeline</span></code></span></a>: the related cast target,
+with the same parse-failure throwing behavior.</p></li>
+<li><p><a class="reference internal" href="series.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryCastAccessor::series</span></code></span></a>: the numeric cast target, with a
+different (silent-null) failure mode for unparseable input.</p></li>
+<li><p><a class="reference internal" href="../registry/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::cast</span></code></span></a>: the entry point this accessor is
+reached from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="series.html">
     <span class="label">Previous</span>
@@ -84,7 +138,6 @@ Value produced by this call.</p>
     <span class="title">timeline</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -13,6 +13,7 @@
 
 #include "MSharp/RangeView.h"
 #include "pluss/codeh/codeh.h"
+#include "pluss/codeh/duration_factory.h"
 #include "pluss/codeh/internal/timeline_factory_detail.h"
 #include "pluss/detail/factory_containers.h"
 #include "pluss/detail/nested_timeline_literal.h"
@@ -29,8 +30,9 @@ namespace pluss {
 // make_timeline(flat, sizes)           -> N-D Timeline (0D..3D)
 // from_epoch_nanos(...)               -> from int64 epoch nanos
 //
-// Duration factories:
-// duration_seconds(5) -> scalar Duration
+// Duration has its own dedicated factory namespace, `pluss::duration::`
+// (`pluss::duration::seconds(5)`, `pluss::duration::range(...)`, etc.) --
+// see duration_factory.h, included above for transitive availability.
 
 inline pluss::codeh::Timeline make_timeline(std::string_view s) {
   const std::array<std::string_view, 1> flat{s};
@@ -96,35 +98,6 @@ inline pluss::codeh::Timeline from_epoch_nanos(pluss::msharp::RangeView::Of<std:
   return pluss::codeh::ops_internal::timeline_from_epoch_nanos(
       std::span<const std::int64_t>(flat.data(), flat.size()),
       shape.span());
-}
-
-// ---- Duration ----
-inline pluss::codeh::Duration duration_nanos(std::int64_t nanos) {
-  const std::array<std::int64_t,1> flat{nanos};
-  return pluss::codeh::ops_internal::duration_from_nanos(flat, {});
-}
-
-inline pluss::codeh::Duration duration_seconds(std::int64_t s) {
-  return duration_nanos(s * 1000000000LL);
-}
-
-inline pluss::codeh::Duration duration_minutes(std::int64_t m) {
-  return duration_seconds(m * 60LL);
-}
-
-inline pluss::codeh::Duration duration_hours(std::int64_t h) {
-  return duration_minutes(h * 60LL);
-}
-
-inline pluss::codeh::Duration duration_days(std::int64_t d) {
-  return duration_hours(d * 24LL);
-}
-
-// ---- Range helpers ----
-inline pluss::codeh::Duration timedelta_range(const pluss::codeh::Duration& start,
-                                              const pluss::codeh::Duration& end,
-                                              const pluss::codeh::Duration& step) {
-  return pluss::codeh::Duration::range(start, end, step);
 }
 
 inline pluss::codeh::Timeline date_range(const pluss::codeh::Timeline& start,

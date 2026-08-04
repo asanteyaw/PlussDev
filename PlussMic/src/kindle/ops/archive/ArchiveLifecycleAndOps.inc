@@ -134,9 +134,9 @@ std::int64_t Archive::maxkeys() const {
 std::int64_t Archive::nrecords() const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   if (impl_ref_().catalogs_.empty()) return 0;
-  const auto n = impl_ref_().catalogs_.front().nrecords();
+  const auto n = impl_ref_().catalogs_.front().nrows();
   for (const auto& catalog : impl_ref_().catalogs_) {
-    PLUSS_CHECK(catalog.nrecords() == n, "Archive::nrecords: catalogs have different record counts");
+    PLUSS_CHECK(catalog.nrows() == n, "Archive::nrecords: catalogs have different record counts");
   }
   return n;
 }
@@ -144,9 +144,9 @@ std::int64_t Archive::nrecords() const {
 std::int64_t Archive::minrecords() const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   if (impl_ref_().catalogs_.empty()) return 0;
-  auto out = impl_ref_().catalogs_.front().minrecords();
+  auto out = impl_ref_().catalogs_.front().minrows();
   for (const auto& catalog : impl_ref_().catalogs_) {
-    out = std::min(out, catalog.minrecords());
+    out = std::min(out, catalog.minrows());
   }
   return out;
 }
@@ -154,9 +154,9 @@ std::int64_t Archive::minrecords() const {
 std::int64_t Archive::maxrecords() const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   if (impl_ref_().catalogs_.empty()) return 0;
-  auto out = impl_ref_().catalogs_.front().maxrecords();
+  auto out = impl_ref_().catalogs_.front().maxrows();
   for (const auto& catalog : impl_ref_().catalogs_) {
-    out = std::max(out, catalog.maxrecords());
+    out = std::max(out, catalog.maxrows());
   }
   return out;
 }
@@ -257,18 +257,6 @@ bool Archive::has(std::string_view key) const {
   return true;
 }
 
-Archive Archive::select(std::span<const std::string_view> keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.select(keys); });
-}
-
-Archive Archive::select(std::initializer_list<std::string_view> keys) const {
-  return select(std::span<const std::string_view>(keys.begin(), keys.size()));
-}
-
-Archive Archive::select(const std::vector<std::string>& keys) const {
-  return map_catalogs([&](const Catalog& catalog) { return catalog.select(keys); });
-}
-
 Archive Archive::drop(std::span<const std::string_view> keys) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.drop(keys); });
 }
@@ -327,6 +315,16 @@ Archive Archive::notnull() const {
 
 Archive Archive::invalid() const {
   return map_catalogs([](const Catalog& catalog) { return catalog.invalid(); });
+}
+
+ArchiveCastAccessor Archive::cast() const {
+  if (empty()) return ArchiveCastAccessor(*this, {}, {});
+  return ArchiveCastAccessor(*this, catalog(0).keys(), {});
+}
+
+ArchiveCastAccessor Archive::cast(const pluss::table::ThreadCastOptions& options) const {
+  if (empty()) return ArchiveCastAccessor(*this, {}, options);
+  return ArchiveCastAccessor(*this, catalog(0).keys(), options);
 }
 
 Archive Archive::cast(pluss::table::ThreadCastTarget target,

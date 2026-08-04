@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f24df731c89b -->
+
 # RegistryFieldAxisAccessor::note
 
 [Back to RegistryFieldAxisAccessor API Reference](../../registry_fieldaxis_accessor_api_reference)
@@ -5,12 +8,14 @@
 ## Signature
 
 ```cpp
-RegistryFieldAxisAccessor::note() -> Registry
+Registry RegistryFieldAxisAccessor::note() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+A named shorthand for [`kind(SlotKind::Note)`](kind.md) — returns a new
+registry containing only the fields whose `Slot::kind()` is `SlotKind::Note`
+(every value in the field is a `pluss::Note` scalar; no nulls, no other kinds).
 
 ## Parameters
 
@@ -19,29 +24,39 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    A new registry containing only the `Note`-kind fields.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Select the text field(s) out of a mixed-kind registry.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
-auto fieldaxis = rg.fieldaxis();
 
-auto out = fieldaxis.note();
-std::cout << out;
+auto out = rg.fieldaxis().note();
+for (const auto& key : out.fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+city
 ```
 
+## Notes
+
+- Equivalent to `kind(SlotKind::Note)` — see [`kind()`](kind.md) for the
+  general form.
+
+## See Also
+
+- [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
+  wraps.
+- [`RegistryFieldAxisAccessor::series`](series.md) / [`timeline`](timeline.md) /
+  [`timeindex`](timeindex.md): the shorthands for the other scalar kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mixed.html">

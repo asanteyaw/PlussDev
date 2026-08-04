@@ -23,7 +23,7 @@ exclude_patterns = [
 html_theme = 'alabaster'
 html_static_path = ['_static']
 html_css_files = ['api_ref.css']
-html_js_files = ['layout.js']
+html_js_files = ['api_nav.js', 'layout.js']
 
 myst_enable_extensions = [
     'colon_fence',

@@ -91,8 +91,8 @@ std::cout << std::distance(ct.begin(), ct.end());
     <span class="label">Previous</span>
     <span class="title">empty</span>
   </a>
-  <a class="next-link" href="extract_keywords.html">
+  <a class="next-link" href="keywords.html">
     <span class="label">Next</span>
-    <span class="title">extract_keywords</span>
+    <span class="title">keywords</span>
   </a>
 </div>

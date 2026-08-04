@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -58,7 +58,7 @@ name/kind/dtype/null-count block distinct from <code class="docutils literal not
 <code class="docutils literal notranslate"><span class="pre">Catalog::info()</span></code> renders <strong>exactly</strong> the same full row-and-column table as
 <a class="reference internal" href="display.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">display()</span></code></span></a>, <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>, and <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>. There is currently no
 lighter-weight metadata view for <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> — if you only want counts, use
-<a class="reference internal" href="nkeys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nkeys()</span></code></span></a>/<a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrecords()</span></code></span></a>/<a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></span></a> directly instead of
+<a class="reference internal" href="nkeys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nkeys()</span></code></span></a>/<a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrows()</span></code></span></a>/<a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></span></a> directly instead of
 <code class="docutils literal notranslate"><span class="pre">info()</span></code>.</p>
 </div>
 </section>
@@ -103,7 +103,7 @@ id                       | Series       | Series[float64]  | 3       | [1, 2, 3]
 <li><p>Renders identically to <a class="reference internal" href="display.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">display()</span></code></span></a>/<a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>/<code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> — see
 the important callout above.</p></li>
 <li><p>For counts alone (row count, stream count) without the full table, use
-<a class="reference internal" href="nkeys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nkeys()</span></code></span></a>, <a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrecords()</span></code></span></a>, or <a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></span></a> directly.</p></li>
+<a class="reference internal" href="nkeys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nkeys()</span></code></span></a>, <a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrows()</span></code></span></a>, or <a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></span></a> directly.</p></li>
 </ul>
 </section>
 <section id="see-also">

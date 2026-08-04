@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 21815157b626 -->
 
 # Registry::sample
 
@@ -59,9 +60,9 @@ auto first = rg.sample(2, 42);
 auto second = rg.sample(2, 42);
 
 bool same_ids = true;
-for (std::int64_t i = 0; i < first.select("id").size(); ++i) {
-  if (std::get<pluss::Series>(first.select("id").at(i)).to_vec<std::int64_t>()[0] !=
-      std::get<pluss::Series>(second.select("id").at(i)).to_vec<std::int64_t>()[0]) {
+for (std::int64_t i = 0; i < first.fields("id").size(); ++i) {
+  if (std::get<pluss::Series>(first.fields("id").at(i)).to_vec<std::int64_t>()[0] !=
+      std::get<pluss::Series>(second.fields("id").at(i)).to_vec<std::int64_t>()[0]) {
     same_ids = false;
   }
 }
@@ -112,9 +113,8 @@ Registry::sample: requires aligned slot lengths
 
 - [`Registry::take`](take.md): the underlying selection mechanism `sample()` builds
   its shuffled index list for.
-- [`Registry::is_stream_compatible`](is_stream_compatible.md): a related but
-  distinct per-field uniformity check — value-kind uniformity, not length
-  uniformity.
+- [`Registry::profiles`](profiles.md): inspect per-field type composition when
+  you want to understand kind uniformity rather than length uniformity.
 - [`Catalog::sample`](../catalog/sample.md): the equivalent operation on the
   kindle model.
 

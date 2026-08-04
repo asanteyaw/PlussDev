@@ -60,10 +60,10 @@ public:
   bool empty() const;
 
   ArchiveLabelAccessor label() const;
-  ArchiveKeyAccessor keys(std::span<const std::string_view> keys) const;
-  ArchiveKeyAccessor keys(std::initializer_list<std::string_view> keys) const;
+  Archive keys(std::span<const std::string_view> keys) const;
+  Archive keys(std::initializer_list<std::string_view> keys) const;
   template <pluss::detail::StringViewNameRange NameRange>
-  ArchiveKeyAccessor keys(const NameRange& keys) const;
+  Archive keys(const NameRange& keys) const;
   ArchiveKeyAxisAccessor keyaxis() const;
   Catalog catalog(std::int64_t i) const;
   Catalog dloc(std::int64_t i) const;
@@ -79,13 +79,6 @@ public:
   Catalog aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const;
 
   bool has(std::string_view key) const;
-  Archive select(std::span<const std::string_view> keys) const;
-  Archive select(std::initializer_list<std::string_view> keys) const;
-  Archive select(const std::vector<std::string>& keys) const;
-  template <pluss::detail::StringViewNameRange NameRange>
-  Archive select(const NameRange& keys) const {
-    return pluss::detail::with_name_span(keys, [&](auto names) { return select(names); });
-  }
   Archive drop(std::span<const std::string_view> keys) const;
   Archive drop(std::initializer_list<std::string_view> keys) const;
   Archive drop(const std::vector<std::string>& keys) const;
@@ -108,6 +101,8 @@ public:
   Archive isnull() const;
   Archive notnull() const;
   Archive invalid() const;
+  ArchiveCastAccessor cast() const;
+  ArchiveCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
   Archive cast(pluss::table::ThreadCastTarget target,
                const pluss::table::ThreadCastOptions& options = {}) const;
   Archive astype(pluss::codem::ScalarType dtype) const;
@@ -220,7 +215,7 @@ Archive ArchiveKeyAccessor::map_selected_(Fn&& fn) const {
 }
 
 template <pluss::detail::StringViewNameRange NameRange>
-ArchiveKeyAccessor Archive::keys(const NameRange& keys) const {
+Archive Archive::keys(const NameRange& keys) const {
   return pluss::detail::with_name_span(keys, [&](auto names) { return this->keys(names); });
 }
 

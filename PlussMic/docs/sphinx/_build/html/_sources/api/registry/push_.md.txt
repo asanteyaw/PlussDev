@@ -1,63 +1,80 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7c576a966a43 -->
+
 # Registry::push_
 
 [Back to Registry API Reference](../../registry_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Registry::push_(std::string_view key, const Slot::Value& value) -> Registry&
+Registry& Registry::push_(std::string_view key, const Slot::Value& value)
+Registry& Registry::push_(const Slot::Value& value)
 ```
 
 ## What It Does
 
-Appends one new value to a named slot in place.
+The in-place counterpart to [`push()`](push.md) — appends one value to a field's
+`Slot` directly. The single-key overload appends to just that field; the
+value-only overload appends to every field.
 
 ## Parameters
 
-**key**
-    Name of the target slot or stream.
+**key** (`std::string_view`)
+    The field to append to (single-key overload). Throws if it doesn't exist.
 
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+**value** (`const Slot::Value&`)
+    The value to append.
 
 ## Returns
 
 `Registry&`
-    Value produced by this call.
+    A reference to this registry, now holding the appended value(s).
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Append to a single named field in place.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-rg.push_("ids", pluss::make_series(4));
+rg.push_("id", pluss::make_series(4));
+auto ids = rg.fields("id");
+std::cout << "[";
+for (std::int64_t i = 0; i < ids.size(); ++i) {
+  if (i) std::cout << ", ";
+  std::cout << std::get<pluss::Series>(ids.at(i)).to_vec<std::int64_t>()[0];
+}
+std::cout << "]";
 ```
 
 ### Output
 
 ```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+[1, 2, 3, 4]
 ```
 
+## Notes
+
+- Same throw and every-field behavior as [`push()`](push.md) — see that page's
+  notes.
+- Mutates the registry it's called on and returns `*this` by reference.
+
+## See Also
+
+- [`Registry::push`](push.md): the non-mutating counterpart.
+- [`Registry::concat_`](concat_.md): append a whole `Slot`'s worth of values in
+  place, rather than a single value.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="push.html">
     <span class="label">Previous</span>
     <span class="title">push</span>
   </a>
-  <a class="next-link" href="push_all.html">
+  <a class="next-link" href="rename.html">
     <span class="label">Next</span>
-    <span class="title">push_all</span>
+    <span class="title">rename</span>
   </a>
 </div>

@@ -23,7 +23,7 @@ int main() {
   std::cout << "Resample sum (H):\n" << pluss::print_series(hourly_sum) << "\n\n";
   std::cout << "Resample mean (H):\n" << pluss::print_series(hourly_mean) << "\n\n";
 
-  const auto roll_window = pluss::duration_minutes(45);
+  const auto roll_window = pluss::duration::minutes(45);
   const auto roll_sum = idx.rolling_agg(values, roll_window, "sum");
   const auto roll_max = idx.rolling_agg(values, roll_window, "max");
   std::cout << "Rolling sum (45min):\n" << pluss::print_series(roll_sum) << "\n\n";

@@ -14,8 +14,7 @@ Catalog::filter(const pluss::Series& condition) const -> Catalog
 ## What It Does
 
 Keeps only the rows where a boolean mask `Series` is `true`, applied independently to every
-stream in the catalog. [`where()`](where.md) and [`masked_select()`](masked_select.md) are
-both pure aliases for this same method.
+stream in the catalog. [`where()`](where.md) is a pure alias for this same method.
 
 ```{important} The mask length must match each stream's length individually
 `filter()` checks `condition`'s length against *each stream's own length*, not against
@@ -115,8 +114,7 @@ Catalog::filter: mask length must match stream length for key 'id'
 
 ## Notes
 
-- [`where()`](where.md) and [`masked_select()`](masked_select.md) are pure aliases —
-  identical behavior, different name.
+- [`where()`](where.md) is a pure alias — identical behavior, different name.
 - The length check runs per-stream, not once for the whole catalog — see the important
   callout above.
 - Requires a defined catalog and a defined `condition`; throws on either an undefined
@@ -124,8 +122,7 @@ Catalog::filter: mask length must match stream length for key 'id'
 
 ## See Also
 
-- [`Catalog::where`](where.md) / [`Catalog::masked_select`](masked_select.md): aliases for
-  this exact method.
+- [`Catalog::where`](where.md): an alias for this exact method.
 - [`Catalog::query`](query.md): build the boolean mask from a callback that receives the
   catalog itself, instead of constructing it beforehand.
 
@@ -134,8 +131,8 @@ Catalog::filter: mask length must match stream length for key 'id'
     <span class="label">Previous</span>
     <span class="title">fillnull</span>
   </a>
-  <a class="next-link" href="filter_by_text.html">
+  <a class="next-link" href="grep.html">
     <span class="label">Next</span>
-    <span class="title">filter_by_text</span>
+    <span class="title">grep</span>
   </a>
 </div>

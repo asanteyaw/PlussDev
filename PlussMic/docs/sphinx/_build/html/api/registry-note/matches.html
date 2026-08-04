@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,49 +34,112 @@
 
           <div class="body" role="main">
             
-  <section id="registrynoteaccessor-matches">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c3b658d5078d -->
+<section id="registrynoteaccessor-matches">
 <h1>RegistryNoteAccessor::matches<a class="headerlink" href="#registrynoteaccessor-matches" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_note_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RegistryNoteAccessor</span><span class="o">::</span><span class="n">matches</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">RegistryNoteAccessor</span><span class="o">::</span><span class="n">matches</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Tests each bound field’s text against <code class="docutils literal notranslate"><span class="pre">pattern</span></code> as a regular expression,
+replacing each <code class="docutils literal notranslate"><span class="pre">Note</span></code> field with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> field. Unlike
+<a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">pattern</span></code> here is <em>always</em> treated as a regex — there’s no
+<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> overload to switch to a literal search.</p>
+<p><code class="docutils literal notranslate"><span class="pre">full</span></code> controls the anchoring:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">false</span></code> (the default): <code class="docutils literal notranslate"><span class="pre">std::regex_search</span></code> semantics — the pattern
+just needs to appear somewhere in the value, unanchored (start-anchored
+patterns like <code class="docutils literal notranslate"><span class="pre">^...</span></code> still work as expected).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">true</span></code>: <code class="docutils literal notranslate"><span class="pre">std::regex_match</span></code> semantics — the pattern must match the
+<em>entire</em> value, equivalent to calling <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch(pattern)</span></code></span></a>.</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>pattern</strong>
-Pattern string used for matching or extraction.</p>
-<p><strong>full</strong>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p><strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A regular expression to test each value against.</p>
+<p><strong>full</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code>)
+When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the pattern must match the entire value rather than just
+appear somewhere within it.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry with every bound field replaced by a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> field;
+every unbound field unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<p>Example 1. Default (<code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">false</span></code>): the pattern just needs to appear
+somewhere in the value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;AB-123&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;99XY&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;code&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;[0-9]+&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;code&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">code</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">code</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true true
 </pre></div>
 </div>
+<p>Both values contain a run of digits somewhere, so both are <code class="docutils literal notranslate"><span class="pre">true</span></code> under the
+unanchored default.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">true</span></code> requires the whole value to match — an anchored
+digits-only pattern rejects <code class="docutils literal notranslate"><span class="pre">&quot;AB-123&quot;</span></code> (which has letters and a dash) and
+<code class="docutils literal notranslate"><span class="pre">&quot;99XY&quot;</span></code> (which has letters).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;AB-123&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;99XY&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;code&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;^[0-9]+$&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;code&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">code</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">code</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> is always a regular expression — there’s no literal-text mode on
+this method, unlike <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matches(pattern,</span> <span class="pre">true)</span></code> is equivalent to
+<a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch(pattern)</span></code></span></a>.</p></li>
+<li><p>Changes each bound field’s kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p>Requires every bound field to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> field throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::nt:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Note&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryNoteAccessor::fullmatch</span></code></span></a>: the always-anchored form,
+equivalent to <code class="docutils literal notranslate"><span class="pre">matches(pattern,</span> <span class="pre">true)</span></code>.</p></li>
+<li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryNoteAccessor::has</span></code></span></a>: substring/pattern presence with a
+literal-by-default mode this method doesn’t have.</p></li>
+<li><p><a class="reference internal" href="../registry/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::nt</span></code></span></a>: the entry point this accessor is
+reached from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lstrip.html">
     <span class="label">Previous</span>
@@ -87,7 +150,6 @@ Value produced by this call.</p>
     <span class="title">normalize</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

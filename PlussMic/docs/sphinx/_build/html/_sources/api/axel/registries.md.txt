@@ -45,9 +45,9 @@ auto out = axel.registries();
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="notnull.html">
+  <a class="prev-link" href="nt.html">
     <span class="label">Previous</span>
-    <span class="title">notnull</span>
+    <span class="title">nt</span>
   </a>
   <a class="next-link" href="registry.html">
     <span class="label">Next</span>

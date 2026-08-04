@@ -1,0 +1,101 @@
+# TimeIndex::tz_localize
+
+[Back to TimeIndex API Reference](../../timeindex_api_reference)
+
+## Signature
+
+```cpp
+TimeIndex::tz_localize(
+    std::string_view tz_name,
+    int fold = 0,
+    std::string_view nonexistent = "raise") const -> TimeIndex
+```
+
+## What It Does
+
+Attaches timezone interpretation to naive local timestamps.
+
+This is the right surface when the strings already represent local wall-clock
+time but have not yet been assigned a timezone.
+
+That is different from `tz_convert()`, which preserves the instant and only
+changes the timezone representation.
+
+## Parameters
+
+**tz_name**
+
+The timezone to attach.
+
+**fold**
+
+Controls ambiguous repeated local times during fall-back transitions.
+
+- `0`
+  Prefer the earlier interpretation.
+- `1`
+  Prefer the later interpretation.
+
+**nonexistent**
+
+Controls what happens for local times that do not exist because of a spring
+forward gap.
+
+- `"raise"`
+  Fail instead of silently guessing.
+- other supported policy strings
+  depend on the underlying temporal engine.
+
+## Returns
+
+`TimeIndex`
+    The localized time index.
+
+## Examples
+
+Example 1. Attach New York timezone meaning to naive local wall-clock values.
+
+```cpp
+auto naive_local = pluss::make_timeindex({
+    "2024-11-01T09:00:00",
+    "2024-11-01T10:15:00",
+}, false);
+
+auto out = naive_local.tz_localize("America/New_York");
+std::cout << pluss::print_timeline(out) << "\n";
+```
+
+### Output
+
+```text
+Timeline(shape=[2], tz=America/New_York)
+[ 2024-11-01 09:00:00, 2024-11-01 10:15:00 ]
+```
+
+Example 2. Use `fold` and `nonexistent` only when DST ambiguity or DST gaps are
+actually part of the input problem.
+
+```cpp
+auto localized = naive_local.tz_localize("America/New_York", 0, "raise");
+std::cout << pluss::print_timeline(localized) << "\n";
+```
+
+## Notes
+
+- `tz_localize()` attaches timezone meaning to naive timestamps.
+- `tz_convert()` transforms an already-aware axis into another timezone view.
+
+## See Also
+
+- [`TimeIndex::tz_convert`](tz_convert.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tz_convert.html">
+    <span class="label">Previous</span>
+    <span class="title">tz_convert</span>
+  </a>
+  <a class="next-link" href="resample_bins.html">
+    <span class="label">Next</span>
+    <span class="title">resample_bins</span>
+  </a>
+</div>

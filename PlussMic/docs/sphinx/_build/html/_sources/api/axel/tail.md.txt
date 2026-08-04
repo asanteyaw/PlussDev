@@ -51,8 +51,8 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
     <span class="label">Previous</span>
     <span class="title">slice</span>
   </a>
-  <a class="next-link" href="to_json.html">
+  <a class="next-link" href="tl.html">
     <span class="label">Next</span>
-    <span class="title">to_json</span>
+    <span class="title">tl</span>
   </a>
 </div>

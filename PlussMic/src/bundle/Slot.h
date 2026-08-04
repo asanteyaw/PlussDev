@@ -105,9 +105,6 @@ public:
   Slot min() const;
   Slot max() const;
 
-  bool is_stream_compatible() const;
-  void ensure_stream_compatible(std::string_view where = "Slot") const;
-
   // Conversion for bridge paths (throws when slot is not stream-compatible).
   pluss::kindle::Stream to_kindle() const;
   // Semantic alias for explicit model switch.
@@ -121,8 +118,11 @@ public:
   void show(std::ostream& os) const;
 
 private:
+  friend class Registry;
   friend class SlotCastAccessor;
   explicit Slot(pluss::msharp::intrusive_ptr<detail::SlotImpl> impl);
+  bool is_stream_compatible() const;
+  void ensure_stream_compatible(std::string_view where = "Slot") const;
   Slot cast(pluss::table::ThreadCastTarget target,
             const pluss::table::ThreadCastOptions& options) const;
   const detail::SlotImpl& impl_ref_() const;

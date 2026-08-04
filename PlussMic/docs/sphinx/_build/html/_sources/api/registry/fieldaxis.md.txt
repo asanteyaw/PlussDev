@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c775f1dc90ed -->
 
 # Registry::fieldaxis
 
@@ -63,16 +64,15 @@ id
 ## See Also
 
 - [`Registry::fields`](fields.md): field access when you already know the exact
-  field names, rather than a pattern or kind.
-- [`Registry::select`](select.md): a lower-level way to keep an explicit list of
-  fields, without pattern or kind matching.
+  field names, rather than a pattern or kind — `fields(keys)` is the lower-level
+  explicit-list projection this accessor's filters are built on top of.
 - [`AtlasLabelAccessor`](../../atlas_label_accessor_api_reference): a similarly-shaped
   filtering accessor on the table model, for depth labels rather than field names.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ensure_stream_compatible.html">
+  <a class="prev-link" href="end.html">
     <span class="label">Previous</span>
-    <span class="title">ensure_stream_compatible</span>
+    <span class="title">end</span>
   </a>
   <a class="next-link" href="fields.html">
     <span class="label">Next</span>

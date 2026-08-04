@@ -453,6 +453,27 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_methods_demo examples/CodeM/series_methods_demo.cpp)
   target_link_libraries(plussqit_codem_series_methods_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_shape_reference_demo examples/CodeM/series_shape_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_shape_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_read_index_reference_demo examples/CodeM/series_read_index_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_read_index_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_combine_reference_demo examples/CodeM/series_combine_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_combine_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_extract_index_take_reference_demo examples/CodeM/series_extract_index_take_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_extract_index_take_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_write_reference_demo examples/CodeM/series_write_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_write_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_selector_write_reference_demo examples/CodeM/series_selector_write_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_selector_write_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_bounds_reference_demo examples/CodeM/series_bounds_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_bounds_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_linear_alg_demo examples/CodeM/linear_alg_demo.cpp)
   target_link_libraries(plussqit_codem_linear_alg_demo PRIVATE PlussQit::CodeM)
 
@@ -609,6 +630,12 @@ if (PLUSSQIT_BUILD_EXAMPLES)
     target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeM)
   endif()
 
+  add_executable(plussqit_coden_note_docverify_demo examples/CodeN/note_docverify_demo.cpp)
+  target_link_libraries(plussqit_coden_note_docverify_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_docverify_demo PRIVATE PlussQit::CodeM)
+  endif()
+
   add_executable(plussqit_coden_cpu_perf_bench examples/CodeN/coden_cpu_perf_bench.cpp)
   target_link_libraries(plussqit_coden_cpu_perf_bench PRIVATE PlussQit::CodeN)
   if (TARGET plussqit_codem)
@@ -682,6 +709,7 @@ if (PLUSSQIT_BUILD_CODEH)
     PUBLIC
       CODEH_ENABLE_TIMELINE_SURFACE
       CODEH_ENABLE_TIMEINDEX_SURFACE
+      CODEH_ENABLE_DURATION_SURFACE
   )
   target_link_libraries(plussqit_codeh PUBLIC PlussQit::CodeM PlussQit::CodeN)
 
@@ -704,6 +732,26 @@ if (PLUSSQIT_BUILD_CODEH)
       examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp
     )
     target_link_libraries(plussqit_codeh_timeline_non_generated_and_factory_methods_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeindex_docverify_demo
+      examples/CodeH/timeindex_docverify_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeindex_docverify_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_docverify_demo
+      examples/CodeH/timeline_docverify_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_docverify_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_duration_docverify_demo
+      examples/CodeH/duration_docverify_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_duration_docverify_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_duration_interop_docverify_demo
+      examples/CodeH/timeline_duration_interop_docverify_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_duration_interop_docverify_demo PRIVATE PlussQit::CodeH)
 
     add_executable(plussqit_dispense_demo
       examples/dispense_demo.cpp

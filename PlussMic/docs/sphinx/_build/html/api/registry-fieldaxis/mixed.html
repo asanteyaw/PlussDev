@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,18 +34,25 @@
 
           <div class="body" role="main">
             
-  <section id="registryfieldaxisaccessor-mixed">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a0ecad6ed6cc -->
+<section id="registryfieldaxisaccessor-mixed">
 <h1>RegistryFieldAxisAccessor::mixed<a class="headerlink" href="#registryfieldaxisaccessor-mixed" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_fieldaxis_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryFieldAxisAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RegistryFieldAxisAccessor</span><span class="o">::</span><span class="n">mixed</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">RegistryFieldAxisAccessor</span><span class="o">::</span><span class="n">mixed</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>A named shorthand for <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind(SlotKind::Mixed)</span></code></span></a> — returns a new
+registry containing only the fields whose <code class="docutils literal notranslate"><span class="pre">Slot::kind()</span></code> is
+<code class="docutils literal notranslate"><span class="pre">SlotKind::Mixed</span></code> (the field holds more than one distinct value kind, or a
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> field mixes numeric dtypes). These are exactly the fields that make a
+registry fail <a class="reference internal" href="../registry/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>’s stream-compatibility
+check.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -54,26 +61,46 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry containing only the genuinely mixed-kind fields.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Isolate the mixed field in a registry that also has a uniform field.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;mixed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">fieldaxis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fieldaxis</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fieldaxis</span><span class="p">.</span><span class="n">mixed</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fieldaxis</span><span class="p">().</span><span class="n">mixed</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">())</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mixed
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">kind(SlotKind::Mixed)</span></code> — see <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind()</span></code></span></a> for the
+general form.</p></li>
+<li><p>Directly identifies which fields would make <a class="reference internal" href="../registry/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>
+throw.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryFieldAxisAccessor::kind</span></code></span></a>: the general form this method
+wraps.</p></li>
+<li><p><a class="reference internal" href="../registry/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_kindle</span></code></span></a>: the conversion these
+fields block.</p></li>
+<li><p><a class="reference internal" href="../registry/profiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::profiles</span></code></span></a>: the per-field type tally
+that shows exactly <em>why</em> a field is mixed.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="match.html">
     <span class="label">Previous</span>
@@ -84,7 +111,6 @@ Value produced by this call.</p>
     <span class="title">note</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

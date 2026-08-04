@@ -2796,3 +2796,11 @@ skip_methods:
   - logical_and
   - logical_or
   - logical_xor
+  # Integer-exact scalar ops (native std::int64_t, no double round-trip) --
+  # internal engine primitives called directly via ops_internal::*_i64, not
+  # exposed as public Series methods. See Arithmetic.cpp/OpsInternal.h.
+  - add_i64
+  - sub_i64
+  - mul_i64
+  - div_i64
+  - mod_i64

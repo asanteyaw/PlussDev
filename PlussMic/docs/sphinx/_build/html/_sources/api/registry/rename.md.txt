@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f5ae6afbc8bf -->
 
 # Registry::rename
 
@@ -144,9 +145,9 @@ Registry::rename: duplicate target key 'id'
   kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="push_all_.html">
+  <a class="prev-link" href="push_.html">
     <span class="label">Previous</span>
-    <span class="title">push_all_</span>
+    <span class="title">push_</span>
   </a>
   <a class="next-link" href="rename_.html">
     <span class="label">Next</span>

@@ -13,7 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::reshape" href="reshape.html" />
@@ -35,7 +36,8 @@
 
           <div class="body" role="main">
             
-  <section id="series-view">
+  <!-- pluss-hand-authored -->
+<section id="series-view">
 <h1>Series::view<a class="headerlink" href="#series-view" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signature">
@@ -46,32 +48,41 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reinterprets the same underlying storage with a different shape, without
-copying, when the current layout is view-compatible.</p>
-<p>In the current implementation that requirement is strict: <code class="docutils literal notranslate"><span class="pre">view()</span></code> only accepts
-layouts that are already contiguous and shape-compatible. If the source is
-non-contiguous, <code class="docutils literal notranslate"><span class="pre">view()</span></code> throws instead of silently materializing a copy.</p>
-<p>That makes <code class="docutils literal notranslate"><span class="pre">view()</span></code> the “I want a true layout reinterpretation” API. If you want
-“same logical result, copy if needed”, use <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> instead.</p>
+<p>Reinterprets the same underlying storage under a new shape <strong>without copying</strong>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">view()</span></code> is the strict shape-reinterpretation surface. It is for the case where
+you do not want “reshape semantics” in the abstract; you want a genuine no-copy
+alias over the same storage, and you want the call to fail if that is not
+possible.</p>
+<p>In the current implementation, that strictness is intentionally conservative:</p>
+<ul class="simple">
+<li><p>the source must be contiguous</p></li>
+<li><p>the requested shape must have the same total <code class="docutils literal notranslate"><span class="pre">numel()</span></code></p></li>
+</ul>
+<p>If either condition fails, <code class="docutils literal notranslate"><span class="pre">view()</span></code> throws instead of silently materializing a
+contiguous buffer. That boundary is the entire point of the method. If you want
+“same logical result, copy if needed,” use <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> instead.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>new_sizes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Int</span></code>)</p>
 <p>The desired output shape.</p>
-<p><code class="docutils literal notranslate"><span class="pre">view()</span></code> requires:</p>
-<ul class="simple">
-<li><p>the same total element count as the source</p></li>
-<li><p>a shape that the source can be viewed as directly</p></li>
-<li><p>a contiguous source layout in the current implementation</p></li>
-</ul>
-<p>If that contract is not met, the call throws. The most visible current failure
-message is <code class="docutils literal notranslate"><span class="pre">&quot;view:</span> <span class="pre">requires</span> <span class="pre">contiguous</span> <span class="pre">in</span> <span class="pre">v0&quot;</span></code>.</p>
+<p>This parameter is shape-like rather than container-specific. In practice that
+means you can feed it from a <code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::int64_t&gt;</span></code>, a <code class="docutils literal notranslate"><span class="pre">std::array</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">std::vector</span></code>, or another <code class="docutils literal notranslate"><span class="pre">Series</span></code>’s <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a> view, as long as the
+borrowed range stays valid for the call.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> handle over the same storage, with <code class="docutils literal notranslate"><span class="pre">new_sizes</span></code> and freshly
-computed contiguous strides for that shape.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> handle over the same storage, with <code class="docutils literal notranslate"><span class="pre">new_sizes</span></code> and
+contiguous strides computed for that new logical shape.</p>
+</section>
+<section id="autograd-behavior">
+<h2>Autograd Behavior<a class="headerlink" href="#autograd-behavior" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">view()</span></code> preserves reverse-mode connectivity. Gradients flowing into the view are
+reshaped back to the original shape on the way to the source.</p>
+<p>That is the right mental model: <code class="docutils literal notranslate"><span class="pre">view()</span></code> changes only how the same values are
+indexed, so the backward path only has to restore the original shape metadata.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -91,10 +102,29 @@ data=[[1, 2],
   [5, 6]]
 </pre></div>
 </div>
-<p>Nothing was transposed here; the same flat storage is simply re-read under a new
-shape. That is why the rows become <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2]</span></code>, <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">4]</span></code>, <code class="docutils literal notranslate"><span class="pre">[5,</span> <span class="pre">6]</span></code>.</p>
-<p>Example 2. A transposed series is non-contiguous, so <code class="docutils literal notranslate"><span class="pre">view()</span></code> rejects it rather
-than copying.</p>
+<p>This is not a transpose. The flat storage order stayed <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">6]</span></code>;
+you simply asked to read that same sequence as <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> instead of <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">new_sizes</span></code> can be borrowed from another tensor’s shape metadata, not
+just spelled out manually.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">shape_template</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">view</span><span class="p">(</span><span class="n">shape_template</span><span class="p">.</span><span class="n">sizes</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2],
+  [3, 4],
+  [5, 6]]
+</pre></div>
+</div>
+<p>The important contract is not “borrowed from another tensor”; it is “same
+number of elements.” <code class="docutils literal notranslate"><span class="pre">shape_template.sizes()</span></code> works here because <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">2]</span></code> still
+has <code class="docutils literal notranslate"><span class="pre">6</span></code> elements.</p>
+<p>Example 3. A non-contiguous input is rejected instead of being copied.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">transposed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transposed</span><span class="p">.</span><span class="n">view</span><span class="p">(</span>
@@ -106,32 +136,31 @@ than copying.</p>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>view: requires contiguous in v0
 </pre></div>
 </div>
-<p>This is the key boundary between <code class="docutils literal notranslate"><span class="pre">view()</span></code> and <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a>: once the
-layout stops being directly viewable, <code class="docutils literal notranslate"><span class="pre">view()</span></code> stays strict.</p>
+<p>That failure is deliberate. Once the source stops being directly viewable,
+<code class="docutils literal notranslate"><span class="pre">view()</span></code> stays strict and forces you to choose <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> if you
+actually want fallback materialization.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">view()</span></code> is the no-copy path; it is supposed to fail rather than quietly
-allocate.</p></li>
-<li><p>The output shape must preserve total <code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p></li>
-<li><p>If you already know the source may be non-contiguous, reach for
-<a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> directly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">view()</span></code> is the no-copy contract, not the forgiving one.</p></li>
+<li><p>Shape compatibility still requires equal total <code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p></li>
+<li><p>In the current implementation, contiguity is mandatory even if a more general
+stride reinterpretation might theoretically exist.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: same high-level shape change, but with a
-contiguous fallback when a true view is impossible.</p></li>
-<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::slice</span></code></span></a>: another view-producing layout change, but by
-range restriction instead of shape reinterpretation.</p></li>
+<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: same target shape, but copy-capable.</p></li>
+<li><p><a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sizes</span></code></span></a>: a convenient way to feed shape metadata into
+<code class="docutils literal notranslate"><span class="pre">view()</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sizes.html">

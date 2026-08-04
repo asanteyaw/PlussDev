@@ -43,8 +43,8 @@ false
     <span class="label">Previous</span>
     <span class="title">dropnull</span>
   </a>
-  <a class="next-link" href="ensure_stream_compatible.html">
+  <a class="next-link" href="fillnull.html">
     <span class="label">Next</span>
-    <span class="title">ensure_stream_compatible</span>
+    <span class="title">fillnull</span>
   </a>
 </div>

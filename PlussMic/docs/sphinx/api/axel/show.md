@@ -47,9 +47,9 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="select.html">
+  <a class="prev-link" href="rename.html">
     <span class="label">Previous</span>
-    <span class="title">select</span>
+    <span class="title">rename</span>
   </a>
   <a class="next-link" href="size.html">
     <span class="label">Next</span>

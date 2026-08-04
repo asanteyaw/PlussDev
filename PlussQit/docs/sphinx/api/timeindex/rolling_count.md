@@ -1,0 +1,92 @@
+# TimeIndex::rolling_count
+
+[Back to TimeIndex API Reference](../../timeindex_api_reference)
+
+## Signature
+
+```cpp
+TimeIndex::rolling_count(const Duration& window) const -> pluss::Series
+```
+
+## What It Does
+
+Counts how many observations fall inside each trailing time window.
+
+Unlike fixed-row rolling windows, this is time-aware: the membership of a window
+depends on the timestamp spacing, not just on row count.
+
+That makes it useful on irregular clocks where "last 45 minutes" and "last 3
+rows" are not even close to the same question.
+
+## Parameters
+
+**window**
+
+The trailing duration window. Examples include:
+
+- `pluss::duration::minutes(15)`
+- `pluss::duration::minutes(45)`
+- `pluss::duration::hours(2)`
+
+In the current implementation the window is trailing and inclusive of values
+whose timestamp is still at least `current_timestamp - window`.
+
+## Returns
+
+`pluss::Series`
+    A 1D numeric `Series` with one rolling count per original observation.
+
+## Examples
+
+Example 1. Count how many observations fall inside a trailing 45-minute window.
+
+```cpp
+auto counts = idx.rolling_count(pluss::duration::minutes(45));
+std::cout << pluss::print_series(counts) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[1, 2, 3, 3, 3]
+```
+
+Example 2. Increase the duration when you want each trailing window to see
+further backward in time.
+
+```cpp
+auto counts = idx.rolling_count(pluss::duration::minutes(60));
+std::cout << pluss::print_series(counts) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[1, 2, 3, 4, 4]
+```
+
+## Notes
+
+- This is the right primitive when you care about observation density through
+  time, not row position.
+- Widening the window can only keep the count the same or increase it.
+- For rolling numeric aggregation on an aligned values vector, use
+  [`rolling_sum`](rolling_sum.md).
+
+## See Also
+
+- [`TimeIndex::rolling_sum`](rolling_sum.md)
+- [`TimeIndex::resample_count`](resample_count.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="resample_ohlc.html">
+    <span class="label">Previous</span>
+    <span class="title">resample_ohlc</span>
+  </a>
+  <a class="next-link" href="rolling_sum.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_sum</span>
+  </a>
+</div>

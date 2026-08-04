@@ -1,4 +1,5 @@
 #include "CodeH/core/Duration.h"
+#include "CodeH/core/detail/Int64ScalarOp.h"
 
 #include <algorithm>
 #include <cmath>
@@ -178,12 +179,8 @@ Duration impl_where_duration(const Duration& a, const pluss::codem::Series& mask
 Duration impl_mul_i64(const Duration& a, std::int64_t k) {
   check_duration_core_(a.nanos_);
   auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
-  auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
-  auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
-    const auto x = av[ao];
-    o[oo] = (x == Duration::kNaT) ? Duration::kNaT : (x * k);
+  apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
+    return (x == Duration::kNaT) ? Duration::kNaT : (x * k);
   });
   return Duration(std::move(out));
 }
@@ -192,12 +189,8 @@ Duration impl_div_i64(const Duration& a, std::int64_t k) {
   CODEM_CHECK(k != 0, "Duration::div: division by zero");
   check_duration_core_(a.nanos_);
   auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
-  auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
-  auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
-    const auto x = av[ao];
-    o[oo] = (x == Duration::kNaT) ? Duration::kNaT : (x / k);
+  apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
+    return (x == Duration::kNaT) ? Duration::kNaT : (x / k);
   });
   return Duration(std::move(out));
 }
@@ -207,16 +200,12 @@ Duration impl_floordiv_i64(const Duration& a, std::int64_t k) {
   CODEM_CHECK(k != 0, "Duration::floordiv: division by zero");
   check_duration_core_(a.nanos_);
   auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
-  auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
-  auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
-    const auto x = av[ao];
-    if (x == Duration::kNaT) { o[oo] = Duration::kNaT; return; }
+  apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
+    if (x == Duration::kNaT) return Duration::kNaT;
     const auto q = x / k;
     const auto r = x % k;
     const bool need_floor = (r != 0) && ((r > 0) != (k > 0));
-    o[oo] = need_floor ? (q - 1) : q;
+    return need_floor ? (q - 1) : q;
   });
   return Duration(std::move(out));
 }
@@ -225,12 +214,8 @@ Duration impl_mod_i64(const Duration& a, std::int64_t k) {
   CODEM_CHECK(k != 0, "Duration::mod: division by zero");
   check_duration_core_(a.nanos_);
   auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
-  auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
-  auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
-    const auto x = av[ao];
-    o[oo] = (x == Duration::kNaT) ? Duration::kNaT : (x % k);
+  apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
+    return (x == Duration::kNaT) ? Duration::kNaT : (x % k);
   });
   return Duration(std::move(out));
 }
@@ -326,7 +311,7 @@ static Duration reduce_minmax_(const Duration& a, bool want_min) {
     best = want_min ? std::min(best, x) : std::max(best, x);
   }
   if (!any) best = Duration::kNaT;
-  return Duration::from_scalar_nanos(best);
+  return ops_internal::duration_from_nanos(std::span<const std::int64_t>(&best, 1), {});
 }
 
 Duration impl_min_duration(const Duration& a) { return reduce_minmax_(a, true); }

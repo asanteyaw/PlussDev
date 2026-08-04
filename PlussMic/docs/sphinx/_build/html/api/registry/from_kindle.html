@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,50 +36,73 @@
 
           <div class="body" role="main">
             
-  <section id="registry-from-kindle">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4c3e84934c25 -->
+<section id="registry-from-kindle">
 <h1>Registry::from_kindle<a class="headerlink" href="#registry-from-kindle" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">catalog</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Registry</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">catalog</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">static</span></code> factory method — the inverse of <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>:
+converts a <code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code> into a <code class="docutils literal notranslate"><span class="pre">Registry</span></code>, one field per stream.
+Since every <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> stream is already uniform-kind, the result is always
+stream-compatible.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>catalog</strong>
-Catalog payload supplied to this overload.</p>
+<p><strong>catalog</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::kindle::Catalog&amp;</span></code>)
+The catalog to convert. Must be defined.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry with one field per stream in <code class="docutils literal notranslate"><span class="pre">catalog</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
+<p>Example 1. Round-trip a registry through <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code> and back.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">catalog</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rg2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">ct</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;nfields=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rg2</span><span class="p">.</span><span class="n">nfields</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; fields: &quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rg2</span><span class="p">.</span><span class="n">fields</span><span class="p">())</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nfields=2 fields: id city
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry::from_kindle:</span> <span class="pre">catalog</span> <span class="pre">undefined&quot;</span></code> if <code class="docutils literal notranslate"><span class="pre">catalog</span></code> isn’t
+defined.</p></li>
+<li><p>Field order matches the source catalog’s key order.</p></li>
+<li><p>Every field in the result is stream-compatible by construction, since it came
+from a uniform-kind <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> stream.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_kindle</span></code></span></a>: the inverse conversion.</p></li>
+<li><p><a class="reference internal" href="../slot/from_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::from_kindle</span></code></span></a>: the per-field conversion this
+method calls for each stream.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="freq.html">
     <span class="label">Previous</span>
@@ -90,7 +113,6 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
     <span class="title">get</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

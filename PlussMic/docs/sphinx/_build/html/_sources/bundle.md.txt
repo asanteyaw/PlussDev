@@ -41,7 +41,7 @@ auto registry = pluss::bundle::Registry({
 
 auto selected = registry.select({"id"});
 auto renamed = registry.rename({{"city", "location"}});
-auto profiled = registry.type_profiles();
+auto profiled = registry.profiles();
 ```
 
 ## Axel

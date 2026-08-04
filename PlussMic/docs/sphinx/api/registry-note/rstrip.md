@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 20eff902c564 -->
+
 # RegistryNoteAccessor::rstrip
 
 [Back to RegistryNoteAccessor API Reference](../../registry_note_accessor_api_reference)
@@ -5,64 +8,87 @@
 ## Signatures
 
 ```cpp
-RegistryNoteAccessor::rstrip() -> Registry
+Registry RegistryNoteAccessor::rstrip() const
 
-RegistryNoteAccessor::rstrip(std::string_view chars) -> Registry
+Registry RegistryNoteAccessor::rstrip(std::string_view chars) const
 ```
 
 ## What It Does
 
-Applies an elementwise cleanup or transformation while preserving the surrounding alignment, labels, and payload family whenever possible.
+Trims characters from the **right** edge of each bound field's text,
+returning a new registry with those fields replaced. The no-argument
+overload trims whitespace; the `chars`-argument overload trims any of the
+given characters, in any order, repeated as many times as they appear at the
+end.
 
 ## Parameters
 
-**chars**
-    Characters to trim from the edge of each text value.
+**chars** (`std::string_view`, one-argument overload only)
+    The set of characters to strip from the right edge. Every trailing
+    character that appears anywhere in `chars` is removed, stopping at the
+    first character (scanning from the end) that doesn't.
 
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    A new registry with every bound field's text right-trimmed; every
+    unbound field unchanged.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. No-argument overload trims trailing whitespace.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"city", pluss::bundle::Slot({pluss::make_note("  Accra  ")})},
 });
-auto notes = rg.fields({"city"}).nt();
 
-auto out = notes.rstrip();
-std::cout << out;
+auto out = rg.fields({"city"}).nt().rstrip();
+std::cout << "'" << std::get<pluss::Note>(out.fields("city").at(0)).at(0) << "'";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+'  Accra'
 ```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+Only the trailing spaces are removed — the leading whitespace is untouched,
+unlike [`strip()`](strip.md).
+
+Example 2. `chars`-argument overload trims a specific character set from the
+right edge only.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"code", pluss::bundle::Slot({pluss::make_note("xxAccraxx")})},
 });
-auto notes = rg.fields({"city"}).nt();
 
-auto out = notes.rstrip("units");
-std::cout << out;
+auto out = rg.fields({"code"}).nt().rstrip("x");
+std::cout << std::get<pluss::Note>(out.fields("code").at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+xxAccra
 ```
 
+## Notes
+
+- Only trims the right edge — see [`lstrip()`](lstrip.md) for the left edge
+  and [`strip()`](strip.md) for both.
+- The `chars`-argument overload treats `chars` as a *set* of characters, not a
+  literal suffix — order within `chars` doesn't matter.
+- Requires every bound field to be `Note`-kind — a non-`Note` field throws
+  `"Slot::nt: slot kind must be Note"`.
+
+## See Also
+
+- [`RegistryNoteAccessor::lstrip`](lstrip.md): the left-edge counterpart.
+- [`RegistryNoteAccessor::strip`](strip.md): trims both edges at once.
+- [`Registry::nt`](../registry/nt.md): the entry point this accessor is
+  reached from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="replace.html">

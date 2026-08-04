@@ -1,84 +1,16 @@
-RegistryFieldAccessor::RegistryFieldAccessor(Registry base, std::vector<std::string> keys)
-    : base_(std::move(base)), keys_(std::move(keys)) {
-  PLUSS_CHECK(base_.defined(), "Registry::fields: undefined handle");
-  PLUSS_CHECK(!keys_.empty(), "Registry::fields: at least one field is required");
-  for (const auto& key : keys_) {
-    PLUSS_CHECK(base_.has(key), "Registry::fields: unknown field '" + key + "'");
-  }
-}
+namespace {
 
 template <class Fn>
-Registry RegistryFieldAccessor::map_selected_(Fn&& fn) const {
-  Registry out = base_;
-  for (const auto& key : keys_) {
-    out.set_(key, fn(base_.select(key)));
+Registry registry_map_selected(const Registry& base, const std::vector<std::string>& keys, Fn&& fn) {
+  PLUSS_CHECK(base.defined(), "Registry: undefined handle");
+  PLUSS_CHECK(!keys.empty(), "Registry: at least one field is required");
+  for (const auto& key : keys) {
+    PLUSS_CHECK(base.has(key), "Registry: unknown field '" + key + "'");
   }
-  return out;
+  return base.fields(keys).map(std::function<Slot(const Slot&)>(std::forward<Fn>(fn)));
 }
 
-RegistryCastAccessor RegistryFieldAccessor::cast() const {
-  return RegistryCastAccessor(base_, keys_, {});
-}
-
-RegistryCastAccessor RegistryFieldAccessor::cast(const pluss::table::ThreadCastOptions& options) const {
-  return RegistryCastAccessor(base_, keys_, options);
-}
-
-RegistryNoteAccessor RegistryFieldAccessor::nt() const {
-  return RegistryNoteAccessor(base_, keys_);
-}
-
-RegistryTimelineAccessor RegistryFieldAccessor::tl() const {
-  return RegistryTimelineAccessor(base_, keys_);
-}
-
-Registry RegistryFieldAccessor::fillnull(double value) const {
-  return map_selected_([&](const Slot& slot) { return slot.fillnull(value); });
-}
-
-Registry RegistryFieldAccessor::fillnull(std::string_view value) const {
-  return map_selected_([&](const Slot& slot) { return slot.fillnull(value); });
-}
-
-Registry RegistryFieldAccessor::fillnull(const pluss::Timeline& value) const {
-  return map_selected_([&](const Slot& slot) { return slot.fillnull(value); });
-}
-
-Registry RegistryFieldAccessor::fillnull(const pluss::TimeIndex& value) const {
-  return map_selected_([&](const Slot& slot) { return slot.fillnull(value); });
-}
-
-Registry RegistryFieldAccessor::dropnull() const {
-  return map_selected_([](const Slot& slot) { return slot.dropnull(); });
-}
-
-Registry RegistryFieldAccessor::isnull() const {
-  return map_selected_([](const Slot& slot) { return slot.isnull(); });
-}
-
-Registry RegistryFieldAccessor::notnull() const {
-  return map_selected_([](const Slot& slot) { return slot.notnull(); });
-}
-
-Registry RegistryFieldAccessor::invalid() const {
-  return map_selected_([](const Slot& slot) { return slot.invalid(); });
-}
-
-Registry RegistryFieldAccessor::distinct(pluss::kindle::DistinctOptions options) const {
-  return map_selected_([&](const Slot& slot) { return slot.distinct(options); });
-}
-
-Registry RegistryFieldAccessor::freq(pluss::kindle::FreqOptions options) const {
-  return map_selected_([&](const Slot& slot) { return slot.freq(options); });
-}
-
-Registry RegistryFieldAccessor::ndistinct(pluss::kindle::DistinctOptions options) const {
-  return map_selected_([&](const Slot& slot) { return slot.ndistinct(options); });
-}
-
-Registry RegistryFieldAccessor::astype(pluss::codem::ScalarType dtype) const {
-  return map_selected_([&](const Slot& slot) { return slot.astype(dtype); });
-}
+} // namespace
 
 RegistryFieldAxisAccessor::RegistryFieldAxisAccessor(Registry base) : base_(std::move(base)) {}
 
@@ -91,7 +23,7 @@ Registry RegistryFieldAxisAccessor::like(std::string_view needle, bool case_sens
     const auto hay = case_sensitive ? key : lower_copy(key);
     if (hay.find(token) != std::string::npos) selected.push_back(key);
   }
-  return base_.select(selected);
+  return base_.fields(selected);
 }
 
 Registry RegistryFieldAxisAccessor::match(std::string_view pattern) const {
@@ -103,7 +35,7 @@ Registry RegistryFieldAxisAccessor::match(std::string_view pattern) const {
     for (const auto& key : base_.fields()) {
       if (std::regex_search(key, rx)) selected.push_back(key);
     }
-    return base_.select(selected);
+    return base_.fields(selected);
   } catch (const std::regex_error& e) {
     PLUSS_FAIL("Registry::fieldaxis().match: invalid regex '" + std::string(pattern) + "': " + std::string(e.what()));
   }
@@ -117,7 +49,7 @@ Registry RegistryFieldAxisAccessor::prefix(std::string_view token) const {
   for (const auto& key : base_.fields()) {
     if (key.rfind(prefix_value, 0) == 0) selected.push_back(key);
   }
-  return base_.select(selected);
+  return base_.fields(selected);
 }
 
 Registry RegistryFieldAxisAccessor::suffix(std::string_view token) const {
@@ -131,7 +63,7 @@ Registry RegistryFieldAxisAccessor::suffix(std::string_view token) const {
       selected.push_back(key);
     }
   }
-  return base_.select(selected);
+  return base_.fields(selected);
 }
 
 Registry RegistryFieldAxisAccessor::kind(SlotKind kind_value) const {
@@ -139,9 +71,9 @@ Registry RegistryFieldAxisAccessor::kind(SlotKind kind_value) const {
   std::vector<std::string> selected;
   selected.reserve(static_cast<std::size_t>(base_.nfields()));
   for (const auto& key : base_.fields()) {
-    if (base_.select(key).kind() == kind_value) selected.push_back(key);
+    if (base_.fields(key).kind() == kind_value) selected.push_back(key);
   }
-  return base_.select(selected);
+  return base_.fields(selected);
 }
 
 Registry RegistryFieldAxisAccessor::series() const { return kind(SlotKind::Series); }
@@ -158,19 +90,19 @@ RegistryCastAccessor::RegistryCastAccessor(Registry base,
     : base_(std::move(base)), keys_(std::move(keys)), options_(std::move(options)) {}
 
 Registry RegistryCastAccessor::series() const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.cast(options_).series(); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).series(); });
 }
 
 Registry RegistryCastAccessor::note() const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.cast(options_).note(); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).note(); });
 }
 
 Registry RegistryCastAccessor::timeline() const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.cast(options_).timeline(); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).timeline(); });
 }
 
 Registry RegistryCastAccessor::timeindex() const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.cast(options_).timeindex(); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).timeindex(); });
 }
 
 RegistryNoteAccessor::RegistryNoteAccessor(Registry base, std::vector<std::string> keys)
@@ -178,7 +110,7 @@ RegistryNoteAccessor::RegistryNoteAccessor(Registry base, std::vector<std::strin
 
 #define PLUSS_REGISTRY_NOTE_UNARY(method) \
   Registry RegistryNoteAccessor::method() const { \
-    return RegistryFieldAccessor(base_, keys_).map_selected_([](const Slot& slot) { return slot.nt().method(); }); \
+    return registry_map_selected(base_, keys_, [](const Slot& slot) { return slot.nt().method(); }); \
   }
 
 PLUSS_REGISTRY_NOTE_UNARY(strip)
@@ -193,75 +125,75 @@ PLUSS_REGISTRY_NOTE_UNARY(length)
 #undef PLUSS_REGISTRY_NOTE_UNARY
 
 Registry RegistryNoteAccessor::strip(std::string_view chars) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().strip(chars); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().strip(chars); });
 }
 
 Registry RegistryNoteAccessor::lstrip(std::string_view chars) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().lstrip(chars); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().lstrip(chars); });
 }
 
 Registry RegistryNoteAccessor::rstrip(std::string_view chars) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().rstrip(chars); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().rstrip(chars); });
 }
 
 Registry RegistryNoteAccessor::starts(std::string_view prefix) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().starts(prefix); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().starts(prefix); });
 }
 
 Registry RegistryNoteAccessor::ends(std::string_view suffix) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().ends(suffix); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().ends(suffix); });
 }
 
 Registry RegistryNoteAccessor::has(std::string_view needle,
                                    const pluss::table::TextOptions& options) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().has(needle, options); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().has(needle, options); });
 }
 
 Registry RegistryNoteAccessor::count(std::string_view pattern) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().count(pattern); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().count(pattern); });
 }
 
 Registry RegistryNoteAccessor::count(std::string_view pattern,
                                      const pluss::table::TextOptions& options) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().count(pattern, options); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().count(pattern, options); });
 }
 
 Registry RegistryNoteAccessor::matches(std::string_view pattern, bool full) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().matches(pattern, full); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().matches(pattern, full); });
 }
 
 Registry RegistryNoteAccessor::fullmatch(std::string_view pattern) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().fullmatch(pattern); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().fullmatch(pattern); });
 }
 
 Registry RegistryNoteAccessor::pad(std::int64_t width,
                                    pluss::table::TextAlign align,
                                    char fill) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().pad(width, align, fill); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().pad(width, align, fill); });
 }
 
 Registry RegistryNoteAccessor::chars(std::int64_t start,
                                      std::optional<std::int64_t> stop,
                                      std::int64_t step) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().chars(start, stop, step); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().chars(start, stop, step); });
 }
 
 Registry RegistryNoteAccessor::normalize(pluss::table::UnicodeForm form) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().normalize(form); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().normalize(form); });
 }
 
 Registry RegistryNoteAccessor::encode(std::string_view encoding) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().encode(encoding); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().encode(encoding); });
 }
 
 Registry RegistryNoteAccessor::replace(std::string_view from, std::string_view to) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().replace(from, to); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().replace(from, to); });
 }
 
 Registry RegistryNoteAccessor::replace(std::string_view from,
                                        std::string_view to,
                                        const pluss::table::TextOptions& options) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.nt().replace(from, to, options); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.nt().replace(from, to, options); });
 }
 
 RegistryTimelineAccessor::RegistryTimelineAccessor(Registry base, std::vector<std::string> keys)
@@ -269,7 +201,7 @@ RegistryTimelineAccessor::RegistryTimelineAccessor(Registry base, std::vector<st
 
 #define PLUSS_REGISTRY_TL_UNARY(method) \
   Registry RegistryTimelineAccessor::method() const { \
-    return RegistryFieldAccessor(base_, keys_).map_selected_([](const Slot& slot) { return slot.tl().method(); }); \
+    return registry_map_selected(base_, keys_, [](const Slot& slot) { return slot.tl().method(); }); \
   }
 
 PLUSS_REGISTRY_TL_UNARY(isnat)
@@ -298,41 +230,41 @@ PLUSS_REGISTRY_TL_UNARY(utc)
 #undef PLUSS_REGISTRY_TL_UNARY
 
 Registry RegistryTimelineAccessor::fmt(std::string_view pattern) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().fmt(pattern); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().fmt(pattern); });
 }
 
 Registry RegistryTimelineAccessor::epoch(pluss::table::TimeUnit unit) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().epoch(unit); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().epoch(unit); });
 }
 
 Registry RegistryTimelineAccessor::floor(std::string_view unit) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().floor(unit); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().floor(unit); });
 }
 
 Registry RegistryTimelineAccessor::ceil(std::string_view unit) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().ceil(unit); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().ceil(unit); });
 }
 
 Registry RegistryTimelineAccessor::round(std::string_view unit) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().round(unit); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().round(unit); });
 }
 
 Registry RegistryTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().shift(periods, freq); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().shift(periods, freq); });
 }
 
 Registry RegistryTimelineAccessor::period(std::string_view freq) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().period(freq); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().period(freq); });
 }
 
 Registry RegistryTimelineAccessor::tz(std::string_view name) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().tz(name); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().tz(name); });
 }
 
 Registry RegistryTimelineAccessor::localize(const pluss::table::TimelineLocalizeOptions& options) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().localize(options); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().localize(options); });
 }
 
 Registry RegistryTimelineAccessor::index(bool require_sorted) const {
-  return RegistryFieldAccessor(base_, keys_).map_selected_([&](const Slot& slot) { return slot.tl().index(require_sorted); });
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().index(require_sorted); });
 }

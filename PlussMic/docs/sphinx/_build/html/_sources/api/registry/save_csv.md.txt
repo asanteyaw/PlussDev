@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4f64cbbbcca2 -->
 
 # Registry::save_csv
 
@@ -85,13 +86,14 @@ try {
 ### Output
 
 ```text
-Registry::save_as: slot 'mixed': slot is not stream-compatible (kind=Mixed)
+Registry::to_kindle: slot 'mixed': slot is not stream-compatible (kind=Mixed)
 ```
 
-```{important} The throw message says "save_as", not "save_csv"
-Every `save_*` method except `save_json()` routes through the same internal
-helper, which reports the error under the name `"Registry::save_as"` regardless of
-which `save_*` method was actually called.
+```{important} The throw message says "to_kindle", not "save_csv"
+Every `save_*` method except `save_json()` routes through
+[`to_kindle()`](to_kindle.md) internally, so the stream-compatibility check
+reports the error under the name `"Registry::to_kindle"` regardless of which
+`save_*` method was actually called.
 ```
 
 ## Notes

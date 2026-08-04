@@ -126,14 +126,14 @@ int main() {
   show_timeline("factory from_epoch_nanos(span, span)", t_epoch_span);
   show_timeline("factory from_epoch_nanos(vector, vector)", t_epoch_vec);
 
-  const auto d_nanos = pluss::duration_nanos(500);
-  const auto d_seconds = pluss::duration_seconds(1);
-  const auto d_minutes = pluss::duration_minutes(1);
-  const auto d_hours = pluss::duration_hours(1);
-  const auto d_days = pluss::duration_days(1);
-  const auto d_range = pluss::timedelta_range(pluss::duration_seconds(0),
-                                              pluss::duration_seconds(5),
-                                              pluss::duration_seconds(1));
+  const auto d_nanos = pluss::duration::nanos(500);
+  const auto d_seconds = pluss::duration::seconds(1);
+  const auto d_minutes = pluss::duration::minutes(1);
+  const auto d_hours = pluss::duration::hours(1);
+  const auto d_days = pluss::duration::days(1);
+  const auto d_range = pluss::duration::range(pluss::duration::seconds(0),
+                                              pluss::duration::seconds(5),
+                                              pluss::duration::seconds(1));
   std::cout << "\n== factory Duration helpers ==\n";
   std::cout << "duration_nanos dim=" << d_nanos.dim() << " numel=" << d_nanos.numel() << "\n";
   std::cout << "duration_seconds dim=" << d_seconds.dim() << " numel=" << d_seconds.numel() << "\n";
@@ -364,7 +364,7 @@ int main() {
   show_series("resample_last", idx.resample_last(values, "H", 1));
   show_series("resample_ohlc", idx.resample_ohlc(values, "H", 1));
 
-  const auto win = pluss::duration_minutes(45);
+  const auto win = pluss::duration::minutes(45);
   show_series("rolling_count", idx.rolling_count(win));
   show_series("rolling_sum", idx.rolling_sum(values, win));
 
@@ -375,7 +375,7 @@ int main() {
       "2024-11-01T01:35:00Z",
   });
   const auto join_back = idx.join_asof(idx_right, TimeIndex::AsofDirection::Backward, nullptr, true);
-  const auto tol = pluss::duration_minutes(25);
+  const auto tol = pluss::duration::minutes(25);
   const auto join_near = idx.join_asof(idx_right, TimeIndex::AsofDirection::Nearest, &tol, true);
   show_series("join_asof(backward)", join_back);
   show_series("join_asof(nearest, tolerance=25m)", join_near);

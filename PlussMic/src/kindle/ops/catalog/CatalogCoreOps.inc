@@ -81,10 +81,6 @@ Catalog Catalog::filter(const pluss::Series& condition) const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::masked_select(const pluss::Series& mask) const {
-  return filter(mask);
-}
-
 Catalog Catalog::where(const pluss::Series& condition) const {
   return filter(condition);
 }
@@ -96,27 +92,35 @@ Catalog Catalog::query(const QueryFn& fn) const {
   return filter(mask);
 }
 
-Catalog Catalog::select(std::span<const std::string_view> field_names) const {
-  std::vector<std::string> names;
-  names.reserve(field_names.size());
-  for (const auto name : field_names) {
-    names.emplace_back(name);
+Catalog Catalog::select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+                        pluss::msharp::RangeView::Of<Catalog> choices,
+                        const Catalog& default_value) {
+  PLUSS_CHECK(!choices.empty(), "Catalog::select: at least one choice is required");
+  PLUSS_CHECK(default_value.defined(), "Catalog::select: default value is undefined");
+  PLUSS_CHECK(conditions.size() == choices.size(),
+              "Catalog::select: condition/choice count mismatch");
+
+  const auto& base_keys = default_value.keys();
+  for (const auto& choice : choices) {
+    PLUSS_CHECK(choice.defined(), "Catalog::select: choice is undefined");
+    PLUSS_CHECK(choice.keys() == base_keys,
+                "Catalog::select: all choices must have the same keys and order");
   }
-  return select(names);
-}
 
-Catalog Catalog::select(std::initializer_list<std::string_view> field_names) const {
-  return select(std::span<const std::string_view>(field_names.begin(), field_names.size()));
-}
-
-Catalog Catalog::select(const std::vector<std::string>& field_names) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  const auto names = normalize_names(field_names);
   std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(names.size());
-  for (const auto& n : names) {
-    PLUSS_CHECK(has(n), "Catalog::select: unknown key '" + n + "'");
-    out.emplace_back(n, at(n));
+  out.reserve(base_keys.size());
+  for (const auto& key : base_keys) {
+    std::vector<Stream> stream_choices;
+    stream_choices.reserve(choices.size());
+    for (const auto& choice : choices) {
+      stream_choices.push_back(choice.at(key));
+    }
+    out.emplace_back(
+        key,
+        Stream::select(
+            conditions,
+            pluss::msharp::RangeView::Of<Stream>(stream_choices),
+            default_value.at(key)));
   }
   return Catalog(std::move(out));
 }
@@ -191,21 +195,36 @@ Catalog Catalog::sort(std::string_view by_field, bool ascending) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key = trim_copy(by_field);
   PLUSS_CHECK(!key.empty(), "Catalog::sort: by_field cannot be empty");
-  return sort_by({key}, {ascending});
+  return sort(std::vector<std::string>{key}, {ascending});
 }
 
-Catalog Catalog::sort_by(const std::vector<std::string>& fields,
-                         const std::vector<bool>& ascending) const {
+Catalog Catalog::sort(std::span<const std::string_view> fields,
+                      const std::vector<bool>& ascending) const {
+  std::vector<std::string> names;
+  names.reserve(fields.size());
+  for (const auto name : fields) {
+    names.emplace_back(name);
+  }
+  return sort(names, ascending);
+}
+
+Catalog Catalog::sort(std::initializer_list<std::string_view> fields,
+                      const std::vector<bool>& ascending) const {
+  return sort(std::span<const std::string_view>(fields.begin(), fields.size()), ascending);
+}
+
+Catalog Catalog::sort(const std::vector<std::string>& fields,
+                      const std::vector<bool>& ascending) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto names = normalize_names(fields);
-  PLUSS_CHECK(!names.empty(), "Catalog::sort_by: at least one field is required");
+  PLUSS_CHECK(!names.empty(), "Catalog::sort: at least one field is required");
   PLUSS_CHECK(ascending.empty() || ascending.size() == names.size(),
-              "Catalog::sort_by: ascending size must be 0 or equal to fields size");
+              "Catalog::sort: ascending size must be 0 or equal to fields size");
 
   std::vector<Stream> key_streams;
   key_streams.reserve(names.size());
   for (const auto& n : names) {
-    PLUSS_CHECK(has(n), "Catalog::sort_by: unknown key '" + n + "'");
+    PLUSS_CHECK(has(n), "Catalog::sort: unknown key '" + n + "'");
     key_streams.push_back(at(n));
   }
   const auto idx = sort_indices_for_keys(key_streams, ascending);
@@ -215,7 +234,7 @@ Catalog Catalog::sort_by(const std::vector<std::string>& fields,
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     const auto& s = impl_ref_().streams_[i];
     PLUSS_CHECK(s.size() == static_cast<std::int64_t>(idx.size()),
-                "Catalog::sort_by: sort fields require aligned stream lengths");
+                "Catalog::sort: sort fields require aligned stream lengths");
     out.emplace_back(impl_ref_().keys_[i], s.take(idx));
   }
   return Catalog(std::move(out));
@@ -368,26 +387,6 @@ Catalog Catalog::astype(pluss::codem::ScalarType dtype) const {
               pluss::table::ThreadCastOptions{.series_dtype = dtype});
 }
 
-Stream Catalog::sum(std::string_view field) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return at(field).sum();
-}
-
-Stream Catalog::mean(std::string_view field) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return at(field).mean();
-}
-
-Stream Catalog::min(std::string_view field) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return at(field).min();
-}
-
-Stream Catalog::max(std::string_view field) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return at(field).max();
-}
-
 Catalog Catalog::distinct(DistinctOptions options) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   std::vector<std::pair<std::string, Stream>> out;
@@ -419,7 +418,7 @@ Catalog Catalog::ndistinct(DistinctOptions options) const {
 }
 
 std::int64_t Catalog::count() const {
-  return nrecords();
+  return nrows();
 }
 
 Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_view how) const {
@@ -438,35 +437,11 @@ Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_vi
   return kindelize(left.unify(key, right, key));
 }
 
-Catalog Catalog::apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  PLUSS_CHECK(static_cast<bool>(func), "Catalog::apply: func is empty");
-  const auto key = trim_copy(field);
-  PLUSS_CHECK(!key.empty(), "Catalog::apply: field cannot be empty");
-  PLUSS_CHECK(has(key), "Catalog::apply: unknown key '" + key + "'");
-  auto out = *this;
-  out.apply_(key, func);
-  return out;
-}
-
-Catalog& Catalog::apply_(std::string_view field, const std::function<Stream(const Stream&)>& func) {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  PLUSS_CHECK(static_cast<bool>(func), "Catalog::apply_: func is empty");
-  const auto key = trim_copy(field);
-  PLUSS_CHECK(!key.empty(), "Catalog::apply_: field cannot be empty");
-  const auto src = at(key);
-  const auto dst = func(src);
-  PLUSS_CHECK(dst.defined(), "Catalog::apply_: function returned undefined stream");
-  PLUSS_CHECK(dst.size() == src.size(),
-              "Catalog::apply_: output stream length must match input stream length");
-  return set_stream_(key, dst);
-}
-
-Catalog Catalog::apply_all(const std::function<Stream(const Stream&)>& fn) const {
+Catalog Catalog::map(const std::function<Stream(const Stream&)>& fn) const {
   return transform(fn);
 }
 
-Catalog& Catalog::apply_all_(const std::function<Stream(const Stream&)>& fn) {
+Catalog& Catalog::map_(const std::function<Stream(const Stream&)>& fn) {
   *this = transform(fn);
   return *this;
 }
@@ -479,15 +454,7 @@ Catalog Catalog::transform(const std::function<Stream(const Stream&)>& fn) const
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     const auto& key = impl_ref_().keys_[i];
     const auto& src = impl_ref_().streams_[i];
-    const auto dst = fn(src);
-    PLUSS_CHECK(dst.defined(), "Catalog::transform: function returned undefined stream");
-    PLUSS_CHECK(dst.size() == src.size(),
-                "Catalog::transform: output stream length must match input stream length");
-    out.emplace_back(key, dst);
+    out.emplace_back(key, src.map(fn));
   }
   return Catalog(std::move(out));
-}
-
-Catalog Catalog::transform(std::string_view field, const std::function<Stream(const Stream&)>& fn) const {
-  return apply(field, fn);
 }

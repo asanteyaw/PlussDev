@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Registry::clear" href="clear.html" />
+    <link rel="next" title="Registry::cast" href="cast.html" />
     <link rel="prev" title="Registry::as_kindle" href="as_kindle.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -36,18 +36,29 @@
 
           <div class="body" role="main">
             
-  <section id="registry-begin">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a0d3777268d8 -->
+<section id="registry-begin">
 <h1>Registry::begin<a class="headerlink" href="#registry-begin" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">const_iterator</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">const_iterator</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.</p>
+<p>Returns an iterator over the registry’s <strong>field names</strong> — <code class="docutils literal notranslate"><span class="pre">begin()</span></code>/<a class="reference internal" href="end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">end()</span></code></span></a>
+are what make <code class="docutils literal notranslate"><span class="pre">Registry</span></code> usable in a range-<code class="docutils literal notranslate"><span class="pre">for</span></code> loop and with standard
+algorithms. <code class="docutils literal notranslate"><span class="pre">const_iterator</span></code> is <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;::const_iterator</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Iterates field names, not values or Slots
+A range-<code class="docutils literal notranslate"><span class="pre">for</span></code> over a <code class="docutils literal notranslate"><span class="pre">Registry</span></code> yields <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::string&amp;</span></code> field names, one per
+field — the same sequence <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields()</span></code></span></a>’s no-arg overload returns. It
+does <strong>not</strong> yield <code class="docutils literal notranslate"><span class="pre">Slot</span></code>s, and it does not iterate row values within any field.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -55,38 +66,56 @@
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">const_iterator</span></code>
-Value produced by this call.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Registry::const_iterator</span></code>
+An iterator to the first field name; equal to <code class="docutils literal notranslate"><span class="pre">end()</span></code> for an empty
+registry.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Iterate a registry’s field names with a range-<code class="docutils literal notranslate"><span class="pre">for</span></code> loop.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">key</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rg</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id city
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above — this iterates field <em>names</em>, matching
+<a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields()</span></code></span></a>’s no-arg overload, not field values.</p></li>
+<li><p>Requires a defined registry — throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> on an
+undefined one (via the underlying <code class="docutils literal notranslate"><span class="pre">keys()</span></code> accessor).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::end</span></code></span></a>: the matching end iterator.</p></li>
+<li><p><a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields</span></code></span></a>: the no-arg overload returns the same field
+names as a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>, without needing manual iteration.</p></li>
+<li><p><a class="reference internal" href="../catalog/begin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::begin</span></code></span></a>: the equivalent iterator on the
+kindle model.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="as_kindle.html">
     <span class="label">Previous</span>
     <span class="title">as_kindle</span>
   </a>
-  <a class="next-link" href="clear.html">
+  <a class="next-link" href="cast.html">
     <span class="label">Next</span>
-    <span class="title">clear</span>
+    <span class="title">cast</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 
@@ -139,7 +168,7 @@ Value produced by this call.</p>
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="as_kindle.html" title="previous chapter">Registry::as_kindle</a></li>
-      <li>Next: <a href="clear.html" title="next chapter">Registry::clear</a></li>
+      <li>Next: <a href="cast.html" title="next chapter">Registry::cast</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

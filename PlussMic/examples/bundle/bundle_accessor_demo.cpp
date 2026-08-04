@@ -240,7 +240,7 @@ int main() {
         })},
     });
 
-    std::cout << "\n=== Registry Field Accessor ===\n";
+    std::cout << "\n=== Registry Fields ===\n";
     std::cout << "fields(...).cast().series()\n"
               << registry.fields({"numeric_text"}).cast({.series_dtype = ScalarType::Float64}).series() << "\n";
     std::cout << "fields(...).cast().note()\n"
@@ -357,32 +357,32 @@ int main() {
         pluss::make_note("test"),
     }));
 
-    std::cout << "\n=== Axel Field Accessor ===\n";
+    std::cout << "\n=== Axel Fields ===\n";
     std::cout << "fields(...).cast().series()\n"
-              << axel.fields({"numeric_text"}).cast({.series_dtype = ScalarType::Float64}).series().registry(0).select("numeric_text") << "\n";
+              << axel.fields({"numeric_text"}).cast({.series_dtype = ScalarType::Float64}).series().registry(0).fields("numeric_text") << "\n";
     std::cout << "fields(...).cast().note()\n"
-              << axel.fields({"amount"}).cast().note().registry(0).select("amount") << "\n";
+              << axel.fields({"amount"}).cast().note().registry(0).fields("amount") << "\n";
     std::cout << "fields(...).cast().timeline()\n"
-              << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeline().registry(0).select("date_text") << "\n";
+              << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeline().registry(0).fields("date_text") << "\n";
     std::cout << "fields(...).cast().timeindex()\n"
-              << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeindex().registry(0).select("date_text") << "\n";
+              << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeindex().registry(0).fields("date_text") << "\n";
     std::cout << "fields(...).nt()\n"
-              << axel.fields({"code"}).nt().strip().fields({"code"}).nt().upper().registry(0).select("code") << "\n";
-    std::cout << "fields(...).tl()\n" << axel.fields({"opened_at"}).tl().year().registry(0).select("opened_at") << "\n";
-    std::cout << "fields(...).fillnull(0.0)\n" << axel.fields({"amount"}).fillnull(0.0).registry(0).select("amount") << "\n";
-    std::cout << "fields(...).fillnull(\"missing\")\n" << axel.fields({"code"}).fillnull("missing").registry(0).select("code") << "\n";
+              << axel.fields({"code"}).nt().strip().fields({"code"}).nt().upper().registry(0).fields("code") << "\n";
+    std::cout << "fields(...).tl()\n" << axel.fields({"opened_at"}).tl().year().registry(0).fields("opened_at") << "\n";
+    std::cout << "fields(...).fillnull(0.0)\n" << axel.fields({"amount"}).fillnull(0.0).registry(0).fields("amount") << "\n";
+    std::cout << "fields(...).fillnull(\"missing\")\n" << axel.fields({"code"}).fillnull("missing").registry(0).fields("code") << "\n";
     std::cout << "fields(...).fillnull(Timeline)\n"
-              << axel.fields({"opened_at"}).fillnull(pluss::make_timeline({"2026-01-01T00:00:00Z"})).registry(0).select("opened_at") << "\n";
+              << axel.fields({"opened_at"}).fillnull(pluss::make_timeline({"2026-01-01T00:00:00Z"})).registry(0).fields("opened_at") << "\n";
     std::cout << "fields(...).fillnull(TimeIndex)\n"
-              << axel.fields({"stamp"}).fillnull(pluss::make_timeindex({"2026-01-01T00:00:00Z"})).registry(0).select("stamp") << "\n";
-    std::cout << "fields(...).dropnull()\n" << axel.fields({"amount"}).dropnull().registry(0).select("amount") << "\n";
-    std::cout << "fields(...).isnull()\n" << axel.fields({"amount"}).isnull().registry(0).select("amount") << "\n";
-    std::cout << "fields(...).notnull()\n" << axel.fields({"amount"}).notnull().registry(0).select("amount") << "\n";
-    std::cout << "fields(...).invalid()\n" << axel.fields({"amount"}).invalid().registry(0).select("amount") << "\n";
-    std::cout << "fields(...).distinct()\n" << axel.fields({"quantity"}).distinct({.dropnull = false}).registry(0).select("quantity") << "\n";
-    std::cout << "fields(...).freq()\n" << axel.fields({"quantity"}).freq({.top = 2, .dropnull = false}).registry(0).select("quantity") << "\n";
-    std::cout << "fields(...).ndistinct()\n" << axel.fields({"quantity"}).ndistinct({.dropnull = false}).registry(0).select("quantity") << "\n";
-    std::cout << "fields(...).astype(Float64)\n" << axel.fields({"numeric_text"}).astype(ScalarType::Float64).registry(0).select("numeric_text") << "\n";
+              << axel.fields({"stamp"}).fillnull(pluss::make_timeindex({"2026-01-01T00:00:00Z"})).registry(0).fields("stamp") << "\n";
+    std::cout << "fields(...).dropnull()\n" << axel.fields({"amount"}).dropnull().registry(0).fields("amount") << "\n";
+    std::cout << "fields(...).isnull()\n" << axel.fields({"amount"}).isnull().registry(0).fields("amount") << "\n";
+    std::cout << "fields(...).notnull()\n" << axel.fields({"amount"}).notnull().registry(0).fields("amount") << "\n";
+    std::cout << "fields(...).invalid()\n" << axel.fields({"amount"}).invalid().registry(0).fields("amount") << "\n";
+    std::cout << "fields(...).distinct()\n" << axel.fields({"quantity"}).distinct({.dropnull = false}).registry(0).fields("quantity") << "\n";
+    std::cout << "fields(...).freq()\n" << axel.fields({"quantity"}).freq({.top = 2, .dropnull = false}).registry(0).fields("quantity") << "\n";
+    std::cout << "fields(...).ndistinct()\n" << axel.fields({"quantity"}).ndistinct({.dropnull = false}).registry(0).fields("quantity") << "\n";
+    std::cout << "fields(...).astype(Float64)\n" << axel.fields({"numeric_text"}).astype(ScalarType::Float64).registry(0).fields("numeric_text") << "\n";
 
     std::cout << "\n=== Axel Field-Axis Accessor ===\n";
     std::cout << "fieldaxis().like(\"date\") => " << axel.fieldaxis().like("date").registry(0).nfields() << "\n";
@@ -399,70 +399,70 @@ int main() {
     std::cout << "fieldaxis().empty() => " << axel.fieldaxis().empty().registry(0).nfields() << "\n";
 
     std::cout << "\n=== Axel Note Accessor ===\n";
-    std::cout << "nt().strip()\n" << axel.fields({"code"}).nt().strip().registry(0).select("code") << "\n";
-    std::cout << "nt().strip(\" -\")\n" << axel.fields({"code"}).nt().strip(" -").registry(0).select("code") << "\n";
-    std::cout << "nt().lstrip()\n" << axel.fields({"code"}).nt().lstrip().registry(0).select("code") << "\n";
-    std::cout << "nt().lstrip(\" O\")\n" << axel.fields({"code"}).nt().lstrip(" O").registry(0).select("code") << "\n";
-    std::cout << "nt().rstrip()\n" << axel.fields({"code"}).nt().rstrip().registry(0).select("code") << "\n";
-    std::cout << "nt().rstrip(\" 34\")\n" << axel.fields({"code"}).nt().rstrip(" 34").registry(0).select("code") << "\n";
-    std::cout << "nt().lower()\n" << axel.fields({"code"}).nt().lower().registry(0).select("code") << "\n";
-    std::cout << "nt().upper()\n" << axel.fields({"code"}).nt().upper().registry(0).select("code") << "\n";
-    std::cout << "nt().casefold()\n" << axel.fields({"code"}).nt().casefold().registry(0).select("code") << "\n";
-    std::cout << "nt().titlecase()\n" << axel.fields({"code"}).nt().titlecase().registry(0).select("code") << "\n";
-    std::cout << "nt().length()\n" << axel.fields({"code"}).nt().length().registry(0).select("code") << "\n";
-    std::cout << "nt().starts(\"  \")\n" << axel.fields({"code"}).nt().starts("  ").registry(0).select("code") << "\n";
-    std::cout << "nt().ends(\"55\")\n" << axel.fields({"code"}).nt().ends("55").registry(0).select("code") << "\n";
+    std::cout << "nt().strip()\n" << axel.fields({"code"}).nt().strip().registry(0).fields("code") << "\n";
+    std::cout << "nt().strip(\" -\")\n" << axel.fields({"code"}).nt().strip(" -").registry(0).fields("code") << "\n";
+    std::cout << "nt().lstrip()\n" << axel.fields({"code"}).nt().lstrip().registry(0).fields("code") << "\n";
+    std::cout << "nt().lstrip(\" O\")\n" << axel.fields({"code"}).nt().lstrip(" O").registry(0).fields("code") << "\n";
+    std::cout << "nt().rstrip()\n" << axel.fields({"code"}).nt().rstrip().registry(0).fields("code") << "\n";
+    std::cout << "nt().rstrip(\" 34\")\n" << axel.fields({"code"}).nt().rstrip(" 34").registry(0).fields("code") << "\n";
+    std::cout << "nt().lower()\n" << axel.fields({"code"}).nt().lower().registry(0).fields("code") << "\n";
+    std::cout << "nt().upper()\n" << axel.fields({"code"}).nt().upper().registry(0).fields("code") << "\n";
+    std::cout << "nt().casefold()\n" << axel.fields({"code"}).nt().casefold().registry(0).fields("code") << "\n";
+    std::cout << "nt().titlecase()\n" << axel.fields({"code"}).nt().titlecase().registry(0).fields("code") << "\n";
+    std::cout << "nt().length()\n" << axel.fields({"code"}).nt().length().registry(0).fields("code") << "\n";
+    std::cout << "nt().starts(\"  \")\n" << axel.fields({"code"}).nt().starts("  ").registry(0).fields("code") << "\n";
+    std::cout << "nt().ends(\"55\")\n" << axel.fields({"code"}).nt().ends("55").registry(0).fields("code") << "\n";
     std::cout << "nt().has(\"theta\", {.case_sensitive = false})\n"
-              << axel.fields({"code"}).nt().has("theta", {.case_sensitive = false}).registry(0).select("code") << "\n";
+              << axel.fields({"code"}).nt().has("theta", {.case_sensitive = false}).registry(0).fields("code") << "\n";
     std::cout << "nt().count(\"[0-9]\", {.regex = true})\n"
-              << axel.fields({"code"}).nt().count("[0-9]", {.regex = true}).registry(0).select("code") << "\n";
-    std::cout << "nt().matches(\"[A-Za-z -]+\")\n" << axel.fields({"code"}).nt().matches("[A-Za-z -]+").registry(0).select("code") << "\n";
-    std::cout << "nt().fullmatch(\"[A-Za-z| -]+\")\n" << axel.fields({"code"}).nt().fullmatch("[A-Za-z| -]+").registry(0).select("code") << "\n";
+              << axel.fields({"code"}).nt().count("[0-9]", {.regex = true}).registry(0).fields("code") << "\n";
+    std::cout << "nt().matches(\"[A-Za-z -]+\")\n" << axel.fields({"code"}).nt().matches("[A-Za-z -]+").registry(0).fields("code") << "\n";
+    std::cout << "nt().fullmatch(\"[A-Za-z| -]+\")\n" << axel.fields({"code"}).nt().fullmatch("[A-Za-z| -]+").registry(0).fields("code") << "\n";
     std::cout << "nt().pad(16, TextAlign::Center, '.')\n"
-              << axel.fields({"code"}).nt().pad(16, TextAlign::Center, '.').registry(0).select("code") << "\n";
-    std::cout << "nt().chars(0, 5)\n" << axel.fields({"code"}).nt().chars(0, 5).registry(0).select("code") << "\n";
-    std::cout << "nt().normalize()\n" << axel.fields({"code"}).nt().normalize().registry(0).select("code") << "\n";
-    std::cout << "nt().encode(\"base64\")\n" << axel.fields({"code"}).nt().encode("base64").registry(0).select("code") << "\n";
-    std::cout << "nt().replace(\"-\", \"_\")\n" << axel.fields({"code"}).nt().replace("-", "_").registry(0).select("code") << "\n";
+              << axel.fields({"code"}).nt().pad(16, TextAlign::Center, '.').registry(0).fields("code") << "\n";
+    std::cout << "nt().chars(0, 5)\n" << axel.fields({"code"}).nt().chars(0, 5).registry(0).fields("code") << "\n";
+    std::cout << "nt().normalize()\n" << axel.fields({"code"}).nt().normalize().registry(0).fields("code") << "\n";
+    std::cout << "nt().encode(\"base64\")\n" << axel.fields({"code"}).nt().encode("base64").registry(0).fields("code") << "\n";
+    std::cout << "nt().replace(\"-\", \"_\")\n" << axel.fields({"code"}).nt().replace("-", "_").registry(0).fields("code") << "\n";
     std::cout << "nt().replace(\"[0-9]+\", \"NUM\", {.regex = true})\n"
-              << axel.fields({"code"}).nt().replace("[0-9]+", "NUM", {.regex = true}).registry(0).select("code") << "\n";
+              << axel.fields({"code"}).nt().replace("[0-9]+", "NUM", {.regex = true}).registry(0).fields("code") << "\n";
 
     std::cout << "\n=== Axel Timeline Accessor ===\n";
-    std::cout << "tl().isnat()\n" << axel.fields({"opened_at"}).tl().isnat().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().valid()\n" << axel.fields({"opened_at"}).tl().valid().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().year()\n" << axel.fields({"opened_at"}).tl().year().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().month()\n" << axel.fields({"opened_at"}).tl().month().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().day()\n" << axel.fields({"opened_at"}).tl().day().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().hour()\n" << axel.fields({"opened_at"}).tl().hour().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().minute()\n" << axel.fields({"opened_at"}).tl().minute().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().second()\n" << axel.fields({"opened_at"}).tl().second().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().weekday()\n" << axel.fields({"opened_at"}).tl().weekday().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().yearday()\n" << axel.fields({"opened_at"}).tl().yearday().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().quarter()\n" << axel.fields({"opened_at"}).tl().quarter().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().week()\n" << axel.fields({"opened_at"}).tl().week().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().weekend()\n" << axel.fields({"opened_at"}).tl().weekend().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().month_start()\n" << axel.fields({"opened_at"}).tl().month_start().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().month_end()\n" << axel.fields({"opened_at"}).tl().month_end().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().leap()\n" << axel.fields({"opened_at"}).tl().leap().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().weekday_name()\n" << axel.fields({"opened_at"}).tl().weekday_name().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().month_name()\n" << axel.fields({"opened_at"}).tl().month_name().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().fmt(\"%Y-%m-%d\")\n" << axel.fields({"opened_at"}).tl().fmt("%Y-%m-%d").registry(0).select("opened_at") << "\n";
-    std::cout << "tl().iso()\n" << axel.fields({"opened_at"}).tl().iso().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().epoch(TimeUnit::Millis)\n" << axel.fields({"opened_at"}).tl().epoch(TimeUnit::Millis).registry(0).select("opened_at") << "\n";
-    std::cout << "tl().floor(\"D\")\n" << axel.fields({"opened_at"}).tl().floor("D").registry(0).select("opened_at") << "\n";
-    std::cout << "tl().ceil(\"H\")\n" << axel.fields({"opened_at"}).tl().ceil("H").registry(0).select("opened_at") << "\n";
-    std::cout << "tl().round(\"H\")\n" << axel.fields({"opened_at"}).tl().round("H").registry(0).select("opened_at") << "\n";
-    std::cout << "tl().date()\n" << axel.fields({"opened_at"}).tl().date().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().time()\n" << axel.fields({"opened_at"}).tl().time().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().shift(-90, \"minutes\")\n" << axel.fields({"opened_at"}).tl().shift(-90, "minutes").registry(0).select("opened_at") << "\n";
-    std::cout << "tl().period(\"months\")\n" << axel.fields({"opened_at"}).tl().period("months").registry(0).select("opened_at") << "\n";
-    std::cout << "tl().tz(\"America/New_York\")\n" << axel.fields({"opened_at"}).tl().tz("America/New_York").registry(0).select("opened_at") << "\n";
+    std::cout << "tl().isnat()\n" << axel.fields({"opened_at"}).tl().isnat().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().valid()\n" << axel.fields({"opened_at"}).tl().valid().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().year()\n" << axel.fields({"opened_at"}).tl().year().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().month()\n" << axel.fields({"opened_at"}).tl().month().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().day()\n" << axel.fields({"opened_at"}).tl().day().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().hour()\n" << axel.fields({"opened_at"}).tl().hour().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().minute()\n" << axel.fields({"opened_at"}).tl().minute().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().second()\n" << axel.fields({"opened_at"}).tl().second().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().weekday()\n" << axel.fields({"opened_at"}).tl().weekday().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().yearday()\n" << axel.fields({"opened_at"}).tl().yearday().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().quarter()\n" << axel.fields({"opened_at"}).tl().quarter().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().week()\n" << axel.fields({"opened_at"}).tl().week().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().weekend()\n" << axel.fields({"opened_at"}).tl().weekend().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().month_start()\n" << axel.fields({"opened_at"}).tl().month_start().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().month_end()\n" << axel.fields({"opened_at"}).tl().month_end().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().leap()\n" << axel.fields({"opened_at"}).tl().leap().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().weekday_name()\n" << axel.fields({"opened_at"}).tl().weekday_name().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().month_name()\n" << axel.fields({"opened_at"}).tl().month_name().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().fmt(\"%Y-%m-%d\")\n" << axel.fields({"opened_at"}).tl().fmt("%Y-%m-%d").registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().iso()\n" << axel.fields({"opened_at"}).tl().iso().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().epoch(TimeUnit::Millis)\n" << axel.fields({"opened_at"}).tl().epoch(TimeUnit::Millis).registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().floor(\"D\")\n" << axel.fields({"opened_at"}).tl().floor("D").registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().ceil(\"H\")\n" << axel.fields({"opened_at"}).tl().ceil("H").registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().round(\"H\")\n" << axel.fields({"opened_at"}).tl().round("H").registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().date()\n" << axel.fields({"opened_at"}).tl().date().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().time()\n" << axel.fields({"opened_at"}).tl().time().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().shift(-90, \"minutes\")\n" << axel.fields({"opened_at"}).tl().shift(-90, "minutes").registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().period(\"months\")\n" << axel.fields({"opened_at"}).tl().period("months").registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().tz(\"America/New_York\")\n" << axel.fields({"opened_at"}).tl().tz("America/New_York").registry(0).fields("opened_at") << "\n";
     std::cout << "tl().localize({.tz = \"UTC\"})\n"
               << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeline()
-                     .fields({"date_text"}).tl().localize(TimelineLocalizeOptions{.tz = "UTC"}).registry(0).select("date_text") << "\n";
+                     .fields({"date_text"}).tl().localize(TimelineLocalizeOptions{.tz = "UTC"}).registry(0).fields("date_text") << "\n";
     std::cout << "tl().utc()\n"
-              << axel.fields({"opened_at"}).tl().tz("America/New_York").fields({"opened_at"}).tl().utc().registry(0).select("opened_at") << "\n";
-    std::cout << "tl().index(false)\n" << axel.fields({"opened_at"}).tl().index(false).registry(0).select("opened_at") << "\n";
+              << axel.fields({"opened_at"}).tl().tz("America/New_York").fields({"opened_at"}).tl().utc().registry(0).fields("opened_at") << "\n";
+    std::cout << "tl().index(false)\n" << axel.fields({"opened_at"}).tl().index(false).registry(0).fields("opened_at") << "\n";
 
     return 0;
   } catch (const std::exception& e) {

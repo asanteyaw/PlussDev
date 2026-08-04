@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Series::sizes
 
 [Back to Series API Reference](../../series_api_reference)
@@ -12,15 +14,15 @@ Series::sizes() const -> pluss::msharp::RangeView::Int
 
 Returns the full current shape as a lightweight borrowed view.
 
-This is the bulk form of [`size()`](size.md): instead of asking for one axis at a
-time, you receive the entire shape sequence. The return type is intentionally
-cheap. `sizes()` does not allocate a new `std::vector<std::int64_t>` just to
-hand you the shape; it exposes the existing shape metadata through
-`pluss::msharp::RangeView::Int`.
+This is the bulk counterpart to [`size()`](size.md). Instead of asking for one
+axis length at a time, you get the entire sequence of extents in rank order.
 
-That makes `sizes()` the right API when you want to pass a shape directly into
-other Series operations such as `reshape`, `expand`, or shape-driven factory
-calls.
+The important design choice here is that `sizes()` does **not** allocate a new
+owning container just to hand you shape metadata. It returns
+`pluss::msharp::RangeView::Int`, which is a non-owning view over the existing
+shape storage. That makes `sizes()` cheap enough to use as plumbing between
+shape-driven operations such as `view()`, `reshape()`, `expand()`, or other
+factory calls that accept a shape-like span.
 
 ## Parameters
 
@@ -29,22 +31,31 @@ This method takes no parameters.
 ## Returns
 
 `pluss::msharp::RangeView::Int`
-    A non-owning view over the current axis extents.
+    A borrowed view of the current axis extents.
+
+## Lifetime Notes
+
+Because the return value is borrowed, you should treat it as shape metadata tied
+to the `Series` it came from. It is ideal for immediate inspection and for
+passing directly into another call; it is not an owning snapshot meant to outlive
+the source object arbitrarily.
 
 ## Examples
 
-Example 1. Borrow the base shape directly.
+Example 1. Read the whole base shape at once.
 
 ```cpp
-auto shape_src = pluss::make_series(
+auto cube = pluss::make_series(
     std::vector<double>{
-        1, 2, 3, 4, 5, 6,
-        7, 8, 9, 10, 11, 12,
-        13, 14, 15, 16, 17, 18,
-        19, 20, 21, 22, 23, 24},
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16,
+        17, 18, 19, 20,
+        21, 22, 23, 24},
     {2, 3, 4});
 
-auto shape = shape_src.sizes();
+auto shape = cube.sizes();
 
 std::cout << "[";
 for (std::size_t i = 0; i < shape.size(); ++i) {
@@ -60,12 +71,11 @@ std::cout << "]";
 [2, 3, 4]
 ```
 
-Example 2. Because `sizes()` reports the current logical view, a transpose
-changes the shape it exposes immediately.
+Example 2. `sizes()` tracks the current logical view immediately after a shape
+operation.
 
 ```cpp
-auto transposed = shape_src.transpose(0, 1);
-auto shape = transposed.sizes();
+shape = cube.transpose(0, 2).sizes();
 
 std::cout << "[";
 for (std::size_t i = 0; i < shape.size(); ++i) {
@@ -78,20 +88,24 @@ std::cout << "]";
 ### Output
 
 ```text
-[3, 2, 4]
+[4, 3, 2]
 ```
+
+The physical storage did not move there; only the logical interpretation
+changed. `sizes()` reports the interpreted shape, not the original factory
+layout.
 
 ## Notes
 
-- `sizes()` is a borrowed view, not an owning container.
-- If you only need one axis, [`size()`](size.md) is clearer.
-- `sizes()` reports shape, not strides. For layout details, use `strides()`.
+- `sizes()` is borrowed metadata, not an owning `std::vector<std::int64_t>`.
+- If you only need one axis, [`size()`](size.md) is the clearer API.
+- `sizes()` reports extents only. It does not expose strides or contiguity.
 
 ## See Also
 
-- [`Series::size`](size.md): axis-by-axis shape inspection.
-- [`Series::view`](view.md): consume a shape-like sequence to reinterpret a
-  contiguous layout.
+- [`Series::size`](size.md): query one axis.
+- [`Series::view`](view.md), [`Series::reshape`](reshape.md): consume shape-like
+  ranges directly.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="size.html">

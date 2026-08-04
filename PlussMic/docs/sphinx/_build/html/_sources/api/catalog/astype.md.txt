@@ -71,9 +71,9 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
   method applies uniformly.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="apply_all_.html">
+  <a class="prev-link" href="map_.html">
     <span class="label">Previous</span>
-    <span class="title">apply_all_</span>
+    <span class="title">map_</span>
   </a>
   <a class="next-link" href="at.html">
     <span class="label">Next</span>

@@ -81,8 +81,8 @@ city                     | Note         | Note             | 3       | [Accra, K
     <span class="label">Previous</span>
     <span class="title">tail</span>
   </a>
-  <a class="next-link" href="text_preprocess.html">
+  <a class="next-link" href="clean.html">
     <span class="label">Next</span>
-    <span class="title">text_preprocess</span>
+    <span class="title">clean</span>
   </a>
 </div>

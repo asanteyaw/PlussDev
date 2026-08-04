@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9b51664f787a -->
 
 # Registry::load_excel
 

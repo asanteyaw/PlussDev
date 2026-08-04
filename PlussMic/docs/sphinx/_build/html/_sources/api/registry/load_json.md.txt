@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1bcb93fd1da8 -->
 
 # Registry::load_json
 

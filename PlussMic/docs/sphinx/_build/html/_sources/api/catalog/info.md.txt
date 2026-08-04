@@ -21,7 +21,7 @@ name/kind/dtype/null-count block distinct from `Thread::show()`'s row rendering)
 `Catalog::info()` renders **exactly** the same full row-and-column table as
 [`display()`](display.md), [`show()`](show.md), and `operator<<`. There is currently no
 lighter-weight metadata view for `Catalog` — if you only want counts, use
-[`nkeys()`](nkeys.md)/[`nrecords()`](nrecords.md)/[`shape()`](shape.md) directly instead of
+[`nkeys()`](nkeys.md)/[`nrows()`](nrows.md)/[`shape()`](shape.md) directly instead of
 `info()`.
 ```
 
@@ -66,7 +66,7 @@ id                       | Series       | Series[float64]  | 3       | [1, 2, 3]
 - Renders identically to [`display()`](display.md)/[`show()`](show.md)/`operator<<` — see
   the important callout above.
 - For counts alone (row count, stream count) without the full table, use
-  [`nkeys()`](nkeys.md), [`nrecords()`](nrecords.md), or [`shape()`](shape.md) directly.
+  [`nkeys()`](nkeys.md), [`nrows()`](nrows.md), or [`shape()`](shape.md) directly.
 
 ## See Also
 

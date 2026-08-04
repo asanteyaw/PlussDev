@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3685d9f2e68b -->
 
 # Registry::defined
 
@@ -113,9 +114,9 @@ true
   model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="concat_values_.html">
+  <a class="prev-link" href="concat_.html">
     <span class="label">Previous</span>
-    <span class="title">concat_values_</span>
+    <span class="title">concat_</span>
   </a>
   <a class="next-link" href="distinct.html">
     <span class="label">Next</span>

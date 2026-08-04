@@ -105,7 +105,7 @@ _label                   | Series       | Series[int64]    | 3       | [0, 1, 2]
 
 Since the round-tripped frame had a default positional case-label axis, the materialized
 `_label` stream is just `[0, 1, 2]` — this is more useful when the frame's label axis
-carries meaningful values (e.g. after [`load_csv_with_key()`](load_csv_with_key.md)).
+carries meaningful values (e.g. after [`load_labeled()`](load_labeled.md)).
 
 ## Notes
 
@@ -119,7 +119,7 @@ carries meaningful values (e.g. after [`load_csv_with_key()`](load_csv_with_key.
 
 - [`Catalog::tabelize`](tabelize.md) / [`Catalog::to_table`](to_table.md): the inverse
   direction, `Catalog` → `DataFrame`.
-- [`Catalog::load_csv_with_key`](load_csv_with_key.md): uses this same
+- [`Catalog::load_labeled`](load_labeled.md): uses this same
   `materialize_label` mechanism internally to expose a loaded CSV's key column.
 
 <div class="pluss-inline-prev-next">

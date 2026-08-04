@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e5c01407d3d4 -->
 
 # Registry::fields
 
@@ -8,58 +9,68 @@
 
 ```cpp
 const std::vector<std::string>& Registry::fields() const
-RegistryFieldAccessor Registry::fields(std::string_view key) const
-RegistryFieldAccessor Registry::fields(std::span<const std::string_view> keys) const
-RegistryFieldAccessor Registry::fields(std::initializer_list<std::string_view> keys) const
+Slot Registry::fields(std::string_view key) const
+Registry Registry::fields(std::span<const std::string_view> keys) const
+Registry Registry::fields(std::initializer_list<std::string_view> keys) const
 template <pluss::detail::StringViewNameRange NameRange>
-RegistryFieldAccessor Registry::fields(const NameRange& keys) const
+Registry Registry::fields(const NameRange& keys) const
 ```
 
 ## What It Does
 
-`fields()` plays **two distinct roles** depending on whether you pass an argument:
+`fields()` has two roles:
 
-- **No-arg overload** — `fields()` is a plain getter, returning the registry's field
-  names in field order. This is the identity/introspection role, analogous to
-  `Catalog::keys()`.
-- **Argument overloads** — `fields(key)` / `fields(keys)` bind the registry and a
-  selection of field names into a `RegistryFieldAccessor`, the entry point for
-  field-scoped operations (`cast()`, `nt()`, `tl()`, plus null-handling and
-  distinct/frequency shorthands). This is the accessor-launcher role.
+- `fields()` with no argument returns the registry's field names.
+- `fields("name")` returns one `Slot`.
+- `fields(keys)` with a multi-name list returns a projected `Registry` containing only those fields, in the requested order.
 
-```{important} fields() is overloaded across two unrelated purposes
-Calling `fields()` with no arguments and calling `fields(key)` with one do
-fundamentally different things — the first returns `const std::vector<std::string>&`
-(the field names), the second returns a `RegistryFieldAccessor` (a binder for
-further operations on the named field). Reading call sites carefully for the
-presence or absence of an argument matters here.
+This keeps `Registry` aligned with the table and kindle stacks:
+
+- no-arg selector returns names
+- one-name selector returns the leaf object
+- multi-name selector returns the projected container
+
+That gives you both direct slot work and projection-first registry work:
+
+```cpp
+auto slot = rg.fields("city").nt().upper();
 ```
+
+```cpp
+auto out = rg.fields({"city"}).nt().upper();
+```
+
+The first example returns a `Slot`. The second returns a one-field `Registry`.
+
+If you want to rewrite one field while keeping the rest of the registry, fetch the slot, do the slot work, then reinsert with [`set`](set.md) or [`set_`](set_.md).
 
 ## Parameters
 
 **key** (`std::string_view`)
-    A single field name to bind the accessor to.
+    One field name to fetch as a `Slot`.
 
 **keys** (`std::span<const std::string_view>` / `std::initializer_list<std::string_view>` / any string-view name range)
-    Multiple field names to bind the accessor to at once.
+    The field names to keep in a projected registry, in the order you want them returned.
 
 ## Returns
 
-`const std::vector<std::string>&` (no-arg overload)
-    The registry's field names, in field order.
+`const std::vector<std::string>&`
+    The registry's field names when called with no argument.
 
-`RegistryFieldAccessor` (argument overloads)
-    A binder for the current registry and the selected field name(s) — call one of
-    its methods to actually transform or query those fields.
+`Slot`
+    The named slot when called with one field name.
+
+`Registry`
+    A projected registry containing only the requested fields when called with a name list.
 
 ## Examples
 
-Example 1. The no-arg overload returns the field names.
+Example 1. Introspect field names.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 for (const auto& name : rg.fields()) std::cout << name << " ";
@@ -71,49 +82,51 @@ for (const auto& name : rg.fields()) std::cout << name << " ";
 id city
 ```
 
-Example 2. The argument overload binds an accessor over the named fields — here
-using its `dropnull()` shorthand, which returns a full `Registry`, not just the
-selected fields.
+Example 2. Fetch one slot directly.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
-auto out = rg.fields({"id", "city"}).dropnull();
-std::cout << out.nfields();
+auto out = rg.fields("city").nt().upper();
+std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-2
+ACCRA
+```
+
+Example 3. Project one field, then run a note accessor on the projected registry.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+});
+
+auto out = rg.fields({"city"}).nt().upper();
+std::cout << out.nfields() << " " << std::get<pluss::Note>(out.fields("city").at(0)).at(0);
+```
+
+### Output
+
+```text
+1 ACCRA
 ```
 
 ## Notes
 
-- The no-arg overload returns a reference into the registry's own storage — valid
-  as long as the registry itself is alive.
-- The accessor-launcher overloads always return a new `RegistryFieldAccessor` that
-  binds a **copy** of the registry handle (cheap — `Registry` shares storage) plus
-  the selected field names; the accessor's own methods do the actual work and are
-  documented on their own pages.
-- `fields(key)` accepts a single name directly; there is no separate single-name
-  accessor type — it's the same `RegistryFieldAccessor` as the multi-name overloads,
-  just bound to one field.
+- Unknown field names throw.
+- `fields(keys)` is projection, not a hidden accessor binder.
 
 ## See Also
 
-- [`RegistryFieldAccessor` API Reference](../../registry_field_accessor_api_reference):
-  the full method surface reachable from the argument overloads.
-- [`Registry::fieldaxis`](fieldaxis.md): select fields by name pattern or value kind
-  instead of an explicit list.
-- [`Registry::select`](select.md): return the selected fields' values directly as a
-  new `Registry`, without going through an accessor.
-- [`Catalog::keys`](../catalog/keys.md): the equivalent no-arg name getter on the
-  kindle model (which has no accessor-launcher counterpart, since `Catalog` streams
-  are already uniformly typed).
+- [`Registry::fieldaxis`](fieldaxis.md): project by field-name pattern or slot kind.
+- [`Registry::set`](set.md): reinsert a transformed slot into a full registry.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fieldaxis.html">

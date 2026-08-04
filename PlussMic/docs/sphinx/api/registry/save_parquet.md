@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d9aec3a4c0e0 -->
 
 # Registry::save_parquet
 

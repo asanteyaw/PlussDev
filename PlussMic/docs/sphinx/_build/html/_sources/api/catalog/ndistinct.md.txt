@@ -79,9 +79,9 @@ region                   | Series       | Series[int64]    | 1       | [2]
   number of distinct *values* within one.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="minrecords.html">
+  <a class="prev-link" href="minrows.html">
     <span class="label">Previous</span>
-    <span class="title">minrecords</span>
+    <span class="title">minrows</span>
   </a>
   <a class="next-link" href="nkeys.html">
     <span class="label">Next</span>

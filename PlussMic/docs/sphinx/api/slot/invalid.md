@@ -43,8 +43,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="is_stream_compatible.html">
+  <a class="next-link" href="isnull.html">
     <span class="label">Next</span>
-    <span class="title">is_stream_compatible</span>
+    <span class="title">isnull</span>
   </a>
 </div>

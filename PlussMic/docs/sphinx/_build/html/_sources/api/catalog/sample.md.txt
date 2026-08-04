@@ -125,7 +125,7 @@ Catalog::sample: requires aligned stream lengths
 
 - [`Catalog::take`](take.md): the positional mechanism `sample()` uses internally, for when
   you already know which positions you want.
-- [`Catalog::nrecords`](nrecords.md): the aligned row-length check `sample()` performs
+- [`Catalog::nrows`](nrows.md): the aligned row-length check `sample()` performs
   before shuffling.
 
 <div class="pluss-inline-prev-next">

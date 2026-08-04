@@ -80,9 +80,9 @@ from its own preceding values.
   value.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="extract_keywords.html">
+  <a class="prev-link" href="keywords.html">
     <span class="label">Previous</span>
-    <span class="title">extract_keywords</span>
+    <span class="title">keywords</span>
   </a>
   <a class="next-link" href="fillnull.html">
     <span class="label">Next</span>

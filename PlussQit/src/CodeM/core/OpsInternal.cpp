@@ -1361,6 +1361,29 @@ Series add(const Series& a, double s) { return add(a, scalar_like_(a, s)); }
 Series sub(const Series& a, double s) { return sub(a, scalar_like_(a, s)); }
 Series mul(const Series& a, double s) { return mul(a, scalar_like_(a, s)); }
 Series div(const Series& a, double s) { return div(a, scalar_like_(a, s)); }
+
+static Series scalar_i64_dispatch_(
+    const Series& a, std::int64_t s, const char* who,
+    void (*kernel)(const Series&, std::int64_t, const Series&)) {
+  PLUSS_CHECK(dtype_of(a.scalar_type()).is_integral(),
+              std::string(who) + ": dtype must be integral, got " + std::string(dtype_of(a.scalar_type()).name));
+  PLUSS_CHECK(a.platform() == Platform::CPU, std::string(who) + ": currently CPU-only");
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  kernel(a, s, out);
+  return out;
+}
+
+Series add_i64(const Series& a, std::int64_t s) { return scalar_i64_dispatch_(a, s, "add_i64", &native::cpu::add_i64); }
+Series sub_i64(const Series& a, std::int64_t s) { return scalar_i64_dispatch_(a, s, "sub_i64", &native::cpu::sub_i64); }
+Series mul_i64(const Series& a, std::int64_t s) { return scalar_i64_dispatch_(a, s, "mul_i64", &native::cpu::mul_i64); }
+Series div_i64(const Series& a, std::int64_t s) {
+  PLUSS_CHECK(s != 0, "div_i64: division by zero");
+  return scalar_i64_dispatch_(a, s, "div_i64", &native::cpu::div_i64);
+}
+Series mod_i64(const Series& a, std::int64_t s) {
+  PLUSS_CHECK(s != 0, "mod_i64: division by zero");
+  return scalar_i64_dispatch_(a, s, "mod_i64", &native::cpu::mod_i64);
+}
 Series pow(const Series& a, double s) {
   const bool base_is_int = dtype_of(a.scalar_type()).is_integral();
   const bool exponent_is_integer =
@@ -6625,7 +6648,6 @@ Series Series::squeeze() const {
     ns.push_back(sizes()[(std::size_t)i]);
     nt.push_back(strides()[(std::size_t)i]);
   }
-  if (ns.empty()) { ns.push_back(1); nt.push_back(1); }
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
@@ -6654,7 +6676,6 @@ Series Series::squeeze(std::int64_t dim_) const {
   auto nt = std::vector<std::int64_t>(strides().begin(), strides().end());
   ns.erase(ns.begin() + dim_);
   nt.erase(nt.begin() + dim_);
-  if (ns.empty()) { ns.push_back(1); nt.push_back(1); }
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
@@ -8263,15 +8284,19 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   guard_direct_inplace_value_op_("put_", *this);
   require_same_platform(*this, index, "put_");
   require_same_platform(*this, source, "put_");
+  Series src = source;
+  if (src.scalar_type() != scalar_type()) {
+    src = src.to(scalar_type());
+  }
   if (platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
-    const bool native_supported = mps_put_fast_path_supported_(*this, index, source, accumulate);
+    const bool native_supported = mps_put_fast_path_supported_(*this, index, src, accumulate);
     if (strict_native && !native_supported) {
       require_mps_native_dispatch_supported_("put_");
     }
     if (mps_native_take_put_enabled_() &&
         native_supported &&
-        (source.numel() == 1 || source.numel() == index.numel())) {
+        (src.numel() == 1 || src.numel() == index.numel())) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
       const std::array<std::int64_t, 1> idx_shape{{index.numel()}};
       const Series flat_idx = index.contiguous().reshape(std::span<const std::int64_t>(idx_shape.data(), idx_shape.size()));
@@ -8286,7 +8311,7 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
         const Series cpu_self = this->to(Platform::CPU);
         const Series cpu_idx =
             (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).to(Platform::CPU);
-        const Series cpu_src = source.to(scalar_type()).to(Platform::CPU);
+        const Series cpu_src = src.to(Platform::CPU);
         const Series cpu_out = pluss::codem::native::cpu::put(cpu_self, cpu_idx, cpu_src, accumulate);
         copy_(cpu_out.to(Platform::MPS));
         return finish_direct_inplace_value_op_(*this);
@@ -8299,7 +8324,7 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
         return s.to(work_dt).contiguous();
       };
 
-      Series flat_src = to_work_lane_mps(source);
+      Series flat_src = to_work_lane_mps(src);
       if (flat_src.numel() == 1 && flat_idx.numel() != 1) {
         const std::array<std::int64_t, 1> src_expand{{flat_idx.numel()}};
         flat_src = flat_src.expand(std::span<const std::int64_t>(src_expand.data(), src_expand.size()), true).contiguous();
@@ -8331,7 +8356,7 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
     const Series cpu_self = this->to(Platform::CPU);
     const Series cpu_idx =
         (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).to(Platform::CPU);
-    const Series cpu_src = source.to(scalar_type()).to(Platform::CPU);
+    const Series cpu_src = src.to(Platform::CPU);
     const Series cpu_out = pluss::codem::native::cpu::put(cpu_self, cpu_idx, cpu_src, accumulate);
     copy_(cpu_out.to(Platform::MPS));
     return finish_direct_inplace_value_op_(*this);
@@ -8339,18 +8364,18 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   if (platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_indexing_enabled();
     const bool native_strict = native::cuda::native_indexing_strict();
-    const bool route_supported = native::cuda::supports_put(*this, index, source, accumulate);
+    const bool route_supported = native::cuda::supports_put(*this, index, src, accumulate);
     Series out = cuda_indexing_route_or_bridge_(
         "put_",
         native_enabled,
         native_strict,
         route_supported,
-        [&]() { return pluss::codem::native::cpu::put(*this, index, source, accumulate); });
+        [&]() { return pluss::codem::native::cpu::put(*this, index, src, accumulate); });
     this->copy_(out);
     return finish_direct_inplace_value_op_(*this);
   }
   require_backend_dispatch_supported_(platform(), "put_");
-  Series out = pluss::codem::native::cpu::put(*this, index, source, accumulate);
+  Series out = pluss::codem::native::cpu::put(*this, index, src, accumulate);
   this->copy_(out);
   return finish_direct_inplace_value_op_(*this);
 }

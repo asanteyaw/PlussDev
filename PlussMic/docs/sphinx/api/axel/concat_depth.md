@@ -55,9 +55,9 @@ depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="as_kindle.html">
+  <a class="prev-link" href="cast.html">
     <span class="label">Previous</span>
-    <span class="title">as_kindle</span>
+    <span class="title">cast</span>
   </a>
   <a class="next-link" href="defined.html">
     <span class="label">Next</span>

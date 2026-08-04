@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,107 +37,47 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: eb36c4f3fa25 -->
+<!-- pluss-signature-hash: 61bfa25297dc -->
 <section id="catalog-select">
 <h1>Catalog::select<a class="headerlink" href="#catalog-select" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">Catalog</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Catalog</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Keeps only the named streams, in the order requested — the direct counterpart to
-<a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>, which keeps everything <em>except</em> the named streams. Every overload
-funnels through the same <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> implementation; pick whichever
-container is most convenient at the call site.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>Every requested key must exist
-Unlike keyaxis()’s name/kind filters, select() does not silently skip unknown names — it
-throws immediately if any requested key isn’t present in the catalog. Check with
-<a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> first if a name might be missing.</p>
-</div>
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>field_names</strong> (<code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::string_view&gt;</span></code> / <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code> /
-<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code>)
-The stream names to keep, in the order they should appear in the result.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
-A new catalog containing only the requested streams, in the requested order.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Select two of three streams, inline.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">select</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-</pre></div>
-</div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
-kindle::Catalog  keys=2
-keys: [id, city]
-------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
-------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[float64]  | 3       | [1, 2, 3]                                        
-city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-========================================================================================================================
-</pre></div>
-</div>
-<p>Example 2. An unknown name throws immediately, before building any result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
-<span class="p">});</span>
-
-<span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">select</span><span class="p">({</span><span class="s">&quot;zzz&quot;</span><span class="p">});</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Catalog::select: unknown key &#39;zzz&#39;
-</pre></div>
-</div>
-</section>
+<p>Chooses row-wise between whole catalogs, using boolean <code class="docutils literal notranslate"><span class="pre">Thread</span></code> masks as the conditions.</p>
+<p>Every choice catalog and the default catalog must have the same keys in the same order.
+For each key, <code class="docutils literal notranslate"><span class="pre">Catalog::select(...)</span></code> delegates to <a class="reference internal" href="../stream/select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::select</span></code></span></a>.</p>
+<p>To keep only named keys, do <strong>not</strong> use this method anymore. Project them with
+<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keys(...)</span></code></span></a>.</p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Every requested name must exist — see the important callout above.</p></li>
-<li><p>Result order follows <code class="docutils literal notranslate"><span class="pre">field_names</span></code>’ order, not the source catalog’s key order.</p></li>
-<li><p>Requires a defined catalog; throws <code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conditions.size()</span></code> must equal <code class="docutils literal notranslate"><span class="pre">choices.size()</span></code>.</p></li>
+<li><p>Every choice catalog and the default catalog must be defined.</p></li>
+<li><p>Every choice catalog must match the default catalog’s key set and key order exactly.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::drop</span></code></span></a>: the complementary operation — keep everything <em>except</em> the
-named streams.</p></li>
-<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys</span></code></span></a>: select a subset of streams for further per-stream
-transformation, rather than a standalone projection.</p></li>
-<li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::has</span></code></span></a>: check a name’s existence before selecting it.</p></li>
+<li><p><a class="reference internal" href="../stream/select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::select</span></code></span></a>: the lower-level stream chooser this delegates
+to.</p></li>
+<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys</span></code></span></a>: projection by key selection.</p></li>
+<li><p><a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::drop</span></code></span></a>: remove named streams from one catalog.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="save_txt.html">

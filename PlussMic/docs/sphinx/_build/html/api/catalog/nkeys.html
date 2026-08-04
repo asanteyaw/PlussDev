@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -57,7 +57,7 @@ name reads better at the call site. Requires a defined catalog; throws otherwise
 <p>This counts streams, not rows
 <code class="docutils literal notranslate"><span class="pre">nkeys()</span></code> (and its alias <code class="docutils literal notranslate"><span class="pre">size()</span></code>) count the number of named streams the catalog holds —
 they say nothing about how many rows each stream has. For row counts, see
-<a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrecords()</span></code></span></a>/<a class="reference internal" href="minrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">minrecords()</span></code></span></a>/<a class="reference internal" href="maxrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrecords()</span></code></span></a>,
+<a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrows()</span></code></span></a>/<a class="reference internal" href="minrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">minrows()</span></code></span></a>/<a class="reference internal" href="maxrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrows()</span></code></span></a>,
 or the row half of <a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></span></a>.</p>
 </div>
 </section>
@@ -132,8 +132,8 @@ stream holds.</p>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::size</span></code></span></a>: a pure alias for this method.</p></li>
-<li><p><a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nrecords</span></code></span></a> / <a class="reference internal" href="minrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">minrecords</span></code></span></a> /
-<a class="reference internal" href="maxrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrecords</span></code></span></a>: the row-count counterparts.</p></li>
+<li><p><a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nrows</span></code></span></a> / <a class="reference internal" href="minrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::minrows</span></code></span></a> /
+<a class="reference internal" href="maxrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::maxrows</span></code></span></a>: the row-count counterparts.</p></li>
 <li><p><a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::shape</span></code></span></a>: both dimensions (rows, streams) in one call.</p></li>
 <li><p><a class="reference internal" href="empty.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::empty</span></code></span></a>: shorthand for <code class="docutils literal notranslate"><span class="pre">nkeys()</span> <span class="pre">==</span> <span class="pre">0</span></code>.</p></li>
 </ul>

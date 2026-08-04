@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 43df1abdb374 -->
 
 # Registry::slice
 
@@ -49,7 +50,7 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.slice(1, 3);
-auto ids = out.select("id");
+auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
@@ -72,7 +73,7 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.slice(-2, -1);
-auto ids = out.select("id");
+auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
@@ -111,7 +112,7 @@ std::cout << "]";
     <span class="label">Previous</span>
     <span class="title">sizes</span>
   </a>
-  <a class="next-link" href="sum.html">
+  <a class="next-link" href="tail.html">
     <span class="label">Next</span>
     <span class="title">sum</span>
   </a>

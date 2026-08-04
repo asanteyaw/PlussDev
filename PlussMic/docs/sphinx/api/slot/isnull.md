@@ -39,9 +39,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_stream_compatible.html">
+  <a class="prev-link" href="invalid.html">
     <span class="label">Previous</span>
-    <span class="title">is_stream_compatible</span>
+    <span class="title">invalid</span>
   </a>
   <a class="next-link" href="kind.html">
     <span class="label">Next</span>

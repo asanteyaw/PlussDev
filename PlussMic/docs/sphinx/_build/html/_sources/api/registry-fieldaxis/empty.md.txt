@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 91864af7ac25 -->
+
 # RegistryFieldAxisAccessor::empty
 
 [Back to RegistryFieldAxisAccessor API Reference](../../registry_fieldaxis_accessor_api_reference)
@@ -5,12 +8,16 @@
 ## Signature
 
 ```cpp
-RegistryFieldAxisAccessor::empty() -> Registry
+Registry RegistryFieldAxisAccessor::empty() const
 ```
 
 ## What It Does
 
-Reports whether the current object has no rows, entries, slots, or depth items.
+A named shorthand for [`kind(SlotKind::Empty)`](kind.md) — returns a new
+registry containing only the fields whose `Slot` has **zero values**
+(`Slot::size() == 0`). This is the field-selection counterpart to
+[`Registry::prune()`](../registry/prune.md), which removes these same fields
+instead of selecting them.
 
 ## Parameters
 
@@ -19,29 +26,42 @@ Reports whether the current object has no rows, entries, slots, or depth items.
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    A new registry containing only the zero-length fields.
 
 ## Examples
 
-Example 1. Inspect the `empty` property of the current object.
+Example 1. Isolate the zero-length field in a registry that also has a
+non-empty field.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"empty_field", pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{})},
 });
-auto fieldaxis = rg.fieldaxis();
 
-auto out = fieldaxis.empty();
-std::cout << out;
+auto out = rg.fieldaxis().empty();
+for (const auto& key : out.fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+empty_field
 ```
 
+## Notes
+
+- Equivalent to `kind(SlotKind::Empty)` — see [`kind()`](kind.md) for the
+  general form.
+- The mirror image of [`Registry::prune()`](../registry/prune.md), which
+  removes these fields rather than selecting them.
+
+## See Also
+
+- [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
+  wraps.
+- [`Registry::prune`](../registry/prune.md): removes zero-length fields,
+  rather than selecting them.
 
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="kind.html">

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <optional>
 #include <span>
@@ -10,6 +11,7 @@
 #include <utility>
 
 #include "MSharp/IntrusivePtr.h"
+#include "MSharp/RangeView.h"
 #include "table/Thread.h"
 #include "table/plot/DataFramePlot.h"
 
@@ -149,6 +151,19 @@ public:
   Stream distinct(DistinctOptions options = {}) const;
   Stream freq(FreqOptions options = {}) const;
   Stream ndistinct(DistinctOptions options = {}) const;
+  Stream map(const std::function<Stream(const Stream&)>& fn) const;
+
+  static Stream select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+                       pluss::msharp::RangeView::Of<Stream> choices,
+                       const Stream& default_value);
+  static Stream select(std::initializer_list<pluss::table::Thread> conditions,
+                       std::initializer_list<Stream> choices,
+                       const Stream& default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<pluss::table::Thread>(conditions),
+        pluss::msharp::RangeView::Of<Stream>(choices),
+        default_value);
+  }
 
   // Type conversion.
   StreamCastAccessor cast() const;

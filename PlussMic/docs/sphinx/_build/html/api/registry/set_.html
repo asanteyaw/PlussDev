@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,83 +36,74 @@
 
           <div class="body" role="main">
             
-  <section id="registry-set">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 97d62e3e518d -->
+<section id="registry-set">
 <h1>Registry::set_<a class="headerlink" href="#registry-set" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">set_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">Slot</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">items</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
-
-<span class="n">Registry</span><span class="o">::</span><span class="n">set_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">Slot</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">items</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
-
-<span class="n">Registry</span><span class="o">::</span><span class="n">set_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">set_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Registry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">set_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">Slot</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">items</span><span class="p">)</span>
+<span class="n">Registry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">set_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">Slot</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">items</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with <code class="docutils literal notranslate"><span class="pre">_</span></code> perform the change in place.</p>
+<p>The in-place counterpart to <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> — sets the named field(s) on this
+registry directly, upserting (replacing an existing field or adding a new one).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>items</strong>
-Inline collection passed directly at the call site.</p>
-<p><strong>key</strong>
-Name of the target slot or stream.</p>
-<p><strong>value</strong>
-Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
+<p><strong>key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A single field name to set (single-item overload).</p>
+<p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slot&amp;</span></code>)
+The new <code class="docutils literal notranslate"><span class="pre">Slot</span></code> for that field. Must be defined.</p>
+<p><strong>items</strong> (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::pair&lt;std::string_view,</span> <span class="pre">Slot&gt;&gt;</span></code> / <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::pair&lt;std::string,</span> <span class="pre">Slot&gt;&gt;</span></code>)
+Several <code class="docutils literal notranslate"><span class="pre">{key,</span> <span class="pre">Slot}</span></code> pairs to set at once.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry&amp;</span></code>
-Value produced by this call.</p>
+A reference to this registry, now holding the updated field(s).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<p>Example 1. Overwrite a field in place.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">set_</span><span class="p">();</span>
+<span class="n">rg</span><span class="p">.</span><span class="n">set_</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">42</span><span class="p">)}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ids</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
-<p>Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">set_</span><span class="p">();</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>42
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
-<p>Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">set_</span><span class="p">();</span>
-</pre></div>
-</div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Upsert semantics, same as <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>: unknown keys are added rather
+than throwing.</p></li>
+<li><p>Mutates the registry it’s called on and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::set</span></code></span></a>: the non-mutating counterpart.</p></li>
+<li><p><a class="reference internal" href="morph_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::morph_</span></code></span></a>: rewrite individual <em>values</em> within a field in
+place, rather than replacing the field’s whole <code class="docutils literal notranslate"><span class="pre">Slot</span></code>.</p></li>
+<li><p><a class="reference internal" href="../catalog/set_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::set_</span></code></span></a>: the equivalent operation on the kindle
+model.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="set.html">
     <span class="label">Previous</span>
@@ -123,7 +114,6 @@ Value produced by this call.</p>
     <span class="title">shape</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -1,0 +1,101 @@
+
+== base_scalar ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 21:15:23
+
+== plus_1ns ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 21:15:23
+
+== plus_1us ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 21:15:23
+
+== plus_1ms ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 21:15:23
+
+== plus_1s ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 21:15:24
+
+== plus_1min ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 21:16:23
+
+== plus_1h ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 22:15:23
+
+== plus_1d ==
+Timeline(shape=[], tz=UTC)
+1999-04-18 21:15:23
+
+== plus_1w ==
+Timeline(shape=[], tz=UTC)
+1999-04-24 21:15:23
+
+== plus_3h_crosses_day_boundary ==
+Timeline(shape=[], tz=UTC)
+1999-04-18 00:15:23
+
+== operator_plus_equals_add_duration ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== operator_minus_equals_sub_duration ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== compound_add_t0_plus_equals_3h ==
+Timeline(shape=[], tz=UTC)
+1999-04-18 00:15:23
+
+== compound_add_equals_binary_plus ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== compound_sub_t0_minus_equals_3h ==
+Timeline(shape=[], tz=UTC)
+1999-04-17 18:15:23
+
+== compound_sub_equals_binary_minus ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== diff_via_operator_t1_minus_t0 ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=10800.0000
+
+== diff_operator_equals_diff_method ==
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+== broadcast_scalar_timeline_plus_1d_duration ==
+Timeline(shape=[4], tz=UTC)
+[ 1999-04-17 22:15:23, 1999-04-17 23:15:23, 1999-04-18 00:15:23, 1999-04-18 01:15:23 ]
+
+== broadcast_1d_timeline_plus_scalar_duration ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:30:00, 2024-11-01 10:30:00, 2024-11-01 11:30:00, 2024-11-01 12:30:00 ]
+
+== elementwise_1d_timeline_plus_1d_duration ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 10:00:00, 2024-11-01 12:00:00, 2024-11-01 14:00:00, 2024-11-01 16:00:00 ]
+
+== nat_timeline_plus_valid_duration ==
+Timeline(shape=[], tz=UTC)
+NaT
+
+== valid_timeline_plus_nat_duration ==
+Timeline(shape=[], tz=UTC)
+NaT
+
+== tz_before_shift_ny ==
+Timeline(shape=[], tz=America/New_York)
+1999-04-17 17:15:23
+
+== tz_after_add_duration_ny ==
+Timeline(shape=[], tz=America/New_York)
+1999-04-17 20:15:23

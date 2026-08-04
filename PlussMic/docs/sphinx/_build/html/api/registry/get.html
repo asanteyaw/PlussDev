@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f2a90b5490dd -->
 <section id="registry-get">
 <h1>Registry::get<a class="headerlink" href="#registry-get" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -51,7 +52,7 @@
 <p>Fetches a field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> by name, returning <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> instead of throwing when
 the name doesn’t exist. This is the safe way to test for a field’s presence and
 retrieve it in one call — use <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> if you only need the presence check,
-or <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select(key)</span></code></span></a> if you’re confident the field exists and want the
+or <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(key)</span></code></span></a> if you’re confident the field exists and want the
 <code class="docutils literal notranslate"><span class="pre">Slot</span></code> directly (throwing otherwise).</p>
 </section>
 <section id="parameters">
@@ -102,7 +103,7 @@ registry; throws on an undefined one.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Never throws on a missing key — unlike <code class="docutils literal notranslate"><span class="pre">select(key)</span></code>, which throws.</p></li>
+<li><p>Never throws on a missing key — unlike <code class="docutils literal notranslate"><span class="pre">fields(key)</span></code>, which throws.</p></li>
 <li><p>Key comparison is exact and case-sensitive, same as <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a>.</p></li>
 <li><p>Requires a defined registry — throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> on an
 undefined one.</p></li>
@@ -112,8 +113,8 @@ undefined one.</p></li>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::has</span></code></span></a>: a pure presence check, without fetching the <code class="docutils literal notranslate"><span class="pre">Slot</span></code>.</p></li>
-<li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::select</span></code></span></a>: fetch the <code class="docutils literal notranslate"><span class="pre">Slot</span></code> directly, throwing if the field
-is missing.</p></li>
+<li><p><a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields</span></code></span></a>: fetch the <code class="docutils literal notranslate"><span class="pre">Slot</span></code> directly (single-key overload),
+throwing if the field is missing.</p></li>
 <li><p><a class="reference internal" href="../catalog/get.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::get</span></code></span></a>: the equivalent lookup on the kindle model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

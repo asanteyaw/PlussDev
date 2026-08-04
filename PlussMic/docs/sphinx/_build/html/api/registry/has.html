@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 63e705043173 -->
 <section id="registry-has">
 <h1>Registry::has<a class="headerlink" href="#registry-has" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -50,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Checks whether a named field exists in the registry, without throwing regardless of
 the answer. This is the safe way to test for a key’s presence before calling
-<a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select(key)</span></code></span></a> (which throws on a missing key) — or use
+<a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(key)</span></code></span></a> (which throws on a missing key) — or use
 <a class="reference internal" href="get.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">get()</span></code></span></a> directly if you also want the <code class="docutils literal notranslate"><span class="pre">Slot</span></code> itself when present.</p>
 </section>
 <section id="parameters">
@@ -102,7 +103,7 @@ treated as missing.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Never throws — <code class="docutils literal notranslate"><span class="pre">has()</span></code> is the safe presence check, unlike <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select(key)</span></code></span></a>,
+<li><p>Never throws — <code class="docutils literal notranslate"><span class="pre">has()</span></code> is the safe presence check, unlike <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(key)</span></code></span></a>,
 which throws on a missing field.</p></li>
 <li><p>Key comparison is exact and case-sensitive.</p></li>
 </ul>
@@ -110,8 +111,8 @@ which throws on a missing field.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::select</span></code></span></a>: fetch the field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> directly, throwing if
-the key is missing.</p></li>
+<li><p><a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields</span></code></span></a>: fetch the field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> directly (single-key
+overload), throwing if the key is missing.</p></li>
 <li><p><a class="reference internal" href="get.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::get</span></code></span></a>: fetch the field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> as <code class="docutils literal notranslate"><span class="pre">std::optional&lt;Slot&gt;</span></code>,
 combining the presence check and the fetch into one call.</p></li>
 <li><p><a class="reference internal" href="has_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::has_all</span></code></span></a> / <a class="reference internal" href="has_any.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::has_any</span></code></span></a>: the

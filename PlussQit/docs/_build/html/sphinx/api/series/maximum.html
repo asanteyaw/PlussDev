@@ -13,7 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::minimum" href="minimum.html" />
@@ -48,72 +49,94 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Elementwise maximum: <code class="docutils literal notranslate"><span class="pre">out[i]</span> <span class="pre">=</span> <span class="pre">max(self[i],</span> <span class="pre">rhs[i])</span></code> (or <code class="docutils literal notranslate"><span class="pre">max(self[i],</span> <span class="pre">rhs)</span></code> for the
-scalar overload). Unlike <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code></span></a>, both sides are ordinary
-values — there is no “bound” role here, just two operands compared elementwise.</p>
-<p><code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">rhs[i]</span></code> (a tie) simply returns that shared value; ties only matter once
-you look at the <strong>Gradient</strong> section below, because a tie is the one case where
-<code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">rhs</span></code> can’t both keep the full derivative.</p>
+<p>Returns the elementwise maximum between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">rhs</span></code>.</p>
+<p>This is a comparison operator, not a reduction. It does not ask “what is the
+largest value in this tensor?” It asks “at each position, which side wins?”</p>
+<p>That distinction matters because <code class="docutils literal notranslate"><span class="pre">maximum()</span></code> participates in broadcasting and in
+autograd. A scalar overload behaves like “compare every element against one
+threshold-like value,” while the <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload behaves like “compare two
+shapes under ordinary broadcasting rules.”</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>rhs</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>)</p>
-<p>The other operand. The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload broadcasts against <code class="docutils literal notranslate"><span class="pre">self</span></code> using ordinary
-broadcasting rules; the <code class="docutils literal notranslate"><span class="pre">double</span></code> overload compares every element against the same
-scalar.</p>
+<p>The other operand.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">maximum(const</span> <span class="pre">Series&amp;</span> <span class="pre">rhs)</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rhs</span></code> is broadcast against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
+<li><p>the result dtype is the promoted dtype of the two operands</p></li>
+<li><p>both operands remain ordinary values; neither side is treated specially as a
+“bound”</p></li>
+</ul>
+<p>For <code class="docutils literal notranslate"><span class="pre">maximum(double</span> <span class="pre">rhs)</span></code>:</p>
+<ul class="simple">
+<li><p>every element of <code class="docutils literal notranslate"><span class="pre">self</span></code> is compared against the same scalar</p></li>
+<li><p>the scalar is materialized onto <code class="docutils literal notranslate"><span class="pre">self</span></code>’s lane, so the result stays on <code class="docutils literal notranslate"><span class="pre">self</span></code>’s
+dtype/platform path rather than becoming a separate broadcasted tensor value in
+a wider promoted dtype</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> holding the elementwise maximum, promoted to the wider of the two
-operand dtypes for the <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload.</p>
+A new series containing the winner at each broadcasted position.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> is differentiable in both operands.</p>
+<p><code class="docutils literal notranslate"><span class="pre">maximum()</span></code> is differentiable in both operands.</p>
+<p>The backward rule is:</p>
+<ul class="simple">
+<li><p>gradient flows to <code class="docutils literal notranslate"><span class="pre">self</span></code> where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;=</span> <span class="pre">rhs</span></code></p></li>
+<li><p>gradient flows to <code class="docutils literal notranslate"><span class="pre">rhs</span></code> where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&lt;</span> <span class="pre">rhs</span></code></p></li>
+</ul>
+<p>The important edge case is the tie.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Tie-breaking convention
-At a tie (<code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">rhs[i]</span></code>), the full gradient is attributed to <code class="docutils literal notranslate"><span class="pre">self</span></code> — <code class="docutils literal notranslate"><span class="pre">rhs</span></code>
-gets zero at that position. This matches <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code></span></a>/<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>’s
-own boundary convention (both are inclusive toward <code class="docutils literal notranslate"><span class="pre">self</span></code>), so a value composed from
-<code class="docutils literal notranslate"><span class="pre">relu()</span></code>/<code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code>/<code class="docutils literal notranslate"><span class="pre">maximum()</span></code> in sequence has one consistent boundary rule
-throughout, rather than each op picking its own.</p>
+When <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">rhs[i]</span></code>, the full gradient goes to <code class="docutils literal notranslate"><span class="pre">self</span></code>, not split across
+both operands and not mirrored to <code class="docutils literal notranslate"><span class="pre">rhs</span></code>. This matches the inclusive-boundary
+rule used by <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code></span></a> and <a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>, so the
+comparison family behaves consistently at boundaries.</p>
 </div>
-<p>Formally: <code class="docutils literal notranslate"><span class="pre">d(out)/d(self[i])</span> <span class="pre">=</span> <span class="pre">1</span></code> where <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">&gt;=</span> <span class="pre">rhs[i]</span></code>, else <code class="docutils literal notranslate"><span class="pre">0</span></code>.
-<code class="docutils literal notranslate"><span class="pre">d(out)/d(rhs[i])</span> <span class="pre">=</span> <span class="pre">1</span></code> where <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">&lt;</span> <span class="pre">rhs[i]</span></code>, else <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Elementwise maximum between two same-shaped tensors.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+<p>Example 1. The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload broadcasts a row-shaped peer across the leading
+dimension.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">peer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">peer</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[4, 5, 3]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 6, 3],
+  [4, 6, 8]]
 </pre></div>
 </div>
-<p>Index 2 is a tie (<code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">==</span> <span class="pre">3</span></code>): the output is <code class="docutils literal notranslate"><span class="pre">3</span></code> either way, but see the gradient
-example below for what a tie means for <em>which operand</em> that <code class="docutils literal notranslate"><span class="pre">3</span></code> is attributed to.</p>
-<p>Example 2. The scalar overload compares every element against one bound.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="mf">2.5</span><span class="p">);</span>
+<p>Each row of <code class="docutils literal notranslate"><span class="pre">grid</span></code> is compared against the same <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">6,</span> <span class="pre">1]</span></code> peer. This is often
+the most readable form when you want a per-column floor without calling it a
+clamp.</p>
+<p>Example 2. The scalar overload compares every element against one shared value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="mf">4.5</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2.5, 5, 3]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[4.5, 5, 4.5],
+  [4.5, 4.5, 8]]
 </pre></div>
 </div>
-<p>Only index 0 (<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;</span> <span class="pre">2.5</span></code>) is raised to the bound; the other two elements already
-exceed it and pass through unchanged.</p>
-<p>Example 3. Gradient split at a tie.</p>
+<p>Only positions below <code class="docutils literal notranslate"><span class="pre">4.5</span></code> are raised. Positions already above the scalar pass
+through unchanged.</p>
+<p>Example 3. At a tie, the output is shared but the gradient is not: the tied
+position attributes its derivative to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
 <span class="n">a</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
@@ -137,30 +160,31 @@ db=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, c
 data=[1, 0, 0]
 </pre></div>
 </div>
-<p>Index 0 (<code class="docutils literal notranslate"><span class="pre">a=1</span> <span class="pre">&lt;</span> <span class="pre">b=4</span></code>): gradient flows entirely to <code class="docutils literal notranslate"><span class="pre">b</span></code> (<code class="docutils literal notranslate"><span class="pre">da=0</span></code>, <code class="docutils literal notranslate"><span class="pre">db=1</span></code>). Index 1
-(<code class="docutils literal notranslate"><span class="pre">a=5</span> <span class="pre">&gt;</span> <span class="pre">b=2</span></code>): gradient flows entirely to <code class="docutils literal notranslate"><span class="pre">a</span></code>. Index 2 is the tie (<code class="docutils literal notranslate"><span class="pre">a=2</span> <span class="pre">==</span> <span class="pre">b=2</span></code>):
-the gradient goes to <code class="docutils literal notranslate"><span class="pre">a</span></code> (<code class="docutils literal notranslate"><span class="pre">da=1</span></code>, <code class="docutils literal notranslate"><span class="pre">db=0</span></code>), per the tie-breaking convention above —
-<code class="docutils literal notranslate"><span class="pre">b</span></code> gets nothing even though its value equally determined the output.</p>
+<p>Index <code class="docutils literal notranslate"><span class="pre">2</span></code> is the interesting one: both operands are <code class="docutils literal notranslate"><span class="pre">2</span></code>, so both values
+determine the output numerically, but only <code class="docutils literal notranslate"><span class="pre">a</span></code> receives the derivative there.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> is a plain elementwise comparison, not a reduction — for “the largest
-element across a dimension,” see the reduction surface (<code class="docutils literal notranslate"><span class="pre">amax</span></code>) instead.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Series</span></code>-arg overload broadcasts; the <code class="docutils literal notranslate"><span class="pre">double</span></code>-arg overload does not need to,
-since a scalar compares against every element uniformly.</p></li>
-<li><p>See <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code></span></a> for the common case of maximizing against a fixed
-scalar floor phrased as a one-sided clamp instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum()</span></code> is non-mutating. The in-place sibling <code class="docutils literal notranslate"><span class="pre">maximum_()</span></code> exists, but this
+page documents the value-returning surface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum(x,</span> <span class="pre">scalar)</span></code> is often the clearer spelling when the scalar is acting as
+a conceptual lower floor; <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code></span></a> is the clearer spelling
+when you want to emphasize the one-sided-bound intent.</p></li>
+<li><p>This is not <code class="docutils literal notranslate"><span class="pre">amax</span></code>. If you want a reduction over an axis, use the reduction
+surface instead.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::minimum</span></code></span></a>: the elementwise counterpart, with the mirrored
-tie-breaking convention.</p></li>
-<li><p><a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_min</span></code></span></a>, <a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_max</span></code></span></a>:
-one-sided bounds built from the same underlying comparison.</p></li>
+<li><p><a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::minimum</span></code></span></a>: the elementwise counterpart. Ties still favor
+<code class="docutils literal notranslate"><span class="pre">self</span></code> there as well.</p></li>
+<li><p><a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_min</span></code></span></a>: one-sided lower bound with the same
+inclusive boundary behavior.</p></li>
+<li><p><a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_max</span></code></span></a>: one-sided upper bound built from the same
+comparison family.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="index_select.html">

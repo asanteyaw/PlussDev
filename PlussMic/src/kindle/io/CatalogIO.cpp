@@ -115,7 +115,7 @@ std::string Catalog::to_json() const {
   oss << "  \"_type\": \"Catalog\",\n";
   oss << "  \"defined\": true,\n";
   oss << "  \"nkeys\": " << nkeys() << ",\n";
-  oss << "  \"nrecords\": " << nrecords() << ",\n";
+  oss << "  \"nrecords\": " << nrows() << ",\n";
   oss << "  \"keys\": [";
   const auto& names = keys();
   for (std::size_t i = 0; i < names.size(); ++i) {

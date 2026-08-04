@@ -99,7 +99,7 @@ location                 | Note         | Note             | 1       | [Accra]
 ```
 
 Example 3. Renaming a key missing from one catalog throws — a ragged-archive gotcha
-shared with [`select()`](select.md)/[`drop()`](drop.md).
+shared with [`keys(...)`](keys.md)/[`drop()`](drop.md).
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -128,11 +128,11 @@ Catalog::rename: unknown key 'city'
 
 - Only stream names change; payload values, row order, and depth labels are unaffected.
 - Throws on any catalog missing a `from` key — same ragged-archive requirement as
-  [`select()`](select.md)/[`drop()`](drop.md).
+  [`keys(...)`](keys.md)/[`drop()`](drop.md).
 
 ## See Also
 
-- [`Archive::select`](select.md) / [`Archive::drop`](drop.md): the other key/column
+- [`Archive::keys`](keys.md) / [`Archive::drop`](drop.md): the other key/column
   operations sharing the same "every catalog must have the key" requirement.
 - [`Archive::has`](has.md): confirm a key exists in every catalog before renaming it.
 
@@ -141,8 +141,8 @@ Catalog::rename: unknown key 'city'
     <span class="label">Previous</span>
     <span class="title">nrecords</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="shape.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">shape</span>
   </a>
 </div>

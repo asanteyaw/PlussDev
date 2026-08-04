@@ -13,7 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/layout.js?v=5c2e594e"></script>
+    <script src="../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Series::pos" href="api/series/pos.html" />
@@ -63,6 +64,19 @@ working subset, prioritized by how load-bearing each method is (indexing/shape,
 factories, then the autograd-sensitive family) rather than alphabetically. Every
 page here is real, hand-verified prose — nothing below is a mechanically generated
 stub.</p>
+<p>The current handwritten shape and slice/indexing cluster now covers:</p>
+<ul class="simple">
+<li><p>shape introspection: <code class="docutils literal notranslate"><span class="pre">size</span></code>, <code class="docutils literal notranslate"><span class="pre">sizes</span></code></p></li>
+<li><p>view reshaping: <code class="docutils literal notranslate"><span class="pre">view</span></code>, <code class="docutils literal notranslate"><span class="pre">reshape</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose</span></code>, <code class="docutils literal notranslate"><span class="pre">permute</span></code>, <code class="docutils literal notranslate"><span class="pre">unsqueeze</span></code>,
+<code class="docutils literal notranslate"><span class="pre">squeeze</span></code>, <code class="docutils literal notranslate"><span class="pre">flatten</span></code></p></li>
+<li><p>combine/build primitives: <code class="docutils literal notranslate"><span class="pre">unite</span></code>, <code class="docutils literal notranslate"><span class="pre">pile</span></code></p></li>
+<li><p>basic and dynamic selection: <code class="docutils literal notranslate"><span class="pre">pos</span></code>, <code class="docutils literal notranslate"><span class="pre">slice</span></code>, <code class="docutils literal notranslate"><span class="pre">traverse_slice</span></code>, <code class="docutils literal notranslate"><span class="pre">block</span></code>,
+<code class="docutils literal notranslate"><span class="pre">extract</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code></p></li>
+<li><p>selector writes: <code class="docutils literal notranslate"><span class="pre">traverse_put_</span></code>, <code class="docutils literal notranslate"><span class="pre">traverse_put</span></code>, <code class="docutils literal notranslate"><span class="pre">extract_put</span></code>,
+<code class="docutils literal notranslate"><span class="pre">extract_put_</span></code>, <code class="docutils literal notranslate"><span class="pre">index_put</span></code>, <code class="docutils literal notranslate"><span class="pre">index_put_</span></code></p></li>
+<li><p>flat gather/scatter primitives: <code class="docutils literal notranslate"><span class="pre">take</span></code>, <code class="docutils literal notranslate"><span class="pre">put_</span></code></p></li>
+<li><p>elementwise comparison/bounds helpers and a few load-bearing utility ops</p></li>
+</ul>
 <div class="toctree-wrapper compound">
 </div>
 <div class="pluss-inline-prev-next">

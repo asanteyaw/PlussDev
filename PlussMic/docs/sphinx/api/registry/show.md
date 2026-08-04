@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 86826e14ef4e -->
+
 # Registry::show
 
 [Back to Registry API Reference](../../registry_api_reference)
@@ -5,44 +8,56 @@
 ## Signature
 
 ```cpp
-Registry::show(std::ostream& os) -> void
+void Registry::show(std::ostream& os) const
 ```
 
 ## What It Does
 
-This renders a human-readable view for inspection instead of creating a new analytic object.
+Writes [`to_string()`](to_string.md)'s output to a caller-provided stream —
+identical content to `operator<<` and `to_string()`, just as a side effect on an
+explicit `std::ostream&` rather than a returned `std::string`.
 
 ## Parameters
 
-**os**
-    Destination output stream used instead of the default display or print target.
+**os** (`std::ostream&`)
+    The destination stream.
 
 ## Returns
 
 `void`
-    Performs the side effect and returns no value.
+    Writes to `os` as a side effect; produces no return value.
 
 ## Examples
 
-Example 1. Write the output to a caller-provided stream.
+Example 1. `show()` writes exactly what `to_string()` returns.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
 
-rg.show(std::cout);
+std::ostringstream oss;
+rg.show(oss);
+std::cout << std::boolalpha << (oss.str() == rg.to_string());
 ```
 
 ### Output
 
 ```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+true
 ```
 
+## Notes
+
+- Identical content to [`to_string()`](to_string.md) and `operator<<` — `show()`
+  exists for call sites that already have a target stream in hand.
+
+## See Also
+
+- [`Registry::to_string`](to_string.md): returns the same content as a
+  `std::string` instead of writing to a stream.
+- [`Catalog::show`](../catalog/show.md): the equivalent method on the kindle
+  model.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="shape.html">

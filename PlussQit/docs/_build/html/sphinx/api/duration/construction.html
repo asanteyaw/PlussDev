@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Duration construction &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Duration arithmetic" href="arithmetic.html" />
+    <link rel="prev" title="Duration API Reference" href="../../duration_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="duration-construction">
+<h1>Duration construction<a class="headerlink" href="#duration-construction" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../duration_api_reference.html"><span class="doc std std-doc">Back to Duration API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">NestedInt64Literal</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nested</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">);</span>
+<span class="c1">// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the</span>
+<span class="c1">// same three overloads as nanos above.</span>
+
+<span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Nanos</span><span class="p">,</span><span class="w"> </span><span class="n">Microseconds</span><span class="p">,</span><span class="w"> </span><span class="n">Milliseconds</span><span class="p">,</span><span class="w"> </span><span class="n">Seconds</span><span class="p">,</span><span class="w"> </span><span class="n">Minutes</span><span class="p">,</span><span class="w"> </span><span class="n">Hours</span><span class="p">,</span><span class="w"> </span><span class="n">Days</span><span class="p">,</span><span class="w"> </span><span class="n">Weeks</span><span class="w"> </span><span class="p">};</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">NestedInt64Literal</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nested</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::range</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">end</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">step</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Builds a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> — an elapsed-time value or array — from scratch, with no
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> required.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Duration</span></code> (capital D, the type) has no public constructors and no public
+construction statics of its own — <code class="docutils literal notranslate"><span class="pre">Duration()</span></code> is deleted, and there is no
+<code class="docutils literal notranslate"><span class="pre">Duration::from_scalar_nanos</span></code>/<code class="docutils literal notranslate"><span class="pre">Duration::range</span></code> to call directly. Construction
+lives entirely in its own namespace, <code class="docutils literal notranslate"><span class="pre">pluss::duration</span></code> (lowercase), the same
+split as <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::from_epoch_nanos</span></code> being kept separate
+from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> itself:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::duration::nanos(...)</span></code>: the base unit. <code class="docutils literal notranslate"><span class="pre">microseconds</span></code>/<code class="docutils literal notranslate"><span class="pre">milliseconds</span></code>/
+<code class="docutils literal notranslate"><span class="pre">seconds</span></code>/<code class="docutils literal notranslate"><span class="pre">minutes</span></code>/<code class="docutils literal notranslate"><span class="pre">hours</span></code>/<code class="docutils literal notranslate"><span class="pre">days</span></code>/<code class="docutils literal notranslate"><span class="pre">weeks</span></code> all scale up from it, so every
+unit factory produces an indistinguishable <code class="docutils literal notranslate"><span class="pre">Duration</span></code> for an equal elapsed
+time — <code class="docutils literal notranslate"><span class="pre">days(1)</span></code> and <code class="docutils literal notranslate"><span class="pre">hours(24)</span></code> are the same value.</p></li>
+<li><p><strong>Every one of those eight functions has three overloads</strong>, not just a
+scalar one — see Example 2. A single count builds a scalar (0D) <code class="docutils literal notranslate"><span class="pre">Duration</span></code>;
+a braced list builds 1D; a nested braced list (up to 3D) or an explicit
+<code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">shape)</span></code> pair builds any N-D array — mirroring <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>’s
+own scalar/1D/nested/flat+shape overload set exactly. Plain <code class="docutils literal notranslate"><span class="pre">{...}</span></code> braces
+work directly for the <code class="docutils literal notranslate"><span class="pre">flat</span></code>/<code class="docutils literal notranslate"><span class="pre">shape</span></code> arguments too (see Example 3) — no
+explicit <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> wrapping needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::duration::make(values,</span> <span class="pre">unit)</span></code>: the same three-overload shape again,
+generalized to take the unit as a runtime <code class="docutils literal notranslate"><span class="pre">Unit</span></code> value instead of picking a
+function by name — for call sites where the unit isn’t known until runtime
+(read from config, chosen generically). See Example 4.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::duration::range(start,</span> <span class="pre">end,</span> <span class="pre">step)</span></code>: a pandas-<code class="docutils literal notranslate"><span class="pre">timedelta_range</span></code>-style
+constructor that always builds a 1D array, regardless of how <code class="docutils literal notranslate"><span class="pre">start</span></code>/<code class="docutils literal notranslate"><span class="pre">end</span></code>/
+<code class="docutils literal notranslate"><span class="pre">step</span></code> themselves were built.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>count</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
+<p>A single count in the named unit, for the scalar overload. Negative values
+are valid and represent “backward in time” — see <a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs</span></code></span></a>.</p>
+<p><strong>nested</strong> (nested <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::int64_t&gt;</span></code>, up to 3 levels deep)</p>
+<p>A braced literal — <code class="docutils literal notranslate"><span class="pre">{1,</span> <span class="pre">2,</span> <span class="pre">3}</span></code> for 1D, <code class="docutils literal notranslate"><span class="pre">{{1,</span> <span class="pre">2},</span> <span class="pre">{3,</span> <span class="pre">4}}</span></code> for 2D, and so on —
+of counts in the named unit.</p>
+<p><strong>flat</strong>, <strong>sizes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::int64_t&gt;</span></code>)</p>
+<p>An explicit flat buffer of counts plus the target shape, for constructing any
+rank without going through nested braces — the same explicit-shape escape
+hatch <code class="docutils literal notranslate"><span class="pre">pluss::from_epoch_nanos(flat,</span> <span class="pre">sizes)</span></code> offers for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>. Accepts a
+plain <code class="docutils literal notranslate"><span class="pre">{...}</span></code> brace list directly; <code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;T&gt;</span></code> converts implicitly
+from <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;T&gt;</span></code>.</p>
+<p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::duration::Unit</span></code>, <code class="docutils literal notranslate"><span class="pre">make</span></code> only)</p>
+<p>Which unit <code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">nested</span></code>/<code class="docutils literal notranslate"><span class="pre">flat</span></code> are expressed in.</p>
+<p><strong>start</strong>, <strong>end</strong>, <strong>step</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Duration&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">range</span></code> only)</p>
+<p>Inclusive start, exclusive-past-end stop, and step size, exactly like
+<code class="docutils literal notranslate"><span class="pre">pluss::date_range</span></code> for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or Python’s <code class="docutils literal notranslate"><span class="pre">range()</span></code>. All three are
+themselves <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values (typically scalar, built from one of the unit
+factories above), not raw integers.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+A scalar (0D), 1D, or N-D <code class="docutils literal notranslate"><span class="pre">Duration</span></code> depending on which overload is used.
+<code class="docutils literal notranslate"><span class="pre">range</span></code> always returns 1D.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The friendly scalar unit factories, including a negative count.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ninety_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">90</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">one_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">one_day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">neg_fifteen_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">-15</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">.</span><span class="n">total_nanoseconds</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=5.4000e+12
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">90</span> <span class="pre">*</span> <span class="pre">60</span> <span class="pre">*</span> <span class="pre">1e9</span> <span class="pre">=</span> <span class="pre">5.4e12</span></code> nanoseconds — <code class="docutils literal notranslate"><span class="pre">duration::minutes</span></code> scales up from
+<code class="docutils literal notranslate"><span class="pre">duration::nanos</span></code> exactly as documented above.</p>
+<p>Example 2. N-D construction: a 1D list and a nested 2D literal, for
+<code class="docutils literal notranslate"><span class="pre">minutes</span></code>/<code class="docutils literal notranslate"><span class="pre">hours</span></code> respectively.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">minutes_1d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">({</span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">hours_2d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">({{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1d.dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">minutes_1d</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; 1d.numel=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">minutes_1d</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;2d.dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">hours_2d</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; 2d.numel=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">hours_2d</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">hours_2d</span><span class="p">.</span><span class="n">total_hours</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1d.dim=1 1d.numel=4
+2d.dim=2 2d.numel=6
+Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 1.0000 2.0000 ⎤
+⎢ 3.0000 4.0000 ⎥
+⎣ 5.0000 6.0000 ⎦
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hours_2d</span></code> is a genuine 2D <code class="docutils literal notranslate"><span class="pre">Duration</span></code> with shape <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">2]</span></code>, holding <code class="docutils literal notranslate"><span class="pre">1</span></code>
+through <code class="docutils literal notranslate"><span class="pre">6</span></code> hours in row-major order — not six independent scalar <code class="docutils literal notranslate"><span class="pre">Duration</span></code>s.</p>
+<p>Example 3. Explicit <code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">shape)</span></code> construction with plain braces — no
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code> wrapping needed, it converts implicitly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">days_2x2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">days_2x2</span><span class="p">.</span><span class="n">total_days</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 1.0000 2.0000 ⎤
+⎣ 3.0000 4.0000 ⎦
+</pre></div>
+</div>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">pluss::duration::make</span></code> — the same construction, with the unit picked at runtime.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">made_scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="o">::</span><span class="n">Days</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">made_1d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="o">::</span><span class="n">Hours</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;scalar=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">made_scalar</span><span class="p">.</span><span class="n">total_days</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1d=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">made_1d</span><span class="p">.</span><span class="n">total_hours</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>scalar=Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=3.0000
+1d=Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, 2.0000, 3.0000]
+</pre></div>
+</div>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">pluss::duration::range</span></code> builds a real 1D array with no <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
+involved.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">range</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">steps</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; numel=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">steps</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">steps</span><span class="p">.</span><span class="n">total_days</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dim=1 numel=6
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 2.0000, 4.0000, 6.0000, 8.0000, 10.0000]
+</pre></div>
+</div>
+<p>Six values from <code class="docutils literal notranslate"><span class="pre">0</span></code> up to (but not including) <code class="docutils literal notranslate"><span class="pre">10</span></code>, stepping by <code class="docutils literal notranslate"><span class="pre">2</span></code> — the same
+half-open range convention as <code class="docutils literal notranslate"><span class="pre">pluss::date_range</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Duration()</span></code> has no default constructor, and there is no public
+<code class="docutils literal notranslate"><span class="pre">Duration::from_scalar_nanos</span></code>/<code class="docutils literal notranslate"><span class="pre">Duration::range</span></code> either — always go through
+<code class="docutils literal notranslate"><span class="pre">pluss::duration::*</span></code>.</p></li>
+<li><p>The unit factories are pure convenience: nothing they produce is
+distinguishable afterward from an equivalent <code class="docutils literal notranslate"><span class="pre">duration::nanos</span></code> call at the
+same elapsed magnitude — <code class="docutils literal notranslate"><span class="pre">Duration</span></code> has no internal notion of “the unit it
+was constructed in.”</p></li>
+<li><p>Every unit factory’s N-D overloads (Examples 2 and 3) exist precisely so you
+never have to fall back to building an array of scalar <code class="docutils literal notranslate"><span class="pre">Duration</span></code>s by hand
+and combining them — construct the array directly, in one call. <code class="docutils literal notranslate"><span class="pre">make</span></code>
+(Example 4) gets the same N-D overload set, for when the unit itself is a
+runtime value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span> <span class="pre">-</span> <span class="pre">Timeline</span></code> is an implicit way to obtain a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> outside this
+factory entirely — see <a class="reference internal" href="../timeline/diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::diff</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="arithmetic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arithmetic</span></code></span></a>: combining <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values once constructed.</p></li>
+<li><p><a class="reference internal" href="total.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total</span></code></span></a>: converting a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> back into a plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> in a
+chosen unit.</p></li>
+<li><p><a class="reference internal" href="../timeline/diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::diff</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-side source of a
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../duration_api_reference.html">
+    <span class="label">Previous</span>
+    <span class="title">Duration API Reference</span>
+  </a>
+  <a class="next-link" href="arithmetic.html">
+    <span class="label">Next</span>
+    <span class="title">arithmetic</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../duration_api_reference.html">Duration API Reference</a><ul>
+      <li>Previous: <a href="../../duration_api_reference.html" title="previous chapter">Duration API Reference</a></li>
+      <li>Next: <a href="arithmetic.html" title="next chapter">Duration arithmetic</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/duration/construction.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

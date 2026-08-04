@@ -79,15 +79,15 @@ similarly high (but not identical, due to differing word counts) norm.
 
 ## See Also
 
-- [`Catalog::compute_similarity`](compute_similarity.md): a related bag-of-words text
+- [`Catalog::similarity`](similarity.md): a related bag-of-words text
   metric, comparing two fields directly instead of summarizing one.
-- [`Catalog::extract_keywords`](extract_keywords.md): raw term frequencies across the
+- [`Catalog::keywords`](keywords.md): raw term frequencies across the
   field, without IDF weighting.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="text_preprocess.html">
+  <a class="prev-link" href="clean.html">
     <span class="label">Previous</span>
-    <span class="title">text_preprocess</span>
+    <span class="title">clean</span>
   </a>
   <a class="next-link" href="to_json.html">
     <span class="label">Next</span>

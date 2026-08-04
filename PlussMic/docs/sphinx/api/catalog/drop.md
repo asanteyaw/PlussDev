@@ -16,13 +16,13 @@ Catalog::drop(const std::vector<std::string>& field_names) const -> Catalog
 
 ## What It Does
 
-Removes the named stream(s), keeping every other stream — the complementary operation to
-[`select()`](select.md), which keeps *only* the named streams. The remaining streams
-preserve their original relative order.
+Removes the named stream(s), keeping every other stream. The remaining streams preserve
+their original relative order. To keep *only* specific names, project them first with
+[`keys(...)`](keys.md).
 
 ```{important} Every requested key must exist
-Like select(), drop() throws immediately if any requested name isn't present in the
-catalog — it never silently ignores an unknown name.
+`drop()` throws immediately if any requested name isn't present in the catalog — it never
+silently ignores an unknown name.
 ```
 
 ## Parameters
@@ -124,8 +124,7 @@ Catalog::drop: unknown key 'zzz'
 
 ## See Also
 
-- [`Catalog::select`](select.md): the complementary operation — keep *only* the named
-  streams.
+- [`Catalog::keys`](keys.md): keep only the named streams instead of dropping them.
 - [`Catalog::has`](has.md): check a name's existence before dropping it.
 
 <div class="pluss-inline-prev-next">

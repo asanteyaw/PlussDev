@@ -20,7 +20,7 @@ name reads better at the call site. Requires a defined catalog; throws otherwise
 ```{important} This counts streams, not rows
 `nkeys()` (and its alias `size()`) count the number of named streams the catalog holds —
 they say nothing about how many rows each stream has. For row counts, see
-[`nrecords()`](nrecords.md)/[`minrecords()`](minrecords.md)/[`maxrecords()`](maxrecords.md),
+[`nrows()`](nrows.md)/[`minrows()`](minrows.md)/[`maxrows()`](maxrows.md),
 or the row half of [`shape()`](shape.md).
 ```
 
@@ -97,8 +97,8 @@ Catalog: undefined handle
 ## See Also
 
 - [`Catalog::size`](size.md): a pure alias for this method.
-- [`Catalog::nrecords`](nrecords.md) / [`minrecords`](minrecords.md) /
-  [`maxrecords`](maxrecords.md): the row-count counterparts.
+- [`Catalog::nrows`](nrows.md) / [`Catalog::minrows`](minrows.md) /
+  [`Catalog::maxrows`](maxrows.md): the row-count counterparts.
 - [`Catalog::shape`](shape.md): both dimensions (rows, streams) in one call.
 - [`Catalog::empty`](empty.md): shorthand for `nkeys() == 0`.
 

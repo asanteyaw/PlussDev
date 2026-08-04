@@ -84,6 +84,57 @@ Stream Stream::ndistinct(DistinctOptions options) const {
   return Stream::from_thread(to_thread().ndistinct(options.dropnull).thread());
 }
 
+Stream Stream::map(const std::function<Stream(const Stream&)>& fn) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  PLUSS_CHECK(static_cast<bool>(fn), "Stream::map: function is empty");
+  const auto out = fn(*this);
+  PLUSS_CHECK(out.defined(), "Stream::map: function returned undefined stream");
+  PLUSS_CHECK(out.size() == size(),
+              "Stream::map: output stream length must match input stream length");
+  return out;
+}
+
+Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+                      pluss::msharp::RangeView::Of<Stream> choices,
+                      const Stream& default_value) {
+  PLUSS_CHECK(!choices.empty(), "Stream::select: at least one choice is required");
+  PLUSS_CHECK(default_value.defined(), "Stream::select: default value is undefined");
+
+  std::vector<pluss::table::Thread> choice_threads;
+  choice_threads.reserve(choices.size());
+  bool any_labels = default_value.has_label();
+  for (const auto& choice : choices) {
+    PLUSS_CHECK(choice.defined(), "Stream::select: choice is undefined");
+    any_labels = any_labels || choice.has_label();
+    choice_threads.push_back(choice.to_thread());
+  }
+
+  const auto out_thread = pluss::table::Thread::select(
+      conditions,
+      pluss::msharp::RangeView::Of<pluss::table::Thread>(choice_threads),
+      default_value.to_thread());
+
+  if (!any_labels) {
+    return Stream::from_thread(out_thread);
+  }
+
+  PLUSS_CHECK(default_value.has_label(),
+              "Stream::select: label presence must match across choices and default");
+  std::vector<pluss::table::Thread> choice_labels;
+  choice_labels.reserve(choices.size());
+  for (const auto& choice : choices) {
+    PLUSS_CHECK(choice.has_label(),
+                "Stream::select: label presence must match across choices and default");
+    choice_labels.push_back(*choice.label());
+  }
+
+  const auto out_label = pluss::table::Thread::select(
+      conditions,
+      pluss::msharp::RangeView::Of<pluss::table::Thread>(choice_labels),
+      *default_value.label());
+  return Stream::from_thread(out_thread, out_label);
+}
+
 Stream Stream::astype(pluss::codem::ScalarType dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.astype(dtype); });

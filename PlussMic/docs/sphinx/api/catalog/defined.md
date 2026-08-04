@@ -113,9 +113,9 @@ true
   storage, a separate question from whether that storage exists.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="compute_similarity.html">
+  <a class="prev-link" href="similarity.html">
     <span class="label">Previous</span>
-    <span class="title">compute_similarity</span>
+    <span class="title">similarity</span>
   </a>
   <a class="next-link" href="display.html">
     <span class="label">Next</span>

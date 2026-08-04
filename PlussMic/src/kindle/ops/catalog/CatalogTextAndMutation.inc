@@ -1,5 +1,5 @@
-Catalog Catalog::text_preprocess(std::string_view field) const {
-  return apply(field, [](const Stream& s) {
+Catalog Catalog::clean(std::string_view field) const {
+  return keys(field).map([](const Stream& s) {
     const auto t = s.to_thread().cast().note().as_note();
     std::vector<std::string> out;
     out.reserve(static_cast<std::size_t>(s.size()));
@@ -16,11 +16,11 @@ Catalog Catalog::text_preprocess(std::string_view field) const {
   });
 }
 
-Catalog Catalog::extract_keywords(std::string_view field, int top_n) const {
+Catalog Catalog::keywords(std::string_view field, int top_n) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key = trim_copy(field);
-  PLUSS_CHECK(!key.empty(), "Catalog::extract_keywords: field cannot be empty");
-  PLUSS_CHECK(has(key), "Catalog::extract_keywords: unknown key '" + key + "'");
+  PLUSS_CHECK(!key.empty(), "Catalog::keywords: field cannot be empty");
+  PLUSS_CHECK(has(key), "Catalog::keywords: unknown key '" + key + "'");
   const auto src = at(key).to_thread().cast().note().as_note();
 
   std::unordered_map<std::string, std::int64_t> counts;
@@ -58,22 +58,22 @@ Catalog Catalog::extract_keywords(std::string_view field, int top_n) const {
   return Catalog(std::move(out_cols));
 }
 
-Catalog Catalog::compute_similarity(std::string_view field1,
-                                    std::string_view field2,
-                                    std::string_view method) const {
+Catalog Catalog::similarity(std::string_view field1,
+                            std::string_view field2,
+                            std::string_view method) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto left_name = trim_copy(field1);
   const auto right_name = trim_copy(field2);
   PLUSS_CHECK(!left_name.empty() && !right_name.empty(),
-              "Catalog::compute_similarity: field names cannot be empty");
-  PLUSS_CHECK(has(left_name), "Catalog::compute_similarity: unknown field '" + left_name + "'");
-  PLUSS_CHECK(has(right_name), "Catalog::compute_similarity: unknown field '" + right_name + "'");
+              "Catalog::similarity: field names cannot be empty");
+  PLUSS_CHECK(has(left_name), "Catalog::similarity: unknown field '" + left_name + "'");
+  PLUSS_CHECK(has(right_name), "Catalog::similarity: unknown field '" + right_name + "'");
   PLUSS_CHECK(lowercase_copy(trim_copy(method)) == "cosine",
-              "Catalog::compute_similarity currently supports only method='cosine'");
+              "Catalog::similarity currently supports only method='cosine'");
 
   const auto lhs = at(left_name).to_thread().cast().note().as_note();
   const auto rhs = at(right_name).to_thread().cast().note().as_note();
-  PLUSS_CHECK(lhs.numel() == rhs.numel(), "Catalog::compute_similarity: fields must have same length");
+  PLUSS_CHECK(lhs.numel() == rhs.numel(), "Catalog::similarity: fields must have same length");
 
   std::vector<double> sim;
   sim.reserve(static_cast<std::size_t>(lhs.numel()));
@@ -100,12 +100,12 @@ Catalog Catalog::compute_similarity(std::string_view field1,
   return set(sim_name, Stream(pluss::make_series(sim, {static_cast<std::int64_t>(sim.size())})));
 }
 
-Catalog Catalog::filter_by_text(std::string_view field, std::string_view pattern) const {
+Catalog Catalog::grep(std::string_view field, std::string_view pattern) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key = trim_copy(field);
   const auto pat = lowercase_copy(trim_copy(pattern));
-  PLUSS_CHECK(!key.empty(), "Catalog::filter_by_text: field cannot be empty");
-  PLUSS_CHECK(has(key), "Catalog::filter_by_text: unknown field '" + key + "'");
+  PLUSS_CHECK(!key.empty(), "Catalog::grep: field cannot be empty");
+  PLUSS_CHECK(has(key), "Catalog::grep: unknown field '" + key + "'");
   const auto src = at(key).to_thread().cast().note().as_note();
   std::vector<bool> keep(static_cast<std::size_t>(src.numel()), false);
   for (std::int64_t i = 0; i < src.numel(); ++i) {
@@ -115,11 +115,11 @@ Catalog Catalog::filter_by_text(std::string_view field, std::string_view pattern
   return filter(bool_series_from_mask(keep));
 }
 
-Catalog Catalog::add_text_features(std::string_view field) const {
+Catalog Catalog::featurize(std::string_view field) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key = trim_copy(field);
-  PLUSS_CHECK(!key.empty(), "Catalog::add_text_features: field cannot be empty");
-  PLUSS_CHECK(has(key), "Catalog::add_text_features: unknown field '" + key + "'");
+  PLUSS_CHECK(!key.empty(), "Catalog::featurize: field cannot be empty");
+  PLUSS_CHECK(has(key), "Catalog::featurize: unknown field '" + key + "'");
   const auto src = at(key).to_thread().cast().note().as_note();
 
   std::vector<std::int64_t> char_len;
@@ -140,12 +140,12 @@ Catalog Catalog::add_text_features(std::string_view field) const {
   return out;
 }
 
-Catalog Catalog::aggregate_text_stats(std::string_view field, std::string_view stat_type) const {
+Catalog Catalog::stats(std::string_view field, std::string_view stat_type) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key = trim_copy(field);
   const auto stat = lowercase_copy(trim_copy(stat_type));
-  PLUSS_CHECK(!key.empty(), "Catalog::aggregate_text_stats: field cannot be empty");
-  PLUSS_CHECK(has(key), "Catalog::aggregate_text_stats: unknown field '" + key + "'");
+  PLUSS_CHECK(!key.empty(), "Catalog::stats: field cannot be empty");
+  PLUSS_CHECK(has(key), "Catalog::stats: unknown field '" + key + "'");
   const auto src = at(key).to_thread().cast().note().as_note();
 
   std::vector<std::int64_t> lens;
@@ -172,7 +172,7 @@ Catalog Catalog::aggregate_text_stats(std::string_view field, std::string_view s
   } else if (stat == "vocab" || stat == "vocab_size") {
     value = static_cast<double>(vocab.size());
   } else {
-    PLUSS_FAIL("Catalog::aggregate_text_stats: unsupported stat_type '" + stat + "'");
+    PLUSS_FAIL("Catalog::stats: unsupported stat_type '" + stat + "'");
   }
 
   std::vector<std::pair<std::string, Stream>> out_cols;

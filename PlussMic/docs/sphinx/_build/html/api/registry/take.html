@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Registry::take_values" href="take_values.html" />
+    <link rel="next" title="Registry::take_" href="take_.html" />
     <link rel="prev" title="Registry::tail" href="tail.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c3b9517d24c2 -->
 <section id="registry-take">
 <h1>Registry::take<a class="headerlink" href="#registry-take" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -44,48 +45,58 @@
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Registry</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Registry</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Registry</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a new registry keeping only the values at the given positions, in the
-given order, applying <a class="reference internal" href="../slot/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::take(indices)</span></code></span></a> independently to
-each field. Unlike <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>/<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>/<a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail()</span></code></span></a>,
-<code class="docutils literal notranslate"><span class="pre">take()</span></code> is not restricted to a contiguous range — indices may repeat, skip
-around, or reorder rows arbitrarily.</p>
+<p><code class="docutils literal notranslate"><span class="pre">take()</span></code> has <strong>two roles</strong>, split by argument count:</p>
+<ul class="simple">
+<li><p><strong>No-key overloads</strong> — <code class="docutils literal notranslate"><span class="pre">take(indices)</span></code> applies the same positional index list
+to <strong>every</strong> field independently, applying
+<a class="reference internal" href="../slot/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::take(indices)</span></code></span></a> to each. Unlike
+<a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>/<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>/<a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail()</span></code></span></a>, it is not
+restricted to a contiguous range — indices may repeat, skip around, or reorder
+arbitrarily.</p></li>
+<li><p><strong>Keyed overloads</strong> — <code class="docutils literal notranslate"><span class="pre">take(key,</span> <span class="pre">indices)</span></code> scopes the same positional
+selection to a <strong>single named field</strong>, leaving every other field untouched.</p></li>
+</ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Out-of-range indices throw — no clamping, no negative-index wraparound
-Unlike <code class="docutils literal notranslate"><span class="pre">slice()</span></code>, <code class="docutils literal notranslate"><span class="pre">take()</span></code> performs no clamping and no Python-style negative-index
-support. Each index is looked up via <code class="docutils literal notranslate"><span class="pre">Slot::at()</span></code>, which throws
-<code class="docutils literal notranslate"><span class="pre">&quot;Slot::at:</span> <span class="pre">index</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">bounds&quot;</span></code> for any index <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">size()</span></code> — for that
+Both roles perform no clamping and no Python-style negative-index support. Each
+index is looked up via <code class="docutils literal notranslate"><span class="pre">Slot::at()</span></code>, which throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::at:</span> <span class="pre">index</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">bounds&quot;</span></code> for any index <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">size()</span></code> for that
 field. On a ragged registry, an index valid for one field can throw for a shorter
-one.</p>
+one — and the keyed overload only checks the one field you name.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>indices</strong> (<code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::int64_t&gt;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::int64_t&gt;&amp;</span></code>)
-The positions to select, applied to every field independently. May repeat or
-appear out of order.</p>
+The positions to select. May repeat or appear out of order.</p>
+<p><strong>key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, keyed overloads only)
+The single field to scope the selection to. Throws if it doesn’t exist.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-A new registry with each field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> rebuilt from the values at <code class="docutils literal notranslate"><span class="pre">indices</span></code>,
-in the order given.</p>
+The no-key overloads return a new registry with every field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+rebuilt from <code class="docutils literal notranslate"><span class="pre">indices</span></code>. The keyed overloads return a new registry with only
+the named field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code> rebuilt; every other field is unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Reorder and repeat positions.</p>
+<p>Example 1. Reorder and repeat positions across every field.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
 <span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">picks</span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">picks</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
@@ -118,38 +129,67 @@ in the order given.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot::at: index out of bounds
 </pre></div>
 </div>
+<p>Example 3. The keyed overload reorders one field’s <code class="docutils literal notranslate"><span class="pre">Slot</span></code>, leaving the rest of
+the registry — including that field’s own length elsewhere in a ragged
+registry — untouched.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">picks</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">picks</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ids</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] city size=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">).</span><span class="n">size</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[3, 1] city size=3
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Applies <a class="reference internal" href="../slot/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::take()</span></code></span></a> independently per field — on a ragged
-registry, the same index list can succeed on a longer field and throw on a
-shorter one.</p></li>
-<li><p>No clamping and no negative-index support — contrast with
+<li><p>No clamping and no negative-index support in either role — contrast with
 <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>’s important callout, which clamps and supports negative
 indices.</p></li>
-<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></span></a> is built on top of <code class="docutils literal notranslate"><span class="pre">take()</span></code>, with an internally generated
-shuffled index list.</p></li>
+<li><p>The keyed overload throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry::take:</span> <span class="pre">unknown</span> <span class="pre">key</span> <span class="pre">'&lt;name&gt;'&quot;</span></code> for a
+missing field.</p></li>
+<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></span></a> is built on top of the no-key <code class="docutils literal notranslate"><span class="pre">take(indices)</span></code>, with an
+internally generated shuffled index list.</p></li>
+<li><p>Never mutates the receiver — use <a class="reference internal" href="take_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take_()</span></code></span></a> for the in-place forms.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="take_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::take_</span></code></span></a>: the in-place counterparts.</p></li>
 <li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::slice</span></code></span></a>: the clamping, negative-index-aware, contiguous-range
-alternative to this method.</p></li>
-<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::sample</span></code></span></a>: random sampling, implemented via <code class="docutils literal notranslate"><span class="pre">take()</span></code>.</p></li>
-<li><p><a class="reference internal" href="../catalog/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::take</span></code></span></a>: the equivalent operation on the kindle
-model.</p></li>
+alternative to the no-key overloads.</p></li>
+<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::sample</span></code></span></a>: random sampling, implemented via the no-key
+<code class="docutils literal notranslate"><span class="pre">take(indices)</span></code>.</p></li>
+<li><p><a class="reference internal" href="concat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::concat</span></code></span></a>: a related field-scoped operation, appending
+rather than reordering.</p></li>
+<li><p><a class="reference internal" href="../catalog/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::take</span></code></span></a>: the equivalent whole-catalog operation
+on the kindle model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tail.html">
     <span class="label">Previous</span>
     <span class="title">tail</span>
   </a>
-  <a class="next-link" href="take_values.html">
+  <a class="next-link" href="take_.html">
     <span class="label">Next</span>
-    <span class="title">take_values</span>
+    <span class="title">take_</span>
   </a>
 </div>
 </section>
@@ -204,7 +244,7 @@ model.</p></li>
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="tail.html" title="previous chapter">Registry::tail</a></li>
-      <li>Next: <a href="take_values.html" title="next chapter">Registry::take_values</a></li>
+      <li>Next: <a href="take_.html" title="next chapter">Registry::take_</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

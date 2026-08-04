@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Archive::select" href="select.html" />
+    <link rel="next" title="Archive::shape" href="shape.html" />
     <link rel="prev" title="Archive::nrecords" href="nrecords.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -128,7 +128,7 @@ location                 | Note         | Note             | 1       | [Accra]
 </pre></div>
 </div>
 <p>Example 3. Renaming a key missing from one catalog throws — a ragged-archive gotcha
-shared with <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a>/<a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>.</p>
+shared with <a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keys(...)</span></code></span></a>/<a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">c0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
@@ -158,13 +158,13 @@ shared with <a class="reference internal" href="select.html"><span class="std st
 <ul class="simple">
 <li><p>Only stream names change; payload values, row order, and depth labels are unaffected.</p></li>
 <li><p>Throws on any catalog missing a <code class="docutils literal notranslate"><span class="pre">from</span></code> key — same ragged-archive requirement as
-<a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a>/<a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>.</p></li>
+<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keys(...)</span></code></span></a>/<a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::select</span></code></span></a> / <a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::drop</span></code></span></a>: the other key/column
+<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::keys</span></code></span></a> / <a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::drop</span></code></span></a>: the other key/column
 operations sharing the same “every catalog must have the key” requirement.</p></li>
 <li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::has</span></code></span></a>: confirm a key exists in every catalog before renaming it.</p></li>
 </ul>
@@ -173,9 +173,9 @@ operations sharing the same “every catalog must have the key” requirement.</
     <span class="label">Previous</span>
     <span class="title">nrecords</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="shape.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">shape</span>
   </a>
 </div>
 </section>
@@ -230,7 +230,7 @@ operations sharing the same “every catalog must have the key” requirement.</
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../archive_api_reference.html">Archive API Reference</a><ul>
       <li>Previous: <a href="nrecords.html" title="previous chapter">Archive::nrecords</a></li>
-      <li>Next: <a href="select.html" title="next chapter">Archive::select</a></li>
+      <li>Next: <a href="shape.html" title="next chapter">Archive::shape</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

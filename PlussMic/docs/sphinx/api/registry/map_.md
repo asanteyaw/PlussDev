@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 966880a19458 -->
 
 # Registry::map_
 
@@ -12,13 +13,14 @@ Registry& Registry::map_(const std::function<Slot(const Slot&)>& fn)
 
 ## What It Does
 
-The in-place counterpart to [`map()`](map.md)/[`apply_all()`](apply_all.md) — runs
-`fn` over every field's `Slot` and rewrites this registry directly. Implemented as
-`*this = apply_all(fn)`.
+The in-place counterpart to [`map()`](map.md) — runs `fn` over every field's
+`Slot` and rewrites this registry directly.
 
-```{important} Same mixed-kind hazard as apply_all()
-`fn` runs on every field regardless of value kind — see
-[`apply_all()`](apply_all.md)'s important callout.
+```{important} Whole-registry transform
+`fn` runs on every field regardless of value kind, so a callback written only for
+one kind can throw on a field of a different kind. To scope a `Slot -> Slot`
+transform to one field, fetch it via [`fields(key)`](fields.md), call `fn` on it,
+and reinsert with [`set_()`](set_.md): `rg.set_("population", fn(rg.fields("population")))`.
 ```
 
 ## Parameters
@@ -47,7 +49,7 @@ rg.map_([](const pluss::bundle::Slot& s) {
   });
 });
 
-auto ids = rg.select("id");
+auto ids = rg.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
@@ -64,26 +66,27 @@ std::cout << "]";
 
 ## Notes
 
-- Implemented as `*this = apply_all(fn)` — full-registry reassignment under the
-  hood, not a field-by-field in-place mutation.
+- Performs a full-registry reassignment under the hood, not a field-by-field
+  mutation of the existing slots.
 - Mutates the registry it's called on and returns `*this` by reference.
 
 ## See Also
 
-- [`Registry::map`](map.md) / [`Registry::apply_all`](apply_all.md): the
-  non-mutating counterparts this method wraps.
-- [`Registry::apply_`](apply_.md): the in-place, scoped counterpart, for
-  transforming only named fields.
-- [`Catalog::apply_all`](../catalog/apply_all.md): the closest equivalent on the
-  kindle model — `Catalog` has no `map`/`map_` alias, only `apply_all`.
+- [`Registry::map`](map.md): the non-mutating counterpart this method wraps.
+- [`Registry::fields`](fields.md) / [`Registry::set_`](set_.md): fetch-transform-reinsert
+  for scoping a `Slot -> Slot` transform to one named field in place.
+- [`Registry::morph_`](morph_.md): a value-level (not whole-`Slot`) in-place
+  transform, scoped to one field.
+- [`Catalog::map`](../catalog/map.md): the closest equivalent on the
+  kindle model.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="map.html">
     <span class="label">Previous</span>
     <span class="title">map</span>
   </a>
-  <a class="next-link" href="max.html">
+  <a class="next-link" href="maxstate.html">
     <span class="label">Next</span>
-    <span class="title">max</span>
+    <span class="title">maxstate</span>
   </a>
 </div>

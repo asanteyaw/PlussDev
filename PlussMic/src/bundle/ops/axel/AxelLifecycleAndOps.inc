@@ -23,16 +23,34 @@ std::int64_t Axel::size() const {
 
 bool Axel::empty() const { return depth() == 0; }
 
-AxelFieldAccessor Axel::fields(std::span<const std::string_view> keys_sel) const {
-  return AxelFieldAccessor(*this, normalize_names(keys_sel));
+Axel Axel::fields(std::span<const std::string_view> keys_sel) const {
+  const auto names = normalize_names(keys_sel);
+  PLUSS_CHECK(!names.empty(), "Axel::fields: at least one field is required");
+  return map([&](const Registry& reg) { return reg.fields(names); });
 }
 
-AxelFieldAccessor Axel::fields(std::initializer_list<std::string_view> keys_sel) const {
+Axel Axel::fields(std::initializer_list<std::string_view> keys_sel) const {
   return fields(std::span<const std::string_view>(keys_sel.begin(), keys_sel.size()));
 }
 
 AxelFieldAxisAccessor Axel::fieldaxis() const {
   return AxelFieldAxisAccessor(*this);
+}
+
+AxelCastAccessor Axel::cast() const {
+  return AxelCastAccessor(*this, {}, {});
+}
+
+AxelCastAccessor Axel::cast(const pluss::table::ThreadCastOptions& options) const {
+  return AxelCastAccessor(*this, {}, options);
+}
+
+AxelNoteAccessor Axel::nt() const {
+  return AxelNoteAccessor(*this, {});
+}
+
+AxelTimelineAccessor Axel::tl() const {
+  return AxelTimelineAccessor(*this, {});
 }
 
 Registry Axel::registry(std::int64_t i) const {
@@ -86,20 +104,6 @@ Axel Axel::map(const std::function<Registry(const Registry&)>& fn) const {
   return Axel(std::move(out), labels());
 }
 
-Axel Axel::select(std::span<const std::string_view> keys) const {
-  PLUSS_CHECK(defined(), "Axel: undefined handle");
-  std::vector<Registry> out;
-  out.reserve(static_cast<std::size_t>(depth()));
-  for (std::int64_t i = 0; i < depth(); ++i) {
-    out.push_back(registry(i).select(keys));
-  }
-  return Axel(std::move(out), labels());
-}
-
-Axel Axel::select(std::initializer_list<std::string_view> keys) const {
-  return select(std::span<const std::string_view>(keys.begin(), keys.size()));
-}
-
 Axel Axel::drop(std::span<const std::string_view> fields) const {
   return map([&](const Registry& reg) { return reg.drop(fields); });
 }
@@ -116,21 +120,6 @@ Axel Axel::rename(std::string_view from, std::string_view to) const {
   return map([&](const Registry& reg) { return reg.rename(from, to); });
 }
 
-Axel Axel::apply_slot(std::string_view key, const std::function<Slot(const Slot&)>& fn) const {
-  PLUSS_CHECK(defined(), "Axel: undefined handle");
-  PLUSS_CHECK(static_cast<bool>(fn), "Axel::apply_slot: fn is empty");
-  std::vector<Registry> out;
-  out.reserve(static_cast<std::size_t>(depth()));
-  for (std::int64_t i = 0; i < depth(); ++i) {
-    auto r = registry(i);
-    if (r.has(key)) {
-      r = r.apply(key, fn);
-    }
-    out.push_back(std::move(r));
-  }
-  return Axel(std::move(out), labels());
-}
-
 bool Axel::has(std::string_view field) const {
   PLUSS_CHECK(defined(), "Axel: undefined handle");
   for (std::int64_t i = 0; i < depth(); ++i) {
@@ -143,170 +132,44 @@ Axel Axel::isnull() const {
   return map([](const Registry& reg) { return reg.isnull(); });
 }
 
-Axel Axel::isnull(std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).isnull(); });
-}
-
-Axel Axel::isnull(std::initializer_list<std::string_view> fields) const {
-  return isnull(std::span<const std::string_view>(fields.begin(), fields.size()));
-}
-
 Axel Axel::notnull() const {
   return map([](const Registry& reg) { return reg.notnull(); });
-}
-
-Axel Axel::notnull(std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).notnull(); });
-}
-
-Axel Axel::notnull(std::initializer_list<std::string_view> fields) const {
-  return notnull(std::span<const std::string_view>(fields.begin(), fields.size()));
 }
 
 Axel Axel::invalid() const {
   return map([](const Registry& reg) { return reg.invalid(); });
 }
 
-Axel Axel::invalid(std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).invalid(); });
-}
-
-Axel Axel::invalid(std::initializer_list<std::string_view> fields) const {
-  return invalid(std::span<const std::string_view>(fields.begin(), fields.size()));
-}
-
 Axel Axel::fillnull(double value) const {
   return map([&](const Registry& reg) { return reg.fillnull(value); });
-}
-
-Axel Axel::fillnull(double value, std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).fillnull(value); });
-}
-
-Axel Axel::fillnull(double value, std::initializer_list<std::string_view> fields) const {
-  return fillnull(value, std::span<const std::string_view>(fields.begin(), fields.size()));
 }
 
 Axel Axel::fillnull(std::string_view value) const {
   return map([&](const Registry& reg) { return reg.fillnull(value); });
 }
 
-Axel Axel::fillnull(std::string_view value, std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).fillnull(value); });
-}
-
-Axel Axel::fillnull(std::string_view value, std::initializer_list<std::string_view> fields) const {
-  return fillnull(value, std::span<const std::string_view>(fields.begin(), fields.size()));
-}
-
 Axel Axel::fillnull(const pluss::Timeline& value) const {
   return map([&](const Registry& reg) { return reg.fillnull(value); });
-}
-
-Axel Axel::fillnull(const pluss::Timeline& value, std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).fillnull(value); });
-}
-
-Axel Axel::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields) const {
-  return fillnull(value, std::span<const std::string_view>(fields.begin(), fields.size()));
 }
 
 Axel Axel::fillnull(const pluss::TimeIndex& value) const {
   return map([&](const Registry& reg) { return reg.fillnull(value); });
 }
 
-Axel Axel::fillnull(const pluss::TimeIndex& value, std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).fillnull(value); });
-}
-
-Axel Axel::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields) const {
-  return fillnull(value, std::span<const std::string_view>(fields.begin(), fields.size()));
-}
-
 Axel Axel::dropnull() const {
   return map([](const Registry& reg) { return reg.dropnull(); });
-}
-
-Axel Axel::dropnull(std::span<const std::string_view> fields) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).dropnull(); });
-}
-
-Axel Axel::dropnull(std::initializer_list<std::string_view> fields) const {
-  return dropnull(std::span<const std::string_view>(fields.begin(), fields.size()));
 }
 
 Axel Axel::distinct(pluss::kindle::DistinctOptions options) const {
   return map([&](const Registry& reg) { return reg.distinct(options); });
 }
 
-Axel Axel::distinct(std::span<const std::string_view> fields,
-                    pluss::kindle::DistinctOptions options) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).distinct(options); });
-}
-
-Axel Axel::distinct(std::initializer_list<std::string_view> fields,
-                    pluss::kindle::DistinctOptions options) const {
-  return distinct(std::span<const std::string_view>(fields.begin(), fields.size()), options);
-}
-
 Axel Axel::freq(pluss::kindle::FreqOptions options) const {
   return map([&](const Registry& reg) { return reg.freq(options); });
 }
 
-Axel Axel::freq(std::span<const std::string_view> fields,
-                pluss::kindle::FreqOptions options) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).freq(options); });
-}
-
-Axel Axel::freq(std::initializer_list<std::string_view> fields,
-                pluss::kindle::FreqOptions options) const {
-  return freq(std::span<const std::string_view>(fields.begin(), fields.size()), options);
-}
-
 Axel Axel::ndistinct(pluss::kindle::DistinctOptions options) const {
   return map([&](const Registry& reg) { return reg.ndistinct(options); });
-}
-
-Axel Axel::ndistinct(std::span<const std::string_view> fields,
-                     pluss::kindle::DistinctOptions options) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).ndistinct(options); });
-}
-
-Axel Axel::ndistinct(std::initializer_list<std::string_view> fields,
-                     pluss::kindle::DistinctOptions options) const {
-  return ndistinct(std::span<const std::string_view>(fields.begin(), fields.size()), options);
-}
-
-Axel Axel::cast(std::span<const std::string_view> fields,
-                pluss::table::ThreadCastTarget target,
-                const pluss::table::ThreadCastOptions& options) const {
-  const auto names = normalize_names(fields);
-  return map([&](const Registry& reg) {
-    auto accessor = RegistryFieldAccessor(reg, names).cast(options);
-    switch (target) {
-      case pluss::table::ThreadCastTarget::Series: return accessor.series();
-      case pluss::table::ThreadCastTarget::Note: return accessor.note();
-      case pluss::table::ThreadCastTarget::Timeline: return accessor.timeline();
-      case pluss::table::ThreadCastTarget::TimeIndex: return accessor.timeindex();
-    }
-    return reg;
-  });
-}
-
-Axel Axel::cast(std::initializer_list<std::string_view> fields,
-                pluss::table::ThreadCastTarget target,
-                const pluss::table::ThreadCastOptions& options) const {
-  return cast(std::span<const std::string_view>(fields.begin(), fields.size()), target, options);
-}
-
-Axel Axel::astype(std::span<const std::string_view> fields,
-                  pluss::codem::ScalarType dtype) const {
-  return map([&](const Registry& reg) { return RegistryFieldAccessor(reg, normalize_names(fields)).astype(dtype); });
-}
-
-Axel Axel::astype(std::initializer_list<std::string_view> fields,
-                  pluss::codem::ScalarType dtype) const {
-  return astype(std::span<const std::string_view>(fields.begin(), fields.size()), dtype);
 }
 
 Axel Axel::concat_depth(const Axel& other) const {

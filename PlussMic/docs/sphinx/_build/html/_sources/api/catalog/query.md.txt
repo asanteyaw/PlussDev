@@ -101,14 +101,14 @@ Catalog::query: query function is empty
 ## See Also
 
 - [`Catalog::filter`](filter.md) / [`Catalog::where`](where.md) /
-  [`Catalog::masked_select`](masked_select.md): the underlying row-selection mechanism this
+  [`Catalog::where`](where.md): the underlying row-selection mechanism this
   method builds its mask for.
 - [`Catalog::at`](at.md): the usual way to reach a stream inside the callback.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nrecords.html">
+  <a class="prev-link" href="nrows.html">
     <span class="label">Previous</span>
-    <span class="title">nrecords</span>
+    <span class="title">nrows</span>
   </a>
   <a class="next-link" href="rename.html">
     <span class="label">Next</span>

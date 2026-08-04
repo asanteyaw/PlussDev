@@ -23,6 +23,7 @@ from typing import Sequence
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PYTHON = sys.executable
 AGGREGATOR = REPO_ROOT / "docs/scripts/aggregate_docs.py"
+DOC_EXAMPLE_VALIDATOR = REPO_ROOT / "docs/scripts/validate_doc_examples.py"
 
 
 @dataclass(frozen=True)
@@ -188,6 +189,14 @@ def prepare(signature_check: bool) -> None:
     run_generators(signature_check=signature_check)
     aggregate_package_sites()
     aggregate_root_site()
+    run(
+        [
+            PYTHON,
+            str(DOC_EXAMPLE_VALIDATOR),
+            str(REPO_ROOT / "PlussQit/docs/sphinx/api/series"),
+        ],
+        cwd=REPO_ROOT,
+    )
 
 
 def sphinx_cmd(sphinxbuild: str, builder: str, site: Site, strict: bool) -> list[str]:

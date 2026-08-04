@@ -30,7 +30,6 @@ Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
 namespace {
 
 pluss::table::DataFrame registry_to_io_frame(const Registry& registry) {
-  registry.ensure_stream_compatible("Registry::save_as");
   auto catalog = registry.to_kindle();
   pluss::kindle::TabelizePolicy policy;
   policy.align = pluss::kindle::Align::Outer;

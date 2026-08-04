@@ -33,14 +33,12 @@ api/slot/defined
 api/slot/distinct
 api/slot/dropnull
 api/slot/empty
-api/slot/ensure_stream_compatible
 api/slot/fillnull
 api/slot/filter
 api/slot/freq
 api/slot/from_kindle
 api/slot/head
 api/slot/invalid
-api/slot/is_stream_compatible
 api/slot/isnull
 api/slot/kind
 api/slot/kindelize

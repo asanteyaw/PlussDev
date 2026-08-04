@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Catalog::filter_by_text" href="filter_by_text.html" />
+    <link rel="next" title="Catalog::freq" href="freq.html" />
     <link rel="prev" title="Catalog::fillnull" href="fillnull.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -50,8 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Keeps only the rows where a boolean mask <code class="docutils literal notranslate"><span class="pre">Series</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>, applied independently to every
-stream in the catalog. <a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where()</span></code></span></a> and <a class="reference internal" href="masked_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">masked_select()</span></code></span></a> are
-both pure aliases for this same method.</p>
+stream in the catalog. <a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where()</span></code></span></a> is a pure alias for this same method.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The mask length must match each stream’s length individually
@@ -148,8 +147,7 @@ id                       | Series       | Series[float64]  | 3       | [3, 4, 5]
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where()</span></code></span></a> and <a class="reference internal" href="masked_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">masked_select()</span></code></span></a> are pure aliases —
-identical behavior, different name.</p></li>
+<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where()</span></code></span></a> is a pure alias — identical behavior, different name.</p></li>
 <li><p>The length check runs per-stream, not once for the whole catalog — see the important
 callout above.</p></li>
 <li><p>Requires a defined catalog and a defined <code class="docutils literal notranslate"><span class="pre">condition</span></code>; throws on either an undefined
@@ -159,8 +157,7 @@ catalog or an undefined mask.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::where</span></code></span></a> / <a class="reference internal" href="masked_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::masked_select</span></code></span></a>: aliases for
-this exact method.</p></li>
+<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::where</span></code></span></a>: an alias for this exact method.</p></li>
 <li><p><a class="reference internal" href="query.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::query</span></code></span></a>: build the boolean mask from a callback that receives the
 catalog itself, instead of constructing it beforehand.</p></li>
 </ul>
@@ -169,9 +166,9 @@ catalog itself, instead of constructing it beforehand.</p></li>
     <span class="label">Previous</span>
     <span class="title">fillnull</span>
   </a>
-  <a class="next-link" href="filter_by_text.html">
+  <a class="next-link" href="grep.html">
     <span class="label">Next</span>
-    <span class="title">filter_by_text</span>
+    <span class="title">grep</span>
   </a>
 </div>
 </section>
@@ -226,7 +223,7 @@ catalog itself, instead of constructing it beforehand.</p></li>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
       <li>Previous: <a href="fillnull.html" title="previous chapter">Catalog::fillnull</a></li>
-      <li>Next: <a href="filter_by_text.html" title="next chapter">Catalog::filter_by_text</a></li>
+      <li>Next: <a href="freq.html" title="next chapter">Catalog::freq</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -49,8 +49,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">ndistinct</span>
   </a>
-  <a class="next-link" href="registries.html">
+  <a class="next-link" href="nt.html">
     <span class="label">Next</span>
-    <span class="title">registries</span>
+    <span class="title">nt</span>
   </a>
 </div>

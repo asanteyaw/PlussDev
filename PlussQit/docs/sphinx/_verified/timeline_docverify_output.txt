@@ -1,0 +1,368 @@
+
+== base ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2024-12-31 23:59:59, 2025-01-01 00:00:00 ]
+
+== other ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:00, 2024-11-01 10:30:00, 2024-12-31 20:00:00, 2025-01-02 00:00:00 ]
+
+== with_nat ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:00, NaT, 2024-12-31 23:59:59, NaT ]
+
+== duplicated ==
+Timeline(shape=[6], tz=UTC)
+[ 2024-11-01 10:15:30, 2024-11-01 09:00:00, 2024-11-01 10:15:30, NaT, 2025-01-01 00:00:00, NaT ]
+
+== add_duration_scalar_90m ==
+Timeline(shape=[], tz=UTC)
+2024-11-01 10:30:00
+
+== add_duration_base_1h ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 10:00:00, 2024-11-01 11:15:30, 2025-01-01 00:59:59, 2025-01-01 01:00:00 ]
+
+== sub_duration_scalar_1d ==
+Timeline(shape=[], tz=UTC)
+2024-10-31 09:00:00
+
+== sub_duration_base_15m ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 08:45:00, 2024-11-01 10:00:30, 2024-12-31 23:44:59, 2024-12-31 23:45:00 ]
+
+== diff_scalar_note_iso ==
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"0 01:30:00"
+
+== diff_scalar_total_seconds ==
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=5400.0000
+
+== diff_vector_note_iso ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["0 00:00:00", "-0 00:14:30", "0 03:59:59", "-1 00:00:00"]
+
+== diff_vector_total_seconds ==
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.0000, -870.0000, 14399.0000, -86400.0000]
+
+== eq ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, false, false, false]
+
+== ne ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[false, true, true, true]
+
+== lt ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[false, true, false, true]
+
+== le ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, true, false, true]
+
+== gt ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[false, false, true, false]
+
+== ge ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, false, true, false]
+
+== isnat ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[false, true, false, true]
+
+== isvalid ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, false, true, false]
+
+== isvalid_base ==
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, true, true, true]
+
+== argsort ==
+Series(shape=[6], strides=[1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[1, 0, 2, 4, 3, 5]
+
+== argsort_base ==
+Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=[0, 1, 2, 3]
+
+== isnat_scalar_false ==
+false
+
+== isnat_scalar_true ==
+true
+
+== isoformat ==
+2024-11-01T09:00:00.000000000+00:00
+
+== strftime_ymd_hm ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["2024-11-01 09:00", "2024-11-01 10:15", "2024-12-31 23:59", "2025-01-01 00:00"]
+
+== strftime_weekday_month ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Friday, Nov 01", "Friday, Nov 01", "Tuesday, Dec 31", "Wednesday, Jan 01"]
+
+== to_note_iso ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["2024-11-01T09:00:00.000000000+00:00", "2024-11-01T10:15:30.000000000+00:00", "2024-12-31T23:59:59.000000000+00:00", "2025-01-01T00:00:00.000000000+00:00"]
+
+== to_note_iso_with_nat ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["2024-11-01T09:00:00.000000000+00:00", "NaT", "2024-12-31T23:59:59.000000000+00:00", "NaT"]
+
+== weekday_name ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Friday", "Friday", "Tuesday", "Wednesday"]
+
+== month_name ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["November", "November", "December", "January"]
+
+== floor_D ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-12-31 00:00:00, 2025-01-01 00:00:00 ]
+
+== ceil_H ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:00, 2024-11-01 11:00:00, 2025-01-01 00:00:00, 2025-01-01 00:00:00 ]
+
+== round_H ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:00, 2024-11-01 10:00:00, 2025-01-01 00:00:00, 2025-01-01 00:00:00 ]
+
+== normalize ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-12-31 00:00:00, 2025-01-01 00:00:00 ]
+
+== date ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-12-31 00:00:00, 2025-01-01 00:00:00 ]
+
+== time ==
+Timeline(shape=[4], tz=UTC)
+[ 1970-01-01 09:00:00, 1970-01-01 10:15:30, 1970-01-01 23:59:59, 1970-01-01 00:00:00 ]
+
+== tz_localize_new_york ==
+Timeline(shape=[2], tz=America/New_York)
+[ 2024-11-01 09:00:00, 2024-11-01 10:15:30 ]
+
+== tz_convert_utc ==
+Timeline(shape=[2], tz=UTC)
+[ 2024-11-01 13:00:00, 2024-11-01 14:15:30 ]
+
+== to_utc ==
+Timeline(shape=[2], tz=UTC)
+[ 2024-11-01 13:00:00, 2024-11-01 14:15:30 ]
+
+== min ==
+Timeline(shape=[], tz=UTC)
+2024-11-01 09:00:00
+
+== max ==
+Timeline(shape=[], tz=UTC)
+2025-01-01 00:00:00
+
+== sort ==
+Timeline(shape=[6], tz=UTC)
+[ 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2024-11-01 10:15:30, 2025-01-01 00:00:00, NaT, NaT ]
+
+== unique ==
+Timeline(shape=[4], tz=UTC)
+[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
+
+== drop_duplicates ==
+Timeline(shape=[4], tz=UTC)
+[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
+
+== fill_nat_scalar ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:00, 2024-11-15 00:00:00, 2024-12-31 23:59:59, 2024-11-15 00:00:00 ]
+
+== where_isnat_floorD ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 00:00:00, NaT, 2024-12-31 00:00:00, NaT ]
+
+== add_nanos_1s ==
+Timeline(shape=[4], tz=UTC)
+[ 2024-11-01 09:00:01, 2024-11-01 10:15:31, 2025-01-01 00:00:00, 2025-01-01 00:00:01 ]
+
+== searchsorted_left ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[0, 2, 4]
+
+== searchsorted_right ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[0, 4, 4]
+
+== searchsorted_left_existing ==
+Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[0, 2]
+
+== searchsorted_right_existing ==
+Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[1, 4]
+
+== to_epoch_nanos_flat ==
+[1730451600000000000, 1730456130000000000, 1735689599000000000, 1735689600000000000]
+
+== year ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[2024, 2024, 2024, 2025]
+
+== month ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[11, 11, 12, 1]
+
+== day ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[1, 1, 31, 1]
+
+== hour ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[9, 10, 23, 0]
+
+== minute ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[0, 15, 59, 0]
+
+== second ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[0, 30, 59, 0]
+
+== nanosecond ==
+Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 0, 0]
+
+== microsecond ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 0, 0]
+
+== millisecond ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 0, 0]
+
+== weekday ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[4, 4, 1, 2]
+
+== dayofyear ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[306, 306, 366, 1]
+
+== quarter ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[4, 4, 4, 1]
+
+== week ==
+Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
+data=[44, 44, 1, 1]
+
+== calendar ==
+Timeline(shape=[8], tz=UTC)
+[ 2024-02-29 12:00:00, 2024-03-01 12:00:00, 2024-03-31 12:00:00, ..., 2025-01-01 12:00:00, 2024-11-02 12:00:00, 2024-11-04 12:00:00 ]
+
+== is_leap_year ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[true, true, true, true, true, false, true, true]
+
+== is_month_start ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, true, false, true, false, true, false, false]
+
+== is_month_end ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[true, false, true, false, true, false, false, false]
+
+== is_quarter_start ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, true, false, true, false, false]
+
+== is_quarter_end ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, true, false, true, false, false, false]
+
+== is_year_start ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, false, true, false, false]
+
+== is_year_end ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, true, false, false, false]
+
+== is_weekend ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, true, false, false, false, true, false]
+
+== is_business_day ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[true, true, false, true, true, true, false, true]
+
+== is_monday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, true, false, false, false, true]
+
+== is_tuesday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, true, false, false, false]
+
+== is_wednesday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, false, true, false, false]
+
+== is_thursday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[true, false, false, false, false, false, false, false]
+
+== is_friday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, true, false, false, false, false, false, false]
+
+== is_saturday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, false, false, true, false]
+
+== is_sunday ==
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, true, false, false, false, false, false]
+
+== weekday_name_calendar ==
+Note(shape=[8], dim=1, numel=8, encoding=utf8)
+["Thursday", "Friday", "Sunday", "Monday", "Tuesday", "Wednesday", "Saturday", "Monday"]
+
+== month_name_calendar ==
+Note(shape=[8], dim=1, numel=8, encoding=utf8)
+["February", "March", "March", "April", "December", "January", "November", "November"]
+
+== to_note_date ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["2024-11-01", "2024-11-01", "2024-12-31", "2025-01-01"]
+
+== to_note_time ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["09:00:00", "10:15:30", "23:59:59", "00:00:00"]
+
+== to_note_datetime ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["2024-11-01 09:00:00", "2024-11-01 10:15:30", "2024-12-31 23:59:59", "2025-01-01 00:00:00"]
+
+== to_note_rfc3339 ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["2024-11-01T09:00:00+00:00", "2024-11-01T10:15:30+00:00", "2024-12-31T23:59:59+00:00", "2025-01-01T00:00:00+00:00"]
+
+== date_range_daily ==
+Timeline(shape=[4], tz=UTC)
+[ 2026-03-14 00:00:00, 2026-03-15 00:00:00, 2026-03-16 00:00:00, 2026-03-17 00:00:00 ]
+
+== date_range_15min ==
+Timeline(shape=[5], tz=UTC)
+[ 2026-03-14 09:00:00, 2026-03-14 09:15:00, 2026-03-14 09:30:00, 2026-03-14 09:45:00, 2026-03-14 10:00:00 ]
+
+== date_range_2h ==
+Timeline(shape=[4], tz=UTC)
+[ 2026-03-14 00:00:00, 2026-03-14 02:00:00, 2026-03-14 04:00:00, 2026-03-14 06:00:00 ]

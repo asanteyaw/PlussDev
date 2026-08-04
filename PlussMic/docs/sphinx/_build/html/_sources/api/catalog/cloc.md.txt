@@ -110,8 +110,8 @@ city                     | Note         | Note             | 2       | [Tema, Ku
     <span class="label">Previous</span>
     <span class="title">cast</span>
   </a>
-  <a class="next-link" href="compute_similarity.html">
+  <a class="next-link" href="similarity.html">
     <span class="label">Next</span>
-    <span class="title">compute_similarity</span>
+    <span class="title">similarity</span>
   </a>
 </div>

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,51 +34,121 @@
 
           <div class="body" role="main">
             
-  <section id="registrynoteaccessor-pad">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c495363ad2fc -->
+<section id="registrynoteaccessor-pad">
 <h1>RegistryNoteAccessor::pad<a class="headerlink" href="#registrynoteaccessor-pad" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_note_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RegistryNoteAccessor</span><span class="o">::</span><span class="n">pad</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">width</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextAlign</span><span class="w"> </span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Left</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">RegistryNoteAccessor</span><span class="o">::</span><span class="n">pad</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">width</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextAlign</span><span class="w"> </span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Left</span><span class="p">,</span>
+<span class="w">                                   </span><span class="kt">char</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Pads every bound field’s text out to at least <code class="docutils literal notranslate"><span class="pre">width</span></code> characters, using
+<code class="docutils literal notranslate"><span class="pre">fill</span></code> and the alignment given by <code class="docutils literal notranslate"><span class="pre">align</span></code>. Returns a new registry with those
+fields replaced.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TextAlign</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="n">Right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="n">Center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">align</span></code> describes where the <em>original text</em> ends up, not where the padding
+goes: <code class="docutils literal notranslate"><span class="pre">Left</span></code> keeps the text flush left and adds padding on the right;
+<code class="docutils literal notranslate"><span class="pre">Right</span></code> keeps the text flush right and adds padding on the left; <code class="docutils literal notranslate"><span class="pre">Center</span></code>
+splits the padding between both sides.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>width</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>align</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>fill</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+<p><strong>width</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+The minimum total length of the result. Values already at or beyond this
+length are returned unchanged.</p>
+<p><strong>align</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::TextAlign</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">pluss::table::TextAlign::Left</span></code>)
+Where the original text sits relative to the added padding.</p>
+<p><strong>fill</strong> (<code class="docutils literal notranslate"><span class="pre">char</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">'</span> <span class="pre">'</span></code>)
+The character used to pad.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry with every bound field’s text padded to <code class="docutils literal notranslate"><span class="pre">width</span></code>; every
+unbound field unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<p>Example 1. Default call: left-align, pad with spaces on the right.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;7&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;code&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">pad</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;&#39;&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;code&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;&#39;&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&#39;7   &#39;
 </pre></div>
 </div>
+<p>Example 2. Right-align with a <code class="docutils literal notranslate"><span class="pre">'0'</span></code> fill — a common way to zero-pad numeric
+codes stored as text.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;7&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;code&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">pad</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Right</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;code&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0007
+</pre></div>
+</div>
+<p>Example 3. Center alignment splits the padding across both sides.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;7&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;code&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">pad</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Center</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;&#39;&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;code&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;&#39;&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&#39;  7  &#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Values already at or beyond <code class="docutils literal notranslate"><span class="pre">width</span></code> characters pass through unchanged — this
+is a <em>minimum</em>-width pad, not a fixed-width truncate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align</span></code> describes where the original text lands, not where the padding
+goes — see the description above.</p></li>
+<li><p>Requires every bound field to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> field throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::nt:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Note&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryNoteAccessor::strip</span></code></span></a> / <a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstrip()</span></code></span></a> /
+<a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rstrip()</span></code></span></a>: the inverse operation family, removing characters
+from the edges instead of adding them.</p></li>
+<li><p><a class="reference internal" href="../registry/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::nt</span></code></span></a>: the entry point this accessor is
+reached from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="normalize.html">
     <span class="label">Previous</span>
@@ -89,7 +159,6 @@ Value produced by this call.</p>
     <span class="title">replace</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

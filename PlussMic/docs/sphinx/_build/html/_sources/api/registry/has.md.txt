@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 63e705043173 -->
 
 # Registry::has
 
@@ -14,7 +15,7 @@ bool Registry::has(std::string_view key) const
 
 Checks whether a named field exists in the registry, without throwing regardless of
 the answer. This is the safe way to test for a key's presence before calling
-[`select(key)`](select.md) (which throws on a missing key) — or use
+[`fields(key)`](fields.md) (which throws on a missing key) — or use
 [`get()`](get.md) directly if you also want the `Slot` itself when present.
 
 ## Parameters
@@ -68,14 +69,14 @@ false true
 
 ## Notes
 
-- Never throws — `has()` is the safe presence check, unlike [`select(key)`](select.md),
+- Never throws — `has()` is the safe presence check, unlike [`fields(key)`](fields.md),
   which throws on a missing field.
 - Key comparison is exact and case-sensitive.
 
 ## See Also
 
-- [`Registry::select`](select.md): fetch the field's `Slot` directly, throwing if
-  the key is missing.
+- [`Registry::fields`](fields.md): fetch the field's `Slot` directly (single-key
+  overload), throwing if the key is missing.
 - [`Registry::get`](get.md): fetch the field's `Slot` as `std::optional<Slot>`,
   combining the presence check and the fetch into one call.
 - [`Registry::has_all`](has_all.md) / [`Registry::has_any`](has_any.md): the

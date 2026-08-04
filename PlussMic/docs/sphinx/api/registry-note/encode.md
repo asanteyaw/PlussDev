@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 438368a702b2 -->
+
 # RegistryNoteAccessor::encode
 
 [Back to RegistryNoteAccessor API Reference](../../registry_note_accessor_api_reference)
@@ -5,44 +8,78 @@
 ## Signature
 
 ```cpp
-RegistryNoteAccessor::encode(std::string_view encoding = "base64") -> Registry
+Registry RegistryNoteAccessor::encode(std::string_view encoding = "base64") const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Encodes each bound field's text bytes using the named encoding, replacing
+each field's `Note` values with their encoded text form.
 
 ## Parameters
 
-**encoding**
-    Text encoding used when reading or writing text-based files.
+**encoding** (`std::string_view`, defaults to `"base64"`)
+    The name of the encoding scheme to apply. `"base64"` and `"hex"` are the
+    two schemes exercised in the examples below.
 
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    A new registry with every bound field's text replaced by its encoded
+    form; every unbound field unchanged.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Default call: base64-encode a text field.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"txt", pluss::bundle::Slot({pluss::make_note("hi")})},
 });
-auto notes = rg.fields({"city"}).nt();
 
-auto out = notes.encode("units");
-std::cout << out;
+auto out = rg.fields({"txt"}).nt().encode();
+std::cout << std::get<pluss::Note>(out.fields("txt").at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+aGk=
 ```
 
+Example 2. Passing `"hex"` explicitly selects hexadecimal encoding instead.
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"txt", pluss::bundle::Slot({pluss::make_note("hi")})},
+});
+
+auto out = rg.fields({"txt"}).nt().encode("hex");
+std::cout << std::get<pluss::Note>(out.fields("txt").at(0)).at(0);
+```
+
+### Output
+
+```text
+6869
+```
+
+## Notes
+
+- The default encoding is `"base64"` — pass `"hex"` (or any other supported
+  scheme) explicitly to change it.
+- Requires every bound field to be `Note`-kind — a non-`Note` field throws
+  `"Slot::nt: slot kind must be Note"`.
+- Bound via [`Registry::nt()`](../registry/nt.md), which binds every field of
+  the registry unless you project first with
+  [`fields(keys)`](../registry/fields.md).
+
+## See Also
+
+- [`RegistryNoteAccessor::normalize`](normalize.md): the other byte/text-level
+  transform on this accessor.
+- [`Registry::nt`](../registry/nt.md): the entry point this accessor is
+  reached from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="count.html">

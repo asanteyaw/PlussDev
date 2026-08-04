@@ -74,7 +74,7 @@ auto frame = catalog.tabelize();
 ```
 
 Catalog operations include stream selection, mutation, merge, transform, text
-preprocessing, and export.
+cleanup, and export.
 
 ```cpp
 auto cleaned = catalog.apply("balance", [](const pluss::kindle::Stream& s) {
@@ -118,7 +118,7 @@ Map catalogs:
 
 ```cpp
 auto cleaned = archive.map_catalogs([](const pluss::kindle::Catalog& catalog) {
-  return catalog.apply_all([](const pluss::kindle::Stream& stream) {
+  return catalog.map([](const pluss::kindle::Stream& stream) {
     return stream.dropnull();
   });
 });

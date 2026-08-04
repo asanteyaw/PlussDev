@@ -1,12 +1,12 @@
-CatalogKeyAccessor Catalog::keys(std::string_view key) const {
-  return CatalogKeyAccessor(*this, normalize_names(std::vector<std::string>{std::string(key)}));
+Catalog Catalog::keys(std::string_view key) const {
+  return project_catalog(*this, normalize_names(std::vector<std::string>{std::string(key)}), "Catalog::keys");
 }
 
-CatalogKeyAccessor Catalog::keys(std::span<const std::string_view> field_names) const {
-  return CatalogKeyAccessor(*this, normalize_names(field_names));
+Catalog Catalog::keys(std::span<const std::string_view> field_names) const {
+  return project_catalog(*this, normalize_names(field_names), "Catalog::keys");
 }
 
-CatalogKeyAccessor Catalog::keys(std::initializer_list<std::string_view> field_names) const {
+Catalog Catalog::keys(std::initializer_list<std::string_view> field_names) const {
   return keys(std::span<const std::string_view>(field_names.begin(), field_names.size()));
 }
 
@@ -18,9 +18,30 @@ CatalogGroupBuilder Catalog::group() const {
   return CatalogGroupBuilder(*this);
 }
 
+CatalogCastAccessor Catalog::cast() const {
+  return CatalogCastAccessor(*this, keys(), {});
+}
+
+CatalogCastAccessor Catalog::cast(const pluss::table::ThreadCastOptions& options) const {
+  return CatalogCastAccessor(*this, keys(), options);
+}
+
+CatalogNoteAccessor Catalog::nt() const {
+  return CatalogNoteAccessor(*this, keys());
+}
+
+CatalogTimelineAccessor Catalog::tl() const {
+  return CatalogTimelineAccessor(*this, keys());
+}
+
+CatalogTimeSeriesAccessor Catalog::ts() const {
+  return CatalogTimeSeriesAccessor(*this, keys());
+}
+
 CatalogKeyAccessor::CatalogKeyAccessor(Catalog base, std::vector<std::string> keys)
     : base_(std::move(base)), keys_(std::move(keys)) {
   PLUSS_CHECK(base_.defined(), "Catalog::keys: undefined handle");
+  if (base_.empty()) return;
   PLUSS_CHECK(!keys_.empty(), "Catalog::keys: at least one key is required");
   for (const auto& key : keys_) {
     PLUSS_CHECK(base_.has(key), "Catalog::keys: unknown key '" + key + "'");
@@ -126,6 +147,11 @@ Catalog CatalogKeyAccessor::astype(pluss::codem::ScalarType dtype) const {
   return map_selected_([&](const Stream& stream) { return stream.astype(dtype); });
 }
 
+Catalog CatalogKeyAccessor::map(const std::function<Stream(const Stream&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn), "Catalog::keys().map: function is empty");
+  return map_selected_([&](const Stream& stream) { return stream.map(fn); });
+}
+
 CatalogKeyAxisAccessor::CatalogKeyAxisAccessor(Catalog base) : base_(std::move(base)) {}
 
 Catalog CatalogKeyAxisAccessor::like(std::string_view needle, bool case_sensitive) const {
@@ -137,7 +163,7 @@ Catalog CatalogKeyAxisAccessor::like(std::string_view needle, bool case_sensitiv
     const auto hay = case_sensitive ? key : lowercase_copy(key);
     if (hay.find(token) != std::string::npos) selected.push_back(key);
   }
-  return base_.select(selected);
+  return project_catalog(base_, selected, "Catalog::keyaxis().like");
 }
 
 Catalog CatalogKeyAxisAccessor::match(std::string_view pattern) const {
@@ -149,7 +175,7 @@ Catalog CatalogKeyAxisAccessor::match(std::string_view pattern) const {
     for (const auto& key : base_.keys()) {
       if (std::regex_search(key, rx)) selected.push_back(key);
     }
-    return base_.select(selected);
+    return project_catalog(base_, selected, "Catalog::keyaxis().match");
   } catch (const std::regex_error& e) {
     PLUSS_FAIL("Catalog::keyaxis().match: invalid regex '" + std::string(pattern) + "': " + std::string(e.what()));
   }
@@ -209,7 +235,7 @@ Catalog CatalogKeyAxisAccessor::prefix(std::string_view prefix) const {
   for (const auto& key : base_.keys()) {
     if (key.rfind(token, 0) == 0) selected.push_back(key);
   }
-  return base_.select(selected);
+  return project_catalog(base_, selected, "Catalog::keyaxis().prefix");
 }
 
 Catalog CatalogKeyAxisAccessor::suffix(std::string_view suffix) const {
@@ -223,7 +249,7 @@ Catalog CatalogKeyAxisAccessor::suffix(std::string_view suffix) const {
       selected.push_back(key);
     }
   }
-  return base_.select(selected);
+  return project_catalog(base_, selected, "Catalog::keyaxis().suffix");
 }
 
 CatalogCastAccessor::CatalogCastAccessor(Catalog base,

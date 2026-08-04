@@ -75,8 +75,8 @@ population               | Series       | Series[int64]    | 3       | [2388000,
     <span class="label">Previous</span>
     <span class="title">load_parquet</span>
   </a>
-  <a class="next-link" href="masked_select.html">
+  <a class="next-link" href="where.html">
     <span class="label">Next</span>
-    <span class="title">masked_select</span>
+    <span class="title">where</span>
   </a>
 </div>

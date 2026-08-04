@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2969d40a1dd5 -->
 
 # Registry::head
 
@@ -46,7 +47,7 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.head(2);
-auto ids = out.select("id");
+auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";

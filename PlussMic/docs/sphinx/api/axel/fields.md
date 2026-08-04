@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b6af95492a76 -->
+
 # Axel::fields
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,90 +8,63 @@
 ## Signatures
 
 ```cpp
-Axel::fields(const NameRange& keys) -> template <pluss::detail::StringViewNameRange NameRange> AxelFieldAccessor
-
-Axel::fields(std::initializer_list<std::string_view> keys) -> AxelFieldAccessor
-
-Axel::fields(std::span<const std::string_view> keys) -> AxelFieldAccessor
+Axel Axel::fields(std::span<const std::string_view> keys) const
+Axel Axel::fields(std::initializer_list<std::string_view> keys) const
+template <pluss::detail::StringViewNameRange NameRange>
+Axel Axel::fields(const NameRange& keys) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Projects every registry in the axel down to the requested field set.
+
+This is the bundle-stack equivalent of `Registry::fields(keys)`: selection happens first, and any later `cast()`, `nt()`, `tl()`, `fillnull()`, `distinct()`, or similar operation runs against the projected registries.
 
 ## Parameters
 
 **keys**
-    Collection of slot or stream names to keep, drop, or rewrite together.
+    Field names to keep in every registry.
 
 ## Returns
 
-`template <pluss::detail::StringViewNameRange NameRange> AxelFieldAccessor`
-    Value produced by this call.
-
-`AxelFieldAccessor`
-    Value produced by this call.
+`Axel`
+    A new axel whose registries contain only the requested fields.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
 ```cpp
 auto r0 = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 auto r1 = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Kumasi"), pluss::make_note("Tamale")})},
 });
-auto axel = pluss::bundle::Axel({r0, r1});
 
-auto out = axel.fields();
+auto ax = pluss::bundle::Axel({r0, r1});
+auto out = ax.fields({"city"}).nt().upper();
+
+std::cout << out.registry(0).nfields() << " "
+          << std::get<pluss::Note>(out.registry(0).fields("city").at(0)).str();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Pass several feature names inline.
-
-```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.fields();
+1 ACCRA
 ```
 
-### Output
+## Notes
 
-```text
-The call completes and returns the contract described under Output.
-```
-Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+- Every registry must contain the requested fields or the call throws.
+- `fields(keys)` is projection, not a hidden field-accessor wrapper.
+- Use root `cast()`, `nt()`, and `tl()` when you want the operation over the entire current axel.
 
-```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
+## See Also
 
-auto out = axel.fields();
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
+- [`Registry::fields`](../registry/fields.md): the per-registry equivalent.
+- [`Axel::fieldaxis`](fieldaxis.md): project by pattern or slot kind instead of explicit names.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fieldaxis.html">

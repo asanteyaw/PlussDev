@@ -37,7 +37,7 @@ void print_frame_shape(std::string_view label, const pluss::table::DataFrame& fr
 }
 
 void print_catalog_shape(std::string_view label, const pluss::kindle::Catalog& catalog) {
-  fmt::print("{} -> [{} rows x {} streams]\n", label, catalog.nrecords(), catalog.nkeys());
+  fmt::print("{} -> [{} rows x {} streams]\n", label, catalog.nrows(), catalog.nkeys());
 }
 
 void print_registry_shape(std::string_view label, const pluss::bundle::Registry& registry) {

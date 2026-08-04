@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Registry::transform_values" href="transform_values.html" />
+    <link rel="next" title="Registry::unique" href="unique.html" />
     <link rel="prev" title="Registry::to_kindle" href="to_kindle.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -36,18 +36,24 @@
 
           <div class="body" role="main">
             
-  <section id="registry-to-string">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: adfc335854d0 -->
+<section id="registry-to-string">
 <h1>Registry::to_string<a class="headerlink" href="#registry-to-string" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
+<p>Renders the registry as a JSON <strong>summary</strong> string — one entry per field, each
+showing its <code class="docutils literal notranslate"><span class="pre">size</span></code> and a tally of value kinds (<code class="docutils literal notranslate"><span class="pre">types</span></code>). This is the format
+<a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code></span></a>/<a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> also use; all
+three are identical. It is a coarser summary than <a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></span></a>,
+which lists every individual value’s type instead of just a per-kind count.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,37 +62,76 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Rendered string result.</p>
+A JSON summary of the registry’s fields.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. A registry with a uniform-kind field and a mixed-kind field.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;mixed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Registry&quot;,
+  &quot;defined&quot;: true,
+  &quot;nfields&quot;: 2,
+  &quot;fields&quot;: {
+    &quot;id&quot;: {
+      &quot;size&quot;: 2,
+      &quot;types&quot;: {
+        &quot;Series&quot;: 2
+      }
+    },
+    &quot;mixed&quot;: {
+      &quot;size&quot;: 2,
+      &quot;types&quot;: {
+        &quot;Note&quot;: 1,
+        &quot;Series&quot;: 1
+      }
+    }
+  }
+}
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Identical output to <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> and <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>.</p></li>
+<li><p>A field’s <code class="docutils literal notranslate"><span class="pre">types</span></code> tally having more than one entry is exactly what makes that
+field not stream-compatible — see <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_kindle</span></code></span></a>.</p></li>
+<li><p>On an undefined registry, returns <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">&quot;_type&quot;:</span> <span class="pre">&quot;Registry&quot;,</span> <span class="pre">&quot;defined&quot;:</span> <span class="pre">false</span> <span class="pre">}</span></code>
+rather than throwing.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_json</span></code></span></a>: the finer-grained, per-value counterpart.</p></li>
+<li><p><a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::show</span></code></span></a>: writes this same string to a caller-provided
+stream.</p></li>
+<li><p><a class="reference internal" href="profiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::profiles</span></code></span></a>: the same per-field type tally, as data
+rather than a rendered string.</p></li>
+<li><p><a class="reference internal" href="../catalog/to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::to_string</span></code></span></a>: the equivalent method on the
+kindle model (a box-table format, not JSON).</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_kindle.html">
     <span class="label">Previous</span>
     <span class="title">to_kindle</span>
   </a>
-  <a class="next-link" href="transform_values.html">
+  <a class="next-link" href="unique.html">
     <span class="label">Next</span>
-    <span class="title">transform_values</span>
+    <span class="title">unique</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 
@@ -139,7 +184,7 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="to_kindle.html" title="previous chapter">Registry::to_kindle</a></li>
-      <li>Next: <a href="transform_values.html" title="next chapter">Registry::transform_values</a></li>
+      <li>Next: <a href="unique.html" title="next chapter">Registry::unique</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

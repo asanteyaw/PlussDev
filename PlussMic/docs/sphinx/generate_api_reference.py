@@ -23,9 +23,9 @@ PER_METHOD_CLASSES = {
     'AtlasTsResampler', 'AtlasPlotAccessor',
     'Slot', 'Registry', 'Axel',
     'SlotCastAccessor', 'SlotNoteAccessor', 'SlotTimelineAccessor',
-    'RegistryFieldAccessor', 'RegistryFieldAxisAccessor', 'RegistryCastAccessor',
+    'RegistryFieldAxisAccessor', 'RegistryCastAccessor',
     'RegistryNoteAccessor', 'RegistryTimelineAccessor',
-    'AxelFieldAccessor', 'AxelFieldAxisAccessor', 'AxelCastAccessor',
+    'AxelFieldAxisAccessor', 'AxelCastAccessor',
     'AxelNoteAccessor', 'AxelTimelineAccessor',
 }
 GENERIC_CSV_PATH = "path/to/data.csv"
@@ -322,14 +322,6 @@ CLASS_CONFIG = {
         'intro': 'This page documents the public timestamp-feature accessor returned by `Slot::tl()`.',
         'binder': 'tl()',
     },
-    'RegistryFieldAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/registry.h',
-        'output': DOCS / 'registry_field_accessor_api_reference.md',
-        'title': 'RegistryFieldAccessor API Reference',
-        'subtitle': 'Practical RegistryFieldAccessor API Reference',
-        'intro': 'This page documents the public multi-key field accessor returned by `Registry::fields(keys)`.',
-        'binder': 'fields(keys)',
-    },
     'RegistryFieldAxisAccessor': {
         'header': ROOT / 'PlussMic/src/bundle/registry.h',
         'output': DOCS / 'registry_fieldaxis_accessor_api_reference.md',
@@ -361,14 +353,6 @@ CLASS_CONFIG = {
         'subtitle': 'Practical RegistryTimelineAccessor API Reference',
         'intro': 'This page documents the public timestamp-feature accessor returned by `Registry::fields(keys).tl()`.',
         'binder': 'fields(keys).tl()',
-    },
-    'AxelFieldAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
-        'output': DOCS / 'axel_field_accessor_api_reference.md',
-        'title': 'AxelFieldAccessor API Reference',
-        'subtitle': 'Practical AxelFieldAccessor API Reference',
-        'intro': 'This page documents the public multi-key field accessor returned by `Axel::fields(keys)`, applied frame-by-frame across the depth stack.',
-        'binder': 'fields(keys)',
     },
     'AxelFieldAxisAccessor': {
         'header': ROOT / 'PlussMic/src/bundle/Axel.h',
@@ -434,12 +418,10 @@ METHOD_PAGE_DIR = {
     'SlotCastAccessor': 'slot-cast',
     'SlotNoteAccessor': 'slot-note',
     'SlotTimelineAccessor': 'slot-timeline',
-    'RegistryFieldAccessor': 'registry-field',
     'RegistryFieldAxisAccessor': 'registry-fieldaxis',
     'RegistryCastAccessor': 'registry-cast',
     'RegistryNoteAccessor': 'registry-note',
     'RegistryTimelineAccessor': 'registry-timeline',
-    'AxelFieldAccessor': 'axel-field',
     'AxelFieldAxisAccessor': 'axel-fieldaxis',
     'AxelCastAccessor': 'axel-cast',
     'AxelNoteAccessor': 'axel-note',
@@ -483,19 +465,13 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
         'SlotTimelineAccessor',
     ],
     'Registry': [
-        'RegistryFieldAccessor',
         'RegistryFieldAxisAccessor',
-    ],
-    'RegistryFieldAccessor': [
         'RegistryCastAccessor',
         'RegistryNoteAccessor',
         'RegistryTimelineAccessor',
     ],
     'Axel': [
-        'AxelFieldAccessor',
         'AxelFieldAxisAccessor',
-    ],
-    'AxelFieldAccessor': [
         'AxelCastAccessor',
         'AxelNoteAccessor',
         'AxelTimelineAccessor',
@@ -2067,42 +2043,30 @@ def generic_note(class_name: str, method: Method) -> str:
         'Catalog': {
             'apply': 'Applies a function to one named stream and returns the updated catalog.',
             'apply_': 'Applies a function to one named stream in place.',
-            'apply_all': 'Applies the same function to every stream and returns the updated catalog.',
-            'apply_all_': 'Applies the same function to every stream in place.',
             'filter': 'Keeps only the rows where the supplied mask stream is true.',
             'from_json': 'Builds a catalog from JSON input using the PlussMic JSON loader route.',
-            'get_stream': 'Returns one named stream from the catalog.',
             'has': 'Checks whether a named stream exists.',
-            'has_stream': 'Checks whether a named stream exists.',
             'head': 'Returns the first `n` rows across every stream in the catalog.',
-            'masked_select': 'Keeps only the rows where the supplied mask stream is true.',
+            'map': 'Applies the same function to every stream and returns the updated catalog.',
+            'map_': 'Applies the same function to every stream in place.',
             'max': 'Computes the maximum value of one named numeric stream.',
             'mean': 'Computes the mean value of one named numeric stream.',
             'min': 'Computes the minimum value of one named numeric stream.',
-            'note': 'Returns one named stream interpreted as a note/text stream.',
             'query': 'Keeps only the rows selected by the supplied row-wise query function or expression.',
             'rename_': 'Renames one or more streams in place without changing their values.',
             'sample': 'Returns a random sample of rows across all streams.',
-            'series': 'Returns one named stream interpreted as a numeric series stream.',
             'set': 'Adds or replaces one named stream and returns the updated catalog.',
             'set_': 'Adds or replaces one named stream in place.',
-            'set_stream': 'Adds or replaces one named stream and returns the updated catalog.',
-            'set_stream_': 'Adds or replaces one named stream in place.',
-            'set_streams': 'Adds or replaces several named streams and returns the updated catalog.',
-            'set_streams_': 'Adds or replaces several named streams in place.',
             'slice': 'Returns a contiguous row slice `[start, stop)` across every stream.',
             'sum': 'Computes the sum of one named numeric stream.',
             'tail': 'Returns the last `n` rows across every stream in the catalog.',
             'take': 'Returns the rows at the requested integer positions across every stream.',
-            'timeindex': 'Returns one named stream interpreted as a time-index stream.',
-            'timeline': 'Returns one named stream interpreted as a timeline stream.',
             'transform': 'Rewrites one stream, several streams, or all streams by applying a user function.',
             'select': 'Keeps only the named streams and preserves their shared row alignment.',
             'drop': 'Removes the named streams and keeps the remaining catalog structure intact.',
             'rename': 'Renames one or more streams without changing their values.',
-            'sort': 'Reorders rows using one stream as the sort key, while keeping the other streams aligned to the same row order.',
-            'sort_by': 'Reorders rows using multiple sort keys, while keeping all streams aligned.',
-            'group_by': 'Splits the catalog into sub-catalogs keyed by the distinct values in the grouping stream.',
+            'sort': 'Reorders rows using one or more sort-key streams, while keeping all other streams aligned to the same row order.',
+            'group': 'Returns the grouping accessor for keyed catalog splits.',
             'merge': 'Combines two catalogs by matching rows on a key stream.',
             'save_csv': 'Writes the catalog to CSV after aligning its streams into a table-like representation.',
             'save_excel': 'Writes the catalog to an Excel workbook after aligning its streams into a table-like representation.',
@@ -2111,45 +2075,44 @@ def generic_note(class_name: str, method: Method) -> str:
             'save_txt': 'Writes a text rendering of the catalog for inspection or logging.',
             'save_as': 'Writes the catalog using the explicitly supplied output format selector.',
             'where': 'Keeps only the rows where the supplied mask stream is true.',
+            'clean': 'Cleans one named text stream and returns the updated catalog.',
+            'keywords': 'Extracts high-frequency keywords from one text stream.',
+            'similarity': 'Computes row-wise text similarity between two named text streams.',
+            'grep': 'Keeps only the rows where one named text stream matches the pattern.',
+            'featurize': 'Adds derived text features from one named text stream.',
+            'stats': 'Computes one text summary statistic for a named text stream.',
+            'load_labeled': 'Loads a CSV catalog and uses one field as stream case labels.',
+            'nrows': 'Returns the aligned row count when all streams share the same length.',
+            'minrows': 'Returns the smallest stream length in the catalog.',
+            'maxrows': 'Returns the largest stream length in the catalog.',
         },
         'Registry': {
             'apply': 'Applies a function to one or more named slots and returns the updated registry.',
             'apply_': 'Applies a function to one or more named slots in place.',
-            'apply_all': 'Applies the same function to every slot and returns the updated registry.',
             'clear': 'Removes all slots and returns an empty registry.',
             'clear_': 'Removes all slots in place.',
-            'concat_values': 'Appends extra values onto one named slot and returns the updated registry.',
-            'concat_values_': 'Appends extra values onto one named slot in place.',
-            'drop_empty_slots': 'Removes slots whose payload is empty and returns the reduced registry.',
-            'drop_empty_slots_': 'Removes empty slots in place.',
-            'ensure_stream_compatible': 'Validates that the registry can be converted to a Kindle catalog without incompatible slot contents.',
-            'filter_values': 'Keeps only the values in one named slot that satisfy the supplied predicate.',
-            'filter_values_': 'Filters the values in one named slot in place.',
-            'get_slot': 'Returns one named slot from the registry.',
+            'concat': 'Appends extra values onto one named slot and returns the updated registry.',
+            'concat_': 'Appends extra values onto one named slot in place.',
             'has': 'Checks whether a named slot exists.',
             'has_all': 'Checks whether every requested slot name exists.',
             'has_any': 'Checks whether at least one requested slot name exists.',
-            'has_slot': 'Checks whether a named slot exists.',
             'head': 'Returns the first `n` values from every slot in the registry.',
-            'is_stream_compatible': 'Reports whether the registry can be converted to a Kindle catalog without incompatible slot contents.',
+            'keep': 'Keeps only the values in one named slot that satisfy the supplied predicate.',
+            'keep_': 'Keeps only the values in one named slot in place.',
             'map': 'Transforms every slot with the same function and returns the updated registry.',
             'map_': 'Transforms every slot in place with the same function.',
+            'morph': 'Rewrites the values inside one named slot with a user function and returns the updated registry.',
+            'morph_': 'Rewrites the values inside one named slot in place.',
+            'profiles': 'Summarizes the value types stored inside each slot.',
+            'prune': 'Removes slots whose payload is empty and returns the reduced registry.',
+            'prune_': 'Removes empty slots in place.',
             'push': 'Appends one new value to a named slot and returns the updated registry.',
             'push_': 'Appends one new value to a named slot in place.',
-            'push_all': 'Appends the same new value to every slot and returns the updated registry.',
-            'push_all_': 'Appends the same new value to every slot in place.',
             'rename_': 'Renames one or more slots in place without changing their stored values.',
             'sample': 'Returns a random sample of positions across every slot.',
-            'set_slot_': 'Adds or replaces one named slot in place.',
-            'set_slots_': 'Adds or replaces several named slots in place.',
             'slice': 'Returns a contiguous positional slice `[start, stop)` across every slot.',
-            'slot_sizes': 'Returns the current length of each slot.',
             'take': 'Returns the values at the requested integer positions across every slot.',
-            'take_values': 'Selects values from one named slot by integer position and returns the updated registry.',
-            'take_values_': 'Selects values from one named slot by integer position in place.',
-            'transform_values': 'Rewrites the values inside one named slot with a user function and returns the updated registry.',
-            'transform_values_': 'Rewrites the values inside one named slot in place.',
-            'type_profiles': 'Summarizes the value types stored inside each slot.',
+            'take_': 'Selects values from one named slot by integer position in place.',
             'tail': 'Returns the last `n` values from every slot in the registry.',
             'select': 'Keeps only the named slots and preserves their shared positional alignment.',
             'drop': 'Removes the named slots and keeps the remaining registry structure intact.',
@@ -2415,19 +2378,19 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'This applies arithmetic across the compatible numeric payloads in the current object.'
     if name in {'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'compare'}:
         return 'This produces a comparison-style result you can inspect directly or reuse as a mask.'
-    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'type_profiles'}:
+    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'profiles'}:
         return 'Use this when you want a summary view instead of carrying the full input forward unchanged.'
     if name in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
         return 'This changes the semantic or numeric type so later operations route through the correct implementation path.'
     if name in {'kindelize', 'tabelize', 'to_kindle', 'from_kindle', 'to_table', 'to_thread', 'as_kindle'}:
         return 'This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.'
-    if name in {'query', 'where', 'filter', 'filter_values', 'masked_select', 'select', 'drop', 'select_features'}:
+    if name in {'query', 'where', 'filter', 'select', 'drop', 'select_features', 'grep', 'keep'}:
         return 'Use this to reduce the current object to the rows or fields that matter for the next step.'
     if name in {'rename', 'rename_', 'relabel_depth', 'set_axis', 'set_axis', 'add_prefix', 'add_suffix'}:
         return 'Changes names or labels only. The underlying payload values, row order, and aligned structure stay the same.'
-    if name in {'join', 'update', 'combine', 'merge', 'unify', 'combine_values', 'concat', 'concat_values', 'concat_depth'}:
+    if name in {'join', 'update', 'combine', 'merge', 'unify', 'combine_values', 'concat', 'concat_depth'}:
         return 'Use this when you need to merge compatible objects or extend the current one with another input.'
-    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_cases', 'with_cases_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_', 'clear', 'clear_', 'drop_empty_slots', 'drop_empty_slots_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
+    if name in {'assign', 'transform', 'apply', 'apply_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_cases', 'with_cases_', 'with_meta', 'with_meta_', 'push', 'push_', 'clear', 'clear_', 'clean', 'featurize', 'keep', 'keep_', 'morph', 'morph_', 'prune', 'prune_', 'take_', 'concat_'}:
         return 'Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.'
     if name in {'sql', 'prep_sql'}:
         return 'Use this when the transformation is easier to express as SQL than as a chained sequence of table verbs.'
@@ -2439,7 +2402,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Serializes or renders the current object into a text form you can inspect, log, or export.'
     if name in {'begin', 'end'}:
         return 'Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.'
-    if name in {'text_preprocess', 'extract_keywords', 'compute_similarity', 'filter_by_text', 'add_text_features', 'aggregate_text_stats', 'tfidf', 'lower', 'replace', 'contains'}:
+    if name in {'clean', 'keywords', 'similarity', 'grep', 'featurize', 'stats', 'tfidf', 'lower', 'replace', 'contains'}:
         return 'This is part of the text-processing surface for note-backed or text-oriented data.'
     if name == 'tl' and class_name == 'DataFrame':
         return 'Opens the timeline surface for the current selected DataFrame. Every selected feature must be Timeline/TimeIndex-backed; select timeline feature(s) first with `df.features({...}).tl()`.'
@@ -2550,7 +2513,7 @@ INSPECTABLE_RETURN_PREFIXES = (
 NO_BEFORE_AFTER = {
     'defined', 'unique', 'size', 'kind', 'dtype', 'nrows', 'ncols', 'nfeatures', 'nstreams',
     'nfields', 'depth', 'empty', 'count', 'count_null_rows', 'has', 'has_any', 'has_all',
-    'has_stream', 'has_slot', 'has_meta', 'is_stream_compatible', 'ensure_stream_compatible',
+    'has_stream', 'has_slot', 'has_meta',
     'keys', 'field_names', 'column_names', 'feature_names', 'values', 'streams', 'slots',
     'frames', 'catalogs', 'registries', 'axis0_labels', 'depth_labels', 'labels',
     'to_string', 'to_json', 'info_string', 'begin', 'end',
@@ -3106,7 +3069,7 @@ def example_caption(class_name: str, method: Method) -> str:
         return 'Return an updated copy after changing structural metadata, cases, or validity state.'
     if n in {'with_meta_', 'drop_meta_', 'with_cases_', 'clear_cases_', 'clear_caselbl_'}:
         return 'Mutate the current object in place, then inspect the updated state.'
-    if n in {'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'map'}:
+    if n in {'apply', 'apply_', 'transform', 'map'}:
         return 'Apply a user function and inspect the transformed result.'
     if class_name == 'Thread':
         if method.return_type.strip() in {'Thread', 'Thread&'}:
@@ -5847,11 +5810,9 @@ out.label().values():
             return 'false'
         if n == 'keys':
             return '["id", "metric", "city"]'
-        if n in {'streams'}:
-            return '[Stream(id), Stream(metric), Stream(city)]'
-        if n in {'has', 'has_stream'}:
+        if n in {'has'}:
             return 'true'
-        if n in {'stream', 'at', 'get', 'get_stream'}:
+        if n in {'at', 'get'}:
             return 'Series([10.0, 20.0, 30.0])'
         if n == 'bfill':
             return CATALOG_BFILL_OUT
@@ -5859,19 +5820,19 @@ out.label().values():
             return CATALOG_DROP_OUT
         if n == 'dropnull':
             return CATALOG_DROPNA_OUT
-        if n == 'extract_keywords':
+        if n == 'keywords':
             return CATALOG_KEYWORDS_OUT
-        if n == 'add_text_features':
+        if n == 'featurize':
             return CATALOG_TEXT_FEATURES_OUT
-        if n == 'aggregate_text_stats':
+        if n == 'stats':
             return CATALOG_TEXT_STATS_OUT
-        if n == 'compute_similarity':
+        if n == 'similarity':
             return CATALOG_SIMILARITY_OUT
-        if n in {'series', 'note', 'timeline', 'timeindex', 'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'filter', 'where', 'query', 'masked_select', 'select', 'rename', 'rename_', 'sort', 'sort_by', 'fillnull', 'fillnull_', 'ffill', 'isnull', 'notnull', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'astype', 'merge', 'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'text_preprocess', 'filter_by_text', 'tfidf', 'set_stream', 'set_stream_', 'set', 'set_', 'set_streams', 'set_streams_'}:
+        if n in {'head', 'tail', 'slice', 'take', 'sample', 'filter', 'where', 'query', 'select', 'rename', 'rename_', 'sort', 'fillnull', 'ffill', 'isnull', 'notnull', 'cast', 'astype', 'merge', 'apply', 'apply_', 'map', 'map_', 'transform', 'clean', 'grep', 'tfidf', 'set', 'set_'}:
             return labeled_pair('ct.head()', CATALOG_BASE_OUT, CATALOG_BASE_OUT)
         if n in {'sum', 'mean', 'min', 'max'}:
             return 'Series([20.0])'
-        if n in {'group_by'}:
+        if n in {'group'}:
             return '{"Accra": Catalog(...), "Tema": Catalog(...)}'
         if n in {'tabelize', 'to_table'}:
             return DF_BASE_OUT
@@ -5940,7 +5901,7 @@ out.label().values():
             return '["ids", "city"]'
         if n in {'slots'}:
             return '[Slot(ids), Slot(city)]'
-        if n in {'has', 'has_slot', 'has_all', 'has_any', 'is_stream_compatible'}:
+        if n in {'has', 'has_slot', 'has_all', 'has_any'}:
             return 'true'
         if n in {'slot', 'at', 'get', 'get_slot'}:
             return SLOT_BASE_OUT
@@ -5948,17 +5909,17 @@ out.label().values():
             return REGISTRY_CLEAR_OUT
         if n == 'combine':
             return REGISTRY_COMBINE_OUT
-        if n == 'concat_values':
+        if n == 'concat':
             return REGISTRY_CONCAT_OUT
         if n == 'drop':
             return REGISTRY_DROP_OUT
-        if n == 'drop_empty_slots':
+        if n == 'prune':
             return REGISTRY_DROP_EMPTY_OUT
-        if n in {'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'select', 'rename', 'rename_', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'clear', 'clear_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'push', 'push_', 'push_all', 'push_all_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
+        if n in {'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'select', 'rename', 'rename_', 'apply', 'apply_', 'map', 'map_', 'clear', 'clear_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'push', 'push_', 'keep', 'keep_', 'morph', 'morph_', 'take_', 'concat', 'concat_'}:
             return labeled_pair('rg.head()', REGISTRY_BASE_OUT, REGISTRY_BASE_OUT)
         if n in {'slot_sizes'}:
             return '{"ids": 3, "city": 3}'
-        if n in {'type_profiles'}:
+        if n in {'profiles'}:
             return '{"ids": {"Series": 3}, "city": {"Note": 3}}'
         if n in {'to_kindle', 'as_kindle', 'kindelize'}:
             return CATALOG_BASE_OUT
@@ -5968,8 +5929,6 @@ out.label().values():
             return 'saved: out.*'
         if n in {'to_string', 'to_json', 'show'}:
             return f"rg.head():\n{REGISTRY_BASE_OUT}"
-        if n == 'ensure_stream_compatible':
-            return 'no error'
         return ''
 
     if class_name == 'Axel':
@@ -6497,12 +6456,10 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'SlotCastAccessor': slot_cast_accessor_base,
     'SlotNoteAccessor': slot_note_accessor_base,
     'SlotTimelineAccessor': slot_timeline_accessor_base,
-    'RegistryFieldAccessor': registry_field_accessor_base,
     'RegistryFieldAxisAccessor': registry_fieldaxis_accessor_base,
     'RegistryCastAccessor': registry_cast_accessor_base,
     'RegistryNoteAccessor': registry_note_accessor_base,
     'RegistryTimelineAccessor': registry_timeline_accessor_base,
-    'AxelFieldAccessor': axel_field_accessor_base,
     'AxelFieldAxisAccessor': axel_fieldaxis_accessor_base,
     'AxelCastAccessor': axel_cast_accessor_base,
     'AxelNoteAccessor': axel_note_accessor_base,
@@ -6527,12 +6484,10 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'SlotCastAccessor': 'cast',
     'SlotNoteAccessor': 'notes',
     'SlotTimelineAccessor': 'timelines',
-    'RegistryFieldAccessor': 'fields',
     'RegistryFieldAxisAccessor': 'fieldaxis',
     'RegistryCastAccessor': 'cast',
     'RegistryNoteAccessor': 'notes',
     'RegistryTimelineAccessor': 'timelines',
-    'AxelFieldAccessor': 'fields',
     'AxelFieldAxisAccessor': 'fieldaxis',
     'AxelCastAccessor': 'cast',
     'AxelNoteAccessor': 'notes',
@@ -8192,8 +8147,8 @@ def example_for(class_name: str, method: Method) -> str:
         if n.startswith('load') or n == 'from_json':
             if n == 'load':
                 return f'auto out = pluss::kindle::Catalog::load("csv", "{GENERIC_CSV_PATH}");'
-            if n == 'load_csv_with_key':
-                return f'auto out = pluss::kindle::Catalog::load_csv_with_key("{GENERIC_CSV_PATH}", "id");'
+            if n == 'load_labeled':
+                return f'auto out = pluss::kindle::Catalog::load_labeled("{GENERIC_CSV_PATH}", "id");'
             if n == 'from_json':
                 return 'auto out = pluss::kindle::Catalog::from_json(R"([{"id":1,"city":"Accra"},{"id":2,"city":"Tema"}])");'
             if 'ReadCsvOptions' in sig:
@@ -8223,11 +8178,11 @@ def example_for(class_name: str, method: Method) -> str:
             return f'auto out = pluss::kindle::Catalog::{n}("{path}");'
         if n == 'kindelize':
             return df_base() + '\n\nauto out = pluss::kindle::Catalog::kindelize(df);'
-        if n in {'defined','unique','nstreams','nfields','empty','keys','streams','count','to_string','to_json'}:
+        if n in {'defined','unique','empty','keys','nrows','minrows','maxrows','nkeys','shape','size','to_string','to_json'}:
             return base + f'\n\nauto out = catalog.{n}();'
-        if n in {'has','has_stream','stream','at','get','get_stream'}:
+        if n in {'has','at','get'}:
             return base + f'\n\nauto out = catalog.{n}("metric");'
-        if n in {'series','note','timeline','timeindex','head','tail','dropnull','ffill','bfill','isnull','notnull','drop','display','info'}:
+        if n in {'head','tail','dropnull','ffill','bfill','isnull','notnull','drop','display','info'}:
             if n == 'bfill':
                 return (
                     'using namespace pluss::kindle::literals;\n'
@@ -8236,7 +8191,7 @@ def example_for(class_name: str, method: Method) -> str:
                     '    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, std::numeric_limits<double>::quiet_NaN(), 75.0, 91.0})),\n'
                     '    "Name"_k = pluss::kindle::Stream(pluss::make_note({"A", "B", "C", "D"})),\n'
                     '});\n\n'
-                    'auto out = catalog.bfill({"Final Points Grade", "Midterm 3"});'
+                    'auto out = catalog.keys({"Final Points Grade", "Midterm 3"}).bfill();'
                 )
             if n == 'dropnull':
                 return (
@@ -8246,7 +8201,7 @@ def example_for(class_name: str, method: Method) -> str:
                     '    "metric"_k = metric,\n'
                     '    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),\n'
                     '});\n\n'
-                    'auto out = catalog.dropnull({"metric"});'
+                    'auto out = catalog.keys({"metric"}).dropnull();'
                 )
             if n == 'drop':
                 if 'vector<std::string>' in sig:
@@ -8259,13 +8214,12 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'head': return base + '\n\nauto out = catalog.head(2);'
             if n == 'tail': return base + '\n\nauto out = catalog.tail(2);'
             return base + f'\n\nauto out = catalog.{n}();'
-        if n in {'slice','iloc','take','sample','filter','where','query','masked_select','select','rename','rename_','sort','sort_by','group_by','fillnull','cast_series','cast_note','cast_timeline','cast_timeindex','astype','sum','mean','min','max','merge','apply','apply_','apply_all','apply_all_','transform','text_preprocess','extract_keywords','compute_similarity','filter_by_text','add_text_features','aggregate_text_stats','tfidf','set_stream','set_stream_','set','set_','set_streams','set_streams_','tabelize','to_table','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','begin','end'}:
+        if n in {'slice','take','sample','filter','where','query','select','rename','rename_','sort','group','fillnull','cast','astype','sum','mean','min','max','merge','apply','apply_','map','map_','transform','clean','keywords','similarity','grep','featurize','stats','tfidf','set','set_','tabelize','to_table','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','begin','end'}:
             if n == 'slice': return base + '\n\nauto out = catalog.slice(0, 2);'
-            if n == 'iloc': return base + ('\n\nauto out = catalog.iloc(1);' if 'start' not in sig else '\n\nauto out = catalog.iloc(0, 2);')
             if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = catalog.take(picks);'
             if n == 'sample': return base + '\n\nauto out = catalog.sample(2, 7);'
-            if n == 'filter' or n == 'where' or n == 'masked_select': return base + f'\n\nauto mask = pluss::make_series({{true, false, true}}, pluss::codem::ScalarType::Bool);\nauto out = catalog.{n}(mask);'
-            if n == 'query': return base + '\n\nauto out = catalog.query([](const pluss::kindle::Catalog& c) { return c.stream("metric").as_series().gt(15.0); });'
+            if n == 'filter' or n == 'where': return base + f'\n\nauto mask = pluss::make_series({{true, false, true}}, pluss::codem::ScalarType::Bool);\nauto out = catalog.{n}(mask);'
+            if n == 'query': return base + '\n\nauto out = catalog.query([](const pluss::kindle::Catalog& c) { return c.at("metric").as_series().gt(15.0); });'
             if n == 'select':
                 if 'vector<std::string>' in sig:
                     return base + '\n\nstd::vector<std::string> names{"id", "metric"};\nauto out = catalog.select(names);'
@@ -8276,65 +8230,44 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'initializer_list' in sig:
                     return base + '\n\nauto out = catalog.rename({{"metric", "distance_km"}});'
                 return base + ('\n\nauto out = catalog.rename("metric", "distance_km");' if not n.endswith('_') else '\n\ncatalog.rename_("metric", "distance_km");')
-            if n == 'sort': return base + '\n\nauto out = catalog.sort("metric", false);'
-            if n == 'sort_by': return base + '\n\nauto out = catalog.sort_by({"city", "id"}, {true, false});'
-            if n == 'group_by': return base + '\n\nauto out = catalog.group_by("city");'
+            if n == 'sort':
+                if 'span<const std::string_view>' in sig or 'initializer_list<std::string_view>' in sig or 'vector<std::string>' in sig:
+                    return base + '\n\nauto out = catalog.sort({"city", "id"}, {true, false});'
+                return base + '\n\nauto out = catalog.sort("metric", false);'
+            if n == 'group': return base + '\n\nauto out = catalog.group().by("city");'
             if n == 'fillnull':
                 if 'std::string_view' in sig or 'const char*' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});\n\nauto out = catalog.fillnull("Unknown", {"city"});'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});\n\nauto out = catalog.keys({"city"}).fillnull("Unknown");'
                 if 'Timeline' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"), {"ts"});'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.keys({"ts"}).fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));'
                 if 'TimeIndex' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"idx"_k = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"), {"idx"});'
-                return base + '\n\nauto out = catalog.fillnull(0.0, {"metric"});'
-            if n.startswith('cast_') or n == 'astype':
-                if n == 'cast_series':
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});\n\nauto out = catalog.cast_series({"metric"}, pluss::codem::ScalarType::Float64);'
-                return base + f'\n\nauto out = catalog.{n}({{"metric"}}' + (', pluss::codem::ScalarType::Float64' if n == 'astype' else '') + ');'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"idx"_k = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.keys({"idx"}).fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));'
+                return base + '\n\nauto out = catalog.keys({"metric"}).fillnull(0.0);'
+            if n == 'cast':
+                return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});\n\nauto out = catalog.keys({"metric"}).cast().series();'
+            if n == 'astype':
+                return base + '\n\nauto out = catalog.keys({"metric"}).astype(pluss::codem::ScalarType::Float64);'
             if n in {'sum','mean','min','max'}: return base + f'\n\nauto out = catalog.{n}("metric");'
-            if n == 'count': return base + '\n\nauto out = catalog.count();'
             if n == 'merge':
                 return base + '\n\nusing namespace pluss::kindle::literals;\nauto right = pluss::kindle::Catalog({"id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})), "score"_k = pluss::kindle::Stream(pluss::make_series({0.9, 0.7, 0.8}))});\nauto out = catalog.merge(right, "id", "inner");'
             if n in {'apply','apply_'}:
                 return base + ('\n\nauto out = catalog.apply("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });' if not n.endswith('_') else '\n\ncatalog.apply_("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });')
-            if n in {'apply_all','apply_all_','transform'}:
+            if n in {'map','map_','transform'}:
                 if n == 'transform' and 'std::string_view field' in sig:
                     return base + '\n\nauto out = catalog.transform("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });'
                 if n == 'transform':
                     return base + '\n\nauto out = catalog.transform([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });'
                 return base + (f'\n\nauto out = catalog.{n}([](const pluss::kindle::Stream& s) {{ return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; }});' if not n.endswith('_') else f'\n\ncatalog.{n}([](const pluss::kindle::Stream& s) {{ return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; }});')
-            if n in {'text_preprocess','extract_keywords','compute_similarity','filter_by_text','add_text_features','aggregate_text_stats','tfidf'}:
-                if n == 'compute_similarity': return catalog_text() + '\n\nauto out = catalog.compute_similarity("text", "text", "cosine");'
-                if n == 'extract_keywords': return catalog_text() + '\n\nauto out = catalog.extract_keywords("text", 5);'
-                if n == 'filter_by_text': return catalog_text() + '\n\nauto out = catalog.filter_by_text("text", "rain");'
-                if n == 'aggregate_text_stats': return catalog_text() + '\n\nauto out = catalog.aggregate_text_stats("text", "mean");'
+            if n in {'clean','keywords','similarity','grep','featurize','stats','tfidf'}:
+                if n == 'similarity': return catalog_text() + '\n\nauto out = catalog.similarity("text", "text", "cosine");'
+                if n == 'keywords': return catalog_text() + '\n\nauto out = catalog.keywords("text", 5);'
+                if n == 'grep': return catalog_text() + '\n\nauto out = catalog.grep("text", "rain");'
+                if n == 'stats': return catalog_text() + '\n\nauto out = catalog.stats("text", "mean");'
                 return catalog_text() + f'\n\nauto out = catalog.{n}("text");'
-            if n in {'set_stream','set_stream_','set','set_'}:
-                return base + ('\n\nauto out = catalog.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));' if not n.endswith('_') else '\n\ncatalog.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));')
-            if n in {'set_streams','set_streams_'}:
-                if 'NamedStream' in sig:
-                    return base + (
-                        '\n\nusing namespace pluss::kindle::literals;\n'
-                        'auto out = catalog.set_streams({\n'
-                        '    "flag"_k = pluss::kindle::Stream(pluss::make_series({1, 0, 1})),\n'
-                        '});'
-                        if not n.endswith('_') else
-                        '\n\nusing namespace pluss::kindle::literals;\n'
-                        'catalog.set_streams_({\n'
-                        '    "flag"_k = pluss::kindle::Stream(pluss::make_series({1, 0, 1})),\n'
-                        '});'
-                    )
-                return base + (
-                    '\n\nauto out = catalog.set_streams({\n'
-                    '    {"flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1}))},\n'
-                    '});'
-                    if not n.endswith('_') else
-                    '\n\ncatalog.set_streams_({\n'
-                    '    {"flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1}))},\n'
-                    '});'
-                )
+            if n in {'set','set_'}:
+                return base + ('\n\nauto out = catalog.set("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));' if not n.endswith('_') else '\n\ncatalog.set_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));')
             if n == 'tabelize' or n == 'to_table':
-                return base + f'\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::AlignPolicy::Inner;\nauto out = catalog.{n}(policy' + (', true' if n == 'to_table' else '') + ');'
+                return base + f'\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::Align::Inner;\nauto out = catalog.{n}(policy' + (', true' if n == 'to_table' else '') + ');'
             if n.startswith('save_') or n == 'save_as':
                 target = {'save_csv':f'"{GENERIC_OUTPUT_CSV_PATH}"','save_txt':f'"{GENERIC_OUTPUT_TXT_PATH}"','save_excel':f'"{GENERIC_OUTPUT_XLSX_PATH}"','save_json':f'"{GENERIC_OUTPUT_JSON_PATH}"','save_parquet':f'"{GENERIC_OUTPUT_PARQUET_PATH}"','save_as':f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'}[n]
                 return base + f'\n\ncatalog.{n}({target});'
@@ -8413,9 +8346,9 @@ def example_for(class_name: str, method: Method) -> str:
             elif 'txt' in n:
                 path = GENERIC_TXT_PATH
             return f'auto out = pluss::bundle::Registry::{n}("{path}");'
-        if n in {'defined','unique','nslots','nfields','empty','keys','field_names','slots','is_stream_compatible','slot_sizes','type_profiles','to_string','to_json'}:
+        if n in {'defined','unique','nslots','nfields','empty','keys','field_names','slots','slot_sizes','profiles','to_string','to_json'}:
             return base + f'\n\nauto out = registry.{n}();'
-        if n in {'has','has_slot','slot','at','get','get_slot','select','drop','head','tail','slice','iloc','take','sample','rename','rename_','apply','apply_','apply_all','map','map_','combine','clear','clear_','drop_empty_slots','drop_empty_slots_','set_slot','set_slot_','set_slots','set_slots_','push','push_','push_all','push_all_','filter_values','filter_values_','transform_values','transform_values_','take_values','take_values_','concat_values','concat_values_','to_kindle','as_kindle','kindelize','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','show','begin','end'}:
+        if n in {'has','has_slot','slot','at','get','get_slot','select','drop','head','tail','slice','iloc','take','take_','sample','rename','rename_','apply','apply_','map','map_','combine','clear','clear_','prune','prune_','set_slot','set_slot_','set_slots','set_slots_','push','push_','keep','keep_','morph','morph_','concat','concat_','to_kindle','as_kindle','kindelize','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','show','begin','end'}:
             if n in {'has','has_slot','slot','at','get','get_slot'}: return base + f'\n\nauto out = registry.{n}("ids");'
             if n == 'select':
                 if 'std::string_view key' in sig: return base + '\n\nauto out = registry.select("ids");'
@@ -8429,7 +8362,11 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'tail': return base + '\n\nauto out = registry.tail(2);'
             if n == 'slice': return base + '\n\nauto out = registry.slice(0, 2);'
             if n == 'iloc': return base + ('\n\nauto out = registry.iloc(1);' if 'start' not in sig else '\n\nauto out = registry.iloc(0, 2);')
-            if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = registry.take(picks);'
+            if n == 'take':
+                if 'std::string_view key' in sig:
+                    return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = registry.take("ids", picks);'
+                return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = registry.take(picks);'
+            if n == 'take_': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nregistry.take_("ids", picks);'
             if n == 'sample': return base + '\n\nauto out = registry.sample(2, 7);'
             if n == 'rename' or n == 'rename_':
                 if 'unordered_map' in sig: return base + '\n\nstd::unordered_map<std::string, std::string> renames{{"ids", "ids_new"}};\nauto out = registry.rename(renames);'
@@ -8439,27 +8376,27 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'initializer_list<std::string_view> keys' in sig:
                     return base + (f'\n\nauto out = registry.{n}({{"ids"}}, [](const pluss::bundle::Slot& slot) {{ return slot; }});' if not n.endswith('_') else '\n\nregistry.apply_({"ids"}, [](const pluss::bundle::Slot& slot) { return slot; });')
                 return base + (f'\n\nauto out = registry.{n}("ids", [](const pluss::bundle::Slot& slot) {{ return slot; }});' if not n.endswith('_') else '\n\nregistry.apply_("ids", [](const pluss::bundle::Slot& slot) { return slot; });')
-            if n in {'apply_all','map'}: return base + f'\n\nauto out = registry.{n}([](const pluss::bundle::Slot& slot) {{ return slot; }});'
-            if n in {'map_','apply_all_'}: return base + f'\n\nregistry.{n}([](const pluss::bundle::Slot& slot) {{ return slot; }});'
+            if n == 'map': return base + '\n\nauto out = registry.map([](const pluss::bundle::Slot& slot) { return slot; });'
+            if n == 'map_': return base + '\n\nregistry.map_([](const pluss::bundle::Slot& slot) { return slot; });'
             if n == 'combine': return base + '\n\nauto other = pluss::bundle::Registry({{"flag", pluss::bundle::Slot({pluss::make_series(true, pluss::codem::ScalarType::Bool), pluss::make_series(false, pluss::codem::ScalarType::Bool), pluss::make_series(true, pluss::codem::ScalarType::Bool)})}});\nauto out = registry.combine(other, "_rhs");'
             if n == 'clear' or n == 'clear_': return base + ('\n\nauto out = registry.clear();' if not n.endswith('_') else '\n\nregistry.clear_();')
-            if n == 'drop_empty_slots':
+            if n == 'prune':
                 return (
                     'auto registry = pluss::bundle::Registry({\n'
                     '    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},\n'
                     '    {"empty", pluss::bundle::Slot({})},\n'
                     '    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},\n'
                     '});\n\n'
-                    'auto out = registry.drop_empty_slots();'
+                    'auto out = registry.prune();'
                 )
-            if n == 'drop_empty_slots_':
+            if n == 'prune_':
                 return (
                     'auto registry = pluss::bundle::Registry({\n'
                     '    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},\n'
                     '    {"empty", pluss::bundle::Slot({})},\n'
                     '    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},\n'
                     '});\n\n'
-                    'registry.drop_empty_slots_();'
+                    'registry.prune_();'
                 )
             if n in {'set_slot','set_slot_'}: return base + ('\n\nauto out = registry.set_slot("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));' if not n.endswith('_') else '\n\nregistry.set_slot_("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));')
             if n in {'set_slots','set_slots_'}:
@@ -8472,20 +8409,23 @@ def example_for(class_name: str, method: Method) -> str:
                     '    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},\n'
                     '});'
                 )
-            if n in {'push','push_'}: return base + ('\n\nauto out = registry.push("ids", pluss::make_series(4));' if not n.endswith('_') else '\n\nregistry.push_("ids", pluss::make_series(4));')
-            if n in {'push_all','push_all_'}: return base + ('\n\nauto out = registry.push_all(pluss::make_note("ok"));' if not n.endswith('_') else '\n\nregistry.push_all_(pluss::make_note("ok"));')
-            if n in {'filter_values','filter_values_'}: return base + ('\n\nauto out = registry.filter_values("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });' if not n.endswith('_') else '\n\nregistry.filter_values_("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });')
-            if n in {'transform_values','transform_values_'}: return base + ('\n\nauto out = registry.transform_values("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });' if not n.endswith('_') else '\n\nregistry.transform_values_("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });')
-            if n in {'take_values','take_values_'}: return base + ('\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = registry.take_values("ids", picks);' if not n.endswith('_') else '\n\nstd::vector<std::int64_t> picks{0, 2};\nregistry.take_values_("ids", picks);')
-            if n in {'concat_values','concat_values_'}: return base + ('\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = registry.concat_values("ids", extra);' if not n.endswith('_') else '\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nregistry.concat_values_("ids", extra);')
+            if n == 'push':
+                if 'std::string_view key' in sig:
+                    return base + '\n\nauto out = registry.push("ids", pluss::make_series(4));'
+                return base + '\n\nauto out = registry.push(pluss::make_note("ok"));'
+            if n == 'push_':
+                if 'std::string_view key' in sig:
+                    return base + '\n\nregistry.push_("ids", pluss::make_series(4));'
+                return base + '\n\nregistry.push_(pluss::make_note("ok"));'
+            if n in {'keep','keep_'}: return base + ('\n\nauto out = registry.keep("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });' if not n.endswith('_') else '\n\nregistry.keep_("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });')
+            if n in {'morph','morph_'}: return base + ('\n\nauto out = registry.morph("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });' if not n.endswith('_') else '\n\nregistry.morph_("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });')
+            if n in {'concat','concat_'}: return base + ('\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = registry.concat("ids", extra);' if not n.endswith('_') else '\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nregistry.concat_("ids", extra);')
             if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = registry.{n}();'
             if n.startswith('save_') or n == 'save_as':
                 target = {'save_csv':f'"{GENERIC_OUTPUT_CSV_PATH}"','save_txt':f'"{GENERIC_OUTPUT_TXT_PATH}"','save_excel':f'"{GENERIC_OUTPUT_XLSX_PATH}"','save_json':f'"{GENERIC_OUTPUT_JSON_PATH}"','save_parquet':f'"{GENERIC_OUTPUT_PARQUET_PATH}"','save_as':f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'}[n]
                 return base + f'\n\nregistry.{n}({target});'
             if n == 'show': return base + '\n\nregistry.show(std::cout);'
             if n in {'begin','end'}: return base + '\n\nfor (const auto& key : registry) {\n  (void)key;\n}'
-        if n == 'ensure_stream_compatible':
-            return base + '\n\nregistry.ensure_stream_compatible("demo");'
         if n == 'from_kindle':
             return catalog_base() + '\n\nauto out = pluss::bundle::Registry::from_kindle(catalog);'
         if n in {'has_all','has_any'}:
@@ -9093,35 +9033,30 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`at(key)` fetches one named stream from the catalog.',
                 'Use it when you want stream access without routing through table conversion first.',
             ])
-        if class_name == 'Catalog' and n in {'apply', 'apply_all'}:
+        if class_name == 'Catalog' and n in {'apply', 'map'}:
             return bullets('Practical Behavior', [
-                '`apply(...)` rewrites one named stream; `apply_all(...)` rewrites every stream.',
+                '`apply(...)` rewrites one named stream; `map(...)` rewrites every stream.',
                 'The transform must return a defined stream with the same length as the input stream.',
                 'Use the underscore form when you want the mutation in place.',
             ])
         if class_name == 'Catalog' and n == 'astype':
             return bullets('Conversion Rules', [
-                '`astype(keys, dtype)` is the catalog-level numeric-series conversion helper.',
+                '`keys({...}).astype(dtype)` is the catalog-level numeric-series conversion helper.',
                 'It delegates to stream/thread conversion on the selected keys only.',
             ])
-        if class_name == 'Catalog' and n == 'add_text_features':
+        if class_name == 'Catalog' and n == 'featurize':
             return bullets('Practical Behavior', [
-                '`add_text_features(field)` adds `<field>_char_len` and `<field>_word_count` streams.',
+                '`featurize(field)` adds `<field>_char_len` and `<field>_word_count` streams.',
                 'The source field is coerced through note/text handling before the text statistics are computed.',
             ])
-        if class_name == 'Catalog' and n == 'aggregate_text_stats':
+        if class_name == 'Catalog' and n == 'stats':
             return bullets('Practical Behavior', [
-                '`aggregate_text_stats(field, stat_type)` collapses one text field into a one-value summary stream.',
+                '`stats(field, stat_type)` collapses one text field into a one-value summary stream.',
                 'Supported statistics include common length-based summaries such as mean/min/max/count, along with vocabulary size.',
             ])
-        if class_name == 'Catalog' and n == 'cast_series':
+        if class_name == 'Catalog' and n == 'cast':
             return bullets('Conversion Rules', [
-                'Catalog cast helpers rewrite only the selected keys.',
-                'Unknown keys throw immediately.',
-            ])
-        if class_name == 'Catalog' and n in {'cast_note', 'cast_timeline', 'cast_timeindex'}:
-            return bullets('Conversion Rules', [
-                'These helpers rewrite only the selected keys and leave all other streams unchanged.',
+                'Catalog cast accessors rewrite only the selected keys.',
                 'Unknown keys throw immediately.',
             ])
         if class_name == 'Catalog' and n == 'cloc':
@@ -9129,16 +9064,11 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`cloc(...)` slices aligned row positions across every stream in the catalog.',
                 'Use it when you want row-wise positional access while keeping stream alignment intact.',
             ])
-        if class_name == 'Catalog' and n == 'compute_similarity':
+        if class_name == 'Catalog' and n == 'similarity':
             return bullets('Practical Behavior', [
-                '`compute_similarity(field1, field2, "cosine")` computes row-wise text similarity and appends the result as a numeric stream.',
+                '`similarity(field1, field2, "cosine")` computes row-wise text similarity and appends the result as a numeric stream.',
                 'At the moment the supported similarity method is cosine.',
                 'Both fields must have the same length.',
-            ])
-        if class_name == 'Catalog' and n == 'count':
-            return bullets('Practical Behavior', [
-                '`count()` returns the catalog row count after alignment through `tabelize()`.',
-                'This is the quick “how many aligned rows do I have?” answer.',
             ])
         if class_name == 'Catalog' and n == 'display':
             return bullets('Practical Behavior', [
@@ -9152,13 +9082,13 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'Catalog' and n == 'dropnull':
             return bullets('Practical Behavior', [
-                '`dropnull(keys)` applies stream-level `dropnull()` to the selected keys.',
-                'With no keys supplied, every stream is processed.',
+                '`keys({...}).dropnull()` applies stream-level `dropnull()` to the selected keys.',
+                'It preserves the surrounding catalog structure while rewriting only those streams.',
                 'Unknown keys throw immediately.',
             ])
-        if class_name == 'Catalog' and n == 'extract_keywords':
+        if class_name == 'Catalog' and n == 'keywords':
             return bullets('Practical Behavior', [
-                '`extract_keywords(field, top_n)` tokenizes the text field, counts tokens, sorts by frequency descending then alphabetically, and returns a small keyword/count catalog.',
+                '`keywords(field, top_n)` tokenizes the text field, counts tokens, sorts by frequency descending then alphabetically, and returns a small keyword/count catalog.',
                 'Use it for quick corpus-level keyword previews rather than row-wise text features.',
             ])
         if class_name == 'Atlas' and n == 'aggregate_over_frames':
@@ -9196,9 +9126,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`at(key)` fetches one named slot from the registry.',
                 'Use it when you want direct slot access before applying slot-level transforms.',
             ])
-        if class_name == 'Registry' and n in {'apply', 'apply_all'}:
+        if class_name == 'Registry' and n in {'apply', 'map'}:
             return bullets('Practical Behavior', [
-                '`apply(...)` rewrites one slot or a selected slot set; `apply_all(...)` rewrites every slot.',
+                '`apply(...)` rewrites one slot or a selected slot set; `map(...)` rewrites every slot.',
                 'The transform must return a defined slot.',
                 'Use the underscore form when you want the mutation in place.',
             ])
@@ -9221,9 +9151,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`combine(other, suffix)` appends slots from `other` and renames collisions using the supplied suffix.',
                 'If the first suffixed name still collides, numbered suffixes are added until the name is unique.',
             ])
-        if class_name == 'Registry' and n == 'concat_values':
+        if class_name == 'Registry' and n == 'concat':
             return bullets('Practical Behavior', [
-                '`concat_values(key, other)` appends the values from another slot onto one existing slot.',
+                '`concat(key, other)` appends the values from another slot onto one existing slot.',
                 'The target key must exist and the appended slot must be defined.',
             ])
         if class_name == 'Registry' and n == 'drop':
@@ -9231,7 +9161,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`drop(...)` removes named slots, not individual values.',
                 'Unknown keys throw immediately.',
             ])
-        if class_name == 'Registry' and n in {'drop_empty_slots', 'drop_empty_slots_'}:
+        if class_name == 'Registry' and n in {'prune', 'prune_'}:
             return bullets('Practical Behavior', [
                 'These methods remove slots whose payload is empty.',
                 'Non-empty slots are passed through unchanged.',
@@ -9657,7 +9587,29 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
     ])
 
     children = ACCESSOR_CHILDREN.get(class_name, [])
-    if children:
+    if class_name == 'Registry':
+        lines.extend([
+            '## Accessors',
+            '',
+            '`Registry` exposes:',
+            '',
+            '- `fields(keys)` -> `Registry` projection',
+            '- `fieldaxis()` -> [`RegistryFieldAxisAccessor`](registry_fieldaxis_accessor_api_reference.md)',
+            '- `cast()`, `nt()`, `tl()` -> nested accessors over the current registry',
+            '',
+        ])
+    elif class_name == 'Axel':
+        lines.extend([
+            '## Accessors',
+            '',
+            '`Axel` exposes:',
+            '',
+            '- `fields(keys)` -> `Axel` projection',
+            '- `fieldaxis()` -> [`AxelFieldAxisAccessor`](axel_fieldaxis_accessor_api_reference.md)',
+            '- `cast()`, `nt()`, `tl()` -> nested accessors over the current axel',
+            '',
+        ])
+    elif children:
         lines.extend(['## Accessors', ''])
         lines.append(f'`{class_name}` exposes nested accessors, each with its own method pages and sidebar:')
         lines.append('')

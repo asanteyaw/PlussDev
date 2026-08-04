@@ -136,22 +136,18 @@ void demo_registry_methods() {
   const auto head = registry.head(2);
   const auto tail = registry.tail(2);
   const auto slice = registry.slice(1, 3);
-  const auto select = registry.select({"ids", "city"});
+  const auto select = registry.fields({"ids", "city"});
   const auto drop = registry.drop({"score"});
   const auto rename = registry.rename({{"city", "location"}});
-  const auto applied = registry.apply("ids", [](const Slot& s) {
-    return s.transform([](const Slot::Value& v) -> Slot::Value {
-      if (is_series(v)) return as_series_i64(to_i64(v) + 100);
-      return v;
-    });
-  });
-  registry.apply_("score", [](const Slot& s) {
-    return s.transform([](const Slot::Value& v) -> Slot::Value {
-      if (is_series(v)) return as_series_f64(to_f64(v) * 2.0);
-      return v;
-    });
-  });
-  const auto all_upper = registry.apply_all([](const Slot& s) {
+  const auto applied = registry.set("ids", registry.fields("ids").transform([](const Slot::Value& v) -> Slot::Value {
+    if (is_series(v)) return as_series_i64(to_i64(v) + 100);
+    return v;
+  }));
+  registry.set_("score", registry.fields("score").transform([](const Slot::Value& v) -> Slot::Value {
+    if (is_series(v)) return as_series_f64(to_f64(v) * 2.0);
+    return v;
+  }));
+  const auto all_upper = registry.map([](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
       if (is_note(v)) {
         auto out = to_string_value(v);
@@ -171,14 +167,14 @@ void demo_registry_methods() {
   registry.set_("city_copy", cities);
 
   std::cout << "registry nfields: " << registry.nfields()
-            << ", head(ids) size: " << head.select("ids").size()
-            << ", tail(ids) size: " << tail.select("ids").size()
-            << ", slice(ids) size: " << slice.select("ids").size()
+            << ", head(ids) size: " << head.fields("ids").size()
+            << ", tail(ids) size: " << tail.fields("ids").size()
+            << ", slice(ids) size: " << slice.fields("ids").size()
             << ", select nfields: " << select.nfields()
             << ", drop nfields: " << drop.nfields()
             << ", rename has(location): " << rename.has("location")
-            << ", applied ids[0] updated: " << to_i64(applied.select("ids").at(0))
-            << ", apply_all city[0]: " << to_string_value(all_upper.select("city").at(0))
+            << ", applied ids[0] updated: " << to_i64(applied.fields("ids").at(0))
+            << ", map city[0]: " << to_string_value(all_upper.fields("city").at(0))
             << ", combined nfields: " << combined.nfields()
             << ", with_status has(status): " << with_status.has("status")
             << ", has(city_copy): " << registry.has("city_copy") << "\n";
@@ -219,12 +215,13 @@ void demo_axel_methods() {
   const auto mapped = axel.map([](const Registry& r) {
     return r.set("source", Slot({as_note("demo"), as_note("demo"), as_note("demo")}));
   });
-  const auto selected = axel.select({"ids"});
-  const auto applied_slot = axel.apply_slot("ids", [](const Slot& s) {
-    return s.transform([](const Slot::Value& v) -> Slot::Value {
+  const auto selected = axel.fields({"ids"});
+  const auto applied_slot = axel.map([](const Registry& r) {
+    if (!r.has("ids")) return r;
+    return r.set("ids", r.fields("ids").transform([](const Slot::Value& v) -> Slot::Value {
       if (is_series(v)) return as_series_i64(to_i64(v) * 3);
       return v;
-    });
+    }));
   });
   const auto concatenated = axel.concat_depth(axel);
 

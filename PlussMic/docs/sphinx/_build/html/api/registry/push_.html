@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Registry::push_all" href="push_all.html" />
+    <link rel="next" title="Registry::rename" href="rename.html" />
     <link rel="prev" title="Registry::push" href="push.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -36,64 +36,85 @@
 
           <div class="body" role="main">
             
-  <section id="registry-push">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7c576a966a43 -->
+<section id="registry-push">
 <h1>Registry::push_<a class="headerlink" href="#registry-push" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">push_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span><span class="o">&amp;</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">push_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Registry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">push_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Appends one new value to a named slot in place.</p>
+<p>The in-place counterpart to <a class="reference internal" href="push.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">push()</span></code></span></a> — appends one value to a field’s
+<code class="docutils literal notranslate"><span class="pre">Slot</span></code> directly. The single-key overload appends to just that field; the
+value-only overload appends to every field.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>key</strong>
-Name of the target slot or stream.</p>
-<p><strong>value</strong>
-Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
+<p><strong>key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The field to append to (single-key overload). Throws if it doesn’t exist.</p>
+<p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slot::Value&amp;</span></code>)
+The value to append.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry&amp;</span></code>
-Value produced by this call.</p>
+A reference to this registry, now holding the appended value(s).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<p>Example 1. Append to a single named field in place.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="n">rg</span><span class="p">.</span><span class="n">push_</span><span class="p">(</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="n">rg</span><span class="p">.</span><span class="n">push_</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ids</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
-
-out.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 2, 3, 4]
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Same throw and every-field behavior as <a class="reference internal" href="push.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">push()</span></code></span></a> — see that page’s
+notes.</p></li>
+<li><p>Mutates the registry it’s called on and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> by reference.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="push.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::push</span></code></span></a>: the non-mutating counterpart.</p></li>
+<li><p><a class="reference internal" href="concat_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::concat_</span></code></span></a>: append a whole <code class="docutils literal notranslate"><span class="pre">Slot</span></code>’s worth of values in
+place, rather than a single value.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="push.html">
     <span class="label">Previous</span>
     <span class="title">push</span>
   </a>
-  <a class="next-link" href="push_all.html">
+  <a class="next-link" href="rename.html">
     <span class="label">Next</span>
-    <span class="title">push_all</span>
+    <span class="title">rename</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 
@@ -146,7 +167,7 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="push.html" title="previous chapter">Registry::push</a></li>
-      <li>Next: <a href="push_all.html" title="next chapter">Registry::push_all</a></li>
+      <li>Next: <a href="rename.html" title="next chapter">Registry::rename</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

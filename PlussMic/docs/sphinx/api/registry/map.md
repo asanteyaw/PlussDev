@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9b5f8eccadfc -->
 
 # Registry::map
 
@@ -12,18 +13,15 @@ Registry Registry::map(const std::function<Slot(const Slot&)>& fn) const
 
 ## What It Does
 
-A pure alias for [`apply_all()`](apply_all.md) — runs `fn` over every field's
-`Slot` and returns a new registry with all of them replaced. `map()` exists for
-readability at call sites that read naturally as "map this function over every
-field"; `apply_all()` exists for call sites where "apply to every slot,
-unconditionally" (as opposed to `apply()`'s scoped form) is the clearer framing.
-There is no behavioral difference.
+Runs `fn` over every field's `Slot` and returns a new registry with all of them
+replaced.
 
-```{important} Same mixed-kind hazard as apply_all()
-Since `map()` is a direct alias, it inherits `apply_all()`'s caveat: `fn` runs on
-every field regardless of value kind, so a callback written only for one kind can
-throw on a field of a different kind. See [`apply_all()`](apply_all.md)'s important
-callout.
+```{important} Whole-registry transform
+`fn` runs on every field regardless of value kind, so a callback written only for
+one kind can throw on a field of a different kind. `Registry` has no scoped,
+apply-to-named-fields sibling method anymore — to transform just one field, fetch
+it via [`fields(key)`](fields.md), call `fn` on it directly, and reinsert with
+[`set()`](set.md): `rg.set("population", fn(rg.fields("population")))`.
 ```
 
 ## Parameters
@@ -35,12 +33,11 @@ callout.
 ## Returns
 
 `Registry`
-    A new registry with every field replaced by `fn`'s result — identical to what
-    `apply_all(fn)` would return.
+    A new registry with every field replaced by `fn`'s result.
 
 ## Examples
 
-Example 1. `map()` and `apply_all()` produce identical results for the same `fn`.
+Example 1. Apply one transform to every field.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -59,19 +56,18 @@ std::cout << out.nfields();
 
 ## Notes
 
-- Identical to `apply_all()` in every respect — pick whichever name reads better
-  at the call site.
 - Never mutates the receiver — returns a new `Registry`; use [`map_()`](map_.md)
   for the in-place form.
 
 ## See Also
 
-- [`Registry::apply_all`](apply_all.md): the method this is a pure alias for.
 - [`Registry::map_`](map_.md): the in-place counterpart.
-- [`Registry::apply`](apply.md): the scoped counterpart, for transforming only
-  named fields.
-- [`Catalog::apply_all`](../catalog/apply_all.md): the closest equivalent on the
-  kindle model — `Catalog` has no `map`/`map_` alias, only `apply_all`.
+- [`Registry::fields`](fields.md) / [`Registry::set`](set.md): fetch-transform-reinsert
+  for scoping a `Slot -> Slot` transform to one named field instead of every field.
+- [`Registry::morph`](morph.md): a value-level (not whole-`Slot`) transform, scoped
+  to one field.
+- [`Catalog::map`](../catalog/map.md): the closest equivalent on the
+  kindle model.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="load_txt.html">

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e2bdd65bc8af -->
+<!-- pluss-signature-hash: ae1c531eeba0 -->
 
 # Archive::keys
 
@@ -8,17 +8,14 @@
 ## Signatures
 
 ```cpp
-Archive::keys(std::span<const std::string_view> keys) const -> ArchiveKeyAccessor
-Archive::keys(std::initializer_list<std::string_view> keys) const -> ArchiveKeyAccessor
+Archive::keys(std::span<const std::string_view> keys) const -> Archive
+Archive::keys(std::initializer_list<std::string_view> keys) const -> Archive
 ```
 
 ## What It Does
 
-Selects one or more keys (present in each catalog, uniformly) and returns an
-`ArchiveKeyAccessor` — an entry point into a family of operations
-(`fillnull`, `dropnull`, `ffill`, `bfill`, `isnull`, `notnull`, `invalid`, `distinct`,
-`freq`, `ndistinct`, `astype`, plus a `cast()` sub-accessor) applied to just the selected
-streams *within every catalog*, returning a new `Archive` scoped to that selection.
+Projects every catalog in the archive down to the named keys and returns that smaller
+archive directly.
 
 ```{important} No no-argument overload — unlike Catalog::keys()
 [`Catalog::keys()`](../catalog/keys.md) has a no-argument overload returning
@@ -27,11 +24,9 @@ equivalent — every overload requires an explicit name list. To list a single c
 key names, go through [`catalog(i)`](catalog.md)`.keys()` instead.
 ```
 
-```{important} keys(names) is a selection, not a rename or a projection to a smaller archive
-`archive.keys("id").fillnull(0.0)` operates on the `id` stream *within each catalog's own
-context* and returns an `Archive` containing only the selected streams, transformed, in
-every catalog. If you want to keep every stream but only transform some, transform the
-full archive directly.
+```{important} keys(names) is direct archive projection
+`archive.keys({"id", "city"})` returns a smaller archive where each catalog contains only
+those streams, in that order. Any chained operation then runs on the projected archive.
 ```
 
 ## Parameters
@@ -41,14 +36,12 @@ full archive directly.
 
 ## Returns
 
-`ArchiveKeyAccessor`
-    An accessor scoped to the selected stream(s) — call one of its methods to actually
-    transform them.
+`Archive`
+    A smaller archive where each catalog contains exactly the requested keys.
 
 ## Examples
 
-Example 1. Select a stream by name and fill its `NULL` cells, scoped to that stream alone
-in every catalog.
+Example 1. Select a stream by name and then operate on the projected archive.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -83,25 +76,20 @@ city                     | Note         | Note             | 2       | [Accra, T
 ========================================================================================================================
 ```
 
-`city`'s own `NULL`-free content is unaffected, in both catalogs — only `id` (the selected
-stream) was transformed.
+Only the projected `id` stream remains in the result, so the fill runs on the smaller
+archive directly.
 
 ## Notes
 
 - No no-argument overload — see the first important callout above.
-- The full `ArchiveKeyAccessor` surface
-  (`fillnull`/`dropnull`/`ffill`/`bfill`/`isnull`/`notnull`/`invalid`/`astype`/`distinct`/
-  `freq`/`ndistinct`/`cast()`) is out of scope for this page — see
-  [`Catalog::keys`](../catalog/keys.md) for the same shape of accessor on a single catalog;
-  every method there has an identical counterpart here, scoped to every catalog in the
-  archive instead of one.
+- The result is an `Archive`, not an accessor shell.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
 
 ## See Also
 
 - [`Archive::has`](has.md): check whether a key exists before selecting it.
-- [`Archive::select`](select.md) / [`Archive::drop`](drop.md): keep or remove whole streams
-  from every catalog, rather than scoping a transform to a selection.
+- [`Archive::drop`](drop.md): remove whole streams from every catalog instead of scoping
+  a transform to selected keys.
 - [`Catalog::keys`](../catalog/keys.md): the single-catalog equivalent, including its
   no-argument overload this method has no counterpart for.
 

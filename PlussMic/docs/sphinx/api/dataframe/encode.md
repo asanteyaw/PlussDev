@@ -35,7 +35,7 @@ one of two modes:
 
 Before `encode()`, the closest existing tools were [`factor()`](factor.md) (which
 returns a *separate* `CategoryEncoding{codes, levels}` pair rather than a modified
-frame) and [`note().indicate()`](note.md) (which does genuine multi-label indicator
+frame) and [`note().indicate()`](../../dataframe_note_accessor_api_reference) (which does genuine multi-label indicator
 expansion for delimiter-separated tag strings, and returns only the new columns rather
 than the whole frame). `encode()` is the direct, single-call "turn this one column into
 model-ready numbers, in place, on the whole frame" entry point either mode's use case

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 76c25b5d84d4 -->
 <section id="registry-shape">
 <h1>Registry::shape<a class="headerlink" href="#registry-shape" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -48,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">fields)</span></code> pair summarizing the registry’s overall size in one call
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">(state,</span> <span class="pre">fields)</span></code> pair summarizing the registry’s overall size in one call
 — the first element is the <strong>longest</strong> field’s length (found by scanning every
 slot’s <a class="reference internal" href="../slot/size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">size()</span></code></span></a>), the second is <a class="reference internal" href="nfields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nfields()</span></code></span></a>.
 Because it takes the maximum rather than requiring agreement, <code class="docutils literal notranslate"><span class="pre">shape()</span></code> never
@@ -64,7 +65,7 @@ other’s length.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::pair&lt;std::int64_t,</span> <span class="pre">std::int64_t&gt;</span></code>
-<code class="docutils literal notranslate"><span class="pre">(longest</span> <span class="pre">field's</span> <span class="pre">length,</span> <span class="pre">nfields())</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">(maxstate(),</span> <span class="pre">nfields())</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -74,8 +75,8 @@ other’s length.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="n">fields</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">shape</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="n">fields</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">shape</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -90,8 +91,8 @@ field’s length as the row count, rather than throwing.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">20</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="n">fields</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ragged</span><span class="p">.</span><span class="n">shape</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="n">fields</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ragged</span><span class="p">.</span><span class="n">shape</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -105,8 +106,7 @@ field’s length as the row count, rather than throwing.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The pair order is <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">fields)</span></code>, matching typical row-by-column shape
-conventions — not <code class="docutils literal notranslate"><span class="pre">(fields,</span> <span class="pre">rows)</span></code>.</p></li>
+<li><p>The pair order is <code class="docutils literal notranslate"><span class="pre">(state,</span> <span class="pre">fields)</span></code>.</p></li>
 <li><p>Never throws on a ragged registry — see Example 2. <code class="docutils literal notranslate"><span class="pre">Registry</span></code> does not require
 fields to share a common length the way <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>’s streams often do.</p></li>
 <li><p>An explicitly empty registry reports <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0)</span></code>.</p></li>
@@ -115,8 +115,10 @@ fields to share a common length the way <code class="docutils literal notranslat
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="nfields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::nfields</span></code></span></a> / <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::sizes</span></code></span></a>: the two kinds
-of value this method combines — field count, and each field’s own length.</p></li>
+<li><p><a class="reference internal" href="nstate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::nstate</span></code></span></a> / <a class="reference internal" href="minstate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::minstate</span></code></span></a> /
+<a class="reference internal" href="maxstate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::maxstate</span></code></span></a>: the strict and ragged state-count surfaces.</p></li>
+<li><p><a class="reference internal" href="nfields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::nfields</span></code></span></a> / <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::sizes</span></code></span></a>: field count
+and per-field lengths.</p></li>
 <li><p><a class="reference internal" href="../catalog/shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::shape</span></code></span></a>: the equivalent summary on the kindle
 model.</p></li>
 </ul>

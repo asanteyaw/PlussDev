@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 97d62e3e518d -->
+
 # Registry::set_
 
 [Back to Registry API Reference](../../registry_api_reference)
@@ -5,84 +8,65 @@
 ## Signatures
 
 ```cpp
-Registry::set_(std::initializer_list<std::pair<std::string, Slot>> items) -> Registry&
-
-Registry::set_(std::initializer_list<std::pair<std::string_view, Slot>> items) -> Registry&
-
-Registry::set_(std::string_view key, const Slot& value) -> Registry&
+Registry& Registry::set_(std::string_view key, const Slot& value)
+Registry& Registry::set_(std::initializer_list<std::pair<std::string_view, Slot>> items)
+Registry& Registry::set_(std::initializer_list<std::pair<std::string, Slot>> items)
 ```
 
 ## What It Does
 
-Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
+The in-place counterpart to [`set()`](set.md) — sets the named field(s) on this
+registry directly, upserting (replacing an existing field or adding a new one).
 
 ## Parameters
 
-**items**
-    Inline collection passed directly at the call site.
+**key** (`std::string_view`)
+    A single field name to set (single-item overload).
 
-**key**
-    Name of the target slot or stream.
+**value** (`const Slot&`)
+    The new `Slot` for that field. Must be defined.
 
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+**items** (`std::initializer_list<std::pair<std::string_view, Slot>>` / `std::initializer_list<std::pair<std::string, Slot>>`)
+    Several `{key, Slot}` pairs to set at once.
 
 ## Returns
 
 `Registry&`
-    Value produced by this call.
+    A reference to this registry, now holding the updated field(s).
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Overwrite a field in place.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-auto out = rg.set_();
+rg.set_("id", pluss::bundle::Slot({pluss::make_series(42)}));
+auto ids = rg.fields("id");
+std::cout << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.set_();
+42
 ```
 
-### Output
+## Notes
 
-```text
-The call completes and returns the contract described under Output.
-```
-Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+- Upsert semantics, same as [`set()`](set.md): unknown keys are added rather
+  than throwing.
+- Mutates the registry it's called on and returns `*this` by reference.
 
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
+## See Also
 
-auto out = rg.set_();
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
+- [`Registry::set`](set.md): the non-mutating counterpart.
+- [`Registry::morph_`](morph_.md): rewrite individual *values* within a field in
+  place, rather than replacing the field's whole `Slot`.
+- [`Catalog::set_`](../catalog/set_.md): the equivalent operation on the kindle
+  model.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="set.html">

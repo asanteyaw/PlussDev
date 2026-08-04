@@ -15,42 +15,74 @@ Series& Series::clamp_min_(const Series& min)
 
 ## What It Does
 
-Floors every element from below: `out[i] = self[i] >= min ? self[i] : min` — the
-mirror image of [`clamp_max`](clamp_max.md). The `_` suffix pair mutate `self` in
-place instead of returning a new `Series`.
+Applies a lower floor to every element.
+
+Conceptually:
+
+- keep `self[i]` if it is already `>= min`
+- otherwise replace it with `min`
+
+This is the one-sided "raise small values upward" member of the clamp family.
+The non-underscore overloads return a new series. The underscore overloads
+mutate the current series in place and return `Series&`.
 
 ## Parameters
 
 **min** (`double` or `const Series&`)
 
-The lower bound. For the `double` overload, every element is floored at the same
-value. For the `Series` overload, the bound broadcasts elementwise against `self`.
+The lower bound.
+
+For `clamp_min(double min)` and `clamp_min_(double min)`:
+
+- one scalar floor is applied everywhere
+- every position compares against the same bound
+
+For `clamp_min(const Series& min)` and `clamp_min_(const Series& min)`:
+
+- `min` is broadcast against `self`
+- each broadcasted position can therefore have its own effective floor
 
 ## Returns
 
-`Series` (or `Series&` for the `_` variants)
-    A new `Series` (or `self`, mutated) with every element `>= min`.
+`Series` or `Series&`
+    The clamped result, either as a fresh value or the mutated current series
+    for the underscore overloads.
 
 ## Gradient
 
-Both overloads are differentiable. `d(out)/d(self[i]) = 1` where `self[i] >= min`,
-else `0` — an **inclusive** boundary, matching [`clamp_max`](clamp_max.md)'s own
-convention and, through it, [`maximum`](maximum.md)/[`minimum`](minimum.md)'s
-tie-breaking rule. For the `Series` overload, `min` gets the complementary
-gradient: `1` exactly where `self[i] < min` (see Example 4).
+The out-of-place overloads are differentiable.
 
-The in-place `_` variant is **not** independently differentiable, for the same
-reason as `clamp_max_`: in-place ops in this engine are treated as low-level
-storage mutations. Use the out-of-place `clamp_min()` inside anything that needs
-to backpropagate through the clamp itself.
+For the scalar form:
+
+- gradient flows to `self` where `self >= min`
+- gradient is zero where `self < min`
+
+For the `Series`-bound form:
+
+- gradient flows to `self` where `self >= min`
+- gradient flows to the bound series where `self < min`
+
+The boundary is inclusive:
+
+```{note} Inclusive boundary
+At `self[i] == min`, the derivative with respect to `self[i]` is `1`, not `0`.
+That matches the comparison-family rule used by
+[`maximum`](maximum.md)/[`minimum`](minimum.md)/[`clamp_max`](clamp_max.md) and
+keeps shared boundaries consistent.
+```
+
+The underscore overloads mutate storage directly and should not be treated as
+the differentiable surface of the clamp itself. Use the value-returning
+`clamp_min()` forms inside computations you intend to backpropagate through.
 
 ## Examples
 
-Example 1. Floor a mix of negative, zero, and positive values at `0.0`.
+Example 1. A scalar floor raises only the positions below the bound.
 
 ```cpp
-auto x = pluss::make_series(std::vector<double>{-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
-std::cout << x.clamp_min(0.0);
+auto line = pluss::make_series(std::vector<double>{-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
+
+std::cout << line.clamp_min(0.0);
 ```
 
 ### Output
@@ -60,20 +92,18 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, 0, 0, 1, 3]
 ```
 
-Everything at or below `0.0` is raised to the floor; `1.0` and `3.0` already clear
-it and pass through unchanged. This is exactly how `relu()` is defined in this
-engine (`relu(x) == clamp_min(x, 0.0)`).
+This is the familiar ReLU-style floor: everything below zero is lifted to zero,
+while values already above zero pass through untouched.
 
-Example 2. Gradient at the boundary.
+Example 2. The boundary at exactly the floor is inclusive in the backward rule.
 
 ```cpp
-auto x = pluss::make_series(std::vector<double>{-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
-x.tracks_slope_(true);
-
-auto y = x.clamp_min(0.0);
-y.sum().reverse();
-std::cout << "y=" << y << "\n";
-std::cout << "dx=" << x.sensitivity() << "\n";
+auto clamp_min_grad = line.clone();
+clamp_min_grad.tracks_slope_(true);
+auto clamp_min_y = clamp_min_grad.clamp_min(0.0);
+clamp_min_y.sum().reverse();
+std::cout << "y=" << clamp_min_y << "\n";
+std::cout << "dx=" << clamp_min_grad.sensitivity() << "\n";
 ```
 
 ### Output
@@ -85,71 +115,80 @@ dx=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, c
 data=[0, 0, 1, 1, 1]
 ```
 
-`x == 0.0` (index 2) gets gradient `1`, not `0` — the inclusive boundary.
+The third position started exactly at `0.0`, and it still receives derivative
+`1`.
 
-Example 3. The `Series`-argument overload: each element is floored at its own,
-independent bound.
+Example 3. The `Series` overload broadcasts a row-shaped lower bound across the
+leading dimension.
 
 ```cpp
-auto x = pluss::make_series(std::vector<double>{1, 5, 3}, {3});
-auto lo = pluss::make_series(std::vector<double>{2, 2, 2}, {3});
-std::cout << x.clamp_min(lo);
+auto lows = pluss::make_series(std::vector<double>{2, 4, 3}, {3});
+auto grid = pluss::make_series(
+    std::vector<double>{1, 5, 3, 0, 7, 2},
+    {2, 3});
+
+std::cout << grid.clamp_min(lows);
 ```
 
 ### Output
 
 ```text
-pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 5, 3]
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 5, 3],
+  [2, 7, 3]]
 ```
 
-`1` is below its bound of `2`, so it's raised to `2`; `5` and `3` already clear
-their bound and pass through unchanged.
+Each row of `grid` is compared against the same `[2, 4, 3]` floor pattern.
 
-Example 4. Gradient of the `Series`-argument overload: it flows to `self` where
-`self` was kept, and to `min` where the bound was used instead.
+Example 4. The scalar underscore overload mutates the current handle in place.
 
 ```cpp
-auto x = pluss::make_series(std::vector<double>{1, 5, 3}, {3});
-auto lo = pluss::make_series(std::vector<double>{2, 2, 2}, {3});
-x.tracks_slope_(true);
-lo.tracks_slope_(true);
-
-auto y = x.clamp_min(lo);
-y.sum().reverse();
-std::cout << "y=" << y << "\n";
-std::cout << "dx=" << x.sensitivity() << "\n";
-std::cout << "dlo=" << lo.sensitivity() << "\n";
+auto scalar_inplace = line.clone();
+scalar_inplace.clamp_min_(1.5);
+std::cout << scalar_inplace;
 ```
 
 ### Output
 
 ```text
-y=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 5, 3]
-dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[0, 1, 1]
-dlo=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[1, 0, 0]
+pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.5, 1.5, 1.5, 1.5, 3]
 ```
 
-Index 0 (`x=1 < lo=2`, the bound was used): gradient goes to `lo`. Indices 1 and 2
-(`x >= lo`, `x` passed through): gradient goes to `x` instead — the mirror image of
-[`clamp_max`](clamp_max.md)'s Example 4.
+No new `Series` is returned here; the original handle now owns the clamped
+values.
+
+Example 5. The `Series` underscore overload mutates through the same broadcasted
+bound pattern.
+
+```cpp
+auto series_inplace = grid.clone();
+series_inplace.clamp_min_(lows);
+std::cout << series_inplace;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 5, 3],
+  [2, 7, 3]]
+```
 
 ## Notes
 
-- `clamp_min(x, 0.0)` is literally how `relu(x)` is defined in this engine.
-- `clamp_min`'s inclusive boundary at `self[i] == min` mirrors
-  [`clamp_max`](clamp_max.md)'s own — see its Gradient section for why that
-  boundary choice matters.
+- `clamp_min(x, 0.0)` is the same numerical idea as a ReLU floor.
+- The `Series`-bound overload is semantically close to [`maximum`](maximum.md):
+  `x.clamp_min(lo)` and `x.maximum(lo)` express the same comparison, but
+  `clamp_min` makes the "this operand is the floor" intent explicit.
+- Use the underscore forms when you specifically want mutation, not when you
+  need the clamp itself to be the differentiable node in the graph.
 
 ## See Also
 
-- [`Series::clamp_max`](clamp_max.md): the mirrored ceiling.
-- [`Series::maximum`](maximum.md): semantically equivalent to the `Series`-argument
-  overload (`self.clamp_min(lo) == self.maximum(lo)`), though implemented
-  separately via `where()` rather than sharing code with it.
+- [`Series::clamp_max`](clamp_max.md): the mirrored upper ceiling.
+- [`Series::maximum`](maximum.md): equivalent comparison phrased without bound
+  terminology.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="clamp_max.html">

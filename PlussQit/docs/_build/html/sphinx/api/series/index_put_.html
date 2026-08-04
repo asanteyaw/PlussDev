@@ -13,11 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::clamp_max" href="clamp_max.html" />
-    <link rel="prev" title="Series::index" href="index.html" />
+    <link rel="next" title="Series::take" href="take.html" />
+    <link rel="prev" title="Series::index_put" href="index_put.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -35,7 +36,8 @@
 
           <div class="body" role="main">
             
-  <section id="series-index-put">
+  <!-- pluss-hand-authored -->
+<section id="series-index-put">
 <h1>Series::index_put_<a class="headerlink" href="#series-index-put" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signatures">
@@ -50,55 +52,61 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Mutates the series through explicit index-based writes and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
-<p>This method family is intentionally broader than one signature suggests:</p>
+<p>This family is intentionally broader than one signature suggests:</p>
 <ul class="simple">
-<li><p>the <code class="docutils literal notranslate"><span class="pre">Series</span></code> index-list overloads are the general advanced-index write path</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">Series</span></code> index-list overloads are the real advanced-index write surface</p></li>
 <li><p>the scalar <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code> overload is an explicit 1D convenience</p></li>
-<li><p>the <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> initializer-list overload is a narrow convenience layer for
-common 1D and 2D write forms</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> initializer-list overload is a narrow shorthand for two
+common handwritten cases</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">accumulate</span></code> toggle belongs to the general advanced-index form. When it is
-<code class="docutils literal notranslate"><span class="pre">false</span></code>, matching positions are replaced. When it is <code class="docutils literal notranslate"><span class="pre">true</span></code>, matching positions
-are incremented instead.</p>
-<p>One API quirk is worth saying explicitly: the method is declared <code class="docutils literal notranslate"><span class="pre">const</span></code> on the
+<p>The key split is not just “copy vs in-place.” It is also “general index
+tensors vs constrained convenience syntax.”</p>
+<p>One API quirk is worth stating directly: the method is declared <code class="docutils literal notranslate"><span class="pre">const</span></code> on the
 handle, but it still mutates the underlying storage. On this surface, handle
 constness does not imply value immutability.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>indices</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Of&lt;Series&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;Series&gt;</span></code>)</p>
-<p>The explicit advanced index tensors for the general overloads.</p>
-<p>Use these when you already have integer index series and want the most direct
-advanced-index write path. This is the only overload family here that supports
-<code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code>.</p>
+<p>The general explicit-index overload family.</p>
+<p>These overloads support:</p>
+<ul class="simple">
+<li><p>integer index tensors</p></li>
+<li><p>bool masks</p></li>
+<li><p>scalar replacement</p></li>
+<li><p>one-value-per-selected-head updates</p></li>
+<li><p>trailing-slice pattern reuse</p></li>
+<li><p>additive updates through <code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code></p></li>
+</ul>
+<p>Use these when you want the real advanced-index write path.</p>
 <p><strong>index</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The scalar convenience form. This overload is intentionally 1D-only and requires
-a scalar <code class="docutils literal notranslate"><span class="pre">values</span></code>.</p>
+<p>The scalar convenience overload.</p>
+<p>This overload is intentionally 1D-only and expects a scalar <code class="docutils literal notranslate"><span class="pre">values</span></code> source.
+Negative indices count from the end.</p>
 <p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;ExtractSpec&gt;</span></code>)</p>
-<p>The constrained slice-spec convenience layer.</p>
-<p>This overload supports exactly two handwritten convenience shapes:</p>
+<p>The constrained shorthand overload.</p>
+<p>This convenience layer supports exactly two handwritten forms:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">x.index_put_({i},</span> <span class="pre">scalar_value)</span></code> on 1D input</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">x.index_put_({SliceAll(),</span> <span class="pre">j},</span> <span class="pre">column_values)</span></code> on 2D input</p></li>
 </ul>
-<p>For anything richer, use <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a> or the general
-Series index-list overloads.</p>
+<p>For richer selector-language writes, use <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a>.</p>
 <p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
 <p>The write source.</p>
 <p>Accepted cardinality depends on the overload family:</p>
 <ul class="simple">
 <li><p>scalar convenience requires a scalar source</p></li>
-<li><p>2D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> column convenience requires a 1D source of length <code class="docutils literal notranslate"><span class="pre">size(0)</span></code></p></li>
-<li><p>general Series index-list writes follow the backend advanced-index write rules;
-common usage is one value per indexed position, or scalar broadcast where
-supported</p></li>
+<li><p>1D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> shorthand requires a scalar source</p></li>
+<li><p>2D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> column shorthand requires a 1D source of length <code class="docutils literal notranslate"><span class="pre">size(0)</span></code></p></li>
+<li><p>general <code class="docutils literal notranslate"><span class="pre">Series</span></code> index-list writes support the richer advanced-index cardinality rules described above</p></li>
 </ul>
 <p><strong>accumulate</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
+<p>Controls replacement vs addition:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: replace written positions</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: add into written positions</p></li>
 </ul>
-<p>This toggle is unsupported on the <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> convenience overload.</p>
+<p>This toggle is unsupported on the <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> shorthand overload.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -108,14 +116,13 @@ The same mutated series handle.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. The initializer-list <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload is the shortest way to do a
-basic advanced-index write.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+basic integer advanced-index write in place.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">picked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">70</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
 
-<span class="n">vec</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">idx</span><span class="p">},</span><span class="w"> </span><span class="n">picked</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span>
+<span class="n">inplace</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">idx</span><span class="p">},</span><span class="w"> </span><span class="n">picked</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">inplace</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -124,81 +131,91 @@ basic advanced-index write.</p>
 data=[0, 90, 2, 70, 4]
 </pre></div>
 </div>
-<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload is the same engine, but useful when the
-index list already lives in a container. Here <code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code> adds into the
-existing positions instead of replacing them.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dup_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">dup_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">{</span><span class="n">dup_idx</span><span class="p">};</span>
+<p>Example 2. A bool mask write is part of the same general overload family.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">mask_inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
 
-<span class="n">vec</span><span class="p">.</span><span class="n">index_put_</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span>
-<span class="w">    </span><span class="n">dup_values</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">true</span><span class="p">);</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span>
+<span class="n">mask_inplace</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">mask</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">),</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mask_inplace</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[0, 120, 2, 100, 4]
+data=[0, -1, 2, -1, 4]
 </pre></div>
 </div>
-<p>Because index <code class="docutils literal notranslate"><span class="pre">1</span></code> appears twice, both <code class="docutils literal notranslate"><span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">20</span></code> are accumulated into the
-existing <code class="docutils literal notranslate"><span class="pre">90</span></code>.</p>
-<p>Example 3. The scalar convenience overload is intentionally 1D-only and expects
-a scalar source.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">vec</span><span class="p">.</span><span class="n">index_put_</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="mf">-5.0</span><span class="p">));</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span>
+<p>Example 3. The <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload is convenient when the index list already
+exists in a container, and <code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code> turns the update additive.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">overlap_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">overlap_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">overlap_indices</span><span class="p">{</span><span class="n">overlap_idx</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">accum_inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+
+<span class="n">accum_inplace</span><span class="p">.</span><span class="n">index_put_</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">overlap_indices</span><span class="p">),</span>
+<span class="w">    </span><span class="n">overlap_values</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">true</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">accum_inplace</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[-5, 120, 2, 100, 4]
+data=[0, 31, 2, 33, 4]
 </pre></div>
 </div>
-<p>Example 4. The 1D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> convenience form accepts a single scalar index
-specifier.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">vec</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">2</span><span class="p">}},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="mf">555.0</span><span class="p">));</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span>
+<p>Example 4. The scalar convenience overload is intentionally 1D-only, and
+negative indices count from the end.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">accum_inplace</span><span class="p">.</span><span class="n">index_put_</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="mf">999.0</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">accum_inplace</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[-5, 120, 555, 100, 4]
+data=[0, 31, 2, 33, 999]
 </pre></div>
 </div>
-<p>Example 5. The 2D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> convenience form is for whole-column
-replacement: <code class="docutils literal notranslate"><span class="pre">{SliceAll(),</span> <span class="pre">j}</span></code> plus a length-<code class="docutils literal notranslate"><span class="pre">size(0)</span></code> source vector.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">col_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-
-<span class="n">mat</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">2</span><span class="p">}},</span><span class="w"> </span><span class="n">col_values</span><span class="p">);</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">;</span>
+<p>Example 5. The 1D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> shorthand accepts a single scalar index spec.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">accum_inplace</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">}},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="mf">123.0</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">accum_inplace</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[123, 31, 2, 33, 999]
+</pre></div>
+</div>
+<p>Example 6. The 2D <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> shorthand is for whole-column replacement:
+<code class="docutils literal notranslate"><span class="pre">{SliceAll(),</span> <span class="pre">j}</span></code> plus a length-<code class="docutils literal notranslate"><span class="pre">size(0)</span></code> source vector.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">column_base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">column_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+
+<span class="n">column_base</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">2</span><span class="p">}},</span><span class="w"> </span><span class="n">column_values</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">column_base</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel=9, contiguous=true)
 data=[[1, 2, 30],
   [4, 5, 60],
   [7, 8, 90]]
 </pre></div>
 </div>
-<p>Example 6. <code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code> is rejected on the slice-spec convenience overload,
-because that overload is intentionally narrow.</p>
+<p>Example 7. The shorthand overload deliberately refuses <code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code>,
+because it is meant to stay narrow and explicit.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">mat</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">}},</span><span class="w"> </span><span class="n">col_values</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">  </span><span class="n">column_base</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">}},</span><span class="w"> </span><span class="n">column_values</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
@@ -206,9 +223,23 @@ because that overload is intentionally narrow.</p>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::index_put_(specs, value, accumulate): accumulate=true is unsupported for slice-spec indexing; use Series index list overload instead
+</pre></div>
+</div>
+<p>Example 8. On the 1D single-integer-list path, duplicate integer indices with
+<code class="docutils literal notranslate"><span class="pre">accumulate=false</span></code> keep last-write behavior, just like <a class="reference internal" href="put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">put_()</span></code></span></a>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">overlap_inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+<span class="n">overlap_inplace</span><span class="p">.</span><span class="n">index_put_</span><span class="p">({</span><span class="n">overlap_idx</span><span class="p">},</span><span class="w"> </span><span class="n">overlap_values</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">overlap_inplace</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[0, 20, 2, 30, 4]
 </pre></div>
 </div>
 </section>
@@ -216,29 +247,27 @@ because that overload is intentionally narrow.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Reach for the <code class="docutils literal notranslate"><span class="pre">Series</span></code> index-list overloads when you want the real advanced
-indexing surface, especially if <code class="docutils literal notranslate"><span class="pre">accumulate</span></code> matters.</p></li>
-<li><p>Reach for the <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> convenience overload only for the narrow 1D/2D
-shorthand it was designed for.</p></li>
-<li><p>For richer selector-based writes, <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a> is
-usually easier to read than constructing index tensors by hand.</p></li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">Series</span></code> index-list overloads when you want the real advanced-index surface.</p></li>
+<li><p>Use the scalar or <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> conveniences only when their narrower contract matches your intent exactly.</p></li>
+<li><p>Bool masks are supported on the general overloads.</p></li>
+<li><p>For richer selector-based writes, <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a> is usually clearer than manufacturing index tensors by hand.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index</span></code></span></a>: the read-side advanced-index entrypoint.</p></li>
+<li><p><a class="reference internal" href="index_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_put</span></code></span></a>: copy-returning sibling.</p></li>
+<li><p><a class="reference internal" href="put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::put_</span></code></span></a>: flat write semantics.</p></li>
 <li><p><a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put_</span></code></span></a>: selector-based in-place writes.</p></li>
-<li><p><a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put</span></code></span></a>: selector-based copy-returning writes.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="index_put.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">index_put</span>
   </a>
-  <a class="next-link" href="clamp_max.html">
+  <a class="next-link" href="take.html">
     <span class="label">Next</span>
-    <span class="title">clamp_max</span>
+    <span class="title">take</span>
   </a>
 </div>
 </section>
@@ -331,8 +360,8 @@ usually easier to read than constructing index tensors by hand.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Series::index</a></li>
-      <li>Next: <a href="clamp_max.html" title="next chapter">Series::clamp_max</a></li>
+      <li>Previous: <a href="index_put.html" title="previous chapter">Series::index_put</a></li>
+      <li>Next: <a href="take.html" title="next chapter">Series::take</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

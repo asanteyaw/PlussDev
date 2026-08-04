@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Registry::push" href="push.html" />
+    <link rel="next" title="Registry::nstate" href="nstate.html" />
     <link rel="prev" title="Registry::nfields" href="nfields.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -36,18 +36,24 @@
 
           <div class="body" role="main">
             
-  <section id="registry-notnull">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2b5b356ffe3c -->
+<section id="registry-notnull">
 <h1>Registry::notnull<a class="headerlink" href="#registry-notnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">notnull</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">notnull</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
+<p>The logical complement of <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a> — returns a new registry where
+every field’s values are replaced by a boolean flag for whether each value is
+<strong>not</strong> null, applying <a class="reference internal" href="../slot/notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::notnull()</span></code></span></a> to every field via
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a>. Works uniformly across every field regardless of its own value
+kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,35 +62,63 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry with every field’s values replaced by boolean not-null flags,
+one per original value.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. A field with one null value among numeric values.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">monostate</span><span class="p">{}},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">to_json</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Slot&quot;,
+  &quot;defined&quot;: true,
+  &quot;size&quot;: 3,
+  &quot;values&quot;: [
+    &quot;Series[bool]&quot;,
+    &quot;Series[bool]&quot;,
+    &quot;Series[bool]&quot;
+  ]
+}
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">notnull()</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> with every flag inverted.</p></li>
+<li><p>Never throws on a mismatched field kind — unlike <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>.</p></li>
+<li><p>Full per-value semantics documented on <a class="reference internal" href="../slot/notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::notnull</span></code></span></a>.</p></li>
+<li><p>Never mutates the receiver — always returns a new <code class="docutils literal notranslate"><span class="pre">Registry</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::isnull</span></code></span></a>: the logical complement.</p></li>
+<li><p><a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::invalid</span></code></span></a>: a related but distinct check.</p></li>
+<li><p><a class="reference internal" href="../catalog/notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::notnull</span></code></span></a>: the equivalent operation on the
+kindle model.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nfields.html">
     <span class="label">Previous</span>
     <span class="title">nfields</span>
   </a>
-  <a class="next-link" href="push.html">
+  <a class="next-link" href="nstate.html">
     <span class="label">Next</span>
-    <span class="title">push</span>
+    <span class="title">nstate</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 
@@ -137,7 +171,7 @@ Value produced by this call.</p>
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="nfields.html" title="previous chapter">Registry::nfields</a></li>
-      <li>Next: <a href="push.html" title="next chapter">Registry::push</a></li>
+      <li>Next: <a href="nstate.html" title="next chapter">Registry::nstate</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

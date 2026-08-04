@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a5d95d2177b7 -->
 
 # Registry::save_txt
 
@@ -82,7 +83,7 @@ id	city
     <span class="label">Previous</span>
     <span class="title">save_parquet</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="set.html">
     <span class="label">Next</span>
     <span class="title">select</span>
   </a>

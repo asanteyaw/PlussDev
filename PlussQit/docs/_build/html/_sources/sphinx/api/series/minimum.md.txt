@@ -13,75 +13,99 @@ Series::minimum(double rhs) const -> Series
 
 ## What It Does
 
-Elementwise minimum: `out[i] = min(self[i], rhs[i])` (or `min(self[i], rhs)` for the
-scalar overload) — the mirror image of [`maximum`](maximum.md).
+Returns the elementwise minimum between `self` and `rhs`.
+
+This is the value-wise mirror of [`maximum`](maximum.md): at each broadcasted
+position, the smaller side wins.
+
+Like `maximum()`, this is not a reduction. It preserves the broadcasted shape
+and chooses one value per position.
 
 ## Parameters
 
 **rhs** (`const Series&` or `double`)
 
-The other operand. The `Series` overload broadcasts against `self`; the `double`
-overload compares every element against the same scalar.
+The other operand.
+
+For `minimum(const Series& rhs)`:
+
+- `rhs` is broadcast against `self`
+- the result dtype is the promoted dtype of the two operands
+- both sides are treated as ordinary values, not as distinguished "data" versus
+  "bound"
+
+For `minimum(double rhs)`:
+
+- every element is compared against one shared scalar
+- the scalar is materialized onto `self`'s lane, so the scalar overload follows
+  `self`'s dtype/platform path directly
 
 ## Returns
 
 `Series`
-    A new `Series` holding the elementwise minimum, promoted to the wider of the two
-    operand dtypes for the `Series` overload.
+    A new series containing the smaller value at each broadcasted position.
 
 ## Gradient
 
-`minimum` is differentiable in both operands.
+`minimum()` is differentiable in both operands.
+
+The backward rule is:
+
+- gradient flows to `self` where `self <= rhs`
+- gradient flows to `rhs` where `self > rhs`
+
+The tie rule is intentionally the same as `maximum()`, not the opposite.
 
 ```{note} Tie-breaking convention
-At a tie (`self[i] == rhs[i]`), the full gradient again goes to `self` — the same
-"ties favor self" rule as [`maximum`](maximum.md), not a mirrored "ties favor rhs"
-rule. Keeping one tie-breaking direction across both ops (rather than each picking
-its own) is what makes `relu()`, `clamp_min()`/`clamp_max()`, and `maximum()`/`minimum()`
-compose into a single consistent derivative at their shared boundaries.
+When `self[i] == rhs[i]`, the full gradient still goes to `self`. The engine
+uses one consistent comparison-boundary convention across
+`maximum()`/`minimum()`/`clamp_min()`/`clamp_max()` rather than flipping the tie
+direction between `max`-like and `min`-like operations.
 ```
-
-Formally: `d(out)/d(self[i]) = 1` where `self[i] <= rhs[i]`, else `0`.
-`d(out)/d(rhs[i]) = 1` where `self[i] > rhs[i]`, else `0`.
 
 ## Examples
 
-Example 1. Elementwise minimum between two same-shaped tensors.
+Example 1. The `Series` overload broadcasts a row-shaped peer across the leading
+dimension and chooses the smaller value at each position.
 
 ```cpp
-auto x = pluss::make_series(std::vector<double>{1, 5, 3}, {3});
-auto y = pluss::make_series(std::vector<double>{4, 2, 3}, {3});
-std::cout << x.minimum(y);
+auto grid = pluss::make_series(
+    std::vector<double>{1, 5, 3, 4, 2, 8},
+    {2, 3});
+auto peer = pluss::make_series(std::vector<double>{2, 6, 1}, {3});
+
+std::cout << grid.minimum(peer);
 ```
 
 ### Output
 
 ```text
-pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[1, 2, 3]
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 5, 1],
+  [2, 2, 1]]
 ```
 
-Example 2. The scalar overload caps every element at one bound from above.
+This is the same broadcast pattern as `maximum()`, but now each location keeps
+the smaller side.
+
+Example 2. The scalar overload caps every element against one shared ceiling.
 
 ```cpp
-auto x = pluss::make_series(std::vector<double>{1, 5, 3}, {3});
-std::cout << x.minimum(2.5);
+std::cout << grid.minimum(4.5);
 ```
 
 ### Output
 
 ```text
-pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[1, 2.5, 2.5]
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 4.5, 3],
+  [4, 2, 4.5]]
 ```
 
-Indices 1 and 2 (`5` and `3`, both `> 2.5`) are pulled down to the bound; index 0
-(`1 < 2.5`) already satisfies it and passes through unchanged. This scalar overload
-is exactly what [`clamp_max`](clamp_max.md) does with a friendlier name for the
-"cap from above" use case.
+Only positions above `4.5` are pulled down. This is the same numerical idea as
+[`clamp_max`](clamp_max.md), but expressed as an ordinary binary comparison.
 
-Example 3. Gradient split at a tie — same operands as `maximum`'s Example 3, to
-show the two ops attribute the tied position identically.
+Example 3. The tie still attributes its derivative to `self`.
 
 ```cpp
 auto a = pluss::make_series(std::vector<double>{1, 5, 2}, {3});
@@ -107,23 +131,27 @@ db=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, c
 data=[0, 1, 0]
 ```
 
-Index 0 (`a=1 < b=4`): `minimum` picks `a`, so the gradient flows to `a`. Index 1
-(`a=5 > b=2`): `minimum` picks `b`, gradient flows to `b`. Index 2 is the tie
-(`a=2 == b=2`): gradient goes to `a` (`da=1`, `db=0`) — the same direction as
-`maximum`'s tie in its own Example 3, not the opposite.
+Index `2` is again the decisive boundary case: the output value is shared, but
+the derivative still belongs to `a`.
 
 ## Notes
 
-- `minimum` is a plain elementwise comparison, not a reduction — for "the smallest
-  element across a dimension," see the reduction surface (`amin`) instead.
-- The `Series`-arg overload broadcasts; the `double`-arg overload does not need to.
+- `minimum()` is non-mutating. The in-place sibling `minimum_()` exists, but the
+  method documented here returns a fresh value.
+- `minimum(x, scalar)` is often the clearer spelling when the scalar acts as a
+  conceptual ceiling; [`clamp_max`](clamp_max.md) is the clearer spelling when
+  you want to emphasize the one-sided-bound intent.
+- This is not `amin`. If you want a reduction over an axis, use the reduction
+  surface.
 
 ## See Also
 
-- [`Series::maximum`](maximum.md): the elementwise counterpart, with the same
-  tie-breaking convention (not a mirrored one).
-- [`Series::clamp_max`](clamp_max.md), [`Series::clamp_min`](clamp_min.md):
-  one-sided bounds built from the same underlying comparison.
+- [`Series::maximum`](maximum.md): the elementwise counterpart. Ties still favor
+  `self` there too.
+- [`Series::clamp_max`](clamp_max.md): one-sided upper bound with the same
+  inclusive comparison boundary.
+- [`Series::clamp_min`](clamp_min.md): one-sided lower bound from the same
+  comparison family.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="maximum.html">

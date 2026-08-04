@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../_static/api_nav.js?v=55000b1c"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -80,14 +80,12 @@ owned state.</p>
 </pre></div>
 </div>
 <p>Inspect:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">registry</span><span class="p">.</span><span class="n">nslots</span><span class="p">();</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">nfields</span><span class="p">();</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">keys</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">registry</span><span class="p">.</span><span class="n">nfields</span><span class="p">();</span>
+<span class="n">registry</span><span class="p">.</span><span class="n">fields</span><span class="p">();</span>
 <span class="n">registry</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;field&quot;</span><span class="p">);</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">slot</span><span class="p">(</span><span class="s">&quot;field&quot;</span><span class="p">);</span>
 <span class="n">registry</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;field&quot;</span><span class="p">);</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">slot_sizes</span><span class="p">();</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">type_profiles</span><span class="p">();</span>
+<span class="n">registry</span><span class="p">.</span><span class="n">sizes</span><span class="p">();</span>
+<span class="n">registry</span><span class="p">.</span><span class="n">profiles</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Select and reshape:</p>
@@ -104,13 +102,13 @@ owned state.</p>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">slot</span><span class="p">;</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">apply_all</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">slot</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">map</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">slot</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">slot</span><span class="p">;</span>
 <span class="p">});</span>
 </pre></div>
 </div>
 <p>Update fields:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">set_slot</span><span class="p">(</span><span class="s">&quot;new_field&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">slot</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;new_field&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">slot</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">pushed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -119,16 +117,16 @@ owned state.</p>
 </pre></div>
 </div>
 </section>
-<section id="stream-compatibility">
-<h2>Stream compatibility<a class="headerlink" href="#stream-compatibility" title="Link to this heading">¶</a></h2>
-<p>Some Registry operations require slots that can map cleanly to streams.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">registry</span><span class="p">.</span><span class="n">is_stream_compatible</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<section id="kindle-bridge">
+<h2>Kindle bridge<a class="headerlink" href="#kindle-bridge" title="Link to this heading">¶</a></h2>
+<p>Some Registry operations require slots that can map cleanly to streams. The public
+surface no longer exposes separate compatibility checkers; <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code> is the
+single contract point.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>
-</pre></div>
-</div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">ensure_stream_compatible</span></code> when failure should be explicit:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">registry</span><span class="p">.</span><span class="n">ensure_stream_compatible</span><span class="p">(</span><span class="s">&quot;export&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>

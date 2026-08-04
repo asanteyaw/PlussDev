@@ -1,0 +1,73 @@
+# TimeIndex::take
+
+[Back to TimeIndex API Reference](../../timeindex_api_reference)
+
+## Signature
+
+```cpp
+TimeIndex::take(const pluss::Series& indices) const -> TimeIndex
+```
+
+## What It Does
+
+Selects timestamps by integer position.
+
+Use this when you already have an explicit position vector such as an `argsort`
+result or a custom gather order.
+
+`take()` is the general position-based gather surface.
+
+## Parameters
+
+**indices**
+
+A 1D integer `Series` of positions to gather.
+
+## Returns
+
+`TimeIndex`
+    A re-ordered or subset index.
+
+## Examples
+
+```cpp
+auto out = base.take(pluss::make_series(std::vector<std::int64_t>{4, 2, 0}));
+std::cout << pluss::print_timeline(out) << "\n";
+```
+
+### Output
+
+```text
+Timeline(shape=[3], tz=UTC)
+[ 2024-11-01 01:20:00, 2024-11-01 00:40:00, 2024-11-01 00:00:00 ]
+```
+
+Example 2. Reuse an `argsort()` result to physically reorder the axis.
+
+```cpp
+auto order = dup.argsort();
+auto sorted = dup.take(order);
+std::cout << pluss::print_series(order) << "\n";
+std::cout << pluss::print_timeline(sorted) << "\n";
+```
+
+## Notes
+
+- `take()` is explicit-position logic. It does not interpret the integers as
+  timestamps or labels.
+
+## See Also
+
+- [`TimeIndex::argsort`](argsort.md)
+- [`TimeIndex::slice_index`](slice_index.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="argsort.html">
+    <span class="label">Previous</span>
+    <span class="title">argsort</span>
+  </a>
+  <a class="next-link" href="slice_index.html">
+    <span class="label">Next</span>
+    <span class="title">slice_index</span>
+  </a>
+</div>

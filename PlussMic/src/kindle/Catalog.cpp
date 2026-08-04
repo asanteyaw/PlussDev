@@ -72,6 +72,19 @@ std::vector<std::string> normalize_names(const std::vector<std::string>& names) 
   return out;
 }
 
+Catalog project_catalog(const Catalog& catalog,
+                        const std::vector<std::string>& names,
+                        std::string_view where) {
+  PLUSS_CHECK(catalog.defined(), "Catalog: undefined handle");
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(names.size());
+  for (const auto& name : names) {
+    PLUSS_CHECK(catalog.has(name), std::string(where) + ": unknown key '" + name + "'");
+    out.emplace_back(name, catalog.at(name));
+  }
+  return Catalog(std::move(out));
+}
+
 std::unordered_set<std::string> normalize_name_set(std::initializer_list<std::string_view> names) {
   const auto list = normalize_names(names);
   return std::unordered_set<std::string>(list.begin(), list.end());
@@ -130,10 +143,10 @@ pluss::Series bool_series_from_mask(const std::vector<bool>& keep) {
 
 std::vector<std::int64_t> sort_indices_for_keys(const std::vector<Stream>& key_streams,
                                                 const std::vector<bool>& ascending) {
-  PLUSS_CHECK(!key_streams.empty(), "Catalog::sort_by: no key streams provided");
+  PLUSS_CHECK(!key_streams.empty(), "Catalog::sort: no key streams provided");
   const auto n = key_streams.front().size();
   for (const auto& s : key_streams) {
-    PLUSS_CHECK(s.size() == n, "Catalog::sort_by: all key streams must have same length");
+    PLUSS_CHECK(s.size() == n, "Catalog::sort: all key streams must have same length");
   }
 
   std::vector<pluss::table::Thread> key_threads;
@@ -544,6 +557,7 @@ public:
 
 #include "kindle/ops/catalog/CatalogLifecycleAndIO.inc"
 #include "kindle/ops/catalog/CatalogCoreOps.inc"
+#include "kindle/ops/catalog/CatalogReduce.inc"
 #include "kindle/ops/catalog/CatalogAccessors.inc"
 #include "kindle/ops/catalog/CatalogTextAndMutation.inc"
 #include "kindle/ops/catalog/CatalogTabelizeAndInternals.inc"

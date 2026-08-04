@@ -27,7 +27,6 @@ namespace detail {
 class AxelImpl;
 }
 
-class AxelFieldAccessor;
 class AxelFieldAxisAccessor;
 class AxelCastAccessor;
 class AxelNoteAccessor;
@@ -48,11 +47,15 @@ public:
   std::int64_t depth() const;
   std::int64_t size() const;
   bool empty() const;
-  AxelFieldAccessor fields(std::span<const std::string_view> keys) const;
-  AxelFieldAccessor fields(std::initializer_list<std::string_view> keys) const;
+  Axel fields(std::span<const std::string_view> keys) const;
+  Axel fields(std::initializer_list<std::string_view> keys) const;
   template <pluss::detail::StringViewNameRange NameRange>
-  AxelFieldAccessor fields(const NameRange& keys) const;
+  Axel fields(const NameRange& keys) const;
   AxelFieldAxisAccessor fieldaxis() const;
+  AxelCastAccessor cast() const;
+  AxelCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  AxelNoteAccessor nt() const;
+  AxelTimelineAccessor tl() const;
   Registry registry(std::int64_t i) const;
   const std::vector<Registry>& registries() const;
   const std::optional<Slot>& labels() const;
@@ -61,12 +64,6 @@ public:
   Axel tail(std::int64_t n) const;
   Axel slice(std::int64_t start, std::int64_t stop) const;
   Axel map(const std::function<Registry(const Registry&)>& fn) const;
-  Axel select(std::span<const std::string_view> keys) const;
-  Axel select(std::initializer_list<std::string_view> keys) const;
-  template <pluss::detail::StringViewNameRange NameRange>
-  Axel select(const NameRange& keys) const {
-    return pluss::detail::with_name_span(keys, [&](auto names) { return select(names); });
-  }
   Axel drop(std::span<const std::string_view> fields) const;
   Axel drop(std::initializer_list<std::string_view> fields) const;
   template <pluss::detail::StringViewNameRange NameRange>
@@ -75,7 +72,6 @@ public:
   }
   Axel rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const;
   Axel rename(std::string_view from, std::string_view to) const;
-  Axel apply_slot(std::string_view key, const std::function<Slot(const Slot&)>& fn) const;
   Axel concat_depth(const Axel& other) const;
 
   bool has(std::string_view field) const;
@@ -107,83 +103,9 @@ public:
 
 private:
   explicit Axel(pluss::msharp::intrusive_ptr<detail::AxelImpl> impl);
-  Axel isnull(std::span<const std::string_view> fields) const;
-  Axel isnull(std::initializer_list<std::string_view> fields) const;
-  Axel notnull(std::span<const std::string_view> fields) const;
-  Axel notnull(std::initializer_list<std::string_view> fields) const;
-  Axel invalid(std::span<const std::string_view> fields) const;
-  Axel invalid(std::initializer_list<std::string_view> fields) const;
-  Axel fillnull(double value, std::span<const std::string_view> fields) const;
-  Axel fillnull(double value, std::initializer_list<std::string_view> fields) const;
-  Axel fillnull(std::string_view value, std::span<const std::string_view> fields) const;
-  Axel fillnull(std::string_view value, std::initializer_list<std::string_view> fields) const;
-  Axel fillnull(const pluss::Timeline& value, std::span<const std::string_view> fields) const;
-  Axel fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields) const;
-  Axel fillnull(const pluss::TimeIndex& value, std::span<const std::string_view> fields) const;
-  Axel fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields) const;
-  Axel dropnull(std::span<const std::string_view> fields) const;
-  Axel dropnull(std::initializer_list<std::string_view> fields) const;
-  Axel distinct(std::span<const std::string_view> fields,
-                pluss::kindle::DistinctOptions options = {}) const;
-  Axel distinct(std::initializer_list<std::string_view> fields,
-                pluss::kindle::DistinctOptions options = {}) const;
-  Axel freq(std::span<const std::string_view> fields,
-            pluss::kindle::FreqOptions options = {}) const;
-  Axel freq(std::initializer_list<std::string_view> fields,
-            pluss::kindle::FreqOptions options = {}) const;
-  Axel ndistinct(std::span<const std::string_view> fields,
-                 pluss::kindle::DistinctOptions options = {}) const;
-  Axel ndistinct(std::initializer_list<std::string_view> fields,
-                 pluss::kindle::DistinctOptions options = {}) const;
-  Axel cast(std::span<const std::string_view> fields,
-            pluss::table::ThreadCastTarget target,
-            const pluss::table::ThreadCastOptions& options = {}) const;
-  Axel cast(std::initializer_list<std::string_view> fields,
-            pluss::table::ThreadCastTarget target,
-            const pluss::table::ThreadCastOptions& options = {}) const;
-  Axel astype(std::span<const std::string_view> fields,
-              pluss::codem::ScalarType dtype) const;
-  Axel astype(std::initializer_list<std::string_view> fields,
-              pluss::codem::ScalarType dtype) const;
   const detail::AxelImpl& impl_ref_() const;
 
   pluss::msharp::intrusive_ptr<detail::AxelImpl> impl_{nullptr};
-};
-
-class AxelFieldAccessor {
-public:
-  explicit AxelFieldAccessor(Axel base, std::vector<std::string> keys);
-
-  AxelCastAccessor cast() const;
-  AxelCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
-  AxelNoteAccessor nt() const;
-  AxelTimelineAccessor tl() const;
-
-  Axel fillnull(double value) const;
-  Axel fillnull(std::string_view value) const;
-  Axel fillnull(const char* value) const {
-    return fillnull(std::string_view{value != nullptr ? value : ""});
-  }
-  Axel fillnull(const pluss::Timeline& value) const;
-  Axel fillnull(const pluss::TimeIndex& value) const;
-  Axel dropnull() const;
-  Axel isnull() const;
-  Axel notnull() const;
-  Axel invalid() const;
-  Axel distinct(pluss::kindle::DistinctOptions options = {}) const;
-  Axel freq(pluss::kindle::FreqOptions options = {}) const;
-  Axel ndistinct(pluss::kindle::DistinctOptions options = {}) const;
-  Axel astype(pluss::codem::ScalarType dtype) const;
-
-private:
-  friend class AxelCastAccessor;
-  friend class AxelNoteAccessor;
-  friend class AxelTimelineAccessor;
-  template <class Fn>
-  Axel map_selected_(Fn&& fn) const;
-
-  Axel base_{};
-  std::vector<std::string> keys_{};
 };
 
 class AxelFieldAxisAccessor {
@@ -311,7 +233,7 @@ private:
 std::ostream& operator<<(std::ostream& os, const Axel& axel);
 
 template <pluss::detail::StringViewNameRange NameRange>
-AxelFieldAccessor Axel::fields(const NameRange& keys) const {
+Axel Axel::fields(const NameRange& keys) const {
   return pluss::detail::with_name_span(keys, [&](auto names) { return fields(names); });
 }
 

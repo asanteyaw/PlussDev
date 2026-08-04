@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,9 +52,9 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Adds a stream under a new key, or overwrites the stream already at an existing key — an
-upsert, unlike <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a>/<a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>/<a class="reference internal" href="rename.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rename()</span></code></span></a>, which
-all throw on an unknown key. A new key is appended at the end of the catalog’s key order;
-an existing key keeps its original position, with only its stream replaced.</p>
+upsert, unlike <a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>/<a class="reference internal" href="rename.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rename()</span></code></span></a>, which throw on an unknown
+key. A new key is appended at the end of the catalog’s key order; an existing key keeps
+its original position, with only its stream replaced.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Braced-list literals can be ambiguous between the two multi-item overloads

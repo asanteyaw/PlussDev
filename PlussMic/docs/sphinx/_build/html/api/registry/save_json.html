@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5ed48f7e6bb0 -->
 <section id="registry-save-json">
 <h1>Registry::save_json<a class="headerlink" href="#registry-save-json" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -50,13 +51,13 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Writes the registry to a JSON file. Unlike every other <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method,
-<code class="docutils literal notranslate"><span class="pre">save_json()</span></code> does <strong>not</strong> unconditionally require the registry to be
-stream-compatible — it branches on <a class="reference internal" href="is_stream_compatible.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_stream_compatible()</span></code></span></a>:</p>
+<code class="docutils literal notranslate"><span class="pre">save_json()</span></code> does <strong>not</strong> unconditionally require the registry to bridge cleanly
+into the kindle model:</p>
 <ul class="simple">
-<li><p><strong>Stream-compatible</strong> (every field holds one uniform value kind): converts via
+<li><p><strong>Uniform field kinds</strong>: converts via
 <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> and writes a row-major array-of-objects JSON, same
 shape as <code class="docutils literal notranslate"><span class="pre">Catalog::save_json()</span></code>.</p></li>
-<li><p><strong>Not stream-compatible</strong> (some field genuinely mixes value kinds): falls back to
+<li><p><strong>Mixed field kinds</strong>: falls back to
 writing this registry’s own <a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></span></a> output directly — the <code class="docutils literal notranslate"><span class="pre">config</span></code>
 parameter is ignored in this path.</p></li>
 </ul>
@@ -75,7 +76,7 @@ registry at all, via its <code class="docutils literal notranslate"><span class=
 The destination file path.</p>
 <p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>, optional)
 A generic configuration bundle, translated into the underlying JSON writer
-options. Ignored when the registry is not stream-compatible (the <code class="docutils literal notranslate"><span class="pre">to_json()</span></code>
+options. Ignored when the registry takes the <code class="docutils literal notranslate"><span class="pre">to_json()</span></code>
 fallback path).</p>
 </section>
 <section id="returns">
@@ -123,8 +124,6 @@ per-value output, rather than throwing.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;mixed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;is_stream_compatible: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">is_stream_compatible</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
 <span class="n">mixed</span><span class="p">.</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;mixed.json&quot;</span><span class="p">);</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span><span class="w"> </span><span class="n">saved</span><span class="p">(</span><span class="s">&quot;mixed.json&quot;</span><span class="p">);</span>
@@ -134,8 +133,7 @@ per-value output, rather than throwing.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>is_stream_compatible: 0
-{
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
   &quot;_type&quot;: &quot;Registry&quot;,
   &quot;defined&quot;: true,
   &quot;nfields&quot;: 2,
@@ -174,7 +172,7 @@ ambiguous first value; see <a class="reference internal" href="to_json.html"><sp
 <ul class="simple">
 <li><p>The only <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method that can succeed on a genuinely heterogeneous registry —
 see the important callout above.</p></li>
-<li><p>The stream-compatible path’s JSON shape matches
+<li><p>The uniform-kind path’s JSON shape matches
 <a class="reference internal" href="../catalog/save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::save_json</span></code></span></a>.</p></li>
 <li><p>The fallback path’s shape matches <a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_json</span></code></span></a> exactly, since
 it writes that method’s output verbatim.</p></li>
@@ -189,10 +187,8 @@ no-config overload — <code class="docutils literal notranslate"><span class="p
 <ul class="simple">
 <li><p><a class="reference internal" href="load_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::load_json</span></code></span></a>: the read-side counterpart for the
 stream-compatible shape.</p></li>
-<li><p><a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_json</span></code></span></a>: the per-value output this method falls back to
-for heterogeneous registries.</p></li>
-<li><p><a class="reference internal" href="is_stream_compatible.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::is_stream_compatible</span></code></span></a>: the check that decides
-which path this method takes.</p></li>
+<li><p><a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_json</span></code></span></a>: the per-value output this method falls back
+to for heterogeneous registries.</p></li>
 <li><p><a class="reference internal" href="../catalog/save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::save_json</span></code></span></a>: the equivalent saver on the
 kindle model.</p></li>
 </ul>

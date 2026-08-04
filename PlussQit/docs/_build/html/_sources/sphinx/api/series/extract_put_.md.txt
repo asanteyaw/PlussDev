@@ -10,52 +10,77 @@ Series::extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Seri
 
 ## What It Does
 
-Mutates the current series by writing `values` into the region selected by
-`specs`, then returns `*this`.
+Writes into the current series through the full `ExtractSpec` selector language,
+mutates in place, and returns `*this`.
 
-Conceptually, `extract_put_()` is "selector-based assignment" for the same
-selector language documented on [`extract()`](extract.md). The implementation
-normalizes the selector, materializes any non-view pieces into explicit per-axis
-index series, and then routes the actual write through `index_put_()`. That is
-why it can handle both easy cases like a whole column write and harder cases
-like reverse-step slices or advanced masks.
+This is the write-side counterpart to [`extract()`](extract.md). If
+[`traverse_put_()`](traverse_put_.md) is the strict "only write through a
+plain view" surface, `extract_put_()` is the broader surface that accepts
+selectors requiring materialization: reverse slices, boolean masks, integer
+index series, and mixed selector forms.
+
+The mental model is:
+
+- `extract()` selects values
+- `extract_put_()` selects destinations
+- the selected destinations are then filled from `values`
+
+Internally, non-trivial selectors are normalized into explicit index series and
+the final update is routed through `index_put_()`. That is why this method can
+write through selector shapes that are not representable as a simple chained
+view.
 
 ## Parameters
 
 **specs** (`pluss::msharp::RangeView::Of<ExtractSpec>`)
 
-The write selector.
+The destination selector.
 
-Everything important about [`extract()`](extract.md) selector semantics carries
-over here:
+This method accepts the same broad selector language documented on
+[`extract()`](extract.md), including:
 
-- scalar indices collapse one source axis
-- identity slices preserve the full axis
-- negative-step slices are legal
-- bool/int advanced index series are legal
-- `NewAxis` is accepted but does not create an extra writable destination axis
+- scalar integer indices
+- `SliceAll()`
+- bounded and unbounded slice ranges
+- negative-step slices
+- boolean mask series
+- integer index series
+- `Ellipsis`
+- `NewAxis`
+
+Important details:
+
+- Scalar indices consume one source axis and target a narrower destination.
+- Identity slices preserve the full addressed axis.
+- Negative-step slices are legal here, even though they are rejected by
+  [`traverse_put_()`](traverse_put_.md).
+- Boolean and integer advanced selectors are legal here.
+- `NewAxis` is accepted for selector compatibility, but it does not create a
+  new writable axis. It is ignored for destination addressing because it
+  consumes no source dimension.
 
 **values** (`const Series&`)
 
-The replacement data.
+The source data to assign into the selected destination positions.
 
-`values` is first converted to the target dtype/platform if necessary, then must
-satisfy one of two cardinality rules:
+`values` follows two cardinality rules:
 
-- `numel() == 1`, which broadcasts to the full selection
-- `numel()` exactly equals the selected element count
+- If `values.numel() == 1`, it broadcasts across the full selection.
+- Otherwise `values.numel()` must equal the selected element count exactly.
 
-If `values` is non-scalar and its element count does not match the selection,
-the call throws.
+Before writing, `values` is converted to the destination platform and dtype if
+needed. Matching is by element count, not by preserving the original shape of
+`values`; non-scalar sources are flattened to the selected logical order before
+the write is applied.
 
 ## Returns
 
 `Series&`
-    The same mutated series handle.
+    The same series, after mutation.
 
 ## Examples
 
-Example 1. A scalar source broadcasts across a full selected column.
+Example 1. A scalar source broadcasts across an entire selected column.
 
 ```cpp
 auto grid = pluss::make_series(
@@ -82,8 +107,11 @@ data=[[10, -1, 12, 13],
   [30, -1, 32, 33]]
 ```
 
-Example 2. A negative-step slice is not a cheap view write, but
-`extract_put_()` still handles it by materializing the indexed positions.
+This is the simplest successful case: the selector names three destination
+positions, and a scalar source is replicated into each one.
+
+Example 2. A reverse slice is legal here, so the write follows the selector's
+logical visitation order rather than physical storage order.
 
 ```cpp
 const std::vector<ExtractSpec> reverse_write{
@@ -108,12 +136,12 @@ data=[[10, -1, 12, 13],
   [30, -1, 32, 33]]
 ```
 
-The selected positions are the row-1 columns visited by the reverse slice:
-first column `3`, then column `1`. The replacement values are consumed in that
-same logical order.
+The selector visits row `1`, columns `3` then `1`. The two source elements are
+consumed in exactly that order, so `90` lands in column `3` and `70` lands in
+column `1`.
 
-Example 3. `NewAxis` is accepted in the selector, but it does not create a new
-writable target dimension. It is ignored for target addressing.
+Example 3. `NewAxis` may appear in the selector, but it does not add a new
+writeable destination dimension.
 
 ```cpp
 const std::vector<ExtractSpec> with_newaxis{
@@ -139,7 +167,10 @@ data=[[100, -1, 12, 13],
   [300, -1, 32, 33]]
 ```
 
-Example 4. A non-scalar source must match the selected element count exactly.
+Semantically this still means "write into column `0` of every row." `NewAxis`
+does not create a phantom target axis that `values` must somehow match.
+
+Example 4. Non-scalar sources must match the selected element count exactly.
 
 ```cpp
 try {
@@ -164,22 +195,28 @@ try {
 Series::extract_put_: source must be scalar or match selected element count
 ```
 
+The selector picks only two destination positions, so a three-element
+replacement series is invalid.
+
 ## Notes
 
-- `extract_put_()` mutates in place. If you need copy-returning behavior, use
+- `extract_put_()` is the richest selector-write surface on `Series`.
+- If the selector is naturally view-like and you want that restriction enforced
+  up front, prefer [`traverse_put_()`](traverse_put_.md).
+- If you want the same selector power without mutating the current object, use
   [`extract_put()`](extract_put.md).
-- For richer write selectors, `extract_put_()` is usually clearer than
-  `index_put_()` because the selector itself documents the intended region.
-- This surface accepts selectors that a pure view traversal cannot represent,
-  such as reverse-step slices.
+- For flat or explicit index-list writes, [`index_put_()`](index_put_.md) can
+  be more direct, but for most readable N-D region writes `extract_put_()` is
+  the clearer API.
 
 ## See Also
 
 - [`Series::extract_put`](extract_put.md): same selector language, but returns a
   modified copy.
-- [`Series::index_put_`](index_put_.md): write through explicit index tensors or
-  constrained convenience overloads.
-- [`Series::extract`](extract.md): selector-based reads.
+- [`Series::traverse_put_`](traverse_put_.md): stricter write surface that
+  accepts only view-representable selectors.
+- [`Series::extract`](extract.md): read through the same selector language.
+- [`Series::index_put_`](index_put_.md): explicit index-list writes.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="extract_put.html">

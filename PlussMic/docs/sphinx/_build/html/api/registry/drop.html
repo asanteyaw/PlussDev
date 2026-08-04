@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Registry::drop_empty" href="drop_empty.html" />
+    <link rel="next" title="Registry::dropnull" href="dropnull.html" />
     <link rel="prev" title="Registry::distinct" href="distinct.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e67d1621ad06 -->
 <section id="registry-drop">
 <h1>Registry::drop<a class="headerlink" href="#registry-drop" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
@@ -54,14 +55,14 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns a new registry with the named field(s) removed, keeping every other field
-in its original order. The complement of <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">select(keys)</span></code>
+in its original order. The complement of <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(keys)</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">fields(keys)</span></code>
 keeps only the named fields, <code class="docutils literal notranslate"><span class="pre">drop(keys)</span></code> keeps everything <em>except</em> them.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>An unknown key throws — drop() does not silently ignore it
 Every overload validates all requested keys against the registry’s fields before
 removing anything: a name that doesn’t exist throws <code class="docutils literal notranslate"><span class="pre">&quot;Registry::drop:</span> <span class="pre">unknown</span> <span class="pre">key</span> <span class="pre">'&lt;name&gt;'&quot;</span></code>.
-This is the same fail-fast behavior <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a> has, and the opposite
+This is the same fail-fast behavior <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(keys)</span></code></span></a> has, and the opposite
 of <a class="reference internal" href="has_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has_all()</span></code></span></a>/<a class="reference internal" href="has_any.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has_any()</span></code></span></a>, which report missing keys
 as <code class="docutils literal notranslate"><span class="pre">false</span></code> rather than throwing.</p>
 </div>
@@ -147,9 +148,9 @@ every overload, including passing a container from a variable (as in Example
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::select</span></code></span></a>: the complementary keep-only operation.</p></li>
-<li><p><a class="reference internal" href="drop_empty.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::drop_empty</span></code></span></a>: a related but distinct operation —
-drops fields by <em>emptiness</em>, not by name.</p></li>
+<li><p><a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields</span></code></span></a>: the complementary keep-only operation.</p></li>
+<li><p><a class="reference internal" href="prune.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::prune</span></code></span></a>: a related but distinct operation — drops fields
+by <em>emptiness</em>, not by name.</p></li>
 <li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::has</span></code></span></a> / <a class="reference internal" href="has_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::has_all</span></code></span></a>: non-throwing
 presence checks, useful for validating keys before calling <code class="docutils literal notranslate"><span class="pre">drop()</span></code> if you’re
 unsure they exist.</p></li>
@@ -161,9 +162,9 @@ model.</p></li>
     <span class="label">Previous</span>
     <span class="title">distinct</span>
   </a>
-  <a class="next-link" href="drop_empty.html">
+  <a class="next-link" href="dropnull.html">
     <span class="label">Next</span>
-    <span class="title">drop_empty</span>
+    <span class="title">dropnull</span>
   </a>
 </div>
 </section>
@@ -218,7 +219,7 @@ model.</p></li>
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="distinct.html" title="previous chapter">Registry::distinct</a></li>
-      <li>Next: <a href="drop_empty.html" title="next chapter">Registry::drop_empty</a></li>
+      <li>Next: <a href="dropnull.html" title="next chapter">Registry::dropnull</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

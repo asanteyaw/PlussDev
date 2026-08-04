@@ -11,6 +11,23 @@ Registry::~Registry() = default;
 
 Registry::Registry(pluss::msharp::intrusive_ptr<detail::RegistryImpl> impl) : impl_(std::move(impl)) {}
 
+namespace {
+
+Registry project_registry_fields(const Registry& registry,
+                                 const std::vector<std::string>& names,
+                                 std::string_view where) {
+  PLUSS_CHECK(registry.defined(), "Registry: undefined handle");
+  std::vector<std::pair<std::string, Slot>> out;
+  out.reserve(names.size());
+  for (const auto& name : names) {
+    PLUSS_CHECK(registry.has(name), std::string(where) + ": unknown field '" + name + "'");
+    out.emplace_back(name, registry.fields(name));
+  }
+  return Registry(std::move(out));
+}
+
+} // namespace
+
 Registry Registry::load(std::string_view source_type, std::string_view filepath) {
   return load(source_type, filepath, pluss::loader::Config{});
 }
@@ -106,6 +123,36 @@ std::int64_t Registry::nslots() const {
   return static_cast<std::int64_t>(impl_ref_().slots_.size());
 }
 
+std::int64_t Registry::minstate() const {
+  PLUSS_CHECK(defined(), "Registry: undefined handle");
+  if (impl_ref_().slots_.empty()) return 0;
+  std::int64_t out = impl_ref_().slots_.front().size();
+  for (const auto& slot : impl_ref_().slots_) {
+    out = std::min(out, slot.size());
+  }
+  return out;
+}
+
+std::int64_t Registry::maxstate() const {
+  PLUSS_CHECK(defined(), "Registry: undefined handle");
+  std::int64_t out = 0;
+  for (const auto& slot : impl_ref_().slots_) {
+    out = std::max(out, slot.size());
+  }
+  return out;
+}
+
+std::int64_t Registry::nstate() const {
+  PLUSS_CHECK(defined(), "Registry: undefined handle");
+  if (impl_ref_().slots_.empty()) return 0;
+  const auto n = impl_ref_().slots_.front().size();
+  for (const auto& slot : impl_ref_().slots_) {
+    PLUSS_CHECK(slot.size() == n,
+                "Registry::nstate: registry has ragged slot lengths; use minstate()/maxstate() or shape()");
+  }
+  return n;
+}
+
 std::int64_t Registry::nfields() const {
   return nslots();
 }
@@ -116,11 +163,7 @@ std::int64_t Registry::size() const {
 
 std::pair<std::int64_t, std::int64_t> Registry::shape() const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
-  std::int64_t max_len = 0;
-  for (const auto& slot : impl_ref_().slots_) {
-    max_len = std::max(max_len, slot.size());
-  }
-  return {max_len, nslots()};
+  return {maxstate(), nslots()};
 }
 
 bool Registry::empty() const { return nslots() == 0; }
@@ -138,20 +181,36 @@ const std::vector<std::string>& Registry::fields() const {
   return keys();
 }
 
-RegistryFieldAccessor Registry::fields(std::string_view key) const {
-  return RegistryFieldAccessor(*this, normalize_names(std::vector<std::string>{std::string(key)}));
+Slot Registry::fields(std::string_view key) const {
+  return slot(key);
 }
 
-RegistryFieldAccessor Registry::fields(std::span<const std::string_view> keys_sel) const {
-  return RegistryFieldAccessor(*this, normalize_names(keys_sel));
+Registry Registry::fields(std::span<const std::string_view> keys_sel) const {
+  return project(keys_sel);
 }
 
-RegistryFieldAccessor Registry::fields(std::initializer_list<std::string_view> keys_sel) const {
+Registry Registry::fields(std::initializer_list<std::string_view> keys_sel) const {
   return fields(std::span<const std::string_view>(keys_sel.begin(), keys_sel.size()));
 }
 
 RegistryFieldAxisAccessor Registry::fieldaxis() const {
   return RegistryFieldAxisAccessor(*this);
+}
+
+RegistryCastAccessor Registry::cast() const {
+  return RegistryCastAccessor(*this, fields(), {});
+}
+
+RegistryCastAccessor Registry::cast(const pluss::table::ThreadCastOptions& options) const {
+  return RegistryCastAccessor(*this, fields(), options);
+}
+
+RegistryNoteAccessor Registry::nt() const {
+  return RegistryNoteAccessor(*this, fields());
+}
+
+RegistryTimelineAccessor Registry::tl() const {
+  return RegistryTimelineAccessor(*this, fields());
 }
 
 bool Registry::has(std::string_view key) const {
@@ -208,6 +267,30 @@ std::optional<Slot> Registry::get_slot(std::string_view key) const {
 std::vector<Slot> Registry::slots() const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
   return impl_ref_().slots_;
+}
+
+Registry Registry::project(std::span<const std::string_view> fields_sel) const {
+  return project_registry_fields(*this, normalize_names(fields_sel), "Registry::fields");
+}
+
+Registry Registry::project(const std::vector<std::string>& fields_sel) const {
+  return project_registry_fields(*this, normalize_names(fields_sel), "Registry::fields");
+}
+
+Registry Registry::transform_fields(std::span<const std::string_view> fields_sel,
+                                    const std::function<Slot(const Slot&)>& fn) const {
+  PLUSS_CHECK(defined(), "Registry: undefined handle");
+  PLUSS_CHECK(static_cast<bool>(fn), "Registry::fields().map: fn is empty");
+  const auto names = normalize_names(fields_sel);
+  PLUSS_CHECK(!names.empty(), "Registry::fields: at least one field is required");
+  Registry out = *this;
+  for (const auto& name : names) {
+    PLUSS_CHECK(has(name), "Registry::fields: unknown field '" + name + "'");
+    auto transformed = fn(slot(name));
+    PLUSS_CHECK(transformed.defined(), "Registry::fields().map: function returned undefined Slot");
+    out.set_slot_(name, transformed);
+  }
+  return out;
 }
 
 bool Registry::is_stream_compatible() const {
@@ -307,42 +390,6 @@ Registry Registry::sample(std::int64_t n, std::optional<std::uint64_t> random_st
   return take(idx);
 }
 
-Registry Registry::select(std::span<const std::string_view> keys_sel) const {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
-  const auto names = normalize_names(keys_sel);
-  std::vector<std::pair<std::string, Slot>> out;
-  out.reserve(names.size());
-  for (const auto& n : names) {
-    if (!has(n)) {
-      throw pluss::Error("Registry::select: unknown key '" + n + "'");
-    }
-    out.emplace_back(n, slot(n));
-  }
-  return Registry(std::move(out));
-}
-
-Registry Registry::select(std::initializer_list<std::string_view> keys_sel) const {
-  return select(std::span<const std::string_view>(keys_sel.begin(), keys_sel.size()));
-}
-
-Registry Registry::select(const std::vector<std::string>& keys_sel) const {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
-  const auto names = normalize_names(keys_sel);
-  std::vector<std::pair<std::string, Slot>> out;
-  out.reserve(names.size());
-  for (const auto& n : names) {
-    if (!has(n)) {
-      throw pluss::Error("Registry::select: unknown key '" + n + "'");
-    }
-    out.emplace_back(n, slot(n));
-  }
-  return Registry(std::move(out));
-}
-
-Slot Registry::select(std::string_view key) const {
-  return slot(key);
-}
-
 Registry Registry::drop(std::span<const std::string_view> keys_drop) const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
   const auto names = normalize_names(keys_drop);
@@ -434,71 +481,21 @@ Registry& Registry::rename_(std::string_view from, std::string_view to) {
   return *this;
 }
 
-Registry Registry::apply(std::string_view key, const std::function<Slot(const Slot&)>& fn) const {
+Registry Registry::map(const std::function<Slot(const Slot&)>& fn) const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
-  auto out = *this;
-  out.apply_(key, fn);
-  return out;
-}
-
-Registry Registry::apply(std::span<const std::string_view> keys_apply,
-                         const std::function<Slot(const Slot&)>& fn) const {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
-  auto out = *this;
-  out.apply_(keys_apply, fn);
-  return out;
-}
-
-Registry Registry::apply(std::initializer_list<std::string_view> keys_apply,
-                         const std::function<Slot(const Slot&)>& fn) const {
-  return apply(std::span<const std::string_view>(keys_apply.begin(), keys_apply.size()), fn);
-}
-
-Registry& Registry::apply_(std::string_view key, const std::function<Slot(const Slot&)>& fn) {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
-  PLUSS_CHECK(static_cast<bool>(fn), "Registry::apply_: fn is empty");
-  const auto name = std::string(key);
-  PLUSS_CHECK(!name.empty(), "Registry::apply_: key cannot be empty");
-  PLUSS_CHECK(has(name), "Registry::apply_: unknown key '" + name + "'");
-  const auto transformed = fn(slot(name));
-  PLUSS_CHECK(transformed.defined(), "Registry::apply_: function returned undefined Slot");
-  return set_slot_(name, transformed);
-}
-
-Registry& Registry::apply_(std::span<const std::string_view> keys_apply,
-                           const std::function<Slot(const Slot&)>& fn) {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
-  const auto names = normalize_names(keys_apply);
-  for (const auto& name : names) {
-    apply_(name, fn);
-  }
-  return *this;
-}
-
-Registry& Registry::apply_(std::initializer_list<std::string_view> keys_apply,
-                           const std::function<Slot(const Slot&)>& fn) {
-  return apply_(std::span<const std::string_view>(keys_apply.begin(), keys_apply.size()), fn);
-}
-
-Registry Registry::apply_all(const std::function<Slot(const Slot&)>& fn) const {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
-  PLUSS_CHECK(static_cast<bool>(fn), "Registry::apply_all: fn is empty");
+  PLUSS_CHECK(static_cast<bool>(fn), "Registry::map: fn is empty");
   std::vector<std::pair<std::string, Slot>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     auto transformed = fn(impl_ref_().slots_[i]);
-    PLUSS_CHECK(transformed.defined(), "Registry::apply_all: function returned undefined Slot");
+    PLUSS_CHECK(transformed.defined(), "Registry::map: function returned undefined Slot");
     out.emplace_back(impl_ref_().keys_[i], std::move(transformed));
   }
   return Registry(std::move(out));
 }
 
-Registry Registry::map(const std::function<Slot(const Slot&)>& fn) const {
-  return apply_all(fn);
-}
-
 Registry& Registry::map_(const std::function<Slot(const Slot&)>& fn) {
-  *this = apply_all(fn);
+  *this = map(fn);
   return *this;
 }
 
@@ -516,7 +513,7 @@ std::unordered_map<std::string, std::int64_t> Registry::sizes() const {
   return slot_sizes();
 }
 
-std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> Registry::type_profiles() const {
+std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> Registry::profiles() const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
   std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> out;
   out.reserve(static_cast<std::size_t>(nslots()) * 2);
@@ -569,7 +566,7 @@ Registry& Registry::clear_() {
   return *this;
 }
 
-Registry Registry::drop_empty_slots() const {
+Registry Registry::prune() const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
   std::vector<std::pair<std::string, Slot>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
@@ -581,224 +578,53 @@ Registry Registry::drop_empty_slots() const {
   return Registry(std::move(out));
 }
 
-Registry& Registry::drop_empty_slots_() {
-  *this = drop_empty_slots();
+Registry& Registry::prune_() {
+  *this = prune();
   return *this;
 }
 
-Registry Registry::drop_empty() const {
-  return drop_empty_slots();
-}
-
-Registry& Registry::drop_empty_() {
-  return drop_empty_slots_();
-}
-
 Registry Registry::isnull() const {
-  return apply_all([](const Slot& s) { return s.isnull(); });
-}
-
-Registry Registry::isnull(std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::isnull(fields): fields cannot be empty; use isnull() for all fields");
-  return apply(fields_sel, [](const Slot& s) { return s.isnull(); });
-}
-
-Registry Registry::isnull(std::initializer_list<std::string_view> fields_sel) const {
-  return isnull(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([](const Slot& s) { return s.isnull(); });
 }
 
 Registry Registry::notnull() const {
-  return apply_all([](const Slot& s) { return s.notnull(); });
-}
-
-Registry Registry::notnull(std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::notnull(fields): fields cannot be empty; use notnull() for all fields");
-  return apply(fields_sel, [](const Slot& s) { return s.notnull(); });
-}
-
-Registry Registry::notnull(std::initializer_list<std::string_view> fields_sel) const {
-  return notnull(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([](const Slot& s) { return s.notnull(); });
 }
 
 Registry Registry::invalid() const {
-  return apply_all([](const Slot& s) { return s.invalid(); });
-}
-
-Registry Registry::invalid(std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::invalid(fields): fields cannot be empty; use invalid() for all fields");
-  return apply(fields_sel, [](const Slot& s) { return s.invalid(); });
-}
-
-Registry Registry::invalid(std::initializer_list<std::string_view> fields_sel) const {
-  return invalid(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([](const Slot& s) { return s.invalid(); });
 }
 
 Registry Registry::fillnull(double value) const {
-  return apply_all([&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(double value, std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0,
-              "Registry::fillnull(double, fields): fields cannot be empty; use fillnull(value) for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(double value, std::initializer_list<std::string_view> fields_sel) const {
-  return fillnull(value, std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([&](const Slot& s) { return s.fillnull(value); });
 }
 
 Registry Registry::fillnull(std::string_view value) const {
-  return apply_all([&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(std::string_view value, std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0,
-              "Registry::fillnull(string, fields): fields cannot be empty; use fillnull(value) for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(std::string_view value, std::initializer_list<std::string_view> fields_sel) const {
-  return fillnull(value, std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([&](const Slot& s) { return s.fillnull(value); });
 }
 
 Registry Registry::fillnull(const pluss::Timeline& value) const {
-  return apply_all([&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(const pluss::Timeline& value, std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0,
-              "Registry::fillnull(Timeline, fields): fields cannot be empty; use fillnull(value) for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(const pluss::Timeline& value, std::initializer_list<std::string_view> fields_sel) const {
-  return fillnull(value, std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([&](const Slot& s) { return s.fillnull(value); });
 }
 
 Registry Registry::fillnull(const pluss::TimeIndex& value) const {
-  return apply_all([&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(const pluss::TimeIndex& value, std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0,
-              "Registry::fillnull(TimeIndex, fields): fields cannot be empty; use fillnull(value) for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.fillnull(value); });
-}
-
-Registry Registry::fillnull(const pluss::TimeIndex& value, std::initializer_list<std::string_view> fields_sel) const {
-  return fillnull(value, std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([&](const Slot& s) { return s.fillnull(value); });
 }
 
 Registry Registry::dropnull() const {
-  return apply_all([](const Slot& s) { return s.dropnull(); });
-}
-
-Registry Registry::dropnull(std::span<const std::string_view> fields_sel) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::dropnull(fields): fields cannot be empty; use dropnull() for all fields");
-  return apply(fields_sel, [](const Slot& s) { return s.dropnull(); });
-}
-
-Registry Registry::dropnull(std::initializer_list<std::string_view> fields_sel) const {
-  return dropnull(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()));
+  return map([](const Slot& s) { return s.dropnull(); });
 }
 
 Registry Registry::distinct(pluss::kindle::DistinctOptions options) const {
-  return apply_all([&](const Slot& s) { return s.distinct(options); });
-}
-
-Registry Registry::distinct(std::span<const std::string_view> fields_sel,
-                            pluss::kindle::DistinctOptions options) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::distinct(fields): fields cannot be empty; use distinct() for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.distinct(options); });
-}
-
-Registry Registry::distinct(std::initializer_list<std::string_view> fields_sel,
-                            pluss::kindle::DistinctOptions options) const {
-  return distinct(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()), options);
+  return map([&](const Slot& s) { return s.distinct(options); });
 }
 
 Registry Registry::freq(pluss::kindle::FreqOptions options) const {
-  return apply_all([&](const Slot& s) { return s.freq(options); });
-}
-
-Registry Registry::freq(std::span<const std::string_view> fields_sel,
-                        pluss::kindle::FreqOptions options) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::freq(fields): fields cannot be empty; use freq() for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.freq(options); });
-}
-
-Registry Registry::freq(std::initializer_list<std::string_view> fields_sel,
-                        pluss::kindle::FreqOptions options) const {
-  return freq(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()), options);
+  return map([&](const Slot& s) { return s.freq(options); });
 }
 
 Registry Registry::ndistinct(pluss::kindle::DistinctOptions options) const {
-  return apply_all([&](const Slot& s) { return s.ndistinct(options); });
-}
-
-Registry Registry::ndistinct(std::span<const std::string_view> fields_sel,
-                             pluss::kindle::DistinctOptions options) const {
-  PLUSS_CHECK(fields_sel.size() > 0,
-              "Registry::ndistinct(fields): fields cannot be empty; use ndistinct() for all fields");
-  return apply(fields_sel, [&](const Slot& s) { return s.ndistinct(options); });
-}
-
-Registry Registry::ndistinct(std::initializer_list<std::string_view> fields_sel,
-                             pluss::kindle::DistinctOptions options) const {
-  return ndistinct(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()), options);
-}
-
-Registry Registry::cast(std::span<const std::string_view> fields_sel,
-                        pluss::table::ThreadCastTarget target,
-                        const pluss::table::ThreadCastOptions& options) const {
-  PLUSS_CHECK(fields_sel.size() > 0, "Registry::cast(fields): fields cannot be empty");
-  return apply(fields_sel, [&](const Slot& s) {
-    switch (target) {
-      case pluss::table::ThreadCastTarget::Series:
-        return s.cast(options).series();
-      case pluss::table::ThreadCastTarget::Note:
-        return s.cast(options).note();
-      case pluss::table::ThreadCastTarget::Timeline:
-        return s.cast(options).timeline();
-      case pluss::table::ThreadCastTarget::TimeIndex:
-        return s.cast(options).timeindex();
-    }
-    return s;
-  });
-}
-
-Registry Registry::cast(std::initializer_list<std::string_view> fields_sel,
-                        pluss::table::ThreadCastTarget target,
-                        const pluss::table::ThreadCastOptions& options) const {
-  return cast(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()), target, options);
-}
-
-Registry Registry::astype(std::span<const std::string_view> fields_sel,
-                          pluss::codem::ScalarType dtype) const {
-  return cast(fields_sel,
-              pluss::table::ThreadCastTarget::Series,
-              pluss::table::ThreadCastOptions{.series_dtype = dtype});
-}
-
-Registry Registry::astype(std::initializer_list<std::string_view> fields_sel,
-                          pluss::codem::ScalarType dtype) const {
-  return astype(std::span<const std::string_view>(fields_sel.begin(), fields_sel.size()), dtype);
-}
-
-Slot Registry::sum(std::string_view field) const {
-  return select(field).sum();
-}
-
-Slot Registry::mean(std::string_view field) const {
-  return select(field).mean();
-}
-
-Slot Registry::min(std::string_view field) const {
-  return select(field).min();
-}
-
-Slot Registry::max(std::string_view field) const {
-  return select(field).max();
+  return map([&](const Slot& s) { return s.ndistinct(options); });
 }
 
 Registry Registry::set_slot(std::string_view key, const Slot& value) const {
@@ -882,60 +708,78 @@ Registry& Registry::set_(std::initializer_list<std::pair<std::string, Slot>> ite
 }
 
 Registry Registry::push(std::string_view key, const Slot::Value& value) const {
-  return apply(key, [&](const Slot& s) { return s.push(value); });
+  PLUSS_CHECK(has(key), "Registry::push: unknown key '" + std::string(key) + "'");
+  return set_slot(key, slot(key).push(value));
 }
 
 Registry& Registry::push_(std::string_view key, const Slot::Value& value) {
-  return apply_(key, [&](const Slot& s) { return s.push(value); });
+  PLUSS_CHECK(has(key), "Registry::push_: unknown key '" + std::string(key) + "'");
+  return set_slot_(key, slot(key).push(value));
 }
 
-Registry Registry::push_all(const Slot::Value& value) const {
-  return apply_all([&](const Slot& s) { return s.push(value); });
+Registry Registry::push(const Slot::Value& value) const {
+  return map([&](const Slot& s) { return s.push(value); });
 }
 
-Registry& Registry::push_all_(const Slot::Value& value) {
-  *this = push_all(value);
+Registry& Registry::push_(const Slot::Value& value) {
+  *this = push(value);
   return *this;
 }
 
-Registry Registry::filter_values(std::string_view key,
-                                 const std::function<bool(const Slot::Value&)>& predicate) const {
-  PLUSS_CHECK(static_cast<bool>(predicate), "Registry::filter_values: predicate is empty");
-  return apply(key, [&](const Slot& s) { return s.filter(predicate); });
+Registry Registry::keep(std::string_view key,
+                        const std::function<bool(const Slot::Value&)>& predicate) const {
+  PLUSS_CHECK(static_cast<bool>(predicate), "Registry::keep: predicate is empty");
+  PLUSS_CHECK(has(key), "Registry::keep: unknown key '" + std::string(key) + "'");
+  return set_slot(key, slot(key).filter(predicate));
 }
 
-Registry& Registry::filter_values_(std::string_view key,
-                                   const std::function<bool(const Slot::Value&)>& predicate) {
-  PLUSS_CHECK(static_cast<bool>(predicate), "Registry::filter_values_: predicate is empty");
-  return apply_(key, [&](const Slot& s) { return s.filter(predicate); });
+Registry& Registry::keep_(std::string_view key,
+                          const std::function<bool(const Slot::Value&)>& predicate) {
+  PLUSS_CHECK(static_cast<bool>(predicate), "Registry::keep_: predicate is empty");
+  PLUSS_CHECK(has(key), "Registry::keep_: unknown key '" + std::string(key) + "'");
+  return set_slot_(key, slot(key).filter(predicate));
 }
 
-Registry Registry::transform_values(std::string_view key,
-                                    const std::function<Slot::Value(const Slot::Value&)>& fn) const {
-  PLUSS_CHECK(static_cast<bool>(fn), "Registry::transform_values: fn is empty");
-  return apply(key, [&](const Slot& s) { return s.transform(fn); });
+Registry Registry::morph(std::string_view key,
+                         const std::function<Slot::Value(const Slot::Value&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn), "Registry::morph: fn is empty");
+  PLUSS_CHECK(has(key), "Registry::morph: unknown key '" + std::string(key) + "'");
+  return set_slot(key, slot(key).transform(fn));
 }
 
-Registry& Registry::transform_values_(std::string_view key,
-                                      const std::function<Slot::Value(const Slot::Value&)>& fn) {
-  PLUSS_CHECK(static_cast<bool>(fn), "Registry::transform_values_: fn is empty");
-  return apply_(key, [&](const Slot& s) { return s.transform(fn); });
+Registry& Registry::morph_(std::string_view key,
+                           const std::function<Slot::Value(const Slot::Value&)>& fn) {
+  PLUSS_CHECK(static_cast<bool>(fn), "Registry::morph_: fn is empty");
+  PLUSS_CHECK(has(key), "Registry::morph_: unknown key '" + std::string(key) + "'");
+  return set_slot_(key, slot(key).transform(fn));
 }
 
-Registry Registry::take_values(std::string_view key, std::span<const std::int64_t> indices) const {
-  return apply(key, [&](const Slot& s) { return s.take(indices); });
+Registry Registry::take(std::string_view key, std::span<const std::int64_t> indices) const {
+  PLUSS_CHECK(has(key), "Registry::take: unknown key '" + std::string(key) + "'");
+  return set_slot(key, slot(key).take(indices));
 }
 
-Registry& Registry::take_values_(std::string_view key, std::span<const std::int64_t> indices) {
-  return apply_(key, [&](const Slot& s) { return s.take(indices); });
+Registry Registry::take(std::string_view key, const std::vector<std::int64_t>& indices) const {
+  return take(key, std::span<const std::int64_t>(indices.data(), indices.size()));
 }
 
-Registry Registry::concat_values(std::string_view key, const Slot& other) const {
-  PLUSS_CHECK(other.defined(), "Registry::concat_values: other slot undefined");
-  return apply(key, [&](const Slot& s) { return s.concat(other); });
+Registry& Registry::take_(std::string_view key, std::span<const std::int64_t> indices) {
+  PLUSS_CHECK(has(key), "Registry::take_: unknown key '" + std::string(key) + "'");
+  return set_slot_(key, slot(key).take(indices));
 }
 
-Registry& Registry::concat_values_(std::string_view key, const Slot& other) {
-  PLUSS_CHECK(other.defined(), "Registry::concat_values_: other slot undefined");
-  return apply_(key, [&](const Slot& s) { return s.concat(other); });
+Registry& Registry::take_(std::string_view key, const std::vector<std::int64_t>& indices) {
+  return take_(key, std::span<const std::int64_t>(indices.data(), indices.size()));
+}
+
+Registry Registry::concat(std::string_view key, const Slot& other) const {
+  PLUSS_CHECK(other.defined(), "Registry::concat: other slot undefined");
+  PLUSS_CHECK(has(key), "Registry::concat: unknown key '" + std::string(key) + "'");
+  return set_slot(key, slot(key).concat(other));
+}
+
+Registry& Registry::concat_(std::string_view key, const Slot& other) {
+  PLUSS_CHECK(other.defined(), "Registry::concat_: other slot undefined");
+  PLUSS_CHECK(has(key), "Registry::concat_: unknown key '" + std::string(key) + "'");
+  return set_slot_(key, slot(key).concat(other));
 }

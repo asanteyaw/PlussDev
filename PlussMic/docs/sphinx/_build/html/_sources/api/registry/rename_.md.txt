@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f0fdaaab993c -->
 
 # Registry::rename_
 

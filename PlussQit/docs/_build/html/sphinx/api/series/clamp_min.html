@@ -13,7 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::copy_" href="copy_.html" />
@@ -50,38 +51,69 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Floors every element from below: <code class="docutils literal notranslate"><span class="pre">out[i]</span> <span class="pre">=</span> <span class="pre">self[i]</span> <span class="pre">&gt;=</span> <span class="pre">min</span> <span class="pre">?</span> <span class="pre">self[i]</span> <span class="pre">:</span> <span class="pre">min</span></code> — the
-mirror image of <a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>. The <code class="docutils literal notranslate"><span class="pre">_</span></code> suffix pair mutate <code class="docutils literal notranslate"><span class="pre">self</span></code> in
-place instead of returning a new <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>Applies a lower floor to every element.</p>
+<p>Conceptually:</p>
+<ul class="simple">
+<li><p>keep <code class="docutils literal notranslate"><span class="pre">self[i]</span></code> if it is already <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">min</span></code></p></li>
+<li><p>otherwise replace it with <code class="docutils literal notranslate"><span class="pre">min</span></code></p></li>
+</ul>
+<p>This is the one-sided “raise small values upward” member of the clamp family.
+The non-underscore overloads return a new series. The underscore overloads
+mutate the current series in place and return <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>min</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
-<p>The lower bound. For the <code class="docutils literal notranslate"><span class="pre">double</span></code> overload, every element is floored at the same
-value. For the <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload, the bound broadcasts elementwise against <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>The lower bound.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">clamp_min(double</span> <span class="pre">min)</span></code> and <code class="docutils literal notranslate"><span class="pre">clamp_min_(double</span> <span class="pre">min)</span></code>:</p>
+<ul class="simple">
+<li><p>one scalar floor is applied everywhere</p></li>
+<li><p>every position compares against the same bound</p></li>
+</ul>
+<p>For <code class="docutils literal notranslate"><span class="pre">clamp_min(const</span> <span class="pre">Series&amp;</span> <span class="pre">min)</span></code> and <code class="docutils literal notranslate"><span class="pre">clamp_min_(const</span> <span class="pre">Series&amp;</span> <span class="pre">min)</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span></code> is broadcast against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
+<li><p>each broadcasted position can therefore have its own effective floor</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> (or <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code> for the <code class="docutils literal notranslate"><span class="pre">_</span></code> variants)
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> (or <code class="docutils literal notranslate"><span class="pre">self</span></code>, mutated) with every element <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">min</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> or <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>
+The clamped result, either as a fresh value or the mutated current series
+for the underscore overloads.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p>Both overloads are differentiable. <code class="docutils literal notranslate"><span class="pre">d(out)/d(self[i])</span> <span class="pre">=</span> <span class="pre">1</span></code> where <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">&gt;=</span> <span class="pre">min</span></code>,
-else <code class="docutils literal notranslate"><span class="pre">0</span></code> — an <strong>inclusive</strong> boundary, matching <a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>’s own
-convention and, through it, <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum</span></code></span></a>/<a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">minimum</span></code></span></a>’s
-tie-breaking rule. For the <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload, <code class="docutils literal notranslate"><span class="pre">min</span></code> gets the complementary
-gradient: <code class="docutils literal notranslate"><span class="pre">1</span></code> exactly where <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">&lt;</span> <span class="pre">min</span></code> (see Example 4).</p>
-<p>The in-place <code class="docutils literal notranslate"><span class="pre">_</span></code> variant is <strong>not</strong> independently differentiable, for the same
-reason as <code class="docutils literal notranslate"><span class="pre">clamp_max_</span></code>: in-place ops in this engine are treated as low-level
-storage mutations. Use the out-of-place <code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code> inside anything that needs
-to backpropagate through the clamp itself.</p>
+<p>The out-of-place overloads are differentiable.</p>
+<p>For the scalar form:</p>
+<ul class="simple">
+<li><p>gradient flows to <code class="docutils literal notranslate"><span class="pre">self</span></code> where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;=</span> <span class="pre">min</span></code></p></li>
+<li><p>gradient is zero where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&lt;</span> <span class="pre">min</span></code></p></li>
+</ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">Series</span></code>-bound form:</p>
+<ul class="simple">
+<li><p>gradient flows to <code class="docutils literal notranslate"><span class="pre">self</span></code> where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;=</span> <span class="pre">min</span></code></p></li>
+<li><p>gradient flows to the bound series where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&lt;</span> <span class="pre">min</span></code></p></li>
+</ul>
+<p>The boundary is inclusive:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Inclusive boundary
+At <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">min</span></code>, the derivative with respect to <code class="docutils literal notranslate"><span class="pre">self[i]</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, not <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+That matches the comparison-family rule used by
+<a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum</span></code></span></a>/<a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">minimum</span></code></span></a>/<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a> and
+keeps shared boundaries consistent.</p>
+</div>
+<p>The underscore overloads mutate storage directly and should not be treated as
+the differentiable surface of the clamp itself. Use the value-returning
+<code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code> forms inside computations you intend to backpropagate through.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Floor a mix of negative, zero, and positive values at <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<p>Example 1. A scalar floor raises only the positions below the bound.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
@@ -90,17 +122,15 @@ to backpropagate through the clamp itself.</p>
 data=[0, 0, 0, 1, 3]
 </pre></div>
 </div>
-<p>Everything at or below <code class="docutils literal notranslate"><span class="pre">0.0</span></code> is raised to the floor; <code class="docutils literal notranslate"><span class="pre">1.0</span></code> and <code class="docutils literal notranslate"><span class="pre">3.0</span></code> already clear
-it and pass through unchanged. This is exactly how <code class="docutils literal notranslate"><span class="pre">relu()</span></code> is defined in this
-engine (<code class="docutils literal notranslate"><span class="pre">relu(x)</span> <span class="pre">==</span> <span class="pre">clamp_min(x,</span> <span class="pre">0.0)</span></code>).</p>
-<p>Example 2. Gradient at the boundary.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
-<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
-<span class="n">y</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<p>This is the familiar ReLU-style floor: everything below zero is lifted to zero,
+while values already above zero pass through untouched.</p>
+<p>Example 2. The boundary at exactly the floor is inclusive in the backward rule.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">clamp_min_grad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="n">clamp_min_grad</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">clamp_min_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clamp_min_grad</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">clamp_min_y</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">clamp_min_y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">clamp_min_grad</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -112,69 +142,76 @@ dx=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, c
 data=[0, 0, 1, 1, 1]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">==</span> <span class="pre">0.0</span></code> (index 2) gets gradient <code class="docutils literal notranslate"><span class="pre">1</span></code>, not <code class="docutils literal notranslate"><span class="pre">0</span></code> — the inclusive boundary.</p>
-<p>Example 3. The <code class="docutils literal notranslate"><span class="pre">Series</span></code>-argument overload: each element is floored at its own,
-independent bound.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">lo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="n">lo</span><span class="p">);</span>
+<p>The third position started exactly at <code class="docutils literal notranslate"><span class="pre">0.0</span></code>, and it still receives derivative
+<code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Example 3. The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload broadcasts a row-shaped lower bound across the
+leading dimension.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="n">lows</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 5, 3]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 5, 3],
+  [2, 7, 3]]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">1</span></code> is below its bound of <code class="docutils literal notranslate"><span class="pre">2</span></code>, so it’s raised to <code class="docutils literal notranslate"><span class="pre">2</span></code>; <code class="docutils literal notranslate"><span class="pre">5</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> already clear
-their bound and pass through unchanged.</p>
-<p>Example 4. Gradient of the <code class="docutils literal notranslate"><span class="pre">Series</span></code>-argument overload: it flows to <code class="docutils literal notranslate"><span class="pre">self</span></code> where
-<code class="docutils literal notranslate"><span class="pre">self</span></code> was kept, and to <code class="docutils literal notranslate"><span class="pre">min</span></code> where the bound was used instead.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">lo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-<span class="n">lo</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="n">lo</span><span class="p">);</span>
-<span class="n">y</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dlo=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lo</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<p>Each row of <code class="docutils literal notranslate"><span class="pre">grid</span></code> is compared against the same <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">4,</span> <span class="pre">3]</span></code> floor pattern.</p>
+<p>Example 4. The scalar underscore overload mutates the current handle in place.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar_inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="n">scalar_inplace</span><span class="p">.</span><span class="n">clamp_min_</span><span class="p">(</span><span class="mf">1.5</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scalar_inplace</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 5, 3]
-dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[0, 1, 1]
-dlo=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[1, 0, 0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.5, 1.5, 1.5, 1.5, 3]
 </pre></div>
 </div>
-<p>Index 0 (<code class="docutils literal notranslate"><span class="pre">x=1</span> <span class="pre">&lt;</span> <span class="pre">lo=2</span></code>, the bound was used): gradient goes to <code class="docutils literal notranslate"><span class="pre">lo</span></code>. Indices 1 and 2
-(<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&gt;=</span> <span class="pre">lo</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code> passed through): gradient goes to <code class="docutils literal notranslate"><span class="pre">x</span></code> instead — the mirror image of
-<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>’s Example 4.</p>
+<p>No new <code class="docutils literal notranslate"><span class="pre">Series</span></code> is returned here; the original handle now owns the clamped
+values.</p>
+<p>Example 5. The <code class="docutils literal notranslate"><span class="pre">Series</span></code> underscore overload mutates through the same broadcasted
+bound pattern.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">series_inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="n">series_inplace</span><span class="p">.</span><span class="n">clamp_min_</span><span class="p">(</span><span class="n">lows</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">series_inplace</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 5, 3],
+  [2, 7, 3]]
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">clamp_min(x,</span> <span class="pre">0.0)</span></code> is literally how <code class="docutils literal notranslate"><span class="pre">relu(x)</span></code> is defined in this engine.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code>’s inclusive boundary at <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">min</span></code> mirrors
-<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>’s own — see its Gradient section for why that
-boundary choice matters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clamp_min(x,</span> <span class="pre">0.0)</span></code> is the same numerical idea as a ReLU floor.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Series</span></code>-bound overload is semantically close to <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum</span></code></span></a>:
+<code class="docutils literal notranslate"><span class="pre">x.clamp_min(lo)</span></code> and <code class="docutils literal notranslate"><span class="pre">x.maximum(lo)</span></code> express the same comparison, but
+<code class="docutils literal notranslate"><span class="pre">clamp_min</span></code> makes the “this operand is the floor” intent explicit.</p></li>
+<li><p>Use the underscore forms when you specifically want mutation, not when you
+need the clamp itself to be the differentiable node in the graph.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_max</span></code></span></a>: the mirrored ceiling.</p></li>
-<li><p><a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::maximum</span></code></span></a>: semantically equivalent to the <code class="docutils literal notranslate"><span class="pre">Series</span></code>-argument
-overload (<code class="docutils literal notranslate"><span class="pre">self.clamp_min(lo)</span> <span class="pre">==</span> <span class="pre">self.maximum(lo)</span></code>), though implemented
-separately via <code class="docutils literal notranslate"><span class="pre">where()</span></code> rather than sharing code with it.</p></li>
+<li><p><a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_max</span></code></span></a>: the mirrored upper ceiling.</p></li>
+<li><p><a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::maximum</span></code></span></a>: equivalent comparison phrased without bound
+terminology.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="clamp_max.html">

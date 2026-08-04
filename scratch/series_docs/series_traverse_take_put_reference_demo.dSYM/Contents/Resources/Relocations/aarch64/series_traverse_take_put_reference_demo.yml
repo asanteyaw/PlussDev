@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'scratch/series_docs/series_traverse_take_put_reference_demo'
+relocations:     []
+...

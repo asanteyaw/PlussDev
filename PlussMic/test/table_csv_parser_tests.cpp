@@ -2345,8 +2345,8 @@ void test_versatile_dataframe_families() {
       "fog near junction,fog near school\n");
   const auto text_df = DataFrame::load_csv(text_path.string());
   const auto text_catalog = pluss::kindle::Catalog::kindelize(text_df);
-  const auto text_clean = text_catalog.text_preprocess("txt").tabelize();
-  expect(text_clean.ncases() == text_df.ncases(), "text_preprocess should preserve case count");
+  const auto text_clean = text_catalog.clean("txt").tabelize();
+  expect(text_clean.ncases() == text_df.ncases(), "clean should preserve case count");
 
   const DataFrame trim_df({
       {"raw", pluss::table::Thread(pluss::make_note({"  alpha  ", "\tbeta", "gamma \n"}))},
@@ -2373,19 +2373,19 @@ void test_versatile_dataframe_families() {
              && std::string(right_trimmed.features("student_id").as_note().at(1)) == "##7788"
              && std::string(right_trimmed.features("student_id").as_note().at(2)) == "4455",
          "Thread::rstrip(chars) should remove only trailing matching characters");
-  const auto keywords = text_catalog.extract_keywords("txt", 3).tabelize();
+  const auto keywords = text_catalog.keywords("txt", 3).tabelize();
   expect(keywords.get("keyword").has_value() && keywords.get("count").has_value(),
-         "extract_keywords should return keyword/count features");
-  const auto sim_df = text_catalog.compute_similarity("txt", "txt2").tabelize();
-  expect(sim_df.ncases() == text_df.ncases(), "compute_similarity should emit one score per case");
-  const auto filtered_text = text_catalog.filter_by_text("txt", "rain").tabelize();
-  expect(filtered_text.ncases() == 1, "filter_by_text should keep matching text rows");
-  const auto enriched_text = text_catalog.add_text_features("txt").tabelize();
+         "keywords should return keyword/count features");
+  const auto sim_df = text_catalog.similarity("txt", "txt2").tabelize();
+  expect(sim_df.ncases() == text_df.ncases(), "similarity should emit one score per case");
+  const auto filtered_text = text_catalog.grep("txt", "rain").tabelize();
+  expect(filtered_text.ncases() == 1, "grep should keep matching text rows");
+  const auto enriched_text = text_catalog.featurize("txt").tabelize();
   expect(enriched_text.get("txt_char_len").has_value() && enriched_text.get("txt_word_count").has_value(),
-         "add_text_features should append generated text features");
-  const auto text_stats = text_catalog.aggregate_text_stats("txt", "count").tabelize();
+         "featurize should append generated text features");
+  const auto text_stats = text_catalog.stats("txt", "count").tabelize();
   expect(text_stats.ncases() == 1 && text_stats.get("value").has_value(),
-         "aggregate_text_stats should emit one-row stat table");
+         "stats should emit one-row stat table");
   const auto text_tfidf = text_catalog.tfidf("txt").tabelize();
   expect(text_tfidf.get("txt_tfidf_norm").has_value(), "tfidf should append tfidf norm feature");
   const auto from_catalog = pluss::kindle::Catalog::kindelize(df.head(5, false)).tabelize();

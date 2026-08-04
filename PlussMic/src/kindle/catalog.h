@@ -16,6 +16,7 @@
 
 #include "common/StringViewNameRange.h"
 #include "MSharp/IntrusivePtr.h"
+#include "MSharp/RangeView.h"
 #include "loader/Config.h"
 #include "loader/CsvLoader.h"
 #include "loader/ExcelLoader.h"
@@ -88,6 +89,20 @@ enum class CollisionPolicy : std::uint8_t {
   Overwrite = 2,
 };
 
+enum class ReduceAxis : std::uint8_t {
+  Record = 0,
+  Key = 1,
+};
+
+struct CatalogReduceOptions {
+  ReduceAxis axis{ReduceAxis::Record};
+  Align align{Align::Strict};
+  AlignBy align_by{AlignBy::Pos};
+  bool skipnull{true};
+  std::optional<double> fill_scalar{std::nullopt};
+  bool unbiased{true};
+};
+
 struct KindelizePolicy {
   bool attach_labels{true};
   bool materialize_label{false};
@@ -138,28 +153,28 @@ public:
   static Catalog load_parquet(std::string_view filepath, const pluss::loader::Config& config);
   static Catalog load_json(std::string_view filepath);
   static Catalog load_json(std::string_view filepath, const pluss::loader::Config& config);
-  static Catalog load_csv_with_key(std::string_view filepath,
-                                   std::string_view key_field,
-                                   const pluss::loader::ReadCsvOptions& options = {});
+  static Catalog load_labeled(std::string_view filepath,
+                              std::string_view label_field,
+                              const pluss::loader::ReadCsvOptions& options = {});
   static Catalog from_json(std::string_view json_text);
 
   bool defined() const noexcept;
   bool unique() const noexcept;
 
   std::int64_t nkeys() const;
-  std::int64_t nrecords() const;
-  std::int64_t minrecords() const;
-  std::int64_t maxrecords() const;
+  std::int64_t nrows() const;
+  std::int64_t minrows() const;
+  std::int64_t maxrows() const;
   std::int64_t size() const;
   std::pair<std::int64_t, std::int64_t> shape() const;
   bool empty() const;
 
   const std::vector<std::string>& keys() const;
-  CatalogKeyAccessor keys(std::string_view key) const;
-  CatalogKeyAccessor keys(std::span<const std::string_view> field_names) const;
-  CatalogKeyAccessor keys(std::initializer_list<std::string_view> field_names) const;
+  Catalog keys(std::string_view key) const;
+  Catalog keys(std::span<const std::string_view> field_names) const;
+  Catalog keys(std::initializer_list<std::string_view> field_names) const;
   template <pluss::detail::StringViewNameRange NameRange>
-  CatalogKeyAccessor keys(const NameRange& field_names) const;
+  Catalog keys(const NameRange& field_names) const;
   CatalogKeyAxisAccessor keyaxis() const;
   CatalogGroupBuilder group() const;
   bool has(std::string_view key) const;
@@ -177,13 +192,16 @@ public:
   Catalog filter(const pluss::Series& condition) const;
   Catalog where(const pluss::Series& condition) const;
   Catalog query(const QueryFn& fn) const;
-  Catalog masked_select(const pluss::Series& mask) const;
-  Catalog select(std::span<const std::string_view> field_names) const;
-  Catalog select(std::initializer_list<std::string_view> field_names) const;
-  Catalog select(const std::vector<std::string>& field_names) const;
-  template <pluss::detail::StringViewNameRange NameRange>
-  Catalog select(const NameRange& field_names) const {
-    return pluss::detail::with_name_span(field_names, [&](auto names) { return select(names); });
+  static Catalog select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+                        pluss::msharp::RangeView::Of<Catalog> choices,
+                        const Catalog& default_value);
+  static Catalog select(std::initializer_list<pluss::table::Thread> conditions,
+                        std::initializer_list<Catalog> choices,
+                        const Catalog& default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<pluss::table::Thread>(conditions),
+        pluss::msharp::RangeView::Of<Catalog>(choices),
+        default_value);
   }
   Catalog drop(std::string_view field_name) const;
   Catalog drop(std::span<const std::string_view> field_names) const;
@@ -197,8 +215,17 @@ public:
   Catalog& rename_(std::string_view from, std::string_view to);
   Catalog rename(const std::unordered_map<std::string, std::string>& mapping) const;
   Catalog sort(std::string_view by_field, bool ascending = true) const;
-  Catalog sort_by(const std::vector<std::string>& fields,
-                  const std::vector<bool>& ascending = {}) const;
+  Catalog sort(std::span<const std::string_view> fields,
+               const std::vector<bool>& ascending = {}) const;
+  Catalog sort(std::initializer_list<std::string_view> fields,
+               const std::vector<bool>& ascending = {}) const;
+  Catalog sort(const std::vector<std::string>& fields,
+               const std::vector<bool>& ascending = {}) const;
+  template <pluss::detail::StringViewNameRange NameRange>
+  Catalog sort(const NameRange& fields,
+               const std::vector<bool>& ascending = {}) const {
+    return pluss::detail::with_name_span(fields, [&](auto names) { return sort(names, ascending); });
+  }
   Catalog fillnull(double value) const;
   Catalog fillnull(std::string_view value) const;
   Catalog fillnull(const char* value) const {
@@ -212,31 +239,47 @@ public:
   Catalog isnull() const;
   Catalog notnull() const;
   Catalog invalid() const;
+  CatalogCastAccessor cast() const;
+  CatalogCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
   Catalog cast(pluss::table::ThreadCastTarget target,
                const pluss::table::ThreadCastOptions& options = {}) const;
+  CatalogNoteAccessor nt() const;
+  CatalogTimelineAccessor tl() const;
+  CatalogTimeSeriesAccessor ts() const;
   Catalog astype(pluss::codem::ScalarType dtype) const;
-  Stream sum(std::string_view field) const;
-  Stream mean(std::string_view field) const;
-  Stream min(std::string_view field) const;
-  Stream max(std::string_view field) const;
   Catalog distinct(DistinctOptions options = {}) const;
   Catalog freq(FreqOptions options = {}) const;
   Catalog ndistinct(DistinctOptions options = {}) const;
+  Catalog sum() const;
+  Catalog sum(ReduceAxis axis) const;
+  Catalog sum(const CatalogReduceOptions& options) const;
+  Catalog mean() const;
+  Catalog mean(ReduceAxis axis) const;
+  Catalog mean(const CatalogReduceOptions& options) const;
+  Catalog min() const;
+  Catalog min(ReduceAxis axis) const;
+  Catalog min(const CatalogReduceOptions& options) const;
+  Catalog max() const;
+  Catalog max(ReduceAxis axis) const;
+  Catalog max(const CatalogReduceOptions& options) const;
+  Catalog var() const;
+  Catalog var(ReduceAxis axis) const;
+  Catalog var(const CatalogReduceOptions& options) const;
+  Catalog std() const;
+  Catalog std(ReduceAxis axis) const;
+  Catalog std(const CatalogReduceOptions& options) const;
   Catalog merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const;
-  Catalog apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const;
-  Catalog& apply_(std::string_view field, const std::function<Stream(const Stream&)>& func);
-  Catalog apply_all(const std::function<Stream(const Stream&)>& fn) const;
-  Catalog& apply_all_(const std::function<Stream(const Stream&)>& fn);
+  Catalog map(const std::function<Stream(const Stream&)>& fn) const;
+  Catalog& map_(const std::function<Stream(const Stream&)>& fn);
   Catalog transform(const std::function<Stream(const Stream&)>& fn) const;
-  Catalog transform(std::string_view field, const std::function<Stream(const Stream&)>& fn) const;
-  Catalog text_preprocess(std::string_view field) const;
-  Catalog extract_keywords(std::string_view field, int top_n = 10) const;
-  Catalog compute_similarity(std::string_view field1,
-                             std::string_view field2,
-                             std::string_view method = "cosine") const;
-  Catalog filter_by_text(std::string_view field, std::string_view pattern) const;
-  Catalog add_text_features(std::string_view field) const;
-  Catalog aggregate_text_stats(std::string_view field, std::string_view stat_type) const;
+  Catalog clean(std::string_view field) const;
+  Catalog keywords(std::string_view field, int top_n = 10) const;
+  Catalog similarity(std::string_view field1,
+                     std::string_view field2,
+                     std::string_view method = "cosine") const;
+  Catalog grep(std::string_view field, std::string_view pattern) const;
+  Catalog featurize(std::string_view field) const;
+  Catalog stats(std::string_view field, std::string_view stat_type) const;
   Catalog tfidf(std::string_view field) const;
 
   Catalog set(std::string_view key, const Stream& value) const;
@@ -311,6 +354,7 @@ public:
   Catalog freq(FreqOptions options = {}) const;
   Catalog ndistinct(DistinctOptions options = {}) const;
   Catalog astype(pluss::codem::ScalarType dtype) const;
+  Catalog map(const std::function<Stream(const Stream&)>& fn) const;
 
 private:
   template <class Fn>
@@ -495,7 +539,7 @@ Catalog CatalogKeyAccessor::map_selected_(Fn&& fn) const {
 }
 
 template <pluss::detail::StringViewNameRange NameRange>
-CatalogKeyAccessor Catalog::keys(const NameRange& field_names) const {
+Catalog Catalog::keys(const NameRange& field_names) const {
   return pluss::detail::with_name_span(field_names, [&](auto names) { return keys(names); });
 }
 

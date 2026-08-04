@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f2a90b5490dd -->
 
 # Registry::get
 
@@ -15,7 +16,7 @@ std::optional<Slot> Registry::get(std::string_view key) const
 Fetches a field's `Slot` by name, returning `std::nullopt` instead of throwing when
 the name doesn't exist. This is the safe way to test for a field's presence and
 retrieve it in one call — use [`has()`](has.md) if you only need the presence check,
-or [`select(key)`](select.md) if you're confident the field exists and want the
+or [`fields(key)`](fields.md) if you're confident the field exists and want the
 `Slot` directly (throwing otherwise).
 
 ## Parameters
@@ -68,7 +69,7 @@ false
 
 ## Notes
 
-- Never throws on a missing key — unlike `select(key)`, which throws.
+- Never throws on a missing key — unlike `fields(key)`, which throws.
 - Key comparison is exact and case-sensitive, same as [`has()`](has.md).
 - Requires a defined registry — throws `"Registry: undefined handle"` on an
   undefined one.
@@ -76,8 +77,8 @@ false
 ## See Also
 
 - [`Registry::has`](has.md): a pure presence check, without fetching the `Slot`.
-- [`Registry::select`](select.md): fetch the `Slot` directly, throwing if the field
-  is missing.
+- [`Registry::fields`](fields.md): fetch the `Slot` directly (single-key overload),
+  throwing if the field is missing.
 - [`Catalog::get`](../catalog/get.md): the equivalent lookup on the kindle model.
 
 <div class="pluss-inline-prev-next">

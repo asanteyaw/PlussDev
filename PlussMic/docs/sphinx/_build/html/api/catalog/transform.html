@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Catalog::unique" href="unique.html" />
+    <link rel="next" title="Catalog::ts" href="ts.html" />
     <link rel="prev" title="Catalog::to_table" href="to_table.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -37,56 +37,41 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 73b0cadcf715 -->
+<!-- pluss-signature-hash: 5a16296c9867 -->
 <section id="catalog-transform">
 <h1>Catalog::transform<a class="headerlink" href="#catalog-transform" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Stream</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Stream</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">field</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Stream</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Stream</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Two overloads sharing one name, with different scope:</p>
-<ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">transform(fn)</span></code></strong> (one argument) transforms <strong>every</strong> stream. It’s the primary
-implementation that <a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_all()</span></code></span></a> is a pure alias for.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">transform(field,</span> <span class="pre">fn)</span></code></strong> (two arguments) transforms <strong>one</strong> named stream. It’s a pure
-alias that forwards straight to <a class="reference internal" href="apply.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply(field,</span> <span class="pre">fn)</span></code></span></a>.</p></li>
-</ul>
+<p>Transforms every stream in the catalog and returns the updated catalog.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>This is the actual implementation apply_all() aliases — the reverse of what the name order suggests
-Reading the source, <code class="docutils literal notranslate"><span class="pre">apply_all(fn)</span></code> is literally <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">transform(fn);</span></code> — <code class="docutils literal notranslate"><span class="pre">transform()</span></code>
-is the real implementation, <code class="docutils literal notranslate"><span class="pre">apply_all()</span></code> is the alias. The two-argument overload runs the
-other direction: <code class="docutils literal notranslate"><span class="pre">transform(field,</span> <span class="pre">fn)</span></code> is literally <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">apply(field,</span> <span class="pre">fn);</span></code> — there,
-<code class="docutils literal notranslate"><span class="pre">apply()</span></code> is the real implementation and <code class="docutils literal notranslate"><span class="pre">transform()</span></code> is the alias. Which name is “the
-real one” flips depending on which overload you’re looking at; functionally it makes no
-difference either way.</p>
+<p>Whole-catalog transform only
+Scoped transforms no longer live on the root <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> surface. If you want to
+transform only some keys, select them first with <a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keys(...)</span></code></span></a> and then
+call <code class="docutils literal notranslate"><span class="pre">map(...)</span></code> on the accessor.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>)
-Called once per stream (one-argument overload) or once for the named stream
-(two-argument overload); must return a defined <code class="docutils literal notranslate"><span class="pre">Stream</span></code> of the same length as its
-input.</p>
-<p><strong>field</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, two-argument overload only)
-The single stream name to transform. Must already exist.</p>
+Called once per stream; must return a defined <code class="docutils literal notranslate"><span class="pre">Stream</span></code> of the same length as
+its input.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
-A new catalog with the affected stream(s) replaced by <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s result(s); every other
-stream unchanged.</p>
+A new catalog with every stream replaced by <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. The one-argument overload transforms every stream — same result as
-<a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_all()</span></code></span></a>.</p>
+<p>Example 1. Transform every stream.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
@@ -114,51 +99,23 @@ metric                   | Series       | Series[float64]  | 3       | [11, 21, 
 ========================================================================================================================
 </pre></div>
 </div>
-<p>Example 2. The two-argument overload transforms only the named stream — same result as
-<a class="reference internal" href="apply.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></span></a>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">as_series</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
-<span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
-kindle::Catalog  keys=2
-keys: [id, metric]
-------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
-------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[float64]  | 3       | [2, 4, 6]                                        
-metric                   | Series       | Series[float64]  | 3       | [10, 20, 30]                                     
-========================================================================================================================
-</pre></div>
-</div>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Overload count (one vs. two arguments), not a runtime flag, decides scope — see the
-important callout above for exactly which method aliases which.</p></li>
-<li><p>The two-argument overload requires <code class="docutils literal notranslate"><span class="pre">field</span></code> to already exist, same as
-<a class="reference internal" href="apply.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></span></a>.</p></li>
 <li><p>Every returned stream must be defined and the same length as its input.</p></li>
+<li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> is a pure alias for this method.</p></li>
+<li><p>For scoped transforms, use <a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keys(...)</span></code></span></a> followed by <code class="docutils literal notranslate"><span class="pre">map(...)</span></code> on the
+accessor.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::apply_all</span></code></span></a>: a pure alias for the one-argument overload.</p></li>
-<li><p><a class="reference internal" href="apply.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::apply</span></code></span></a> / <a class="reference internal" href="apply_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::apply_</span></code></span></a>: the single-stream forms —
-<code class="docutils literal notranslate"><span class="pre">apply()</span></code> is a pure alias for this method’s two-argument overload.</p></li>
+<li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::map</span></code></span></a>: a pure alias for the one-argument overload.</p></li>
+<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys</span></code></span></a>: select one or more keys, then transform only that
+selection with accessor <code class="docutils literal notranslate"><span class="pre">map(...)</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_table.html">
@@ -222,7 +179,7 @@ important callout above for exactly which method aliases which.</p></li>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
       <li>Previous: <a href="to_table.html" title="previous chapter">Catalog::to_table</a></li>
-      <li>Next: <a href="unique.html" title="next chapter">Catalog::unique</a></li>
+      <li>Next: <a href="ts.html" title="next chapter">Catalog::ts</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

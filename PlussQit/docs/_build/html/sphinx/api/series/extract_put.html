@@ -13,7 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
+    <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::extract_put_" href="extract_put_.html" />
@@ -46,53 +47,58 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a modified copy of the series after writing <code class="docutils literal notranslate"><span class="pre">values</span></code> into the region
-selected by <code class="docutils literal notranslate"><span class="pre">specs</span></code>.</p>
-<p>This is the non-mutating companion to <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a>. The
-selector language is the same as <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>: scalar indices,
-slices, <code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code>, negative-step slices, bool/integer advanced index series,
-<code class="docutils literal notranslate"><span class="pre">Ellipsis</span></code>, and <code class="docutils literal notranslate"><span class="pre">NewAxis</span></code>.</p>
-<p>The important semantic boundary is simple:</p>
+<p>Returns a modified copy of the series after writing through the full
+<code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> selector language.</p>
+<p>This is the non-mutating sibling of <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a>. It
+accepts the same selectors, applies the same broadcast and cardinality rules,
+and performs the same logical write. The only difference is ownership:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> reads from a selector</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code> writes through a selector but leaves the original unchanged</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> writes through a selector in place</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> mutates the current series</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code> leaves the current series unchanged and returns a patched copy</p></li>
 </ul>
+<p>Use this when selector-based patching is part of an expression and you do not
+want to disturb the original value.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Of&lt;ExtractSpec&gt;</span></code>)</p>
-<p>The write selector.</p>
-<p>The same normalization rules used by <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> apply here. In
-particular:</p>
+<p>The destination selector.</p>
+<p>All major <code class="docutils literal notranslate"><span class="pre">extract()</span></code>-style selector forms are supported here:</p>
 <ul class="simple">
-<li><p>scalar indices collapse one source axis</p></li>
-<li><p>identity slices preserve the full axis</p></li>
-<li><p>negative-step slices are allowed</p></li>
-<li><p>advanced bool/int index series are materialized internally into explicit index
-positions</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis</span></code> does not create a writable destination axis; it is ignored for
-target addressing because it consumes no source dimension</p></li>
+<li><p>scalar indices</p></li>
+<li><p>slices, including negative-step slices</p></li>
+<li><p>boolean masks</p></li>
+<li><p>integer index series</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis</span></code></p></li>
+</ul>
+<p>Key write-side behavior:</p>
+<ul class="simple">
+<li><p>Scalar indices narrow the targeted destination region.</p></li>
+<li><p>Negative-step slices remain legal here.</p></li>
+<li><p>Advanced selectors are materialized internally into explicit destination
+positions before the write happens.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis</span></code> is accepted for selector compatibility, but it does not contribute a
+new writable destination axis.</p></li>
 </ul>
 <p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
-<p>The data to write.</p>
+<p>The source data to write into the selected positions.</p>
 <p><code class="docutils literal notranslate"><span class="pre">values</span></code> may be:</p>
 <ul class="simple">
-<li><p>a scalar, which broadcasts across the selected region</p></li>
-<li><p>a non-scalar whose <code class="docutils literal notranslate"><span class="pre">numel()</span></code> exactly matches the selected element count</p></li>
+<li><p>scalar, in which case it broadcasts across the whole selection</p></li>
+<li><p>non-scalar, in which case its element count must match the selection exactly</p></li>
 </ul>
-<p>Before writing, <code class="docutils literal notranslate"><span class="pre">values</span></code> is converted to the destination dtype/platform if
-needed.</p>
+<p>If dtype or platform differ, <code class="docutils literal notranslate"><span class="pre">values</span></code> is converted before assignment.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> with the requested update applied.</p>
+A new series containing the write result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. The original input stays unchanged until you choose to use the
-returned copy.</p>
+<p>Example 1. Start from the already-patched grid produced by the in-place
+examples, then show that <code class="docutils literal notranslate"><span class="pre">extract_put()</span></code> itself does not mutate that input.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">33</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
@@ -108,7 +114,7 @@ data=[[100, -1, 12, 13],
   [300, -1, 32, 33]]
 </pre></div>
 </div>
-<p>Example 2. A scalar source broadcasts across the selected region in the returned
+<p>Example 2. A scalar source broadcasts into the selected region of the returned
 copy.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right_two</span><span class="p">{</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
@@ -130,8 +136,10 @@ data=[[100, -1, 5, 5],
   [300, -1, 5, 5]]
 </pre></div>
 </div>
-<p>Example 3. Advanced selectors work here too. A boolean row mask plus scalar
-broadcast can zero only the masked rows.</p>
+<p>The original <code class="docutils literal notranslate"><span class="pre">grid</span></code> still holds its old right-hand columns. Only <code class="docutils literal notranslate"><span class="pre">patched</span></code>
+contains the replacement.</p>
+<p>Example 3. Advanced selectors work on the copy-returning surface too. Here a
+boolean row mask zeros only the masked rows.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
 
 <span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mask_specs</span><span class="p">{</span>
@@ -152,26 +160,30 @@ data=[[0, 0, 0, 0],
   [0, 0, 0, 0]]
 </pre></div>
 </div>
+<p>The same selector would have been legal on <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a>;
+the difference is only whether the update lands on <code class="docutils literal notranslate"><span class="pre">grid</span></code> itself or on the
+returned series.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code> is the copy-returning write path. If you want mutation, use
+<li><p><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code> is the unrestricted selector-write surface when you want value
+semantics rather than mutation.</p></li>
+<li><p>This is usually the cleanest method for “derive a patched copy” code.</p></li>
+<li><p>If you need the update to happen in place, use
 <a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code></span></a>.</p></li>
-<li><p>Non-scalar <code class="docutils literal notranslate"><span class="pre">values</span></code> are matched by element count, not by preserving a
-higher-rank source shape contract.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis</span></code> in a write selector is accepted, but it does not add a writable
-target dimension.</p></li>
+<li><p>If you want the selector to be rejected unless it is view-representable, use
+<a class="reference internal" href="traverse_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put()</span></code></span></a> instead.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put_</span></code></span></a>: the in-place form.</p></li>
-<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: read from the same selector language.</p></li>
-<li><p><a class="reference internal" href="index_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_put_</span></code></span></a>: write through explicit index tensors or
-convenience index overloads instead of <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> selectors.</p></li>
+<li><p><a class="reference internal" href="traverse_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_put</span></code></span></a>: copy-returning writes with a
+stricter selector gate.</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: read through the same selector language.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="extract.html">

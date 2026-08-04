@@ -4,6 +4,7 @@
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/SeriesIterator.h"
+#include "CodeM/native/cpu/ElementwiseOps.h"
 #include "CodeM/native/cpu/TernaryApply.h"
 #include "MSharp/Parallel.h"
 
@@ -286,6 +287,59 @@ void mul(const Series& a, const Series& b, const Series& out_) {
     }
   }
 }
+
+// Integer-exact scalar op: unlike the double-based scalar convenience path in
+// OpsInternal.cpp (ops_internal::add/sub/mul/div(a, double s), which round-trips
+// the scalar through double and loses precision above 2^53), the scalar here
+// stays a native std::int64_t and is cast down to T without ever touching a
+// floating-point type -- correct for the full int64_t range. Contiguous same-
+// shape in/out get the same vectorizable __restrict loop as fast_contiguous_binary_;
+// anything else (broadcast views, non-contiguous strides) falls back to SeriesIterator.
+template <class T, class Op>
+static void scalar_apply_i64_(const Series& a, Series& out, std::int64_t s, Op&& op) {
+  const T sv = static_cast<T>(s);
+  const auto* ap = reinterpret_cast<const T*>(a.raw_data());
+  auto* optr = reinterpret_cast<T*>(out.raw_data());
+  if (a.is_contiguous() && out.is_contiguous() && a.numel() == out.numel()) {
+    const auto n = out.numel();
+    for_each_chunk_(n, [&](std::int64_t b0, std::int64_t b1) {
+#if defined(__clang__)
+#pragma clang loop vectorize(enable)
+#pragma clang loop interleave(enable)
+#endif
+      for (std::int64_t i = b0; i < b1; ++i) optr[i] = op(ap[i], sv);
+    });
+    return;
+  }
+  SeriesIterator it = SeriesIterator::unary(a, out);
+  it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t, std::int64_t) {
+    optr[lin] = op(ap[ao], sv);
+  });
+}
+
+#define DISPATCH_SCALAR_I64(name, OP) \
+  void name(const Series& a, std::int64_t s, const Series& out_) { \
+    auto& out = const_cast<Series&>(out_); \
+    switch (a.scalar_type()) { \
+      case ScalarType::Int8: scalar_apply_i64_<std::int8_t>(a,out,s,[](auto x,auto y){ return (std::int8_t)(x OP y); }); return; \
+      case ScalarType::UInt8: scalar_apply_i64_<std::uint8_t>(a,out,s,[](auto x,auto y){ return (std::uint8_t)(x OP y); }); return; \
+      case ScalarType::Int16: scalar_apply_i64_<std::int16_t>(a,out,s,[](auto x,auto y){ return (std::int16_t)(x OP y); }); return; \
+      case ScalarType::UInt16: scalar_apply_i64_<std::uint16_t>(a,out,s,[](auto x,auto y){ return (std::uint16_t)(x OP y); }); return; \
+      case ScalarType::Int32: scalar_apply_i64_<std::int32_t>(a,out,s,[](auto x,auto y){ return (std::int32_t)(x OP y); }); return; \
+      case ScalarType::UInt32: scalar_apply_i64_<std::uint32_t>(a,out,s,[](auto x,auto y){ return (std::uint32_t)(x OP y); }); return; \
+      case ScalarType::Int64: scalar_apply_i64_<std::int64_t>(a,out,s,[](auto x,auto y){ return (std::int64_t)(x OP y); }); return; \
+      case ScalarType::UInt64: scalar_apply_i64_<std::uint64_t>(a,out,s,[](auto x,auto y){ return (std::uint64_t)(x OP y); }); return; \
+      default: throw_error(#name ": dtype must be integral"); \
+    } \
+  }
+
+DISPATCH_SCALAR_I64(add_i64, +)
+DISPATCH_SCALAR_I64(sub_i64, -)
+DISPATCH_SCALAR_I64(mul_i64, *)
+DISPATCH_SCALAR_I64(div_i64, /)
+DISPATCH_SCALAR_I64(mod_i64, %)
+
+#undef DISPATCH_SCALAR_I64
 
 void neg(const Series& a, Series& out) {
   switch (a.scalar_type()) {

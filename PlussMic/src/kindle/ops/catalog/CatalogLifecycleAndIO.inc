@@ -136,17 +136,17 @@ Catalog Catalog::load_json(std::string_view filepath, const pluss::loader::Confi
   return catalog_from_raw_batch(pluss::loader::read_json_raw_batch(filepath, config), infer_options);
 }
 
-Catalog Catalog::load_csv_with_key(std::string_view filepath,
-                                   std::string_view key_field,
-                                   const pluss::loader::ReadCsvOptions& options) {
+Catalog Catalog::load_labeled(std::string_view filepath,
+                              std::string_view label_field,
+                              const pluss::loader::ReadCsvOptions& options) {
   auto raw = pluss::loader::read_csv_raw_batch(filepath, options);
-  const auto key = trim_copy(key_field);
-  PLUSS_CHECK(!key.empty(), "Catalog::load_csv_with_key: key field cannot be empty");
+  const auto key = trim_copy(label_field);
+  PLUSS_CHECK(!key.empty(), "Catalog::load_labeled: label field cannot be empty");
   auto it = std::find_if(raw.features.begin(),
                          raw.features.end(),
                          [&](const auto& col) { return col.name == key; });
   PLUSS_CHECK(it != raw.features.end(),
-              "Catalog::load_csv_with_key: key field not found '" + key + "'");
+              "Catalog::load_labeled: label field not found '" + key + "'");
   raw.cases = std::move(*it);
   raw.features.erase(it);
   KindelizePolicy policy;
@@ -174,7 +174,7 @@ std::int64_t Catalog::nkeys() const {
   return nstreams();
 }
 
-std::int64_t Catalog::minrecords() const {
+std::int64_t Catalog::minrows() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   if (impl_ref_().streams_.empty()) return 0;
   std::int64_t out = impl_ref_().streams_.front().size();
@@ -184,7 +184,7 @@ std::int64_t Catalog::minrecords() const {
   return out;
 }
 
-std::int64_t Catalog::maxrecords() const {
+std::int64_t Catalog::maxrows() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   std::int64_t out = 0;
   for (const auto& stream : impl_ref_().streams_) {
@@ -193,13 +193,13 @@ std::int64_t Catalog::maxrecords() const {
   return out;
 }
 
-std::int64_t Catalog::nrecords() const {
+std::int64_t Catalog::nrows() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   if (impl_ref_().streams_.empty()) return 0;
   const auto n = impl_ref_().streams_.front().size();
   for (const auto& stream : impl_ref_().streams_) {
     PLUSS_CHECK(stream.size() == n,
-                "Catalog::nrecords: catalog has ragged stream lengths; use minrecords()/maxrecords() or tabelize()");
+                "Catalog::nrows: catalog has ragged stream lengths; use minrows()/maxrows() or tabelize()");
   }
   return n;
 }
@@ -210,7 +210,7 @@ std::int64_t Catalog::size() const {
 
 std::pair<std::int64_t, std::int64_t> Catalog::shape() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return {maxrecords(), nkeys()};
+  return {maxrows(), nkeys()};
 }
 
 bool Catalog::empty() const { return nkeys() == 0; }

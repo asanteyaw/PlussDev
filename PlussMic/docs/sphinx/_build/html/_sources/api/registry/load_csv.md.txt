@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 614e3bc7b3d7 -->
 
 # Registry::load_csv
 

@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Registry::to_kindle" href="to_kindle.html" />
-    <link rel="prev" title="Registry::take_values_" href="take_values_.html" />
+    <link rel="prev" title="Registry::tl" href="tl.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -36,18 +36,35 @@
 
           <div class="body" role="main">
             
-  <section id="registry-to-json">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f1d063783034 -->
+<section id="registry-to-json">
 <h1>Registry::to_json<a class="headerlink" href="#registry-to-json" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_api_reference.html"><span class="doc std std-doc">Back to Registry API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="o">::</span><span class="n">to_json</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">Registry</span><span class="o">::</span><span class="n">to_json</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
+<p>Renders the registry as a JSON string with <strong>per-value</strong> type detail — for each
+field, a <code class="docutils literal notranslate"><span class="pre">values</span></code> array listing every individual value’s type (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Series[int64]&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Note[numel=1]&quot;</span></code>), in order. This is finer-grained than
+<a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>/<a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>, which only report a per-kind
+<em>count</em> per field, not each value’s own type.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Correctly types CSV-loaded integer columns, including the first row
+A field loaded from a CSV column of plain integers reports <code class="docutils literal notranslate"><span class="pre">&quot;Series[int64]&quot;</span></code> for
+<strong>every</strong> row, including the first one — even when that row’s literal string is
+<code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>. Earlier versions of the per-cell type-inference path used during
+CSV loading could misresolve an ambiguous literal like <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> toward <code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code>
+for a single-token cell; this is fixed, and integer columns type consistently
+regardless of which row’s value happens to look boolean-like. See
+<a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::load_csv</span></code></span></a>.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,37 +73,84 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Rendered string result.</p>
+A JSON string with a <code class="docutils literal notranslate"><span class="pre">values</span></code> array per field, one entry per value.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. A registry with a uniform-kind field and a genuinely mixed field —
+each value’s own type is listed individually.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;mixed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rg.head():
-ids  -&gt; Slot([Series(1), Series(2), Series(3)])
-city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kumasi&quot;)])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Registry&quot;,
+  &quot;defined&quot;: true,
+  &quot;nfields&quot;: 2,
+  &quot;fields&quot;: {
+    &quot;id&quot;: {
+  &quot;_type&quot;: &quot;Slot&quot;,
+  &quot;defined&quot;: true,
+  &quot;size&quot;: 3,
+  &quot;values&quot;: [
+    &quot;Series[int64]&quot;,
+    &quot;Series[int64]&quot;,
+    &quot;Series[int64]&quot;
+  ]
+},
+    &quot;mixed&quot;: {
+  &quot;_type&quot;: &quot;Slot&quot;,
+  &quot;defined&quot;: true,
+  &quot;size&quot;: 3,
+  &quot;values&quot;: [
+    &quot;Series[int64]&quot;,
+    &quot;Note[numel=1]&quot;,
+    &quot;Series[float64]&quot;
+  ]
+}
+  }
+}
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Each field’s embedded object is exactly <a class="reference internal" href="../slot/to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::to_json()</span></code></span></a>’s
+own output, concatenated in — not independently re-derived.</p></li>
+<li><p>Every <code class="docutils literal notranslate"><span class="pre">id</span></code> value above reports <code class="docutils literal notranslate"><span class="pre">Series[int64]</span></code> consistently, including the
+first row — see the important callout above.</p></li>
+<li><p>On an undefined registry, returns <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">&quot;_type&quot;:</span> <span class="pre">&quot;Registry&quot;,</span> <span class="pre">&quot;defined&quot;:</span> <span class="pre">false</span> <span class="pre">}</span></code>
+rather than throwing.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_string</span></code></span></a>: the coarser, per-kind-count
+counterpart.</p></li>
+<li><p><a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::load_csv</span></code></span></a>: the loader whose per-cell type inference
+this method’s important callout describes.</p></li>
+<li><p><a class="reference internal" href="../slot/to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::to_json</span></code></span></a>: the per-field method this one embeds
+for every field.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="take_values_.html">
+  <a class="prev-link" href="tl.html">
     <span class="label">Previous</span>
-    <span class="title">take_values_</span>
+    <span class="title">tl</span>
   </a>
   <a class="next-link" href="to_kindle.html">
     <span class="label">Next</span>
     <span class="title">to_kindle</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 
@@ -138,7 +202,7 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
-      <li>Previous: <a href="take_values_.html" title="previous chapter">Registry::take_values_</a></li>
+      <li>Previous: <a href="tl.html" title="previous chapter">Registry::tl</a></li>
       <li>Next: <a href="to_kindle.html" title="next chapter">Registry::to_kindle</a></li>
   </ul></li>
   </ul></li>

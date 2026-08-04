@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,8 +50,8 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns a <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">streams)</span></code> pair summarizing the catalog’s overall size in one call —
-<code class="docutils literal notranslate"><span class="pre">{maxrecords(),</span> <span class="pre">nkeys()}</span></code>. Because it’s built from <a class="reference internal" href="maxrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrecords()</span></code></span></a> rather
-than <a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrecords()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">shape()</span></code> never throws on a ragged catalog (one whose
+<code class="docutils literal notranslate"><span class="pre">{maxrows(),</span> <span class="pre">nkeys()}</span></code>. Because it’s built from <a class="reference internal" href="maxrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrows()</span></code></span></a> rather
+than <a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrows()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">shape()</span></code> never throws on a ragged catalog (one whose
 streams don’t all share the same length); the row count it reports is the <em>longest</em>
 stream’s length in that case, not an assertion that all streams agree.</p>
 </section>
@@ -62,7 +62,7 @@ stream’s length in that case, not an assertion that all streams agree.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::pair&lt;std::int64_t,</span> <span class="pre">std::int64_t&gt;</span></code>
-<code class="docutils literal notranslate"><span class="pre">{maxrecords(),</span> <span class="pre">nkeys()}</span></code> — the first element is the longest stream’s length, the
+<code class="docutils literal notranslate"><span class="pre">{maxrows(),</span> <span class="pre">nkeys()}</span></code> — the first element is the longest stream’s length, the
 second is the number of streams.</p>
 </section>
 <section id="examples">
@@ -86,7 +86,7 @@ second is the number of streams.</p>
 </pre></div>
 </div>
 <p>Example 2. On a ragged catalog, <code class="docutils literal notranslate"><span class="pre">shape()</span></code> reports the longest stream’s length as the row
-count — it does not throw the way <a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrecords()</span></code></span></a> would.</p>
+count — it does not throw the way <a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nrows()</span></code></span></a> would.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ragged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;a&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
 <span class="w">    </span><span class="s">&quot;b&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})),</span>
@@ -107,7 +107,7 @@ count — it does not throw the way <a class="reference internal" href="nrecords
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Built from <a class="reference internal" href="maxrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrecords()</span></code></span></a>, not <code class="docutils literal notranslate"><span class="pre">nrecords()</span></code> — never throws on a ragged
+<li><p>Built from <a class="reference internal" href="maxrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maxrows()</span></code></span></a>, not <code class="docutils literal notranslate"><span class="pre">nrows()</span></code> — never throws on a ragged
 catalog.</p></li>
 <li><p>The pair order is <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">streams)</span></code>, matching typical row-by-column shape conventions —
 not <code class="docutils literal notranslate"><span class="pre">(streams,</span> <span class="pre">rows)</span></code>.</p></li>
@@ -117,9 +117,9 @@ not <code class="docutils literal notranslate"><span class="pre">(streams,</span
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="nkeys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nkeys</span></code></span></a> / <a class="reference internal" href="maxrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::maxrecords</span></code></span></a>: the two values
+<li><p><a class="reference internal" href="nkeys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nkeys</span></code></span></a> / <a class="reference internal" href="maxrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::maxrows</span></code></span></a>: the two values
 <code class="docutils literal notranslate"><span class="pre">shape()</span></code> combines.</p></li>
-<li><p><a class="reference internal" href="nrecords.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nrecords</span></code></span></a>: the strict, throwing row-count check this method
+<li><p><a class="reference internal" href="nrows.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nrows</span></code></span></a>: the strict, throwing row-count check this method
 deliberately avoids.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

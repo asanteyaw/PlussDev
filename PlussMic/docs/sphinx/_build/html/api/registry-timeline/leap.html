@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,18 +34,29 @@
 
           <div class="body" role="main">
             
-  <section id="registrytimelineaccessor-leap">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 41e1dd0affc9 -->
+<section id="registrytimelineaccessor-leap">
 <h1>RegistryTimelineAccessor::leap<a class="headerlink" href="#registrytimelineaccessor-leap" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryTimelineAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RegistryTimelineAccessor</span><span class="o">::</span><span class="n">leap</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Registry</span><span class="w"> </span><span class="n">RegistryTimelineAccessor</span><span class="o">::</span><span class="n">leap</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Flags whether each bound field’s timestamp’s calendar year is a leap year,
+replacing each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> field.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Reflects the row’s YEAR, not whether the date is February 29th
+<code class="docutils literal notranslate"><span class="pre">leap()</span></code> answers “is this row’s <em>year</em> a leap year,” not “is this row
+February 29th.” Any row dated anywhere in 2024 flags <code class="docutils literal notranslate"><span class="pre">true</span></code>, since 2024 as a
+whole is a leap year — see Example 1, where a January date and a
+February-29th date both flag <code class="docutils literal notranslate"><span class="pre">true</span></code> for the same reason.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -54,26 +65,73 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-Value produced by this call.</p>
+A new registry with every bound field replaced by a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+field: <code class="docutils literal notranslate"><span class="pre">true</span></code> when the row’s calendar year is a leap year, <code class="docutils literal notranslate"><span class="pre">false</span></code>
+otherwise.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Two timestamps from the same leap year both flag <code class="docutils literal notranslate"><span class="pre">true</span></code>, even
+though only one falls on February 29th.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:40:00Z&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-02-29T23:45:00Z&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">timelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timelines</span><span class="p">.</span><span class="n">leap</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">leap</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ts</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ts</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true true
 </pre></div>
 </div>
+<p>Example 2. A 2024 timestamp flags <code class="docutils literal notranslate"><span class="pre">true</span></code>; a 2023 timestamp flags <code class="docutils literal notranslate"><span class="pre">false</span></code>,
+since 2023 isn’t a leap year.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-07-06T14:00:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2023-03-01T00:00:00Z&quot;</span><span class="p">)})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">leap</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ts</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ts</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above — reflects the row’s year, not its exact
+date.</p></li>
+<li><p>Reads local calendar fields relative to whatever timezone the field’s
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> currently carries (<code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> unless changed via
+<a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>/<a class="reference internal" href="localize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">localize()</span></code></span></a>).</p></li>
+<li><p>Requires every bound field to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field
+throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="month_end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::month_end</span></code></span></a>: where leap-year
+status actually changes February’s last valid day.</p></li>
+<li><p><a class="reference internal" href="yearday.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::yearday</span></code></span></a>: where leap years shift
+every day-of-year number from March onward.</p></li>
+<li><p><a class="reference internal" href="../registry/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::tl</span></code></span></a>: the entry point this accessor is
+reached from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="iso.html">
     <span class="label">Previous</span>
@@ -84,7 +142,6 @@ Value produced by this call.</p>
     <span class="title">localize</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

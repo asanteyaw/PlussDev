@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a5d59d69"></script>
+    <script src="../../_static/api_nav.js?v=55000b1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Catalog::load" href="load.html" />
-    <link rel="prev" title="Catalog::keys" href="keys.html" />
+    <link rel="prev" title="Catalog::keywords" href="keywords.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -134,7 +134,7 @@ _label                   | Series       | Series[int64]    | 3       | [0, 1, 2]
 </div>
 <p>Since the round-tripped frame had a default positional case-label axis, the materialized
 <code class="docutils literal notranslate"><span class="pre">_label</span></code> stream is just <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2]</span></code> — this is more useful when the frame’s label axis
-carries meaningful values (e.g. after <a class="reference internal" href="load_csv_with_key.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv_with_key()</span></code></span></a>).</p>
+carries meaningful values (e.g. after <a class="reference internal" href="load_labeled.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_labeled()</span></code></span></a>).</p>
 </section>
 </section>
 <section id="notes">
@@ -152,7 +152,7 @@ whether a visible <code class="docutils literal notranslate"><span class="pre">_
 <ul class="simple">
 <li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize</span></code></span></a> / <a class="reference internal" href="to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::to_table</span></code></span></a>: the inverse
 direction, <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> → <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
-<li><p><a class="reference internal" href="load_csv_with_key.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::load_csv_with_key</span></code></span></a>: uses this same
+<li><p><a class="reference internal" href="load_labeled.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::load_labeled</span></code></span></a>: uses this same
 <code class="docutils literal notranslate"><span class="pre">materialize_label</span></code> mechanism internally to expose a loaded CSV’s key column.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -216,7 +216,7 @@ direction, <code class="docutils literal notranslate"><span class="pre">Catalog<
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
-      <li>Previous: <a href="keys.html" title="previous chapter">Catalog::keys</a></li>
+      <li>Previous: <a href="keywords.html" title="previous chapter">Catalog::keywords</a></li>
       <li>Next: <a href="load.html" title="next chapter">Catalog::load</a></li>
   </ul></li>
   </ul></li>

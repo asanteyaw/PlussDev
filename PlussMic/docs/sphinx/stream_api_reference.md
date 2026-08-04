@@ -49,6 +49,7 @@ api/stream/kind
 api/stream/label
 api/stream/lbl
 api/stream/log
+api/stream/map
 api/stream/max
 api/stream/mean
 api/stream/meta
@@ -57,6 +58,7 @@ api/stream/ndistinct
 api/stream/notnull
 api/stream/nrecords
 api/stream/ptype
+api/stream/select
 api/stream/shape
 api/stream/show
 api/stream/size

@@ -54,8 +54,8 @@ auto text_catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto clean = text_catalog.text_preprocess("text");
-auto keywords = text_catalog.extract_keywords("text", 5);
+auto clean = text_catalog.clean("text");
+auto keywords = text_catalog.keywords("text", 5);
 auto tfidf = text_catalog.tfidf("text");
 ```
 
@@ -78,8 +78,8 @@ auto mapped = archive.map_catalogs([](const pluss::kindle::Catalog& c) {
 
 ```cpp
 pluss::kindle::TabelizePolicy policy;
-policy.align = pluss::kindle::AlignPolicy::Outer;
-policy.index_mode = pluss::kindle::IndexMode::Positional;
+policy.align = pluss::kindle::Align::Outer;
+policy.align_by = pluss::kindle::AlignBy::Pos;
 
 auto df = catalog.tabelize(policy);
 auto atlas = archive.tabelize(policy);

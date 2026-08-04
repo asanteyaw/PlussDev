@@ -110,9 +110,9 @@ read_excel_raw_batch: Excel support not built (libzip not available)
   `libzip` requirement.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="load_csv_with_key.html">
+  <a class="prev-link" href="load_labeled.html">
     <span class="label">Previous</span>
-    <span class="title">load_csv_with_key</span>
+    <span class="title">load_labeled</span>
   </a>
   <a class="next-link" href="load_json.html">
     <span class="label">Next</span>

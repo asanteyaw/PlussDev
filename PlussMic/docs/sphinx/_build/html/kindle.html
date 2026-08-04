@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=a5d59d69"></script>
+    <script src="_static/api_nav.js?v=55000b1c"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -91,8 +91,8 @@
 <span class="w">    </span><span class="p">})),</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_catalog</span><span class="p">.</span><span class="n">text_preprocess</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">keywords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_catalog</span><span class="p">.</span><span class="n">extract_keywords</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_catalog</span><span class="p">.</span><span class="n">clean</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">keywords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_catalog</span><span class="p">.</span><span class="n">keywords</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">tfidf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text_catalog</span><span class="p">.</span><span class="n">tfidf</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -115,8 +115,8 @@
 <section id="convert-back-to-table-model">
 <h2>Convert Back To Table Model<a class="headerlink" href="#convert-back-to-table-model" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">TabelizePolicy</span><span class="w"> </span><span class="n">policy</span><span class="p">;</span>
-<span class="n">policy</span><span class="p">.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">AlignPolicy</span><span class="o">::</span><span class="n">Outer</span><span class="p">;</span>
-<span class="n">policy</span><span class="p">.</span><span class="n">index_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">IndexMode</span><span class="o">::</span><span class="n">Positional</span><span class="p">;</span>
+<span class="n">policy</span><span class="p">.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Align</span><span class="o">::</span><span class="n">Outer</span><span class="p">;</span>
+<span class="n">policy</span><span class="p">.</span><span class="n">align_by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Pos</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">tabelize</span><span class="p">(</span><span class="n">policy</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">tabelize</span><span class="p">(</span><span class="n">policy</span><span class="p">);</span>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 405866cfe223 -->
 
 # Registry::unique
 
@@ -110,8 +111,8 @@ false
   model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="type_profiles.html">
+  <a class="prev-link" href="to_string.html">
     <span class="label">Previous</span>
-    <span class="title">type_profiles</span>
+    <span class="title">to_string</span>
   </a>
 </div>

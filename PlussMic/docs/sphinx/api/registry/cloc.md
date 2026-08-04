@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 05cfceaee4c7 -->
 
 # Registry::cloc
 
@@ -50,7 +51,7 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.cloc(1);
-auto ids = out.select("id");
+auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
@@ -73,7 +74,7 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.cloc(0, 2);
-auto ids = out.select("id");
+auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";

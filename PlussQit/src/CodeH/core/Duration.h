@@ -95,14 +95,22 @@ public:
   Duration operator-(const Duration& other) const;
   Duration operator-() const;
 
-  // Scalar helpers
-  static Duration from_scalar_nanos(std::int64_t nanos);
+private:
+  // Construction is intentionally not on the public type surface -- `Duration`
+  // (capital D) names the type; `pluss::duration::` (lowercase namespace, see
+  // duration_factory.h) is the sole public construction path, mirroring how
+  // `pluss::make_timeline`/`pluss::from_epoch_nanos` sit outside `Timeline`
+  // itself. `range` stays here as the private algorithm `detail::impl_range`
+  // (already a friend, used by both `pluss::duration::range` and the
+  // string-dispatch dispatcher) wraps; there is no `from_scalar_nanos`
+  // anymore -- `ops_internal::duration_from_nanos` (a 1-element flat call)
+  // already covers that case and is what `pluss::duration::nanos` itself
+  // calls.
 
   // Range factory (like pandas timedelta_range)
   // Inclusive start; stops before exceeding end.
   static Duration range(const Duration& start, const Duration& end, const Duration& step);
 
-private:
 
   friend class Timeline;
   friend class TimeIndex;

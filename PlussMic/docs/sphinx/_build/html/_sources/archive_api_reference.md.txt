@@ -51,7 +51,6 @@ api/archive/nkeys
 api/archive/notnull
 api/archive/nrecords
 api/archive/rename
-api/archive/select
 api/archive/shape
 api/archive/show
 api/archive/size

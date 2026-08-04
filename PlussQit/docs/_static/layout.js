@@ -36,10 +36,6 @@
     return `${title}(${args.join(", ")})`;
   }
 
-  // Recovers the site's project name from the page <title>, which Sphinx
-  // renders as "<page title> — <project>  documentation" (or just
-  // "<project>  documentation" on the index page itself). This keeps the
-  // topbar brand correct per-site without hardcoding any one package's name.
   function siteBrandFromTitle() {
     const raw = document.title || "";
     const parts = raw.split("—").map((p) => p.trim()).filter(Boolean);
@@ -49,10 +45,6 @@
     return candidate || "Pluss";
   }
 
-  // Sphinx exposes the relative path back to this site's root as
-  // DOCUMENTATION_OPTIONS.URL_ROOT (e.g. "../../" from a nested API page).
-  // Using it means topbar links resolve correctly no matter how deep the
-  // current page is nested.
   function urlRoot() {
     if (window.DOCUMENTATION_OPTIONS && typeof window.DOCUMENTATION_OPTIONS.URL_ROOT === "string") {
       return window.DOCUMENTATION_OPTIONS.URL_ROOT;
@@ -77,9 +69,6 @@
     links.className = "top-links";
     topbar.appendChild(links);
 
-    // Deliberately small and fixed: this site's own in-page sidebar already
-    // carries the detailed navigation (method list, section list, etc.), so
-    // the topbar only needs to get you Home or into the API reference.
     const navItems = [
       { href: `${root}index.html`, label: "Home", match: "index.html" },
       { href: `${root}api_reference.html`, label: "API Reference", match: "api_reference.html" },
@@ -98,13 +87,128 @@
     document.body.insertBefore(topbar, document.body.firstChild);
   }
 
-  function buildMethodSidebar() {
-    const apiRoots = Array.from(document.querySelectorAll("section")).filter((section) => {
-      const h2 = section.querySelector(":scope > h2");
-      return h2 && text(h2).startsWith("API Reference Style");
+  function currentApiPage() {
+    // Generalized to work for any class registered in PLUSS_API_NAV (written
+    // by generate_api_reference.py's write_api_nav_manifest), not just
+    // DataFrame/Thread. Adding a new per-method class (e.g. a DataFrame
+    // accessor) never requires touching this function -- it only needs an
+    // entry in CLASS_CONFIG/PER_METHOD_CLASSES/METHOD_PAGE_DIR on the Python
+    // side, since `slug` and `landing` for every class arrive here already
+    // computed from that same config.
+    const path = window.location.pathname || "";
+    const navData = window.PLUSS_API_NAV || {};
+
+    for (const key of Object.keys(navData)) {
+      const entry = navData[key];
+      if (entry.landing && (path === entry.landing || path.endsWith("/" + entry.landing))) {
+        return { key, slug: entry.slug, landing: true };
+      }
+    }
+
+    const methodMatch = path.match(/\/api\/([a-z0-9][a-z0-9-]*)\/([A-Za-z_][A-Za-z0-9_]*)\.html$/);
+    if (!methodMatch) {
+      return null;
+    }
+    const slug = methodMatch[1];
+    const key = Object.keys(navData).find((k) => navData[k].slug === slug);
+    if (!key) {
+      return null;
+    }
+    return { key, slug, landing: false, method: methodMatch[2] };
+  }
+
+  function buildApiMethodSidebar() {
+    const page = currentApiPage();
+    const navData = window.PLUSS_API_NAV || {};
+    if (!page || !navData[page.key]) {
+      return null;
+    }
+
+    const documentRoot = document.querySelector("div.document");
+    if (!documentRoot) {
+      return null;
+    }
+
+    document.body.classList.add("has-method-sidebar");
+
+    const sidebar = document.createElement("aside");
+    sidebar.id = "pluss-method-sidebar";
+
+    const title = document.createElement("div");
+    title.className = "sidebar-title";
+    title.textContent = `${navData[page.key].title} Methods`;
+    sidebar.appendChild(title);
+
+    const nav = document.createElement("nav");
+    nav.className = "method-nav";
+    sidebar.appendChild(nav);
+
+    let currentLetter = "";
+    let activeLink = null;
+    navData[page.key].methods.forEach((name) => {
+      const letter = (name[0] || "#").toUpperCase();
+      if (letter !== currentLetter) {
+        currentLetter = letter;
+        const groupHeader = document.createElement("div");
+        groupHeader.className = "method-group";
+        groupHeader.textContent = currentLetter;
+        nav.appendChild(groupHeader);
+      }
+
+      const link = document.createElement("a");
+      link.textContent = name;
+      link.href = page.landing ? `api/${page.slug}/${name}.html` : `${name}.html`;
+      if (!page.landing && page.method === name) {
+        link.classList.add("active");
+        activeLink = link;
+      }
+      nav.appendChild(link);
     });
 
-    if (!apiRoots.length) {
+    documentRoot.appendChild(sidebar);
+
+    // Every method click is a full page navigation, so this sidebar is torn
+    // down and rebuilt from scratch on each new page -- without this, it
+    // always renders scrolled to the top ("A" group) no matter where you
+    // clicked from. Jump the freshly built sidebar straight to the active
+    // method instead, keeping it roughly centered in the scrollable rail.
+    if (activeLink) {
+      const scrollActiveIntoView = () => {
+        const railRect = sidebar.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
+        const offset = (linkRect.top - railRect.top) - sidebar.clientHeight / 2 + linkRect.height / 2;
+        sidebar.scrollTop = Math.max(0, sidebar.scrollTop + offset);
+      };
+      // Run after layout has settled so getBoundingClientRect reflects the
+      // real, final sidebar height (fonts/CSS can still be applying at the
+      // moment this function first runs).
+      requestAnimationFrame(scrollActiveIntoView);
+    }
+
+    return { apiSidebar: true };
+  }
+
+  function buildMethodSidebar() {
+    const pageRoots = Array.from(document.querySelectorAll("div.body > section"));
+    const pageRootGroups = pageRoots
+      .map((root) => {
+        const groups = Array.from(root.children).filter((node) => {
+          if (node.tagName !== "SECTION") {
+            return false;
+          }
+          const h2 = node.querySelector(":scope > h2");
+          if (!h2) {
+            return false;
+          }
+          return Array.from(node.children).some((child) => {
+            return child.tagName === "SECTION" && child.querySelector(":scope > h3");
+          });
+        });
+        return { root, groups };
+      })
+      .filter((entry) => entry.groups.length > 0);
+
+    if (!pageRootGroups.length) {
       return;
     }
 
@@ -114,58 +218,32 @@
       return;
     }
 
+    const groups = pageRootGroups.flatMap((entry) => entry.groups);
+
     const methodItems = [];
-    apiRoots.forEach((root) => {
-      const groupTitleNode = root.parentElement
-        ? root.parentElement.querySelector(":scope > h1, :scope > h2")
-        : null;
-      const fallbackGroup = cleanHeadingText(text(groupTitleNode)) || "Methods";
+    groups.forEach((groupRoot) => {
+      const groupTitleNode = groupRoot.querySelector(":scope > h2");
+      const groupTitle = cleanHeadingText(text(groupTitleNode)) || "Methods";
 
-      const container = root.parentElement || root;
-      const isAfterRoot = (node) => {
-        if (node === root) {
-          return false;
-        }
-        if (root.contains(node)) {
-          return true;
-        }
-        const rel = root.compareDocumentPosition(node);
-        return Boolean(rel & Node.DOCUMENT_POSITION_FOLLOWING);
-      };
-
-      const methodSections = Array.from(container.querySelectorAll("section")).filter((node) => {
-        return node.querySelector(":scope > h3") && isAfterRoot(node);
+      const methodSections = Array.from(groupRoot.children).filter((node) => {
+        return node.tagName === "SECTION" && node.querySelector(":scope > h3");
       });
-
-      const groupForSection = (section) => {
-        let current = section.parentElement;
-        while (current && current !== root) {
-          if (current.tagName === "SECTION") {
-            const h2 = current.querySelector(":scope > h2");
-            if (h2) {
-              return cleanHeadingText(text(h2)) || fallbackGroup;
-            }
-          }
-          current = current.parentElement;
-        }
-        return fallbackGroup;
-      };
 
       methodSections.forEach((section, index) => {
         if (!section.id) {
-          section.id = `method-${fallbackGroup.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
+          section.id = `method-${groupTitle.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
         }
         const h3 = section.querySelector(":scope > h3");
         const codeTitle = h3 ? h3.querySelector("code") : null;
         const title = cleanHeadingText(text(codeTitle) || text(h3));
         const overloadLabel = extractOverloadLabel(section, title || "method");
         methodItems.push({
-          root,
+          root: groupRoot,
           section,
           id: section.id,
           title: title || "method",
           overloadLabel,
-          group: groupForSection(section),
+          group: groupTitle,
         });
       });
     });
@@ -174,51 +252,7 @@
       return null;
     }
 
-    methodItems.sort((a, b) => {
-      const ta = (a.title || "").toLowerCase();
-      const tb = (b.title || "").toLowerCase();
-      if (ta !== tb) {
-        return ta.localeCompare(tb);
-      }
-      const oa = (a.overloadLabel || "").toLowerCase();
-      const ob = (b.overloadLabel || "").toLowerCase();
-      if (oa !== ob) {
-        return oa.localeCompare(ob);
-      }
-      return (a.id || "").localeCompare(b.id || "");
-    });
-
     document.body.classList.add("has-method-sidebar");
-
-    // Hide everything before the API root inside each container so API starts immediately.
-    apiRoots.forEach((root) => {
-      const parent = root.parentElement;
-      if (!parent) {
-        return;
-      }
-      let reachedRoot = false;
-      Array.from(parent.children).forEach((child) => {
-        if (child === root) {
-          reachedRoot = true;
-          return;
-        }
-        if (!reachedRoot) {
-          child.classList.add("pluss-pre-api-hidden");
-        }
-      });
-
-      // Hide API section chrome before first method (title/intro text) so method appears first.
-      let reachedMethod = false;
-      Array.from(root.children).forEach((child) => {
-        if (child.tagName === "SECTION" && child.querySelector("h3")) {
-          reachedMethod = true;
-          return;
-        }
-        if (!reachedMethod) {
-          child.classList.add("pluss-api-intro-hidden");
-        }
-      });
-    });
 
     const dupCount = new Map();
     methodItems.forEach((m) => {
@@ -232,7 +266,8 @@
 
     const title = document.createElement("div");
     title.className = "sidebar-title";
-    title.textContent = "Method Navigation";
+    const pageTitle = cleanHeadingText(text(document.querySelector("div.body h1"))) || "Method Navigation";
+    title.textContent = `${pageTitle} Methods`;
     sidebar.appendChild(title);
 
     const nav = document.createElement("nav");
@@ -267,21 +302,18 @@
 
     let activeIndex = 0;
     const listeners = [];
+    const sectionTop = (item) => {
+      const wrapperRect = bodywrapper.getBoundingClientRect();
+      const sectionRect = item.section.getBoundingClientRect();
+      return bodywrapper.scrollTop + (sectionRect.top - wrapperRect.top);
+    };
     const setActive = (idx, opts = {}) => {
-      const { updateHash = true, resetScroll = true } = opts;
+      const { updateHash = true, scrollIntoView = true } = opts;
       if (idx < 0 || idx >= methodItems.length) {
         return;
       }
       activeIndex = idx;
       const active = methodItems[idx];
-
-      apiRoots.forEach((root) => {
-        root.classList.toggle("pluss-api-root-hidden", root !== active.root);
-      });
-
-      methodItems.forEach((item, i) => {
-        item.section.classList.toggle("pluss-method-hidden", i !== idx);
-      });
 
       links.forEach((a, i) => {
         a.classList.toggle("active", i === idx);
@@ -290,8 +322,11 @@
       if (updateHash) {
         history.replaceState(null, "", `#${active.id}`);
       }
-      if (resetScroll) {
-        bodywrapper.scrollTop = 0;
+      if (scrollIntoView) {
+        bodywrapper.scrollTo({
+          top: Math.max(0, sectionTop(active) - 8),
+          behavior: "auto",
+        });
       }
 
       listeners.forEach((fn) => fn(activeIndex));
@@ -301,7 +336,7 @@
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
         const idx = Number(a.dataset.methodIndex || "0");
-        setActive(idx, { updateHash: true, resetScroll: true });
+        setActive(idx, { updateHash: true, scrollIntoView: true });
       });
     });
 
@@ -312,20 +347,33 @@
       }
       return methodItems.findIndex((m) => m.id === hash);
     })();
-    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, resetScroll: false });
+    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, scrollIntoView: false });
 
     window.addEventListener("hashchange", () => {
       const hash = window.location.hash.replace(/^#/, "");
       const idx = methodItems.findIndex((m) => m.id === hash);
       if (idx >= 0 && idx !== activeIndex) {
-        setActive(idx, { updateHash: false, resetScroll: true });
+        setActive(idx, { updateHash: false, scrollIntoView: true });
+      }
+    });
+
+    bodywrapper.addEventListener("scroll", () => {
+      let candidate = 0;
+      const currentTop = bodywrapper.scrollTop + 12;
+      methodItems.forEach((item, idx) => {
+        if (sectionTop(item) <= currentTop) {
+          candidate = idx;
+        }
+      });
+      if (candidate !== activeIndex) {
+        setActive(candidate, { updateHash: true, scrollIntoView: false });
       }
     });
 
     return {
       items: methodItems,
       getActiveIndex: () => activeIndex,
-      setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
+      setActive: (idx) => setActive(idx, { updateHash: true, scrollIntoView: true }),
       onChange: (fn) => {
         if (typeof fn === "function") {
           listeners.push(fn);
@@ -397,30 +445,35 @@
     documentRoot.appendChild(sidebar);
 
     let activeIndex = 0;
+    const sectionTop = (item) => {
+      const wrapperRect = bodywrapper.getBoundingClientRect();
+      const sectionRect = item.section.getBoundingClientRect();
+      return bodywrapper.scrollTop + (sectionRect.top - wrapperRect.top);
+    };
     const setActive = (idx, opts = {}) => {
-      const { updateHash = true, resetScroll = true } = opts;
+      const { updateHash = true, scrollIntoView = true } = opts;
       if (idx < 0 || idx >= items.length) {
         return;
       }
       activeIndex = idx;
-      items.forEach((item, i) => {
-        item.section.classList.toggle("pluss-method-hidden", i !== idx);
-      });
       links.forEach((a, i) => {
         a.classList.toggle("active", i === idx);
       });
       if (updateHash) {
         history.replaceState(null, "", `#${items[idx].id}`);
       }
-      if (resetScroll) {
-        bodywrapper.scrollTop = 0;
+      if (scrollIntoView) {
+        bodywrapper.scrollTo({
+          top: Math.max(0, sectionTop(items[idx]) - 8),
+          behavior: "auto",
+        });
       }
     };
 
     links.forEach((a) => {
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
-        setActive(Number(a.dataset.sectionIndex || "0"), { updateHash: true, resetScroll: true });
+        setActive(Number(a.dataset.sectionIndex || "0"), { updateHash: true, scrollIntoView: true });
       });
     });
 
@@ -428,12 +481,12 @@
       const hash = window.location.hash.replace(/^#/, "");
       return items.findIndex((item) => item.id === hash);
     })();
-    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, resetScroll: false });
+    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, scrollIntoView: false });
 
     return {
       items,
       getActiveIndex: () => activeIndex,
-      setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
+      setActive: (idx) => setActive(idx, { updateHash: true, scrollIntoView: true }),
     };
   }
 
@@ -481,7 +534,7 @@
 
         if (prevIdx >= 0) {
           prevLink.style.display = "";
-          prevTitle.textContent = methodNav.items[prevIdx].title;
+          prevTitle.textContent = methodNav.items[prevIdx].overloadLabel || methodNav.items[prevIdx].title;
           prevLink.href = `#${methodNav.items[prevIdx].id}`;
         } else {
           prevLink.style.display = "none";
@@ -489,7 +542,7 @@
 
         if (nextIdx < methodNav.items.length) {
           nextLink.style.display = "";
-          nextTitle.textContent = methodNav.items[nextIdx].title;
+          nextTitle.textContent = methodNav.items[nextIdx].overloadLabel || methodNav.items[nextIdx].title;
           nextLink.href = `#${methodNav.items[nextIdx].id}`;
         } else {
           nextLink.style.display = "none";
@@ -566,10 +619,31 @@
     wrap.classList.add("show");
   }
 
+  function decorateApiBlocks() {
+    const headings = Array.from(document.querySelectorAll("#api-reference-style h4"));
+    headings.forEach((heading) => {
+      const label = cleanHeadingText(text(heading));
+      if (label === "Output") {
+        heading.classList.add("pluss-output-heading");
+        let node = heading.nextElementSibling;
+        while (node && !node.matches("div.highlight, section, h3, h4")) {
+          node = node.nextElementSibling;
+        }
+        if (node && node.matches("div.highlight")) {
+          node.classList.add("pluss-output-block");
+        }
+      }
+      if (label === "Examples" || label === "Example") {
+        heading.classList.add("pluss-examples-heading");
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
-    const methodNav = buildMethodSidebar();
-    const sectionNav = methodNav ? null : buildSectionSidebar();
+    const apiMethodSidebar = buildApiMethodSidebar();
+    const methodNav = apiMethodSidebar ? null : buildMethodSidebar();
+    decorateApiBlocks();
 
     // Safety fallback: never leave the left rail empty.
     if (document.body.classList.contains("has-method-sidebar")) {
@@ -583,6 +657,8 @@
       }
     }
 
-    buildPrevNext(methodNav || sectionNav);
+    if (!apiMethodSidebar) {
+      buildPrevNext(methodNav || null);
+    }
   });
 })();

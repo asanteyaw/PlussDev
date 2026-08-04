@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7647e9d4f746 -->
 
 # Registry::save_excel
 

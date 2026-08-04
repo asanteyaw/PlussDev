@@ -667,7 +667,9 @@ static std::vector<Series> normalize_index_list_for_put_(
     }
     Series idx = idx_raw;
     if (idx.platform() != like.platform()) idx = idx.to(like.platform());
-    if (idx.scalar_type() != ScalarType::Int64) idx = idx.to(ScalarType::Int64);
+    if (idx.scalar_type() != ScalarType::Bool && idx.scalar_type() != ScalarType::Int64) {
+      idx = idx.to(ScalarType::Int64);
+    }
     out.push_back(std::move(idx));
   }
   return out;
@@ -945,7 +947,13 @@ static Series put_dispatch_copy_indices_(
   if (val.platform() != out.platform()) val = val.to(out.platform());
   if (val.scalar_type() != out.scalar_type()) val = val.to(out.scalar_type());
 
-  if (normalized_indices.size() == 1 && normalized_indices.front().defined()) {
+  const bool use_flat_put_fast_path =
+      out.dim() == 1 &&
+      normalized_indices.size() == 1 &&
+      normalized_indices.front().defined() &&
+      is_integer_index_dtype_(normalized_indices.front().scalar_type());
+
+  if (use_flat_put_fast_path) {
     auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
     out = (out.*put_fn)(normalized_indices.front(), val, accumulate);
   } else {
@@ -954,8 +962,7 @@ static Series put_dispatch_copy_indices_(
 
   const bool track_src = series_tape::recording_enabled() && series_tape::tracks_slope(val);
   if (series_tape::recording_enabled() && (track_self || track_src)) {
-    if (normalized_indices.size() == 1 &&
-        normalized_indices.front().defined() &&
+    if (use_flat_put_fast_path &&
         supports_put_autodiff_1d_(self, normalized_indices.front(), val)) {
       bind_put_backward_1d_(out, self, normalized_indices.front(), val, accumulate);
     } else {
@@ -1360,17 +1367,10 @@ static Series block_2d_impl(
   PLUSS_CHECK(row_start + row_count <= rows, "block: requested rows exceed dim-0 bounds");
   PLUSS_CHECK(col_start + col_count <= cols, "block: requested cols exceed dim-1 bounds");
 
-  const auto base_off = self.storage_offset() / std::max<std::int64_t>(1, self.itemsize());
-  const auto row_stride = self.strides()[0];
-  const auto col_stride = self.strides()[1];
-  const auto view_off = base_off + row_start * row_stride + col_start * col_stride;
-  const std::array<std::int64_t, 2> view_sizes{{row_count, col_count}};
-  const std::array<std::int64_t, 2> view_strides{{row_stride, col_stride}};
-  return as_strided_impl(
-      self,
-      std::span<const std::int64_t>(view_sizes.data(), view_sizes.size()),
-      std::span<const std::int64_t>(view_strides.data(), view_strides.size()),
-      view_off);
+  // Delegate through the native slice/view surface so block() inherits the same
+  // aliasing and reverse-mode wiring as ordinary basic slicing.
+  return self.slice(0, row_start, row_start + row_count)
+      .slice(1, col_start, col_start + col_count);
 }
 
 static Series split_first_by_size(const Series& self, std::int64_t split_size, std::int64_t dim) {
