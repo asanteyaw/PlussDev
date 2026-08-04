@@ -291,7 +291,7 @@ ArchLmResult arch_lm(const Series& x, const ArchLmOptions& options, Config cfg) 
 
   std::vector<Series> cols;
   cols.reserve(static_cast<std::size_t>(lags + 1));
-  cols.push_back(pluss::ones({t, 1}, out_cfg));
+  cols.push_back(pluss::series::ones({t, 1}, out_cfg));
   for (std::int64_t j = 1; j <= lags; ++j) {
     cols.push_back(lagged_column_(sq, lags - j, t));
   }
@@ -343,7 +343,7 @@ AdfResult adf_test(const Series& y, const AdfOptions& options, Config cfg) {
   std::int64_t delta_idx = 0;
 
   if (options.model == AdfModel::ARD || options.model == AdfModel::TS) {
-    cols.push_back(pluss::ones({t, 1}, out_cfg));
+    cols.push_back(pluss::series::ones({t, 1}, out_cfg));
     delta_idx = 1;
   }
   if (options.model == AdfModel::TS) {
@@ -400,7 +400,7 @@ KpssResult kpss_test(const Series& y, const KpssOptions& options, Config cfg) {
 
   std::vector<Series> cols;
   cols.reserve(options.trend ? 2 : 1);
-  cols.push_back(pluss::ones({n, 1}, out_cfg));
+  cols.push_back(pluss::series::ones({n, 1}, out_cfg));
   if (options.trend) {
     cols.push_back(Series::arange(1, n + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({n, 1}));
   }

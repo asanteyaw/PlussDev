@@ -34,7 +34,7 @@ int main() {
             << static_cast<int>(starts_with_a[1]) << ", "
             << static_cast<int>(starts_with_a[2]) << "]\n";
 
-  auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
+  auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   auto t_floor = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
   std::cout << "Timeline floor(\"D\") hour: "
             << t_floor.hour().to_vec<std::int32_t>(0) << "\n";

@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("special unary ops implemented", "[unary_special]") {
-  Series x = pluss::full({4}, 1.0, ScalarType::Float32);
+  Series x = pluss::series::full({4}, 1.0, ScalarType::Float32);
   auto y = x.log1p();
   auto* yp = reinterpret_cast<const float*>(y.raw_data());
   REQUIRE(yp[0] > 0.6f);

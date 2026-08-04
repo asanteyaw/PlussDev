@@ -226,7 +226,7 @@ Series build_design_(const Series& x, bool add_intercept, Config cfg) {
   if (!add_intercept) {
     return x;
   }
-  const Series ones = pluss::ones({x.sizes()[0], 1}, cfg);
+  const Series ones = pluss::series::ones({x.sizes()[0], 1}, cfg);
   return ones.unite({x}, 1);
 }
 
@@ -316,14 +316,14 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
                            ? t_quantile_(1.0 - options.alpha * 0.5, static_cast<double>(df_resid), out_cfg)
                            : std::numeric_limits<double>::quiet_NaN();
   const Series t_v = coef.div(std_err.maximum(std::sqrt(kEps)));
-  Series p_v = pluss::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  Series p_v = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   if (df_resid > 0) {
     const Series p_raw = pluss::subsp::stats::distr::StudentT{static_cast<double>(df_resid), 0.0, 1.0}
                              .cdf(t_v.abs());
-    p_v = pluss::ones({k}, out_cfg).sub(p_raw).mul(2.0).clamp(0.0, 1.0);
+    p_v = pluss::series::ones({k}, out_cfg).sub(p_raw).mul(2.0).clamp(0.0, 1.0);
   }
-  Series ci_lo = pluss::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
-  Series ci_hi = pluss::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  Series ci_lo = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  Series ci_hi = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   if (std::isfinite(tcrit)) {
     const Series delta = std_err.mul(tcrit);
     ci_lo = coef.sub(delta);
@@ -441,7 +441,7 @@ Series ols_predict(const OLSFitResult& fit, const Series& x, Config cfg) {
 
   if (fit.has_intercept) {
     if (cols == fit.num_predictors) {
-      const Series ones = pluss::ones({n, 1}, out_cfg);
+      const Series ones = pluss::series::ones({n, 1}, out_cfg);
       design = ones.unite({xm}, 1);
     } else {
       PLUSS_CHECK(cols == fit.k_params,

@@ -9,8 +9,8 @@ static double ms_since(std::chrono::steady_clock::time_point t0) {
 
 int main() {
   const std::int64_t N = 10'000'000;
-  auto a = pluss::full({N}, 1.25, pluss::ScalarType::Float32);
-  auto b = pluss::full({N}, 2.00, pluss::ScalarType::Float32);
+  auto a = pluss::series::full({N}, 1.25, pluss::ScalarType::Float32);
+  auto b = pluss::series::full({N}, 2.00, pluss::ScalarType::Float32);
 
   // warmup
   auto c = a.add(b);

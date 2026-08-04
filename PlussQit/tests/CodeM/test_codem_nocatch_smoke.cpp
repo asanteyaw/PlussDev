@@ -130,7 +130,7 @@ void test_factories() {
   expect_eq(s1_mps.to_vec<double>(), s1.to_vec<double>(), "to(MPS) preserves values");
 
   std::cout << "[RUN] factories:create_on_mps\n";
-  auto z_mps = pluss::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
+  auto z_mps = pluss::series::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
   expect_true(z_mps.platform() == pluss::Platform::MPS, "factory config platform creates MPS series");
   expect_eq(z_mps.to_vec<float>(), std::vector<float>{0.0f, 0.0f, 0.0f, 0.0f}, "factory-created MPS zeros values");
 
@@ -193,8 +193,8 @@ void test_factories() {
   std::cout << "[RUN] factories:rand\n";
   std::array<std::int64_t, 1> sizes{4};
   auto span = std::span<const std::int64_t>(sizes.data(), sizes.size());
-  auto r0 = pluss::rand(span, pluss::ScalarType::Float32, 42);
-  auto r1 = pluss::rand(span, pluss::ScalarType::Float32, 42);
+  auto r0 = pluss::series::rand(span, pluss::ScalarType::Float32, 42);
+  auto r1 = pluss::series::rand(span, pluss::ScalarType::Float32, 42);
   std::cout << "[RUN] factories:to_vec\n";
   expect_true(r0.to_vec<float>() == r1.to_vec<float>(), "rand seed reproducibility");
 
@@ -208,16 +208,16 @@ void test_factories() {
 
   std::cout << "[RUN] factories:expanded\n";
   std::cout << "[RUN] factories:logspace\n";
-  auto ls = pluss::logspace(0.0, 2.0, 3, 10.0, pluss::ScalarType::Float64);
+  auto ls = pluss::series::logspace(0.0, 2.0, 3, 10.0, pluss::ScalarType::Float64);
   expect_true(ls.numel() == 3, "logspace works");
   std::cout << "[RUN] factories:randperm\n";
-  auto rp = pluss::randperm(8, pluss::ScalarType::Int64, 123);
+  auto rp = pluss::series::randperm(8, pluss::ScalarType::Int64, 123);
   expect_true(rp.numel() == 8, "randperm works");
   std::cout << "[RUN] factories:bernoulli\n";
-  auto b01 = pluss::bernoulli({16}, 0.5, pluss::ScalarType::Bool, 7);
+  auto b01 = pluss::series::bernoulli({16}, 0.5, pluss::ScalarType::Bool, 7);
   expect_true(b01.numel() == 16, "bernoulli factory works");
   std::cout << "[RUN] factories:zeroes_like\n";
-  auto zlike = pluss::zeroes_like(s2);
+  auto zlike = pluss::series::zeroes_like(s2);
   expect_true(zlike.scalar_type() == s2.scalar_type(), "zeroes_like alias works");
   std::cout << "[RUN] factories:value_literal\n";
   auto t = pluss::make_series({1, 2, 3});
@@ -538,7 +538,7 @@ void test_dispatch_extensions() {
   expect_eq(xt.to_vec<std::int64_t>(), {1, 2, 3, 1, 2, 3}, "tile alias");
 
   std::cout << "[RUN] dispatch_extensions:repeat_like\n";
-  auto like_rep = pluss::rand({2, 6}, pluss::ScalarType::Float32, 7);
+  auto like_rep = pluss::series::rand({2, 6}, pluss::ScalarType::Float32, 7);
   auto x_like = x.repeat_like(like_rep);
   expect_true(x_like.sizes().size() == 2 && x_like.sizes()[0] == 2 && x_like.sizes()[1] == 6,
               "repeat_like target shape");
@@ -556,7 +556,7 @@ void test_dispatch_extensions() {
   expect_eq(one_like.to_vec<std::int64_t>(), {9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9}, "expand_like values");
 
   std::cout << "[RUN] dispatch_extensions:repeat_like_incompatible\n";
-  auto bad_like = pluss::rand({2, 5}, pluss::ScalarType::Float32, 8);
+  auto bad_like = pluss::series::rand({2, 5}, pluss::ScalarType::Float32, 8);
   expect_throws([&] { (void)x.repeat_like(bad_like); }, "repeat_like throws for non-multiple target dimension");
 
   std::cout << "[RUN] dispatch_extensions:repeat_interleave\n";

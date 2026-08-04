@@ -1,17 +1,43 @@
 #include "CodeH/core/Printing.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <iomanip>
 #include <span>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "CodeH/core/Duration.h"
 #include "CodeH/core/Timeline.h"
+#include "CodeH/core/TimeIndex.h"
 
 namespace pluss::codeh {
 
 namespace {
+
+// Same "[D] days HH:MM:SS.nnnnnnnnn" format as Duration::to_note()'s
+// non-compact style (see DurationExtras.cpp's format_one_) -- duplicated
+// here rather than shared since that one is file-local and this is a small,
+// self-contained amount of logic.
+static std::string format_duration_one_(std::int64_t ns) {
+  if (ns == Duration::kNaT) return "NaT";
+  const bool neg = ns < 0;
+  std::int64_t a = neg ? -ns : ns;
+  const std::int64_t day = 86400LL * 1'000'000'000LL;
+  const std::int64_t hour = 3600LL * 1'000'000'000LL;
+  const std::int64_t min = 60LL * 1'000'000'000LL;
+  const std::int64_t sec = 1'000'000'000LL;
+  const auto d = a / day; a %= day;
+  const auto h = a / hour; a %= hour;
+  const auto m = a / min; a %= min;
+  const auto s = a / sec; a %= sec;
+  const auto n = a;
+  char buf[128];
+  std::snprintf(buf, sizeof(buf), "%s%lld days %02lld:%02lld:%02lld.%09lld",
+                neg ? "-" : "", (long long)d, (long long)h, (long long)m, (long long)s, (long long)n);
+  return std::string(buf);
+}
 
 static std::vector<std::int64_t> make_tokens(std::int64_t n,
                                              std::int64_t max_visible,
@@ -163,6 +189,60 @@ static std::string render_values(const Timeline& t,
   return oss.str();
 }
 
+// Shape-aware rendering for Duration, mirroring render_values(const Timeline&, ...)
+// above rank-for-rank (0D scalar, 1D flat list with edge truncation, 2D real
+// row-per-line grid via render_matrix, 3D slice-of-matrices) -- reuses
+// render_matrix/make_tokens directly since neither is Timeline-specific.
+// TimelinePrintOptions is reused here too (it's just layout/truncation knobs,
+// nothing timeline-semantic beyond the fields render_values(Timeline) itself
+// doesn't touch), rather than introducing a near-duplicate options struct.
+static std::string render_duration_values_(std::span<const std::int64_t> shape,
+                                           const std::vector<std::string>& flat) {
+  const TimelinePrintOptions opt{};
+  const auto rank = shape.size();
+  if (rank == 0) {
+    return flat.empty() ? "NaT" : flat[0];
+  }
+  if (rank == 1) {
+    const auto tokens = make_tokens(shape[0], opt.max_cols, opt.edge_items);
+    std::ostringstream oss;
+    oss << "[ ";
+    for (std::size_t i = 0; i < tokens.size(); ++i) {
+      if (i) oss << ", ";
+      oss << (tokens[i] < 0 ? "..." : flat[static_cast<std::size_t>(tokens[i])]);
+    }
+    oss << " ]";
+    return oss.str();
+  }
+  if (rank == 2) {
+    return render_matrix(flat, static_cast<std::size_t>(shape[0]), static_cast<std::size_t>(shape[1]), opt);
+  }
+
+  CODEM_CHECK(rank == 3, "print_duration: Duration supports rank up to 3");
+  const std::size_t slices = static_cast<std::size_t>(shape[0]);
+  const std::size_t rows = static_cast<std::size_t>(shape[1]);
+  const std::size_t cols = static_cast<std::size_t>(shape[2]);
+  const std::size_t plane = rows * cols;
+  const auto slice_tokens =
+      make_tokens(static_cast<std::int64_t>(slices), opt.max_slices, opt.edge_items);
+
+  std::ostringstream oss;
+  for (std::size_t si = 0; si < slice_tokens.size(); ++si) {
+    const auto s = slice_tokens[si];
+    if (s < 0) {
+      oss << "...";
+    } else {
+      const auto slice = static_cast<std::size_t>(s);
+      oss << "values[" << slice << ", :, :]\n";
+      oss << render_matrix(flat, rows, cols, opt, 0, slice * plane);
+    }
+    if (si + 1 < slice_tokens.size()) {
+      oss << "\n\n";
+    }
+  }
+  return oss.str();
+}
+
 } // namespace
 
 std::string to_string(const Timeline& t, const TimelinePrintOptions& opt) {
@@ -206,6 +286,67 @@ std::ostream& print_timeline(std::ostream& os,
 
 std::ostream& operator<<(std::ostream& os, const Timeline& t) {
   os << to_string(t);
+  return os;
+}
+
+std::string to_string(const Duration& d) {
+  if (!d.defined()) {
+    return "Duration(undefined)";
+  }
+
+  std::ostringstream oss;
+  oss << "Duration(shape=" << format_shape(d.sizes())
+      << ", dim=" << d.dim() << ", numel=" << d.numel() << ")";
+  if (d.numel() > 0) oss << "\n";
+
+  const auto nanos_flat = detail::impl_to_nanos_flat(d);
+  std::vector<std::string> flat;
+  flat.reserve(nanos_flat.size());
+  for (const auto ns : nanos_flat) flat.push_back(format_duration_one_(ns));
+
+  oss << render_duration_values_(d.sizes(), flat);
+  return oss.str();
+}
+
+std::string print_duration(const Duration& d) {
+  return to_string(d);
+}
+
+std::ostream& print_duration(std::ostream& os, const Duration& d) {
+  os << to_string(d);
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Duration& d) {
+  os << to_string(d);
+  return os;
+}
+
+std::string to_string(const TimeIndex& idx) {
+  if (!idx.timeline().defined()) {
+    return "TimeIndex(undefined)";
+  }
+  std::string s = to_string(idx.timeline());
+  // Reuse Timeline's rendering verbatim -- only the leading type name in the
+  // header differs, since a TimeIndex's values are exactly its Timeline's.
+  constexpr std::string_view kFrom = "Timeline(";
+  if (s.compare(0, kFrom.size(), kFrom) == 0) {
+    s.replace(0, kFrom.size(), "TimeIndex(");
+  }
+  return s;
+}
+
+std::string print_timeindex(const TimeIndex& idx) {
+  return to_string(idx);
+}
+
+std::ostream& print_timeindex(std::ostream& os, const TimeIndex& idx) {
+  os << to_string(idx);
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const TimeIndex& idx) {
+  os << to_string(idx);
   return os;
 }
 

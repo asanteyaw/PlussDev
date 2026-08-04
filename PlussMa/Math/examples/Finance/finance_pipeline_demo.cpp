@@ -8,11 +8,11 @@ int main() {
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const auto strikes = pluss::linspace(80.0, 120.0, 9, cfg);
-  const auto maturities = pluss::full({9}, 1.0, cfg);
-  const auto spots = pluss::full({9}, 100.0, cfg);
-  const auto rates = pluss::full({9}, 0.02, cfg);
-  const auto divs = pluss::full({9}, 0.00, cfg);
+  const auto strikes = pluss::series::linspace(80.0, 120.0, 9, cfg);
+  const auto maturities = pluss::series::full({9}, 1.0, cfg);
+  const auto spots = pluss::series::full({9}, 100.0, cfg);
+  const auto rates = pluss::series::full({9}, 0.02, cfg);
+  const auto divs = pluss::series::full({9}, 0.00, cfg);
 
   mod::Field pipe{
       .instrument = fin::instrument::Vanilla{
@@ -26,11 +26,11 @@ int main() {
           .dividend_yield = divs,
       },
       .model = fin::model::Heston{
-          .kappa = pluss::full({1}, 1.5, cfg),
-          .theta = pluss::full({1}, 0.04, cfg),
-          .sigma = pluss::full({1}, 0.30, cfg),
-          .rho = pluss::full({1}, -0.70, cfg),
-          .v0 = pluss::full({1}, 0.04, cfg),
+          .kappa = pluss::series::full({1}, 1.5, cfg),
+          .theta = pluss::series::full({1}, 0.04, cfg),
+          .sigma = pluss::series::full({1}, 0.30, cfg),
+          .rho = pluss::series::full({1}, -0.70, cfg),
+          .v0 = pluss::series::full({1}, 0.04, cfg),
       },
       .controls = mod::Controls{
           .engine = mod::Engine::Cos,

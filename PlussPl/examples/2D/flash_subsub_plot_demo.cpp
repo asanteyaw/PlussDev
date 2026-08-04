@@ -16,7 +16,7 @@ int main() {
     return (output_dir / std::string(name)).string();
   };
 
-  const auto x = pluss::linspace(0.0, 10.0, 140, pluss::ScalarType::Float64);
+  const auto x = pluss::series::linspace(0.0, 10.0, 140, pluss::ScalarType::Float64);
   const auto y_base = x.mul(0.55).sin().add(x.mul(1.3).cos().mul(0.2));
 
   Studio fig("flash_subsub_plot_demo", Theme::paper());
@@ -50,7 +50,7 @@ int main() {
     const double phase = 0.18 * static_cast<double>(idx + 1);
     const auto y1 = y_base.add(phase);
     const auto y2 = x.mul(0.42 + 0.06 * static_cast<double>(idx)).cos().mul(0.65).add(phase * 0.7);
-    const auto y3 = y1.add(pluss::randn({x.numel()}, pluss::ScalarType::Float64, 1234ULL + idx).mul(0.08));
+    const auto y3 = y1.add(pluss::series::randn({x.numel()}, pluss::ScalarType::Float64, 1234ULL + idx).mul(0.08));
 
     auto& p00 = fig.subpane2(parent, 4, 2, 0, 0, 2, 1);
     p00.grid(GridStyle::Major).x_label("x").y_label("y");

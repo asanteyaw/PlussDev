@@ -114,7 +114,7 @@ TEST_CASE("MPS stochastic dropout and random-like ops stay on device", "[mps][st
     REQUIRE((v == 0.0f || v == 1.0f));
   }
 
-  pluss::Series ints = pluss::zeros({6}, pluss::Config{}.with_dtype(pluss::ScalarType::Int32).with_platform(pluss::pMPS));
+  pluss::Series ints = pluss::series::zeros({6}, pluss::Config{}.with_dtype(pluss::ScalarType::Int32).with_platform(pluss::pMPS));
   ints.random_(2.0, 7.0);
   REQUIRE(ints.platform() == pluss::pMPS);
   REQUIRE(ints.scalar_type() == pluss::ScalarType::Int32);
@@ -163,7 +163,7 @@ TEST_CASE("MPS public stochastic factories use native device generation", "[mps]
   const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pMPS);
 
-  const pluss::Series uniform = pluss::rand({8}, cfg, 777);
+  const pluss::Series uniform = pluss::series::rand({8}, cfg, 777);
   REQUIRE(uniform.platform() == pluss::pMPS);
   REQUIRE(uniform.scalar_type() == pluss::ScalarType::Float32);
   for (const float v : vec_f32(uniform)) {
@@ -171,19 +171,19 @@ TEST_CASE("MPS public stochastic factories use native device generation", "[mps]
     REQUIRE(v < 1.0f);
   }
 
-  const pluss::Series uniform_again = pluss::rand({8}, cfg, 777);
+  const pluss::Series uniform_again = pluss::series::rand({8}, cfg, 777);
   REQUIRE(vec_f32(uniform_again) == vec_f32(uniform));
 
-  const pluss::Series normal = pluss::randn({8}, cfg, 778);
+  const pluss::Series normal = pluss::series::randn({8}, cfg, 778);
   REQUIRE(normal.platform() == pluss::pMPS);
   REQUIRE(normal.scalar_type() == pluss::ScalarType::Float32);
 
-  const pluss::Series shifted = pluss::normal(2.0, 0.5, {8}, cfg, 779);
+  const pluss::Series shifted = pluss::series::normal(2.0, 0.5, {8}, cfg, 779);
   REQUIRE(shifted.platform() == pluss::pMPS);
   REQUIRE(shifted.scalar_type() == pluss::ScalarType::Float32);
 
   const pluss::Series ints =
-      pluss::randint(3, 9, {8}, pluss::Config{}.with_dtype(pluss::ScalarType::Int32).with_platform(pluss::pMPS), 780);
+      pluss::series::randint(3, 9, {8}, pluss::Config{}.with_dtype(pluss::ScalarType::Int32).with_platform(pluss::pMPS), 780);
   REQUIRE(ints.platform() == pluss::pMPS);
   REQUIRE(ints.scalar_type() == pluss::ScalarType::Int32);
   for (const float v : vec_f32(ints)) {
@@ -191,7 +191,7 @@ TEST_CASE("MPS public stochastic factories use native device generation", "[mps]
     REQUIRE(v < 9.0f);
   }
 
-  const pluss::Series bernoulli = pluss::bernoulli({8}, 0.5, cfg, 781);
+  const pluss::Series bernoulli = pluss::series::bernoulli({8}, 0.5, cfg, 781);
   REQUIRE(bernoulli.platform() == pluss::pMPS);
   REQUIRE(bernoulli.scalar_type() == pluss::ScalarType::Bool);
 }
@@ -220,7 +220,7 @@ TEST_CASE("MPS dropout family matches PyTorch dropout variant contracts", "[mps]
   const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pMPS);
   const std::vector<std::int64_t> shape{2, 3, 4};
-  const pluss::Series x = pluss::ones(shape, cfg);
+  const pluss::Series x = pluss::series::ones(shape, cfg);
 
   const pluss::Series feature = pluss::codem::_compat::invoke("feature_dropout", x, {0.5, true});
   REQUIRE(feature.platform() == pluss::pMPS);
@@ -300,7 +300,7 @@ TEST_CASE("MPS dropout family matches PyTorch dropout variant contracts", "[mps]
   REQUIRE(taken_u8.scalar_type() == pluss::ScalarType::UInt8);
   REQUIRE(vec_f32(taken_u8.to(pluss::ScalarType::Float32)) == std::vector<float>{17.0f, 0.0f, 255.0f});
 
-  const pluss::Series rank1 = pluss::ones(std::vector<std::int64_t>{4}, cfg);
+  const pluss::Series rank1 = pluss::series::ones(std::vector<std::int64_t>{4}, cfg);
   REQUIRE_THROWS(pluss::codem::_compat::invoke("feature_dropout", rank1, {0.5, true}));
 
   pluss::Series inplace = x.clone();

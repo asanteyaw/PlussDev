@@ -465,6 +465,6 @@ auto d4 = nth_diff(
     4);
 auto fourth = d4(x);
 
-auto xv = pluss::linspace(-7.0, 7.0, 700, pluss::ScalarType::Float64);
+auto xv = pluss::series::linspace(-7.0, 7.0, 700, pluss::ScalarType::Float64);
 auto d1v = nth_diff([](const auto& z) { return tanh(z); }, xv, 1);
 ```

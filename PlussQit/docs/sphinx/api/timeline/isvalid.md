@@ -78,7 +78,7 @@ Example 3. Use `isvalid()` when you want the positive branch to be explicit.
 
 ```cpp
 auto repaired = with_nat.where(with_nat.isvalid(), with_nat.floor("D"));
-std::cout << pluss::print_timeline(repaired) << "\n";
+std::cout << pluss::timeline::print(repaired) << "\n";
 ```
 
 ### Output

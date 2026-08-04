@@ -21,8 +21,8 @@ class PLUSS_API LayerNormImpl final : public Module {
 public:
   explicit LayerNormImpl(LayerNormOptions options) : Module(true), options_(std::move(options)) {
     const Config cfg = options_.cfg;
-    weight_ = pluss::ones({options_.normalized_size}, cfg);
-    bias_ = pluss::zeros({options_.normalized_size}, cfg);
+    weight_ = pluss::series::ones({options_.normalized_size}, cfg);
+    bias_ = pluss::series::zeros({options_.normalized_size}, cfg);
     this->parameter_record("weight", weight_);
     this->parameter_record("bias", bias_);
   }

@@ -65,7 +65,7 @@ Slot make_mixed_slot(std::int64_t n) {
         out.emplace_back(pluss::make_note("tag_" + std::to_string(i % 128)));
         break;
       case 2:
-        out.emplace_back(pluss::from_epoch_nanos(1704067200000000000LL + i * 86400000000000LL));
+        out.emplace_back(pluss::timeline::from_epoch(1704067200000000000LL + i * 86400000000000LL));
         break;
       default:
         out.emplace_back(std::monostate{});

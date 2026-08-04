@@ -49,7 +49,7 @@ int main() {
   using namespace pluss::subsp::math::optimization;
 
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
-  const pluss::Series x0 = pluss::full({12}, 2.5, cfg);
+  const pluss::Series x0 = pluss::series::full({12}, 2.5, cfg);
 
   std::cout << std::fixed << std::setprecision(8);
   std::cout << "Unified DFO facade demo\n";
@@ -68,7 +68,7 @@ int main() {
   print_result("auto", auto_out);
 
   DfoProblem unconstrained_small;
-  unconstrained_small.initial = pluss::full({2}, 2.5, cfg);
+  unconstrained_small.initial = pluss::series::full({2}, 2.5, cfg);
   unconstrained_small.objective = sphere;
 
   DfoOptions forced_nm = auto_opts;
@@ -79,11 +79,11 @@ int main() {
   print_result("forced_nelder_mead_sphere", nm_out);
 
   DfoProblem constrained;
-  constrained.initial = pluss::full({6}, 1.5, cfg);
+  constrained.initial = pluss::series::full({6}, 1.5, cfg);
   constrained.objective = sphere;
   constrained.constraints = sum_le_one_constraint;
-  constrained.lower_bounds = pluss::full({6}, -2.0, cfg);
-  constrained.upper_bounds = pluss::full({6}, 2.0, cfg);
+  constrained.lower_bounds = pluss::series::full({6}, -2.0, cfg);
+  constrained.upper_bounds = pluss::series::full({6}, 2.0, cfg);
 
   DfoOptions constrained_opts;
   constrained_opts.max_iterations = 500;
@@ -94,9 +94,9 @@ int main() {
   const DfoResult constrained_out = DFO::solve(constrained, constrained_opts);
   print_result("auto_constrained", constrained_out);
 
-  const DfoResult builder_out = DFO::build(pluss::full({4}, 2.0, cfg))
+  const DfoResult builder_out = DFO::build(pluss::series::full({4}, 2.0, cfg))
                                     .with_objective(sphere)
-                                    .with_bounds(pluss::full({4}, -1.0, cfg), pluss::full({4}, 1.0, cfg))
+                                    .with_bounds(pluss::series::full({4}, -1.0, cfg), pluss::series::full({4}, 1.0, cfg))
                                     .with_max_iterations(250)
                                     .with_max_evaluations(10000)
                                     .with_seed(20260228ULL)

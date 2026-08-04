@@ -6,7 +6,7 @@
 int main() {
   auto x = pluss::make_series(std::vector<double>{-3, -2, -1, 0, 1, 2, 3}, {7});
   std::cout << "x:\n" << x << "\n\n";
-  auto x_7d = pluss::arange(0, 128).reshape({2,2,2,2,2,2,2});
+  auto x_7d = pluss::series::arange(0, 128).reshape({2,2,2,2,2,2,2});
   std::cout << "x_7d:\n" << pluss::print_series(x_7d) << "\n\n";
 
   auto xdct = x.dct();

@@ -110,7 +110,7 @@ Series stabilize_cov_(Series covariance, Config cfg) {
   const auto sizes = cov.sizes();
   PLUSS_CHECK(sizes.size() == 2 && sizes[0] == sizes[1], "subsp::stats::ts::Var: covariance must be square");
   const std::int64_t k = sizes[0];
-  const Series eye = pluss::eye(k, k, f64_cfg_(cfg));
+  const Series eye = pluss::series::eye(k, k, f64_cfg_(cfg));
   double jitter = 1e-12;
   for (std::int64_t i = 0; i < 8; ++i) {
     const Series slogdet = pluss::subsp::math::linalg::slogdet(cov).to(f64_cfg_(cfg).dtype).reshape({2});
@@ -169,7 +169,7 @@ VarDesign build_design_(const VarFit& fit,
   std::vector<Series> cols;
   cols.reserve(static_cast<std::size_t>((fit.include_intercept ? 1 : 0) + (fit.include_trend ? 1 : 0) + dims.p + (dims.m > 0 ? 1 : 0)));
   if (fit.include_intercept) {
-    cols.push_back(pluss::ones({t, 1}, out_cfg));
+    cols.push_back(pluss::series::ones({t, 1}, out_cfg));
   }
   if (fit.include_trend) {
     cols.push_back(Series::arange(1, t + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({t, 1}));
@@ -274,9 +274,9 @@ std::vector<Series> ma_coeffs_(const VarFit& fit, std::int64_t horizon, Config c
 
   std::vector<Series> psi;
   psi.reserve(static_cast<std::size_t>(horizon));
-  psi.push_back(pluss::eye(dims.k, dims.k, out_cfg));
+  psi.push_back(pluss::series::eye(dims.k, dims.k, out_cfg));
   for (std::int64_t h = 1; h < horizon; ++h) {
-    Series acc = pluss::zeros({dims.k, dims.k}, out_cfg);
+    Series acc = pluss::series::zeros({dims.k, dims.k}, out_cfg);
     const std::int64_t max_lag = std::min<std::int64_t>(dims.p, h);
     for (std::int64_t lag = 1; lag <= max_lag; ++lag) {
       acc = acc.add(psi[static_cast<std::size_t>(h - lag)].matmul(ar_lags[static_cast<std::size_t>(lag - 1)]));
@@ -295,7 +295,7 @@ Series shock_map_(const Series& covariance, IrfMethod method, Config cfg, const 
     return pluss::subsp::math::linalg::cholesky(cov).transpose(0, 1).to(out_cfg.platform, out_cfg.dtype);
   }
 
-  const Series eye = pluss::eye(k, k, out_cfg);
+  const Series eye = pluss::series::eye(k, k, out_cfg);
   const Series diag = cov.mul(eye).sum(0, false).reshape({k}).clamp_min(kEps).sqrt();
   const Series d_inv = eye.div(diag.reshape({k, 1}));
   const Series map = d_inv.matmul(cov);
@@ -410,14 +410,14 @@ GrangerResult run_granger_(const VarFit& fit,
 
   if (tests.empty()) {
     return GrangerResult{
-        .cause = pluss::empty({0}, i64_cfg_(out_cfg)),
-        .effect = pluss::empty({0}, i64_cfg_(out_cfg)),
-        .stat = pluss::empty({0}, out_cfg),
-        .pvalue = pluss::empty({0}, out_cfg),
-        .critical = pluss::empty({0}, out_cfg),
-        .dof1 = pluss::empty({0}, i64_cfg_(out_cfg)),
-        .dof2 = pluss::empty({0}, i64_cfg_(out_cfg)),
-        .reject = pluss::empty({0}, i64_cfg_(out_cfg)),
+        .cause = pluss::series::empty({0}, i64_cfg_(out_cfg)),
+        .effect = pluss::series::empty({0}, i64_cfg_(out_cfg)),
+        .stat = pluss::series::empty({0}, out_cfg),
+        .pvalue = pluss::series::empty({0}, out_cfg),
+        .critical = pluss::series::empty({0}, out_cfg),
+        .dof1 = pluss::series::empty({0}, i64_cfg_(out_cfg)),
+        .dof2 = pluss::series::empty({0}, i64_cfg_(out_cfg)),
+        .reject = pluss::series::empty({0}, i64_cfg_(out_cfg)),
     };
   }
 
@@ -531,10 +531,10 @@ Series VarFit::fevd(const FevdOptions& options, Config cfg) const {
   const Series cov = stabilize_cov_(covariance, out_cfg);
   const auto psi = ma_coeffs_(*this, options.horizon, out_cfg, "VarFit::fevd");
   const Series map = shock_map_(cov, options.method, out_cfg, "VarFit::fevd");
-  const Series eye = pluss::eye(dims.k, dims.k, out_cfg);
+  const Series eye = pluss::series::eye(dims.k, dims.k, out_cfg);
 
-  Series num = pluss::zeros({dims.k, dims.k}, out_cfg);
-  Series den = pluss::zeros({dims.k}, out_cfg);
+  Series num = pluss::series::zeros({dims.k, dims.k}, out_cfg);
+  Series den = pluss::series::zeros({dims.k}, out_cfg);
   std::vector<Series> pages;
   pages.reserve(static_cast<std::size_t>(options.horizon));
 

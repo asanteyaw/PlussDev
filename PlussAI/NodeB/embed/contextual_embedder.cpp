@@ -115,8 +115,8 @@ nodej::Status ContextualEmbedder::learn(const std::vector<Doc>& docs) {
   encoder->model()->train(true);
 
   const double scale = 0.5 / static_cast<double>(width);
-  Series output_weight = pluss::rand({width, vocab_size}, cfg, options_.seed + 2).sub(0.5).mul(2.0 * scale);
-  Series output_bias = pluss::zeros({vocab_size}, cfg);
+  Series output_weight = pluss::series::rand({width, vocab_size}, cfg, options_.seed + 2).sub(0.5).mul(2.0 * scale);
+  Series output_bias = pluss::series::zeros({vocab_size}, cfg);
   output_weight.tracks_slope_(true);
   output_bias.tracks_slope_(true);
 
@@ -379,7 +379,7 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
     } else {
       const auto flat_logits = logits.to(pluss::pCPU, ScalarType::Float64).reshape({vocab_size}).to_vec<double>();
       const auto probs = next_token_probs(flat_logits, options.top_k);
-      const Series sampled = pluss::multinomial(std::span<const double>(probs), 1, /*replacement=*/true, sample_seed);
+      const Series sampled = pluss::series::multinomial(std::span<const double>(probs), 1, /*replacement=*/true, sample_seed);
       ++sample_seed;
       next_id = sampled.to(pluss::pCPU, ScalarType::Int64).item<std::int64_t>();
     }

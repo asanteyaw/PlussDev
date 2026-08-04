@@ -6,7 +6,7 @@ using pluss::codem::Series;
 using pluss::codem::ScalarType;
 
 TEST_CASE("complex add/mul + exp/log", "[complex]") {
-  pluss::Series a = pluss::full({2}, 0.0, pluss::ScalarType::Complex64);
+  pluss::Series a = pluss::series::full({2}, 0.0, pluss::ScalarType::Complex64);
   auto* ap = reinterpret_cast<std::complex<float>*>(a.raw_data());
   ap[0] = {1.0f, 2.0f};
   ap[1] = {0.0f, -1.0f};

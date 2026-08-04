@@ -62,7 +62,7 @@ Series norm_pdf_(const Series& x) {
 }
 
 Series full_like_(const Series& like, double value, Config cfg) {
-  return pluss::full(like.sizes(), value, cfg);
+  return pluss::series::full(like.sizes(), value, cfg);
 }
 
 void validate_option_type_(OptionType type, const char* op) {
@@ -185,14 +185,14 @@ BsSeriesCore bs_core_(OptionType type,
 }
 
 Series scalar_series_(double x, Config cfg) {
-  return pluss::full({1}, x, cfg);
+  return pluss::series::full({1}, x, cfg);
 }
 
 Series maturity_vector_(const Series& spot, double maturity, Config cfg, const char* op) {
   PLUSS_CHECK(std::isfinite(maturity) && maturity >= 0.0,
               std::string("subsp::math::finance::pricing::") + op + ": maturity must be finite and >= 0");
   const Series s = as_vector_(spot, op);
-  return pluss::full({s.numel()}, maturity, cfg);
+  return pluss::series::full({s.numel()}, maturity, cfg);
 }
 
 } // namespace

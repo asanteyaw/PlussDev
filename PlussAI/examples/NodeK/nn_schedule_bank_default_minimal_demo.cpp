@@ -34,7 +34,7 @@ int main() {
     return 1;
   }
 
-  const auto x = pluss::pile(
+  const auto x = pluss::series::pile(
                      {
                          standardize(df.features("age").as_series()),
                          standardize(df.features("balance").as_series()),

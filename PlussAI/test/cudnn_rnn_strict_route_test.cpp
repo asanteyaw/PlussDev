@@ -92,11 +92,11 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights_(
     for (std::int64_t dir = 0; dir < dirs; ++dir) {
       const std::uint64_t seed = seed_base + static_cast<std::uint64_t>(17 * (layer * dirs + dir));
       out.push_back(pluss::ai::rnn::NetWeight{
-          .weight_ih = pluss::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
-          .weight_hh = pluss::rand({gates * hidden_size, hidden_size}, cfg, seed + 2ULL),
+          .weight_ih = pluss::series::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
+          .weight_hh = pluss::series::rand({gates * hidden_size, hidden_size}, cfg, seed + 2ULL),
           .bias = pluss::Series(),
-          .bias_ih = pluss::rand({gates * hidden_size}, cfg, seed + 3ULL),
-          .bias_hh = pluss::rand({gates * hidden_size}, cfg, seed + 4ULL),
+          .bias_ih = pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL),
+          .bias_hh = pluss::series::rand({gates * hidden_size}, cfg, seed + 4ULL),
           .weight_hr = pluss::Series(),
       });
     }
@@ -131,9 +131,9 @@ bool run_cudnn_rnn_strict_route_checks(std::ostream* err = nullptr) {
   run_cfg.split_bias = true;
   run_cfg.cfg = cfg;
 
-  const auto x = pluss::rand({6, 3, 5}, cfg, 7201ULL);
-  const auto h0 = pluss::rand({4, 3, 4}, cfg, 7203ULL);
-  const auto c0 = pluss::rand({4, 3, 4}, cfg, 7205ULL);
+  const auto x = pluss::series::rand({6, 3, 5}, cfg, 7201ULL);
+  const auto h0 = pluss::series::rand({4, 3, 4}, cfg, 7203ULL);
+  const auto c0 = pluss::series::rand({4, 3, 4}, cfg, 7205ULL);
 
   const auto rnn_w_cpu = make_weights_(1, 5, 4, 2, true, cfg, 7301ULL);
   const auto gru_w_cpu = make_weights_(3, 5, 4, 2, true, cfg, 7401ULL);

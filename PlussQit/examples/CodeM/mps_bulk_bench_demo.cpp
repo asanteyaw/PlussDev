@@ -241,9 +241,9 @@ BenchResult run_workload(WorkloadKind kind,
                          int rounds,
                          std::uint64_t seed) {
   pluss::Config cpu_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const auto x0_cpu = pluss::randn({n, n}, cpu_cfg, seed);
-  const auto a_cpu = pluss::randn({n, n}, cpu_cfg, seed + 1);
-  const auto b_cpu = pluss::randn({n, n}, cpu_cfg, seed + 2);
+  const auto x0_cpu = pluss::series::randn({n, n}, cpu_cfg, seed);
+  const auto a_cpu = pluss::series::randn({n, n}, cpu_cfg, seed + 1);
+  const auto b_cpu = pluss::series::randn({n, n}, cpu_cfg, seed + 2);
   const auto x0 = x0_cpu.to(p);
   const auto a = a_cpu.to(p);
   const auto b = b_cpu.to(p);

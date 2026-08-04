@@ -439,7 +439,7 @@ TEST_CASE("PlussPl flash facade maps flash-like names to PlussPl traces", "[plus
   set_style(pane, GridStyle::Major);
   set_context(book, 1000.0, 700.0, 1.2, 1.1);
 
-  auto x = pluss::linspace(0.0, 1.0, 8, pluss::ScalarType::Float64);
+  auto x = pluss::series::linspace(0.0, 1.0, 8, pluss::ScalarType::Float64);
   auto y = pluss::make_series(std::vector<double>{0.0, 0.2, 0.35, 0.6, 0.7, 0.82, 0.9, 1.0}, {8});
 
   scatterplot(pane, x, y).label("scatter");

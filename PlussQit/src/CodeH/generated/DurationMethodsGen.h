@@ -45,41 +45,9 @@ Duration operator*(std::int64_t k) const { return mul(k); }
 Duration operator/(std::int64_t k) const { return div(k); }
 
 // ---- Unit conversions (vectorized; pandas-style total_seconds, etc.) ----
-pluss::codem::Series total_nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"ns"}); }
-pluss::codem::Series total_microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"us"}); }
-pluss::codem::Series total_milliseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"ms"}); }
-pluss::codem::Series total_seconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"s"}); }
-pluss::codem::Series total_minutes() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"min"}); }
-pluss::codem::Series total_hours() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"h"}); }
-pluss::codem::Series total_days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"D"}); }
-pluss::codem::Series total_weeks() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"W"}); }
-
-// Additional naming variants (MATLAB/pandas discoverability)
-pluss::codem::Series totalWeeks() const { return total_weeks(); }
-pluss::codem::Series totalDays() const { return total_days(); }
-pluss::codem::Series totalHours() const { return total_hours(); }
-pluss::codem::Series totalMinutes() const { return total_minutes(); }
-pluss::codem::Series totalSeconds() const { return total_seconds(); }
-pluss::codem::Series totalMilliseconds() const { return total_milliseconds(); }
-pluss::codem::Series totalMicroseconds() const { return total_microseconds(); }
-pluss::codem::Series totalNanoseconds() const { return total_nanoseconds(); }
-
-pluss::codem::Series to_days() const { return total_days(); }
-pluss::codem::Series to_hours() const { return total_hours(); }
-pluss::codem::Series to_minutes() const { return total_minutes(); }
-pluss::codem::Series to_seconds() const { return total_seconds(); }
-pluss::codem::Series to_milliseconds() const { return total_milliseconds(); }
-pluss::codem::Series to_microseconds() const { return total_microseconds(); }
-pluss::codem::Series to_nanoseconds() const { return total_nanoseconds(); }
-
-// Common aliases (pandas-ish)
-pluss::codem::Series total_sec() const { return total_seconds(); }
-pluss::codem::Series total_min() const { return total_minutes(); }
-pluss::codem::Series total_hr() const { return total_hours(); }
-pluss::codem::Series total_day() const { return total_days(); }
-pluss::codem::Series total_ns() const { return total_nanoseconds(); }
-pluss::codem::Series total_us() const { return total_microseconds(); }
-pluss::codem::Series total_ms() const { return total_milliseconds(); }
+// Deliberately NOT exposed as flat total_nanoseconds()/total_seconds()/etc.
+// methods on Duration itself -- total() (see Duration.h's DurationTotal)
+// is the sole entry point: d.total().seconds(), not d.total_seconds().
 
 // ---- Components extraction (like Timedelta components) ----
 pluss::codem::Series days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"days"}); }

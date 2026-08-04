@@ -56,13 +56,13 @@ forward gap.
 Example 1. Attach New York timezone meaning to naive local wall-clock values.
 
 ```cpp
-auto naive_local = pluss::make_timeindex({
+auto naive_local = pluss::timeindex::make({
     "2024-11-01T09:00:00",
     "2024-11-01T10:15:00",
 }, false);
 
 auto out = naive_local.tz_localize("America/New_York");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -77,7 +77,7 @@ actually part of the input problem.
 
 ```cpp
 auto localized = naive_local.tz_localize("America/New_York", 0, "raise");
-std::cout << pluss::print_timeline(localized) << "\n";
+std::cout << pluss::timeindex::print(localized) << "\n";
 ```
 
 ## Notes

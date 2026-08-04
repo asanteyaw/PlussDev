@@ -8,7 +8,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("index_put_ accumulate supports float16", "[indexing][accumulate]") {
-  auto x = pluss::zeros({4}, pluss::config({{"dtype","float16"}}));
+  auto x = pluss::series::zeros({4}, pluss::config({{"dtype","float16"}}));
   auto idx = pluss::make_series(std::vector<std::int64_t>{1,1,2}, {3});
   auto v  = pluss::make_series(std::vector<float>{1,2,3}, {3}).to(pluss::ScalarType::Float16);
   x.index_put_({idx}, v, true);

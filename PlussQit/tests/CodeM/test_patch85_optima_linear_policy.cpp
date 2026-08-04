@@ -70,18 +70,18 @@ TEST_CASE("sequential qp can use pivoted direct KKT solves", "[optim][sqp][linea
 TEST_CASE("interior point auto routing can prefer Krylov for sparse-structured problems",
           "[optim][ip][linear-policy]") {
   const std::int64_t n = 10;
-  Series target = pluss::linspace(0.1, 1.0, n, ScalarType::Float64).to(pluss::pCPU);
+  Series target = pluss::series::linspace(0.1, 1.0, n, ScalarType::Float64).to(pluss::pCPU);
 
   ConstrainedProblem problem;
   problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
     return sum(square(p.at("x") - trace(target, false)));
   };
   problem.bounds.lower = ParameterPack<Series>({
-      {"x", pluss::zeros({n}, ScalarType::Float64).to(pluss::pCPU)},
+      {"x", pluss::series::zeros({n}, ScalarType::Float64).to(pluss::pCPU)},
   });
 
   const ParameterPack<Series> initial({
-      {"x", pluss::full({n}, 1.5, ScalarType::Float64).to(pluss::pCPU)},
+      {"x", pluss::series::full({n}, 1.5, ScalarType::Float64).to(pluss::pCPU)},
   });
 
   OptimaOptions options;

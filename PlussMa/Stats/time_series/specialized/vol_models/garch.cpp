@@ -475,7 +475,7 @@ std::vector<double> simulate_series_(std::int64_t n,
                                      std::uint64_t seed) {
   PLUSS_CHECK(n > 0, "subsp::stats::ts::GarchFit::simulate: num_observations must be > 0");
   const auto out_cfg = f64_cfg_(cfg);
-  const auto z = flat_f64_values_(pluss::randn({n}, out_cfg, seed));
+  const auto z = flat_f64_values_(pluss::series::randn({n}, out_cfg, seed));
 
   GarchParams p{fit.omega, fit.arch, fit.garch};
   const double sum = coeff_sum_(p);

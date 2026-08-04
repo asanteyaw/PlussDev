@@ -9,11 +9,11 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
-  Series a = pluss::arange(0, 6, 1, ScalarType::Int64).view(std::vector<std::int64_t>{2,3});
-  Series b = pluss::full({1,3}, 100.0, ScalarType::Int64); // broadcast over dim0
-  Series m = pluss::zeros({2,1}, ScalarType::Bool);        // broadcast over dim1
-  m = m.index_put({pluss::full({1}, 1, ScalarType::Int64), pluss::full({1}, 0, ScalarType::Int64)},
-                  pluss::full({1}, 1, ScalarType::Bool), false);
+  Series a = pluss::series::arange(0, 6, 1, ScalarType::Int64).view(std::vector<std::int64_t>{2,3});
+  Series b = pluss::series::full({1,3}, 100.0, ScalarType::Int64); // broadcast over dim0
+  Series m = pluss::series::zeros({2,1}, ScalarType::Bool);        // broadcast over dim1
+  m = m.index_put({pluss::series::full({1}, 1, ScalarType::Int64), pluss::series::full({1}, 0, ScalarType::Int64)},
+                  pluss::series::full({1}, 1, ScalarType::Bool), false);
 
   auto wv = a.where(m, b);
   REQUIRE(wv.sizes()[0] == 2);
@@ -22,7 +22,7 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
   REQUIRE(wp[0] == 0);    // row0 uses a
   REQUIRE(wp[3] == 100);  // row1 uses b due to mask
 
-  auto c = pluss::full({3}, 2.0, ScalarType::Float32).clamp(3.0, 4.0);
+  auto c = pluss::series::full({3}, 2.0, ScalarType::Float32).clamp(3.0, 4.0);
   auto* cp = reinterpret_cast<const float*>(c.raw_data());
   REQUIRE(cp[0] == 3.0f);
 
@@ -31,7 +31,7 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
   REQUIRE(wsp[3] == 7);
 
   auto finite = pluss::make_series({1.0, 2.0});
-  auto nan_values = pluss::full(
+  auto nan_values = pluss::series::full(
       {2},
       std::numeric_limits<double>::quiet_NaN(),
       ScalarType::Float64);

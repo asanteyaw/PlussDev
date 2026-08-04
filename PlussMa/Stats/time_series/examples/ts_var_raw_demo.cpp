@@ -18,7 +18,7 @@ int main() {
   truth.include_intercept = true;
   truth.include_trend = false;
   truth.constant = pluss::make_series(std::vector<double>{0.10, -0.05}, {2}, cfg);
-  truth.trend = pluss::zeros({2}, cfg);
+  truth.trend = pluss::series::zeros({2}, cfg);
   truth.ar = pluss::make_series(
       std::vector<double>{
           0.45, 0.08,
@@ -28,7 +28,7 @@ int main() {
       },
       {2, 2, 2},
       cfg);
-  truth.beta = pluss::empty({0, 2}, cfg);
+  truth.beta = pluss::series::empty({0, 2}, cfg);
   truth.covariance = pluss::make_series(std::vector<double>{0.35, 0.08, 0.08, 0.25}, {2, 2}, cfg);
 
   const pluss::Series y = truth.simulate(2000, cfg, 20260611ULL);

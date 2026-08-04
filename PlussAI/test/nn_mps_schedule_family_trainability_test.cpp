@@ -78,8 +78,8 @@ void seed_parameters(ModuleT& model, float base, float step) {
     if (!p || !p->defined()) continue;
     const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(p->platform());
     const Series idx =
-        pluss::arange(0, p->numel(), 1, icfg).to(p->platform(), ScalarType::Float32).reshape(p->sizes());
-    *p = pluss::full_like(*p, base, ScalarType::Float32).add(idx.mul(step));
+        pluss::series::arange(0, p->numel(), 1, icfg).to(p->platform(), ScalarType::Float32).reshape(p->sizes());
+    *p = pluss::series::full_like(*p, base, ScalarType::Float32).add(idx.mul(step));
     p->tracks_slope_(true);
   }
 }
@@ -551,7 +551,7 @@ struct MaskedTransformerAutoencoderImpl final : pluss::nn::Module {
     const std::int64_t batch = input.sizes()[0];
     const std::int64_t seq = input.sizes()[1];
     const Series seq_mask = pluss::square_subsequent_mask(seq, input);
-    const Series pad_mask = pluss::zeros({batch, seq}, Config{}.with_dtype(ScalarType::Bool).with_platform(input.platform()));
+    const Series pad_mask = pluss::series::zeros({batch, seq}, Config{}.with_dtype(ScalarType::Bool).with_platform(input.platform()));
     return transformer->forward(
         input,
         input,

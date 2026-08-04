@@ -237,7 +237,7 @@ public:
         processed.push_back(var_grns_[static_cast<std::size_t>(slot_lookup_[idx])]->forward(one_var));
       }
     }
-    const Series stacked = pluss::pile(processed, -2); // [..., num_vars, hidden_size]
+    const Series stacked = pluss::series::pile(processed, -2); // [..., num_vars, hidden_size]
 
     std::vector<std::int64_t> flat_shape(stacked.sizes().begin(), stacked.sizes().end() - 2);
     flat_shape.push_back(options_.num_vars * options_.hidden_size);
@@ -280,7 +280,7 @@ PLUSS_MODULE_IMPL(VariableSelectionNetwork, VariableSelectionNetworkImpl);
     // they differ by -e>0. Both match the max().
     per_quantile.push_back(e.mul(q).add(e.neg().relu()));
   }
-  const Series stacked = pluss::unite(per_quantile, -1); // [N, horizon, num_quantiles]
+  const Series stacked = pluss::series::unite(per_quantile, -1); // [N, horizon, num_quantiles]
   return stacked.mean();
 }
 

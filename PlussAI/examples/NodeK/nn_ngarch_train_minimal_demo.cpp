@@ -80,7 +80,7 @@ struct NGARCHModuleImpl final : pluss::nn::Module {
       z_prev = z_t;
     }
 
-    return {pluss::pile(z_hist, 0).reshape({n}), pluss::pile(h_hist, 0).reshape({n})};
+    return {pluss::series::pile(z_hist, 0).reshape({n}), pluss::series::pile(h_hist, 0).reshape({n})};
   }
 };
 
@@ -93,7 +93,7 @@ Series ngarch_generate_returns(std::int64_t n, const Config& cfg) {
   const Series lambda = pluss::make_series(0.12, cfg);
   const Series gamma = pluss::make_series(-0.25, cfg);
 
-  const Series noise = pluss::randn({n}, cfg, 123456ULL);
+  const Series noise = pluss::series::randn({n}, cfg, 123456ULL);
   std::vector<Series> y_hist;
   y_hist.reserve(static_cast<std::size_t>(n));
 
@@ -108,7 +108,7 @@ Series ngarch_generate_returns(std::int64_t n, const Config& cfg) {
     h_prev = h_t;
     z_prev = z_t;
   }
-  return pluss::pile(y_hist, 0).reshape({n});
+  return pluss::series::pile(y_hist, 0).reshape({n});
 }
 
 Series neg_log_likelihood(const Series& z, const Series& h) {

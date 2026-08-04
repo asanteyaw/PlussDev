@@ -51,15 +51,15 @@ Garch11Params decode_params(const ParameterPack<Series>& params) {
 }
 
 Series simulate_garch11(const Garch11Params& p, std::int64_t n, std::uint64_t seed, const pluss::Config& cfg) {
-  const Series z = pluss::randn({n}, cfg, seed);
-  Series returns = pluss::zeros({n}, cfg);
+  const Series z = pluss::series::randn({n}, cfg, seed);
+  Series returns = pluss::series::zeros({n}, cfg);
 
   const pluss::Config idx_cfg = pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform);
   const Series one = scalar(1.0, cfg);
   Series variance = p.omega.div(one.sub(p.alpha).sub(p.beta).maximum(1e-8));
 
   for (std::int64_t t = 0; t < n; ++t) {
-    const Series idx = pluss::arange(t, t + 1, idx_cfg);
+    const Series idx = pluss::series::arange(t, t + 1, idx_cfg);
     const Series eps = z.select(0, t);
     const Series r = variance.maximum(1e-12).sqrt().mul(eps);
     returns = returns.put(idx, r.reshape({1}), false);

@@ -174,7 +174,7 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Series prepend_intercept(const Series& x_rows) {
-  const Series ones = pluss::ones({x_rows.sizes()[0], 1}, f64_on(x_rows.platform()));
+  const Series ones = pluss::series::ones({x_rows.sizes()[0], 1}, f64_on(x_rows.platform()));
   return ones.unite({x_rows}, 1);
 }
 
@@ -197,18 +197,18 @@ struct DenseFeatureMatrix {
   Series rhs = xt.matmul(labels.reshape({labels.numel(), 1}));
 
   if (lambda > 0.0) {
-    Series ridge_diag = pluss::ones({feature_dim}, f64_on(platform)).mul(lambda);
+    Series ridge_diag = pluss::series::ones({feature_dim}, f64_on(platform)).mul(lambda);
     if (fit_intercept) {
       const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, platform);
       ridge_diag = pluss::index_put(ridge_diag,
                                     std::vector<Series>{idx0},
-                                    pluss::zeros({1}, f64_on(platform)),
+                                    pluss::series::zeros({1}, f64_on(platform)),
                                     false);
     }
-    gram = gram.add(pluss::eye(feature_dim, feature_dim, f64_on(platform)).mul(ridge_diag.reshape({1, feature_dim})));
+    gram = gram.add(pluss::series::eye(feature_dim, feature_dim, f64_on(platform)).mul(ridge_diag.reshape({1, feature_dim})));
   }
 
-  const Series eye = pluss::eye(feature_dim, feature_dim, f64_on(platform));
+  const Series eye = pluss::series::eye(feature_dim, feature_dim, f64_on(platform));
   const std::array<double, 7> jitters{0.0, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2};
   for (double jitter : jitters) {
     try {
@@ -225,13 +225,13 @@ struct DenseFeatureMatrix {
   Series x_aug = design;
   Series y_aug = labels.reshape({labels.numel(), 1});
   if (lambda > 0.0) {
-    Series penalty = pluss::eye(feature_dim, feature_dim, f64_on(platform)).mul(std::sqrt(lambda));
+    Series penalty = pluss::series::eye(feature_dim, feature_dim, f64_on(platform)).mul(std::sqrt(lambda));
     if (fit_intercept) {
       const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, penalty.platform());
-      penalty = pluss::index_put(penalty, std::vector<Series>{idx0, idx0}, pluss::zeros({1}, f64_on(penalty.platform())), false);
+      penalty = pluss::index_put(penalty, std::vector<Series>{idx0, idx0}, pluss::series::zeros({1}, f64_on(penalty.platform())), false);
     }
     x_aug = x_aug.unite({penalty}, 0);
-    y_aug = y_aug.unite({pluss::zeros({feature_dim, 1}, f64_on(platform))}, 0);
+    y_aug = y_aug.unite({pluss::series::zeros({feature_dim, 1}, f64_on(platform))}, 0);
   }
   const Series beta = pluss::subsp::math::linalg::pinverse(x_aug, pinv_rcond).matmul(y_aug).reshape({feature_dim});
   if (all_finite(beta)) return StatusOr<Series>(beta);
@@ -280,7 +280,7 @@ struct LinearPenalty {
   Series penalized = weights;
   if (fit_intercept) {
     const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, penalized.platform());
-    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(penalized.platform())), false);
+    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(penalized.platform())), false);
   }
   return 0.5 * lambda_l2 * penalized.square().sum().item<double>();
 }
@@ -290,7 +290,7 @@ struct LinearPenalty {
   Series penalized = weights;
   if (fit_intercept) {
     const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, penalized.platform());
-    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(penalized.platform())), false);
+    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(penalized.platform())), false);
   }
   return lambda_l1 * penalized.abs().sum().item<double>();
 }
@@ -312,7 +312,7 @@ struct LinearPenalty {
     return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires positive max_iterations and tolerance."));
   }
 
-  Series weights = pluss::zeros({p}, f64_on(design.platform()));
+  Series weights = pluss::series::zeros({p}, f64_on(design.platform()));
   const Series design_t = design.transpose(0, 1);
   const Series col_sq_sum = design.square().sum(0, false);
   const double max_col_sq = col_sq_sum.max().reshape({1}).item<double>();
@@ -332,7 +332,7 @@ struct LinearPenalty {
       Series ridge = weights;
       if (fit_intercept) {
         const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, ridge.platform());
-        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
       }
       grad = grad.add(ridge.mul(lambda_l2));
     }
@@ -385,7 +385,7 @@ struct LinearPenalty {
     return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires finite robust_transition > 0."));
   }
 
-  Series weights = pluss::zeros({p}, f64_on(design.platform()));
+  Series weights = pluss::series::zeros({p}, f64_on(design.platform()));
   const Series design_t = design.transpose(0, 1);
   const Series col_sq_sum = design.square().sum(0, false);
   const double max_col_sq = col_sq_sum.max().reshape({1}).item<double>();
@@ -411,7 +411,7 @@ struct LinearPenalty {
       Series ridge = weights;
       if (fit_intercept) {
         const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, ridge.platform());
-        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
       }
       grad = grad.add(ridge.mul(lambda_l2));
     }
@@ -460,9 +460,9 @@ struct LinearPenalty {
     return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires non-empty design matrix."));
   }
   Series y = labels01.to(ScalarType::Float64).reshape({n}).clamp(0.0, 1.0);
-  Series weights = pluss::zeros({p}, f64_on(design.platform()));
+  Series weights = pluss::series::zeros({p}, f64_on(design.platform()));
   const Series design_t = design.transpose(0, 1);
-  const Series eye = pluss::eye(p, p, f64_on(design.platform()));
+  const Series eye = pluss::series::eye(p, p, f64_on(design.platform()));
   const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, design.platform());
 
   double prev_loss = std::numeric_limits<double>::infinity();
@@ -474,7 +474,7 @@ struct LinearPenalty {
     if (lambda_l2 > 0.0) {
       Series ridge = weights;
       if (fit_intercept) {
-        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
       }
       grad = grad.add(ridge.mul(lambda_l2));
     }
@@ -483,7 +483,7 @@ struct LinearPenalty {
     if (lambda_l2 > 0.0) {
       Series reg = eye.mul(lambda_l2);
       if (fit_intercept) {
-        reg = pluss::index_put(reg, std::vector<Series>{idx0, idx0}, pluss::zeros({1}, f64_on(reg.platform())), false);
+        reg = pluss::index_put(reg, std::vector<Series>{idx0, idx0}, pluss::series::zeros({1}, f64_on(reg.platform())), false);
       }
       hessian = hessian.add(reg);
     }
@@ -497,7 +497,7 @@ struct LinearPenalty {
     const Series bce = y.mul(p_next.log()).add(y.mul(-1.0).add(1.0).mul(p_next.mul(-1.0).add(1.0).log())).mul(-1.0);
     Series ridge = next;
     if (fit_intercept) {
-      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
     }
     const double loss = bce.mean().item<double>() + 0.5 * lambda_l2 * ridge.square().sum().item<double>();
     const double step = delta.abs().max().reshape({1}).item<double>();
@@ -533,8 +533,8 @@ struct LinearPenalty {
   const Series quantile_loss = residual.mul(quantile).sub(residual.mul(neg_indicator)).mean();
   const Series y_centered = y.sub(y.mean());
   const Series sst = y_centered.square().sum();
-  const Series zero = pluss::zeros_like(sst, ScalarType::Float64);
-  const Series one = pluss::ones_like(sst, ScalarType::Float64);
+  const Series zero = pluss::series::zeros_like(sst, ScalarType::Float64);
+  const Series one = pluss::series::ones_like(sst, ScalarType::Float64);
   const Series sse_small = sse.le(std::numeric_limits<double>::epsilon()).to(ScalarType::Float64);
   const Series r2 = sst.gt(std::numeric_limits<double>::epsilon())
                         .where(one.sub(sse.div(sst)),
@@ -854,7 +854,7 @@ struct LinearPenalty {
   const Series dist2 = pairwise_distance2(query_rows, train_rows);
   const Series sort_idx = dist2.argsort(1, false, true);
   const Series k_cols =
-      pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
+      pluss::series::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
   const Series knn_idx = sort_idx.index_select(1, k_cols);
   const Series y_train_2d =
       y_train.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
@@ -868,11 +868,11 @@ struct LinearPenalty {
   const Series d2_knn = dist2.gather(1, knn_idx);
   const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
   const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
-  const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
+  const Series inv_dist = pluss::series::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
   const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
   const Series wsum = weights.sum(1, false);
   const Series ysum = weights.mul(y_knn).sum(1, false);
-  return wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64));
+  return wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64));
 }
 
 [[nodiscard]] Series radius_predict_series(const Series& query_rows,
@@ -895,7 +895,7 @@ struct LinearPenalty {
     constexpr double eps = 1e-12;
     const Series zero_mask = dist2.le(eps).to(ScalarType::Float64).mul(mask);
     const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
-    const Series inv_dist = pluss::ones_like(dist2, ScalarType::Float64).div(dist2.sqrt().add(eps));
+    const Series inv_dist = pluss::series::ones_like(dist2, ScalarType::Float64).div(dist2.sqrt().add(eps));
     const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist).mul(mask));
     const Series wsum = weights.sum(1, false);
     const Series ysum = weights.mul(y_train_2d).sum(1, false);
@@ -993,7 +993,7 @@ public:
         const Series dist2 = pairwise_distance2(x_query, x_train_);
         const Series sort_idx = dist2.argsort(1, false, true);
         const Series k_cols =
-            pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
+            pluss::series::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
         const Series knn_idx = sort_idx.index_select(1, k_cols);
         const Series y_train_2d =
             y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
@@ -1004,11 +1004,11 @@ public:
           const Series d2_knn = dist2.gather(1, knn_idx);
           const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
           const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
-          const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
+          const Series inv_dist = pluss::series::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
           const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
           const Series wsum = weights.sum(1, false);
           const Series ysum = weights.mul(y_knn).sum(1, false);
-          pred = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64));
+          pred = wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64));
         } else {
           pred = y_knn.mean(1, false);
         }
@@ -2391,9 +2391,9 @@ private:
                                                     const char* where) {
   const std::int64_t n = kernel.sizes()[0];
   const Platform platform = kernel.platform();
-  const Series eye = pluss::eye(n, n, f64_on(platform));
+  const Series eye = pluss::series::eye(n, n, f64_on(platform));
   const Series a = kernel.add(eye.mul(lambda));
-  Series x = pluss::zeros({n}, f64_on(platform));
+  Series x = pluss::series::zeros({n}, f64_on(platform));
   Series b = rhs.to(platform, ScalarType::Float64).reshape({n});
   Series r = b;
   Series p = r;
@@ -2503,7 +2503,7 @@ public:
       alpha = alpha_or.move_value();
     } else {
       // Fallback for indefinite kernels (for example sigmoid/polynomial edge cases).
-      Series shifted = k_series.add(pluss::eye(sample_count_, sample_count_, f64_cpu()).to(x_train_.platform()).mul(lambda_));
+      Series shifted = k_series.add(pluss::series::eye(sample_count_, sample_count_, f64_cpu()).to(x_train_.platform()).mul(lambda_));
       alpha = pluss::subsp::math::linalg::pinverse(shifted, 1e-12).matmul(y).reshape({sample_count_});
     }
     if (!all_finite(alpha)) {

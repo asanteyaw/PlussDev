@@ -50,7 +50,7 @@ Series as_vector_col_(const Series& x, const char* op, const char* name) {
 
 Series stabilize_cov_(const Series& cov, double jitter, Config cfg) {
   const Series sym = cov.add(cov.transpose(0, 1)).mul(0.5);
-  return sym.add(pluss::eye(sym.sizes()[0], cfg).mul(std::max(jitter, 0.0)));
+  return sym.add(pluss::series::eye(sym.sizes()[0], cfg).mul(std::max(jitter, 0.0)));
 }
 
 Series stack_rows_(const std::vector<Series>& rows) {
@@ -64,7 +64,7 @@ Series stack_rows_(const std::vector<Series>& rows) {
 }
 
 Series row_index_(std::int64_t i, Platform platform) {
-  return pluss::full({1}, i, Config{}.with_dtype(ScalarType::Int64).with_platform(platform));
+  return pluss::series::full({1}, i, Config{}.with_dtype(ScalarType::Int64).with_platform(platform));
 }
 
 Series index_from_vector_(const std::vector<std::int64_t>& idx, Platform platform) {
@@ -147,10 +147,10 @@ Series force_obs_matrix_(const Series& y) {
 }
 
 Series make_weights_(std::int64_t k, double w0, double wi, Config cfg) {
-  Series w = pluss::full({k, 1}, wi, cfg);
+  Series w = pluss::series::full({k, 1}, wi, cfg);
   if (k > 0) {
     const Series idx0 = row_index_(0, cfg.platform);
-    w = pluss::index_put(w, std::vector<Series>{idx0, idx0}, pluss::full({1}, w0, cfg), false);
+    w = pluss::index_put(w, std::vector<Series>{idx0, idx0}, pluss::series::full({1}, w0, cfg), false);
   }
   return w;
 }
@@ -336,7 +336,7 @@ KalmanResult kalman_filter(const Series& observations, const KalmanModel& model,
               "subsp::math::finance::filtering::kalman_filter: initial_cov shape mismatch");
 
   const std::int64_t n = fs[0];
-  const Series I = pluss::eye(n, out_cfg);
+  const Series I = pluss::series::eye(n, out_cfg);
 
   const bool use_control = model.control.defined() || model.control_matrix.defined();
   const double info_tol = std::max(model.info_tol, 0.0);
@@ -460,7 +460,7 @@ KalmanResult ekf_filter(const Series& observations, const EkfModel& model, Confi
   PLUSS_CHECK(P.sizes()[0] == n && P.sizes()[1] == n,
               "subsp::math::finance::filtering::ekf_filter: initial_cov shape mismatch");
 
-  const Series I = pluss::eye(n, out_cfg);
+  const Series I = pluss::series::eye(n, out_cfg);
 
   std::vector<Series> pred_means;
   std::vector<Series> pred_covs;
@@ -711,7 +711,7 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
     PLUSS_CHECK(weights.numel() == n_particles,
                 "subsp::math::finance::filtering::particle_filter: initial_weights length mismatch");
   } else {
-    weights = pluss::full({n_particles}, 1.0 / static_cast<double>(n_particles), out_cfg);
+    weights = pluss::series::full({n_particles}, 1.0 / static_cast<double>(n_particles), out_cfg);
   }
   weights = weights.clamp_min(0.0);
   weights = weights.div(weights.sum().clamp_min(kTiny));
@@ -782,7 +782,7 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
                                        model.options.resample_method,
                                        seed_base + static_cast<std::uint64_t>(t + 1));
       particles = particles.index_select(0, idx);
-      weights = pluss::full({n_particles}, 1.0 / static_cast<double>(n_particles), out_cfg);
+      weights = pluss::series::full({n_particles}, 1.0 / static_cast<double>(n_particles), out_cfg);
     }
   }
 
@@ -821,7 +821,7 @@ ParticleFilterResult sv_particle_filter(const Series& log_returns,
   const double init_std = sigma_h / std::sqrt(std::max(kTiny, 1.0 - phi * phi));
 
   const std::uint64_t base_seed = (seed == 0U) ? 0xA1C3D5E7ULL : seed;
-  Series particles0 = pluss::randn({num_particles, 1}, out_cfg, base_seed)
+  Series particles0 = pluss::series::randn({num_particles, 1}, out_cfg, base_seed)
                           .mul(init_std)
                           .add(params.logvar0);
 
@@ -832,7 +832,7 @@ ParticleFilterResult sv_particle_filter(const Series& log_returns,
   model.options.store_particles = true;
 
   model.transition = [=](const Series& particles, std::int64_t t) {
-    const Series eps = pluss::randn({num_particles, 1}, out_cfg, base_seed + 4099U * static_cast<std::uint64_t>(t + 1));
+    const Series eps = pluss::series::randn({num_particles, 1}, out_cfg, base_seed + 4099U * static_cast<std::uint64_t>(t + 1));
     return particles.mul(phi)
         .add(mean_h * (1.0 - phi))
         .add(eps.mul(sigma_h * std::sqrt(dt)));
@@ -841,7 +841,7 @@ ParticleFilterResult sv_particle_filter(const Series& log_returns,
   model.loglik = [=](const Series& particles, const Series& obs, std::int64_t) {
     const Series h = particles.reshape({num_particles, 1});
     const Series v = h.exp().mul(dt).clamp_min(params.variance_floor);
-    const Series mu = pluss::full({num_particles, 1}, params.mu * dt, out_cfg).sub(v.mul(0.5));
+    const Series mu = pluss::series::full({num_particles, 1}, params.mu * dt, out_cfg).sub(v.mul(0.5));
     const Series r = obs.reshape({1, 1});
     const Series resid = r.sub(mu);
     return v.log().add(kLog2Pi).add(resid.square().div(v)).mul(-0.5).reshape({num_particles});

@@ -64,7 +64,7 @@ int main() {
   const Series t = pluss::make_series(std::vector<double>{-0.25, 0.0, 0.25}, {3}, f64);
   const Series t_nonpositive = pluss::make_series(std::vector<double>{-0.5, -0.25, 0.0}, {3}, f64);
   const Series t_zero_only = pluss::make_series(std::vector<double>{0.0}, {1}, f64);
-  const Series like = pluss::zeros({4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
+  const Series like = pluss::series::zeros({4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
   const Series mix_weights = pluss::make_series(std::vector<double>{0.7, 0.3}, {2}, f64);
   const Series mix_means = pluss::make_series(std::vector<double>{-1.0, 2.0}, {2}, f64);
   const Series mix_stddevs = pluss::make_series(std::vector<double>{0.5, 1.25}, {2}, f64);

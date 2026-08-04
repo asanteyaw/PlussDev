@@ -28,6 +28,11 @@ namespace ops_internal {
                               std::span<const std::int64_t> sizes);
   Timeline timeline_from_epoch_nanos(std::span<const std::int64_t> ticks_flat,
                                      std::span<const std::int64_t> sizes);
+  // Zero-copy wrap of an already-built Int64 epoch-nanoseconds Series -- lets
+  // callers (e.g. pluss::timeline::epoch) build via Series' own optimized
+  // factories (Series::zeros' memset, etc.) instead of paying for a second
+  // host-side fill + memcpy through timeline_from_epoch_nanos.
+  Timeline timeline_from_series(pluss::codem::Series ticks, std::string tz_name = "UTC");
 } // namespace ops_internal
 
 namespace detail {
@@ -94,6 +99,7 @@ private:
                                                                  std::span<const std::int64_t>);
   friend Timeline pluss::codeh::ops_internal::timeline_from_epoch_nanos(std::span<const std::int64_t>,
                                                                         std::span<const std::int64_t>);
+  friend Timeline pluss::codeh::ops_internal::timeline_from_series(pluss::codem::Series, std::string);
 
   friend Timeline detail::impl_add_duration(const Timeline&, const Duration&);
   friend Timeline detail::impl_sub_duration(const Timeline&, const Duration&);

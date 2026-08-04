@@ -7,7 +7,7 @@ This guide covers the unified serialization API now available in `pluss::io` and
 ```cpp
 #include <pluss/pluss.h>
 
-pluss::Series x = pluss::randn({3, 4});
+pluss::Series x = pluss::series::randn({3, 4});
 pluss::save(x, "tensor.plio");
 
 auto x_loaded = pluss::load<pluss::Series>("tensor.plio");
@@ -90,7 +90,7 @@ pluss::load(y, "tensor.plio");
 
 ```cpp
 std::stringstream ss;
-pluss::save(pluss::arange(10), ss);
+pluss::save(pluss::series::arange(10), ss);
 
 auto z = pluss::load<pluss::Series>(ss);
 ```
@@ -99,13 +99,13 @@ auto z = pluss::load<pluss::Series>(ss);
 
 ```cpp
 std::vector<pluss::Series> batch = {
-  pluss::randn({2, 2}),
-  pluss::ones({2, 2})
+  pluss::series::randn({2, 2}),
+  pluss::series::ones({2, 2})
 };
 pluss::save(batch, "batch_vec.plio");
 auto batch2 = pluss::load<std::vector<pluss::Series>>("batch_vec.plio");
 
-pluss::StackArray<pluss::Series> stack{pluss::zeros({3}), pluss::ones({3})};
+pluss::StackArray<pluss::Series> stack{pluss::series::zeros({3}), pluss::series::ones({3})};
 pluss::save(stack, "stack_series.plio");
 auto stack2 = pluss::load<pluss::StackArray<pluss::Series>>("stack_series.plio");
 ```
@@ -116,7 +116,7 @@ auto stack2 = pluss::load<pluss::StackArray<pluss::Series>>("stack_series.plio")
 pluss::io::SaveOptions save_opts;
 save_opts.create_parent_dirs = true;
 save_opts.include_platform_hint = true;
-pluss::save(pluss::randn({4, 4}), "artifacts/tensors/a.plio", save_opts);
+pluss::save(pluss::series::randn({4, 4}), "artifacts/tensors/a.plio", save_opts);
 ```
 
 ### 6) Load options for `Series`

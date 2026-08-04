@@ -605,11 +605,11 @@ void set_rough_bergomi_parameters_series_(model::RoughBergomi& mdl, const Series
 void set_heston_parameters_(model::Heston& mdl, std::span<const double> params, Config cfg) {
   PLUSS_CHECK(params.size() == 5, "subsp::math::finance::module::Model::parameters: Heston expects 5 parameters");
   const Config out_cfg = model_param_cfg_({&mdl.kappa, &mdl.theta, &mdl.sigma, &mdl.rho, &mdl.v0}, cfg);
-  mdl.kappa = pluss::full({1}, params[0], out_cfg);
-  mdl.theta = pluss::full({1}, params[1], out_cfg);
-  mdl.sigma = pluss::full({1}, params[2], out_cfg);
-  mdl.rho = pluss::full({1}, params[3], out_cfg);
-  mdl.v0 = pluss::full({1}, params[4], out_cfg);
+  mdl.kappa = pluss::series::full({1}, params[0], out_cfg);
+  mdl.theta = pluss::series::full({1}, params[1], out_cfg);
+  mdl.sigma = pluss::series::full({1}, params[2], out_cfg);
+  mdl.rho = pluss::series::full({1}, params[3], out_cfg);
+  mdl.v0 = pluss::series::full({1}, params[4], out_cfg);
 }
 
 void set_bates_parameters_(model::Bates& mdl, std::span<const double> params, Config cfg) {
@@ -623,49 +623,49 @@ void set_bates_parameters_(model::Bates& mdl, std::span<const double> params, Co
                                            &mdl.jump_mean,
                                            &mdl.jump_vol},
                                           cfg);
-  mdl.kappa = pluss::full({1}, params[0], out_cfg);
-  mdl.theta = pluss::full({1}, params[1], out_cfg);
-  mdl.sigma = pluss::full({1}, params[2], out_cfg);
-  mdl.rho = pluss::full({1}, params[3], out_cfg);
-  mdl.v0 = pluss::full({1}, params[4], out_cfg);
-  mdl.jump_intensity = pluss::full({1}, params[5], out_cfg);
-  mdl.jump_mean = pluss::full({1}, params[6], out_cfg);
-  mdl.jump_vol = pluss::full({1}, params[7], out_cfg);
+  mdl.kappa = pluss::series::full({1}, params[0], out_cfg);
+  mdl.theta = pluss::series::full({1}, params[1], out_cfg);
+  mdl.sigma = pluss::series::full({1}, params[2], out_cfg);
+  mdl.rho = pluss::series::full({1}, params[3], out_cfg);
+  mdl.v0 = pluss::series::full({1}, params[4], out_cfg);
+  mdl.jump_intensity = pluss::series::full({1}, params[5], out_cfg);
+  mdl.jump_mean = pluss::series::full({1}, params[6], out_cfg);
+  mdl.jump_vol = pluss::series::full({1}, params[7], out_cfg);
 }
 
 void set_black_scholes_parameters_(model::BlackScholes& mdl, std::span<const double> params, Config cfg) {
   PLUSS_CHECK(params.size() == 1, "subsp::math::finance::module::Model::parameters: BlackScholes expects 1 parameter");
   const Config out_cfg = model_param_cfg_({&mdl.volatility}, cfg);
-  mdl.volatility = pluss::full({1}, params[0], out_cfg);
+  mdl.volatility = pluss::series::full({1}, params[0], out_cfg);
 }
 
 void set_sabr_parameters_(model::Sabr& mdl, std::span<const double> params, Config cfg) {
   PLUSS_CHECK(params.size() == 4, "subsp::math::finance::module::Model::parameters: Sabr expects 4 parameters");
   const Config out_cfg = model_param_cfg_({&mdl.alpha0, &mdl.beta, &mdl.nu, &mdl.rho}, cfg);
-  mdl.alpha0 = pluss::full({1}, params[0], out_cfg);
-  mdl.beta = pluss::full({1}, params[1], out_cfg);
-  mdl.nu = pluss::full({1}, params[2], out_cfg);
-  mdl.rho = pluss::full({1}, params[3], out_cfg);
+  mdl.alpha0 = pluss::series::full({1}, params[0], out_cfg);
+  mdl.beta = pluss::series::full({1}, params[1], out_cfg);
+  mdl.nu = pluss::series::full({1}, params[2], out_cfg);
+  mdl.rho = pluss::series::full({1}, params[3], out_cfg);
 }
 
 void set_rough_heston_parameters_(model::RoughHeston& mdl, std::span<const double> params, Config cfg) {
   PLUSS_CHECK(params.size() == 6, "subsp::math::finance::module::Model::parameters: RoughHeston expects 6 parameters");
   const Config out_cfg = model_param_cfg_({&mdl.kappa, &mdl.theta, &mdl.sigma, &mdl.alpha, &mdl.rho, &mdl.v0}, cfg);
-  mdl.kappa = pluss::full({1}, params[0], out_cfg);
-  mdl.theta = pluss::full({1}, params[1], out_cfg);
-  mdl.sigma = pluss::full({1}, params[2], out_cfg);
-  mdl.alpha = pluss::full({1}, params[3], out_cfg);
-  mdl.rho = pluss::full({1}, params[4], out_cfg);
-  mdl.v0 = pluss::full({1}, params[5], out_cfg);
+  mdl.kappa = pluss::series::full({1}, params[0], out_cfg);
+  mdl.theta = pluss::series::full({1}, params[1], out_cfg);
+  mdl.sigma = pluss::series::full({1}, params[2], out_cfg);
+  mdl.alpha = pluss::series::full({1}, params[3], out_cfg);
+  mdl.rho = pluss::series::full({1}, params[4], out_cfg);
+  mdl.v0 = pluss::series::full({1}, params[5], out_cfg);
 }
 
 void set_rough_bergomi_parameters_(model::RoughBergomi& mdl, std::span<const double> params, Config cfg) {
   PLUSS_CHECK(params.size() == 4, "subsp::math::finance::module::Model::parameters: RoughBergomi expects 4 parameters");
   const Config out_cfg = model_param_cfg_({&mdl.xi, &mdl.eta, &mdl.alpha, &mdl.rho}, cfg);
-  mdl.xi = pluss::full({1}, params[0], out_cfg);
-  mdl.eta = pluss::full({1}, params[1], out_cfg);
-  mdl.alpha = pluss::full({1}, params[2], out_cfg);
-  mdl.rho = pluss::full({1}, params[3], out_cfg);
+  mdl.xi = pluss::series::full({1}, params[0], out_cfg);
+  mdl.eta = pluss::series::full({1}, params[1], out_cfg);
+  mdl.alpha = pluss::series::full({1}, params[2], out_cfg);
+  mdl.rho = pluss::series::full({1}, params[3], out_cfg);
 }
 
 } // namespace

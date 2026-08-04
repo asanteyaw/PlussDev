@@ -43,7 +43,7 @@ Series shifted_sphere(const Series& x, double shift) {
 
 Series guarded_sphere(const Series& x) {
   if (!x.abs().le(0.8).all().item<bool>()) {
-    return pluss::full({1}, std::numeric_limits<double>::infinity(),
+    return pluss::series::full({1}, std::numeric_limits<double>::infinity(),
                        Config{}.with_dtype(ScalarType::Float64).with_platform(x.platform()));
   }
   return x.square().sum();
@@ -55,7 +55,7 @@ int main() {
   int failures = 0;
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
   const std::int64_t dim = 6;
-  const Series x0 = pluss::full({dim}, 2.0, cfg);
+  const Series x0 = pluss::series::full({dim}, 2.0, cfg);
 
   DifferentialEvolutionConfig de_cfg;
   de_cfg.population_size = 120;
@@ -175,8 +175,8 @@ int main() {
          "PSO-DV compat reproducibility minimizer mismatch", &failures);
   expect(pso_dv_compat_a.minimum < 5.0, "PSO-DV compat failed sphere accuracy target", &failures);
 
-  const Series lb = pluss::full({dim}, -1.0, cfg);
-  const Series ub = pluss::full({dim}, 1.0, cfg);
+  const Series lb = pluss::series::full({dim}, -1.0, cfg);
+  const Series ub = pluss::series::full({dim}, 1.0, cfg);
   DifferentialEvolutionConfig de_bound_cfg;
   de_bound_cfg.population_size = 100;
   de_bound_cfg.max_generations = 350;
@@ -198,9 +198,9 @@ int main() {
   de_guard_cfg.max_generations = 250;
   de_guard_cfg.check_every = 20;
   de_guard_cfg.rng_seed = 909ULL;
-  de_guard_cfg.lower_bounds = pluss::full({dim}, -2.0, cfg);
-  de_guard_cfg.upper_bounds = pluss::full({dim}, 2.0, cfg);
-  const Series x0_guard = pluss::full({dim}, 0.5, cfg);
+  de_guard_cfg.lower_bounds = pluss::series::full({dim}, -2.0, cfg);
+  de_guard_cfg.upper_bounds = pluss::series::full({dim}, 2.0, cfg);
+  const Series x0_guard = pluss::series::full({dim}, 0.5, cfg);
   const auto de_guard_out = differential_evolution_minimizer(guarded_sphere, x0_guard, de_guard_cfg);
   std::cerr << "DE guarded f=" << de_guard_out.minimum << '\n';
   expect(std::isfinite(de_guard_out.minimum), "DE non-finite objective handling failed", &failures);

@@ -686,7 +686,7 @@ Thread Thread::percentiles(
     values.push_back(std::move(value));
   }
   auto packed =
-      pluss::pile(values, 0).reshape(
+      pluss::series::pile(values, 0).reshape(
           {static_cast<std::int64_t>(points.size())});
   const auto valid =
       clean.numel() >= min_count
@@ -1582,7 +1582,7 @@ Thread Thread::map(
       payloads.push_back(value.as_series());
       validity.push_back(detail::valid_at(value, 0));
     }
-    auto output = pluss::unite(payloads, 0, true);
+    auto output = pluss::series::unite(payloads, 0, true);
     auto mask = bool_series_from_bools(validity);
     if (output.platform() != pluss::codem::Platform::CPU) {
       mask = mask.to(output.platform());

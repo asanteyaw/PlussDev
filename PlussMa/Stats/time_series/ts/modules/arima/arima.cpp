@@ -796,7 +796,7 @@ std::vector<double> arma_simulate_transformed_(std::int64_t n,
     PLUSS_CHECK(fit.beta.empty(), "subsp::stats::ts::ArimaFit::simulate: exogenous coefficients require x");
   }
   const auto out_cfg = f64_cfg_(cfg);
-  const auto z = flat_f64_values_(pluss::randn({n}, out_cfg, seed));
+  const auto z = flat_f64_values_(pluss::series::randn({n}, out_cfg, seed));
   const double sigma = std::max(fit.sigma, std::sqrt(fit.variance_floor));
 
   std::vector<double> y_state(static_cast<std::size_t>(n), 0.0);

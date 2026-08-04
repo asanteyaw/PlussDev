@@ -18,9 +18,9 @@ int main() {
   }
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
-  const Series x = pluss::rand({4, 16}, cfg, 101ULL);
-  const Series w = pluss::rand({8, 16}, cfg, 103ULL);
-  const Series b = pluss::rand({8}, cfg, 107ULL);
+  const Series x = pluss::series::rand({4, 16}, cfg, 101ULL);
+  const Series w = pluss::series::rand({8, 16}, cfg, 103ULL);
+  const Series b = pluss::series::rand({8}, cfg, 107ULL);
   const Series y_cpu = pluss::fusion(x, w, b);
   std::cout << "cpu_fusion_mean=" << y_cpu.mean().item<double>() << "\n";
 

@@ -31,7 +31,7 @@ double as_f64(const Series& x) {
 }
 
 Series synth_features(const Config& cfg, std::int64_t n) {
-  return pluss::randn({n, 2}, cfg, 1337ULL);
+  return pluss::series::randn({n, 2}, cfg, 1337ULL);
 }
 
 Series scalar_like(const Series& like, double v) {

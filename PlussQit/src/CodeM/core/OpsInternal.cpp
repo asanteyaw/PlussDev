@@ -5624,7 +5624,7 @@ Series cartprod_pair_1d_(const Series& lhs_raw, const Series& rhs_raw) {
   }
   const Series left = lhs.repeat_interleave(m, /*dim=*/0).reshape({n * m, 1});
   const Series right = rhs.repeat(std::vector<std::int64_t>{n}).reshape({n * m, 1});
-  return pluss::unite({left, right}, /*dim=*/1, /*strict_dtype=*/true);
+  return pluss::series::unite({left, right}, /*dim=*/1, /*strict_dtype=*/true);
 }
 
 } // namespace
@@ -5670,7 +5670,7 @@ Series union1d(const Series& a, const Series& b, bool sorted) {
   require_same_platform(a, b, "union1d");
   PLUSS_CHECK(a.scalar_type() == b.scalar_type(), "union1d: input dtypes must match");
 
-  const Series joined = pluss::unite(
+  const Series joined = pluss::series::unite(
       {set_flatten_1d_(a), set_flatten_1d_(b)},
       /*dim=*/0,
       /*strict_dtype=*/true);
@@ -5746,7 +5746,7 @@ Series setxor1d(const Series& a,
   const Series ub = unique_for_set_1d_(b, assume_unique);
   const Series only_a = setdiff1d(ua, ub, /*sorted=*/false, /*assume_unique=*/true);
   const Series only_b = setdiff1d(ub, ua, /*sorted=*/false, /*assume_unique=*/true);
-  Series out = pluss::unite({only_a, only_b}, /*dim=*/0, /*strict_dtype=*/true);
+  Series out = pluss::series::unite({only_a, only_b}, /*dim=*/0, /*strict_dtype=*/true);
   if (sorted) {
     return unique(out, /*sorted=*/true);
   }
@@ -5803,7 +5803,7 @@ Series unionize_along(const Series& a,
                       std::int64_t dim,
                       bool sorted) {
   const std::int64_t dim_norm = require_set_along_compatible_(a, b, dim, "unionize_along");
-  const Series joined = pluss::unite({a, b}, dim_norm, /*strict_dtype=*/true);
+  const Series joined = pluss::series::unite({a, b}, dim_norm, /*strict_dtype=*/true);
   return unique(joined, dim_norm, sorted);
 }
 
@@ -8591,7 +8591,7 @@ Series Series::cartprod(pluss::msharp::RangeView::Of<Series> others) const {
     }
     const Series left = out.repeat_interleave(m, /*dim=*/0);
     const Series right = rhs.repeat(std::vector<std::int64_t>{left_rows}).reshape({left_rows * m, 1});
-    out = pluss::unite({left, right}, /*dim=*/1, /*strict_dtype=*/true);
+    out = pluss::series::unite({left, right}, /*dim=*/1, /*strict_dtype=*/true);
   }
   return out;
 }

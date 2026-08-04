@@ -317,13 +317,13 @@ auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
 - Signature: `Series abs2()`
   Example: `auto out = x.hilbert().abs2();`
 - Signature: `Series addbmm(const Series& batch1, const Series& batch2)`
-  Example: `auto out = pluss::zeros({2,2}).addbmm(pluss::ones({3,2,4}), pluss::ones({3,4,2}));`
+  Example: `auto out = pluss::series::zeros({2,2}).addbmm(pluss::series::ones({3,2,4}), pluss::series::ones({3,4,2}));`
 - Signature: `Series addbmm(const Series& batch1, const Series& batch2, double beta, double alpha)`
-  Example: `auto out = pluss::zeros({2,2}).addbmm(pluss::ones({3,2,4}), pluss::ones({3,4,2}), 0.5, 2.0);`
+  Example: `auto out = pluss::series::zeros({2,2}).addbmm(pluss::series::ones({3,2,4}), pluss::series::ones({3,4,2}), 0.5, 2.0);`
 - Signature: `Series view_as(const Series& other)`
-  Example: `auto out = pluss::arange(0, 6).view_as(pluss::ones({3,2}));`
+  Example: `auto out = pluss::series::arange(0, 6).view_as(pluss::series::ones({3,2}));`
 - Signature: `Series vsplit(std::int64_t sections)`
-  Example: `auto out = pluss::arange(0, 12).reshape({6,2}).vsplit(2);`
+  Example: `auto out = pluss::series::arange(0, 12).reshape({6,2}).vsplit(2);`
 - Signature: `Series xlogy(const Series& other)`
   Example: `auto out = x.abs().xlogy(y.abs().add(1.0));`
 - Signature: `Series xlogy(double scalar)`

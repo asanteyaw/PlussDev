@@ -74,9 +74,9 @@ TEST_CASE("COS pricing tracks Heston NI and FFT across strikes", "[finance][pric
   const double parity = s * std::exp(-q * t) - k * std::exp(-r * t);
   REQUIRE(std::abs((c - pput) - parity) < 0.2);
 
-  const auto spot_s = pluss::full({static_cast<std::int64_t>(strikes.size())}, s, cfg);
+  const auto spot_s = pluss::series::full({static_cast<std::int64_t>(strikes.size())}, s, cfg);
   const auto strike_s = pluss::make_series(strikes, {static_cast<std::int64_t>(strikes.size())}, cfg);
-  const auto maturity_s = pluss::full({static_cast<std::int64_t>(strikes.size())}, t, cfg);
+  const auto maturity_s = pluss::series::full({static_cast<std::int64_t>(strikes.size())}, t, cfg);
   const auto series_px = prc::heston_price_cos(prc::OptionType::Call, spot_s, strike_s, r, q, maturity_s, p, cos_opt, cfg);
   REQUIRE(series_px.numel() == static_cast<std::int64_t>(strikes.size()));
   REQUIRE(all_finite(series_px));
@@ -127,32 +127,32 @@ TEST_CASE("Object FFT and COS expose greeks for Heston/Bates", "[finance][pricin
 
   const auto inst = fin::instrument::Vanilla{
       .type = prc::OptionType::Call,
-      .strike = pluss::linspace(85.0, 115.0, 7, cfg),
-      .maturity = pluss::full({7}, 1.0, cfg),
+      .strike = pluss::series::linspace(85.0, 115.0, 7, cfg),
+      .maturity = pluss::series::full({7}, 1.0, cfg),
   };
   const auto mkt = fin::market::State{
-      .spot = pluss::full({7}, 100.0, cfg),
-      .rate = pluss::full({7}, 0.02, cfg),
-      .dividend_yield = pluss::full({7}, 0.0, cfg),
+      .spot = pluss::series::full({7}, 100.0, cfg),
+      .rate = pluss::series::full({7}, 0.02, cfg),
+      .dividend_yield = pluss::series::full({7}, 0.0, cfg),
   };
 
   const auto heston = fin::model::Heston{
-      .kappa = pluss::full({1}, 1.7, cfg),
-      .theta = pluss::full({1}, 0.04, cfg),
-      .sigma = pluss::full({1}, 0.30, cfg),
-      .rho = pluss::full({1}, -0.6, cfg),
-      .v0 = pluss::full({1}, 0.04, cfg),
+      .kappa = pluss::series::full({1}, 1.7, cfg),
+      .theta = pluss::series::full({1}, 0.04, cfg),
+      .sigma = pluss::series::full({1}, 0.30, cfg),
+      .rho = pluss::series::full({1}, -0.6, cfg),
+      .v0 = pluss::series::full({1}, 0.04, cfg),
   };
 
   const auto bates = fin::model::Bates{
-      .kappa = pluss::full({1}, 1.7, cfg),
-      .theta = pluss::full({1}, 0.04, cfg),
-      .sigma = pluss::full({1}, 0.30, cfg),
-      .rho = pluss::full({1}, -0.6, cfg),
-      .v0 = pluss::full({1}, 0.04, cfg),
-      .jump_intensity = pluss::full({1}, 0.15, cfg),
-      .jump_mean = pluss::full({1}, -0.08, cfg),
-      .jump_vol = pluss::full({1}, 0.20, cfg),
+      .kappa = pluss::series::full({1}, 1.7, cfg),
+      .theta = pluss::series::full({1}, 0.04, cfg),
+      .sigma = pluss::series::full({1}, 0.30, cfg),
+      .rho = pluss::series::full({1}, -0.6, cfg),
+      .v0 = pluss::series::full({1}, 0.04, cfg),
+      .jump_intensity = pluss::series::full({1}, 0.15, cfg),
+      .jump_mean = pluss::series::full({1}, -0.08, cfg),
+      .jump_vol = pluss::series::full({1}, 0.20, cfg),
   };
 
   const fin::pricer::Fft fft{

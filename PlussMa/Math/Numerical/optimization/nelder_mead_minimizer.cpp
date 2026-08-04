@@ -128,12 +128,12 @@ SimplexState initialize_state(
 
   for (std::int64_t j = 0; j < n; ++j) {
     Series candidate = flat_initial.clone();
-    const Series idx = pluss::arange(j, j + 1, idx_cfg);
+    const Series idx = pluss::series::arange(j, j + 1, idx_cfg);
     const Series current = candidate.take(idx);
 
     Series stepped = current.mul(1.0 + config.simplex_delta);
     if (scalar_as_f64(current, "nelder_mead_minimizer") == 0.0) {
-      stepped = pluss::full({1}, config.simplex_delta_zero, cfg);
+      stepped = pluss::series::full({1}, config.simplex_delta_zero, cfg);
     }
 
     candidate = candidate.put(idx, stepped, false);

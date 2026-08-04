@@ -9,7 +9,7 @@ int main() {
   using pluss::Series;
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
-  const Series x = pluss::rand({3, 12, 16}, cfg, 101ULL);
+  const Series x = pluss::series::rand({3, 12, 16}, cfg, 101ULL);
 
   pluss::nn::Transformer model(pluss::nn::TransformerOptions{
       .d_model = 16,

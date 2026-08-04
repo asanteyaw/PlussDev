@@ -87,7 +87,7 @@ Example 1. Backward as-of matching: the latest right timestamp less than or
 equal to each left timestamp.
 
 ```cpp
-auto left = pluss::make_timeindex({
+auto left = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
@@ -95,7 +95,7 @@ auto left = pluss::make_timeindex({
     "2024-11-01T01:20:00Z",
 });
 
-auto right = pluss::make_timeindex({
+auto right = pluss::timeindex::make({
     "2024-11-01T00:05:00Z",
     "2024-11-01T00:30:00Z",
     "2024-11-01T01:10:00Z",

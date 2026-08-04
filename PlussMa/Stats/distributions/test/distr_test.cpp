@@ -718,7 +718,7 @@ int main() {
   expect(sample(dst::VonMises, {0.0, 2.0}, {5}, f64, 19ULL).numel() == 5, "vonmises sample shape", &failures);
   expect(pluss::distr::sample(dst::Arcsin, {5}, f64, 23ULL).numel() == 5, "sample overload without params", &failures);
 
-  const Series like = pluss::zeros(
+  const Series like = pluss::series::zeros(
       {2, 5},
       Config{}
           .with_dtype(ScalarType::Float32)
@@ -846,7 +846,7 @@ int main() {
     }
 
     const auto obj_inline =
-        pluss::distr::Normal{pluss::zeros_like(x_vec), pluss::ones_like(x_vec)}.logpdf(x_vec).to_vec<double>();
+        pluss::distr::Normal{pluss::series::zeros_like(x_vec), pluss::series::ones_like(x_vec)}.logpdf(x_vec).to_vec<double>();
     const auto stdn = logpdf(dst::Normal, x_vec, std::initializer_list<double>{0.0, 1.0}).to_vec<double>();
     for (std::size_t i = 0; i < stdn.size(); ++i) {
       expect(approx(obj_inline[i], stdn[i], 1e-12), "Normal inline object Series constructor usage", &failures);

@@ -13,12 +13,12 @@ TEST_CASE("bool mask payoff arithmetic works without explicit casts", "[arith][p
       pluss::make_series(std::vector<float>{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f}, {3, 2});
   const Series strike = pluss::make_series(std::vector<float>{15.0f, 25.0f, 35.0f}, {3, 1});
 
-  const Series put_mask = pluss::ones_like(is_call) - is_call;
+  const Series put_mask = pluss::series::ones_like(is_call) - is_call;
   REQUIRE(put_mask.scalar_type() == ScalarType::Int64);
   REQUIRE(put_mask.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 1, 0});
 
   const Series payoffs = is_call * (s_t - strike).relu() +
-                         (pluss::ones_like(is_call) - is_call) * (strike - s_t).relu();
+                         (pluss::series::ones_like(is_call) - is_call) * (strike - s_t).relu();
   REQUIRE(payoffs.scalar_type() == ScalarType::Float32);
 
   const auto got = payoffs.to_vec<float>();

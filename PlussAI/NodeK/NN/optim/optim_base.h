@@ -408,7 +408,7 @@ protected:
   }
 
   static Series state_zeros_like_(const Series& like) {
-    return pluss::zeros_like(like, like.scalar_type());
+    return pluss::series::zeros_like(like, like.scalar_type());
   }
 
   void reset_step_lane_telemetry_() {

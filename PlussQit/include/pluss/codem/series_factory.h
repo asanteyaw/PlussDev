@@ -30,7 +30,20 @@
 #include <pluss/codem/torch_interop.h>
 #endif
 
-namespace pluss {
+// `Series` (capital S) names the type; `pluss::series::` (lowercase) is its
+// dedicated factory namespace, kept separate from the type itself the same
+// way `pluss::timeline::make`/`pluss::duration::*`/`pluss::note::*` are kept
+// separate from `Timeline`/`Duration`/`Note`. Unlike those three, Series'
+// value-construction entrypoint (`make`, formerly the flat `make_series`)
+// already funnels through a single `DataReader`-based overload, so no new
+// reader type was needed here -- this is a namespace relocation, not an
+// overload-collapse.
+//
+// The old flat `pluss::` spellings (`pluss::zeros`, `pluss::make_series`,
+// etc.) remain available -- see series_factory_compat.h, included at the
+// bottom of this file -- since Series' flat names are used across the
+// entire codebase and are not slated for a hard-rename sweep.
+namespace pluss::series {
   // ---- Config builder helpers ----
   using pluss::config; // from pluss/config.h
   using detail::FactoryCore;
@@ -274,7 +287,7 @@ namespace pluss {
                          pluss::msharp::RangeView::Int sizes,
                          std::uint64_t seed = 0) {
     PLUSS_CHECK(hi >= lo, "rand_btw: expected hi >= lo");
-    return lo + (hi - lo) * pluss::rand(sizes, ScalarType::Float64, seed);
+    return lo + (hi - lo) * rand(sizes, ScalarType::Float64, seed);
   }
   inline Series rand_btw(f64_t lo,
                          f64_t hi,
@@ -290,7 +303,7 @@ namespace pluss {
     PLUSS_CHECK(hi >= lo, "rand_btw: expected hi >= lo");
     PLUSS_CHECK(cfg.dtype == ScalarType::Float32 || cfg.dtype == ScalarType::Float64,
                 "rand_btw: CUDA native route supports float32/float64 outputs");
-    return pluss::rand(sizes, cfg, seed).mul(hi - lo).add(lo);
+    return rand(sizes, cfg, seed).mul(hi - lo).add(lo);
   }
   inline Series rand_btw(f64_t lo,
                          f64_t hi,
@@ -717,14 +730,14 @@ namespace pluss {
   }
 
   inline Series rand_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
-    return pluss::rand(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()), seed);
+    return rand(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()), seed);
   }
   inline Series rand_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
     return rand(like.sizes(), cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)), seed);
   }
 
   inline Series randn_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
-    return pluss::randn(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()), seed);
+    return randn(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()), seed);
   }
   inline Series randn_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
     return randn(like.sizes(), cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)), seed);
@@ -781,7 +794,7 @@ namespace pluss {
     PLUSS_CHECK(like.dim() >= 2, "eye_like: expected input with rank >= 2");
     const auto n = like.sizes()[static_cast<std::size_t>(like.dim() - 2)];
     const auto m = like.sizes()[static_cast<std::size_t>(like.dim() - 1)];
-    return pluss::eye(n, m, Config{}.with_dtype(dt).with_platform(like.platform()));
+    return eye(n, m, Config{}.with_dtype(dt).with_platform(like.platform()));
   }
   inline Series eye_like(const Series& like, Config cfg) {
     PLUSS_CHECK(like.dim() >= 2, "eye_like: expected input with rank >= 2");
@@ -949,14 +962,14 @@ namespace pluss {
 #endif
 
   // --------------------------------------------------------------------------
-  // Value / blob / make_series factories (create NEW Series from user data)
+  // Value / blob / make factories (create NEW Series from user data)
   // --------------------------------------------------------------------------
   // Owned-construction entrypoint.
   // Data forms are parsed by DataReader constructors; options are applied here.
   template <class... Opts>
-  inline Series make_series(detail::DataReader data,
-                            detail::DataReader::Option first = {},
-                            Opts&&... opts) {
+  inline Series make(detail::DataReader data,
+                     detail::DataReader::Option first = {},
+                     Opts&&... opts) {
     return codem::value(
         data,
         std::move(first),
@@ -971,12 +984,24 @@ namespace pluss {
     return codem::from_buffer(data, sizes, strides, deleter, dtype);
   }
 
+  // Fully qualified so this resolves to the StackSpan-taking overload in
+  // stack_array.h (which stays in the outer `pluss::` namespace as a shared
+  // container utility, not part of this factory surface) rather than
+  // re-finding this very overload -- ordinary unqualified lookup would stop
+  // at `pluss::series::pile` before ever reaching the enclosing `pluss::`.
   inline pluss::Series pile(StackArray<Series> values, std::int64_t dim = 0) {
-    return pile(values.data(), dim);
+    return ::pluss::pile(values.data(), dim);
   }
 
   inline pluss::Series unite(StackArray<Series> values, std::int64_t dim = 0, bool strict_dtype = true) {
-    return unite(values.data(), dim, strict_dtype);
+    return ::pluss::unite(values.data(), dim, strict_dtype);
   }
 
-} // namespace pluss
+} // namespace pluss::series
+
+// Keep the backward-compatible flat pluss::* spellings transitively
+// available from series_factory.h. Kept in a separate file since Series'
+// flat names (used across the entire codebase, not slated for a hard-rename
+// sweep) would make one file unwieldy -- mirrors the note_factory.h /
+// note_factory_compat.h split.
+#include "pluss/codem/series_factory_compat.h"

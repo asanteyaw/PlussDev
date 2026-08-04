@@ -31,16 +31,16 @@ void test_bs_analytic_series_lane() {
 
   const obj::Vanilla inst{
       .type = prc::OptionType::Call,
-      .strike = pluss::full({5}, 100.0, cfg),
-      .maturity = pluss::full({5}, 1.0, cfg),
+      .strike = pluss::series::full({5}, 100.0, cfg),
+      .maturity = pluss::series::full({5}, 1.0, cfg),
   };
   const obj::MarketState mkt{
-      .spot = pluss::linspace(80.0, 120.0, 5, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::linspace(80.0, 120.0, 5, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const obj::model::BlackScholes mdl{
-      .volatility = pluss::full({5}, 0.20, cfg),
+      .volatility = pluss::series::full({5}, 0.20, cfg),
   };
 
   const auto out = obj::price(inst, mdl, mkt, obj::pricer::Analytic{.with_greeks = true}, cfg);
@@ -59,16 +59,16 @@ void test_bs_analytic_auto_mixed_lane() {
   const obj::Vanilla inst{
       .type = prc::OptionType::Auto,
       .is_call = is_call,
-      .strike = pluss::full({4}, 100.0, cfg),
-      .maturity = pluss::full({4}, 1.0, cfg),
+      .strike = pluss::series::full({4}, 100.0, cfg),
+      .maturity = pluss::series::full({4}, 1.0, cfg),
   };
   const obj::MarketState mkt{
-      .spot = pluss::linspace(90.0, 110.0, 4, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::linspace(90.0, 110.0, 4, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const obj::model::BlackScholes mdl{
-      .volatility = pluss::full({1}, 0.20, cfg),
+      .volatility = pluss::series::full({1}, 0.20, cfg),
   };
 
   const auto out = obj::price(inst, mdl, mkt, obj::pricer::Analytic{.with_greeks = false}, cfg);
@@ -85,16 +85,16 @@ void test_bs_mc_series_lane() {
 
   const obj::Vanilla inst{
       .type = prc::OptionType::Put,
-      .strike = pluss::full({1}, 100.0, cfg),
-      .maturity = pluss::full({1}, 1.0, cfg),
+      .strike = pluss::series::full({1}, 100.0, cfg),
+      .maturity = pluss::series::full({1}, 1.0, cfg),
   };
   const obj::MarketState mkt{
-      .spot = pluss::full({1}, 100.0, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::full({1}, 100.0, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const obj::model::BlackScholes mdl{
-      .volatility = pluss::full({1}, 0.20, cfg),
+      .volatility = pluss::series::full({1}, 0.20, cfg),
   };
   obj::pricer::MonteCarlo mc;
   mc.options.paths = 120000;
@@ -115,20 +115,20 @@ void test_heston_object_finite() {
 
   const obj::Vanilla inst{
       .type = prc::OptionType::Call,
-      .strike = pluss::full({1}, 100.0, cfg),
-      .maturity = pluss::full({1}, 1.0, cfg),
+      .strike = pluss::series::full({1}, 100.0, cfg),
+      .maturity = pluss::series::full({1}, 1.0, cfg),
   };
   const obj::MarketState mkt{
-      .spot = pluss::full({1}, 100.0, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::full({1}, 100.0, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const obj::model::Heston mdl{
-      .kappa = pluss::full({1}, 1.4, cfg),
-      .theta = pluss::full({1}, 0.04, cfg),
-      .sigma = pluss::full({1}, 0.35, cfg),
-      .rho = pluss::full({1}, -0.65, cfg),
-      .v0 = pluss::full({1}, 0.04, cfg),
+      .kappa = pluss::series::full({1}, 1.4, cfg),
+      .theta = pluss::series::full({1}, 0.04, cfg),
+      .sigma = pluss::series::full({1}, 0.35, cfg),
+      .rho = pluss::series::full({1}, -0.65, cfg),
+      .v0 = pluss::series::full({1}, 0.04, cfg),
   };
 
   const auto out_fft = obj::price(inst, mdl, mkt, obj::pricer::Fft{}, cfg);
@@ -148,23 +148,23 @@ void test_bates_fft_object_finite() {
 
   const obj::Vanilla inst{
       .type = prc::OptionType::Call,
-      .strike = pluss::full({1}, 100.0, cfg),
-      .maturity = pluss::full({1}, 1.0, cfg),
+      .strike = pluss::series::full({1}, 100.0, cfg),
+      .maturity = pluss::series::full({1}, 1.0, cfg),
   };
   const obj::MarketState mkt{
-      .spot = pluss::full({1}, 100.0, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::full({1}, 100.0, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const obj::model::Bates mdl{
-      .kappa = pluss::full({1}, 1.4, cfg),
-      .theta = pluss::full({1}, 0.04, cfg),
-      .sigma = pluss::full({1}, 0.35, cfg),
-      .rho = pluss::full({1}, -0.65, cfg),
-      .v0 = pluss::full({1}, 0.04, cfg),
-      .jump_intensity = pluss::full({1}, 0.15, cfg),
-      .jump_mean = pluss::full({1}, -0.08, cfg),
-      .jump_vol = pluss::full({1}, 0.2, cfg),
+      .kappa = pluss::series::full({1}, 1.4, cfg),
+      .theta = pluss::series::full({1}, 0.04, cfg),
+      .sigma = pluss::series::full({1}, 0.35, cfg),
+      .rho = pluss::series::full({1}, -0.65, cfg),
+      .v0 = pluss::series::full({1}, 0.04, cfg),
+      .jump_intensity = pluss::series::full({1}, 0.15, cfg),
+      .jump_mean = pluss::series::full({1}, -0.08, cfg),
+      .jump_vol = pluss::series::full({1}, 0.2, cfg),
   };
 
   const auto out_fft = obj::price(inst, mdl, mkt, obj::pricer::Fft{}, cfg);
@@ -176,19 +176,19 @@ void test_sabr_object_finite() {
 
   const obj::Vanilla inst{
       .type = prc::OptionType::Call,
-      .strike = pluss::full({1}, 100.0, cfg),
-      .maturity = pluss::full({1}, 1.0, cfg),
+      .strike = pluss::series::full({1}, 100.0, cfg),
+      .maturity = pluss::series::full({1}, 1.0, cfg),
   };
   const obj::MarketState mkt{
-      .spot = pluss::full({1}, 100.0, cfg),
-      .rate = pluss::full({1}, 0.02, cfg),
-      .dividend_yield = pluss::full({1}, 0.0, cfg),
+      .spot = pluss::series::full({1}, 100.0, cfg),
+      .rate = pluss::series::full({1}, 0.02, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.0, cfg),
   };
   const obj::model::Sabr mdl{
-      .alpha0 = pluss::full({1}, 0.2, cfg),
-      .beta = pluss::full({1}, 0.5, cfg),
-      .nu = pluss::full({1}, 0.4, cfg),
-      .rho = pluss::full({1}, -0.3, cfg),
+      .alpha0 = pluss::series::full({1}, 0.2, cfg),
+      .beta = pluss::series::full({1}, 0.5, cfg),
+      .nu = pluss::series::full({1}, 0.4, cfg),
+      .rho = pluss::series::full({1}, -0.3, cfg),
       .vol_type = prc::SabrVolType::Lognormal,
       .approx = prc::SabrApproxOptions{
           .model = prc::SabrApproxModel::Hagan2002,
@@ -218,11 +218,11 @@ void test_models_vectorized_overloads() {
       .rho = -0.65,
       .v0 = 0.04,
   });
-  const Series spot = pluss::full({4}, 100.0, cfg);
-  const Series strike = pluss::linspace(90.0, 110.0, 4, cfg);
-  const Series rate = pluss::full({4}, 0.03, cfg);
-  const Series div = pluss::full({4}, 0.01, cfg);
-  const Series tau = pluss::full({4}, 1.0, cfg);
+  const Series spot = pluss::series::full({4}, 100.0, cfg);
+  const Series strike = pluss::series::linspace(90.0, 110.0, 4, cfg);
+  const Series rate = pluss::series::full({4}, 0.03, cfg);
+  const Series div = pluss::series::full({4}, 0.01, cfg);
+  const Series tau = pluss::series::full({4}, 1.0, cfg);
 
   const Series px_fft = h.price(prc::OptionType::Call, spot, strike, rate, div, tau, prc::HestonFftOptions{}, cfg);
   const Series px_mc = h.price_mc(prc::OptionType::Call, spot, strike, rate, div, tau, prc::MonteCarloOptions{}, cfg);

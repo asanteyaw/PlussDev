@@ -107,8 +107,8 @@ using pluss::ScalarType;
       return StatusOr<Series>(
           Status::invalid_argument(std::string(where) + " BalanceTarget.ratio must be finite and in (0, 1]."));
     }
-    const double c0 = counts.index_select(0, pluss::arange(0, 1, i64_on(platform))).reshape({1}).item<double>();
-    const double c1 = counts.index_select(0, pluss::arange(1, 2, i64_on(platform))).reshape({1}).item<double>();
+    const double c0 = counts.index_select(0, pluss::series::arange(0, 1, i64_on(platform))).reshape({1}).item<double>();
+    const double c1 = counts.index_select(0, pluss::series::arange(1, 2, i64_on(platform))).reshape({1}).item<double>();
     const double minority = std::min(c0, c1);
     const double majority = std::max(c0, c1);
     const double desired_minority = std::max(minority, std::ceil(target.ratio * majority));
@@ -137,7 +137,7 @@ using pluss::ScalarType;
                                                     const Series& class_labels,
                                                     std::int64_t class_index) {
   const Platform platform = labels.platform();
-  const Series pos = pluss::arange(class_index, class_index + 1, i64_on(platform));
+  const Series pos = pluss::series::arange(class_index, class_index + 1, i64_on(platform));
   const Series class_value = class_labels.index_select(0, pos).reshape({1});
   const Series mask = labels.eq(class_value);
   Series selected = all_indices.masked_select(mask).to(platform, ScalarType::Int64);
@@ -149,7 +149,7 @@ using pluss::ScalarType;
                                                               const Series& class_labels,
                                                               std::int64_t class_index) {
   const Platform platform = base_labels.platform();
-  const Series pos = pluss::arange(class_index, class_index + 1, i64_on(platform));
+  const Series pos = pluss::series::arange(class_index, class_index + 1, i64_on(platform));
   const Series class_value = class_labels.index_select(0, pos).reshape({1});
   const Series mask = base_labels.eq(class_value);
   Series selected = base_indices.to(platform, ScalarType::Int64).masked_select(mask).to(platform, ScalarType::Int64);
@@ -181,7 +181,7 @@ using pluss::ScalarType;
   const std::int64_t n = feature_rows.sizes()[0];
   const Platform platform = feature_rows.platform();
   const Series dist2 = pairwise_distance2(feature_rows, feature_rows);
-  const Series idx = pluss::arange(0, n, i64_on(platform));
+  const Series idx = pluss::series::arange(0, n, i64_on(platform));
   const Series eye = idx.reshape({n, 1}).eq(idx.reshape({1, n}));
   const Series large = dist2.max().reshape({1, 1}).add(1.0).mul(static_cast<double>(n + 1));
   return eye.where(large.expand(std::vector<std::int64_t>{n, n}), dist2).reshape({n, n});
@@ -192,7 +192,7 @@ using pluss::ScalarType;
                                            bool protect_small_classes) {
   const std::int64_t n = labels.numel();
   const std::int64_t k = mix.class_count;
-  if (!protect_small_classes) return pluss::ones({n}, Config{}.with_dtype(ScalarType::Bool).with_platform(labels.platform()));
+  if (!protect_small_classes) return pluss::series::ones({n}, Config{}.with_dtype(ScalarType::Bool).with_platform(labels.platform()));
   const Series counts = mix.counts.to(labels.platform(), ScalarType::Float64).reshape({k});
   const Series min_count = counts.min().reshape({1});
   const Series class_targetable = counts.gt(min_count).to(ScalarType::Float64).reshape({k});
@@ -207,7 +207,7 @@ using pluss::ScalarType;
                                                     const char* where) {
   const std::int64_t n = labels.numel();
   const Platform platform = labels.platform();
-  const Series all_indices = pluss::arange(0, n, i64_on(platform));
+  const Series all_indices = pluss::series::arange(0, n, i64_on(platform));
   if (target.clean == BalanceCleanKind::None) {
     return StatusOr<Series>(all_indices.reshape({n}));
   }
@@ -223,10 +223,10 @@ using pluss::ScalarType;
   const Series dist2 = self_masked_distance2(feature_rows.to(feature_rows.platform(), ScalarType::Float64));
   const Series sort_idx = dist2.argsort(1, false, true);
 
-  Series remove_mask = pluss::zeros({n}, Config{}.with_dtype(ScalarType::Bool).with_platform(platform));
+  Series remove_mask = pluss::series::zeros({n}, Config{}.with_dtype(ScalarType::Bool).with_platform(platform));
   if (target.clean == BalanceCleanKind::BoundaryPairs
       || target.clean == BalanceCleanKind::BoundaryPairsAndNeighborAgreement) {
-    const Series first_col = pluss::arange(0, 1, i64_on(sort_idx.platform()));
+    const Series first_col = pluss::series::arange(0, 1, i64_on(sort_idx.platform()));
     const Series nn = sort_idx.index_select(1, first_col).reshape({n}).to(platform, ScalarType::Int64);
     const Series nn_of_nn = nn.index_select(0, nn).reshape({n});
     const Series nn_label = y.index_select(0, nn).reshape({n});
@@ -238,7 +238,7 @@ using pluss::ScalarType;
   if (target.clean == BalanceCleanKind::NeighborAgreement
       || target.clean == BalanceCleanKind::BoundaryPairsAndNeighborAgreement) {
     const std::int64_t neighbor_count = std::max<std::int64_t>(1, std::min<std::int64_t>(target.clean_neighbors, n - 1));
-    const Series neighbor_cols = pluss::arange(0, neighbor_count, i64_on(sort_idx.platform()));
+    const Series neighbor_cols = pluss::series::arange(0, neighbor_count, i64_on(sort_idx.platform()));
     const Series neighbor_idx = sort_idx.index_select(1, neighbor_cols).reshape({n, neighbor_count}).to(platform, ScalarType::Int64);
     const Series y_expand = y.reshape({1, n}).expand(std::vector<std::int64_t>{n, n});
     const Series neighbor_labels = y_expand.gather(1, neighbor_idx).reshape({n, neighbor_count});
@@ -298,7 +298,7 @@ StatusOr<ClassMix> class_mix(const Series& labels) {
   }
 
   const Series total = counts.sum().reshape({1});
-  const Series k_scalar = pluss::ones({1}, f64_on(y.platform())).mul(static_cast<double>(k));
+  const Series k_scalar = pluss::series::ones({1}, f64_on(y.platform())).mul(static_cast<double>(k));
   ClassMix out{};
   out.labels = classes.to(y.platform(), ScalarType::Float64).reshape({k});
   out.counts = counts;
@@ -325,7 +325,7 @@ StatusOr<WeightPlan> resolve_weight_plan(const Series& labels,
   const std::int64_t k = mix.class_count;
   const Platform platform = mix.labels.platform();
 
-  Series weights = pluss::ones({n}, f64_on(platform));
+  Series weights = pluss::series::ones({n}, f64_on(platform));
 
   Status sample_status = validate_sample_weights(batch_sample_weights, n, where, "batch.sample_weights");
   if (!sample_status.ok()) return StatusOr<WeightPlan>(std::move(sample_status));
@@ -340,7 +340,7 @@ StatusOr<WeightPlan> resolve_weight_plan(const Series& labels,
   }
   const Series resolved_sample_weights = weights.reshape({n});
 
-  Series class_weights = pluss::ones({k}, f64_on(platform));
+  Series class_weights = pluss::series::ones({k}, f64_on(platform));
   if (options.class_weight == ClassWeightMode::Balanced) {
     class_weights = mix.inverse_frequency.to(platform, ScalarType::Float64).reshape({k});
   } else if (options.class_weight == ClassWeightMode::Custom) {
@@ -415,7 +415,7 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
   const Series target_counts = target_counts_or.move_value().to(platform, ScalarType::Float64).reshape({k});
 
   const Series y = labels.to(platform, ScalarType::Float64).reshape({n});
-  const Series all_indices = pluss::arange(0, n, i64_on(platform));
+  const Series all_indices = pluss::series::arange(0, n, i64_on(platform));
   const std::vector<double> current = before.counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
   const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
   const std::uint64_t seed = compose_seed(random);
@@ -436,13 +436,13 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
     Series selected = Series::undefined();
     const std::uint64_t class_seed = splitmix64(seed + static_cast<std::uint64_t>(ci) * 0x9e3779b97f4a7c15ULL);
     if (want < have) {
-      const Series perm = pluss::randperm(have, i64_on(platform), class_seed).reshape({have});
-      const Series take = perm.index_select(0, pluss::arange(0, want, i64_on(platform))).reshape({want});
+      const Series perm = pluss::series::randperm(have, i64_on(platform), class_seed).reshape({have});
+      const Series take = perm.index_select(0, pluss::series::arange(0, want, i64_on(platform))).reshape({want});
       selected = class_indices.index_select(0, take).reshape({want});
     } else if (want == have) {
       selected = class_indices.reshape({have});
     } else {
-      const Series extra_pos = pluss::randint(0, have, {want - have}, i64_on(platform), class_seed).reshape({want - have});
+      const Series extra_pos = pluss::series::randint(0, have, {want - have}, i64_on(platform), class_seed).reshape({want - have});
       const Series extra = class_indices.index_select(0, extra_pos).reshape({want - have});
       selected = class_indices.reshape({have}).unite({extra}, 0).reshape({want});
       uses_replacement = true;
@@ -453,7 +453,7 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
   if (!planned.defined() || planned.numel() <= 0) {
     return StatusOr<BalancePlan>(Status::internal(std::string(where) + " produced no row indices."));
   }
-  const Series final_perm = pluss::randperm(planned.numel(), i64_on(platform), splitmix64(seed ^ 0x51ed2705ULL));
+  const Series final_perm = pluss::series::randperm(planned.numel(), i64_on(platform), splitmix64(seed ^ 0x51ed2705ULL));
   planned = planned.index_select(0, final_perm).reshape({planned.numel()});
 
   const Series after_labels = y.index_select(0, planned.to(platform, ScalarType::Int64)).reshape({planned.numel()});
@@ -534,8 +534,8 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
 
     const std::uint64_t class_seed = splitmix64(seed + static_cast<std::uint64_t>(ci) * 0x9e3779b97f4a7c15ULL);
     if (want < have) {
-      const Series perm = pluss::randperm(have, i64_on(platform), class_seed).reshape({have});
-      const Series take = perm.index_select(0, pluss::arange(0, want, i64_on(platform))).reshape({want});
+      const Series perm = pluss::series::randperm(have, i64_on(platform), class_seed).reshape({have});
+      const Series take = perm.index_select(0, pluss::series::arange(0, want, i64_on(platform))).reshape({want});
       retained = append_indices(std::move(retained), class_indices.index_select(0, take).reshape({want}));
       continue;
     }
@@ -545,7 +545,7 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
     if (extra <= 0) continue;
 
     if (target.growth == BalanceGrowthKind::ReuseRows || have < 2) {
-      const Series extra_pos = pluss::randint(0, have, {extra}, i64_on(platform), class_seed).reshape({extra});
+      const Series extra_pos = pluss::series::randint(0, have, {extra}, i64_on(platform), class_seed).reshape({extra});
       retained = append_indices(std::move(retained), class_indices.index_select(0, extra_pos).reshape({extra}));
       uses_replacement = true;
       continue;
@@ -556,13 +556,13 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
                                .reshape({have, batch.features.feature_count()});
     const Series dist2 = pairwise_distance2(class_x, class_x);
     const Series sort_idx = dist2.argsort(1, false, true);
-    const Series neighbor_cols = pluss::arange(1, neighbor_count + 1, i64_on(sort_idx.platform()));
+    const Series neighbor_cols = pluss::series::arange(1, neighbor_count + 1, i64_on(sort_idx.platform()));
     const Series neighbor_pos = sort_idx.index_select(1, neighbor_cols).reshape({have, neighbor_count});
 
-    const Series base_pos = pluss::randint(0, have, {extra}, i64_on(platform), splitmix64(class_seed ^ 0xfeed1234ULL))
+    const Series base_pos = pluss::series::randint(0, have, {extra}, i64_on(platform), splitmix64(class_seed ^ 0xfeed1234ULL))
                                 .reshape({extra});
     const Series neighbor_choice =
-        pluss::randint(0, neighbor_count, {extra}, i64_on(platform), splitmix64(class_seed ^ 0xa11ce5eedULL))
+        pluss::series::randint(0, neighbor_count, {extra}, i64_on(platform), splitmix64(class_seed ^ 0xa11ce5eedULL))
             .reshape({extra, 1});
     const Series neighbor_for_base = neighbor_pos.index_select(0, base_pos.to(neighbor_pos.platform(), ScalarType::Int64))
                                          .gather(1, neighbor_choice.to(neighbor_pos.platform(), ScalarType::Int64))
@@ -570,10 +570,10 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
     const Series base_indices = class_indices.index_select(0, base_pos.to(platform, ScalarType::Int64)).reshape({extra});
     const Series neighbor_indices = class_indices.index_select(0, neighbor_for_base.to(platform, ScalarType::Int64))
                                         .reshape({extra});
-    const Series steps = pluss::rand({extra}, f64_on(platform), splitmix64(class_seed ^ 0x5eededULL)).reshape({extra});
-    const Series label_pos = pluss::arange(ci, ci + 1, i64_on(platform));
+    const Series steps = pluss::series::rand({extra}, f64_on(platform), splitmix64(class_seed ^ 0x5eededULL)).reshape({extra});
+    const Series label_pos = pluss::series::arange(ci, ci + 1, i64_on(platform));
     const double label_value = before.labels.index_select(0, label_pos).reshape({1}).item<double>();
-    const Series labels_extra = pluss::ones({extra}, f64_on(platform)).mul(label_value).reshape({extra});
+    const Series labels_extra = pluss::series::ones({extra}, f64_on(platform)).mul(label_value).reshape({extra});
 
     synth_base = append_indices(std::move(synth_base), base_indices);
     synth_neighbor = append_indices(std::move(synth_neighbor), neighbor_indices);
@@ -601,7 +601,7 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
   out.synthetic_steps = synth_steps.defined() ? synth_steps.to(platform, ScalarType::Float64).reshape({synth_steps.numel()}) : Series::undefined();
   out.synthetic_labels = synth_labels.defined() ? synth_labels.to(platform, ScalarType::Float64).reshape({synth_labels.numel()}) : Series::undefined();
   if (target.clean != BalanceCleanKind::None) {
-    const Series all_indices = pluss::arange(0, n, i64_on(platform));
+    const Series all_indices = pluss::series::arange(0, n, i64_on(platform));
     const Series kept_mask = all_indices.reshape({n, 1}).eq(base_indices.reshape({1, base_indices.numel()})).any(1, false);
     Series removed = all_indices.masked_select(kept_mask.logical_not()).to(platform, ScalarType::Int64);
     out.removed_indices = removed.reshape({removed.numel()});

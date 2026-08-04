@@ -26,7 +26,7 @@ bool run_cudnn_attention_route_checks(std::ostream* err = nullptr) {
   }
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const pluss::Series x = pluss::rand({2, 5, 8}, cfg, 401ULL);
+  const pluss::Series x = pluss::series::rand({2, 5, 8}, cfg, 401ULL);
   const auto [out_cpu, w_cpu] = pluss::scaled_attention(x, x, x);
   if (!same_shape(out_cpu, {2, 5, 8}) || !same_shape(w_cpu, {2, 5, 5})) {
     if (err) *err << "scaled_attention CPU fallback shape mismatch\n";

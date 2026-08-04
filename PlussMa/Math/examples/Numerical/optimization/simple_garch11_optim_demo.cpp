@@ -14,13 +14,13 @@ pluss::Series simulate_garch11(const pluss::Series& omega,
                         std::int64_t n,
                         std::uint64_t seed,
                         const pluss::Config& cfg) {
-  const pluss::Series z = pluss::randn({n}, cfg, seed);
-  pluss::Series returns = pluss::zeros({n}, cfg);
+  const pluss::Series z = pluss::series::randn({n}, cfg, seed);
+  pluss::Series returns = pluss::series::zeros({n}, cfg);
   pluss::Series variance = omega / (pluss::make_series(1.0, cfg) - alpha - beta);
   const pluss::Config idx_cfg = pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform);
   for (std::int64_t t = 0; t < n; ++t) {
     const pluss::Series r = variance.sqrt() * z.select(0, t);
-    returns = returns.put(pluss::arange(t, t + 1, idx_cfg), r.reshape({1}), false);
+    returns = returns.put(pluss::series::arange(t, t + 1, idx_cfg), r.reshape({1}), false);
     variance = omega + alpha * (r * r) + beta * variance;
   }
   return returns;

@@ -102,7 +102,7 @@ void test_gjr_slice() {
 
 void test_error_paths() {
   const auto cfg = f64_cpu();
-  const Series y = pluss::randn({300}, cfg, 20260418ULL);
+  const Series y = pluss::series::randn({300}, cfg, 20260418ULL);
 
   bool threw = false;
   try {

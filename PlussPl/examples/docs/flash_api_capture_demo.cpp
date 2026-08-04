@@ -16,8 +16,8 @@ using namespace pluss::pl;
 using namespace pluss::pl::flash;
 
 Series make_grid_surface(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = linspace(-3.0, 3.0, cols, ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = linspace(-3.0, 3.0, rows, ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = series::linspace(-3.0, 3.0, cols, ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = series::linspace(-3.0, 3.0, rows, ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -70,7 +70,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     fig.save_svg(out_svg.string());
   };
 
-  const auto x = linspace(0.0, 12.0, 180, ScalarType::Float64);
+  const auto x = series::linspace(0.0, 12.0, 180, ScalarType::Float64);
   const auto y = x.mul(0.6).sin().add(x.mul(0.22).cos().mul(0.5));
   const auto z = x.mul(0.35).cos().add(0.3);
 
@@ -289,8 +289,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "heatmap") {
     Studio fig("heatmap", Theme::paper());
     auto& pane = fig.pane2("heatmap");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     save(fig);
@@ -299,8 +299,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "clustermap") {
     Studio fig("clustermap", Theme::paper());
     auto& pane = fig.pane2("clustermap");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     clustermap(pane, gx, gy, gz).label("clustermap");
     save(fig);
@@ -488,8 +488,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "color_palette") {
     Studio fig("color_palette", Theme::paper());
     auto& pane = fig.pane2("color_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(color_palette("ocean"));
@@ -499,8 +499,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "flash_palette") {
     Studio fig("flash_palette", Theme::paper());
     auto& pane = fig.pane2("flash_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(flash_palette(FlashPalette::Muted));
@@ -518,8 +518,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "flash_palette_kind") {
     Studio fig("flash_palette_kind", Theme::paper());
     auto& pane = fig.pane2("flash_palette_kind");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     const auto palette_kind = flash_palette_kind("colorblind");
@@ -530,8 +530,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "blend_palette") {
     Studio fig("blend_palette", Theme::paper());
     auto& pane = fig.pane2("blend_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(blend_palette(
@@ -543,8 +543,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "hls_palette") {
     Studio fig("hls_palette", Theme::paper());
     auto& pane = fig.pane2("hls_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(hls_palette(8, 0.72, 0.54));
@@ -554,8 +554,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "husl_palette") {
     Studio fig("husl_palette", Theme::paper());
     auto& pane = fig.pane2("husl_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(husl_palette(8));
@@ -565,8 +565,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "cubehelix_palette") {
     Studio fig("cubehelix_palette", Theme::paper());
     auto& pane = fig.pane2("cubehelix_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(cubehelix_palette(8));
@@ -576,8 +576,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "light_palette") {
     Studio fig("light_palette", Theme::paper());
     auto& pane = fig.pane2("light_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(light_palette(Rgba::from_u8(42, 95, 153), 8));
@@ -587,8 +587,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "dark_palette") {
     Studio fig("dark_palette", Theme::paper());
     auto& pane = fig.pane2("dark_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(dark_palette(Rgba::from_u8(42, 95, 153), 8));
@@ -598,8 +598,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "diverging_palette") {
     Studio fig("diverging_palette", Theme::paper());
     auto& pane = fig.pane2("diverging_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(diverging_palette(Rgba::from_u8(42, 95, 153), Rgba::from_u8(181, 80, 54), 9));
@@ -609,8 +609,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "mpl_palette") {
     Studio fig("mpl_palette", Theme::paper());
     auto& pane = fig.pane2("mpl_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(mpl_palette("viridis"));
@@ -620,8 +620,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "xkcd_palette") {
     Studio fig("xkcd_palette", Theme::paper());
     auto& pane = fig.pane2("xkcd_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(xkcd_palette());
@@ -631,8 +631,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "crayon_palette") {
     Studio fig("crayon_palette", Theme::paper());
     auto& pane = fig.pane2("crayon_palette");
-    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
     trace.palette(crayon_palette());
@@ -765,8 +765,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     auto& pane = fig.pane3("scene");
     pane.place(0, 0);
     scene3d(pane, Scene3DOptions{.preset = ScenePreset3D::Presentation});
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     auto& tr = sheet(pane, gx, gy, gz).label("sheet");
     trace3d(tr, Trace3DOptions{.preset = TracePreset3D::Surface});
@@ -776,8 +776,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "camera3d") {
     Studio fig("camera3d", Theme::paper());
     auto& pane = fig.pane3("camera3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     camera3d(
         pane,
@@ -794,8 +794,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "camera_preset3d") {
     Studio fig("camera_preset3d", Theme::paper());
     auto& pane = fig.pane3("camera_preset3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     camera_preset3d(pane, CameraPreset3D::Isometric);
     sheet(pane, gx, gy, gz).label("camera_preset3d");
@@ -805,8 +805,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "lighting3d") {
     Studio fig("lighting3d", Theme::paper());
     auto& pane = fig.pane3("lighting3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     lighting3d(
         pane,
@@ -824,8 +824,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "theme_preset3d") {
     Studio fig("theme_preset3d", Theme::paper());
     auto& pane = fig.pane3("theme_preset3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     theme_preset3d(pane, ThemePreset3D::Slate);
     sheet(pane, gx, gy, gz).label("theme_preset3d");
@@ -835,8 +835,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "scene_preset3d") {
     Studio fig("scene_preset3d", Theme::paper());
     auto& pane = fig.pane3("scene_preset3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     scene_preset3d(pane, ScenePreset3D::Studio);
     sheet(pane, gx, gy, gz).label("scene_preset3d");
@@ -846,8 +846,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "trace3d") {
     Studio fig("trace3d", Theme::paper());
     auto& pane = fig.pane3("trace3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     auto& tr = sheet(pane, gx, gy, gz).label("sheet");
     trace3d(tr, Trace3DOptions{.preset = TracePreset3D::Surface});
@@ -857,8 +857,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "trace_preset3d") {
     Studio fig("trace_preset3d", Theme::paper());
     auto& pane = fig.pane3("trace_preset3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     auto& tr = sheet(pane, gx, gy, gz).label("sheet");
     trace_preset3d(tr, TracePreset3D::Surface);
@@ -892,8 +892,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "sheet") {
     Studio fig("sheet", Theme::paper());
     auto& pane = fig.pane3("sheet");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     sheet(pane, gx, gy, gz).label("sheet");
     save(fig);
@@ -902,8 +902,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "lattice") {
     Studio fig("lattice", Theme::paper());
     auto& pane = fig.pane3("lattice");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     lattice(pane, gx, gy, gz).label("lattice");
     save(fig);
@@ -912,8 +912,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "ridge3") {
     Studio fig("ridge3", Theme::paper());
     auto& pane = fig.pane3("ridge3");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     ridge3(pane, gx, gy, gz, 8).label("ridge3");
     save(fig);
@@ -952,7 +952,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "path4") {
     Studio fig("path4", Theme::paper());
     auto& pane = fig.pane3("path4");
-    const auto t = linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
+    const auto t = series::linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
     const auto hx = t.cos();
     const auto hy = t.sin();
     const auto hz = t.mul(2.0).cos().mul(0.72);
@@ -970,7 +970,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "cloud4") {
     Studio fig("cloud4", Theme::paper());
     auto& pane = fig.pane3("cloud4");
-    const auto t = linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
+    const auto t = series::linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
     const auto hx = t.cos();
     const auto hy = t.sin();
     const auto hz = t.mul(2.0).cos().mul(0.72);
@@ -989,7 +989,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     return true;
   }
   if (key == "export4_frames") {
-    const auto t = linspace(0.0, 2.0 * kPi, 360, ScalarType::Float64);
+    const auto t = series::linspace(0.0, 2.0 * kPi, 360, ScalarType::Float64);
     const auto hx = t.cos();
     const auto hy = t.sin();
     const auto hz = t.mul(2.0).cos().mul(0.72);
@@ -1046,8 +1046,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "plot_surface") {
     Studio fig("plot_surface", Theme::paper());
     auto& pane = fig.pane3("plot_surface");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     plot_surface(pane, gx, gy, gz).label("plot_surface");
     save(fig);
@@ -1056,8 +1056,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "plot_wireframe") {
     Studio fig("plot_wireframe", Theme::paper());
     auto& pane = fig.pane3("plot_wireframe");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     plot_wireframe(pane, gx, gy, gz).label("plot_wireframe");
     save(fig);
@@ -1066,8 +1066,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "contour3D") {
     Studio fig("contour3D", Theme::paper());
     auto& pane = fig.pane3("contour3D");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     contour3D(pane, gx, gy, gz, 10).label("contour3D");
     save(fig);
@@ -1328,8 +1328,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     auto& parent = fig.pane3("parent3").place(0, 0);
     const std::size_t root = fig.pane_index(parent);
 
-    const auto gx = linspace(-2.4, 2.4, 20, ScalarType::Float64);
-    const auto gy = linspace(-2.4, 2.4, 20, ScalarType::Float64);
+    const auto gx = series::linspace(-2.4, 2.4, 20, ScalarType::Float64);
+    const auto gy = series::linspace(-2.4, 2.4, 20, ScalarType::Float64);
     const auto gz = make_grid_surface(20, 20);
 
     auto& a = fig.subpane3(root, 1, 2, 0, 0, 1, 1, "sheet");
@@ -1452,8 +1452,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     auto& p10 = fig.pane3("p10");
     p10.place(1, 0).align_z("z_shared");
     const auto parent3 = fig.pane_index(p10);
-    const auto gx = linspace(-2.5, 2.5, 18, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 18, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 18, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 18, ScalarType::Float64);
     const auto gz = make_grid_surface(18, 18);
     p10.sheet(gx, gy, gz).label("sheet");
 
@@ -1708,7 +1708,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_pane_scales") {
     Studio fig("core_pane_scales", Theme::paper());
     auto& pane = fig.pane2("scale_x/log + scale_y/symlog");
-    const auto xs = linspace(1.0, 120.0, 180, ScalarType::Float64);
+    const auto xs = series::linspace(1.0, 120.0, 180, ScalarType::Float64);
     const auto ys = xs.mul(0.08).sin().mul(xs.mul(0.02).add(0.6));
     pane.scale_x(ScalePolicy::log10()).scale_y(ScalePolicy::symlog(10.0, 0.2));
     pane.trend(xs, ys).label("scaled");
@@ -1719,7 +1719,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     Studio fig("core_axis_layout_exhaustive", Theme::paper());
     fig.size(1220.0, 780.0).mosaic(1, 1, 12.0, 12.0);
     auto& pane = fig.pane2("axis/layout exhaustive");
-    const auto xs = linspace(1.0, 120.0, 180, ScalarType::Float64);
+    const auto xs = series::linspace(1.0, 120.0, 180, ScalarType::Float64);
     const auto ys = xs.mul(0.08).sin().mul(xs.mul(0.02).add(0.6));
 
     pane.title("axis/layout exhaustive");
@@ -1789,8 +1789,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_axis_layout_exhaustive_3d") {
     Studio fig("core_axis_layout_exhaustive_3d", Theme::paper());
     auto& pane = fig.pane3("axis/layout exhaustive 3d");
-    const auto gx = linspace(-2.4, 2.4, 22, ScalarType::Float64);
-    const auto gy = linspace(-2.4, 2.4, 22, ScalarType::Float64);
+    const auto gx = series::linspace(-2.4, 2.4, 22, ScalarType::Float64);
+    const auto gy = series::linspace(-2.4, 2.4, 22, ScalarType::Float64);
     const auto gz = make_grid_surface(22, 22);
 
     pane.title("axis/layout exhaustive 3d");
@@ -1843,8 +1843,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_trace_style_3d") {
     Studio fig("core_trace_style_3d", Theme::paper());
     auto& pane = fig.pane3("trace styling 3d");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     pane.sheet(gx, gy, gz)
         .label("sheet")
@@ -1890,8 +1890,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_fieldmap") {
     Studio fig("core_fieldmap", Theme::paper());
     auto& pane = fig.pane2("fieldmap");
-    const auto gx = linspace(-3.0, 3.0, 42, ScalarType::Float64);
-    const auto gy = linspace(-3.0, 3.0, 42, ScalarType::Float64);
+    const auto gx = series::linspace(-3.0, 3.0, 42, ScalarType::Float64);
+    const auto gy = series::linspace(-3.0, 3.0, 42, ScalarType::Float64);
     const auto gz = make_grid_surface(42, 42);
     pane.scale_guide(true);
     pane.fieldmap(gx, gy, gz).label("fieldmap");
@@ -1978,7 +1978,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_radial") {
     Studio fig("core_radial", Theme::paper());
     auto& pane = fig.pane2("radial");
-    const auto theta = linspace(0.0, 2.0 * kPi, 180, ScalarType::Float64);
+    const auto theta = series::linspace(0.0, 2.0 * kPi, 180, ScalarType::Float64);
     const auto radius = theta.mul(3.0).sin().abs().add(0.35);
     pane.radial(theta, radius).label("radial");
     save(fig);
@@ -2007,8 +2007,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_contour") {
     Studio fig("core_contour", Theme::paper());
     auto& pane = fig.pane2("contour");
-    const auto gx = linspace(-2.5, 2.5, 26, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 26, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 26, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 26, ScalarType::Float64);
     const auto gz = make_grid_surface(26, 26);
     pane.contour(gx, gy, gz, 10).label("contour");
     save(fig);
@@ -2017,8 +2017,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_isoband") {
     Studio fig("core_isoband", Theme::paper());
     auto& pane = fig.pane2("isoband");
-    const auto gx = linspace(-2.5, 2.5, 34, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 34, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 34, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 34, ScalarType::Float64);
     const auto gz = make_grid_surface(34, 34);
     pane.isoband(gx, gy, gz, 8).label("isoband");
     save(fig);
@@ -2027,8 +2027,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_ridge3") {
     Studio fig("core_ridge3", Theme::paper());
     auto& pane = fig.pane3("ridge3");
-    const auto gx = linspace(-2.5, 2.5, 26, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 26, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 26, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 26, ScalarType::Float64);
     const auto gz = make_grid_surface(26, 26);
     pane.ridge3(gx, gy, gz, 9).label("ridge3");
     save(fig);
@@ -2056,8 +2056,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_sheet") {
     Studio fig("core_sheet", Theme::paper());
     auto& pane = fig.pane3("sheet");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     pane.sheet(gx, gy, gz).label("sheet");
     save(fig);
@@ -2066,8 +2066,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "core_lattice") {
     Studio fig("core_lattice", Theme::paper());
     auto& pane = fig.pane3("lattice");
-    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
-    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
     pane.lattice(gx, gy, gz).label("lattice");
     save(fig);

@@ -30,8 +30,8 @@ int main() {
   std::filesystem::create_directories(root / "outputs" / "svg");
   std::filesystem::create_directories(root / "outputs" / "pdf");
 
-  const auto x = pluss::linspace(-3.0, 3.0, 15, pluss::ScalarType::Float64);
-  const auto y = pluss::linspace(-2.5, 2.5, 12, pluss::ScalarType::Float64);
+  const auto x = pluss::series::linspace(-3.0, 3.0, 15, pluss::ScalarType::Float64);
+  const auto y = pluss::series::linspace(-2.5, 2.5, 12, pluss::ScalarType::Float64);
   const auto z = basin_field(12, 15);
 
   pl::Studio studio("plusspl-fieldmap", pl::Theme::ocean());

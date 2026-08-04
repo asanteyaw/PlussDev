@@ -8,7 +8,7 @@ namespace {
 
 void show_timeline(std::string_view label, const pluss::codeh::Timeline& t) {
   std::cout << "\n== " << label << " ==\n";
-  std::cout << pluss::print_timeline(t) << "\n";
+  std::cout << pluss::timeline::print(t) << "\n";
 }
 
 void show_series(std::string_view label, const pluss::Series& s) {
@@ -26,7 +26,7 @@ void show_note(std::string_view label, const pluss::Note& n) {
 int main() {
   using pluss::TimeIndex;
 
-  const auto base = pluss::make_timeindex({
+  const auto base = pluss::timeindex::make({
       "2024-11-01T00:00:00Z",
       "2024-11-01T00:20:00Z",
       "2024-11-01T00:40:00Z",
@@ -34,7 +34,7 @@ int main() {
       "2024-11-01T01:20:00Z",
   });
 
-  const auto unsorted_dup = pluss::make_timeindex({
+  const auto unsorted_dup = pluss::timeindex::make({
       "2024-11-01T00:40:00Z",
       "2024-11-01T00:00:00Z",
       "2024-11-01T00:20:00Z",
@@ -42,7 +42,7 @@ int main() {
       "2024-11-01T01:00:00Z",
   }, false);
 
-  const auto descending = pluss::make_timeindex({
+  const auto descending = pluss::timeindex::make({
       "2024-11-01T01:20:00Z",
       "2024-11-01T01:00:00Z",
       "2024-11-01T00:40:00Z",
@@ -84,20 +84,20 @@ int main() {
   show_timeline("base.tail(2)", base.tail(2).timeline());
 
   std::cout << "base.searchsorted(00:55,left)="
-            << base.searchsorted(pluss::make_timeline("2024-11-01T00:55:00Z"), false)
+            << base.searchsorted(pluss::timeline::make("2024-11-01T00:55:00Z"), false)
             << "\n";
   std::cout << "base.searchsorted(00:55,right)="
-            << base.searchsorted(pluss::make_timeline("2024-11-01T00:55:00Z"), true)
+            << base.searchsorted(pluss::timeline::make("2024-11-01T00:55:00Z"), true)
             << "\n";
   std::cout << "base.asof(00:55)="
-            << base.asof(pluss::make_timeline("2024-11-01T00:55:00Z")) << "\n";
+            << base.asof(pluss::timeline::make("2024-11-01T00:55:00Z")) << "\n";
   show_series("base.slice(00:15,01:00)",
-              base.slice(pluss::make_timeline("2024-11-01T00:15:00Z"),
-                         pluss::make_timeline("2024-11-01T01:00:00Z")));
+              base.slice(pluss::timeline::make("2024-11-01T00:15:00Z"),
+                         pluss::timeline::make("2024-11-01T01:00:00Z")));
   show_series("base.slice_time(00:15,01:00)",
               base.slice_time("2024-11-01T00:15:00Z", "2024-11-01T01:00:00Z"));
 
-  const auto right = pluss::make_timeindex({
+  const auto right = pluss::timeindex::make({
       "2024-11-01T00:05:00Z",
       "2024-11-01T00:20:00Z",
       "2024-11-01T01:05:00Z",
@@ -115,7 +115,7 @@ int main() {
 
   show_note("base.to_note_iso()", base.to_note_iso());
 
-  const auto utc_midday = pluss::make_timeindex({
+  const auto utc_midday = pluss::timeindex::make({
       "2024-11-01T16:00:00Z",
       "2024-11-01T18:30:00Z",
   });
@@ -123,7 +123,7 @@ int main() {
                 utc_midday.tz_convert("America/New_York").timeline());
   show_timeline("utc_midday.to_utc()", utc_midday.to_utc().timeline());
 
-  const auto naive_local = pluss::make_timeindex({
+  const auto naive_local = pluss::timeindex::make({
       "2024-11-01T09:00:00",
       "2024-11-01T10:15:00",
   }, false);
@@ -162,14 +162,14 @@ int main() {
   show_series("base.rolling_first(values,45m)", base.rolling_first(vals, win));
   show_series("base.rolling_last(values,45m)", base.rolling_last(vals, win));
 
-  const auto left_join = pluss::make_timeindex({
+  const auto left_join = pluss::timeindex::make({
       "2024-11-01T00:00:00Z",
       "2024-11-01T00:20:00Z",
       "2024-11-01T00:40:00Z",
       "2024-11-01T01:00:00Z",
       "2024-11-01T01:20:00Z",
   });
-  const auto right_join = pluss::make_timeindex({
+  const auto right_join = pluss::timeindex::make({
       "2024-11-01T00:05:00Z",
       "2024-11-01T00:30:00Z",
       "2024-11-01T01:10:00Z",

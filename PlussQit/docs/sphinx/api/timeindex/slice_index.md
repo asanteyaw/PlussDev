@@ -36,7 +36,7 @@ The first excluded position.
 
 ```cpp
 auto out = base.slice_index(1, 4);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -51,7 +51,7 @@ independent of the actual timestamp values.
 
 ```cpp
 auto middle = base.slice_index(1, 4);
-std::cout << pluss::print_timeline(middle) << "\n";
+std::cout << pluss::timeindex::print(middle) << "\n";
 ```
 
 ## Notes

@@ -38,7 +38,7 @@ A scalar `Timeline` timestamp to look up against the index.
 Example 1. Find the most recent available timestamp at or before a query time.
 
 ```cpp
-auto key = pluss::make_timeline("2024-11-01T00:55:00Z");
+auto key = pluss::timeline::make("2024-11-01T00:55:00Z");
 auto pos = idx.asof(key);
 std::cout << "pos = " << pos << "\n";
 ```
@@ -53,7 +53,7 @@ Example 2. If every index value is greater than the key, the method returns
 `-1`.
 
 ```cpp
-auto key = pluss::make_timeline("2024-10-31T23:00:00Z");
+auto key = pluss::timeline::make("2024-10-31T23:00:00Z");
 auto pos = idx.asof(key);
 std::cout << "pos = " << pos << "\n";
 ```

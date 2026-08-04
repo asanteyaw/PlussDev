@@ -657,7 +657,7 @@ Series uniform(std::span<const std::int64_t> sizes,
 
   switch (method) {
     case Method::Pseudo:
-      return pluss::rand(sizes, out_cfg, seed_or_offset);
+      return pluss::series::rand(sizes, out_cfg, seed_or_offset);
     case Method::Sobol:
       return sobol(sizes, out_cfg, seed_or_offset);
     case Method::Halton:
@@ -666,7 +666,7 @@ Series uniform(std::span<const std::int64_t> sizes,
       return torus(sizes, out_cfg, seed_or_offset);
     default:
       PLUSS_CHECK(false, "rng::uniform: unsupported method");
-      return pluss::rand(sizes, out_cfg, seed_or_offset);
+      return pluss::series::rand(sizes, out_cfg, seed_or_offset);
   }
 }
 
@@ -682,7 +682,7 @@ Series standard_normal(std::span<const std::int64_t> sizes,
 
   switch (method) {
     case Method::Pseudo:
-      return pluss::randn(sizes, out_cfg, seed_or_offset);
+      return pluss::series::randn(sizes, out_cfg, seed_or_offset);
     case Method::Sobol:
       return sobol_normal(sizes, out_cfg, seed_or_offset);
     case Method::Halton:
@@ -691,7 +691,7 @@ Series standard_normal(std::span<const std::int64_t> sizes,
       return torus_normal(sizes, out_cfg, seed_or_offset);
     default:
       PLUSS_CHECK(false, "rng::standard_normal: unsupported method");
-      return pluss::randn(sizes, out_cfg, seed_or_offset);
+      return pluss::series::randn(sizes, out_cfg, seed_or_offset);
   }
 }
 

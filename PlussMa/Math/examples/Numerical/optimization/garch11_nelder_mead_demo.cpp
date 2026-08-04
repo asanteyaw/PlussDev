@@ -55,15 +55,15 @@ pluss::Series simulate_garch11(
     std::int64_t n,
     std::uint64_t seed,
     const pluss::Config& cfg) {
-  const pluss::Series z = pluss::randn({n}, cfg, seed);
-  pluss::Series returns = pluss::zeros({n}, cfg);
+  const pluss::Series z = pluss::series::randn({n}, cfg, seed);
+  pluss::Series returns = pluss::series::zeros({n}, cfg);
 
   const pluss::Config idx_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(cfg.platform);
   const pluss::Series one = scalar(1.0, cfg);
   pluss::Series variance = p.omega.div(one.sub(p.alpha).sub(p.beta).maximum(1e-8));
 
   for (std::int64_t t = 0; t < n; ++t) {
-    const pluss::Series idx = pluss::arange(t, t + 1, idx_cfg);
+    const pluss::Series idx = pluss::series::arange(t, t + 1, idx_cfg);
     const pluss::Series eps = z.select(0, t);
     const pluss::Series r = variance.maximum(1e-12).sqrt().mul(eps);
 

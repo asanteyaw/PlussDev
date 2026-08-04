@@ -1617,7 +1617,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
           ticks[static_cast<std::size_t>(i)] = base * time_unit_to_nanos(ts_type->unit());
         }
       }
-      return pluss::table::Thread(pluss::from_epoch_nanos(ticks, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Thread(pluss::timeline::from_epoch(ticks, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::STRING:
     case arrow::Type::LARGE_STRING: {

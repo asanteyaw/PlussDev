@@ -180,7 +180,7 @@ inline std::tuple<Series, Series> rnn(const Series& input,
           detail::rnn_layer(detail::reverse_time_(layer_input), detail::select_dim_(state, 0, base + 1), params[base + 1], cfg);
       final_hidden.push_back(forward_h);
       final_hidden.push_back(backward_h);
-      layer_input = pluss::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
+      layer_input = pluss::series::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
     } else {
       auto [layer_out, layer_h] = detail::rnn_layer(layer_input, detail::select_dim_(state, 0, base), params[base], cfg);
       final_hidden.push_back(layer_h);
@@ -255,7 +255,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
           detail::gru_layer(detail::reverse_time_(layer_input), detail::select_dim_(state, 0, base + 1), params[base + 1], cfg);
       final_hidden.push_back(forward_h);
       final_hidden.push_back(backward_h);
-      layer_input = pluss::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
+      layer_input = pluss::series::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
     } else {
       auto [layer_out, layer_h] = detail::gru_layer(layer_input, detail::select_dim_(state, 0, base), params[base], cfg);
       final_hidden.push_back(layer_h);
@@ -349,7 +349,7 @@ inline std::tuple<Series, LSTMState> lstm(const Series& input,
       final_hidden.push_back(backward_h);
       final_cell.push_back(forward_c);
       final_cell.push_back(backward_c);
-      layer_input = pluss::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
+      layer_input = pluss::series::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
     } else {
       auto [layer_out, layer_h, layer_c] = detail::lstm_layer(
           layer_input, detail::select_dim_(hidden, 0, base), detail::select_dim_(cell, 0, base), params[base], cfg);

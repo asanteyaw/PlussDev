@@ -35,7 +35,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("normal", {0.0, 1.0}, {6}, cfg, 11ULL);
@@ -73,7 +73,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("lognorm", {0.0, 0.5}, {6}, cfg, 12ULL);
@@ -111,7 +111,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 0.25, 0.5, 0.75, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("uniform", {0.0, 1.0}, {6}, cfg, 13ULL);
@@ -149,7 +149,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 0.5, 1.0, 1.5}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("exp", {1.5}, {6}, cfg, 14ULL);
@@ -187,7 +187,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("bern", {0.35}, {8}, cfg, 15ULL);
@@ -225,7 +225,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("bessel", {0.0, 2.5}, {6}, cfg, 15ULL);
@@ -268,7 +268,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.25, 0.5, 0.75}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("beta", {2.0, 5.0}, {6}, cfg, 16ULL);
@@ -306,7 +306,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("binom", {10.0, 0.3}, {6}, cfg, 17ULL);
@@ -344,7 +344,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.1, 0.4, 0.8}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("bradford", {1.5}, {6}, cfg, 18ULL);
@@ -382,7 +382,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("burr", {2.0, 3.0}, {6}, cfg, 19ULL);
@@ -420,7 +420,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("cauchy", {0.0, 1.0}, {6}, cfg, 20ULL);
@@ -463,7 +463,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("chi", {3.0}, {6}, cfg, 21ULL);
@@ -501,7 +501,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0, 4.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("chisq", {4.0}, {6}, cfg, 22ULL);
@@ -539,7 +539,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("chisqnc", {1.5, 4.0}, {6}, cfg, 23ULL);
@@ -577,7 +577,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("cosine", {}, {6}, cfg, 24ULL);
@@ -615,7 +615,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("erlang", {1.25, 3.0}, {6}, cfg, 25ULL);
@@ -653,7 +653,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("extrval", {0.0, 1.0}, {6}, cfg, 26ULL);
@@ -691,7 +691,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("f", {4.0, 6.0}, {6}, cfg, 27ULL);
@@ -729,7 +729,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("fnc", {1.5, 4.0, 6.0}, {6}, cfg, 28ULL);
@@ -767,7 +767,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("laplace", {0.0, 1.0}, {6}, cfg, 29ULL);
@@ -805,7 +805,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("logistic", {0.0, 1.0}, {6}, cfg, 30ULL);
@@ -843,7 +843,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("geom", {0.35}, {6}, cfg, 31ULL);
@@ -886,7 +886,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("gamma", {2.5}, {6}, cfg, 32ULL);
@@ -924,7 +924,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.25, 0.5, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("gompertz", {1.0, 2.0}, {6}, cfg, 33ULL);
@@ -962,7 +962,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 0.25, 0.5}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("hcos", {}, {6}, cfg, 34ULL);
@@ -1000,7 +1000,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("hsec", {}, {6}, cfg, 35ULL);
@@ -1038,7 +1038,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("hypergeom", {20.0, 8.0, 5.0}, {6}, cfg, 36ULL);
@@ -1076,7 +1076,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("ig", {1.5, 2.0}, {6}, cfg, 37ULL);
@@ -1114,7 +1114,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("maxwell", {1.0}, {6}, cfg, 38ULL);
@@ -1152,7 +1152,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("nakagami", {1.5, 2.0}, {6}, cfg, 39ULL);
@@ -1190,7 +1190,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("pascal", {3.0, 0.45}, {6}, cfg, 40ULL);
@@ -1228,7 +1228,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("normaltrunc", {-1.0, 1.0, 0.0, 1.0}, {6}, cfg, 41ULL);
@@ -1266,7 +1266,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("planck", {2.0, 1.5}, {6}, cfg, 42ULL);
@@ -1304,7 +1304,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("poisson", {2.0}, {6}, cfg, 43ULL);
@@ -1342,7 +1342,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-0.5, 0.0, 0.5}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("quadr", {}, {6}, cfg, 44ULL);
@@ -1380,7 +1380,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("rademacher", {}, {6}, cfg, 45ULL);
@@ -1423,7 +1423,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("t", {5.0}, {6}, cfg, 46ULL);
@@ -1461,7 +1461,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.0, 0.5, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("tri", {0.0, 0.5, 1.0}, {6}, cfg, 47ULL);
@@ -1499,7 +1499,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 4.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("pareto", {1.0, 3.0}, {6}, cfg, 48ULL);
@@ -1537,7 +1537,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("lomax", {2.0, 3.0}, {6}, cfg, 49ULL);
@@ -1575,7 +1575,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("rayl", {1.0}, {6}, cfg, 50ULL);
@@ -1613,7 +1613,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.5, 2.5}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("rice", {1.0, 1.0}, {6}, cfg, 51ULL);
@@ -1651,7 +1651,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("semicirc", {0.0, 1.0}, {6}, cfg, 52ULL);
@@ -1689,7 +1689,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("skellam", {2.0, 1.0}, {6}, cfg, 53ULL);
@@ -1727,7 +1727,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("tukeylambda", {0.14}, {6}, cfg, 54ULL);
@@ -1765,7 +1765,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.1, 0.5, 0.9}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("u", {}, {6}, cfg, 55ULL);
@@ -1803,7 +1803,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("vonmises", {0.0, 2.0}, {6}, cfg, 56ULL);
@@ -1841,7 +1841,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("wald", {2.0}, {6}, cfg, 57ULL);
@@ -1884,7 +1884,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("weibull", {0.0, 2.0, 1.5}, {6}, cfg, 58ULL);
@@ -1922,7 +1922,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("yule", {3.0}, {6}, cfg, 59ULL);
@@ -1960,7 +1960,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("zipf", {2.5}, {6}, cfg, 60ULL);
@@ -1998,7 +1998,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({0.5, 1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("gig", {0.5, 1.0, 2.0}, {6}, cfg, 61ULL);
@@ -2036,7 +2036,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("gh", {1.0, 2.0, 0.5, 0.0, 1.0}, {6}, cfg, 62ULL);
@@ -2074,7 +2074,7 @@ Use `sample_like(...)` when you want the sampled output to inherit shape, dtype,
 auto cfg = pluss::Config{}
     .with_dtype(pluss::ScalarType::Float64)
     .with_platform(pluss::pCPU);
-auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+auto like = pluss::series::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
 auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("nig", {2.0, 0.5, 0.0, 1.0}, {6}, cfg, 63ULL);

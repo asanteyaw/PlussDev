@@ -12,9 +12,9 @@ int main() {
   std::cout << "cudnn_conv_route_ready: " << (pluss::cudnn_conv_ready() ? "true" : "false") << '\n';
 
   const auto cpu_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const auto x_cpu = pluss::rand({2, 4, 16, 16}, cpu_cfg, 301ULL);
-  const auto w_cpu = pluss::rand({8, 2, 3, 3}, cpu_cfg, 303ULL);
-  const auto b_cpu = pluss::zeros({8}, cpu_cfg);
+  const auto x_cpu = pluss::series::rand({2, 4, 16, 16}, cpu_cfg, 301ULL);
+  const auto w_cpu = pluss::series::rand({8, 2, 3, 3}, cpu_cfg, 303ULL);
+  const auto b_cpu = pluss::series::zeros({8}, cpu_cfg);
   const auto y_cpu = pluss::conv(
       x_cpu,
       w_cpu,

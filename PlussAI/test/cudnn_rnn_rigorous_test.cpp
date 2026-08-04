@@ -134,12 +134,12 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(const RnnCase& tc, const plu
     for (std::int64_t dir = 0; dir < dirs; ++dir) {
       const std::uint64_t seed = tc.seed + static_cast<std::uint64_t>(29 * (layer * dirs + dir));
       out.push_back(pluss::ai::rnn::NetWeight{
-          .weight_ih = pluss::rand({gates * tc.hidden_size, layer_input}, cfg, seed + 1ULL),
-          .weight_hh = pluss::rand({gates * tc.hidden_size, hidden_out}, cfg, seed + 2ULL),
-          .bias = (tc.use_bias && !tc.split_bias) ? pluss::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_ih = (tc.use_bias && tc.split_bias) ? pluss::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_hh = (tc.use_bias && tc.split_bias) ? pluss::rand({gates * tc.hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
-          .weight_hr = projected_lstm ? pluss::rand({hidden_out, tc.hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
+          .weight_ih = pluss::series::rand({gates * tc.hidden_size, layer_input}, cfg, seed + 1ULL),
+          .weight_hh = pluss::series::rand({gates * tc.hidden_size, hidden_out}, cfg, seed + 2ULL),
+          .bias = (tc.use_bias && !tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
+          .bias_ih = (tc.use_bias && tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
+          .bias_hh = (tc.use_bias && tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
+          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, tc.hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
       });
     }
   }
@@ -411,10 +411,10 @@ bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {
       const std::int64_t hidden_out_single = (tc.kind == Kind::LSTM && tc.proj_size > 0) ? tc.proj_size : tc.hidden_size;
       const std::int64_t out_hidden = hidden_out_single * dirs;
       const pluss::Series x_cpu = tc.batch_first
-          ? pluss::rand({tc.batch, tc.seq, tc.input_size}, cfg_cpu, tc.seed)
-          : pluss::rand({tc.seq, tc.batch, tc.input_size}, cfg_cpu, tc.seed);
-      const pluss::Series h0_cpu = pluss::rand({stacked, tc.batch, hidden_out_single}, cfg_cpu, tc.seed + 31ULL);
-      const pluss::Series c0_cpu = pluss::rand({stacked, tc.batch, tc.hidden_size}, cfg_cpu, tc.seed + 47ULL);
+          ? pluss::series::rand({tc.batch, tc.seq, tc.input_size}, cfg_cpu, tc.seed)
+          : pluss::series::rand({tc.seq, tc.batch, tc.input_size}, cfg_cpu, tc.seed);
+      const pluss::Series h0_cpu = pluss::series::rand({stacked, tc.batch, hidden_out_single}, cfg_cpu, tc.seed + 31ULL);
+      const pluss::Series c0_cpu = pluss::series::rand({stacked, tc.batch, tc.hidden_size}, cfg_cpu, tc.seed + 47ULL);
       const auto w_cpu = make_weights(tc, cfg_cpu);
       const auto expect_func_output = [&](const pluss::Series& y) {
         return tc.batch_first ? has_shape(y, {tc.batch, tc.seq, out_hidden}) : has_shape(y, {tc.seq, tc.batch, out_hidden});

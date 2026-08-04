@@ -308,7 +308,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         ticks[static_cast<std::size_t>(i)] = ts.to_epoch_nanos_vector()[0];
       }
       return pluss::kindle::Stream(
-          pluss::from_epoch_nanos(ticks, {n}),
+          pluss::timeline::from_epoch(ticks, {n}),
           has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
     }
     case SlotKind::TimeIndex: {
@@ -350,7 +350,7 @@ pluss::table::Thread thread_from_slot_value(const Slot::Value& value) {
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
           PLUSS_CHECK(v.numel() == 1, "Slot: Timeline value must be scalar-like for Thread delegation");
           const auto ticks = v.to_epoch_nanos_vector();
-          return pluss::table::Thread(pluss::from_epoch_nanos(
+          return pluss::table::Thread(pluss::timeline::from_epoch(
               std::vector<std::int64_t>{ticks[0]},
               std::vector<std::int64_t>{1}));
         } else if constexpr (std::is_same_v<T, pluss::TimeIndex>) {

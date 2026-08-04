@@ -101,9 +101,9 @@ int main() {
   const std::int64_t dim = 12;
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const pluss::Series x0 = pluss::full({dim}, 2.5, cfg);
-  const pluss::Series lb = pluss::full({dim}, -5.0, cfg);
-  const pluss::Series ub = pluss::full({dim}, 5.0, cfg);
+  const pluss::Series x0 = pluss::series::full({dim}, 2.5, cfg);
+  const pluss::Series lb = pluss::series::full({dim}, -5.0, cfg);
+  const pluss::Series ub = pluss::series::full({dim}, 5.0, cfg);
 
   DifferentialEvolutionConfig de_cfg;
   de_cfg.population_size = 96;

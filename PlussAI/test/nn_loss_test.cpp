@@ -264,13 +264,13 @@ bool run_nn_loss_checks(std::ostream* err = nullptr) {
 
     const Series log_probs = logits.log_softmax(1);
     const Series safe_target = target.eq(-1).where(
-        pluss::zeros_like(target, ScalarType::Int64),
+        pluss::series::zeros_like(target, ScalarType::Int64),
         target.to(ScalarType::Int64));
     const Series picked = log_probs.gather(1, safe_target.unsqueeze(1)).squeeze(1).neg();
     const Series w = class_weight.gather(0, safe_target);
     const Series mask = target.ne(-1);
-    const Series numer = mask.where(picked.mul(w), pluss::zeros_like(picked, ScalarType::Float64)).sum();
-    const Series denom = mask.where(w, pluss::zeros_like(w, ScalarType::Float64)).sum().clamp_min(1.0);
+    const Series numer = mask.where(picked.mul(w), pluss::series::zeros_like(picked, ScalarType::Float64)).sum();
+    const Series denom = mask.where(w, pluss::series::zeros_like(w, ScalarType::Float64)).sum().clamp_min(1.0);
     const Series expected = numer.div(denom);
 
     if (!approx(as_f64(loss), as_f64(expected), 1e-5)) {

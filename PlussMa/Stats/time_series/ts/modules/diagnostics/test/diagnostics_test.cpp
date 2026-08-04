@@ -24,7 +24,7 @@ void expect(bool condition, const std::string& message) {
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = phi * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -34,7 +34,7 @@ Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
 
 void test_acf_white_noise() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({4000}, cfg, 20260309ULL);
+  const Series y = pluss::series::randn({4000}, cfg, 20260309ULL);
 
   AcfOptions opt;
   opt.max_lag = 20;
@@ -65,7 +65,7 @@ void test_pacf_ar1() {
 
 void test_ljung_box_signal_vs_noise() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series wn = pluss::randn({3500}, cfg, 20260311ULL);
+  const Series wn = pluss::series::randn({3500}, cfg, 20260311ULL);
   const Series ar = make_ar1(3500, 0.7, 20260312ULL);
 
   LjungBoxOptions opt;
@@ -83,7 +83,7 @@ void test_ljung_box_signal_vs_noise() {
 
 void test_error_paths() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({32}, cfg, 20260313ULL);
+  const Series y = pluss::series::randn({32}, cfg, 20260313ULL);
 
   bool threw = false;
   try {

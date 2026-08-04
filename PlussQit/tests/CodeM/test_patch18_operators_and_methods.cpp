@@ -8,8 +8,8 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("operators", "[ops]") {
-  Series a = pluss::full({4}, 2.0, ScalarType::Float32);
-  Series b = pluss::full({4}, 3.0, ScalarType::Float32);
+  Series a = pluss::series::full({4}, 2.0, ScalarType::Float32);
+  Series b = pluss::series::full({4}, 3.0, ScalarType::Float32);
 
   Series c = a + b;
   auto* cp = reinterpret_cast<const float*>(c.raw_data());
@@ -32,7 +32,7 @@ TEST_CASE("operators", "[ops]") {
 }
 
 TEST_CASE("ostream", "[print]") {
-  Series a = pluss::arange(0, 5, 1, ScalarType::Int64);
+  Series a = pluss::series::arange(0, 5, 1, ScalarType::Int64);
   std::ostringstream oss;
   oss << a;
   REQUIRE(oss.str().find("pluss::Series") != std::string::npos);

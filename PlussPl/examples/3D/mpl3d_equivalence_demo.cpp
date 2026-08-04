@@ -9,8 +9,8 @@
 namespace {
 
 pluss::Series peaks_like(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = pluss::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = pluss::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -36,12 +36,12 @@ int main() {
   studio.headline("Matplotlib 3D Equivalence Gallery (PlussPl)");
   studio.legend(pl::KeyDock::East);
 
-  const auto t = pluss::linspace(0.0, 11.0, 260, pluss::ScalarType::Float64);
+  const auto t = pluss::series::linspace(0.0, 11.0, 260, pluss::ScalarType::Float64);
   const auto x = t.mul(1.6).cos();
   const auto y = t.mul(1.6).sin();
   const auto z = t.mul(0.2);
-  const auto gx = pluss::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
-  const auto gy = pluss::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
+  const auto gx = pluss::series::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
+  const auto gy = pluss::series::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
   const auto gz = peaks_like(36, 36);
 
   auto& p1 = studio.pane3("ax.plot3D");
@@ -96,9 +96,9 @@ int main() {
 
   auto& p6 = studio.pane3("volumetric extension");
   p6.place(1, 2).grid(pl::GridStyle::Major).caption("isoshell extension beyond mpl baseline");
-  const auto vx = pluss::linspace(-1.3, 1.3, 22, pluss::ScalarType::Float64);
-  const auto vy = pluss::linspace(-1.3, 1.3, 22, pluss::ScalarType::Float64);
-  const auto vz = pluss::linspace(-1.2, 1.2, 22, pluss::ScalarType::Float64);
+  const auto vx = pluss::series::linspace(-1.3, 1.3, 22, pluss::ScalarType::Float64);
+  const auto vy = pluss::series::linspace(-1.3, 1.3, 22, pluss::ScalarType::Float64);
+  const auto vz = pluss::series::linspace(-1.2, 1.2, 22, pluss::ScalarType::Float64);
   const auto hx = vx.to_vec<double>();
   const auto hy = vy.to_vec<double>();
   const auto hz = vz.to_vec<double>();

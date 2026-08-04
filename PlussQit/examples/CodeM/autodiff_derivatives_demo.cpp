@@ -31,7 +31,7 @@ bool report_case(std::string_view name,
     const auto [_, hv] = pluss::subsp::math::diff::hvp(
         [&](const auto& xx) { return fn(xx); },
         x,
-        pluss::ones_like(x));
+        pluss::series::ones_like(x));
     const Series second = hv;
 
     const double value_err = std::abs(value.template item<double>() - expected_value);

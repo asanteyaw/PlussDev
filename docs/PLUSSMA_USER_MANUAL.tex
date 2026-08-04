@@ -112,35 +112,35 @@ auto x = pluss::make_series(flat, {2,3});
 
 \subsubsection{4) Shape factories}
 \begin{lstlisting}[language=C++]
-auto e = pluss::empty({2,3}, ScalarType::Float32);
-auto z = pluss::zeros({2,3});
-auto o = pluss::ones({2,3});
-auto f = pluss::full({2,3}, 7.5);
+auto e = pluss::series::empty({2,3}, ScalarType::Float32);
+auto z = pluss::series::zeros({2,3});
+auto o = pluss::series::ones({2,3});
+auto f = pluss::series::full({2,3}, 7.5);
 \end{lstlisting}
 
 \subsubsection{5) Range and random factories}
 \begin{lstlisting}[language=C++]
-auto a = pluss::arange(0, 10);
-auto b = pluss::linspace(0.0, 1.0, 11);
-auto c = pluss::randn({3,4});
-auto d = pluss::randint(0, 100, {2,3});
-auto e = pluss::normal(0.0, 1.0, {5});
+auto a = pluss::series::arange(0, 10);
+auto b = pluss::series::linspace(0.0, 1.0, 11);
+auto c = pluss::series::randn({3,4});
+auto d = pluss::series::randint(0, 100, {2,3});
+auto e = pluss::series::normal(0.0, 1.0, {5});
 \end{lstlisting}
 
 \subsubsection{6) Like-factories}
 \begin{lstlisting}[language=C++]
-auto base = pluss::zeros({2,3}, ScalarType::Float64);
-auto a = pluss::zeros_like(base);
-auto b = pluss::rand_like(base, ScalarType::Float64, 123);
-auto c = pluss::eye_like(base);
+auto base = pluss::series::zeros({2,3}, ScalarType::Float64);
+auto a = pluss::series::zeros_like(base);
+auto b = pluss::series::rand_like(base, ScalarType::Float64, 123);
+auto c = pluss::series::eye_like(base);
 \end{lstlisting}
 
 \subsubsection{7) Complex factories}
 \begin{lstlisting}[language=C++]
-auto re = pluss::linspace(0.0, 1.0, 4);
-auto im = pluss::linspace(1.0, 2.0, 4);
-auto z1 = pluss::complex(re, im, ScalarType::Complex64);
-auto z2 = pluss::polar(re.abs(), im, ScalarType::Complex64);
+auto re = pluss::series::linspace(0.0, 1.0, 4);
+auto im = pluss::series::linspace(1.0, 2.0, 4);
+auto z1 = pluss::series::complex(re, im, ScalarType::Complex64);
+auto z2 = pluss::series::polar(re.abs(), im, ScalarType::Complex64);
 \end{lstlisting}
 
 \subsection{Core Usage Patterns}
@@ -157,7 +157,7 @@ std::cout << meta << "\n";
 
 \subsubsection{Math and reductions}
 \begin{lstlisting}[language=C++]
-auto x = pluss::normal(0.0, 1.0, {20});
+auto x = pluss::series::normal(0.0, 1.0, {20});
 auto y = x.abs().add(1.0).log();
 auto mean = y.mean();
 auto stdv = y.std(false);
@@ -178,7 +178,7 @@ auto src = pluss::make_series({10,20,30,40,50,60}, {2,3});
 auto idx = pluss::make_series({2,1,0,0,1,2}, {2,3});
 auto g = src.gather(1, idx);
 
-auto base = pluss::zeros({2,3}, ScalarType::Int64);
+auto base = pluss::series::zeros({2,3}, ScalarType::Int64);
 auto val  = pluss::make_series({1,2,3,4,5,6}, {2,3});
 auto out  = base.scatter_add(1, idx, val);
 \end{lstlisting}
@@ -222,14 +222,14 @@ auto m = pluss::make_note({{"a","b"}, {"c","d"}});
 std::vector<std::string> flat{"p","q","r","s"};
 auto n = pluss::make_note(flat, std::array<std::int64_t,2>{2,2});
 
-auto from_lines = pluss::note_from_lines("line1\nline2\nline3");
-auto from_words = pluss::note_from_words("alpha beta gamma");
+auto from_lines = pluss::note::from_lines("line1\nline2\nline3");
+auto from_words = pluss::note::from_words("alpha beta gamma");
 
-auto filled = pluss::full_note({2,1,2}, "z");
-auto empty  = pluss::empty_note({2,2});
+auto filled = pluss::note::full({2,1,2}, "z");
+auto empty  = pluss::note::empty({2,2});
 
 // raw bytes mode
-auto bytes = pluss::bytes_content({{"\x01","\x02"}, {"\x03","\x04"}});
+auto bytes = pluss::note::bytes({{"\x01","\x02"}, {"\x03","\x04"}});
 \end{lstlisting}
 
 \subsection{Common Workflows}
@@ -288,7 +288,7 @@ auto t0 = pluss::make_timeline("2024-01-01T00:00:00Z");
 auto t1 = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
 auto t2 = pluss::make_timeline({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
 
-auto t3 = pluss::from_epoch_nanos(std::vector<std::int64_t>{0, 1'000'000'000}, std::vector<std::int64_t>{2});
+auto t3 = pluss::timeline::from_epoch(std::vector<std::int64_t>{0, 1'000'000'000}, std::vector<std::int64_t>{2});
 \end{lstlisting}
 
 \subsection{Construct Duration and do date arithmetic}

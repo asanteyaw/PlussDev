@@ -35,8 +35,24 @@ inline Series value(double v, ScalarType dtype = ScalarType::Float32) {
 
 
 // Scalar overloads: integral defaults to Int64; bool defaults to Bool.
+//
+// Integral v routes through an exact int64 buffer (memcpy, no double
+// round-trip) whenever the target dtype is itself integral, so magnitudes
+// beyond a double's 2^53 mantissa survive intact -- the same exact-path
+// convention used by pluss::detail::to_series (nested_series_literal.h) and
+// pluss::codem::factories::infer (ValueInitList.h) below. Falls back to the
+// double-based Series::full for a floating-point target dtype, where the
+// cast is intentional anyway.
 template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
 inline Series value(T v, ScalarType dtype = ScalarType::Int64) {
+  if (pluss::codem::dtype_of(dtype).is_integral()) {
+    const std::int64_t iv = static_cast<std::int64_t>(v);
+    Series tmp = Series::empty({}, ScalarType::Int64);
+    std::memcpy(tmp.raw_mutable_data(), &iv, sizeof(std::int64_t));
+    Series out = Series::empty({}, dtype);
+    out.copy_(tmp.to(dtype), false);
+    return out;
+  }
   return Series::full({}, static_cast<double>(v), dtype);
 }
 inline Series value(bool v, ScalarType dtype = ScalarType::Bool) {
@@ -44,12 +60,25 @@ inline Series value(bool v, ScalarType dtype = ScalarType::Bool) {
 }
 
 // Nested initializer_list: infer shape and flatten. Supports up to 7D (enforced by depth check).
+//
+// See the exact-integer note above: when every leaf was integral (not bool,
+// not float) and the target dtype is integral, this uses InferredList's
+// parallel int64 buffer instead of the double one.
 template <class T>
 inline Series value(std::initializer_list<T> list, ScalarType dtype = ScalarType::Float32) {
   static_assert(pluss::codem::factories::depth<std::initializer_list<T>>::value <= 7,
                 "pluss::value: supports up to 7D nested initializer_list");
   auto inf = pluss::codem::factories::infer(list);
   Series out = Series::empty(inf.sizes, dtype);
+  if (inf.leaf_is_exact_integer && pluss::codem::dtype_of(dtype).is_integral()) {
+    Series tmp = Series::empty(inf.sizes, ScalarType::Int64);
+    std::memcpy(
+        tmp.raw_mutable_data(),
+        inf.data_i64.data(),
+        sizeof(std::int64_t) * static_cast<std::size_t>(tmp.numel()));
+    out.copy_(tmp.to(dtype), false);
+    return out;
+  }
   Series tmp = Series::empty(inf.sizes, ScalarType::Float64);
   std::memcpy(
       tmp.raw_mutable_data(),

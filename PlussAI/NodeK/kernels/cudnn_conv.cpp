@@ -554,7 +554,7 @@ bool prepare_common_(
     return false;
   }
 
-  *output = pluss::zeros(
+  *output = pluss::series::zeros(
       {static_cast<std::int64_t>(on), static_cast<std::int64_t>(oc), static_cast<std::int64_t>(oh), static_cast<std::int64_t>(ow)},
       Config{}.with_dtype(input.scalar_type()).with_platform(input.platform()));
 
@@ -900,7 +900,7 @@ bool cudnn_backward_input_(
     return false;
   }
 
-  Series dx = pluss::zeros(input_like.sizes(), Config{}.with_dtype(input_like.scalar_type()).with_platform(input_like.platform()));
+  Series dx = pluss::series::zeros(input_like.sizes(), Config{}.with_dtype(input_like.scalar_type()).with_platform(input_like.platform()));
   std::array<int, 4> dx_dims{};
   std::array<int, 4> dx_strides{};
   if (!as_int4_(dx, &dx_dims, &dx_strides, reason)) return false;
@@ -1027,7 +1027,7 @@ bool cudnn_backward_weight_(
     return false;
   }
 
-  Series dw = pluss::zeros(weight_like.sizes(), Config{}.with_dtype(weight_like.scalar_type()).with_platform(weight_like.platform()));
+  Series dw = pluss::series::zeros(weight_like.sizes(), Config{}.with_dtype(weight_like.scalar_type()).with_platform(weight_like.platform()));
   std::array<int, 4> w_dims{};
   std::array<int, 4> w_strides{};
   if (!as_int4_(dw, &w_dims, &w_strides, reason)) return false;

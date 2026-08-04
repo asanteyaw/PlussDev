@@ -25,12 +25,12 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
     for (std::int64_t dir = 0; dir < dirs; ++dir) {
       const std::uint64_t seed = seed_base + static_cast<std::uint64_t>(23 * (layer * dirs + dir));
       out.push_back(pluss::ai::rnn::NetWeight{
-          .weight_ih = pluss::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
-          .weight_hh = pluss::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
+          .weight_ih = pluss::series::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
+          .weight_hh = pluss::series::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
           .bias = pluss::Series(),
-          .bias_ih = pluss::rand({gates * hidden_size}, cfg, seed + 3ULL),
-          .bias_hh = pluss::rand({gates * hidden_size}, cfg, seed + 4ULL),
-          .weight_hr = projected_lstm ? pluss::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
+          .bias_ih = pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL),
+          .bias_hh = pluss::series::rand({gates * hidden_size}, cfg, seed + 4ULL),
+          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
       });
     }
   }
@@ -50,12 +50,12 @@ int main() {
   std::cout << "cudnn_rnn_route_ready: " << (pluss::cudnn_rnn_ready() ? "true" : "false") << "\n\n";
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
-  const Series x = rand({8, 4, 3}, cfg, 1101ULL);
+  const Series x = series::rand({8, 4, 3}, cfg, 1101ULL);
   const std::int64_t num_layers = 2;
   const bool bidirectional = true;
   const std::int64_t dirs = bidirectional ? 2 : 1;
-  const Series h0 = zeros({num_layers * dirs, 4, 5}, cfg);
-  const Series c0 = zeros({num_layers * dirs, 4, 5}, cfg);
+  const Series h0 = series::zeros({num_layers * dirs, 4, 5}, cfg);
+  const Series c0 = series::zeros({num_layers * dirs, 4, 5}, cfg);
 
   ai::rnn::NetConfig run_cfg{};
   run_cfg.training = false;
@@ -72,8 +72,8 @@ int main() {
   train_cfg.training = true;
   ai::rnn::NetConfig proj_cfg = run_cfg;
   proj_cfg.proj_size = 3;
-  const Series h0_proj = zeros({num_layers * dirs, 4, 3}, cfg);
-  const Series c0_proj = zeros({num_layers * dirs, 4, 5}, cfg);
+  const Series h0_proj = series::zeros({num_layers * dirs, 4, 3}, cfg);
+  const Series c0_proj = series::zeros({num_layers * dirs, 4, 5}, cfg);
 
   const auto rnn_w = make_weights(1, 3, 5, num_layers, bidirectional, cfg, 2001ULL);
   const auto gru_w = make_weights(3, 3, 5, num_layers, bidirectional, cfg, 3001ULL);

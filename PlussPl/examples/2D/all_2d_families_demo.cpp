@@ -9,8 +9,8 @@
 namespace {
 
 pluss::Series peaks_like(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = pluss::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = pluss::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -37,7 +37,7 @@ int main() {
   studio.headline("PlussPl All 2D Families");
   studio.legend(pl::KeyDock::East);
 
-  const auto axis = pluss::linspace(1.0, 20.0, 20, pluss::ScalarType::Float64);
+  const auto axis = pluss::series::linspace(1.0, 20.0, 20, pluss::ScalarType::Float64);
   const auto wave = axis.mul(0.45).sin().add(axis.mul(0.15).cos().mul(0.4));
 
   auto& pane1 = studio.pane2("trend + cloud");
@@ -79,7 +79,7 @@ int main() {
 
   auto& pane5 = studio.pane2("ribbon + whisk");
   pane5.place(1, 1).grid(pl::GridStyle::Major).caption("band and uncertainty families");
-  const auto trial = pluss::linspace(1.0, 10.0, 10, pluss::ScalarType::Float64);
+  const auto trial = pluss::series::linspace(1.0, 10.0, 10, pluss::ScalarType::Float64);
   const auto center = trial.mul(0.45).sin().mul(0.5).add(1.6);
   pane5.ribbon(trial, center, 0.2).label("ribbon");
   pane5.whisk(trial,
@@ -90,14 +90,14 @@ int main() {
 
   auto& pane6 = studio.pane2("radial");
   pane6.place(1, 2).grid(pl::GridStyle::Major).caption("polar line family");
-  const auto theta = pluss::linspace(0.0, 6.283185307179586, 180, pluss::ScalarType::Float64);
+  const auto theta = pluss::series::linspace(0.0, 6.283185307179586, 180, pluss::ScalarType::Float64);
   const auto radius = theta.mul(2.5).cos().mul(0.4).add(1.1);
   pane6.radial(theta, radius).label("radial").width(1.7F);
 
   auto& pane7 = studio.pane2("fieldmap");
   pane7.place(2, 0).grid(pl::GridStyle::Major).caption("heatmap family");
-  const auto gx = pluss::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
-  const auto gy = pluss::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
+  const auto gx = pluss::series::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
+  const auto gy = pluss::series::linspace(-3.0, 3.0, 36, pluss::ScalarType::Float64);
   const auto gz = peaks_like(36, 36);
   pane7.scale_guide();
   pane7.fieldmap(gx, gy, gz).label("fieldmap").palette(pl::PaletteRamp::lagoon());

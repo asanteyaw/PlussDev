@@ -212,8 +212,8 @@ struct TemporalFusionTransformer::Impl {
     auto [decoder_lstm_out, decoder_state] = lstm->forward(decoder_selected, encoder_state);
     (void)decoder_state;
 
-    const Series lstm_out = pluss::unite({encoder_lstm_out, decoder_lstm_out}, 1);
-    const Series vsn_out = pluss::unite({encoder_selected, decoder_selected}, 1);
+    const Series lstm_out = pluss::series::unite({encoder_lstm_out, decoder_lstm_out}, 1);
+    const Series vsn_out = pluss::series::unite({encoder_selected, decoder_selected}, 1);
     const Series gated_lstm = post_lstm_gate->forward(lstm_out, vsn_out);
 
     const Series enriched = static_enrichment_grn->forward(gated_lstm, expand_context(c_enrichment));

@@ -19,7 +19,7 @@ namespace _compat { namespace detail { struct Access; } }
 
 // A 1D, (optionally) monotonic Timeline axis with index-oriented utilities.
 // This is the key building block for pandas-like resampling/alignment.
-// Construction is intentionally routed through pluss::make_timeindex(...)
+// Construction is intentionally routed through pluss::timeindex::make(...)
 // and Timeline::to_timeindex(...), not public constructors.
 class CODEH_API TimeIndex {
 public:

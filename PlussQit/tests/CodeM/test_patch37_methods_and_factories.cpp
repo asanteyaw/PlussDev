@@ -6,16 +6,16 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("factory Config kv list works", "[factories]") {
-  auto x = pluss::zeros({2,3}, pluss::config({{"dtype","float16"}}));
+  auto x = pluss::series::zeros({2,3}, pluss::config({{"dtype","float16"}}));
   REQUIRE(x.scalar_type() == pluss::ScalarType::Float16);
 
-  auto y = pluss::full({2,3}, 1.0, pluss::config({{"dtype","bfloat16"}}));
+  auto y = pluss::series::full({2,3}, 1.0, pluss::config({{"dtype","bfloat16"}}));
   REQUIRE(y.scalar_type() == pluss::ScalarType::BFloat16);
 }
 
 TEST_CASE("pile/unite methods work", "[methods]") {
-  auto a = pluss::ones({2,2}, pluss::ScalarType::Float32);
-  auto b = pluss::zeros({2,2}, pluss::ScalarType::Float32);
+  auto a = pluss::series::ones({2,2}, pluss::ScalarType::Float32);
+  auto b = pluss::series::zeros({2,2}, pluss::ScalarType::Float32);
   auto s = a.pile({b}, 0);
   REQUIRE(s.sizes()[0] == 2); // stacked along new dim: [2,2,2]
   REQUIRE(s.sizes()[1] == 2);
@@ -27,10 +27,10 @@ TEST_CASE("pile/unite methods work", "[methods]") {
 }
 
 TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
-  auto a = pluss::ones({2,2}, ScalarType::Float32);
-  auto b = pluss::zeros({2,2}, ScalarType::Float32);
+  auto a = pluss::series::ones({2,2}, ScalarType::Float32);
+  auto b = pluss::series::zeros({2,2}, ScalarType::Float32);
 
-  auto stacked_temp = pluss::pile(pluss::sign_list(a, b), 0);
+  auto stacked_temp = pluss::series::pile(pluss::sign_list(a, b), 0);
   REQUIRE(stacked_temp.sizes()[0] == 2);
   REQUIRE(stacked_temp.sizes()[1] == 2);
   REQUIRE(stacked_temp.sizes()[2] == 2);
@@ -51,7 +51,7 @@ TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
   REQUIRE(extended_two.size() == 4);
   REQUIRE(extended_two.get(3).sizes()[0] == 2);
 
-  auto united_lvalue = pluss::unite(list, 0);
+  auto united_lvalue = pluss::series::unite(list, 0);
   REQUIRE(united_lvalue.sizes()[0] == 4);
   REQUIRE(united_lvalue.sizes()[1] == 2);
 }

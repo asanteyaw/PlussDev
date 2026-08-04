@@ -41,9 +41,9 @@ void check_corr_(const Series& corr, const std::string& name) {
          name + ": corr must be square");
   expect(corr.isfinite().all().item<double>() == 1.0, name + ": corr must be finite");
   const auto k = corr.sizes()[0];
-  const Series eye = pluss::eye(k, f64_cpu());
+  const Series eye = pluss::series::eye(k, f64_cpu());
   const Series diag = corr.mul(eye).sum(1, false);
-  const Series diag_err = diag.sub(pluss::ones({k}, f64_cpu())).abs();
+  const Series diag_err = diag.sub(pluss::series::ones({k}, f64_cpu())).abs();
   expect(diag_err.max().item<double>() < 1e-3, name + ": corr diagonal should be ~1");
 }
 

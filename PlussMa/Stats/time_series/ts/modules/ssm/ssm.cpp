@@ -79,11 +79,11 @@ Series force_obs_matrix_(const Series& y, const char* op) {
 Series stabilize_cov_(const Series& cov, double jitter, Config cfg) {
   const Series sym = cov.add(cov.transpose(0, 1)).mul(0.5);
   const std::int64_t n = sym.sizes()[0];
-  return sym.add(pluss::eye(n, cfg).mul(std::max(jitter, 0.0)));
+  return sym.add(pluss::series::eye(n, cfg).mul(std::max(jitter, 0.0)));
 }
 
 Series row_index_(std::int64_t i, Platform platform) {
-  return pluss::full({1}, i, Config{}.with_dtype(ScalarType::Int64).with_platform(platform));
+  return pluss::series::full({1}, i, Config{}.with_dtype(ScalarType::Int64).with_platform(platform));
 }
 
 Series index_from_vector_(const std::vector<std::int64_t>& idx, Platform platform) {
@@ -466,7 +466,7 @@ SsmSimResult Ssm::simulate(std::int64_t num_observations,
   e_paths.reserve(static_cast<std::size_t>(num_paths));
 
   for (std::int64_t p = 0; p < num_paths; ++p) {
-    const Series z0 = pluss::randn({ssm.n_state, 1}, ssm.out_cfg, draw_seed++);
+    const Series z0 = pluss::series::randn({ssm.n_state, 1}, ssm.out_cfg, draw_seed++);
     Series x = ssm.mean0.add(chol0.matmul(z0));
 
     std::vector<Series> y_rows;
@@ -479,10 +479,10 @@ SsmSimResult Ssm::simulate(std::int64_t num_observations,
     e_rows.reserve(static_cast<std::size_t>(num_observations));
 
     for (std::int64_t t = 0; t < num_observations; ++t) {
-      const Series u = pluss::randn({ssm.n_state_disturb, 1}, ssm.out_cfg, draw_seed++);
+      const Series u = pluss::series::randn({ssm.n_state_disturb, 1}, ssm.out_cfg, draw_seed++);
       x = ssm.A.matmul(x).add(ssm.B.matmul(u));
 
-      const Series e = pluss::randn({ssm.n_obs_innov, 1}, ssm.out_cfg, draw_seed++);
+      const Series e = pluss::series::randn({ssm.n_obs_innov, 1}, ssm.out_cfg, draw_seed++);
       const Series y = ssm.C.matmul(x).add(ssm.D.matmul(e));
 
       x_rows.push_back(x.reshape({1, ssm.n_state}));

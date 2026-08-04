@@ -8,15 +8,15 @@ int main() {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   auto inst = fin::instrument::make(fin::pricing::OptionType::Call, 100.0, 1.0, cfg);
-  inst.strike = pluss::full({6}, 100.0, cfg);
-  inst.maturity = pluss::full({6}, 1.0, cfg);
+  inst.strike = pluss::series::full({6}, 100.0, cfg);
+  inst.maturity = pluss::series::full({6}, 1.0, cfg);
 
   const auto hest = fin::model::make(1.5, 0.04, 0.30, -0.70, 0.04, cfg);
 
   auto mkt = fin::market::make(100.0, 0.03, 0.01, cfg);
-  mkt.spot = pluss::full({6}, 100.0, cfg);
-  mkt.rate = pluss::full({6}, 0.03, cfg);
-  mkt.dividend_yield = pluss::full({6}, 0.01, cfg);
+  mkt.spot = pluss::series::full({6}, 100.0, cfg);
+  mkt.rate = pluss::series::full({6}, 0.03, cfg);
+  mkt.dividend_yield = pluss::series::full({6}, 0.01, cfg);
 
   const auto fft = fin::pricer::Fft{
       .num_fft = 4096,

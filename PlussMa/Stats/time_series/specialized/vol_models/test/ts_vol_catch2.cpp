@@ -203,7 +203,7 @@ TEST_CASE("ts vol gjr(p,q): fit and diagnostics", "[ts][vol][gjr][accuracy]") {
 
 TEST_CASE("ts vol egarch/gjr: crash checks", "[ts][vol][egarch][gjr][crash]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({600}, cfg, 20260429ULL);
+  const Series y = pluss::series::randn({600}, cfg, 20260429ULL);
 
   EgarchOptions bad_e;
   bad_e.stationarity_margin = 1.0;

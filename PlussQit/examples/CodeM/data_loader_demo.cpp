@@ -5,7 +5,7 @@
 
 int main() {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const auto x = pluss::randn({64, 3}, cfg, 7ULL);
+  const auto x = pluss::series::randn({64, 3}, cfg, 7ULL);
   const auto y = x.select(1, 0).reshape({64, 1}).gt(0.0).to(pluss::ScalarType::Float32);
 
   pluss::DataLoader loader(

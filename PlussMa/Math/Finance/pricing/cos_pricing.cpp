@@ -66,7 +66,7 @@ Series as_f64_(const Series& x, Config cfg) {
 }
 
 Series scalar_(double value, Config cfg) {
-  return pluss::full({}, value, f64_cfg_(cfg));
+  return pluss::series::full({}, value, f64_cfg_(cfg));
 }
 
 ComplexSeries c_make_(const Series& re, const Series& im) {
@@ -159,11 +159,11 @@ std::pair<Series, Series> cos_truncation_interval_series_(const Series& spot,
                                                           const char* op) {
   const double h = options.cumulant_step;
   const Series like = as_f64_(spot, cfg).flatten(0, -1).reshape({1, spot.numel()});
-  const Series um2 = pluss::full(like.sizes(), -2.0 * h, f64_cfg_(cfg));
-  const Series um1 = pluss::full(like.sizes(), -h, f64_cfg_(cfg));
-  const Series u0 = pluss::full(like.sizes(), 0.0, f64_cfg_(cfg));
-  const Series up1 = pluss::full(like.sizes(), h, f64_cfg_(cfg));
-  const Series up2 = pluss::full(like.sizes(), 2.0 * h, f64_cfg_(cfg));
+  const Series um2 = pluss::series::full(like.sizes(), -2.0 * h, f64_cfg_(cfg));
+  const Series um1 = pluss::series::full(like.sizes(), -h, f64_cfg_(cfg));
+  const Series u0 = pluss::series::full(like.sizes(), 0.0, f64_cfg_(cfg));
+  const Series up1 = pluss::series::full(like.sizes(), h, f64_cfg_(cfg));
+  const Series up2 = pluss::series::full(like.sizes(), 2.0 * h, f64_cfg_(cfg));
 
   const ComplexSeries fm2 = c_log_(checked_cf_(char_fn, um2, cfg, op));
   const ComplexSeries fm1 = c_log_(checked_cf_(char_fn, um1, cfg, op));
@@ -283,7 +283,7 @@ Series option_price_cos(OptionType type,
               "subsp::math::finance::pricing::option_price_cos: maturity must be >= 0");
 
   const std::int64_t n = std::max<std::int64_t>(options.num_terms, 8);
-  const Series k = pluss::arange(0, n, out_cfg).to(pluss::ScalarType::Float64).reshape({n, 1});
+  const Series k = pluss::series::arange(0, n, out_cfg).to(pluss::ScalarType::Float64).reshape({n, 1});
   const auto [a, b] = cos_truncation_interval_series_(spot2, char_fn, options, out_cfg, "option_price_cos");
   const Series width = b.sub(a).clamp_min(kEps);
   const Series u = k.mul(kPi).div(width);
@@ -303,9 +303,9 @@ Series option_price_cos(OptionType type,
                          .div(u.square().add(1.0));
   const Series psi_general = ub.sin().sub(ul.sin()).div(u.clamp_min(kEps));
   const Series psi_zero = b.sub(lower);
-  const Series zero_mask = k.eq(pluss::full({n, 1}, 0.0, out_cfg));
+  const Series zero_mask = k.eq(pluss::series::full({n, 1}, 0.0, out_cfg));
   const Series psi = zero_mask.where(psi_zero, psi_general);
-  const Series wk = zero_mask.where(pluss::full({n, 1}, 0.5, out_cfg), pluss::full({n, 1}, 1.0, out_cfg));
+  const Series wk = zero_mask.where(pluss::series::full({n, 1}, 0.5, out_cfg), pluss::series::full({n, 1}, 1.0, out_cfg));
   const Series hk = chi.sub(strike2.mul(psi)).mul(2.0).div(width);
   const Series call = kernel.real.mul(hk).mul(wk).sum(0, false).mul(tau2.mul(-rate).exp()).clamp_min(0.0);
   if (type == OptionType::Call) {

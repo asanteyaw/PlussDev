@@ -188,7 +188,7 @@ Series stabilize_cov_(Series covariance) {
   const auto sizes = cov.sizes();
   PLUSS_CHECK(sizes.size() == 2 && sizes[0] == sizes[1], "subsp::stats::ts::Var: covariance must be square");
   const std::int64_t k = sizes[0];
-  Series eye = pluss::eye(k, k, cpu_f64_cfg_());
+  Series eye = pluss::series::eye(k, k, cpu_f64_cfg_());
   double jitter = 1e-12;
   for (std::int64_t i = 0; i < 8; ++i) {
     const Series slogdet = pluss::subsp::math::linalg::slogdet(cov).to(ScalarType::Float64).reshape({2});
@@ -367,7 +367,7 @@ Series run_sim_impl_(const VarFit& fit, std::int64_t n, const Series* x, Config 
   const Series cov = stabilize_cov_(fit.covariance);
   const Series chol = pluss::subsp::math::linalg::cholesky(cov).to(ScalarType::Float64).contiguous();
   const auto lvals = row_major_(chol);
-  const auto z = row_major_(pluss::randn({n, dims.k}, cpu_f64_cfg_(), seed));
+  const auto z = row_major_(pluss::series::randn({n, dims.k}, cpu_f64_cfg_(), seed));
 
   std::vector<double> eps(static_cast<std::size_t>(n * dims.k), 0.0);
   for (std::int64_t i = 0; i < n; ++i) {
@@ -423,7 +423,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
   Series z_fit = design.design;
   Series y_fit = design.target;
   if (options.ridge > 0.0) {
-    Series penalty = pluss::eye(design.d, design.d, cpu_f64_cfg_()).mul(std::sqrt(options.ridge));
+    Series penalty = pluss::series::eye(design.d, design.d, cpu_f64_cfg_()).mul(std::sqrt(options.ridge));
     if (options.include_intercept || options.include_trend) {
       auto pvals = row_major_(penalty);
       const std::int64_t protected_cols = (options.include_intercept ? 1 : 0) + (options.include_trend ? 1 : 0);
@@ -433,7 +433,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
       penalty = pluss::make_series(pvals, {design.d, design.d}, cpu_f64_cfg_());
     }
     z_fit = z_fit.unite({penalty}, 0);
-    y_fit = y_fit.unite({pluss::zeros({design.d, design.k}, cpu_f64_cfg_())}, 0);
+    y_fit = y_fit.unite({pluss::series::zeros({design.d, design.k}, cpu_f64_cfg_())}, 0);
   }
 
   Series coeff = Series::undefined();
@@ -488,7 +488,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
   fit.trend = pluss::make_series(tvals, {design.k}, out_cfg);
   fit.ar = pluss::make_series(ar_values, {design.p, design.k, design.k}, out_cfg);
   fit.beta = (design.m > 0) ? pluss::make_series(beta_values, {design.m, design.k}, out_cfg)
-                            : pluss::empty({0, design.k}, out_cfg);
+                            : pluss::series::empty({0, design.k}, out_cfg);
   fit.covariance = covariance.to(out_cfg.platform, out_cfg.dtype);
   fit.sample_size = design.t;
   return fit;
@@ -582,7 +582,7 @@ std::pair<Series, Series> var_to_vecm(const Series& ar, Config cfg) {
 
   if (p == 1) {
     return {
-        pluss::empty({0, k, k}, out_cfg),
+        pluss::series::empty({0, k, k}, out_cfg),
         pluss::make_series(impact, {k, k}, out_cfg),
     };
   }

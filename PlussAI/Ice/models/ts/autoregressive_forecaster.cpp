@@ -110,7 +110,7 @@ struct FeatureEncoder {
       }
       pieces.push_back(std::move(piece));
     }
-    return pieces.size() == 1 ? pieces.front() : pluss::unite(pieces, -1);
+    return pieces.size() == 1 ? pieces.front() : pluss::series::unite(pieces, -1);
   }
 };
 
@@ -123,7 +123,7 @@ struct FeatureEncoder {
   const auto n = batch.target.sizes()[0];
   const auto horizon = batch.target.sizes()[1];
   if (horizon == 1) return last_encoder_target_(batch).reshape({n, 1});
-  return pluss::unite(
+  return pluss::series::unite(
       {
           last_encoder_target_(batch).reshape({n, 1}),
           batch.target.narrow_copy(1, 0, horizon - 1),
@@ -135,7 +135,7 @@ struct FeatureEncoder {
                                           const Series& previous_target) {
   const Series prev = previous_target.unsqueeze(-1);
   if (!encoded_features.defined()) return prev;
-  return pluss::unite({encoded_features, prev}, -1);
+  return pluss::series::unite({encoded_features, prev}, -1);
 }
 
 [[nodiscard]] Series gaussian_nll_(const Series& mean,
@@ -421,8 +421,8 @@ struct AutoregressiveForecaster::Impl {
     }
 
     return GaussianForecast{
-        .mean = means.size() == 1 ? means.front() : pluss::unite(means, 1),
-        .scale = scales.size() == 1 ? scales.front() : pluss::unite(scales, 1),
+        .mean = means.size() == 1 ? means.front() : pluss::series::unite(means, 1),
+        .scale = scales.size() == 1 ? scales.front() : pluss::series::unite(scales, 1),
     };
   }
 

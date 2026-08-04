@@ -49,8 +49,8 @@ int main() {
 
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series batch = make_batch(f64);
-  const Series hx = zeros({1, 4, 3}, f64);
-  const Series cx = zeros({1, 4, 3}, f64);
+  const Series hx = series::zeros({1, 4, 3}, f64);
+  const Series cx = series::zeros({1, 4, 3}, f64);
 
   rnn::NetConfig cfg;
   cfg.batch_first = true;

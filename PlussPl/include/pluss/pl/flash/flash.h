@@ -205,7 +205,7 @@ inline void require_equal_xy_hue_lengths(
   const double low = scalar_f64(hue.min());
   const double high = scalar_f64(hue.max());
   if (!(high > low)) {
-    return {pluss::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
+    return {pluss::series::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
   }
 
   const Series codes = hue.sub(low)
@@ -736,7 +736,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
   const double low = scalar_value(flat.min());
   const double high = scalar_value(flat.max());
   if (!std::isfinite(low) || !std::isfinite(high) || !(high > low)) {
-    return pluss::full({flat.numel()}, 0.0, ScalarType::Float64);
+    return pluss::series::full({flat.numel()}, 0.0, ScalarType::Float64);
   }
   return flat.sub(low).div(high - low);
 }
@@ -1811,7 +1811,7 @@ template <class Values>
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
   const double spike_height = std::max(height, 1e-4);
-  const Series y = ::pluss::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
+  const Series y = ::pluss::series::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
   return pane.spike(x, y, 0.0);
 }
 
@@ -4131,7 +4131,7 @@ inline Studio& andrews_curves(
   detail::downsample_columns(prepared, options.max_curves);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = ::pluss::linspace(-3.14159265358979323846,
+  const auto t = ::pluss::series::linspace(-3.14159265358979323846,
                                  3.14159265358979323846,
                                  std::max<std::int64_t>(64, options.points),
                                  ScalarType::Float64);
@@ -4180,7 +4180,7 @@ inline Studio& andrews_curves(
   detail::downsample_columns(prepared, options.max_curves, &labels);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = ::pluss::linspace(-3.14159265358979323846,
+  const auto t = ::pluss::series::linspace(-3.14159265358979323846,
                                  3.14159265358979323846,
                                  std::max<std::int64_t>(64, options.points),
                                  ScalarType::Float64);
@@ -4780,7 +4780,7 @@ Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOption
   bootstrap_stats.reserve(static_cast<std::size_t>(samples));
   for (const auto i : std::views::iota(std::int64_t{0}, samples)) {
     const auto idx =
-        ::pluss::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
+        ::pluss::series::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
     const Series sample = base.take(idx);
     double stat = 0.0;
     switch (options.statistic) {

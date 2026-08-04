@@ -140,11 +140,11 @@ public:
     linear2_->reset_parameters();
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm1_weight_.copy_(pluss::ones({options_.d_model}, cfg));
-    norm2_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm1_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
+    norm2_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
     if (options_.bias) {
-      norm1_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
-      norm2_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm1_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
+      norm2_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
     }
   }
 
@@ -319,9 +319,9 @@ public:
     }
     if (!options_.final_norm) return;
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
     if (options_.bias) {
-      norm_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
     }
   }
 
@@ -521,13 +521,13 @@ public:
     linear2_->reset_parameters();
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm1_weight_.copy_(pluss::ones({options_.d_model}, cfg));
-    norm2_weight_.copy_(pluss::ones({options_.d_model}, cfg));
-    norm3_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm1_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
+    norm2_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
+    norm3_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
     if (options_.bias) {
-      norm1_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
-      norm2_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
-      norm3_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm1_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
+      norm2_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
+      norm3_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
     }
   }
 
@@ -695,9 +695,9 @@ public:
     }
     if (!options_.final_norm) return;
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm_weight_.copy_(pluss::ones({options_.d_model}, cfg));
+    norm_weight_.copy_(pluss::series::ones({options_.d_model}, cfg));
     if (options_.bias) {
-      norm_bias_.copy_(pluss::zeros({options_.d_model}, cfg));
+      norm_bias_.copy_(pluss::series::zeros({options_.d_model}, cfg));
     }
   }
 

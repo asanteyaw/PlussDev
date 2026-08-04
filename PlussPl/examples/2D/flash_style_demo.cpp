@@ -17,7 +17,7 @@ int main() {
     return (output_dir / std::string(name)).string();
   };
 
-  auto x = pluss::linspace(0.0, 10.0, 64, pluss::ScalarType::Float64);
+  auto x = pluss::series::linspace(0.0, 10.0, 64, pluss::ScalarType::Float64);
   auto y = x.mul(0.65).sin().add(x.mul(1.8).cos().mul(0.25));
   auto y2 = x.mul(0.4).cos().mul(0.6).add(x.mul(1.1).sin().mul(0.35));
 
@@ -68,8 +68,8 @@ int main() {
   boxplot(categorical, cats, cat_vals).label("sns.boxplot");
   violinplot(categorical, cats, cat_vals, flash_violin_opts).label("sns.violinplot");
   boxenplot(categorical, cat_vals).label("sns.boxenplot");
-  pointplot(categorical, pluss::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals, cat_err).label("sns.pointplot");
-  barplot(categorical, pluss::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals).label("sns.barplot");
+  pointplot(categorical, pluss::series::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals, cat_err).label("sns.pointplot");
+  barplot(categorical, pluss::series::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals).label("sns.barplot");
   countplot(categorical, cats).label("sns.countplot");
   catplot(categorical, cats, cat_vals, "violin").label("sns.catplot");
   move_legend(categorical, KeyPlace::OutsideEast);
@@ -227,11 +227,11 @@ int main() {
   heatmap_borderless_fig.save_pdf(out_path("plusspl_flash_heatmap_borderless_demo.pdf"));
 
   Studio pairplot_fig("flash_pairplot_demo", Theme::paper());
-  const auto pair_a = pluss::randn({360}, pluss::ScalarType::Float64, 24681357ULL);
-  const auto pair_b = pair_a.mul(0.52).add(pluss::randn({360}, pluss::ScalarType::Float64, 31415926ULL).mul(0.82));
+  const auto pair_a = pluss::series::randn({360}, pluss::ScalarType::Float64, 24681357ULL);
+  const auto pair_b = pair_a.mul(0.52).add(pluss::series::randn({360}, pluss::ScalarType::Float64, 31415926ULL).mul(0.82));
   const auto pair_c = pair_a.mul(-0.3)
                           .add(pair_b.mul(0.42))
-                          .add(pluss::randn({360}, pluss::ScalarType::Float64, 27182818ULL).mul(0.76));
+                          .add(pluss::series::randn({360}, pluss::ScalarType::Float64, 27182818ULL).mul(0.76));
   std::vector<pluss::Series> pair_cols{
       pair_a,
       pair_b,

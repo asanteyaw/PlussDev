@@ -68,7 +68,7 @@ Series draw_normals_(std::int64_t rows,
   const auto out_cfg = f64_cfg_(cfg);
 
   if (options.method == RandMethod::Pseudo) {
-    return pluss::randn({rows, cols}, out_cfg, effective_seed_(options, compat_seed, bump));
+    return pluss::series::randn({rows, cols}, out_cfg, effective_seed_(options, compat_seed, bump));
   }
 
   const std::uint64_t off = effective_offset_(options, bump);
@@ -286,7 +286,7 @@ HjmPaths finalize_hjm_paths_(const Series& rate,
 
 Series stack_rows_(const std::vector<Series>& rows, const char* op) {
   PLUSS_CHECK(!rows.empty(), std::string("subsp::math::finance::rates::") + op + ": row history is empty");
-  return pluss::pile(pluss::sign_list(rows), 0);
+  return pluss::series::pile(pluss::sign_list(rows), 0);
 }
 
 } // namespace
@@ -311,7 +311,7 @@ RatePaths vasicek_paths(std::int64_t steps,
   const double var_scale = (params.sigma * params.sigma) * (1.0 - std::exp(-2.0 * params.kappa * dt)) /
                            std::max(2.0 * params.kappa, kEps);
 
-  Series rt = pluss::full({1, paths}, params.r0, out_cfg);
+  Series rt = pluss::series::full({1, paths}, params.r0, out_cfg);
   std::vector<Series> rate_rows;
   rate_rows.reserve(static_cast<std::size_t>(n));
   rate_rows.push_back(rt.reshape({paths}));
@@ -321,7 +321,7 @@ RatePaths vasicek_paths(std::int64_t steps,
 
     Series r_next;
     if (options.scheme == Scheme::Transition) {
-      r_next = pluss::full({1, paths}, params.theta, out_cfg)
+      r_next = pluss::series::full({1, paths}, params.theta, out_cfg)
                    .add(rt.sub(params.theta).mul(exp_kdt))
                    .add(eps.mul(std::sqrt(std::max(var_scale, 0.0))));
     } else {
@@ -368,7 +368,7 @@ RatePaths cir_paths(std::int64_t steps,
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x2713ULL);
   const std::uint64_t transition_seed = effective_seed_(options, seed, 0x3521ULL);
 
-  Series rt = pluss::full({1, paths}, std::max(params.r0, params.rate_floor), out_cfg);
+  Series rt = pluss::series::full({1, paths}, std::max(params.r0, params.rate_floor), out_cfg);
   std::vector<Series> rate_rows;
   rate_rows.reserve(static_cast<std::size_t>(n));
   rate_rows.push_back(rt.reshape({paths}));
@@ -436,7 +436,7 @@ RatePaths hull_white_paths(std::int64_t steps,
   const double var_scale = (params.sigma * params.sigma) * (1.0 - std::exp(-2.0 * params.kappa * dt)) /
                            std::max(2.0 * params.kappa, kEps);
 
-  Series rt = pluss::full({1, paths}, params.r0, out_cfg);
+  Series rt = pluss::series::full({1, paths}, params.r0, out_cfg);
   std::vector<Series> rate_rows;
   rate_rows.reserve(static_cast<std::size_t>(n));
   rate_rows.push_back(rt.reshape({paths}));
@@ -448,7 +448,7 @@ RatePaths hull_white_paths(std::int64_t steps,
 
     Series r_next;
     if (options.scheme == Scheme::Transition) {
-      r_next = pluss::full({1, paths}, theta_t, out_cfg)
+      r_next = pluss::series::full({1, paths}, theta_t, out_cfg)
                    .add(rt.sub(theta_t).mul(exp_kdt))
                    .add(eps.mul(std::sqrt(std::max(var_scale, 0.0))));
     } else {
@@ -495,7 +495,7 @@ HjmPaths hjm_paths(std::int64_t steps,
 
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x5719ULL);
 
-  Series f_state = pluss::full({paths, k}, params.r0, out_cfg);
+  Series f_state = pluss::series::full({paths, k}, params.r0, out_cfg);
   const Series alpha_row = pluss::make_series(alpha, {1, k}, out_cfg).mul(dt);
   const Series vol_row = pluss::make_series(params.vol, {1, k}, out_cfg).mul(std::sqrt(dt));
 

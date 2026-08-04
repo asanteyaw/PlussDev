@@ -24,6 +24,14 @@ struct StringSpan {
   std::span<const std::string_view> values;
 };
 
+struct Int64Span {
+  std::span<const std::int64_t> values;
+};
+
+struct DoubleSpan {
+  std::span<const double> values;
+};
+
 template <class Range>
 concept SeriesRange =
     std::ranges::input_range<Range> &&
@@ -33,6 +41,16 @@ template <class Range>
 concept StringViewRange =
     std::ranges::input_range<Range> &&
     std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<Range>>, std::string_view>;
+
+template <class Range>
+concept Int64Range =
+    std::ranges::input_range<Range> &&
+    std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<Range>>, std::int64_t>;
+
+template <class Range>
+concept DoubleRange =
+    std::ranges::input_range<Range> &&
+    std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<Range>>, double>;
 
 template <SeriesRange Range>
 inline std::vector<Series> collect_series(Range&& values) {
@@ -54,6 +72,30 @@ inline std::vector<std::string> collect_strings(Range&& values) {
   }
   for (auto&& value : values) {
     out.emplace_back(std::string_view(std::forward<decltype(value)>(value)));
+  }
+  return out;
+}
+
+template <Int64Range Range>
+inline std::vector<std::int64_t> collect_int64s(Range&& values) {
+  std::vector<std::int64_t> out;
+  if constexpr (requires { values.size(); }) {
+    out.reserve(static_cast<std::size_t>(values.size()));
+  }
+  for (auto&& value : values) {
+    out.push_back(static_cast<std::int64_t>(value));
+  }
+  return out;
+}
+
+template <DoubleRange Range>
+inline std::vector<double> collect_doubles(Range&& values) {
+  std::vector<double> out;
+  if constexpr (requires { values.size(); }) {
+    out.reserve(static_cast<std::size_t>(values.size()));
+  }
+  for (auto&& value : values) {
+    out.push_back(static_cast<double>(value));
   }
   return out;
 }
@@ -264,6 +306,264 @@ private:
 
   std::vector<std::string> owned_{};
   storage_type views_{};
+};
+
+template <>
+class StackArray<std::string> {
+public:
+  using value_type = std::string;
+  using storage_type = std::vector<std::string>;
+  using iterator = storage_type::iterator;
+  using const_iterator = storage_type::const_iterator;
+
+  StackArray() = default;
+
+  StackArray(std::initializer_list<std::string> values) : values_(values) {}
+
+  StackArray(std::initializer_list<const char*> values) {
+    values_.reserve(values.size());
+    for (const char* value : values) {
+      values_.emplace_back(value ? value : "");
+    }
+  }
+
+  StackArray(std::span<const std::string> values) : values_(values.begin(), values.end()) {}
+
+  StackArray(std::vector<std::string> values) : values_(std::move(values)) {}
+
+  template <detail::stack_array::StringViewRange Range>
+    requires(!std::same_as<std::remove_cvref_t<Range>, StackArray<std::string>> &&
+             !std::same_as<std::remove_cvref_t<Range>, std::vector<std::string>> &&
+             !std::same_as<std::remove_cvref_t<Range>, std::span<const std::string>>)
+  StackArray(Range&& values)
+      : values_(detail::stack_array::collect_strings(std::forward<Range>(values))) {}
+
+  [[nodiscard]] bool empty() const noexcept { return values_.empty(); }
+  [[nodiscard]] std::size_t size() const noexcept { return values_.size(); }
+  [[nodiscard]] const std::string& get(i64_t i) const {
+    PLUSS_CHECK(
+        i >= 0,
+        "pluss::StackArray<string>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    const std::size_t idx = static_cast<std::size_t>(i);
+    PLUSS_CHECK(
+        idx < values_.size(),
+        "pluss::StackArray<string>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    return values_[idx];
+  }
+  [[nodiscard]] std::string& get(i64_t i) {
+    PLUSS_CHECK(
+        i >= 0,
+        "pluss::StackArray<string>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    const std::size_t idx = static_cast<std::size_t>(i);
+    PLUSS_CHECK(
+        idx < values_.size(),
+        "pluss::StackArray<string>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    return values_[idx];
+  }
+  [[nodiscard]] const std::string& operator[](i64_t i) const { return get(i); }
+  [[nodiscard]] std::string& operator[](i64_t i) { return get(i); }
+
+  [[nodiscard]] StackArray extend(std::string_view value) const {
+    StackArray out = *this;
+    out.values_.emplace_back(value);
+    return out;
+  }
+  [[nodiscard]] StackArray extend(std::span<const std::string> values) const {
+    StackArray out = *this;
+    out.values_.insert(out.values_.end(), values.begin(), values.end());
+    return out;
+  }
+  [[nodiscard]] StackArray extend(std::initializer_list<std::string> values) const {
+    return extend(std::span<const std::string>(values.begin(), values.size()));
+  }
+
+  // Views this StackArray's owned strings as string_view -- the same
+  // StringSpan the std::string_view specialization produces, so downstream
+  // consumers (dispatch functions, factory readers) see one canonical
+  // text-span type regardless of whether the caller passed std::string or
+  // std::string_view literals.
+  [[nodiscard]] detail::stack_array::StringSpan data() const {
+    views_.clear();
+    views_.reserve(values_.size());
+    for (const auto& value : values_) {
+      views_.emplace_back(value);
+    }
+    return detail::stack_array::StringSpan{
+        std::span<const std::string_view>(views_.data(), views_.size())};
+  }
+
+  [[nodiscard]] iterator begin() noexcept { return values_.begin(); }
+  [[nodiscard]] iterator end() noexcept { return values_.end(); }
+  [[nodiscard]] const_iterator begin() const noexcept { return values_.begin(); }
+  [[nodiscard]] const_iterator end() const noexcept { return values_.end(); }
+
+private:
+  storage_type values_{};
+  mutable std::vector<std::string_view> views_{};
+};
+
+template <>
+class StackArray<std::int64_t> {
+public:
+  using value_type = std::int64_t;
+  using storage_type = std::vector<std::int64_t>;
+  using iterator = storage_type::iterator;
+  using const_iterator = storage_type::const_iterator;
+
+  StackArray() = default;
+
+  StackArray(std::initializer_list<std::int64_t> values) : values_(values) {}
+
+  StackArray(std::span<const std::int64_t> values) : values_(values.begin(), values.end()) {}
+
+  StackArray(std::vector<std::int64_t> values) : values_(std::move(values)) {}
+
+  template <detail::stack_array::Int64Range Range>
+    requires(!std::same_as<std::remove_cvref_t<Range>, StackArray<std::int64_t>> &&
+             !std::same_as<std::remove_cvref_t<Range>, std::vector<std::int64_t>> &&
+             !std::same_as<std::remove_cvref_t<Range>, std::span<const std::int64_t>>)
+  StackArray(Range&& values)
+      : values_(detail::stack_array::collect_int64s(std::forward<Range>(values))) {}
+
+  [[nodiscard]] bool empty() const noexcept { return values_.empty(); }
+  [[nodiscard]] std::size_t size() const noexcept { return values_.size(); }
+  [[nodiscard]] std::int64_t get(i64_t i) const {
+    PLUSS_CHECK(
+        i >= 0,
+        "pluss::StackArray<int64_t>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    const std::size_t idx = static_cast<std::size_t>(i);
+    PLUSS_CHECK(
+        idx < values_.size(),
+        "pluss::StackArray<int64_t>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    return values_[idx];
+  }
+  [[nodiscard]] std::int64_t& get(i64_t i) {
+    PLUSS_CHECK(
+        i >= 0,
+        "pluss::StackArray<int64_t>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    const std::size_t idx = static_cast<std::size_t>(i);
+    PLUSS_CHECK(
+        idx < values_.size(),
+        "pluss::StackArray<int64_t>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    return values_[idx];
+  }
+  [[nodiscard]] std::int64_t operator[](i64_t i) const { return get(i); }
+  [[nodiscard]] std::int64_t& operator[](i64_t i) { return get(i); }
+
+  [[nodiscard]] StackArray extend(std::int64_t value) const {
+    StackArray out = *this;
+    out.values_.push_back(value);
+    return out;
+  }
+  [[nodiscard]] StackArray extend(std::span<const std::int64_t> values) const {
+    StackArray out = *this;
+    out.values_.insert(out.values_.end(), values.begin(), values.end());
+    return out;
+  }
+  [[nodiscard]] StackArray extend(std::initializer_list<std::int64_t> values) const {
+    return extend(std::span<const std::int64_t>(values.begin(), values.size()));
+  }
+
+  [[nodiscard]] detail::stack_array::Int64Span data() const noexcept {
+    return detail::stack_array::Int64Span{
+        std::span<const std::int64_t>(values_.data(), values_.size())};
+  }
+
+  [[nodiscard]] iterator begin() noexcept { return values_.begin(); }
+  [[nodiscard]] iterator end() noexcept { return values_.end(); }
+  [[nodiscard]] const_iterator begin() const noexcept { return values_.begin(); }
+  [[nodiscard]] const_iterator end() const noexcept { return values_.end(); }
+
+private:
+  storage_type values_{};
+};
+
+template <>
+class StackArray<double> {
+public:
+  using value_type = double;
+  using storage_type = std::vector<double>;
+  using iterator = storage_type::iterator;
+  using const_iterator = storage_type::const_iterator;
+
+  StackArray() = default;
+
+  StackArray(std::initializer_list<double> values) : values_(values) {}
+
+  StackArray(std::span<const double> values) : values_(values.begin(), values.end()) {}
+
+  StackArray(std::vector<double> values) : values_(std::move(values)) {}
+
+  template <detail::stack_array::DoubleRange Range>
+    requires(!std::same_as<std::remove_cvref_t<Range>, StackArray<double>> &&
+             !std::same_as<std::remove_cvref_t<Range>, std::vector<double>> &&
+             !std::same_as<std::remove_cvref_t<Range>, std::span<const double>>)
+  StackArray(Range&& values)
+      : values_(detail::stack_array::collect_doubles(std::forward<Range>(values))) {}
+
+  [[nodiscard]] bool empty() const noexcept { return values_.empty(); }
+  [[nodiscard]] std::size_t size() const noexcept { return values_.size(); }
+  [[nodiscard]] double get(i64_t i) const {
+    PLUSS_CHECK(
+        i >= 0,
+        "pluss::StackArray<double>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    const std::size_t idx = static_cast<std::size_t>(i);
+    PLUSS_CHECK(
+        idx < values_.size(),
+        "pluss::StackArray<double>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    return values_[idx];
+  }
+  [[nodiscard]] double& get(i64_t i) {
+    PLUSS_CHECK(
+        i >= 0,
+        "pluss::StackArray<double>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    const std::size_t idx = static_cast<std::size_t>(i);
+    PLUSS_CHECK(
+        idx < values_.size(),
+        "pluss::StackArray<double>::get index out of range: index=" + std::to_string(i) +
+            ", size=" + std::to_string(values_.size()));
+    return values_[idx];
+  }
+  [[nodiscard]] double operator[](i64_t i) const { return get(i); }
+  [[nodiscard]] double& operator[](i64_t i) { return get(i); }
+
+  [[nodiscard]] StackArray extend(double value) const {
+    StackArray out = *this;
+    out.values_.push_back(value);
+    return out;
+  }
+  [[nodiscard]] StackArray extend(std::span<const double> values) const {
+    StackArray out = *this;
+    out.values_.insert(out.values_.end(), values.begin(), values.end());
+    return out;
+  }
+  [[nodiscard]] StackArray extend(std::initializer_list<double> values) const {
+    return extend(std::span<const double>(values.begin(), values.size()));
+  }
+
+  [[nodiscard]] detail::stack_array::DoubleSpan data() const noexcept {
+    return detail::stack_array::DoubleSpan{
+        std::span<const double>(values_.data(), values_.size())};
+  }
+
+  [[nodiscard]] iterator begin() noexcept { return values_.begin(); }
+  [[nodiscard]] iterator end() noexcept { return values_.end(); }
+  [[nodiscard]] const_iterator begin() const noexcept { return values_.begin(); }
+  [[nodiscard]] const_iterator end() const noexcept { return values_.end(); }
+
+private:
+  storage_type values_{};
 };
 
 using sign_list = StackArray<Series>;

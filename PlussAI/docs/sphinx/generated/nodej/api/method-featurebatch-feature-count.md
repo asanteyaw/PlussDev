@@ -87,7 +87,7 @@ Config i64() {
 }
 
 LabeledBatch slice_rows(const LabeledBatch& batch, std::int64_t start, std::int64_t count) {
-  const Series idx = pluss::arange(start, start + count, i64());
+  const Series idx = pluss::series::arange(start, start + count, i64());
   const Series x = batch.features.x.index_select(0, idx).reshape({count, batch.features.feature_count()});
   const Series y = batch.y.index_select(0, idx).reshape({count});
   return LabeledBatch{

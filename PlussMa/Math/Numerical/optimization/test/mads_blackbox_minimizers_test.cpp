@@ -43,9 +43,9 @@ int main() {
 
   const std::int64_t dim = 8;
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
-  const Series x0 = pluss::full({dim}, 2.0, cfg);
-  const Series lb = pluss::full({dim}, -1.0, cfg);
-  const Series ub = pluss::full({dim}, 1.0, cfg);
+  const Series x0 = pluss::series::full({dim}, 2.0, cfg);
+  const Series lb = pluss::series::full({dim}, -1.0, cfg);
+  const Series ub = pluss::series::full({dim}, 1.0, cfg);
 
   MadsBlackboxConfig ortho_cfg;
   ortho_cfg.max_iterations = 900;

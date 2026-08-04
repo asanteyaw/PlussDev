@@ -6,7 +6,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("reductions dim variants work", "[reduce]") {
-  auto a = pluss::ones({2,3,4}, pluss::ScalarType::Float32);
+  auto a = pluss::series::ones({2,3,4}, pluss::ScalarType::Float32);
   auto s0 = a.sum(0);
   REQUIRE(s0.sizes()[0] == 3);
   REQUIRE(s0.sizes()[1] == 4);
@@ -23,8 +23,8 @@ TEST_CASE("reductions dim variants work", "[reduce]") {
 
 TEST_CASE("where and masked_fill methods", "[where][mask]") {
   auto cond = pluss::make_series(std::vector<std::uint8_t>{1,0,1,0}, {2,2}).to(pluss::ScalarType::Bool);
-  auto a = pluss::full({2,2}, 3.0, pluss::ScalarType::Float32);
-  auto b = pluss::zeros({2,2}, pluss::ScalarType::Float32);
+  auto a = pluss::series::full({2,2}, 3.0, pluss::ScalarType::Float32);
+  auto b = pluss::series::zeros({2,2}, pluss::ScalarType::Float32);
   auto out = cond.where(a,b);
   REQUIRE(out.scalar_type() == pluss::ScalarType::Float32);
 

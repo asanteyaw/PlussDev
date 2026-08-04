@@ -1138,7 +1138,7 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   pluss::nn::optim::Minimax minimax_tape_staged({&minimax_tape_staged_param}, minimax_opt, minimax_constraints);
   for (int i = 0; i < 120; ++i) {
     auto tx = pluss::subsp::math::diff::trace(minimax_tape_staged_param, true);
-    Series staged = pluss::zeros_like(tx.value());
+    Series staged = pluss::series::zeros_like(tx.value());
     staged.select(0, 0).copy_(tx.value().select(0, 0));
     staged.select(0, 1).copy_(tx.value().select(0, 1));
     const Series loss = staged.sub(minimax_target).square().sum().mul(0.5);

@@ -152,7 +152,7 @@ int main() {
             << " supports(Zeta)=" << pluss::distr::supports(ma::dst::Zeta)
             << " supports(NegativeBinomial)=" << pluss::distr::supports(ma::dst::NegativeBinomial) << '\n';
 
-  const Series like = pluss::zeros({2, 4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
+  const Series like = pluss::series::zeros({2, 4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
   const Series like_gamma = pluss::distr::sample_like(ma::dst::Gamma, {2.0}, like, 77ULL);
   const Series like_sign = pluss::distr::sample_like(ma::dst::Rademacher, like, 79ULL);
   const Series nig = pluss::distr::sample(ma::dst::Nig, {2.0, 0.5, 0.0, 1.0}, {2, 4}, f64, 83ULL);

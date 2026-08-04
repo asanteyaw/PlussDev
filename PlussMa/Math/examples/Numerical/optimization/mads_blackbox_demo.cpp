@@ -77,9 +77,9 @@ int main() {
   const pluss::Config cfg = pluss::Config{}
                                 .with_dtype(pluss::ScalarType::Float64)
                                 .with_platform(pluss::pCPU);
-  const pluss::Series x0 = pluss::full({dim}, 3.25, cfg);
-  const pluss::Series lb = pluss::full({dim}, -5.0, cfg);
-  const pluss::Series ub = pluss::full({dim}, 5.0, cfg);
+  const pluss::Series x0 = pluss::series::full({dim}, 3.25, cfg);
+  const pluss::Series lb = pluss::series::full({dim}, -5.0, cfg);
+  const pluss::Series ub = pluss::series::full({dim}, 5.0, cfg);
 
   MadsBlackboxConfig base_cfg;
   base_cfg.max_iterations = 1200;

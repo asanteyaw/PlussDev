@@ -28,7 +28,7 @@ void remove_if_exists(const std::filesystem::path& path) {
 TEST_CASE("pluss::save/load roundtrip for Series", "[io][series]") {
   const auto path = temp_file_path("pluss_series_roundtrip");
 
-  auto s = pluss::arange(0, 6, pluss::ScalarType::Int64).to(pluss::ScalarType::Float32).reshape({2, 3});
+  auto s = pluss::series::arange(0, 6, pluss::ScalarType::Int64).to(pluss::ScalarType::Float32).reshape({2, 3});
   pluss::save(s, path.string());
 
   const auto loaded = pluss::load<pluss::Series>(path.string());
@@ -50,7 +50,7 @@ TEST_CASE("pluss::save/load roundtrip for bytes Note", "[io][note]") {
       std::string_view(b.data(), b.size())};
   const std::array<std::int64_t, 1> sizes{2};
 
-  const auto note = pluss::make_bytes_note(
+  const auto note = pluss::note::bytes(
       std::span<const std::string_view>(flat.data(), flat.size()),
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
@@ -83,7 +83,7 @@ TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timelin
   const auto timeline_path = temp_file_path("pluss_timeline_roundtrip");
   const auto timeindex_path = temp_file_path("pluss_timeindex_roundtrip");
 
-  const auto timeline = pluss::from_epoch_nanos(
+  const auto timeline = pluss::timeline::from_epoch(
       std::vector<std::int64_t>{1704067200000000000LL, 1704153600000000000LL},
       std::vector<std::int64_t>{2});
 
@@ -94,7 +94,7 @@ TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timelin
   REQUIRE(loaded_timeline.to_epoch_nanos_vector() == timeline.to_epoch_nanos_vector());
   REQUIRE(loaded_timeline.tz() == timeline.tz());
 
-  const auto index = pluss::make_timeindex(std::vector<std::int64_t>{3, 1, 2}, false);
+  const auto index = pluss::timeindex::make(std::vector<std::int64_t>{3, 1, 2}, false);
   pluss::save(index, timeindex_path.string());
   const auto loaded_index = pluss::load<pluss::TimeIndex>(timeindex_path.string());
 
@@ -110,8 +110,8 @@ TEST_CASE("pluss::save/load roundtrip for STL containers and StackArray<Series>"
   const auto stack_path = temp_file_path("pluss_stack_roundtrip");
 
   const std::vector<pluss::Series> batch{
-      pluss::arange(0, 4, pluss::ScalarType::Int64),
-      pluss::ones({2, 2}, pluss::ScalarType::Float32)};
+      pluss::series::arange(0, 4, pluss::ScalarType::Int64),
+      pluss::series::ones({2, 2}, pluss::ScalarType::Float32)};
 
   pluss::save(batch, vec_path.string());
   const auto loaded_batch = pluss::load<std::vector<pluss::Series>>(vec_path.string());
@@ -121,8 +121,8 @@ TEST_CASE("pluss::save/load roundtrip for STL containers and StackArray<Series>"
   REQUIRE(loaded_batch[1].to_vec<float>() == batch[1].to_vec<float>());
 
   const pluss::StackArray<pluss::Series> stack{
-      pluss::zeros({3}, pluss::ScalarType::Float32),
-      pluss::ones({3}, pluss::ScalarType::Float32)};
+      pluss::series::zeros({3}, pluss::ScalarType::Float32),
+      pluss::series::ones({3}, pluss::ScalarType::Float32)};
 
   pluss::save(stack, stack_path.string());
   const auto loaded_stack = pluss::load<pluss::StackArray<pluss::Series>>(stack_path.string());

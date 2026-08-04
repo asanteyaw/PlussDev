@@ -16,4 +16,4 @@ PlussQit follows a strict policy:
 - `pluss::codem::*` factory implementations live in `src/CodeM/core/SeriesBody.h`.
 
 This keeps the public header stable and avoids accidental recursion/bloat where a public factory calls another public
-factory (e.g. `pluss::nan()` must not call `pluss::full()`), ensuring a single source of truth for behavior.
+factory (e.g. `pluss::series::nan()` must not call `pluss::series::full()`), ensuring a single source of truth for behavior.

@@ -235,7 +235,7 @@ TEST_CASE("autodiff strict dependency stays connected for staged inplace write A
     const auto [value, grads] = value_and_grad(
         [](const std::vector<Trace>& xs) -> Trace {
           const Series x = xs[0].value();
-          Series staged = pluss::zeros_like(x);
+          Series staged = pluss::series::zeros_like(x);
           staged.select(1, 0).copy_(x.select(1, 0).mul(2.0));
           staged.select(1, 1).copy_(x.select(1, 1).square());
           staged.select(1, 2).copy_(x.select(1, 2).add(1.0));
@@ -254,7 +254,7 @@ TEST_CASE("autodiff strict dependency stays connected for staged inplace write A
     const auto [value, grads] = value_and_grad(
         [](const std::vector<Trace>& xs) -> Trace {
           const Series x = xs[0].value();
-          Series staged = pluss::zeros_like(x);
+          Series staged = pluss::series::zeros_like(x);
           const std::array<ExtractSpec, 2> specs{
               ExtractSpec{pluss::Slicing::SliceAll()},
               ExtractSpec{1, 3}};
@@ -276,7 +276,7 @@ TEST_CASE("autodiff strict dependency stays connected for staged inplace write A
     const auto [value, grads] = value_and_grad(
         [](const std::vector<Trace>& xs) -> Trace {
           const Series x = xs[0].value();
-          Series staged = pluss::zeros_like(x);
+          Series staged = pluss::series::zeros_like(x);
           staged.extract_put_(
               {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(1, 3, 1)},
               x.slice(1, 1, 3, 1));
@@ -295,7 +295,7 @@ TEST_CASE("autodiff strict dependency stays connected for staged inplace write A
     const auto [value, grads] = value_and_grad(
         [](const std::vector<Trace>& xs) -> Trace {
           const Series x = xs[0].value();
-          Series staged = pluss::zeros({6}, x.scalar_type()).to(x.platform());
+          Series staged = pluss::series::zeros({6}, x.scalar_type()).to(x.platform());
           const Series idx = make_series(std::vector<std::int64_t>{1, 4}, {2});
           const Series src = x.reshape({6}).slice(0, 0, 2, 1);
           staged.index_put_({idx}, src, false);
@@ -314,7 +314,7 @@ TEST_CASE("autodiff strict dependency stays connected for staged inplace write A
     const auto [value, grads] = value_and_grad(
         [](const std::vector<Trace>& xs) -> Trace {
           const Series x = xs[0].value();
-          Series staged = pluss::zeros_like(x);
+          Series staged = pluss::series::zeros_like(x);
           const Series i0 = make_series(std::vector<std::int64_t>{0, 1}, {2}).to(ScalarType::Int64);
           const Series i1 = make_series(std::vector<std::int64_t>{1, 2}, {2}).to(ScalarType::Int64);
           const Series src = x.select(1, 0).reshape({2});
@@ -334,7 +334,7 @@ TEST_CASE("autodiff strict dependency stays connected for staged inplace write A
     const auto [value, grads] = value_and_grad(
         [](const std::vector<Trace>& xs) -> Trace {
           const Series x = xs[0].value();
-          Series staged = pluss::zeros_like(x);
+          Series staged = pluss::series::zeros_like(x);
           for (std::int64_t t = 0; t < x.size(1); ++t) {
             staged.select(1, t).copy_(x.select(1, t).add(static_cast<double>(t + 1)));
           }
@@ -2064,7 +2064,7 @@ TEST_CASE("vector parameter gradients preserve order and shape", "[autodiff][par
       make_series(0.25).to(ScalarType::Float64),
       make_series(-0.1).to(ScalarType::Float64),
   };
-  const Series x = pluss::linspace(-1.0, 1.0, 16, ScalarType::Float64);
+  const Series x = pluss::series::linspace(-1.0, 1.0, 16, ScalarType::Float64);
   const Series y = x.mul(2.0).sub(0.5);
 
   const auto [value, grads] = value_and_grad(
@@ -2209,7 +2209,7 @@ TEST_CASE("reverse diagnostics include context on seeded reverse failures", "[au
 }
 
 TEST_CASE("autodiff remains finite under repeated nonlinear training steps", "[autodiff][stability]") {
-  const Series x = pluss::linspace(-2.0, 2.0, 128, ScalarType::Float64);
+  const Series x = pluss::series::linspace(-2.0, 2.0, 128, ScalarType::Float64);
   const Series y = x.mul(1.8).add(0.25).tanh();
 
   std::vector<Series> params{

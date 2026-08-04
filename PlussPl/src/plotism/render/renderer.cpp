@@ -388,7 +388,7 @@ struct WedgeSlice {
 [[nodiscard]] Series broadcast_plot_matrix(const Series& series, std::int64_t rows, std::int64_t cols) {
   Series values = series.to(ScalarType::Float64);
   if (values.numel() == 1) {
-    return pluss::full({rows, cols}, scalar_f64(values), ScalarType::Float64);
+    return pluss::series::full({rows, cols}, scalar_f64(values), ScalarType::Float64);
   }
   if (series_is_vector(values) && values.numel() == rows) {
     const Series col_vec = values.reshape({rows, 1});
@@ -409,7 +409,7 @@ struct WedgeSlice {
     std::int64_t rows,
     std::int64_t cols) {
   if (!series.has_value()) {
-    return pluss::zeros({rows, cols}, ScalarType::Float64);
+    return pluss::series::zeros({rows, cols}, ScalarType::Float64);
   }
   return broadcast_plot_matrix(*series, rows, cols);
 }
@@ -1171,7 +1171,7 @@ struct WedgeSlice {
   const Series top = (cols > 1 ? y_matrix.cumsum(1) : y_matrix).add(data.base);
   const Series bottom = cols > 1
                             ? top.sub(y_matrix)
-                            : pluss::full({rows, cols}, data.base, ScalarType::Float64);
+                            : pluss::series::full({rows, cols}, data.base, ScalarType::Float64);
 
   return RibbonGeometry{
       rows,

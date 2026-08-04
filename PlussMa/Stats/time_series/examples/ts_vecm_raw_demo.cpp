@@ -30,7 +30,7 @@ int main() {
       {1, 2, 2},
       cfg);
   truth.constant = pluss::make_series(std::vector<double>{0.012, -0.007}, {2}, cfg);
-  truth.trend = pluss::zeros({2}, cfg);
+  truth.trend = pluss::series::zeros({2}, cfg);
   truth.covariance = pluss::make_series(std::vector<double>{0.22, 0.03, 0.03, 0.18}, {2, 2}, cfg);
 
   const auto y = truth.simulate(2800, cfg, 20260324ULL);

@@ -1,4 +1,4 @@
-# Pluss
+# Plusses
 Next-generation technical computing and AI Ecosystem for C++.
 
 ## Quick Start
@@ -13,22 +13,21 @@ int main() {
   df.head();
   df.info();
 
-  auto by_agency = df.tally("Agency Name", 10);
-  auto numeric = df.series();
+  auto by_agency = df.features("Agency Name").freq();
+  auto numeric_data = df.feataxis().series();
 
-  auto df2 = df.set_features("Lifecycle Cost x2", df.features("Lifecycle Cost") * 2.0);
+  auto df2 = df.assign("Lifecycle Cost x2", df.features("Lifecycle Cost") * 2.0);
   df2.save_csv("path/to/save/data.csv");
 }
 ```
 
 ## Core Types
 
-- `pluss::Series` (numeric/bool 1D)
-- `pluss::Note` (text 1D)
-- `pluss::Timeline` / `pluss::TimeIndex` (time 1D)
-- `pluss::table::Thread` (1D table abstraction over pluss types)
-- `pluss::table::DataFrame` (2D features x cases)
-- `pluss::table::Atlas` (3D stack of DataFrames)
+- `pluss::Series` (numeric/bool ND)
+- `pluss::Note` (text ND)
+- `pluss::Timeline` (time ND)
+- `pluss::TimeIndex` (time 1D)
+- `pluss::Duration` (elapsed time ND)
 
 Doctrine:
 
@@ -38,7 +37,7 @@ Doctrine:
 
 - Feature axis terminology: `features(...)`
 - Case axis terminology: `cases(...)`
-- Preferred methods: `sort_caselbl`, `tally`, `group_by`, `set_features`, `set`
+- Preferred methods: `transform`, `arrange`, `assign`, `set`
 
 ## Loading and Saving
 

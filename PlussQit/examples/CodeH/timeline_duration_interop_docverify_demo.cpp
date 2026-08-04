@@ -8,13 +8,13 @@ namespace {
 
 void show_timeline(std::string_view label, const pluss::Timeline& t) {
   std::cout << "\n== " << label << " ==\n";
-  std::cout << pluss::print_timeline(t) << "\n";
+  std::cout << pluss::timeline::print(t) << "\n";
 }
 
 void show_duration(std::string_view label, const pluss::Duration& d) {
   std::cout << "\n== " << label << " ==\n";
   std::cout << "dim=" << d.dim() << " numel=" << d.numel() << "\n";
-  std::cout << pluss::print_series(d.total_seconds()) << "\n";
+  std::cout << pluss::print_series(d.total().seconds()) << "\n";
 }
 
 void show_series(std::string_view label, const pluss::Series& s) {
@@ -26,7 +26,7 @@ void show_series(std::string_view label, const pluss::Series& s) {
 
 int main() {
   // ---- Base instant ----
-  const auto t0 = pluss::make_timeline("1999-04-17T21:15:23Z");
+  const auto t0 = pluss::timeline::make("1999-04-17T21:15:23Z");
   show_timeline("base_scalar", t0);
 
   // ---- Full scope: every Duration unit factory shifting the same instant ----
@@ -64,7 +64,7 @@ int main() {
   show_series("compound_sub_equals_binary_minus", compound_sub_t.eq(via_operator_sub));
 
   // ---- Timeline - Timeline -> Duration, operator vs method ----
-  const auto t1 = pluss::make_timeline("1999-04-18T00:15:23Z"); // t0 + 3h
+  const auto t1 = pluss::timeline::make("1999-04-18T00:15:23Z"); // t0 + 3h
   const auto diff_operator = t1 - t0;
   const auto diff_method = t1.diff(t0);
   show_duration("diff_via_operator_t1_minus_t0", diff_operator);
@@ -75,7 +75,7 @@ int main() {
   show_timeline("broadcast_scalar_timeline_plus_1d_duration", t0 + steps);
 
   // ---- Broadcasting: 1D Timeline + scalar Duration -> 1D Timeline ----
-  const auto t_vec = pluss::make_timeline({
+  const auto t_vec = pluss::timeline::make({
       "2024-11-01T09:00:00Z",
       "2024-11-01T10:00:00Z",
       "2024-11-01T11:00:00Z",
@@ -87,7 +87,7 @@ int main() {
   show_timeline("elementwise_1d_timeline_plus_1d_duration", t_vec + steps);
 
   // ---- NaT propagates from either side ----
-  const auto t_missing = pluss::make_timeline(""); // documented missing-timestamp text
+  const auto t_missing = pluss::timeline::make(""); // documented missing-timestamp text
   show_timeline("nat_timeline_plus_valid_duration", t_missing + pluss::duration::hours(1));
 
   const auto d_missing = pluss::duration::nanos(pluss::Duration::kNaT);

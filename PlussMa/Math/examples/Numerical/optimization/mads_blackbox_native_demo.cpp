@@ -57,9 +57,9 @@ int main() {
                                 .with_platform(pluss::pCPU);
 
   const std::int64_t dim = 3;
-  const pluss::Series x0 = pluss::full({dim}, 1.8, cfg);
-  const pluss::Series lb = pluss::full({dim}, -5.0, cfg);
-  const pluss::Series ub = pluss::full({dim}, 5.0, cfg);
+  const pluss::Series x0 = pluss::series::full({dim}, 1.8, cfg);
+  const pluss::Series lb = pluss::series::full({dim}, -5.0, cfg);
+  const pluss::Series ub = pluss::series::full({dim}, 5.0, cfg);
 
   MadsBlackboxAdvancedConfig config;
   config.max_iterations = 220;

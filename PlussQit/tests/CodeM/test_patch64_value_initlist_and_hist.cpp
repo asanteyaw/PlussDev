@@ -32,7 +32,7 @@ TEST_CASE("bincount/histc/unique basic", "[count][hist][unique]") {
   auto u = x.unique(true);
   REQUIRE(u.numel() <= x.numel());
 
-  auto f = pluss::linspace(0.0, 1.0, 100, pluss::config({{"dtype","float32"}}));
+  auto f = pluss::series::linspace(0.0, 1.0, 100, pluss::config({{"dtype","float32"}}));
   auto h = f.histc(10, 0.0, 1.0);
   REQUIRE(h.numel() == 10);
 }

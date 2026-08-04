@@ -10,7 +10,7 @@ int main() {
   using namespace pluss;
   using namespace pluss::subsp::math::diff;
 
-  const Series x = pluss::linspace(-1.0, 1.0, 256, ScalarType::Float64);
+  const Series x = pluss::series::linspace(-1.0, 1.0, 256, ScalarType::Float64);
   const Series y = x.mul(2.0).sub(0.5);
 
   std::vector<Series> params{

@@ -27,7 +27,7 @@ Series make_arx_response(const Series& x, std::uint64_t seed) {
   const auto x_cpu = x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const std::int64_t n = x.sizes()[0];
   const std::int64_t p = x.sizes()[1];
-  const auto noise = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto noise = pluss::series::randn({n}, cfg, seed).to_vec<double>();
 
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
@@ -42,7 +42,7 @@ Series make_arx_response(const Series& x, std::uint64_t seed) {
 void test_fit_predict_closed_loop() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 1200;
-  const Series x = pluss::randn({n, 2}, cfg, 20260312ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260312ULL);
   const Series y = make_arx_response(x, 20260313ULL);
 
   DirectForecasterOptions options;
@@ -69,7 +69,7 @@ void test_fit_predict_closed_loop() {
 void test_multi_horizon_shape_and_finiteness() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 900;
-  const Series x = pluss::rand({n, 3}, cfg, 20260314ULL);
+  const Series x = pluss::series::rand({n, 3}, cfg, 20260314ULL);
   const Series first_two = x.index_select(
       1,
       pluss::make_series(std::vector<std::int64_t>{0, 1},
@@ -99,7 +99,7 @@ void test_multi_horizon_shape_and_finiteness() {
 void test_error_paths() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 200;
-  const Series x = pluss::randn({n, 2}, cfg, 20260316ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260316ULL);
   const Series y = make_arx_response(x, 20260317ULL);
 
   DirectForecasterOptions bad;

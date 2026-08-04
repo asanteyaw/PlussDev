@@ -89,7 +89,7 @@ Series draw_normals_(std::int64_t rows,
   const auto out_cfg = f64_cfg_(cfg);
 
   if (options.method == RandMethod::Pseudo) {
-    Series z = pluss::randn({rows, base_cols}, out_cfg, effective_seed_(options, compat_seed, bump));
+    Series z = pluss::series::randn({rows, base_cols}, out_cfg, effective_seed_(options, compat_seed, bump));
     if (options.antithetic) {
       z = append_antithetic_(z, cols);
     }
@@ -164,7 +164,7 @@ Series draw_uniforms_(std::int64_t rows,
   const auto out_cfg = f64_cfg_(cfg);
 
   if (options.method == RandMethod::Pseudo) {
-    return pluss::rand({rows, cols}, out_cfg, effective_seed_(options, compat_seed, bump));
+    return pluss::series::rand({rows, cols}, out_cfg, effective_seed_(options, compat_seed, bump));
   }
 
   const std::uint64_t off = effective_offset_(options, bump);
@@ -399,7 +399,7 @@ void validate_rough_bergomi_(const RoughBergomiParams& p, const char* op) {
 
 Series local_vol_(const Series& s, const SlvParams& p) {
   if (p.local_vol_form == LocalVolForm::Constant) {
-    return pluss::full(s.sizes(), std::max(0.0, p.local_vol_level), cfg_like_(s));
+    return pluss::series::full(s.sizes(), std::max(0.0, p.local_vol_level), cfg_like_(s));
   }
   if (p.local_vol_form == LocalVolForm::Cev) {
     return s.clamp_min(p.variance_floor).pow(p.local_vol_curvature).mul(p.local_vol_level).clamp_min(0.0);
@@ -482,15 +482,15 @@ Series heston_variance_step_(const Series& vt,
               "subsp::math::finance::volatility::heston_variance_step_: invalid scheme for QE step");
 
   const Config vt_cfg = cfg_like_(vt);
-  const Series exp_kdt = pluss::full(vt.sizes(), std::exp(-p.kappa * dt), vt_cfg);
+  const Series exp_kdt = pluss::series::full(vt.sizes(), std::exp(-p.kappa * dt), vt_cfg);
   const Series one_minus_exp = exp_kdt.mul(-1.0).add(1.0);
 
-  const Series m = pluss::full(vt.sizes(), p.theta, vt_cfg).add(vt.sub(p.theta).mul(exp_kdt));
+  const Series m = pluss::series::full(vt.sizes(), p.theta, vt_cfg).add(vt.sub(p.theta).mul(exp_kdt));
   const Series s2 = vt.mul(p.sigma * p.sigma)
                         .mul(exp_kdt)
                         .mul(one_minus_exp)
                         .div(std::max(p.kappa, kEps))
-                        .add(pluss::full(vt.sizes(), p.theta, vt_cfg)
+                        .add(pluss::series::full(vt.sizes(), p.theta, vt_cfg)
                                  .mul(p.sigma * p.sigma)
                                  .mul(one_minus_exp.square())
                                  .div(std::max(2.0 * p.kappa, kEps)));
@@ -507,7 +507,7 @@ Series heston_variance_step_(const Series& vt,
   const Series beta = p_zero.mul(-1.0).add(1.0).div(m.clamp_min(kEps));
   const Series u = u_qe.clamp_min(kEps).clamp_max(1.0 - kEps);
   const Series v2_nonzero = u.sub(1.0).div(p_zero.sub(1.0).clamp_max(-kEps)).log().mul(-1.0).div(beta.clamp_min(kEps));
-  const Series v2 = u.le(p_zero).where(pluss::zeros(vt.sizes(), vt_cfg), v2_nonzero);
+  const Series v2 = u.le(p_zero).where(pluss::series::zeros(vt.sizes(), vt_cfg), v2_nonzero);
 
   return use_q1.where(v1, v2).clamp_min(p.variance_floor);
 }
@@ -562,7 +562,7 @@ Series heston_transition_step_(const Series& vt,
 
 Series stack_rows_(const std::vector<Series>& rows, const char* op) {
   PLUSS_CHECK(!rows.empty(), std::string("subsp::math::finance::volatility::") + op + ": row history is empty");
-  return pluss::pile(pluss::sign_list(rows), 0);
+  return pluss::series::pile(pluss::sign_list(rows), 0);
 }
 
 } // namespace
@@ -583,11 +583,11 @@ StochVolPaths gbm_paths(std::int64_t steps,
   const std::int64_t n = steps + 1;
   const double sigma2 = params.sigma * params.sigma;
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x7011ULL);
-  const Series z_var = pluss::zeros({steps, paths}, out_cfg);
+  const Series z_var = pluss::series::zeros({steps, paths}, out_cfg);
   const Series log_inc = z_spot.mul(params.sigma * std::sqrt(dt)).add((params.mu - 0.5 * sigma2) * dt);
   const Series spot_tail = log_inc.cumsum(0, false).exp().mul(spot0);
-  const Series spot = pluss::full({1, paths}, spot0, out_cfg).unite({spot_tail}, 0);
-  const Series variance = pluss::full({n, paths}, sigma2, out_cfg);
+  const Series spot = pluss::series::full({1, paths}, spot0, out_cfg).unite({spot_tail}, 0);
+  const Series variance = pluss::series::full({n, paths}, sigma2, out_cfg);
 
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::gbm_paths: spot path produced non-finite values");
@@ -625,14 +625,14 @@ StochVolPaths heston_paths(std::int64_t steps,
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x2303ULL);
   const bool use_qe = (options.scheme == SimScheme::QuadExp);
   const Series u_qe = use_qe ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0x4517ULL)
-                             : pluss::zeros({steps, paths}, out_cfg);
+                             : pluss::series::zeros({steps, paths}, out_cfg);
   const std::uint64_t transition_seed = effective_seed_(options, seed, 0x5843ULL);
 
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));
@@ -706,7 +706,7 @@ StochVolPaths bates_paths(std::int64_t steps,
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xB273ULL);
   const bool use_qe = (options.scheme == SimScheme::QuadExp);
   const Series u_qe = use_qe ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0xC317ULL)
-                             : pluss::zeros({steps, paths}, out_cfg);
+                             : pluss::series::zeros({steps, paths}, out_cfg);
   const Series z_jump = draw_normals_(steps, paths, options, out_cfg, seed, 0xD401ULL);
   const Series u_jump = draw_uniforms_(steps, paths, options, out_cfg, seed, 0xE511ULL);
   const std::uint64_t transition_seed = effective_seed_(options, seed, 0xF713ULL);
@@ -715,8 +715,8 @@ StochVolPaths bates_paths(std::int64_t steps,
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
   const double p_jump = 1.0 - std::exp(-params.jump_intensity * dt);
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));
@@ -742,7 +742,7 @@ StochVolPaths bates_paths(std::int64_t steps,
 
     const Series jump_mask = uj.le(p_jump);
     const Series jump_log = zj.mul(params.jump_vol).add(params.jump_mean);
-    const Series jump_term = jump_mask.where(jump_log, pluss::zeros({1, paths}, out_cfg));
+    const Series jump_term = jump_mask.where(jump_log, pluss::series::zeros({1, paths}, out_cfg));
     const Series log_inc = v_bar.mul(-0.5 * dt)
                                .add(params.mu * dt)
                                .add(v_bar.mul(dt).sqrt().mul(eps_s))
@@ -797,9 +797,9 @@ StochVolPaths sv_paths(std::int64_t steps,
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series h_t = pluss::full({1, paths}, params.logvar0, out_cfg);
-  Series vt = pluss::full({1, paths}, std::exp(params.logvar0), out_cfg).clamp_min(params.variance_floor);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series h_t = pluss::series::full({1, paths}, params.logvar0, out_cfg);
+  Series vt = pluss::series::full({1, paths}, std::exp(params.logvar0), out_cfg).clamp_min(params.variance_floor);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));
@@ -867,12 +867,12 @@ StochVolPaths heston_nandi_paths(std::int64_t steps,
 
   const Series z_raw = draw_normals_(steps, paths, options, out_cfg, seed, 0xF311ULL);
   const Series z_spot = z_raw.isfinite()
-                            .where(z_raw, pluss::zeros({steps, paths}, out_cfg))
+                            .where(z_raw, pluss::series::zeros({steps, paths}, out_cfg))
                             .clamp_min(-10.0)
                             .clamp_max(10.0);
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series ht = pluss::full({1, paths}, h0, out_cfg);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series ht = pluss::series::full({1, paths}, h0, out_cfg);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));
@@ -888,13 +888,13 @@ StochVolPaths heston_nandi_paths(std::int64_t steps,
     const Series log_inc = ht.mul(params.lambda).add(params.r * dt).add(sig_t.mul(zt)).clamp_min(-30.0).clamp_max(30.0);
     const Series s_raw = st.mul(log_inc.exp());
     const Series s_next = s_raw.isfinite()
-                              .where(s_raw, pluss::full({1, paths}, spot0, out_cfg))
+                              .where(s_raw, pluss::series::full({1, paths}, spot0, out_cfg))
                               .clamp_min(params.variance_floor)
                               .clamp_max(1.0e12);
 
     const Series h_next = ht.mul(params.beta).add(params.omega).add(zt.sub(sig_t.mul(params.gamma)).square().mul(params.alpha));
     const Series h_safe = h_next.isfinite()
-                              .where(h_next, pluss::full({1, paths}, params.variance_floor, out_cfg))
+                              .where(h_next, pluss::series::full({1, paths}, params.variance_floor, out_cfg))
                               .clamp_min(params.variance_floor)
                               .clamp_max(1.0e6);
 
@@ -947,8 +947,8 @@ StochVolPaths sabr_paths(std::int64_t steps,
   const double sqdt = std::sqrt(dt);
   const bool positive_forward = params.beta > 0.0;
 
-  Series ft_state = pluss::full({1, paths}, forward0, out_cfg);
-  Series at_state = pluss::full({1, paths}, std::max(params.alpha0, params.alpha_floor), out_cfg);
+  Series ft_state = pluss::series::full({1, paths}, forward0, out_cfg);
+  Series at_state = pluss::series::full({1, paths}, std::max(params.alpha0, params.alpha_floor), out_cfg);
   std::vector<Series> forward_rows;
   std::vector<Series> alpha_rows;
   forward_rows.reserve(static_cast<std::size_t>(n));
@@ -967,7 +967,7 @@ StochVolPaths sabr_paths(std::int64_t steps,
     const Series alpha_log_inc = eps_a.mul(params.nu * sqdt).add(-0.5 * params.nu * params.nu * dt).clamp_min(-30.0).clamp_max(30.0);
     const Series a_next = at.mul(alpha_log_inc.exp()).clamp_min(params.alpha_floor).clamp_max(1.0e6);
 
-    const Series f_pow = (params.beta == 0.0) ? pluss::full({1, paths}, 1.0, out_cfg)
+    const Series f_pow = (params.beta == 0.0) ? pluss::series::full({1, paths}, 1.0, out_cfg)
                                                : ft.clamp_min(params.alpha_floor).pow(params.beta);
     const Series sigma_f = at.mul(f_pow);
     Series f_next = ft.add(ft.mul(params.mu * dt)).add(sigma_f.mul(sqdt).mul(eps_f));
@@ -982,7 +982,7 @@ StochVolPaths sabr_paths(std::int64_t steps,
       }
     }
 
-    const Series f_safe = f_next.isfinite().where(f_next, pluss::full({1, paths}, forward0, out_cfg));
+    const Series f_safe = f_next.isfinite().where(f_next, pluss::series::full({1, paths}, forward0, out_cfg));
     const Series f_bounded = positive_forward
                                  ? f_safe.clamp_min(params.alpha_floor).clamp_max(1.0e12)
                                  : f_safe.clamp_min(-1.0e12).clamp_max(1.0e12);
@@ -1034,8 +1034,8 @@ StochVolPaths slv_paths(std::int64_t steps,
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));
@@ -1115,10 +1115,10 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
     kernel[static_cast<std::size_t>(k)] = a - b;
   }
   const Series kernel_series = pluss::make_series(kernel, {steps}, out_cfg);
-  Series drives_hist = pluss::zeros({paths, steps}, out_cfg);
+  Series drives_hist = pluss::series::zeros({paths, steps}, out_cfg);
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));
@@ -1132,7 +1132,7 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
     const Series eps_s = z_spot.select(0, t).reshape({1, paths});
     const Series eps_v = z_var.select(0, t).reshape({1, paths});
 
-    const Series drift = pluss::full({1, paths}, params.kappa * params.theta * dt, out_cfg).sub(vt.mul(params.kappa * dt));
+    const Series drift = pluss::series::full({1, paths}, params.kappa * params.theta * dt, out_cfg).sub(vt.mul(params.kappa * dt));
     const Series diff = vt.sqrt().mul(params.sigma * sqdt).mul(eps_v);
     const Series drive_t = drift.add(diff).reshape({paths});
     drives_hist.index_put_({pluss::Slicing::SliceAll(), t}, drive_t);
@@ -1141,7 +1141,7 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
     const Series frac_acc = drives_prefix.mul(k_rev).sum(1, false).reshape({1, paths});
 
     const Series v_next =
-        pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg).add(frac_acc).clamp_min(params.variance_floor);
+        pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg).add(frac_acc).clamp_min(params.variance_floor);
     const Series v_bar = vt.add(v_next).mul(0.5).clamp_min(params.variance_floor);
     const Series log_inc = v_bar.mul(-0.5 * dt).add(params.mu * dt).add(v_bar.mul(dt).sqrt().mul(eps_s));
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
@@ -1203,10 +1203,10 @@ StochVolPaths rough_bergomi_paths(std::int64_t steps,
     kernel[static_cast<std::size_t>(k)] = a - b;
   }
   const Series kernel_series = pluss::make_series(kernel, {steps}, out_cfg);
-  Series dWv_hist = pluss::zeros({paths, steps}, out_cfg);
+  Series dWv_hist = pluss::series::zeros({paths, steps}, out_cfg);
 
-  Series st = pluss::full({1, paths}, spot0, out_cfg);
-  Series vt = pluss::full({1, paths}, std::max(params.xi, params.variance_floor), out_cfg);
+  Series st = pluss::series::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::series::full({1, paths}, std::max(params.xi, params.variance_floor), out_cfg);
   std::vector<Series> spot_rows;
   std::vector<Series> variance_rows;
   spot_rows.reserve(static_cast<std::size_t>(n));

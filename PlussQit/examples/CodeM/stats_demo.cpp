@@ -6,7 +6,7 @@
 #include <vector>
 
 int main() {
-  let x = pluss::normal(0.0, 1.0, {20});
+  let x = pluss::series::normal(0.0, 1.0, {20});
   std::cout << "x:\n" << x << "\n\n";
 
   std::cout << "mean:\n" << x.mean() << "\n\n";
@@ -28,8 +28,8 @@ int main() {
   std::cout << "standardize:\n" << x.standardize() << "\n\n";
   std::cout << "center:\n" << x.center() << "\n\n";
 
-  let a = pluss::normal(0.0, 1.0, {8, 3});
-  let b = pluss::normal(0.0, 1.0, {5, 3});
+  let a = pluss::series::normal(0.0, 1.0, {8, 3});
+  let b = pluss::series::normal(0.0, 1.0, {5, 3});
   std::cout << "stat(peer).cdist:\n" << a.stat(b).cdist() << "\n\n";
 
   const double nan = std::numeric_limits<double>::quiet_NaN();

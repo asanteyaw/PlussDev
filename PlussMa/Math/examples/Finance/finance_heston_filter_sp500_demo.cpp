@@ -91,14 +91,14 @@ int main() {
     const double v0 = std::exp(u.select(0, 4).item<double>());
 
     ParticleFilterModel m;
-    m.initial_particles = pluss::randn({n_particles, 1}, cfg, base_seed).mul(std::sqrt(v0) * 0.20).add(v0).clamp_min(1e-12);
+    m.initial_particles = pluss::series::randn({n_particles, 1}, cfg, base_seed).mul(std::sqrt(v0) * 0.20).add(v0).clamp_min(1e-12);
     m.options.ess_threshold = 0.5;
     m.options.resample = true;
     m.options.store_particles = false;
 
     m.transition = [=](const Series& particles, std::int64_t t) {
       const Series eps =
-          pluss::randn({n_particles, 1}, cfg, base_seed + 7919ULL * static_cast<std::uint64_t>(t + 1));
+          pluss::series::randn({n_particles, 1}, cfg, base_seed + 7919ULL * static_cast<std::uint64_t>(t + 1));
       const Series v = particles.clamp_min(1e-12);
       return v.add((kappa * dt) * (theta - v))
           .add((sigma * std::sqrt(dt)) * v.sqrt().mul(eps))
@@ -129,13 +129,13 @@ int main() {
 
   ParticleFilterModel final_model;
   final_model.initial_particles =
-      pluss::randn({n_particles, 1}, cfg, base_seed + 97ULL).mul(std::sqrt(v0) * 0.20).add(v0).clamp_min(1e-12);
+      pluss::series::randn({n_particles, 1}, cfg, base_seed + 97ULL).mul(std::sqrt(v0) * 0.20).add(v0).clamp_min(1e-12);
   final_model.options.ess_threshold = 0.5;
   final_model.options.resample = true;
   final_model.options.store_particles = true;
   final_model.transition = [=](const Series& particles, std::int64_t t) {
     const Series eps =
-        pluss::randn({n_particles, 1}, cfg, base_seed + 104729ULL + 7919ULL * static_cast<std::uint64_t>(t + 1));
+        pluss::series::randn({n_particles, 1}, cfg, base_seed + 104729ULL + 7919ULL * static_cast<std::uint64_t>(t + 1));
     const Series v = particles.clamp_min(1e-12);
     return v.add((kappa * dt) * (theta - v))
         .add((sigma * std::sqrt(dt)) * v.sqrt().mul(eps))

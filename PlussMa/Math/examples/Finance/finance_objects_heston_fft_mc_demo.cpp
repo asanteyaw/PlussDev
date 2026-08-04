@@ -10,20 +10,20 @@ int main() {
 
   const auto inst = obj::Vanilla{
       .type = prc::OptionType::Call,
-      .strike = pluss::full({1}, 100.0, cfg),
-      .maturity = pluss::full({1}, 1.0, cfg),
+      .strike = pluss::series::full({1}, 100.0, cfg),
+      .maturity = pluss::series::full({1}, 1.0, cfg),
   };
   const auto mkt = obj::MarketState{
-      .spot = pluss::full({1}, 100.0, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::full({1}, 100.0, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const auto mdl = obj::model::Heston{
-      .kappa = pluss::full({1}, 1.4, cfg),
-      .theta = pluss::full({1}, 0.04, cfg),
-      .sigma = pluss::full({1}, 0.35, cfg),
-      .rho = pluss::full({1}, -0.65, cfg),
-      .v0 = pluss::full({1}, 0.04, cfg),
+      .kappa = pluss::series::full({1}, 1.4, cfg),
+      .theta = pluss::series::full({1}, 0.04, cfg),
+      .sigma = pluss::series::full({1}, 0.35, cfg),
+      .rho = pluss::series::full({1}, -0.65, cfg),
+      .v0 = pluss::series::full({1}, 0.04, cfg),
   };
 
   obj::pricer::Fft fft;

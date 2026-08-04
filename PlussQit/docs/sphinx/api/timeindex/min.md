@@ -25,7 +25,7 @@ Example 1. Read the first instant represented anywhere on the axis.
 
 ```cpp
 auto out = idx.min();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

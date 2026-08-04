@@ -10,13 +10,13 @@ int main() {
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
   pluss::nn::Fusion layer(4, 2, true, cfg, 73ULL);
-  const Series x = pluss::rand({3, 4}, cfg, 79ULL);
+  const Series x = pluss::series::rand({3, 4}, cfg, 79ULL);
 
   const Series y_before = layer->forward(x);
   const auto snap = layer->snapshot();
 
-  layer->weight() = pluss::zeros(layer->weight().sizes(), cfg);
-  layer->bias() = pluss::zeros(layer->bias().sizes(), cfg);
+  layer->weight() = pluss::series::zeros(layer->weight().sizes(), cfg);
+  layer->bias() = pluss::series::zeros(layer->bias().sizes(), cfg);
   const Series y_mutated = layer->forward(x);
 
   const auto report = layer->restore(snap, true);

@@ -588,7 +588,7 @@ Best first pass for blackbox objective when you do not want to manually pick a s
 ```cpp
 namespace dfo = pluss::subsp::math::optimization;
 dfo::DfoProblem p;
-p.initial = pluss::full({12}, 2.5, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+p.initial = pluss::series::full({12}, 2.5, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
 p.objective = [](const pluss::Series& x) { return x.square().sum(); };
 
 dfo::DfoOptions o{};
@@ -631,9 +631,9 @@ Builder form is best for readable composition in scripts/demos.
 ### Examples
 
 ```cpp
-const auto out = dfo::DFO::build(pluss::full({6}, 2.0, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)))
+const auto out = dfo::DFO::build(pluss::series::full({6}, 2.0, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)))
                      .with_objective([](const pluss::Series& x) { return x.square().sum(); })
-                     .with_bounds(pluss::full({6}, -2.0), pluss::full({6}, 2.0))
+                     .with_bounds(pluss::series::full({6}, -2.0), pluss::series::full({6}, 2.0))
                      .with_solver(dfo::DfoSolverKind::PatternSearch)
                      .with_max_iterations(400)
                      .with_seed(7)
@@ -718,8 +718,8 @@ dfo::PSConfig ps{};
 ps.max_iterations = 800;
 ps.max_evaluations = 6000;
 ps.constraint_policy = dfo::PSConstraintPolicy::AugmentedLagrangian;
-ps.lower_bounds = pluss::full({2}, -2.0);
-ps.upper_bounds = pluss::full({2}, 2.0);
+ps.lower_bounds = pluss::series::full({2}, -2.0);
+ps.upper_bounds = pluss::series::full({2}, 2.0);
 ps.linear_ineq_matrix = pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2});
 ps.linear_ineq_rhs = pluss::make_series(std::vector<double>{1.5}, {1});
 ps.nonlinear_constraints = [](const pluss::Series& x) {
@@ -764,10 +764,10 @@ Use for global search in rugged landscapes.
 dfo::DifferentialEvolutionConfig de{};
 de.population_size = 96;
 de.max_generations = 600;
-de.lower_bounds = pluss::full({12}, -5.0);
-de.upper_bounds = pluss::full({12}, 5.0);
+de.lower_bounds = pluss::series::full({12}, -5.0);
+de.upper_bounds = pluss::series::full({12}, 5.0);
 de.rng_seed = 20260225ULL;
-const pluss::Series x0 = pluss::full({12}, 2.5, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+const pluss::Series x0 = pluss::series::full({12}, 2.5, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
 
 const auto out = dfo::differential_evolution_minimizer(
     [](const pluss::Series& x) { return x.square().mean().add(x.cos().mean()); },
@@ -820,8 +820,8 @@ cfg.multiobjective_scalarization = dfo::MultiObjectiveScalarization::WeightedSum
 cfg.enable_cache = true;
 cfg.surrogate_mode = dfo::SurrogateMode::CandidateOrdering;
 cfg.max_total_evaluations = 8000;
-cfg.lower_bounds = pluss::full({8}, -4.0);
-cfg.upper_bounds = pluss::full({8}, 4.0);
+cfg.lower_bounds = pluss::series::full({8}, -4.0);
+cfg.upper_bounds = pluss::series::full({8}, 4.0);
 
 const auto out = dfo::mads_blackbox_minimizer(
     [](const pluss::Series& x) {
@@ -830,7 +830,7 @@ const auto out = dfo::mads_blackbox_minimizer(
       ev.constraints = (x.sum() - 2.0).reshape({1});
       return ev;
     },
-    pluss::full({8}, 1.0),
+    pluss::series::full({8}, 1.0),
     cfg);
 ```
 

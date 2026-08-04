@@ -160,7 +160,7 @@ TEST_CASE("ts arima: differencing edge path and crash checks", "[ts][arima][edge
 TEST_CASE("ts arimax: exogenous regression path", "[ts][arimax][accuracy]") {
   const auto cfg = f64_cpu();
   const std::int64_t n = 3000;
-  const Series x = pluss::randn({n, 2}, cfg, 20260443ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260443ULL);
   const ArimaFit truth{
       .mean = 0.0,
       .intercept = 0.08,
@@ -195,7 +195,7 @@ TEST_CASE("ts arimax: exogenous regression path", "[ts][arimax][accuracy]") {
   REQUIRE(fit.score(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
   REQUIRE(fit.observed_inf(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
 
-  const Series x_future = pluss::randn({16, 2}, cfg, 20260445ULL);
+  const Series x_future = pluss::series::randn({16, 2}, cfg, 20260445ULL);
   const Series f = fit.forecast(16, y, x, x_future, cfg);
   REQUIRE(f.sizes()[0] == 16);
   REQUIRE(f.isfinite().all().item<double>() == Approx(1.0));

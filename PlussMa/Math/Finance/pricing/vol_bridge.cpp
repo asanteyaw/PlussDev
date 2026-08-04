@@ -52,7 +52,7 @@ Series scalar_index_(std::int64_t index, Config cfg) {
 
 Series clamp_floor_(const Series& value, double floor, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
-  const Series floor_s = pluss::full({}, floor, out_cfg);
+  const Series floor_s = pluss::series::full({}, floor, out_cfg);
   return value.ge(floor_s).where(value, floor_s);
 }
 
@@ -107,10 +107,10 @@ NgarchCore ngarch_core_(const Series& returns, const Ngarch11Params& params, Con
   PLUSS_CHECK(n > 0, std::string("subsp::math::finance::") + op + ": expected at least one observation");
 
   const double h0 = unconditional_variance_ngarch_(params, op);
-  Series variance = pluss::full({n}, h0, out_cfg);
-  Series mean = pluss::zeros({n}, out_cfg);
-  Series z = pluss::zeros({n}, out_cfg);
-  Series ll = pluss::zeros({n}, out_cfg);
+  Series variance = pluss::series::full({n}, h0, out_cfg);
+  Series mean = pluss::series::zeros({n}, out_cfg);
+  Series z = pluss::series::zeros({n}, out_cfg);
+  Series ll = pluss::series::zeros({n}, out_cfg);
 
   for (std::int64_t t = 0; t < n; ++t) {
     const Series idx_t = scalar_index_(t, out_cfg);
@@ -159,7 +159,7 @@ Series ngarch_forecast_(std::int64_t horizon,
   const NgarchCore core = ngarch_core_(returns, params, out_cfg, op);
   const std::int64_t n = core.variance.numel();
 
-  Series out = pluss::zeros({horizon}, out_cfg);
+  Series out = pluss::series::zeros({horizon}, out_cfg);
   Series h_prev = core.variance.select(0, n - 1);
   Series z_prev = core.standardized_innovation.select(0, n - 1);
 

@@ -38,8 +38,8 @@ int main() {
   ps.al_max_outer_iterations = 5;
   ps.al_penalty_growth = 4.0;
   ps.al_violation_reduction_ratio = 0.6;
-  ps.lower_bounds = pluss::full({2}, -2.0, cfg);
-  ps.upper_bounds = pluss::full({2}, 2.0, cfg);
+  ps.lower_bounds = pluss::series::full({2}, -2.0, cfg);
+  ps.upper_bounds = pluss::series::full({2}, 2.0, cfg);
   ps.linear_ineq_matrix = pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}, cfg);
   ps.linear_ineq_rhs = pluss::make_series(std::vector<double>{1.5}, {1}, cfg);
   ps.nonlinear_constraints = [](const pluss::Series& x) {

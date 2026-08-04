@@ -6,7 +6,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("more generated methods route to real kernels", "[surface][kernels]") {
-  auto x = pluss::linspace(0.0, 1.0, 10, pluss::config({{"dtype","float32"}}));
+  auto x = pluss::series::linspace(0.0, 1.0, 10, pluss::config({{"dtype","float32"}}));
   auto y = x.asin().sin(); // asin then sin
   REQUIRE(y.numel() == 10);
 

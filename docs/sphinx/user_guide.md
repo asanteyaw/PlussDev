@@ -139,7 +139,7 @@ auto json = pluss::table::DataFrame::load_json("records.json");
 Use `pluss::save` and `pluss::load<T>` for core object serialization:
 
 ```cpp
-auto x = pluss::randn({3, 4});
+auto x = pluss::series::randn({3, 4});
 pluss::save(x, "x.plio");
 auto restored = pluss::load<pluss::Series>("x.plio");
 ```
@@ -182,7 +182,7 @@ cleaned.save_csv("outputs/sales_clean.csv");
 Use `Series` for array-style operations:
 
 ```cpp
-auto x = pluss::linspace(0.0, 1.0, 11);
+auto x = pluss::series::linspace(0.0, 1.0, 11);
 auto y = x.pow(2.0) + 1.0;
 auto z = y.mean();
 ```

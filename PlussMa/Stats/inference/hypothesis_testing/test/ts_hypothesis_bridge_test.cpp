@@ -20,7 +20,7 @@ void expect(bool condition, const std::string& message) {
 
 Series make_random_walk(std::int64_t n, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -61,7 +61,7 @@ int main() {
     expect(std::abs(ts_arch.stat - inf_arch.stat) < 1e-12, "arch_lm bridge stat mismatch");
     expect(std::abs(ts_arch.pvalue - inf_arch.pvalue) < 1e-12, "arch_lm bridge pvalue mismatch");
 
-    const Series base = pluss::randn({2048}, cfg, 20260424ULL);
+    const Series base = pluss::series::randn({2048}, cfg, 20260424ULL);
     const Series err_a = base.add(1.0);
     const Series err_b = base;
     pluss::subsp::stats::ts::DmOptions dm_opt;

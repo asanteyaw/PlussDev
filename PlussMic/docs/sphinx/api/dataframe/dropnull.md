@@ -78,8 +78,8 @@ using namespace pluss::table;
 
 auto missing = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz",    pluss::make_series({10.0, pluss::nan(), 8.0, pluss::nan()})},
-    {"final",   pluss::make_series({80.0, 75.0, pluss::nan(), 90.0})},
+    {"quiz",    pluss::make_series({10.0, pluss::series::nan(), 8.0, pluss::series::nan()})},
+    {"final",   pluss::make_series({80.0, 75.0, pluss::series::nan(), 90.0})},
 });
 
 auto out = missing.dropnull({"quiz", "final"}, false);
@@ -109,8 +109,8 @@ using namespace pluss::table;
 
 auto missing = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz",    pluss::make_series({10.0, pluss::nan(), 8.0, pluss::nan()})},
-    {"final",   pluss::make_series({80.0, 75.0, pluss::nan(), 90.0})},
+    {"quiz",    pluss::make_series({10.0, pluss::series::nan(), 8.0, pluss::series::nan()})},
+    {"final",   pluss::make_series({80.0, 75.0, pluss::series::nan(), 90.0})},
 });
 
 DataFrame::DropOptions options;
@@ -147,8 +147,8 @@ using namespace pluss::table;
 
 auto missing2 = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz",    pluss::make_series({10.0, pluss::nan(), pluss::nan(), 5.0})},
-    {"final",   pluss::make_series({80.0, 75.0, pluss::nan(), pluss::nan()})},
+    {"quiz",    pluss::make_series({10.0, pluss::series::nan(), pluss::series::nan(), 5.0})},
+    {"final",   pluss::make_series({80.0, 75.0, pluss::series::nan(), pluss::series::nan()})},
 });
 
 auto kept_any = missing2.dropnull({"quiz", "final"}, false);

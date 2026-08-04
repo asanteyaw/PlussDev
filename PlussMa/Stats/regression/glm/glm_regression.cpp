@@ -191,7 +191,7 @@ Series build_design_(const Series& x, bool add_intercept, Config cfg) {
   if (!add_intercept) {
     return x;
   }
-  const Series ones = pluss::ones({x.sizes()[0], 1}, cfg);
+  const Series ones = pluss::series::ones({x.sizes()[0], 1}, cfg);
   return ones.unite({x}, 1);
 }
 
@@ -266,12 +266,12 @@ Series inv_link_(const Series& eta, GLMLink link, Config cfg) {
   if (link == GLMLink::Log) {
     return eta.exp().maximum(kMinMu);
   }
-  const Series one = pluss::ones(eta.sizes(), cfg);
+  const Series one = pluss::series::ones(eta.sizes(), cfg);
   return one.div(one.add(eta.neg().exp())).maximum(kMinMu).minimum(kMaxMu);
 }
 
 Series link_derivative_mu_(const Series& mu_in, GLMLink link, Config cfg) {
-  const Series one = pluss::ones(mu_in.sizes(), cfg);
+  const Series one = pluss::series::ones(mu_in.sizes(), cfg);
   if (link == GLMLink::Identity) {
     return one;
   }
@@ -283,7 +283,7 @@ Series link_derivative_mu_(const Series& mu_in, GLMLink link, Config cfg) {
 }
 
 Series variance_mu_(const Series& mu_in, GLMFamily family, Config cfg) {
-  const Series one = pluss::ones(mu_in.sizes(), cfg);
+  const Series one = pluss::series::ones(mu_in.sizes(), cfg);
   if (family == GLMFamily::Normal) {
     return one;
   }
@@ -308,7 +308,7 @@ double deviance_value_(GLMFamily family, const Series& y, const Series& mu) {
   }
   const Series yi = y.clamp(kMinMu, kMaxMu);
   const Series mui = mu.clamp(kMinMu, kMaxMu);
-  const Series one = pluss::ones(yi.sizes(), f64_cfg_like_(yi, {}));
+  const Series one = pluss::series::ones(yi.sizes(), f64_cfg_like_(yi, {}));
   const Series term = yi.mul(yi.div(mui).log())
                           .add(one.sub(yi).mul(one.sub(yi).div(one.sub(mui)).log()));
   return 2.0 * scalar_(term.sum());
@@ -332,7 +332,7 @@ double loglik_value_(GLMFamily family, const Series& y, const Series& mu) {
   }
   const Series yi = y.clamp(kMinMu, kMaxMu);
   const Series mui = mu.clamp(kMinMu, kMaxMu);
-  const Series one = pluss::ones(yi.sizes(), f64_cfg_like_(yi, {}));
+  const Series one = pluss::series::ones(yi.sizes(), f64_cfg_like_(yi, {}));
   return scalar_(yi.mul(mui.log()).add(one.sub(yi).mul(one.sub(mui).log())).sum());
 }
 
@@ -364,7 +364,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   const std::int64_t k = X.sizes()[1];
   PLUSS_CHECK(n >= k, std::string(op) + ": requires n >= number of parameters");
 
-  Series beta = pluss::zeros({k, 1}, out_cfg);
+  Series beta = pluss::series::zeros({k, 1}, out_cfg);
   if (options.family == GLMFamily::Normal) {
     beta = pluss::subsp::math::linalg::pinverse(X, options.rcond).matmul(ycol);
   } else if (options.add_intercept && k > 0) {
@@ -378,9 +378,9 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
     } else {
       b0 = ymean;
     }
-    const Series head = pluss::full({1, 1}, b0, out_cfg);
+    const Series head = pluss::series::full({1, 1}, b0, out_cfg);
     if (k > 1) {
-      beta = head.unite({pluss::zeros({k - 1, 1}, out_cfg)}, 0);
+      beta = head.unite({pluss::series::zeros({k - 1, 1}, out_cfg)}, 0);
     } else {
       beta = head;
     }
@@ -390,7 +390,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   bool converged = false;
   Series eta = X.matmul(beta);
   Series mu = inv_link_(eta, resolved_link, out_cfg);
-  Series weights = pluss::ones({n, 1}, out_cfg);
+  Series weights = pluss::series::ones({n, 1}, out_cfg);
   std::vector<std::string> warnings;
 
   for (std::int64_t it = 0; it < options.max_iter; ++it) {
@@ -400,7 +400,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
     const Series var = variance_mu_(mu, options.family, out_cfg);
     const Series gprime = link_derivative_mu_(mu, resolved_link, out_cfg);
     const Series denom = var.mul(gprime).mul(gprime).maximum(kMinMu);
-    const Series ones = pluss::ones(denom.sizes(), out_cfg);
+    const Series ones = pluss::series::ones(denom.sizes(), out_cfg);
     weights = ones.div(denom);
 
     const Series z = eta.add(ycol.sub(mu).mul(gprime));
@@ -430,7 +430,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   const double llf = loglik_value_(options.family, ycol.reshape({n}), mu.reshape({n}));
 
   const double mean_y = scalar_(ycol.mean());
-  Series mu_null = pluss::full({n, 1}, mean_y, out_cfg);
+  Series mu_null = pluss::series::full({n, 1}, mean_y, out_cfg);
   if (options.family == GLMFamily::Binomial) {
     mu_null = mu_null.maximum(kMinMu).minimum(kMaxMu);
   } else if (options.family == GLMFamily::Poisson) {
@@ -452,7 +452,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   const Series var = variance_mu_(mu, options.family, out_cfg);
   const Series gprime = link_derivative_mu_(mu, resolved_link, out_cfg);
   const Series denom = var.mul(gprime).mul(gprime).maximum(kMinMu);
-  const Series ones = pluss::ones(denom.sizes(), out_cfg);
+  const Series ones = pluss::series::ones(denom.sizes(), out_cfg);
   weights = ones.div(denom);
 
   const Series sw = weights.sqrt();
@@ -469,7 +469,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
 
   const Series coef = beta.reshape({k});
   const Series z_v = coef.div(std_err.maximum(std::sqrt(kEps)));
-  const Series p_v = pluss::ones({k}, out_cfg)
+  const Series p_v = pluss::series::ones({k}, out_cfg)
                          .sub(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(z_v.abs()))
                          .mul(2.0)
                          .clamp(0.0, 1.0);
@@ -539,7 +539,7 @@ Series glm_predict(const GLMFitResult& fit, const Series& x, GLMPredictionType t
 
   if (fit.has_intercept) {
     if (cols == fit.num_predictors) {
-      const Series ones = pluss::ones({n, 1}, out_cfg);
+      const Series ones = pluss::series::ones({n, 1}, out_cfg);
       design = ones.unite({xm}, 1);
     } else {
       PLUSS_CHECK(cols == fit.k_params,

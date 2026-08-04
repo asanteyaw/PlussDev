@@ -491,7 +491,7 @@ Thread DataFrame::transform(
     for (const auto& value : mapped) {
       values.push_back(value.as_series());
     }
-    auto output = pluss::unite(values, 0, true);
+    auto output = pluss::series::unite(values, 0, true);
     if (output.platform() != pluss::codem::Platform::CPU) {
       mask = mask.to(output.platform());
     }

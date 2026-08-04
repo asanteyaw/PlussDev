@@ -52,7 +52,7 @@ Controls which side of equal timestamps is chosen.
 Example 1. Find the insertion position for an in-between timestamp.
 
 ```cpp
-auto idx = pluss::make_timeindex({
+auto idx = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
@@ -60,7 +60,7 @@ auto idx = pluss::make_timeindex({
     "2024-11-01T01:20:00Z",
 });
 
-auto key = pluss::make_timeline("2024-11-01T00:55:00Z");
+auto key = pluss::timeline::make("2024-11-01T00:55:00Z");
 
 auto left_pos = idx.searchsorted(key, false);
 auto right_pos = idx.searchsorted(key, true);

@@ -87,7 +87,7 @@ void test_methods_finite_and_shapes() {
 
 void test_error_paths() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({400}, cfg, 20260322ULL);
+  const Series y = pluss::series::randn({400}, cfg, 20260322ULL);
   const auto fit = Garch11::fit_mle(y, {}, cfg);
 
   bool threw = false;

@@ -23,28 +23,28 @@ int main() {
   const double drift = (annual_mu - 0.5 * annual_sigma * annual_sigma) * dt;
   const double shock_scale = annual_sigma * std::sqrt(dt);
 
-  const auto shocks = pluss::randn({samples}, pluss::ScalarType::Float64, 20260305ULL);
+  const auto shocks = pluss::series::randn({samples}, pluss::ScalarType::Float64, 20260305ULL);
   const auto log_returns = shocks.mul(shock_scale).add(drift);
   const auto prices = log_returns.exp().cumprod(0).mul(100.0);
   const auto log_prices = prices.log();
-  const auto prev_idx = pluss::arange(0, log_prices.numel() - 1, 1, pluss::ScalarType::Int64);
-  const auto next_idx = pluss::arange(1, log_prices.numel(), 1, pluss::ScalarType::Int64);
+  const auto prev_idx = pluss::series::arange(0, log_prices.numel() - 1, 1, pluss::ScalarType::Int64);
+  const auto next_idx = pluss::series::arange(1, log_prices.numel(), 1, pluss::ScalarType::Int64);
   const auto returns = log_prices.index_select(0, next_idx).sub(log_prices.index_select(0, prev_idx));
   constexpr std::int64_t vol_window = 21;
   const auto rolling_vol = returns.unfold(0, vol_window, 1).std(1, false, false).mul(std::sqrt(trading_days));
   const auto rolling_mean = returns.unfold(0, vol_window, 1).mean(1, false);
-  const auto t = pluss::linspace(1.0, static_cast<double>(returns.numel()), returns.numel(), pluss::ScalarType::Float64);
-  const auto t_vol = pluss::linspace(
+  const auto t = pluss::series::linspace(1.0, static_cast<double>(returns.numel()), returns.numel(), pluss::ScalarType::Float64);
+  const auto t_vol = pluss::series::linspace(
       static_cast<double>(vol_window),
       static_cast<double>(returns.numel()),
       rolling_vol.numel(),
       pluss::ScalarType::Float64);
-  const auto t_roll = pluss::linspace(
+  const auto t_roll = pluss::series::linspace(
       static_cast<double>(vol_window),
       static_cast<double>(returns.numel()),
       rolling_mean.numel(),
       pluss::ScalarType::Float64);
-  const auto baseline_vol = pluss::full({rolling_vol.numel()}, annual_sigma, pluss::ScalarType::Float64);
+  const auto baseline_vol = pluss::series::full({rolling_vol.numel()}, annual_sigma, pluss::ScalarType::Float64);
 
   pl::Studio studio("returns-volatility-demo", pl::Theme::paper());
   studio.size(1420.0, 920.0);

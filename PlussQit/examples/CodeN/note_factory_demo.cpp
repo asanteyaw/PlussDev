@@ -16,14 +16,14 @@ int main() {
   const std::array<std::int64_t, 2> sizes{2, 2};
   pluss::Note from_flat = pluss::make_note(flat, std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
-  pluss::Note from_lines = pluss::note_from_lines("line1\nline2\nline3");
-  pluss::Note from_words = pluss::note_from_words("alpha beta gamma");
+  pluss::Note from_lines = pluss::note::from_lines("line1\nline2\nline3");
+  pluss::Note from_words = pluss::note::from_words("alpha beta gamma");
 
-  pluss::Note filled = pluss::full_note({2, 1, 2}, "z");
-  pluss::Note empty = pluss::empty_note({2, 2});
-  pluss::Note like = pluss::full_note_like(two_d, "x");
+  pluss::Note filled = pluss::note::full({2, 1, 2}, "z");
+  pluss::Note empty = pluss::note::empty({2, 2});
+  pluss::Note like = pluss::note::full_like(two_d, "x");
 
-  pluss::Note bytes = pluss::bytes_content({{"\x01", "\x02"}, {"\x03", "\x04"}});
+  pluss::Note bytes = pluss::note::bytes({{"\x01", "\x02"}, {"\x03", "\x04"}});
 
   std::cout << "scalar:\n" << pluss::print_note(scalar) << "\n\n";
   std::cout << "one_d:\n" << pluss::print_note(one_d) << "\n\n";

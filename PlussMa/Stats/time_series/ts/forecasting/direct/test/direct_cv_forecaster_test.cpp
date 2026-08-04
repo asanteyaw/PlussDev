@@ -29,7 +29,7 @@ void expect(bool condition, const std::string& message) {
 Series make_arx_response(const Series& x, std::uint64_t seed, double noise_scale) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const auto xv = x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto eps = pluss::randn({x.sizes()[0]}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({x.sizes()[0]}, cfg, seed).to_vec<double>();
   const std::int64_t n = x.sizes()[0];
   const std::int64_t p = x.sizes()[1];
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
@@ -45,7 +45,7 @@ Series make_arx_response(const Series& x, std::uint64_t seed, double noise_scale
 void test_cvpredict_and_losses() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 1500;
-  const Series x = pluss::randn({n, 2}, cfg, 20260326ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260326ULL);
   const Series y = make_arx_response(x, 20260327ULL, 0.03);
 
   PartitionOptions popts;
@@ -83,7 +83,7 @@ void test_cvpredict_and_losses() {
 void test_overlap_and_missing_rows_behavior() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 1200;
-  const Series x = pluss::rand({n, 2}, cfg, 20260328ULL);
+  const Series x = pluss::series::rand({n, 2}, cfg, 20260328ULL);
   const Series y = make_arx_response(x, 20260329ULL, 0.02);
 
   PartitionOptions popts;
@@ -115,7 +115,7 @@ void test_overlap_and_missing_rows_behavior() {
 void test_error_paths() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 500;
-  const Series x = pluss::randn({n, 2}, cfg, 20260330ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260330ULL);
   const Series y = make_arx_response(x, 20260331ULL, 0.05);
 
   PartitionOptions popts;
@@ -134,7 +134,7 @@ void test_error_paths() {
 
   bool threw = false;
   try {
-    (void)cv.cvpredict(x, pluss::randn({n + 1}, cfg, 77ULL), cfg);
+    (void)cv.cvpredict(x, pluss::series::randn({n + 1}, cfg, 77ULL), cfg);
   } catch (...) {
     threw = true;
   }

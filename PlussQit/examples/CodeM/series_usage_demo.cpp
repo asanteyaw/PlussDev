@@ -24,7 +24,7 @@ int main() {
         {1.0, 2.0, 3.0},
         {4.0, 5.0, 6.0}
     });
-  let a2 = pluss::from_torch(A);
+  let a2 = pluss::series::from_torch(A);
   torch::Tensor B = torch::tensor({
         {
             {1.0, 2.0},
@@ -35,7 +35,7 @@ int main() {
             {7.0, 8.0}
         }
     });
-  let b2 = pluss::from_torch(B);
+  let b2 = pluss::series::from_torch(B);
 #endif
   std::vector<std::int64_t> raw{10, 20, 30, 40};
   pluss::Series b = pluss::make_series(raw, {2, 2}).to(platform);
@@ -44,10 +44,10 @@ int main() {
   std::cout << "a platform enum=" << static_cast<int>(p) << "\n";
   auto a_cpu_f32 = a.to(pluss::Platform::CPU, pluss::ScalarType::Float32);
   std::cout << "a.to(CPU, Float32) numel=" << a_cpu_f32.numel() << "\n";
-  auto default_cpu = pluss::zeros({2, 2});
+  auto default_cpu = pluss::series::zeros({2, 2});
   std::cout << "zeros default platform enum=" << static_cast<int>(default_cpu.platform()) << "\n";
   if (pluss::mps::is_ready()) {
-    auto created_mps = pluss::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
+    auto created_mps = pluss::series::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
     std::cout << "zeros(..., cfg::platform(MPS)) platform enum="
               << static_cast<int>(created_mps.platform()) << "\n";
   }
@@ -69,7 +69,7 @@ int main() {
   std::cout << "looking at 1D rendering\n" << pluss::print_series(a) << "\n";
   std::cout << "looking at 0D rendering\n" << pluss::print_series(d) << "\n";
 
-  let rv = pluss::normal(0.0, 1.0, {5});
+  let rv = pluss::series::normal(0.0, 1.0, {5});
   std::cout << "random values: " << rv << "\n";
   std::cout << "sum: " << rv.sum() << "\n";
   std::cout << "mean: " << rv.mean() << "\n";
@@ -78,7 +78,7 @@ int main() {
   let e = c + d;
   std::cout << "e: " << e-a << "\n";
 
-  let rand_vals = pluss::randn({3, 4});
+  let rand_vals = pluss::series::randn({3, 4});
   std::cout << "randn(3,4) default:\n" << rand_vals << "\n";
   std::cout << "to vec:\n";
   const auto all_vals = rand_vals.to_vec<double>();
@@ -108,15 +108,15 @@ int main() {
 
   std::cout << "randn(3,4) pretty default:\n" << pluss::print_series(rand_vals) << "\n";
 
-  let rand_3d = pluss::randn({3, 4, 5});
+  let rand_3d = pluss::series::randn({3, 4, 5});
   std::cout << "randn(3,4,5) pretty:\n" << pluss::print_series(rand_3d) << "\n";
 
-  let big_mat = pluss::randn({8, 6});
+  let big_mat = pluss::series::randn({8, 6});
   std::cout << "randn(8,6) default with row/col summary:\n" << big_mat << "\n";
   std::cout << "randn(8,6) pretty summarized:\n" << pluss::print_series(big_mat) << "\n";
 
 #ifdef PLUSS_ENABLE_TORCH
-  let torch_b = pluss::to_torch(rand_3d);
+  let torch_b = pluss::series::to_torch(rand_3d);
   std::cout << "looking at the to_torch conversion\n" << torch_b << "\n";
 #endif
 
@@ -159,7 +159,7 @@ int main() {
   let seven_d_lvalue = pluss::make_series(seven_d_host, {1, 1, 1, 1, 1, 2, 3});
   std::cout << "7D lvalue via make_series(host, sizes):\n" << pluss::print_series(seven_d_lvalue) << "\n";
 
-  let large_2d = pluss::randn({11, 7});
+  let large_2d = pluss::series::randn({11, 7});
   std::cout << "large 2D with default summarization:\n" << pluss::print_series(large_2d) << "\n";
 
   // 1) Precision / notation / trailing-zero trim
@@ -224,7 +224,7 @@ int main() {
   std::cout << "header only:\n" << pluss::print_series(rand_vals, header_only) << "\n";
 
   // 6) Width controls: clip cell width + auto-wrap
-  let wide_mat = pluss::randn({4, 12});
+  let wide_mat = pluss::series::randn({4, 12});
   pluss::PrintOptions wrapped;
   wrapped.pretty_matrix_max_cols = 0;
   wrapped.pretty_max_line_width = 44;

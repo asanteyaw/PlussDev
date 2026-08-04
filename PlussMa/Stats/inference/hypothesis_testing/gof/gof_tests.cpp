@@ -296,7 +296,7 @@ ChiGofResult chisq_gof(const Series& observed,
     PLUSS_CHECK(scalar_(expv.gt(0.0).all()) > 0.5, std::string(op) + ": expected bins must be > 0");
   } else {
     const double total = scalar_(obs.sum());
-    expv = pluss::full({k}, total / static_cast<double>(k), out_cfg);
+    expv = pluss::series::full({k}, total / static_cast<double>(k), out_cfg);
   }
 
   if (options.normalize_expected) {

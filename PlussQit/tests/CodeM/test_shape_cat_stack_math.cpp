@@ -26,7 +26,7 @@ TEST_CASE("reshape and expand", "[shape]") {
 }
 
 TEST_CASE("expand_like and repeat_like", "[shape]") {
-  const auto like = pluss::rand({2, 6}, ScalarType::Float32, 123);
+  const auto like = pluss::series::rand({2, 6}, ScalarType::Float32, 123);
 
   const auto scalar = pluss::make_series(std::vector<int>{7}, {1, 1});
   const auto expanded = scalar.expand_like(like);
@@ -43,7 +43,7 @@ TEST_CASE("expand_like and repeat_like", "[shape]") {
   REQUIRE(repeated.to_vec<std::int64_t>() ==
           std::vector<std::int64_t>{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3});
 
-  const auto bad_like = pluss::rand({2, 5}, ScalarType::Float32, 11);
+  const auto bad_like = pluss::series::rand({2, 5}, ScalarType::Float32, 11);
   REQUIRE_THROWS(base.repeat_like(bad_like));
 }
 

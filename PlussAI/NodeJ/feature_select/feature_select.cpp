@@ -366,7 +366,7 @@ StatusOr<Series> f_score_rank(const LabeledBatch& batch, const ScoreRankOptions&
   if (!rank_or.ok()) return StatusOr<Series>(rank_or.status());
   const std::int64_t out_k = std::min<std::int64_t>(options.top_k, rank_or.value().ranked_feature_indices.numel());
   const Series ids = rank_or.value().ranked_feature_indices.reshape({rank_or.value().ranked_feature_indices.numel()})
-                         .index_select(0, pluss::arange(0, out_k, i64_cpu()));
+                         .index_select(0, pluss::series::arange(0, out_k, i64_cpu()));
   return StatusOr<Series>(ids);
 }
 
@@ -379,7 +379,7 @@ StatusOr<Series> f_regression_rank(const LabeledBatch& batch, const ScoreRankOpt
   if (!rank_or.ok()) return StatusOr<Series>(rank_or.status());
   const std::int64_t out_k = std::min<std::int64_t>(options.top_k, rank_or.value().ranked_feature_indices.numel());
   const Series ids = rank_or.value().ranked_feature_indices.reshape({rank_or.value().ranked_feature_indices.numel()})
-                         .index_select(0, pluss::arange(0, out_k, i64_cpu()));
+                         .index_select(0, pluss::series::arange(0, out_k, i64_cpu()));
   return StatusOr<Series>(ids);
 }
 

@@ -98,7 +98,7 @@ Example 3. See the equal-key difference directly on timestamps that already
 exist in the sorted timeline.
 
 ```cpp
-auto left = sorted.searchsorted_left(pluss::make_timeline({
+auto left = sorted.searchsorted_left(pluss::timeline::make({
     "2024-11-01T09:00:00Z",
     "2024-11-01T11:00:00Z",
 }));
@@ -115,7 +115,7 @@ data=[0, 2]
 Example 4. Use the right-side rule on the same exact matches.
 
 ```cpp
-auto right = sorted.searchsorted_right(pluss::make_timeline({
+auto right = sorted.searchsorted_right(pluss::timeline::make({
     "2024-11-01T09:00:00Z",
     "2024-11-01T11:00:00Z",
 }));

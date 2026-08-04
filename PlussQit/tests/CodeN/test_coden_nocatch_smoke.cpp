@@ -603,7 +603,7 @@ void test_high_yield_nlp_and_printing() {
   expect_true(!std::string(pluss::make_note("Robert").phonetic_soundex().at(0)).empty(), "phonetic_soundex emits code");
 
   std::string latin1 = "caf\xE9";
-  auto decoded = pluss::bytes_content(latin1).from_latin1();
+  auto decoded = pluss::note::bytes(latin1).from_latin1();
   expect_true(decoded.at(0) == "café", "from_latin1 decodes bytes to UTF-8");
   auto reenc = decoded.to_latin1_lossy();
   expect_true(static_cast<const pluss::coden::NoteBase&>(reenc).is_bytes(),
@@ -626,7 +626,7 @@ void test_high_yield_nlp_and_printing() {
 
   pluss::NotePrintOptions hex_opt;
   hex_opt.bytes_mode = pluss::coden::NotePrintBytesMode::Hex;
-  const std::string bytes_print = pluss::print_note(pluss::bytes_content("Hi"), hex_opt);
+  const std::string bytes_print = pluss::print_note(pluss::note::bytes("Hi"), hex_opt);
   expect_true(bytes_print.find("hex[48 69]") != std::string::npos, "print_note hex mode prints byte hex");
 
   pluss::Note tex = pluss::make_note(
@@ -768,28 +768,28 @@ void test_note_factory_paths() {
   pluss::Note mf = pluss::make_note(flat, std::span<const std::int64_t>(sz.data(), sz.size()));
   expect_true(mf.dim() == 2 && mf.at(2) == "r", "make_note(flat, sizes) constructs 2D");
 
-  pluss::Note lines = pluss::note_from_lines("a\nb\nc");
+  pluss::Note lines = pluss::note::from_lines("a\nb\nc");
   expect_true(lines.dim() == 1 && lines.size(0) == 3, "note_from_lines splits into 1D note");
 
-  pluss::Note words = pluss::note_from_words("alpha beta");
+  pluss::Note words = pluss::note::from_words("alpha beta");
   expect_true(words.dim() == 1 && words.size(0) == 2, "note_from_words splits words");
 
-  pluss::Note full = pluss::full_note({2, 2, 1}, "x");
+  pluss::Note full = pluss::note::full({2, 2, 1}, "x");
   expect_true(full.dim() == 3 && full.numel() == 4 && full.at(0) == "x", "full_note fills shape");
 
-  pluss::Note empty = pluss::empty_note({2, 1, 2});
+  pluss::Note empty = pluss::note::empty({2, 1, 2});
   expect_true(empty.dim() == 3 && empty.numel() == 4, "empty_note creates shape");
 
-  pluss::Note like = pluss::full_note_like(s2, "y");
+  pluss::Note like = pluss::note::full_like(s2, "y");
   expect_true(like.sizes() == s2.sizes(), "full_note_like copies shape");
 
-  pluss::Note b0 = pluss::bytes_content("hi");
+  pluss::Note b0 = pluss::note::bytes("hi");
   expect_true(static_cast<const pluss::coden::NoteBase&>(b0).is_bytes(), "bytes_content uses bytes mode");
 
-  pluss::Note b2 = pluss::bytes_content({{"\x01", "\x02"}, {"\x03", "\x04"}});
+  pluss::Note b2 = pluss::note::bytes({{"\x01", "\x02"}, {"\x03", "\x04"}});
   expect_true(b2.dim() == 2 && b2.at(3).size() == 1, "bytes_content supports nested list");
 
-  pluss::Note bfull = pluss::full_bytes_note_like(b2, "\xFF");
+  pluss::Note bfull = pluss::note::full_bytes_like(b2, "\xFF");
   expect_true(static_cast<const pluss::coden::NoteBase&>(bfull).is_bytes(), "full_bytes_note_like preserves bytes");
 
   pluss::Note lower = s3.lower();

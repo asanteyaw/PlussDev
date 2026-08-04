@@ -192,10 +192,10 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
   const auto cfg = embedding_config();
   const auto idx_cfg = index_config();
   const double scale = 0.5 / static_cast<double>(options_.width);
-  Series input_weights = pluss::rand({vocab_size, options_.width}, cfg, options_.seed)
+  Series input_weights = pluss::series::rand({vocab_size, options_.width}, cfg, options_.seed)
                              .sub(0.5)
                              .mul(2.0 * scale);
-  Series output_weights = pluss::rand({vocab_size, options_.width}, cfg, options_.seed + 1)
+  Series output_weights = pluss::series::rand({vocab_size, options_.width}, cfg, options_.seed + 1)
                               .sub(0.5)
                               .mul(2.0 * scale);
   input_weights.tracks_slope_(true);
@@ -234,7 +234,7 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
           context_batch[static_cast<std::size_t>(k)] = pairs.contexts[idx];
         }
 
-        const Series neg_ids = pluss::multinomial(std::span<const double>(negative_probs),
+        const Series neg_ids = pluss::series::multinomial(std::span<const double>(negative_probs),
                                                    batch_n * options_.negative_samples,
                                                    /*replacement=*/true, idx_cfg,
                                                    options_.seed + 1000 + step);
@@ -253,8 +253,8 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
         const Series pos_logits = center_emb.mul(pos_emb).sum(1);                        // [B]
         const Series neg_logits = center_emb.unsqueeze(1).mul(neg_emb).sum(2);           // [B, K]
 
-        const Series pos_target = pluss::ones({batch_n}, cfg);
-        const Series neg_target = pluss::zeros({batch_n, options_.negative_samples}, cfg);
+        const Series pos_target = pluss::series::ones({batch_n}, cfg);
+        const Series neg_target = pluss::series::zeros({batch_n, options_.negative_samples}, cfg);
 
         const Series loss = pluss::nn::losses::BCEWithLogits(pos_logits, pos_target)
                                 .add(pluss::nn::losses::BCEWithLogits(neg_logits, neg_target));

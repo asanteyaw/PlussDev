@@ -317,7 +317,7 @@ bool cudnn_softmax_forward_(
   if (!check_status_(ctx.api, ctx.api.create_tensor_desc(&desc.value), "cudnnCreateTensorDescriptor", reason)) return false;
   if (!set_softmax_desc_(ctx.api, desc.value, rows, cols, CUDNN_DATA_FLOAT, reason)) return false;
 
-  Series out_series = pluss::empty(
+  Series out_series = pluss::series::empty(
       in.sizes(),
       Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCUDA));
   DeviceBuffer d_in{};

@@ -679,7 +679,7 @@ const pluss::TimeIndex& Thread::as_timeindex() const {
 namespace {
 
 std::string scalar_time_iso(std::int64_t epoch_nanos) {
-  return pluss::from_epoch_nanos(epoch_nanos).toISOString();
+  return pluss::timeline::from_epoch(epoch_nanos).toISOString();
 }
 
 ThreadValue::HostAny scalar_series_host(const pluss::Series& series) {

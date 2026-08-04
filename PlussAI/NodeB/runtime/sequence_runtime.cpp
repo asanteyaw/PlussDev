@@ -140,7 +140,7 @@ template <class T>
 [[nodiscard]] Series last_step_index(const SequenceBatch& batch) {
   const Config cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
   const Series offsets =
-      pluss::arange(0, batch.batch_size, cfg).mul(static_cast<double>(batch.max_length));
+      pluss::series::arange(0, batch.batch_size, cfg).mul(static_cast<double>(batch.max_length));
   const Series last =
       batch.lengths.to(pluss::pCPU, ScalarType::Int64).clamp_min(1).sub(1);
   return offsets.add(last).to(ScalarType::Int64);
@@ -455,7 +455,7 @@ void EmbeddingTable::reset(std::int64_t vocab_size,
   }
 
   const double scale = 1.0 / std::sqrt(static_cast<double>(options_.width));
-  weights_ = pluss::rand(
+  weights_ = pluss::series::rand(
       {vocab_size, options_.width},
       options_.cfg,
       options_.seed).sub(0.5).mul(2.0 * scale);
@@ -473,7 +473,7 @@ void EmbeddingTable::reset(std::int64_t vocab_size,
   if (!options_.use_positions) {
     position_weights_ = Series();
   } else if (options_.learned_positions) {
-    position_weights_ = pluss::rand(
+    position_weights_ = pluss::series::rand(
         {options_.max_positions, options_.width},
         options_.cfg,
         options_.seed + 97ULL).sub(0.5).mul(2.0 * scale);

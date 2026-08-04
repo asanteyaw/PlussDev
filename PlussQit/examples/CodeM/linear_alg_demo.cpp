@@ -9,7 +9,7 @@ int main() {
 
   let a = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
   let b = pluss::make_series(std::vector<double>{7, 8, 9, 10, 11, 12}, {3, 2});
-  let i3 = pluss::eye(3, 3, ScalarType::Float64);
+  let i3 = pluss::series::eye(3, 3, ScalarType::Float64);
 
   std::cout << "A:\n" << a << "\n\n";
   std::cout << "B:\n" << b << "\n\n";

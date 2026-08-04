@@ -512,7 +512,7 @@ inline Series index_series(std::int64_t count, double first = 1.0) {
   if (count == 1) {
     return pluss::make_series(std::vector<double>{first}, {1});
   }
-  return pluss::linspace(first, first + static_cast<double>(count - 1), count, ScalarType::Float64);
+  return pluss::series::linspace(first, first + static_cast<double>(count - 1), count, ScalarType::Float64);
 }
 
 template <ArithmeticRange Range>

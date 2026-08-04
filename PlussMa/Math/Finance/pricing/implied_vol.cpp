@@ -388,13 +388,13 @@ Series implied_vol_series_(OptionType type,
   PLUSS_CHECK(p.numel() == s.numel() && s.numel() == tau.numel(),
               "subsp::math::finance::pricing::implied_vol: option_price/spot/time_to_maturity size mismatch");
 
-  Series out = pluss::full({p.numel()}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  Series out = pluss::series::full({p.numel()}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   for (std::int64_t i = 0; i < p.numel(); ++i) {
     const double pi = p.select(0, i).item<double>();
     const double si = s.select(0, i).item<double>();
     const double ti = tau.select(0, i).item<double>();
     const double vi = implied_vol_scalar_(type, pi, si, strike, rate, dividend_yield, ti, options);
-    out = pluss::index_put(out, std::vector<Series>{scalar_index_(i, out_cfg)}, pluss::full({1}, vi, out_cfg), false);
+    out = pluss::index_put(out, std::vector<Series>{scalar_index_(i, out_cfg)}, pluss::series::full({1}, vi, out_cfg), false);
   }
   return out;
 }
@@ -423,7 +423,7 @@ Series implied_vol(OptionType type,
                    Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const Series s = as_vector_(spot, "implied_vol").to(out_cfg.platform, out_cfg.dtype);
-  const Series tau = pluss::full({s.numel()}, maturity, out_cfg);
+  const Series tau = pluss::series::full({s.numel()}, maturity, out_cfg);
   return implied_vol_series_(type, option_price, s, tau, strike, rate, dividend_yield, options, out_cfg);
 }
 

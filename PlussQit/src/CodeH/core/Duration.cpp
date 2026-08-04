@@ -125,6 +125,12 @@ Duration duration_from_nanos(std::span<const std::int64_t> nanos_flat,
   return Duration(std::move(out));
 }
 
+Duration duration_from_series(pluss::codem::Series nanos) {
+  CODEM_CHECK(nanos.scalar_type() == pluss::codem::ScalarType::Int64,
+              "duration_from_series: expected an Int64 nanoseconds Series");
+  return Duration(std::move(nanos));
+}
+
 } // namespace ops_internal
 
 namespace detail {

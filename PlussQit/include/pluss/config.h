@@ -12,7 +12,7 @@
 namespace pluss {
 
 // Typed option tags to avoid boilerplate chains.
-// Usage: pluss::zeros({128,64}, pluss::cfg::dtype(pluss::ScalarType::Float16), pluss::cfg::pinned(true));
+// Usage: pluss::series::zeros({128,64}, pluss::cfg::dtype(pluss::ScalarType::Float16), pluss::cfg::pinned(true));
 namespace cfg {
   struct DType { pluss::codem::ScalarType v; };
   struct Pinned { bool v; };

@@ -41,12 +41,12 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
     for (std::int64_t dir = 0; dir < dirs; ++dir) {
       const std::uint64_t seed = seed_base + static_cast<std::uint64_t>(19 * (layer * dirs + dir));
       out.push_back(pluss::ai::rnn::NetWeight{
-          .weight_ih = pluss::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
-          .weight_hh = pluss::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
-          .bias = (use_bias && !split_bias) ? pluss::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_ih = (use_bias && split_bias) ? pluss::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_hh = (use_bias && split_bias) ? pluss::rand({gates * hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
-          .weight_hr = projected_lstm ? pluss::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
+          .weight_ih = pluss::series::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
+          .weight_hh = pluss::series::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
+          .bias = (use_bias && !split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
+          .bias_ih = (use_bias && split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
+          .bias_hh = (use_bias && split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
+          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
       });
     }
   }
@@ -55,7 +55,7 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
 
 bool run_cudnn_rnn_route_checks(std::ostream* err = nullptr) {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const pluss::Series x = pluss::rand({5, 3, 4}, cfg, 1001ULL);
+  const pluss::Series x = pluss::series::rand({5, 3, 4}, cfg, 1001ULL);
 
   pluss::ai::rnn::NetConfig run_cfg{};
   run_cfg.batch_first = false;
@@ -66,8 +66,8 @@ bool run_cudnn_rnn_route_checks(std::ostream* err = nullptr) {
   run_cfg.training = false;
   run_cfg.cfg = cfg;
 
-  const pluss::Series h0 = pluss::zeros({4, 3, 2}, cfg);
-  const pluss::Series c0 = pluss::zeros({4, 3, 2}, cfg);
+  const pluss::Series h0 = pluss::series::zeros({4, 3, 2}, cfg);
+  const pluss::Series c0 = pluss::series::zeros({4, 3, 2}, cfg);
 
   const auto rnn_w = make_weights(1, 4, 2, 2, true, cfg, 11ULL);
   const auto gru_w = make_weights(3, 4, 2, 2, true, cfg, 21ULL);
@@ -75,8 +75,8 @@ bool run_cudnn_rnn_route_checks(std::ostream* err = nullptr) {
   const auto lstm_proj_w = make_weights(4, 4, 2, 2, true, cfg, 41ULL, 1);
   pluss::ai::rnn::NetConfig proj_cfg = run_cfg;
   proj_cfg.proj_size = 1;
-  const pluss::Series h0_proj = pluss::zeros({4, 3, 1}, cfg);
-  const pluss::Series c0_proj = pluss::zeros({4, 3, 2}, cfg);
+  const pluss::Series h0_proj = pluss::series::zeros({4, 3, 1}, cfg);
+  const pluss::Series c0_proj = pluss::series::zeros({4, 3, 2}, cfg);
 
   std::string why{};
   if (pluss::ai::kernels::cudnn::supports_rnn(x, h0, rnn_w, run_cfg, false, &why)) {
@@ -129,7 +129,7 @@ bool run_cudnn_rnn_route_checks(std::ostream* err = nullptr) {
   gru_bf_cfg.batch_first = true;
   gru_bf_cfg.bidirectional = false;
   const auto gru_bf_w = make_weights(3, 4, 2, 2, false, cfg, 51ULL);
-  const auto [gru_bf_out, gru_bf_hn] = pluss::gru(x.transpose(0, 1), pluss::zeros({2, 3, 2}, cfg), gru_bf_w, gru_bf_cfg);
+  const auto [gru_bf_out, gru_bf_hn] = pluss::gru(x.transpose(0, 1), pluss::series::zeros({2, 3, 2}, cfg), gru_bf_w, gru_bf_cfg);
   auto gru_no_bias_cfg = run_cfg;
   gru_no_bias_cfg.batch_first = false;
   gru_no_bias_cfg.use_bias = false;

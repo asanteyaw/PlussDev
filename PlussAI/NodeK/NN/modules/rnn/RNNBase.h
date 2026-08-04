@@ -44,7 +44,7 @@ inline PackedSequence pack_padded_sequence(const Series& input, const Series& le
   const Series batch_sizes =
       pluss::make_series(batch_sizes_vec, {static_cast<std::int64_t>(batch_sizes_vec.size())}, icfg);
   return PackedSequence{
-      chunks.empty() ? Series() : pluss::unite(chunks, 0),
+      chunks.empty() ? Series() : pluss::series::unite(chunks, 0),
       batch_sizes,
       sorted_idx,
       unsorted_idx};
@@ -67,7 +67,7 @@ inline std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& pack
     if (current_batch < batch) {
       std::vector<std::int64_t> pad_sizes{batch - current_batch};
       pad_sizes.insert(pad_sizes.end(), tail_sizes.begin(), tail_sizes.end());
-      step = pluss::unite(pluss::StackArray<Series>{step, pluss::zeros(pad_sizes, cfg)}, 0);
+      step = pluss::series::unite(pluss::StackArray<Series>{step, pluss::series::zeros(pad_sizes, cfg)}, 0);
     }
     steps.push_back(step);
     for (std::int64_t i = 0; i < current_batch; ++i) lengths[static_cast<std::size_t>(i)] = t + 1;
@@ -75,7 +75,7 @@ inline std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& pack
   }
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(packed.data.platform());
   const Series lengths_s = pluss::make_series(lengths, {static_cast<std::int64_t>(lengths.size())}, icfg);
-  Series padded = steps.empty() ? Series() : pluss::pile(steps, 0);
+  Series padded = steps.empty() ? Series() : pluss::series::pile(steps, 0);
   if (batch_first) {
     padded = padded.transpose(0, 1);
   }

@@ -22,28 +22,28 @@ auto s4 = pluss::make_series(flat, {2,3});
 
 ```cpp
 // Factory families with dtype / config / options
-auto a = pluss::empty({2,3}, pluss::ScalarType::Float64);
-auto b = pluss::zeros({2,3});
-auto c = pluss::ones({2,3}, pluss::ScalarType::Float32);
-auto d = pluss::full({2,3}, 7.5);
+auto a = pluss::series::empty({2,3}, pluss::ScalarType::Float64);
+auto b = pluss::series::zeros({2,3});
+auto c = pluss::series::ones({2,3}, pluss::ScalarType::Float32);
+auto d = pluss::series::full({2,3}, 7.5);
 
 auto cfg = pluss::config({{"dtype", "Float64"}, {"platform", "CPU"}});
-auto e = pluss::zeros({2,3}, cfg);
-auto f = pluss::ones({2,3}, cfg);
+auto e = pluss::series::zeros({2,3}, cfg);
+auto f = pluss::series::ones({2,3}, cfg);
 ```
 
 ```cpp
 // Ranges and random
-auto r0 = pluss::arange(0, 10);
-auto r1 = pluss::arange(0, 10, 2);
-auto r2 = pluss::linspace(-1.0, 1.0, 11);
-auto r3 = pluss::eye(4);
+auto r0 = pluss::series::arange(0, 10);
+auto r1 = pluss::series::arange(0, 10, 2);
+auto r2 = pluss::series::linspace(-1.0, 1.0, 11);
+auto r3 = pluss::series::eye(4);
 
-auto n0 = pluss::rand({2,3});
-auto n1 = pluss::randn({2,3});
-auto n2 = pluss::randint(0, 10, {2,3});
-auto n3 = pluss::normal(0.0, 1.0, {2,3});
-auto n4 = pluss::bernoulli({2,3}, 0.25);
+auto n0 = pluss::series::rand({2,3});
+auto n1 = pluss::series::randn({2,3});
+auto n2 = pluss::series::randint(0, 10, {2,3});
+auto n3 = pluss::series::normal(0.0, 1.0, {2,3});
+auto n4 = pluss::series::bernoulli({2,3}, 0.25);
 ```
 
 ## Method call rules (all overload styles)

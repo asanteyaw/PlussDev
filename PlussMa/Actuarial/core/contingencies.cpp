@@ -50,7 +50,7 @@ Series survival_prefix_(const Series& qx_clean) {
     return one;
   }
   const Series px = qx_clean.mul(-1.0).add(1.0);
-  return pluss::unite({one, px.cumprod(0)}, /*dim=*/0, /*strict_dtype=*/true);
+  return pluss::series::unite({one, px.cumprod(0)}, /*dim=*/0, /*strict_dtype=*/true);
 }
 
 CommutationTable commutation_from_sanitized_(const Series& qx_clean,
@@ -78,9 +78,9 @@ CommutationTable commutation_from_sanitized_(const Series& qx_clean,
   out.C = out.dx.mul(discount_powers_(/*start=*/1, /*end=*/n + 1, interest_rate, qx_clean));
 
   const Series N_head = out.D.slice(/*dim=*/0, /*start=*/0, /*end=*/n, /*step=*/1).flip(0).cumsum(0).flip(0);
-  out.N = pluss::unite({N_head, zero1}, /*dim=*/0, /*strict_dtype=*/true);
+  out.N = pluss::series::unite({N_head, zero1}, /*dim=*/0, /*strict_dtype=*/true);
   const Series M_head = out.C.flip(0).cumsum(0).flip(0);
-  out.M = pluss::unite({M_head, zero1}, /*dim=*/0, /*strict_dtype=*/true);
+  out.M = pluss::series::unite({M_head, zero1}, /*dim=*/0, /*strict_dtype=*/true);
   return out;
 }
 

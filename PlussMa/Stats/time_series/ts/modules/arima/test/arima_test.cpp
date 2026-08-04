@@ -118,7 +118,7 @@ void test_sarima_fit_slice() {
 
 void test_error_paths() {
   const auto cfg = f64_cpu();
-  const Series y = pluss::randn({256}, cfg, 20260412ULL);
+  const Series y = pluss::series::randn({256}, cfg, 20260412ULL);
 
   bool threw = false;
   try {
@@ -144,7 +144,7 @@ void test_error_paths() {
 void test_arimax_slice() {
   const auto cfg = f64_cpu();
   const std::int64_t n = 2400;
-  const Series x = pluss::randn({n, 2}, cfg, 20260440ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260440ULL);
   const ArimaFit truth{
       .mean = 0.0,
       .intercept = 0.08,
@@ -174,7 +174,7 @@ void test_arimax_slice() {
   expect(std::isfinite(fit.loglik(y, x)), "arimax fit: finite loglik expected");
   expect(fit.infer(y, x, cfg).isfinite().all().item<double>() == 1.0, "arimax infer must be finite");
 
-  const Series x_future = pluss::randn({12, 2}, cfg, 20260442ULL);
+  const Series x_future = pluss::series::randn({12, 2}, cfg, 20260442ULL);
   const Series f = fit.forecast(12, y, x, x_future, cfg);
   expect(f.sizes()[0] == 12, "arimax forecast shape mismatch");
   expect(f.isfinite().all().item<double>() == 1.0, "arimax forecast must be finite");

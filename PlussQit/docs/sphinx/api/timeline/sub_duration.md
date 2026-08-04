@@ -38,8 +38,9 @@ The practical effect depends on the scale of the duration you build:
 Example 1. Move one scalar timestamp backward by one day.
 
 ```cpp
+auto scalar = pluss::timeline::make("2024-11-01T09:00:00Z");
 auto out = scalar.sub_duration(pluss::duration::days(1));
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output
@@ -52,8 +53,9 @@ Timeline(shape=[], tz=UTC)
 Example 2. Roll a whole vector back by fifteen minutes.
 
 ```cpp
+auto base = pluss::timeline::make({"2024-11-01T09:00:00Z", "2024-11-01T10:15:30Z", "2024-12-31T23:59:59Z", "2025-01-01T00:00:00Z"});
 auto out = base.sub_duration(pluss::duration::minutes(15));
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output
@@ -74,6 +76,7 @@ broadcasting/missing-value/timezone examples; this page just confirms
 `t - d` is exactly `t.sub_duration(d)`, not an approximation of it:
 
 ```cpp
+const auto t0 = pluss::timeline::make("1999-04-17T21:15:23Z");
 const auto via_operator = t0 - pluss::duration::hours(3);
 const auto via_method = t0.sub_duration(pluss::duration::hours(3));
 std::cout << pluss::print_series(via_operator.eq(via_method)) << "\n";
@@ -93,7 +96,7 @@ form, `t -= d`, verified identical to the binary operator:
 ```cpp
 auto t_mut = t0;
 t_mut -= pluss::duration::hours(3);
-std::cout << pluss::print_timeline(t_mut) << "\n";
+std::cout << pluss::timeline::print(t_mut) << "\n";
 std::cout << pluss::print_series(t_mut.eq(t0 - pluss::duration::hours(3))) << "\n";
 ```
 

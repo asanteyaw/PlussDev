@@ -70,7 +70,7 @@ int main() {
   const Series normal_sob = pluss::distr::sample(
       dst::Normal, {0.0, 1.0}, {10}, f64, 123ULL, pluss::rng::Method::Sobol);
 
-  const Series like = pluss::zeros({2, 5}, f64);
+  const Series like = pluss::series::zeros({2, 5}, f64);
   const Series unif_like_tor = pluss::distr::sample_like(
       dst::Uniform, {0.0, 1.0}, like, 999ULL, pluss::rng::Method::Torus);
 

@@ -107,7 +107,7 @@ Example 1. Inspect the raw hourly bin layout before aggregating values.
 
 ```cpp
 auto bins = idx.resample_bins("H");
-std::cout << pluss::print_timeline(bins.labels) << "\n";
+std::cout << pluss::timeline::print(bins.labels) << "\n";
 std::cout << pluss::print_series(bins.bin_id) << "\n";
 ```
 
@@ -125,7 +125,7 @@ Example 2. Increase `step` to collapse multiple base periods into one wider bin.
 
 ```cpp
 auto bins = idx.resample_bins("H", 2);
-std::cout << pluss::print_timeline(bins.labels) << "\n";
+std::cout << pluss::timeline::print(bins.labels) << "\n";
 std::cout << pluss::print_series(bins.bin_id) << "\n";
 ```
 
@@ -150,7 +150,7 @@ opts.closed = pluss::TimeIndex::ResampleClosed::Right;
 opts.label = pluss::TimeIndex::ResampleLabel::Right;
 
 auto bins = idx.resample_bins(opts);
-std::cout << pluss::print_timeline(bins.labels) << "\n";
+std::cout << pluss::timeline::print(bins.labels) << "\n";
 std::cout << pluss::print_series(bins.bin_id) << "\n";
 ```
 

@@ -90,22 +90,22 @@ std::vector<std::int64_t> complement_indices_(std::int64_t size, const std::vect
 
 Series bool_mask_matrix_(std::int64_t rows, std::int64_t cols, Config cfg) {
   const Config mask_cfg = Config{}.with_dtype(ScalarType::Bool).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  return pluss::zeros({rows, cols}, mask_cfg);
+  return pluss::series::zeros({rows, cols}, mask_cfg);
 }
 
 Series bool_ones_(std::int64_t n, Config cfg) {
   const Config mask_cfg = Config{}.with_dtype(ScalarType::Bool).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  return pluss::ones({n}, mask_cfg);
+  return pluss::series::ones({n}, mask_cfg);
 }
 
 Series int_idx_(std::int64_t start, std::int64_t end, Config cfg) {
   const Config idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  return pluss::arange(start, end, idx_cfg);
+  return pluss::series::arange(start, end, idx_cfg);
 }
 
 Series matrix_with_shifted_source_(const Series& source, std::int64_t out_rows, std::int64_t shift, std::int64_t max_lead, Config cfg) {
   const Config out_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  Series out = pluss::full({out_rows}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  Series out = pluss::series::full({out_rows}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   const std::int64_t nobs = source.numel();
   const std::int64_t start = shift + max_lead;
   PLUSS_CHECK(start >= 0, "subsp::stats::ts::build_lagged_predictors: negative start offset");
@@ -141,7 +141,7 @@ Series as_vector_(const Series& x, const char* name) {
 Series concat_columns_(const std::vector<Series>& columns, std::int64_t rows, Config cfg) {
   const Config out_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
   if (columns.empty()) {
-    return pluss::empty({rows, 0}, out_cfg);
+    return pluss::series::empty({rows, 0}, out_cfg);
   }
   if (columns.size() == 1) {
     return columns.front();
@@ -279,7 +279,7 @@ LagPlan build_lag_plan(std::int64_t num_predictors, const LagPlanOptions& option
         }
       }
       if (!active_cols.empty()) {
-        const Series row_idx = pluss::full({static_cast<std::int64_t>(active_cols.size())},
+        const Series row_idx = pluss::series::full({static_cast<std::int64_t>(active_cols.size())},
                                            static_cast<double>(hidx),
                                            Config{}.with_dtype(ScalarType::Int64).with_platform(mask_cfg.platform));
         const Series col_idx = pluss::make_series(active_cols,
@@ -339,7 +339,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
                                           plan.max_lead,
                                           out_cfg));
   } else {
-    blocks.push_back(pluss::empty({out_rows, 0}, out_cfg));
+    blocks.push_back(pluss::series::empty({out_rows, 0}, out_cfg));
   }
 
   if (!plan.response_lags.empty()) {
@@ -352,7 +352,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
                                           plan.max_lead,
                                           out_cfg));
   } else {
-    blocks.push_back(pluss::empty({out_rows, 0}, out_cfg));
+    blocks.push_back(pluss::series::empty({out_rows, 0}, out_cfg));
   }
 
   if (!plan.leading_predictor_indices.empty()) {
@@ -364,7 +364,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
                                           plan.max_lead,
                                           out_cfg));
   } else {
-    blocks.push_back(pluss::empty({out_rows, 0}, out_cfg));
+    blocks.push_back(pluss::series::empty({out_rows, 0}, out_cfg));
   }
 
   std::vector<Series> nonempty;

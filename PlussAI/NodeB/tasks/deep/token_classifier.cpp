@@ -130,8 +130,8 @@ void train_token_classifier(TokenClassifierState& state,
   encoder->model()->train(true);
 
   const double scale = 0.5 / static_cast<double>(width);
-  Series cls_weight = pluss::rand({width, num_classes}, cfg, options.seed + 2).sub(0.5).mul(2.0 * scale);
-  Series cls_bias = pluss::zeros({num_classes}, cfg);
+  Series cls_weight = pluss::series::rand({width, num_classes}, cfg, options.seed + 2).sub(0.5).mul(2.0 * scale);
+  Series cls_bias = pluss::series::zeros({num_classes}, cfg);
   cls_weight.tracks_slope_(true);
   cls_bias.tracks_slope_(true);
 

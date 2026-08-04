@@ -145,7 +145,7 @@ std::vector<pluss::codem::ExtractSpec> middle{
   SliceRange(1, 3, 1)
 };
 y.traverse_put_(pluss::msharp::RangeView::Of<pluss::codem::ExtractSpec>(middle),
-                pluss::full({3, 2}, -1.0));
+                pluss::series::full({3, 2}, -1.0));
 ```
 
 Output:
@@ -163,7 +163,7 @@ data=[[10, -1, -1, 13],
 ### 2.1 Core moments
 
 ```cpp
-auto x = pluss::normal(0.0, 1.0, {20});
+auto x = pluss::series::normal(0.0, 1.0, {20});
 auto m = x.stat.mean();
 auto v = x.var(false);
 auto s = x.std(false);
@@ -240,7 +240,7 @@ auto A = pluss::make_series(std::vector<double>{1,2,3,4,5,6}, {2,3});
 auto B = pluss::make_series(std::vector<double>{7,8,9,10,11,12}, {3,2});
 auto AB = A.linearalg(B).matmul();
 
-auto G = A.transpose(0, 1).matmul(A).add(pluss::eye(3, 3, pluss::ScalarType::Float64));
+auto G = A.transpose(0, 1).matmul(A).add(pluss::series::eye(3, 3, pluss::ScalarType::Float64));
 auto d = G.linearalg.det();
 ```
 

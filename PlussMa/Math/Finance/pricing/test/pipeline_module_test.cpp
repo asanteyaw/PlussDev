@@ -25,8 +25,8 @@ Config f64_cpu() {
 
 void test_pipeline_heston_cos_loss_and_objective() {
   const Config cfg = f64_cpu();
-  const auto strikes = pluss::linspace(80.0, 120.0, 9, cfg);
-  const auto tau = pluss::full({9}, 1.0, cfg);
+  const auto strikes = pluss::series::linspace(80.0, 120.0, 9, cfg);
+  const auto tau = pluss::series::full({9}, 1.0, cfg);
 
   mod::Field pipe{
       .instrument = fin::instrument::Vanilla{
@@ -35,16 +35,16 @@ void test_pipeline_heston_cos_loss_and_objective() {
           .maturity = tau,
       },
       .market = fin::market::State{
-          .spot = pluss::full({9}, 100.0, cfg),
-          .rate = pluss::full({9}, 0.02, cfg),
-          .dividend_yield = pluss::full({9}, 0.00, cfg),
+          .spot = pluss::series::full({9}, 100.0, cfg),
+          .rate = pluss::series::full({9}, 0.02, cfg),
+          .dividend_yield = pluss::series::full({9}, 0.00, cfg),
       },
       .model = fin::model::Heston{
-          .kappa = pluss::full({1}, 1.5, cfg),
-          .theta = pluss::full({1}, 0.04, cfg),
-          .sigma = pluss::full({1}, 0.30, cfg),
-          .rho = pluss::full({1}, -0.70, cfg),
-          .v0 = pluss::full({1}, 0.04, cfg),
+          .kappa = pluss::series::full({1}, 1.5, cfg),
+          .theta = pluss::series::full({1}, 0.04, cfg),
+          .sigma = pluss::series::full({1}, 0.30, cfg),
+          .rho = pluss::series::full({1}, -0.70, cfg),
+          .v0 = pluss::series::full({1}, 0.04, cfg),
       },
       .controls = mod::Controls{
           .engine = mod::Engine::Cos,
@@ -65,7 +65,7 @@ void test_pipeline_heston_cos_loss_and_objective() {
 
   auto objective = pipe.bind_objective_typed<fin::model::Heston>(market_px, cfg);
   fin::model::Heston shifted = pipe.model.as<fin::model::Heston>();
-  shifted.v0 = pluss::full({1}, 0.08, cfg);
+  shifted.v0 = pluss::series::full({1}, 0.08, cfg);
   const double fit1 = objective(shifted);
   expect(std::isfinite(fit1), "pipeline heston cos: objective must be finite");
   expect(fit1 >= fit0, "pipeline heston cos: shifted params should not improve exact self-fit");
@@ -76,16 +76,16 @@ void test_pipeline_black_scholes_analytic() {
   mod::Field pipe{
       .instrument = fin::instrument::Vanilla{
           .type = fin::pricing::OptionType::Call,
-          .strike = pluss::full({1}, 100.0, cfg),
-          .maturity = pluss::full({1}, 1.0, cfg),
+          .strike = pluss::series::full({1}, 100.0, cfg),
+          .maturity = pluss::series::full({1}, 1.0, cfg),
       },
       .market = fin::market::State{
-          .spot = pluss::full({1}, 100.0, cfg),
-          .rate = pluss::full({1}, 0.02, cfg),
-          .dividend_yield = pluss::full({1}, 0.00, cfg),
+          .spot = pluss::series::full({1}, 100.0, cfg),
+          .rate = pluss::series::full({1}, 0.02, cfg),
+          .dividend_yield = pluss::series::full({1}, 0.00, cfg),
       },
       .model = fin::model::BlackScholes{
-          .volatility = pluss::full({1}, 0.2, cfg),
+          .volatility = pluss::series::full({1}, 0.2, cfg),
       },
       .controls = mod::Controls{
           .engine = mod::Engine::Analytic,
@@ -105,16 +105,16 @@ void test_pipeline_black_scholes_auto_mixed_call_put() {
       .instrument = fin::instrument::Vanilla{
           .type = fin::pricing::OptionType::Auto,
           .is_call = pluss::make_series(std::vector<double>{1.0, 0.0, 1.0, 0.0}, {4}, cfg),
-          .strike = pluss::full({4}, 100.0, cfg),
-          .maturity = pluss::full({4}, 1.0, cfg),
+          .strike = pluss::series::full({4}, 100.0, cfg),
+          .maturity = pluss::series::full({4}, 1.0, cfg),
       },
       .market = fin::market::State{
-          .spot = pluss::linspace(90.0, 110.0, 4, cfg),
-          .rate = pluss::full({1}, 0.02, cfg),
-          .dividend_yield = pluss::full({1}, 0.00, cfg),
+          .spot = pluss::series::linspace(90.0, 110.0, 4, cfg),
+          .rate = pluss::series::full({1}, 0.02, cfg),
+          .dividend_yield = pluss::series::full({1}, 0.00, cfg),
       },
       .model = fin::model::BlackScholes{
-          .volatility = pluss::full({1}, 0.2, cfg),
+          .volatility = pluss::series::full({1}, 0.2, cfg),
       },
       .controls = mod::Controls{
           .engine = mod::Engine::Analytic,
@@ -133,20 +133,20 @@ void test_pipeline_monte_carlo_paths() {
   mod::Field pipe{
       .instrument = fin::instrument::Vanilla{
           .type = fin::pricing::OptionType::Call,
-          .strike = pluss::full({1}, 100.0, cfg),
-          .maturity = pluss::full({1}, 1.0, cfg),
+          .strike = pluss::series::full({1}, 100.0, cfg),
+          .maturity = pluss::series::full({1}, 1.0, cfg),
       },
       .market = fin::market::State{
-          .spot = pluss::full({1}, 100.0, cfg),
-          .rate = pluss::full({1}, 0.02, cfg),
-          .dividend_yield = pluss::full({1}, 0.00, cfg),
+          .spot = pluss::series::full({1}, 100.0, cfg),
+          .rate = pluss::series::full({1}, 0.02, cfg),
+          .dividend_yield = pluss::series::full({1}, 0.00, cfg),
       },
       .model = fin::model::Heston{
-          .kappa = pluss::full({1}, 1.5, cfg),
-          .theta = pluss::full({1}, 0.04, cfg),
-          .sigma = pluss::full({1}, 0.30, cfg),
-          .rho = pluss::full({1}, -0.70, cfg),
-          .v0 = pluss::full({1}, 0.04, cfg),
+          .kappa = pluss::series::full({1}, 1.5, cfg),
+          .theta = pluss::series::full({1}, 0.04, cfg),
+          .sigma = pluss::series::full({1}, 0.30, cfg),
+          .rho = pluss::series::full({1}, -0.70, cfg),
+          .v0 = pluss::series::full({1}, 0.04, cfg),
       },
       .controls = mod::Controls{
           .engine = mod::Engine::MonteCarlo,
@@ -176,21 +176,21 @@ void test_pipeline_mismatch_error_is_helpful() {
   mod::Field pipe{
       .instrument = fin::instrument::Vanilla{
           .type = fin::pricing::OptionType::Call,
-          .strike = pluss::full({1}, 100.0, cfg),
-          .maturity = pluss::full({1}, 1.0, cfg),
+          .strike = pluss::series::full({1}, 100.0, cfg),
+          .maturity = pluss::series::full({1}, 1.0, cfg),
       },
       .market = fin::market::State{
-          .spot = pluss::full({1}, 100.0, cfg),
-          .rate = pluss::full({1}, 0.02, cfg),
-          .dividend_yield = pluss::full({1}, 0.00, cfg),
+          .spot = pluss::series::full({1}, 100.0, cfg),
+          .rate = pluss::series::full({1}, 0.02, cfg),
+          .dividend_yield = pluss::series::full({1}, 0.00, cfg),
       },
       .model = fin::model::RoughHeston{
-          .kappa = pluss::full({1}, 1.5, cfg),
-          .theta = pluss::full({1}, 0.04, cfg),
-          .sigma = pluss::full({1}, 0.30, cfg),
-          .alpha = pluss::full({1}, -0.2, cfg),
-          .rho = pluss::full({1}, -0.6, cfg),
-          .v0 = pluss::full({1}, 0.04, cfg),
+          .kappa = pluss::series::full({1}, 1.5, cfg),
+          .theta = pluss::series::full({1}, 0.04, cfg),
+          .sigma = pluss::series::full({1}, 0.30, cfg),
+          .alpha = pluss::series::full({1}, -0.2, cfg),
+          .rho = pluss::series::full({1}, -0.6, cfg),
+          .v0 = pluss::series::full({1}, 0.04, cfg),
       },
       .controls = mod::Controls{
           .engine = mod::Engine::Analytic,

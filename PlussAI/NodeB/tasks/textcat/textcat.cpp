@@ -142,7 +142,7 @@ struct SequenceVocab {
   for (const auto& ids : doc_ids) {
     pooled_rows.push_back(embedding_weights.index_select(0, ids).mean(0)); // [width]
   }
-  return pluss::pile(pooled_rows, 0); // [docs, width]
+  return pluss::series::pile(pooled_rows, 0); // [docs, width]
 }
 
 [[nodiscard]] std::vector<std::string> split_multi_label(std::string_view value) {
@@ -334,10 +334,10 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     const double scale = 0.5 / static_cast<double>(width);
 
     Series embedding_weights =
-        pluss::rand({vocab_size, width}, cfg, options_.sequence_seed).sub(0.5).mul(2.0 * scale);
+        pluss::series::rand({vocab_size, width}, cfg, options_.sequence_seed).sub(0.5).mul(2.0 * scale);
     Series cls_weight =
-        pluss::rand({width, num_classes}, cfg, options_.sequence_seed + 7).sub(0.5).mul(2.0 * scale);
-    Series cls_bias = pluss::zeros({num_classes}, cfg);
+        pluss::series::rand({width, num_classes}, cfg, options_.sequence_seed + 7).sub(0.5).mul(2.0 * scale);
+    Series cls_bias = pluss::series::zeros({num_classes}, cfg);
     embedding_weights.tracks_slope_(true);
     cls_weight.tracks_slope_(true);
     cls_bias.tracks_slope_(true);
@@ -482,10 +482,10 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     const double scale = 0.5 / static_cast<double>(width);
 
     Series embedding_weights =
-        pluss::rand({vocab_size, width}, cfg, options_.sequence_seed).sub(0.5).mul(2.0 * scale);
+        pluss::series::rand({vocab_size, width}, cfg, options_.sequence_seed).sub(0.5).mul(2.0 * scale);
     Series cls_weight =
-        pluss::rand({width, num_classes}, cfg, options_.sequence_seed + 7).sub(0.5).mul(2.0 * scale);
-    Series cls_bias = pluss::zeros({num_classes}, cfg);
+        pluss::series::rand({width, num_classes}, cfg, options_.sequence_seed + 7).sub(0.5).mul(2.0 * scale);
+    Series cls_bias = pluss::series::zeros({num_classes}, cfg);
     embedding_weights.tracks_slope_(true);
     cls_weight.tracks_slope_(true);
     cls_bias.tracks_slope_(true);

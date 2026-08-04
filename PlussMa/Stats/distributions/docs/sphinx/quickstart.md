@@ -19,7 +19,7 @@ auto z = pluss::distr::sample("vonmises", {0.0, 3.0}, {1024});
 ## Keep Shape And Dtype
 
 ```cpp
-auto like = pluss::zeros({2, 4},
+auto like = pluss::series::zeros({2, 4},
     pluss::Config{}
         .with_dtype(pluss::ScalarType::Float32)
         .with_platform(pluss::pCPU)

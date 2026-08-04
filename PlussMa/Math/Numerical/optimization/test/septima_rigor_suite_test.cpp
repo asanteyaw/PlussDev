@@ -187,7 +187,7 @@ int main() {
       const auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
           [](const std::vector<Trace>& xs) -> Trace {
             const Series x = xs[0].value();
-            Series staged = pluss::empty_like(x);
+            Series staged = pluss::series::empty_like(x);
             staged.select(1, 0).copy_(x.select(1, 0).mul(2.0));
             staged.select(1, 1).copy_(x.select(1, 1).square());
             staged.select(1, 2).copy_(x.select(1, 2).add(1.0));
@@ -230,7 +230,7 @@ int main() {
 
     const auto fit = pluss::optim::septima(
         [target](const Series& x) -> Series {
-          Series staged = pluss::zeros_like(x);
+          Series staged = pluss::series::zeros_like(x);
           for (std::int64_t t = 0; t < x.size(1); ++t) {
             staged.select(1, t).copy_(x.select(1, t));
           }

@@ -32,7 +32,7 @@ Example 1. Keep only timestamps that appear on both sides exactly.
 
 ```cpp
 auto out = base.intersection(right);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output

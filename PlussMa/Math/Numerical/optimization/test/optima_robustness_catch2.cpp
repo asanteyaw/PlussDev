@@ -61,8 +61,8 @@ ConstrainedProblem make_structured_working_set_problem(std::int64_t n,
   }
   problem.linear.Aineq = pluss::make_series(aineq, {2 * (n - 1), n}).to(ScalarType::Float64);
   problem.linear.bineq = pluss::make_series(bineq, {2 * (n - 1)}).to(ScalarType::Float64);
-  problem.bounds.lower = pluss::optim::pack_series(pluss::zeros({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
-  problem.bounds.upper = pluss::optim::pack_series(pluss::ones({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
+  problem.bounds.lower = pluss::optim::pack_series(pluss::series::zeros({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
+  problem.bounds.upper = pluss::optim::pack_series(pluss::series::ones({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
   return problem;
 }
 
@@ -71,7 +71,7 @@ ConstrainedProblem make_structured_working_set_problem(std::int64_t n,
 TEST_CASE("Optima working set remains robust on structured active-constraint families", "[optima][working_set][stress]") {
   constexpr std::int64_t n = 24;
   const Series target =
-      pluss::linspace(0.18, 0.72, n, pluss::Config{}.with_dtype(ScalarType::Float64)).reshape({n});
+      pluss::series::linspace(0.18, 0.72, n, pluss::Config{}.with_dtype(ScalarType::Float64)).reshape({n});
 
   std::vector<double> initial_values(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t i = 0; i < n; ++i) {
@@ -227,7 +227,7 @@ TEST_CASE("Optima autodiff stays connected through staged copy_ objectives", "[o
   problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
     const Trace x = p.at("x");
     const Series xv = x.value();
-    Series staged = pluss::zeros_like(xv);
+    Series staged = pluss::series::zeros_like(xv);
     for (std::int64_t i = 0; i < xv.size(0); ++i) {
       staged.select(0, i).copy_(xv.select(0, i));
     }

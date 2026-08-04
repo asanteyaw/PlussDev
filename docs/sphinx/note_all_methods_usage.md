@@ -22,17 +22,17 @@ auto n4 = pluss::make_note(flat, std::array<std::int64_t,2>{2,2});
 
 ```cpp
 // Text-derived helpers
-auto lines = pluss::note_from_lines("line1\nline2\nline3");
-auto words = pluss::note_from_words("alpha beta gamma");
-auto full = pluss::full_note({2,3}, "x");
-auto empty_like = pluss::empty_note_like(full);
+auto lines = pluss::note::from_lines("line1\nline2\nline3");
+auto words = pluss::note::from_words("alpha beta gamma");
+auto full = pluss::note::full({2,3}, "x");
+auto empty_like = pluss::note::empty_like(full);
 ```
 
 ```cpp
 // Bytes-mode construction
-auto b0 = pluss::bytes_content("\x01\x02");
-auto b1 = pluss::bytes_content({"\x01", "\x02", "\x03"});
-auto b2 = pluss::make_bytes_note({{"\x0A", "\x0B"}, {"\x0C", "\x0D"}});
+auto b0 = pluss::note::bytes("\x01\x02");
+auto b1 = pluss::note::bytes({"\x01", "\x02", "\x03"});
+auto b2 = pluss::note::bytes({{"\x0A", "\x0B"}, {"\x0C", "\x0D"}});
 ```
 
 ## Method call rules (all overload styles)

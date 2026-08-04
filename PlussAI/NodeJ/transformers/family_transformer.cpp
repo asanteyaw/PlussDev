@@ -359,7 +359,7 @@ public:
     }
     const Series k = kernel_similarity(matrix.x_rows, x_train_, options_.kernel, gamma_);
     const Series score = k.mean(1, false).reshape({matrix.sample_count});
-    const Series ones = pluss::ones_like(score, ScalarType::Float64);
+    const Series ones = pluss::series::ones_like(score, ScalarType::Float64);
     const Series labels = score.ge(offset_.reshape({1})).where(ones, ones.mul(-1.0));
     if (matrix.layout == ObservationLayout::Rows) {
       return StatusOr<Series>(labels.to(matrix.original_platform, ScalarType::Float64).reshape({matrix.sample_count, 1}));
@@ -461,7 +461,7 @@ public:
       Series v = pluss::make_series(init, {p}, f64_on(platform));
       const double vn = v.square().sum().sqrt().item<double>();
       if (vn <= 0.0 || !std::isfinite(vn)) {
-        v = pluss::ones({p}, f64_on(platform)).div(std::sqrt(static_cast<double>(p)));
+        v = pluss::series::ones({p}, f64_on(platform)).div(std::sqrt(static_cast<double>(p)));
       } else {
         v = v.div(vn);
       }

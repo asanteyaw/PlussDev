@@ -45,7 +45,7 @@ int main() {
       1);
   print_vector("Note row character totals", row_char_counts);
 
-  auto timeline2d = pluss::make_timeline({
+  auto timeline2d = pluss::timeline::make({
       {"2024-01-01T01:00:00Z", "2024-01-02T02:00:00Z"},
       {"2024-01-03T03:00:00Z", "2024-01-04T04:00:00Z"},
   });
@@ -60,8 +60,8 @@ int main() {
       1);
   print_vector("Timeline row hour totals", row_hour_totals);
 
-  auto idx = pluss::make_timeindex(
-      pluss::make_timeline({
+  auto idx = pluss::timeindex::make(
+      pluss::timeline::make({
           "2024-01-01T00:00:00Z",
           "2024-01-02T00:00:00Z",
           "2024-01-03T00:00:00Z",

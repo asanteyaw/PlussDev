@@ -27,18 +27,19 @@ array with no `Timeline` involved at all), and a full arithmetic/comparison/
 conversion surface. The one real asymmetry: `Duration` is not one of the four
 `ThreadKind` payloads a DataFrame column can hold (`Series`, `Note`,
 `Timeline`, `TimeIndex`) — to store elapsed time in a column, convert to a
-plain `Series` first via one of the `total_*` methods.
+plain `Series` first via one of the [`total()`](api/duration/total_nanoseconds.md)
+accessor's unit methods.
 
 ```{important} Build with CODEH_ENABLE_DURATION_SURFACE defined
 `Duration`'s generated method surface (every comparison, `mul`/`div`/`floordiv`/
-`mod`, all `total_*` conversions, `abs`/`sign`/`clip`, `isnat`/`fill_nat`/`where`)
+`mod`, `total()`'s unit conversions, `abs`/`sign`/`clip`, `isnat`/`fill_nat`/`where`)
 is compiled in only when `CODEH_ENABLE_DURATION_SURFACE` is defined, mirroring
 how `Timeline`'s and `TimeIndex`'s surfaces are gated behind their own flags.
 `PlussQit`'s own `plussqit_codeh` CMake target now defines it (alongside
 `CODEH_ENABLE_TIMELINE_SURFACE`/`CODEH_ENABLE_TIMEINDEX_SURFACE`), so anything
 linking against `PlussQit::CodeH` gets it automatically. If you see `Duration`
-missing methods like `total_seconds()` or `operator*` in a different build
-target, this define is the first thing to check.
+missing methods like `total()` or `operator*` in a different build target,
+this define is the first thing to check.
 ```
 
 Use `Duration` when you have elapsed time that isn't anchored to a particular
@@ -59,7 +60,7 @@ is the `Duration`-based sibling documented here.
 
 ```{note} Duration (capital D) is the type; pluss::duration (lowercase) is its factory
 Construction lives in its own namespace, kept separate from the type itself —
-the same split as `pluss::make_timeline`/`pluss::from_epoch_nanos` being
+the same split as `pluss::timeline::make`/`pluss::timeline::from_epoch` being
 separate from `Timeline`. `pluss::duration::seconds(5)`, not
 `pluss::duration_seconds(5)`; `pluss::duration::range(...)`, not
 `pluss::timedelta_range(...)`. See [`construction`](api/duration/construction.md)
@@ -94,7 +95,7 @@ Negative counts are valid and mean "backward in time" — see
 [`abs`](api/duration/abs.md) for recovering a magnitude.
 
 Example 2. Every unit factory also builds 1D and N-D arrays — not just
-scalars — the same three ways `pluss::make_timeline` does.
+scalars — the same three ways `pluss::timeline::make` does.
 
 ```cpp
 auto one_d = pluss::duration::minutes({15, 30, 45, 60});          // 1D, 4 elements
@@ -102,7 +103,7 @@ auto nested_2d = pluss::duration::hours({{1, 2}, {3, 4}, {5, 6}}); // 2D, shape 
 ```
 
 Explicit flat-plus-shape construction is also available for any rank, mirroring
-`pluss::from_epoch_nanos(flat, sizes)` — plain braces convert implicitly to
+`pluss::timeline::from_epoch(flat, sizes)` — plain braces convert implicitly to
 `pluss::RangeView<int64_t>`, no explicit wrapping needed:
 
 ```cpp
@@ -140,40 +141,80 @@ This reference covers the canonical public surface:
 - construction: `pluss::duration::nanos`/`seconds`/`minutes`/`hours`/`days`
   (each with scalar, 1D, nested-N-D, and flat+shape overloads),
   `pluss::duration::range`
-- arithmetic: `operator+`, `operator-`, unary `operator-()`, `mul`, `div`,
-  `floordiv`, `mod`
-- comparisons: `eq`, `ne`, `lt`, `le`, `gt`, `ge` (elementwise, return
-  `Series[bool]`)
-- unary transforms: `abs`, `sign`, `clip`
-- unit conversion: `total_seconds`, `total_minutes`, `total_hours`,
-  `total_days`, `total_weeks`, `total_nanoseconds`, `total_microseconds`,
-  `total_milliseconds` (all return a plain `Series`)
-- missing-value handling: `isnat`, `isvalid`, `fill_nat`, `where`
+- arithmetic: [`add`](api/duration/add.md), [`sub`](api/duration/sub.md),
+  [`neg`](api/duration/neg.md), [`mul`](api/duration/mul.md),
+  [`div`](api/duration/div.md), [`floordiv`](api/duration/floordiv.md),
+  [`mod`](api/duration/mod.md)
+- comparisons (elementwise, return `Series[bool]`): [`eq`](api/duration/eq.md),
+  [`ne`](api/duration/ne.md), [`lt`](api/duration/lt.md),
+  [`le`](api/duration/le.md), [`gt`](api/duration/gt.md),
+  [`ge`](api/duration/ge.md)
+- unary transforms: [`abs`](api/duration/abs.md), [`sign`](api/duration/sign.md),
+  [`clip`](api/duration/clip.md)
+- unit conversion (all return a plain `Series`):
+  [`total().nanoseconds()`](api/duration/total_nanoseconds.md),
+  [`total().microseconds()`](api/duration/total_microseconds.md),
+  [`total().milliseconds()`](api/duration/total_milliseconds.md),
+  [`total().seconds()`](api/duration/total_seconds.md),
+  [`total().minutes()`](api/duration/total_minutes.md),
+  [`total().hours()`](api/duration/total_hours.md),
+  [`total().days()`](api/duration/total_days.md),
+  [`total().weeks()`](api/duration/total_weeks.md)
+- missing-value handling: [`isnat`](api/duration/isnat.md),
+  [`isvalid`](api/duration/isvalid.md), [`fill_nat`](api/duration/fill_nat.md),
+  [`where`](api/duration/where.md)
 - `Timeline` integration: `Timeline ± Duration`, `Timeline - Timeline`
 
-Where several short aliases or sibling methods share one implementation, the
-reference documents them on the canonical page instead of cloning identical
-prose onto many near-empty pages — the same policy [`Timeline`](timeline_api_reference.md)
-uses.
+Each distinct method has its own page — matching the convention used by
+PlussMic's `DataFrame` reference. A true one-line alias with zero behavior
+difference from its canonical method (`isfinite()`/`isnan()`, for example) is
+documented on that canonical method's page rather than getting a near-empty
+page of its own; every other method, including ones that share an
+implementation pattern with a sibling (the six comparisons, the eight
+`total_*` unit accessors), gets its own page.
 
 ## Using This Reference
 
 - Use the left sidebar to open one `Duration` method page at a time.
 - Each page embeds verified output directly under the example that produced
   it, captured from `PlussQit/examples/CodeH/duration_docverify_demo.cpp`.
-- When a page says it covers a family, that is the canonical place for the
-  sibling methods too.
+- A true one-line alias (`isfinite()`/`isnan()`) is documented on its
+  canonical method's page rather than getting a page of its own — see that
+  page's Notes section for the alias.
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
 api/duration/construction
-api/duration/arithmetic
+api/duration/add
+api/duration/sub
+api/duration/neg
+api/duration/mul
+api/duration/div
+api/duration/floordiv
+api/duration/mod
 api/duration/eq
+api/duration/ne
+api/duration/lt
+api/duration/le
+api/duration/gt
+api/duration/ge
 api/duration/abs
-api/duration/total
+api/duration/sign
+api/duration/clip
+api/duration/total_nanoseconds
+api/duration/total_microseconds
+api/duration/total_milliseconds
+api/duration/total_seconds
+api/duration/total_minutes
+api/duration/total_hours
+api/duration/total_days
+api/duration/total_weeks
 api/duration/isnat
+api/duration/isvalid
+api/duration/fill_nat
+api/duration/where
 ```
 
 <div class="pluss-inline-prev-next">

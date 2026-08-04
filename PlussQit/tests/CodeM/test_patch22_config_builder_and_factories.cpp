@@ -14,10 +14,10 @@ TEST_CASE("config unordered map and tags", "[config]") {
       {"dtype", "float16"},
       {"pinned", "true"},
   });
-  Series a = pluss::zeros({2,2}, cfg1);
+  Series a = pluss::series::zeros({2,2}, cfg1);
   REQUIRE(a.scalar_type() == ScalarType::Float16);
 
-  Series b = pluss::zeros({2,2}, pluss::cfg::dtype(ScalarType::Int16), pluss::cfg::pinned(false));
+  Series b = pluss::series::zeros({2,2}, pluss::cfg::dtype(ScalarType::Int16), pluss::cfg::pinned(false));
   REQUIRE(b.scalar_type() == ScalarType::Int16);
 }
 

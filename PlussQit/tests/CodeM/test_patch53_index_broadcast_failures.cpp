@@ -6,7 +6,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("advanced index tensors not broadcastable throws", "[indexing][fail]") {
-  auto x = pluss::zeros({3,4,5}, pluss::config({{"dtype","float32"}}));
+  auto x = pluss::series::zeros({3,4,5}, pluss::config({{"dtype","float32"}}));
   // (2,2) and (2,3) are not broadcast-compatible.
   auto i0 = pluss::make_series(std::vector<std::int64_t>{0,1,1,2}, {2,2});
   auto i2 = pluss::make_series(std::vector<std::int64_t>{1,2,3, 0,1,2}, {2,3});

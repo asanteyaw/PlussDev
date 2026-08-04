@@ -50,12 +50,12 @@ TEST_CASE("sequential qp tracks best feasible points using solver feasibility to
   problem.nonlinear.analytic = [](const ParameterPack<Series>&) {
     NonlinearConstraintEvaluation eval;
     eval.equality = make_series(std::vector<double>{1e-8}, {1}).to(ScalarType::Float64);
-    eval.inequality = pluss::empty({0}, ScalarType::Float64).to(pluss::pCPU);
+    eval.inequality = pluss::series::empty({0}, ScalarType::Float64).to(pluss::pCPU);
     eval.equality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({1, 2}, ScalarType::Float64).to(pluss::pCPU)},
+        {"x", pluss::series::zeros({1, 2}, ScalarType::Float64).to(pluss::pCPU)},
     });
     eval.inequality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({0, 2}, ScalarType::Float64).to(pluss::pCPU)},
+        {"x", pluss::series::zeros({0, 2}, ScalarType::Float64).to(pluss::pCPU)},
     });
     return eval;
   };

@@ -59,7 +59,7 @@ bool weighted_neighbor_votes_flip(std::ostream* err) {
 }
 
 bool weighted_tree_leaf_flips(std::ostream* err) {
-  const Series x = pluss::ones({3, 1}, f64());
+  const Series x = pluss::series::ones({3, 1}, f64());
   const Series y = pluss::make_series(std::vector<double>{0.0, 1.0, 1.0}, {3}, f64());
   const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
   const LabeledBatch batch{
@@ -87,7 +87,7 @@ bool weighted_tree_leaf_flips(std::ostream* err) {
 }
 
 bool weighted_bayes_prior_flips(std::ostream* err) {
-  const Series x = pluss::zeros({2, 1}, f64());
+  const Series x = pluss::series::zeros({2, 1}, f64());
   const Series y = pluss::make_series(std::vector<double>{0.0, 1.0}, {2}, f64());
   const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
   const LabeledBatch batch{
@@ -115,7 +115,7 @@ bool weighted_bayes_prior_flips(std::ostream* err) {
 }
 
 bool weighted_kernel_solution_flips(std::ostream* err) {
-  const Series x = pluss::zeros({2, 1}, f64());
+  const Series x = pluss::series::zeros({2, 1}, f64());
   const Series y = pluss::make_series(std::vector<double>{0.0, 1.0}, {2}, f64());
   const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
   const LabeledBatch batch{

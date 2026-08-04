@@ -7,7 +7,7 @@ int main() {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   const std::int64_t n = 512;
-  const pluss::Series x = pluss::randn({n, 2}, cfg, 20260450ULL);
+  const pluss::Series x = pluss::series::randn({n, 2}, cfg, 20260450ULL);
 
   const ts::ArimaFit truth{
       .mean = 0.0,
@@ -35,7 +35,7 @@ int main() {
   opt.max_evaluations = 12000;
   const auto fit = ts::Arima::fit_mle(y, x, opt, cfg);
 
-  const pluss::Series x_future = pluss::randn({12, 2}, cfg, 20260452ULL);
+  const pluss::Series x_future = pluss::series::randn({12, 2}, cfg, 20260452ULL);
 
   std::cout << "ARIMAX\n";
   std::cout << "mean=" << fit.mean << " intercept=" << fit.intercept << " sigma=" << fit.sigma << "\n";

@@ -90,7 +90,7 @@ void emit_cross_terms_(std::int64_t pos,
     }
     const std::int64_t n = xcols.front().sizes()[0];
     const Config cfg = f64_cfg_like_(xcols.front(), {});
-    Series term = pluss::ones({n, 1}, cfg);
+    Series term = pluss::series::ones({n, 1}, cfg);
     for (std::int64_t j = 0; j < p; ++j) {
       const std::int64_t e = cur[static_cast<std::size_t>(j)];
       if (e > 0) {

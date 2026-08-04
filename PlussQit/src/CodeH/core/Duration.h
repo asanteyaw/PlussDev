@@ -64,10 +64,16 @@ namespace pluss::codeh {
 class TimeIndex;
 class Timeline;
 class Duration;
+class DurationTotal;
 
 namespace ops_internal {
   Duration duration_from_nanos(std::span<const std::int64_t> nanos_flat,
                                std::span<const std::int64_t> sizes);
+  // Zero-copy wrap of an already-built Int64 nanoseconds Series -- lets
+  // callers (e.g. pluss::duration::zeros) build via Series' own optimized
+  // factories (Series::zeros' memset, etc.) instead of paying for a second
+  // host-side fill + memcpy through duration_from_nanos.
+  Duration duration_from_series(pluss::codem::Series nanos);
 } // namespace ops_internal
 
 // Duration: N-D (0D..3D) array of nanosecond spans.
@@ -99,7 +105,7 @@ private:
   // Construction is intentionally not on the public type surface -- `Duration`
   // (capital D) names the type; `pluss::duration::` (lowercase namespace, see
   // duration_factory.h) is the sole public construction path, mirroring how
-  // `pluss::make_timeline`/`pluss::from_epoch_nanos` sit outside `Timeline`
+  // `pluss::timeline::make`/`pluss::timeline::from_epoch` sit outside `Timeline`
   // itself. `range` stays here as the private algorithm `detail::impl_range`
   // (already a friend, used by both `pluss::duration::range` and the
   // string-dispatch dispatcher) wraps; there is no `from_scalar_nanos`
@@ -120,6 +126,7 @@ private:
   friend Timeline detail::impl_sub_duration(const Timeline&, const Duration&);
   friend Duration pluss::codeh::ops_internal::duration_from_nanos(std::span<const std::int64_t>,
                                                                  std::span<const std::int64_t>);
+  friend Duration pluss::codeh::ops_internal::duration_from_series(pluss::codem::Series);
   friend Duration detail::impl_add_duration(const Duration&, const Duration&);
   friend Duration detail::impl_sub_duration(const Duration&, const Duration&);
   friend Duration detail::impl_neg_duration(const Duration&);
@@ -150,5 +157,36 @@ private:
 
   pluss::codem::Series nanos_;
 };
+
+// A tiny proxy returned by Duration::total() -- the sole way to read a
+// Duration's elapsed magnitude out as a plain Series in a chosen unit.
+// `total_nanoseconds()`/`total_seconds()`/etc. are deliberately NOT flat
+// methods on Duration itself (see DurationMethodsGen.h) -- `d.total().hours()`
+// is the only spelling. Each accessor here routes directly to the same
+// "total" dispatch the old flat methods used. Holds its own copy of the
+// Duration (cheap -- Duration wraps a single reference-counted Series), not
+// a reference, so `pluss::duration::minutes(90).total()` is safe to store
+// and use even after the temporary Duration it was built from would
+// otherwise have gone out of scope.
+class CODEH_API DurationTotal {
+ public:
+  explicit DurationTotal(Duration d) : d_(std::move(d)) {}
+
+  pluss::codem::Series nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"ns"}); }
+  pluss::codem::Series microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"us"}); }
+  pluss::codem::Series milliseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"ms"}); }
+  pluss::codem::Series seconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"s"}); }
+  pluss::codem::Series minutes() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"min"}); }
+  pluss::codem::Series hours() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"h"}); }
+  pluss::codem::Series days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"D"}); }
+  pluss::codem::Series weeks() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", d_, {"W"}); }
+
+ private:
+  Duration d_;
+};
+
+#if defined(CODEH_ENABLE_DURATION_SURFACE) && !defined(CODEH_NO_DURATION_SURFACE)
+inline DurationTotal Duration::total() const { return DurationTotal(*this); }
+#endif
 
 } // namespace pluss::codeh

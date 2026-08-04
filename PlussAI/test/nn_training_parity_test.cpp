@@ -449,7 +449,7 @@ void seed_lstm_model_parameters_(TinyLSTMParityRegressor& model) {
   auto params = model->parameters();
   for (Series* p : params) {
     if (!p || !p->defined()) continue;
-    *p = pluss::full_like(*p, 0.02f, ScalarType::Float32);
+    *p = pluss::series::full_like(*p, 0.02f, ScalarType::Float32);
   }
 }
 
@@ -482,7 +482,7 @@ void seed_model_parameters_(ModelT& model, float value) {
   auto params = model->parameters();
   for (Series* p : params) {
     if (!p || !p->defined()) continue;
-    *p = pluss::full_like(*p, value, ScalarType::Float32);
+    *p = pluss::series::full_like(*p, value, ScalarType::Float32);
   }
 }
 
@@ -493,8 +493,8 @@ void seed_model_parameters_ramp_(ModelT& model, float value, float ramp_step) {
     if (!p || !p->defined()) continue;
     const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(p->platform());
     const Series idx =
-        pluss::arange(0, p->numel(), 1, icfg).to(p->platform(), ScalarType::Float32).reshape(p->sizes());
-    *p = pluss::full_like(*p, value, ScalarType::Float32).add(idx.mul(ramp_step));
+        pluss::series::arange(0, p->numel(), 1, icfg).to(p->platform(), ScalarType::Float32).reshape(p->sizes());
+    *p = pluss::series::full_like(*p, value, ScalarType::Float32).add(idx.mul(ramp_step));
   }
 }
 
@@ -586,7 +586,7 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
         const Series p = model->weight().reshape({2});
         const Series g = model->weight().sensitivity().reshape({2});
         const Series lr = Series::full({}, 5e-2, p.scalar_type()).to(p.platform());
-        const Series z = pluss::zeros_like(p, p.scalar_type());
+        const Series z = pluss::series::zeros_like(p, p.scalar_type());
         const Series z_mul = z.mul(Series::full({}, 0.9, p.scalar_type()).to(p.platform()));
         const Series one = Series::full({}, 1.0, p.scalar_type()).to(p.platform());
         const Series beta1 = Series::full({}, 0.9, p.scalar_type()).to(p.platform());
@@ -604,7 +604,7 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
         const Series delta_sim = first_hat_sim.div(den_sim).mul(lr);
         const Series next_sim = p.sub(delta_sim);
         const Series gb = model->bias().sensitivity().reshape({1});
-        const Series zb = pluss::zeros_like(gb, gb.scalar_type());
+        const Series zb = pluss::series::zeros_like(gb, gb.scalar_type());
         const Series one_b = Series::full({}, 1.0, gb.scalar_type()).to(gb.platform());
         const Series beta1_b = Series::full({}, 0.9, gb.scalar_type()).to(gb.platform());
         const Series one_minus_beta1_b = one_b.sub(beta1_b);

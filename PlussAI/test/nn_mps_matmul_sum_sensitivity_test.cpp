@@ -190,7 +190,7 @@ bool run_case_(std::ostream* err = nullptr) {
     Series b = pluss::make_series(std::vector<float>{3.f, 4.f}, {2}, mps);
     a.tracks_slope_(true);
     b.tracks_slope_(true);
-    pluss::pile(std::vector<Series>{a, b}, 0).select(0, 1).sum().reverse();
+    pluss::series::pile(std::vector<Series>{a, b}, 0).select(0, 1).sum().reverse();
     if (!a.has_sensitivity() || !b.has_sensitivity()) {
       if (err) *err << "mps pile/select sensitivity missing\n";
       return false;

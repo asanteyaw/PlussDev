@@ -195,7 +195,7 @@ Use the vector overload when your objective depends on several parameters.
 ```cpp
 using namespace pluss::subsp::math::diff;
 
-auto x = pluss::linspace(-1.0, 1.0, 8, pluss::ScalarType::Float64);
+auto x = pluss::series::linspace(-1.0, 1.0, 8, pluss::ScalarType::Float64);
 auto y = x.mul(2.0).sub(0.5);
 
 auto w = pluss::make_series(0.0).to(pluss::ScalarType::Float64);
@@ -497,7 +497,7 @@ auto d1 = nth_diff([](const auto& z) { return exp(z); }, x, 1);
 Vectorized input (elementwise function over many values):
 
 ```cpp
-auto xv = pluss::linspace(-7.0, 7.0, 700, pluss::ScalarType::Float64);
+auto xv = pluss::series::linspace(-7.0, 7.0, 700, pluss::ScalarType::Float64);
 auto d1v = nth_diff([](const auto& z) { return tanh(z); }, xv, 1);
 auto d2v = nth_diff([](const auto& z) { return tanh(z); }, xv, 2);
 ```

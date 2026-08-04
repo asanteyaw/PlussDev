@@ -111,7 +111,7 @@ Useful for smile or spot-sensitivity sweeps.
 ### Examples
 
 ```cpp
-auto spot = pluss::linspace(70.0, 130.0, 13, cfg);
+auto spot = pluss::series::linspace(70.0, 130.0, 13, cfg);
 auto curve = fin::pricing::black_scholes_price(
     fin::pricing::OptionType::Call,
     spot,
@@ -287,11 +287,11 @@ Use object/pricer when you want typed engine objects and consistent return conta
 
 ```cpp
 auto inst = fin::instrument::make(fin::pricing::OptionType::Call, 100.0, 1.0, cfg);
-inst.strike = pluss::full({6}, 100.0, cfg);
-inst.maturity = pluss::full({6}, 1.0, cfg);
+inst.strike = pluss::series::full({6}, 100.0, cfg);
+inst.maturity = pluss::series::full({6}, 1.0, cfg);
 
 auto mkt = fin::market::make(100.0, 0.03, 0.01, cfg);
-mkt.spot = pluss::full({6}, 100.0, cfg);
+mkt.spot = pluss::series::full({6}, 100.0, cfg);
 
 auto hest = fin::model::make(1.5, 0.04, 0.30, -0.70, 0.04, cfg);
 
@@ -335,13 +335,13 @@ namespace mod = fin::module;
 mod::Field pipe{
   .instrument = fin::instrument::Vanilla{
     .type = fin::pricing::OptionType::Call,
-    .strike = pluss::linspace(80.0, 120.0, 9, cfg),
-    .maturity = pluss::full({9}, 1.0, cfg),
+    .strike = pluss::series::linspace(80.0, 120.0, 9, cfg),
+    .maturity = pluss::series::full({9}, 1.0, cfg),
   },
   .market = fin::market::State{
-    .spot = pluss::full({9}, 100.0, cfg),
-    .rate = pluss::full({9}, 0.02, cfg),
-    .dividend_yield = pluss::full({9}, 0.0, cfg),
+    .spot = pluss::series::full({9}, 100.0, cfg),
+    .rate = pluss::series::full({9}, 0.02, cfg),
+    .dividend_yield = pluss::series::full({9}, 0.0, cfg),
   },
   .model = fin::model::make(1.5, 0.04, 0.30, -0.70, 0.04, cfg),
   .controls = mod::Controls{.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly, .loss = mod::Loss::MSE},
@@ -432,7 +432,7 @@ auto bfit = fin::calibration::calibrate_bates(quotes, 100.0, 0.02, 0.0, b0, bopt
 ```
 
 ```cpp
-auto returns = pluss::randn({252}, cfg, 20260701ULL).mul(0.02);
+auto returns = pluss::series::randn({252}, cfg, 20260701ULL).mul(0.02);
 fin::volatility::HestonNandiParams hn0{};
 fin::calibration::HestonNandiCalibOptions hnopt{};
 auto hnfit = fin::calibration::calibrate_heston_nandi(returns, quotes, 100.0, 0.02, 0.0, hn0, hnopt, cfg);
@@ -588,15 +588,15 @@ Use linear model first (KF), then nonlinear model (EKF/UKF) when needed.
 13A) Linear KF baseline
 
 ```cpp
-auto y = pluss::full({40}, 1.0, cfg);
+auto y = pluss::series::full({40}, 1.0, cfg);
 
 fin::filtering::KalmanModel km;
-km.transition = pluss::full({1,1}, 1.0, cfg);
-km.observation = pluss::full({1,1}, 1.0, cfg);
-km.process_cov = pluss::full({1,1}, 0.01, cfg);
-km.observation_cov = pluss::full({1,1}, 0.05, cfg);
-km.initial_mean = pluss::full({1}, 0.0, cfg);
-km.initial_cov = pluss::full({1,1}, 1.0, cfg);
+km.transition = pluss::series::full({1,1}, 1.0, cfg);
+km.observation = pluss::series::full({1,1}, 1.0, cfg);
+km.process_cov = pluss::series::full({1,1}, 0.01, cfg);
+km.observation_cov = pluss::series::full({1,1}, 0.05, cfg);
+km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+km.initial_cov = pluss::series::full({1,1}, 1.0, cfg);
 
 auto kf = fin::filtering::kalman_filter(y, km, cfg);
 ```
@@ -608,15 +608,15 @@ fin::filtering::EkfModel ekm;
 ekm.transition = [](const pluss::Series& x, std::int64_t) { return x.mul(0.96).add(0.02); };
 ekm.observation = [](const pluss::Series& x, std::int64_t) { return x.square(); };
 ekm.transition_jacobian = [](const pluss::Series& x, std::int64_t) {
-  return pluss::full({1,1}, 0.96, x.options());
+  return pluss::series::full({1,1}, 0.96, x.options());
 };
 ekm.observation_jacobian = [](const pluss::Series& x, std::int64_t) {
   return x.mul(2.0).reshape({1,1});
 };
-ekm.process_cov = pluss::full({1,1}, 0.01, cfg);
-ekm.observation_cov = pluss::full({1,1}, 0.05, cfg);
-ekm.initial_mean = pluss::full({1}, 0.8, cfg);
-ekm.initial_cov = pluss::full({1,1}, 0.4, cfg);
+ekm.process_cov = pluss::series::full({1,1}, 0.01, cfg);
+ekm.observation_cov = pluss::series::full({1,1}, 0.05, cfg);
+ekm.initial_mean = pluss::series::full({1}, 0.8, cfg);
+ekm.initial_cov = pluss::series::full({1,1}, 0.4, cfg);
 
 auto ekf = fin::filtering::ekf_filter(y, ekm, cfg);
 ```
@@ -627,10 +627,10 @@ auto ekf = fin::filtering::ekf_filter(y, ekm, cfg);
 fin::filtering::UkfModel ukm;
 ukm.transition = [](const pluss::Series& x, std::int64_t) { return x.mul(0.95); };
 ukm.observation = [](const pluss::Series& x, std::int64_t) { return x.square(); };
-ukm.process_cov = pluss::full({1,1}, 0.01, cfg);
-ukm.observation_cov = pluss::full({1,1}, 0.05, cfg);
-ukm.initial_mean = pluss::full({1}, 1.0, cfg);
-ukm.initial_cov = pluss::full({1,1}, 0.5, cfg);
+ukm.process_cov = pluss::series::full({1,1}, 0.01, cfg);
+ukm.observation_cov = pluss::series::full({1,1}, 0.05, cfg);
+ukm.initial_mean = pluss::series::full({1}, 1.0, cfg);
+ukm.initial_cov = pluss::series::full({1,1}, 0.5, cfg);
 ukm.options = fin::filtering::UkfOptions{.alpha = 1e-3, .beta = 2.0, .kappa = 0.0, .jitter = 1e-9};
 
 auto ukf = fin::filtering::ukf_filter(y, ukm, cfg);
@@ -671,7 +671,7 @@ Use generic particle filter for custom state spaces; use `sv_particle_filter` fo
 
 ```cpp
 fin::filtering::ParticleFilterModel pm;
-pm.initial_particles = pluss::randn({1000, 1}, cfg, 20260711ULL);
+pm.initial_particles = pluss::series::randn({1000, 1}, cfg, 20260711ULL);
 pm.options.ess_threshold = 0.6;
 pm.options.resample = true;
 pm.options.resample_method = fin::filtering::ParticleResampleMethod::Stratified;
@@ -679,7 +679,7 @@ pm.options.resample_trigger = fin::filtering::ParticleResampleTrigger::Ratio;
 pm.options.resample_seed = 20260712ULL;
 
 pm.transition = [=](const pluss::Series& particles, std::int64_t t) {
-  return particles.mul(0.98).add(pluss::randn({particles.sizes()[0], 1}, cfg, 1000 + static_cast<std::uint64_t>(t)).mul(0.1));
+  return particles.mul(0.98).add(pluss::series::randn({particles.sizes()[0], 1}, cfg, 1000 + static_cast<std::uint64_t>(t)).mul(0.1));
 };
 
 pm.loglik = [](const pluss::Series& particles, const pluss::Series& obs, std::int64_t) {
@@ -687,13 +687,13 @@ pm.loglik = [](const pluss::Series& particles, const pluss::Series& obs, std::in
   return resid.square().mul(-0.5).reshape({particles.sizes()[0]});
 };
 
-auto pf = fin::filtering::particle_filter(pluss::full({40}, 0.0, cfg), pm, cfg);
+auto pf = fin::filtering::particle_filter(pluss::series::full({40}, 0.0, cfg), pm, cfg);
 ```
 
 14B) Specialized SV particle filter convenience
 
 ```cpp
-auto log_returns = pluss::randn({252}, cfg, 20260721ULL).mul(0.01);
+auto log_returns = pluss::series::randn({252}, cfg, 20260721ULL).mul(0.01);
 
 auto svpf = fin::filtering::sv_particle_filter(
     log_returns,
@@ -736,7 +736,7 @@ Use to evaluate discrete-time hedge replication error under assumed volatility.
 ### Examples
 
 ```cpp
-auto spot_path = pluss::linspace(95.0, 110.0, 80, cfg);
+auto spot_path = pluss::series::linspace(95.0, 110.0, 80, cfg);
 auto hedged = fin::hedging::delta_hedge(
     spot_path,
     fin::pricing::OptionType::Call,

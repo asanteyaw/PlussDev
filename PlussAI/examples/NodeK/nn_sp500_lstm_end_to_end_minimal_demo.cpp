@@ -168,8 +168,8 @@ int main() {
 
   const std::int64_t train_n = static_cast<std::int64_t>(static_cast<double>(n) * 0.8);
   const std::int64_t test_n = n - train_n;
-  const Series train_idx = pluss::arange(0, train_n, cpu_i64);
-  const Series test_idx = pluss::arange(train_n, n, cpu_i64);
+  const Series train_idx = pluss::series::arange(0, train_n, cpu_i64);
+  const Series test_idx = pluss::series::arange(train_n, n, cpu_i64);
   const Series x_train_cpu = features.index_select(0, train_idx);
   const Series y_train_cpu = target.index_select(0, train_idx);
   const Series x_test_cpu = features.index_select(0, test_idx);
@@ -189,7 +189,7 @@ int main() {
     std::int64_t train_batches = 0;
     for (std::int64_t start = 0; start < train_n; start += batch_size) {
       const std::int64_t end = std::min(start + batch_size, train_n);
-      const Series batch_idx = pluss::arange(start, end, cpu_i64);
+      const Series batch_idx = pluss::series::arange(start, end, cpu_i64);
       const Series xb = x_train_cpu.index_select(0, batch_idx).to(platform, dtype);
       const Series yb = y_train_cpu.index_select(0, batch_idx).to(platform, dtype);
       const Series loss = optimizer.step([&]() -> Series {
@@ -221,7 +221,7 @@ int main() {
   for (std::int64_t start = 0; start < test_n; start += batch_size) {
     const std::int64_t end = std::min(start + batch_size, test_n);
     const std::int64_t bs = end - start;
-    const Series batch_idx = pluss::arange(start, end, cpu_i64);
+    const Series batch_idx = pluss::series::arange(start, end, cpu_i64);
     const Series xb = x_test_cpu.index_select(0, batch_idx).to(platform, dtype);
     const Series yb = y_test_cpu.index_select(0, batch_idx).to(platform, dtype);
     const Series pred = model->forward(xb);

@@ -17,12 +17,12 @@
 #include "pluss/detail/factory_containers.h"
 #include "pluss/detail/nested_timeline_literal.h"
 
-namespace pluss::codeh {
+namespace pluss::timeline {
 
 enum class MomentMode : std::uint8_t {
   Auto = 0,           // expression first, then strict datetime parse fallback
   ExpressionOnly = 1, // expression parser only
-  Strict = 2,         // strict datetime parse only (equivalent to make_timeline)
+  Strict = 2,         // strict datetime parse only (equivalent to pluss::timeline::make)
 };
 
 enum class MomentClock : std::uint8_t {
@@ -35,7 +35,7 @@ struct MomentOptions {
   MomentClock clock{MomentClock::UTC};
 };
 
-Timeline moment(std::string_view expr, const MomentOptions& options);
+pluss::Timeline moment(std::string_view expr, const MomentOptions& options);
 
 namespace detail {
 
@@ -106,7 +106,7 @@ inline std::string ymd_to_iso(int year, int month, int day) {
   return std::string(buf);
 }
 
-inline std::int64_t scalar_epoch_nanos(const Timeline& t, std::string_view where) {
+inline std::int64_t scalar_epoch_nanos(const pluss::Timeline& t, std::string_view where) {
   const auto flat = t.to_epoch_nanos_vector();
   CODEM_CHECK(flat.size() == 1, std::string(where) + ": expected scalar timeline");
   return flat[0];
@@ -190,23 +190,23 @@ inline bool parse_expression_ns(std::string_view expr, const MomentOptions& opti
     if (base == "today") {
       // already set
     } else if (base == "yesterday") {
-      base_ns = scalar_epoch_nanos(::pluss::make_timeline(ymd_to_iso(year, month, day)), "moment(yesterday)")
+      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(yesterday)")
           - 24LL * 3600LL * 1'000'000'000LL;
     } else if (base == "tomorrow") {
-      base_ns = scalar_epoch_nanos(::pluss::make_timeline(ymd_to_iso(year, month, day)), "moment(tomorrow)")
+      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(tomorrow)")
           + 24LL * 3600LL * 1'000'000'000LL;
     } else if (base == "som" || base == "startofmonth" || base == "start_of_month") {
       day = 1;
-      base_ns = scalar_epoch_nanos(::pluss::make_timeline(ymd_to_iso(year, month, day)), "moment(start_of_month)");
+      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(start_of_month)");
     } else if (base == "eom" || base == "endofmonth" || base == "end_of_month") {
       day = days_in_month(year, month);
-      base_ns = scalar_epoch_nanos(::pluss::make_timeline(ymd_to_iso(year, month, day)), "moment(end_of_month)");
+      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(end_of_month)");
     } else {
       return false;
     }
 
     if (base == "today") {
-      base_ns = scalar_epoch_nanos(::pluss::make_timeline(ymd_to_iso(year, month, day)), "moment(today)");
+      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(today)");
     }
   }
 
@@ -218,15 +218,15 @@ inline bool parse_expression_ns(std::string_view expr, const MomentOptions& opti
   return true;
 }
 
-inline Timeline moment_from_textspan(::pluss::detail::TextSpan s1d, const MomentOptions& options) {
+inline pluss::Timeline moment_from_textspan(::pluss::detail::TextSpan s1d, const MomentOptions& options) {
   if (options.mode == MomentMode::Strict) {
     const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(s1d.size())};
-    return ops_internal::timeline_from_utf8(s1d.span(), sizes);
+    return pluss::codeh::ops_internal::timeline_from_utf8(s1d.span(), sizes);
   }
   if (options.mode == MomentMode::Auto) {
     try {
       const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(s1d.size())};
-      return ops_internal::timeline_from_utf8(s1d.span(), sizes);
+      return pluss::codeh::ops_internal::timeline_from_utf8(s1d.span(), sizes);
     } catch (const std::exception&) {
       // Fallback to expression-aware parsing below.
     }
@@ -235,64 +235,71 @@ inline Timeline moment_from_textspan(::pluss::detail::TextSpan s1d, const Moment
   std::vector<std::int64_t> ticks;
   ticks.reserve(s1d.size());
   for (const auto& item : s1d.span()) {
-    ticks.push_back(detail::scalar_epoch_nanos(::pluss::codeh::moment(item, options), "moment(TextSpan)"));
+    ticks.push_back(detail::scalar_epoch_nanos(pluss::timeline::moment(item, options), "moment(TextSpan)"));
   }
   const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(ticks.size())};
-  return ops_internal::timeline_from_epoch_nanos(
+  return pluss::codeh::ops_internal::timeline_from_epoch_nanos(
       std::span<const std::int64_t>(ticks.data(), ticks.size()), sizes);
 }
 
 } // namespace detail
 
-inline Timeline moment(std::string_view expr, const MomentOptions& options = {}) {
+inline pluss::Timeline moment(std::string_view expr, const MomentOptions& options = {}) {
   if (options.mode == MomentMode::Strict) {
-    return ::pluss::make_timeline(expr);
+    return pluss::timeline::make(expr);
   }
 
   std::int64_t epoch_ns = 0;
   if (detail::parse_expression_ns(expr, options, epoch_ns)) {
-    return ::pluss::from_epoch_nanos(epoch_ns);
+    return pluss::timeline::from_epoch(epoch_ns);
   }
 
   CODEM_CHECK(options.mode != MomentMode::ExpressionOnly,
-              "codeh::moment: unsupported moment expression '" + std::string(expr) + "'");
-  return ::pluss::make_timeline(expr);
+              "pluss::timeline::moment: unsupported moment expression '" + std::string(expr) + "'");
+  return pluss::timeline::make(expr);
 }
 
-inline Timeline moment(const char* expr, const MomentOptions& options = {}) {
+inline pluss::Timeline moment(const char* expr, const MomentOptions& options = {}) {
   return moment(std::string_view{expr ? expr : ""}, options);
 }
 
-inline Timeline moment(pluss::msharp::RangeView::Of<std::string_view> s1d, const MomentOptions& options = {}) {
+inline pluss::Timeline moment(pluss::msharp::RangeView::Of<std::string_view> s1d, const MomentOptions& options = {}) {
   return detail::moment_from_textspan(
       ::pluss::detail::TextSpan(std::span<const std::string_view>(s1d.data(), s1d.size())),
       options);
 }
 
-inline Timeline moment(pluss::msharp::RangeView::Of<std::string> s1d, const MomentOptions& options = {}) {
+inline pluss::Timeline moment(pluss::msharp::RangeView::Of<std::string> s1d, const MomentOptions& options = {}) {
   return detail::moment_from_textspan(
       ::pluss::detail::TextSpan::from_strings(std::span<const std::string>(s1d.data(), s1d.size())),
       options);
 }
 
-inline Timeline moment(std::initializer_list<::pluss::detail::NestedTimelineLiteral> nested,
-                       const MomentOptions& options = {}) {
-  auto lit = ::pluss::detail::flatten_timeline_literal(nested, 3, "codeh::moment");
+inline pluss::Timeline moment(std::initializer_list<::pluss::detail::NestedTimelineLiteral> nested,
+                              const MomentOptions& options = {}) {
+  auto lit = ::pluss::detail::flatten_timeline_literal(nested, 3, "pluss::timeline::moment");
   std::vector<std::int64_t> ticks;
   ticks.reserve(lit.flat.size());
   for (const auto& item : lit.flat) {
     ticks.push_back(detail::scalar_epoch_nanos(moment(item, options), "moment(nested)"));
   }
-  return ops_internal::timeline_from_epoch_nanos(
+  return pluss::codeh::ops_internal::timeline_from_epoch_nanos(
       std::span<const std::int64_t>(ticks.data(), ticks.size()),
       std::span<const std::int64_t>(lit.sizes.data(), lit.sizes.size()));
 }
 
-} // namespace pluss::codeh
+// pluss::timeline::now(clock) -> scalar Timeline at the current instant.
+// Convenience wrapper over moment("now", ...) for the single most common
+// moment expression -- no string literal or MomentOptions boilerplate needed
+// at the call site.
+inline pluss::Timeline now(MomentClock clock = MomentClock::UTC) {
+  return moment("now", MomentOptions{MomentMode::Auto, clock});
+}
 
-namespace pluss {
-using codeh::MomentClock;
-using codeh::MomentMode;
-using codeh::MomentOptions;
-using codeh::moment;
-} // namespace pluss
+// pluss::timeline::today(clock) -> scalar Timeline at the start of today
+// (midnight). Convenience wrapper over moment("today", ...).
+inline pluss::Timeline today(MomentClock clock = MomentClock::UTC) {
+  return moment("today", MomentOptions{MomentMode::Auto, clock});
+}
+
+} // namespace pluss::timeline

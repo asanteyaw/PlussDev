@@ -19,7 +19,7 @@ using pluss::subsp::stats::ts::AcfNorm;
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = phi * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -51,7 +51,7 @@ TEST_CASE("ts plotting: payload numerics are finite", "[ts][plot][payload]") {
 
 TEST_CASE("ts plotting: residual payload keeps length", "[ts][plot][residual]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({1500}, cfg, 20260409ULL);
+  const Series y = pluss::series::randn({1500}, cfg, 20260409ULL);
   const auto payload = pluss::subsp::stats::ts::plot::residuals_payload(y, cfg);
 
   REQUIRE(payload.index.numel() == y.numel());

@@ -16,7 +16,7 @@ Config f64_cfg_(Config cfg, Platform p) {
 }
 
 Series scalar_series_(double v, Config cfg) {
-  return pluss::full({1}, v, cfg);
+  return pluss::series::full({1}, v, cfg);
 }
 
 object::model::Heston to_series_model_(const volatility::HestonParams& p, Config cfg) {

@@ -57,7 +57,7 @@ Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
         if (has_validity && !valid[static_cast<std::size_t>(i)]) {
           out.emplace_back(std::monostate{});
         } else {
-          out.emplace_back(pluss::from_epoch_nanos(x[static_cast<std::size_t>(i)]));
+          out.emplace_back(pluss::timeline::from_epoch(x[static_cast<std::size_t>(i)]));
         }
       }
       break;

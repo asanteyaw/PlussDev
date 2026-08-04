@@ -9,17 +9,17 @@ int main() {
   using pluss::Series;
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
-  const Series x = pluss::rand({2, 6, 8}, cfg, 41ULL);
+  const Series x = pluss::series::rand({2, 6, 8}, cfg, 41ULL);
 
   const pluss::MultiheadWeights weights{
-      .q_weight = pluss::rand({8, 8}, cfg, 43ULL),
-      .k_weight = pluss::rand({8, 8}, cfg, 47ULL),
-      .v_weight = pluss::rand({8, 8}, cfg, 53ULL),
-      .out_weight = pluss::rand({8, 8}, cfg, 59ULL),
-      .q_bias = pluss::zeros({8}, cfg),
-      .k_bias = pluss::zeros({8}, cfg),
-      .v_bias = pluss::zeros({8}, cfg),
-      .out_bias = pluss::zeros({8}, cfg),
+      .q_weight = pluss::series::rand({8, 8}, cfg, 43ULL),
+      .k_weight = pluss::series::rand({8, 8}, cfg, 47ULL),
+      .v_weight = pluss::series::rand({8, 8}, cfg, 53ULL),
+      .out_weight = pluss::series::rand({8, 8}, cfg, 59ULL),
+      .q_bias = pluss::series::zeros({8}, cfg),
+      .k_bias = pluss::series::zeros({8}, cfg),
+      .v_bias = pluss::series::zeros({8}, cfg),
+      .out_bias = pluss::series::zeros({8}, cfg),
   };
   const pluss::MultiheadOptions options{
       .num_heads = 2,

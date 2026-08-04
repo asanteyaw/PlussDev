@@ -28,7 +28,7 @@ Series make_response(const Series& x, std::uint64_t seed, double noise_scale) {
   const std::int64_t n = x.sizes()[0];
   const std::int64_t p = x.sizes()[1];
   const auto xv = x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     const double x0_lag = xv[static_cast<std::size_t>((t - 1) * p)];
@@ -53,7 +53,7 @@ double l2_norm(const Series& x) {
 TEST_CASE("ts direct forecaster: low-noise fit is accurate", "[ts][direct][accuracy]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 1500;
-  const Series x = pluss::randn({n, 2}, cfg, 20260318ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260318ULL);
   const Series y = make_response(x, 20260319ULL, 0.01);
 
   DirectForecasterOptions opt;
@@ -81,7 +81,7 @@ TEST_CASE("ts direct forecaster: low-noise fit is accurate", "[ts][direct][accur
 TEST_CASE("ts direct forecaster: ridge regularization shrinks coefficient norm", "[ts][direct][sensitivity]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 1200;
-  const Series x = pluss::randn({n, 4}, cfg, 20260320ULL);
+  const Series x = pluss::series::randn({n, 4}, cfg, 20260320ULL);
   const Series y = make_response(
       x.index_select(1,
                      pluss::make_series(std::vector<std::int64_t>{0, 1},
@@ -111,7 +111,7 @@ TEST_CASE("ts direct forecaster: ridge regularization shrinks coefficient norm",
 TEST_CASE("ts direct forecaster: stress and crash checks", "[ts][direct][stress][crash]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 30000;
-  const Series x = pluss::rand({n, 6}, cfg, 20260322ULL);
+  const Series x = pluss::series::rand({n, 6}, cfg, 20260322ULL);
   const Series y = make_response(
       x.index_select(1,
                      pluss::make_series(std::vector<std::int64_t>{0, 1},
@@ -143,7 +143,7 @@ TEST_CASE("ts direct forecaster: stress and crash checks", "[ts][direct][stress]
 TEST_CASE("ts direct cv forecaster: overlap handling and average loss", "[ts][direct][cv][overlap]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 2200;
-  const Series x = pluss::randn({n, 2}, cfg, 20260401ULL);
+  const Series x = pluss::series::randn({n, 2}, cfg, 20260401ULL);
   const Series y = make_response(x, 20260402ULL, 0.03);
 
   PartitionOptions popts;
@@ -183,7 +183,7 @@ TEST_CASE("ts direct cv forecaster: overlap handling and average loss", "[ts][di
 TEST_CASE("ts direct cv forecaster: stress and crash checks", "[ts][direct][cv][stress][crash]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 30000;
-  const Series x = pluss::rand({n, 4}, cfg, 20260403ULL);
+  const Series x = pluss::series::rand({n, 4}, cfg, 20260403ULL);
   const Series y = make_response(
       x.index_select(1,
                      pluss::make_series(std::vector<std::int64_t>{0, 1},
@@ -214,6 +214,6 @@ TEST_CASE("ts direct cv forecaster: stress and crash checks", "[ts][direct][cv][
   REQUIRE(lind.sizes()[1] == 3);
   REQUIRE(lind.isfinite().all().item<double>() == Approx(1.0));
 
-  REQUIRE_THROWS(cv.cvpredict(x, pluss::rand({n + 1}, cfg, 101ULL), cfg));
+  REQUIRE_THROWS(cv.cvpredict(x, pluss::series::rand({n + 1}, cfg, 101ULL), cfg));
   REQUIRE_THROWS(cv.fold_model(-1));
 }

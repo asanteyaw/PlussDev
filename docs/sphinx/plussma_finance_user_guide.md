@@ -233,13 +233,13 @@ This surface is the most ergonomic for batched option pricing with typed engines
 auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
 auto inst = fin::instrument::make(fin::pricing::OptionType::Call, 100.0, 1.0, cfg);
-inst.strike = pluss::full({7}, 100.0, cfg);
-inst.maturity = pluss::full({7}, 1.0, cfg);
+inst.strike = pluss::series::full({7}, 100.0, cfg);
+inst.maturity = pluss::series::full({7}, 1.0, cfg);
 
 auto mkt = fin::market::make(100.0, 0.03, 0.01, cfg);
-mkt.spot = pluss::linspace(70.0, 130.0, 7, cfg);
+mkt.spot = pluss::series::linspace(70.0, 130.0, 7, cfg);
 
-fin::model::BlackScholes bs_mdl{.volatility = pluss::full({7}, 0.22, cfg)};
+fin::model::BlackScholes bs_mdl{.volatility = pluss::series::full({7}, 0.22, cfg)};
 fin::pricer::Analytic an;
 
 auto out = an.price(inst, bs_mdl, mkt, fin::pricer::RiskSpec::All, cfg);
@@ -295,13 +295,13 @@ auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(
 mod::Field pipe{
   .instrument = fin::instrument::Vanilla{
     .type = fin::pricing::OptionType::Call,
-    .strike = pluss::linspace(80.0, 120.0, 9, cfg),
-    .maturity = pluss::full({9}, 1.0, cfg),
+    .strike = pluss::series::linspace(80.0, 120.0, 9, cfg),
+    .maturity = pluss::series::full({9}, 1.0, cfg),
   },
   .market = fin::market::State{
-    .spot = pluss::full({9}, 100.0, cfg),
-    .rate = pluss::full({9}, 0.02, cfg),
-    .dividend_yield = pluss::full({9}, 0.0, cfg),
+    .spot = pluss::series::full({9}, 100.0, cfg),
+    .rate = pluss::series::full({9}, 0.02, cfg),
+    .dividend_yield = pluss::series::full({9}, 0.0, cfg),
   },
   .model = fin::model::make(1.5, 0.04, 0.30, -0.70, 0.04, cfg),
   .controls = mod::Controls{
@@ -573,14 +573,14 @@ KF (linear-Gaussian):
 
 ```cpp
 flt::KalmanModel km;
-km.transition = pluss::full({1,1}, 1.0, cfg);
-km.observation = pluss::full({1,1}, 1.0, cfg);
-km.process_cov = pluss::full({1,1}, 0.01, cfg);
-km.observation_cov = pluss::full({1,1}, 0.04, cfg);
-km.initial_mean = pluss::full({1}, 0.0, cfg);
-km.initial_cov = pluss::full({1,1}, 1.0, cfg);
+km.transition = pluss::series::full({1,1}, 1.0, cfg);
+km.observation = pluss::series::full({1,1}, 1.0, cfg);
+km.process_cov = pluss::series::full({1,1}, 0.01, cfg);
+km.observation_cov = pluss::series::full({1,1}, 0.04, cfg);
+km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+km.initial_cov = pluss::series::full({1,1}, 1.0, cfg);
 
-auto y = pluss::full({40}, 1.2, cfg);
+auto y = pluss::series::full({40}, 1.2, cfg);
 auto kf = flt::kalman_filter(y, km, cfg);
 ```
 
@@ -591,15 +591,15 @@ flt::EkfModel ekm;
 ekm.transition = [](const pluss::Series& x, std::int64_t) { return x.mul(0.96).add(0.03); };
 ekm.observation = [](const pluss::Series& x, std::int64_t) { return x.square(); };
 ekm.transition_jacobian = [](const pluss::Series& x, std::int64_t) {
-  return pluss::full({1, 1}, 0.96, x.options());
+  return pluss::series::full({1, 1}, 0.96, x.options());
 };
 ekm.observation_jacobian = [](const pluss::Series& x, std::int64_t) {
   return x.mul(2.0).reshape({1, 1});
 };
-ekm.process_cov = pluss::full({1,1}, 0.01, cfg);
-ekm.observation_cov = pluss::full({1,1}, 0.05, cfg);
-ekm.initial_mean = pluss::full({1}, 0.8, cfg);
-ekm.initial_cov = pluss::full({1,1}, 0.3, cfg);
+ekm.process_cov = pluss::series::full({1,1}, 0.01, cfg);
+ekm.observation_cov = pluss::series::full({1,1}, 0.05, cfg);
+ekm.initial_mean = pluss::series::full({1}, 0.8, cfg);
+ekm.initial_cov = pluss::series::full({1,1}, 0.3, cfg);
 
 auto ekf = flt::ekf_filter(y, ekm, cfg);
 ```
@@ -610,10 +610,10 @@ UKF (nonlinear derivative-free):
 flt::UkfModel ukm;
 ukm.transition = [](const pluss::Series& x, std::int64_t) { return x.mul(0.95); };
 ukm.observation = [](const pluss::Series& x, std::int64_t) { return x.square(); };
-ukm.process_cov = pluss::full({1,1}, 0.01, cfg);
-ukm.observation_cov = pluss::full({1,1}, 0.05, cfg);
-ukm.initial_mean = pluss::full({1}, 1.0, cfg);
-ukm.initial_cov = pluss::full({1,1}, 0.5, cfg);
+ukm.process_cov = pluss::series::full({1,1}, 0.01, cfg);
+ukm.observation_cov = pluss::series::full({1,1}, 0.05, cfg);
+ukm.initial_mean = pluss::series::full({1}, 1.0, cfg);
+ukm.initial_cov = pluss::series::full({1,1}, 0.5, cfg);
 ukm.options = flt::UkfOptions{.alpha = 1e-3, .beta = 2.0, .kappa = 0.0, .jitter = 1e-9};
 
 auto ukf = flt::ukf_filter(y, ukm, cfg);
@@ -623,7 +623,7 @@ Particle filter (generic state-space):
 
 ```cpp
 flt::ParticleFilterModel pm;
-pm.initial_particles = pluss::randn({1500, 1}, cfg, 20260711ULL);
+pm.initial_particles = pluss::series::randn({1500, 1}, cfg, 20260711ULL);
 pm.options.resample = true;
 pm.options.ess_threshold = 0.6;
 pm.options.resample_method = flt::ParticleResampleMethod::Stratified;
@@ -632,7 +632,7 @@ pm.options.resample_seed = 20260712ULL;
 
 pm.transition = [=](const pluss::Series& particles, std::int64_t t) {
   return particles.mul(0.98).add(
-      pluss::randn({particles.sizes()[0], 1}, cfg, 5000 + static_cast<std::uint64_t>(t)).mul(0.08));
+      pluss::series::randn({particles.sizes()[0], 1}, cfg, 5000 + static_cast<std::uint64_t>(t)).mul(0.08));
 };
 pm.loglik = [](const pluss::Series& particles, const pluss::Series& obs, std::int64_t) {
   const auto resid = obs.reshape({1,1}).sub(particles);
@@ -645,7 +645,7 @@ auto pf = flt::particle_filter(y, pm, cfg);
 SV particle filter (specialized convenience):
 
 ```cpp
-auto r = pluss::randn({120}, cfg, 20260801ULL).mul(0.01);
+auto r = pluss::series::randn({120}, cfg, 20260801ULL).mul(0.01);
 auto sv = flt::sv_particle_filter(
     r,
     fin::volatility::SvParams{},
@@ -689,7 +689,7 @@ Computes Black-Scholes delta-hedging trajectory on a realized spot path.
 ### Examples
 
 ```cpp
-auto spot_path = pluss::linspace(95.0, 110.0, 64, cfg);
+auto spot_path = pluss::series::linspace(95.0, 110.0, 64, cfg);
 auto hedged = fin::hdg::delta_hedge(
     spot_path,
     fin::pricing::OptionType::Call,

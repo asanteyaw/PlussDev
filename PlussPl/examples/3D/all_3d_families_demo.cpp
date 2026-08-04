@@ -11,8 +11,8 @@
 namespace {
 
 pluss::Series peaks_like(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = pluss::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = pluss::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -28,9 +28,9 @@ std::tuple<pluss::Series, pluss::Series, pluss::Series, pluss::Series> synthetic
     std::int64_t nx,
     std::int64_t ny,
     std::int64_t nz) {
-  auto x = pluss::linspace(-1.4, 1.4, nx, pluss::ScalarType::Float64);
-  auto y = pluss::linspace(-1.4, 1.4, ny, pluss::ScalarType::Float64);
-  auto z = pluss::linspace(-1.2, 1.2, nz, pluss::ScalarType::Float64);
+  auto x = pluss::series::linspace(-1.4, 1.4, nx, pluss::ScalarType::Float64);
+  auto y = pluss::series::linspace(-1.4, 1.4, ny, pluss::ScalarType::Float64);
+  auto z = pluss::series::linspace(-1.2, 1.2, nz, pluss::ScalarType::Float64);
   const auto xv = x.to_vec<double>();
   const auto yv = y.to_vec<double>();
   const auto zv = z.to_vec<double>();
@@ -69,8 +69,8 @@ int main() {
   gallery.headline("PlussPl All 3D Families");
   gallery.legend(pl::KeyDock::East).z_caption("terrain-group", "shared z scale");
 
-  const auto xs = pluss::linspace(-3.0, 3.0, 34, pluss::ScalarType::Float64);
-  const auto ys = pluss::linspace(-3.0, 3.0, 34, pluss::ScalarType::Float64);
+  const auto xs = pluss::series::linspace(-3.0, 3.0, 34, pluss::ScalarType::Float64);
+  const auto ys = pluss::series::linspace(-3.0, 3.0, 34, pluss::ScalarType::Float64);
   const auto zz = peaks_like(34, 34);
 
   auto& pane1 = gallery.pane3("sheet + lattice");
@@ -95,7 +95,7 @@ int main() {
   auto& pane3 = gallery.pane3("path3 + cloud3");
   pane3.place(0, 2).grid(pl::GridStyle::Major).caption("trajectory and point-cloud families");
   pane3.lights().headlight();
-  const auto t = pluss::linspace(0.0, 10.0, 240, pluss::ScalarType::Float64);
+  const auto t = pluss::series::linspace(0.0, 10.0, 240, pluss::ScalarType::Float64);
   const auto px = t.mul(1.9).cos();
   const auto py = t.mul(1.9).sin();
   const auto pz = t.mul(0.22);

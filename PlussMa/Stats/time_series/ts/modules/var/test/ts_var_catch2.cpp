@@ -47,7 +47,7 @@ VarFit var_truth_no_exog() {
   fit.include_intercept = true;
   fit.include_trend = false;
   fit.constant = pluss::make_series(std::vector<double>{0.10, -0.05}, {2}, cfg);
-  fit.trend = pluss::zeros({2}, cfg);
+  fit.trend = pluss::series::zeros({2}, cfg);
   fit.ar = pluss::make_series(
       std::vector<double>{
           0.45, 0.08,
@@ -57,7 +57,7 @@ VarFit var_truth_no_exog() {
       },
       {2, 2, 2},
       cfg);
-  fit.beta = pluss::empty({0, 2}, cfg);
+  fit.beta = pluss::series::empty({0, 2}, cfg);
   fit.covariance = pluss::make_series(std::vector<double>{0.35, 0.08, 0.08, 0.25}, {2, 2}, cfg);
   return fit;
 }
@@ -123,7 +123,7 @@ TEST_CASE("ts var: fit/infer/loglik are finite and stable", "[ts][var][fit]") {
 TEST_CASE("ts varx: exogenous fit + forecast path", "[ts][var][varx]") {
   const auto cfg = f64_cpu();
   const auto truth = var_truth_with_exog();
-  const Series x = pluss::randn({5000, 2}, cfg, 20260602ULL);
+  const Series x = pluss::series::randn({5000, 2}, cfg, 20260602ULL);
   const Series y = truth.simulate(x, cfg, 20260603ULL);
 
   VarOptions opt;
@@ -138,7 +138,7 @@ TEST_CASE("ts varx: exogenous fit + forecast path", "[ts][var][varx]") {
   REQUIRE(fit.infer(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
   REQUIRE(fit.loglik_per_obs(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
 
-  const Series xf = pluss::randn({16, 2}, cfg, 20260604ULL);
+  const Series xf = pluss::series::randn({16, 2}, cfg, 20260604ULL);
   const Series f = fit.forecast(16, y, xf, cfg);
   REQUIRE(f.sizes()[0] == 16);
   REQUIRE(f.sizes()[1] == 2);
@@ -155,7 +155,7 @@ TEST_CASE("ts var/vec conversion roundtrip + edge checks", "[ts][var][vec]") {
 
   VarOptions opt;
   opt.lag_order = 2;
-  const Series bad_y = pluss::randn({2, 2}, cfg, 20260605ULL);
+  const Series bad_y = pluss::series::randn({2, 2}, cfg, 20260605ULL);
   REQUIRE_THROWS(Var::fit_mle(bad_y, opt, cfg));
 
   const Series y = truth.simulate(200, cfg, 20260606ULL);
@@ -207,8 +207,8 @@ TEST_CASE("ts var: granger_test detects directional lag-causality", "[ts][var][g
   truth.lag_order = 1;
   truth.include_intercept = false;
   truth.include_trend = false;
-  truth.constant = pluss::zeros({2}, cfg);
-  truth.trend = pluss::zeros({2}, cfg);
+  truth.constant = pluss::series::zeros({2}, cfg);
+  truth.trend = pluss::series::zeros({2}, cfg);
   truth.ar = pluss::make_series(
       std::vector<double>{
           0.20, 0.00,  // source 0 -> eq0,eq1
@@ -216,7 +216,7 @@ TEST_CASE("ts var: granger_test detects directional lag-causality", "[ts][var][g
       },
       {1, 2, 2},
       cfg);
-  truth.beta = pluss::empty({0, 2}, cfg);
+  truth.beta = pluss::series::empty({0, 2}, cfg);
   truth.covariance = pluss::make_series(std::vector<double>{0.25, 0.02, 0.02, 0.20}, {2, 2}, cfg);
 
   const Series y = truth.simulate(4500, cfg, 20260622ULL);

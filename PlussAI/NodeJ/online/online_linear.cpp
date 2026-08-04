@@ -85,7 +85,7 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Series prepend_intercept(const Series& x_rows) {
-  const Series ones = pluss::ones({x_rows.sizes()[0], 1}, f64_on(x_rows.platform()));
+  const Series ones = pluss::series::ones({x_rows.sizes()[0], 1}, f64_on(x_rows.platform()));
   return ones.unite({x_rows}, 1);
 }
 
@@ -118,8 +118,8 @@ struct BinaryLabelEncoding {
         Status::invalid_argument(std::string(where) + " currently requires exactly two distinct classes."));
   }
 
-  const Series idx0 = pluss::arange(0, 1, i64_on(classes.platform()));
-  const Series idx1 = pluss::arange(1, 2, i64_on(classes.platform()));
+  const Series idx0 = pluss::series::arange(0, 1, i64_on(classes.platform()));
+  const Series idx1 = pluss::series::arange(1, 2, i64_on(classes.platform()));
   const double negative = classes.index_select(0, idx0).reshape({1}).item<double>();
   const double positive = classes.index_select(0, idx1).reshape({1}).item<double>();
   const Series y01 = y64.eq(positive).to(ScalarType::Float64);
@@ -171,8 +171,8 @@ struct BinaryLabelEncoding {
   if (lambda > 0.0) {
     Series ridge = weights;
     if (fit_intercept) {
-      const Series idx0 = pluss::arange(0, 1, i64_on(ridge.platform()));
-      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      const Series idx0 = pluss::series::arange(0, 1, i64_on(ridge.platform()));
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
     }
     grad = grad.add(ridge.mul(lambda));
   }
@@ -195,8 +195,8 @@ struct BinaryLabelEncoding {
   if (lambda > 0.0) {
     Series ridge = weights;
     if (fit_intercept) {
-      const Series idx0 = pluss::arange(0, 1, i64_on(ridge.platform()));
-      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      const Series idx0 = pluss::series::arange(0, 1, i64_on(ridge.platform()));
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
     }
     grad = grad.add(ridge.mul(lambda));
   }
@@ -216,8 +216,8 @@ struct BinaryLabelEncoding {
   if (lambda > 0.0) {
     Series ridge = weights;
     if (fit_intercept) {
-      const Series idx0 = pluss::arange(0, 1, i64_on(ridge.platform()));
-      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      const Series idx0 = pluss::series::arange(0, 1, i64_on(ridge.platform()));
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
     }
     grad = grad.add(ridge.mul(lambda));
   }
@@ -242,8 +242,8 @@ struct BinaryLabelEncoding {
   if (lambda > 0.0) {
     Series ridge = weights;
     if (fit_intercept) {
-      const Series idx0 = pluss::arange(0, 1, i64_on(ridge.platform()));
-      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      const Series idx0 = pluss::series::arange(0, 1, i64_on(ridge.platform()));
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
     }
     grad = grad.add(ridge.mul(lambda));
   }
@@ -280,7 +280,7 @@ struct BinaryLabelEncoding {
   const Series fp = yb.mul(-1.0).add(1.0).mul(yhb).sum();
   const Series fn = yb.mul(yhb.mul(-1.0).add(1.0)).sum();
   const Series accuracy = yb.eq(yhb).to(ScalarType::Float64).mean();
-  const Series zero = pluss::zeros_like(tp, ScalarType::Float64);
+  const Series zero = pluss::series::zeros_like(tp, ScalarType::Float64);
   const Series recall = tp.add(fn).gt(0.0).where(tp.div(tp.add(fn)), zero);
   const Series precision = tp.add(fp).gt(0.0).where(tp.div(tp.add(fp)), zero);
   const Series f1 = precision.add(recall).gt(0.0).where(
@@ -350,8 +350,8 @@ struct BinaryLabelEncoding {
   const Series y_mean = y.mean();
   const Series sse = err.square().sum();
   const Series sst = y.sub(y_mean).square().sum();
-  const Series one = pluss::ones({1}, f64_on(y.platform()));
-  const Series zero = pluss::zeros({1}, f64_on(y.platform()));
+  const Series one = pluss::series::ones({1}, f64_on(y.platform()));
+  const Series zero = pluss::series::zeros({1}, f64_on(y.platform()));
   const Series r2 = sst.gt(0.0).where(one.sub(sse.div(sst)), zero);
 
   std::vector<Series> out{};
@@ -452,7 +452,7 @@ Status OnlineLinearClassifier::learn(const LabeledBatch& batch, const TrainOptio
 
   Series design = matrix.x_rows;
   if (options_.family.fit_intercept) design = prepend_intercept(design);
-  weights_ = pluss::zeros({design.sizes()[1]}, f64_on(design.platform()));
+  weights_ = pluss::series::zeros({design.sizes()[1]}, f64_on(design.platform()));
 
   feature_count_ = matrix.feature_count;
   negative_label_ = labels.negative;
@@ -589,7 +589,7 @@ Status OnlineLinearRegressor::learn(const LabeledBatch& batch, const TrainOption
 
   Series design = matrix.x_rows;
   if (options_.family.fit_intercept) design = prepend_intercept(design);
-  weights_ = pluss::zeros({design.sizes()[1]}, f64_on(design.platform()));
+  weights_ = pluss::series::zeros({design.sizes()[1]}, f64_on(design.platform()));
 
   feature_count_ = matrix.feature_count;
   seen_samples_ = 0;

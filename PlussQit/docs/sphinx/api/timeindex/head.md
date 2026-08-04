@@ -29,7 +29,7 @@ How many timestamps to keep from the front.
 
 ```cpp
 auto out = base.head(3);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -43,7 +43,7 @@ Example 2. Use the default when you only want a small front preview.
 
 ```cpp
 auto preview = base.head();
-std::cout << pluss::print_timeline(preview) << "\n";
+std::cout << pluss::timeindex::print(preview) << "\n";
 ```
 
 ## See Also

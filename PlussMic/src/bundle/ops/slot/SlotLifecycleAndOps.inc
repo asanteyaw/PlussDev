@@ -460,7 +460,7 @@ pluss::kindle::Stream Slot::to_kindle() const {
     std::vector<std::int64_t> ticks;
     ticks.reserve(values().size());
     for (const auto& v : values()) ticks.push_back(std::get<pluss::Timeline>(v).to_epoch_nanos_vector()[0]);
-    return pluss::kindle::Stream(pluss::from_epoch_nanos(
+    return pluss::kindle::Stream(pluss::timeline::from_epoch(
         ticks,
         std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())}));
   }

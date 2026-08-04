@@ -41,7 +41,7 @@ VecmFit vecm_truth() {
       {1, 2, 2},
       cfg);
   fit.constant = pluss::make_series(std::vector<double>{0.012, -0.007}, {2}, cfg);
-  fit.trend = pluss::zeros({2}, cfg);
+  fit.trend = pluss::series::zeros({2}, cfg);
   fit.covariance = pluss::make_series(std::vector<double>{0.22, 0.03, 0.03, 0.18}, {2, 2}, cfg);
   fit.sample_size = 0;
   return fit;

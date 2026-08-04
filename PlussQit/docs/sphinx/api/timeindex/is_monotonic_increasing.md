@@ -29,7 +29,7 @@ semantics become harder to reason about immediately.
 Example 1. A standard ascending axis is monotonic increasing.
 
 ```cpp
-auto idx = pluss::make_timeindex({
+auto idx = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
@@ -53,7 +53,7 @@ Example 2. A descending axis can still be checked when you intentionally build
 it without sorted enforcement.
 
 ```cpp
-auto descending = pluss::make_timeindex({
+auto descending = pluss::timeindex::make({
     "2024-11-01T01:20:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T00:40:00Z",

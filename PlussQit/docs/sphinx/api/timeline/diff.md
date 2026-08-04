@@ -101,12 +101,12 @@ data=[0.0000, -870.0000, 14399.0000, -86400.0000]
 `a - b` and `a.diff(b)` compute identically:
 
 ```cpp
-const auto t0 = pluss::make_timeline("1999-04-17T21:15:23Z");
-const auto t1 = pluss::make_timeline("1999-04-18T00:15:23Z"); // t0 + 3h
+const auto t0 = pluss::timeline::make("1999-04-17T21:15:23Z");
+const auto t1 = pluss::timeline::make("1999-04-18T00:15:23Z"); // t0 + 3h
 const auto diff_operator = t1 - t0;
 const auto diff_method = t1.diff(t0);
 std::cout << "dim=" << diff_operator.dim() << " numel=" << diff_operator.numel() << "\n";
-std::cout << pluss::print_series(diff_operator.total_seconds()) << "\n";
+std::cout << pluss::print_series(diff_operator.total().seconds()) << "\n";
 std::cout << pluss::print_series(diff_operator.eq(diff_method)) << "\n";
 ```
 

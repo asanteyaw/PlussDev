@@ -48,8 +48,8 @@ Example 1. Return the positions whose timestamps fall inside an inclusive time
 window.
 
 ```cpp
-auto start = pluss::make_timeline("2024-11-01T00:15:00Z");
-auto end = pluss::make_timeline("2024-11-01T01:00:00Z");
+auto start = pluss::timeline::make("2024-11-01T00:15:00Z");
+auto end = pluss::timeline::make("2024-11-01T01:00:00Z");
 
 auto take_rows = idx.slice(start, end);
 std::cout << pluss::print_series(take_rows) << "\n";
@@ -68,8 +68,8 @@ aligned payload.
 ```cpp
 auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0});
 auto rows = idx.slice(
-    pluss::make_timeline("2024-11-01T00:15:00Z"),
-    pluss::make_timeline("2024-11-01T01:00:00Z"));
+    pluss::timeline::make("2024-11-01T00:15:00Z"),
+    pluss::timeline::make("2024-11-01T01:00:00Z"));
 
 auto window_values = values.take(rows);
 std::cout << pluss::print_series(rows) << "\n";

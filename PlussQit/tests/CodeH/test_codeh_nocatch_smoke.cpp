@@ -54,7 +54,7 @@ void test_generated_timeline_surface() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:generated_surface\n";
 
-  const Timeline t = pluss::make_timeline("2026-02-15T13:04:05Z");
+  const Timeline t = pluss::timeline::make("2026-02-15T13:04:05Z");
   expect_true(t.defined(), "moment scalar is defined");
   expect_true(t.year().to_vec<std::int32_t>(0) == 2026, "year() generated method");
   expect_true(t.month().to_vec<std::int32_t>(0) == 2, "month() generated method");
@@ -189,7 +189,7 @@ void test_dataframe_datetime_tranche() {
 
   const auto idx = ymdhms.sort().to_timeindex(true);
   expect_true(idx.size() == 3, "to_timeindex bridge");
-  const auto key = pluss::make_timeline("2024-01-03T11:06:09Z");
+  const auto key = pluss::timeline::make("2024-01-03T11:06:09Z");
   const auto pos = idx.searchsorted(key, false);
   expect_true(pos >= 1 && pos <= 2, "TimeIndex searchsorted on Timeline-built index");
 }
@@ -198,7 +198,7 @@ void test_factory_rank_and_printing() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:factory_rank_print\n";
 
-  const auto t2 = pluss::make_timeline({
+  const auto t2 = pluss::timeline::make({
       {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
       {"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"},
   });
@@ -206,7 +206,7 @@ void test_factory_rank_and_printing() {
   expect_eq_vec(t2.day().to_vec<std::int32_t>(), std::vector<std::int32_t>{1, 1, 2, 2},
                 "moment 2D flatten order");
 
-  const auto t3 = pluss::make_timeline({
+  const auto t3 = pluss::timeline::make({
       {
           {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
           {"2024-01-01T02:00:00Z", "2024-01-01T03:00:00Z"},
@@ -223,7 +223,7 @@ void test_factory_rank_and_printing() {
       "2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z",
       "2024-02-02T00:00:00Z", "2024-02-02T01:00:00Z"};
   const std::vector<std::int64_t> lvalue_shape{2, 2};
-  const auto t_lvalue = pluss::make_timeline(lvalue_flat, lvalue_shape);
+  const auto t_lvalue = pluss::timeline::make(lvalue_flat, lvalue_shape);
   expect_true(t_lvalue.dim() == 2, "make_timeline lvalue flat+shape rank");
   expect_true(t_lvalue.month().to_vec<std::int32_t>(0) == 2, "make_timeline lvalue parse");
 
@@ -232,7 +232,7 @@ void test_factory_rank_and_printing() {
       4'000'000'000LL, 5'000'000'000LL
   };
   const std::vector<std::int64_t> epoch_shape{1, 2, 3};
-  const auto t_epoch = pluss::from_epoch_nanos(epoch_flat, epoch_shape);
+  const auto t_epoch = pluss::timeline::from_epoch(epoch_flat, epoch_shape);
   expect_true(t_epoch.dim() == 3, "from_epoch_nanos lvalue rank");
   expect_eq_vec(t_epoch.to_epoch_nanos_flat(), epoch_flat,
                 "from_epoch_nanos lvalue preserves data");
@@ -256,7 +256,7 @@ void test_factory_rank_and_printing() {
   }
   expect_true(timeline_freed, "Timeline::from_buffer_epoch_nanos deleter called");
 
-  const auto t_epoch_nested = pluss::from_epoch_nanos({
+  const auto t_epoch_nested = pluss::timeline::from_epoch({
       {
           {0LL, 1'000'000'000LL},
           {2'000'000'000LL, 3'000'000'000LL},
@@ -269,7 +269,7 @@ void test_factory_rank_and_printing() {
   expect_true(t_epoch_nested.dim() == 3, "from_epoch_nanos nested rank");
   expect_true(t_epoch_nested.numel() == 8, "from_epoch_nanos nested numel");
 
-  const auto idx = pluss::make_timeindex({
+  const auto idx = pluss::timeindex::make({
       "2024-01-01T00:00:00Z",
       "2024-01-01T01:00:00Z",
       "2024-01-01T02:00:00Z",
@@ -302,16 +302,16 @@ void test_factory_rank_and_printing() {
   popt.max_rows = 4;
   popt.max_cols = 4;
   popt.max_slices = 4;
-  const auto s2 = pluss::print_timeline(t2, popt);
+  const auto s2 = pluss::timeline::print(t2, popt);
   expect_true(s2.find("Timeline(shape=[2, 2]") != std::string::npos, "print_timeline 2D header");
   expect_true(s2.find("2024-01-02 01:00:00") != std::string::npos, "print_timeline 2D value");
-  const auto s3 = pluss::print_timeline(t3, popt);
+  const auto s3 = pluss::timeline::print(t3, popt);
   expect_true(s3.find("values[0, :, :]") != std::string::npos, "print_timeline 3D slice header");
   expect_true(s3.find("2024-01-02 03:00:00") != std::string::npos, "print_timeline 3D value");
 
   expect_throw(
       [] {
-        (void)pluss::make_timeline({
+        (void)pluss::timeline::make({
             {"2024-01-01T00:00:00Z"},
             {"2024-01-01T01:00:00Z", "2024-01-01T02:00:00Z"},
         });
@@ -319,7 +319,7 @@ void test_factory_rank_and_printing() {
       "moment 2D rejects ragged input");
   expect_throw(
       [] {
-        (void)pluss::make_timeindex({
+        (void)pluss::timeindex::make({
             {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
             {"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"},
         });
@@ -331,7 +331,7 @@ void test_generated_timeindex_dataframe_family() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:timeindex_generated_df\n";
 
-  const auto t = pluss::make_timeline({
+  const auto t = pluss::timeline::make({
       "2024-01-01T00:00:00Z",
       "2024-01-01T00:30:00Z",
       "2024-01-01T01:00:00Z",
@@ -386,7 +386,7 @@ void test_generated_timeindex_dataframe_family() {
 void test_3d_non_generated_timeline_support() {
   std::cout << "[RUN] codeh:timeline_3d_non_generated\n";
 
-  const auto t3 = pluss::make_timeline({
+  const auto t3 = pluss::timeline::make({
       {
           {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
           {"2024-01-01T02:00:00Z", "2024-01-01T03:00:00Z"},
@@ -432,7 +432,7 @@ void test_3d_non_generated_timeline_support() {
 void test_queue_dynamic_dispatch() {
   std::cout << "[RUN] codeh:queue_dynamic_dispatch\n";
 
-  pluss::Type qt = pluss::make_timeline("2024-01-15T10:11:12Z");
+  pluss::Type qt = pluss::timeline::make("2024-01-15T10:11:12Z");
   expect_true(qt.as_timeline().year().to_vec<std::int32_t>(0) == 2024,
               "Type.as_timeline() exposes Timeline surface");
 
@@ -450,7 +450,7 @@ void test_queue_dynamic_dispatch() {
   expect_true(qn.kind() == pluss::Type::Kind::Note, "Type strftime returns Note");
   expect_true(qn.as<pluss::Note>().at(0) == "2024-01-15", "Type strftime formatted value");
 
-  pluss::Type qt1d = pluss::make_timeline({
+  pluss::Type qt1d = pluss::timeline::make({
       "2024-01-15T10:11:12Z",
       "2024-01-16T10:11:12Z",
   });
@@ -476,7 +476,7 @@ void test_dynamic_dispense_utility() {
   expect_true(starts_with_a.size() == 3 && starts_with_a[0] == 1 && starts_with_a[1] == 0 && starts_with_a[2] == 1,
               "dispense(Note,&Note::starts_with)");
 
-  auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
+  auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   const auto floor_d = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
   expect_true(floor_d.hour().to_vec<std::int32_t>(0) == 0,
               "dispense(Timeline,&Timeline::floor)");

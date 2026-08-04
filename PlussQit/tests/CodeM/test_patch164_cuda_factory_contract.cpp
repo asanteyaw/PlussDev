@@ -131,26 +131,26 @@ TEST_CASE("CUDA bridge enables factory fallback when strict native is off", "[cu
 
   const pluss::Config cfg_cuda = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA);
 
-  require_close_f32_(pluss::zeros({2, 3}, cfg_cuda), pluss::zeros({2, 3}, pluss::ScalarType::Float32));
-  require_close_f32_(pluss::ones({2, 3}, cfg_cuda), pluss::ones({2, 3}, pluss::ScalarType::Float32));
-  require_close_f32_(pluss::full({2, 3}, 2.5, cfg_cuda), pluss::full({2, 3}, 2.5, pluss::ScalarType::Float32));
+  require_close_f32_(pluss::series::zeros({2, 3}, cfg_cuda), pluss::series::zeros({2, 3}, pluss::ScalarType::Float32));
+  require_close_f32_(pluss::series::ones({2, 3}, cfg_cuda), pluss::series::ones({2, 3}, pluss::ScalarType::Float32));
+  require_close_f32_(pluss::series::full({2, 3}, 2.5, cfg_cuda), pluss::series::full({2, 3}, 2.5, pluss::ScalarType::Float32));
   require_equal_i64_(
-      pluss::arange(0, 7, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA)),
-      pluss::arange(0, 7, pluss::ScalarType::Int64));
+      pluss::series::arange(0, 7, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA)),
+      pluss::series::arange(0, 7, pluss::ScalarType::Int64));
   require_close_f32_(
-      pluss::linspace(0.0, 1.0, 7, cfg_cuda),
-      pluss::linspace(0.0, 1.0, 7, pluss::ScalarType::Float32));
-  require_close_f32_(pluss::eye(4, cfg_cuda), pluss::eye(4, -1, pluss::ScalarType::Float32));
+      pluss::series::linspace(0.0, 1.0, 7, cfg_cuda),
+      pluss::series::linspace(0.0, 1.0, 7, pluss::ScalarType::Float32));
+  require_close_f32_(pluss::series::eye(4, cfg_cuda), pluss::series::eye(4, -1, pluss::ScalarType::Float32));
 
   require_close_f32_(
-      pluss::rand({3, 3}, cfg_cuda, /*seed=*/1234),
-      pluss::rand({3, 3}, pluss::ScalarType::Float32, /*seed=*/1234));
+      pluss::series::rand({3, 3}, cfg_cuda, /*seed=*/1234),
+      pluss::series::rand({3, 3}, pluss::ScalarType::Float32, /*seed=*/1234));
   require_close_f32_(
-      pluss::randn({3, 3}, cfg_cuda, /*seed=*/4321),
-      pluss::randn({3, 3}, pluss::ScalarType::Float32, /*seed=*/4321));
+      pluss::series::randn({3, 3}, cfg_cuda, /*seed=*/4321),
+      pluss::series::randn({3, 3}, pluss::ScalarType::Float32, /*seed=*/4321));
   require_equal_i64_(
-      pluss::randint(2, 10, {8}, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/42),
-      pluss::randint(2, 10, {8}, pluss::ScalarType::Int64, /*seed=*/42));
+      pluss::series::randint(2, 10, {8}, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/42),
+      pluss::series::randint(2, 10, {8}, pluss::ScalarType::Int64, /*seed=*/42));
 }
 
 TEST_CASE("CUDA strict native factory executes supported lanes without CPU bridge", "[cuda][bridge][policy][factory][no_bridge]") {
@@ -167,28 +167,28 @@ TEST_CASE("CUDA strict native factory executes supported lanes without CPU bridg
   }
 
   const pluss::Config cfg_cuda = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA);
-  const auto zeros = pluss::zeros({2, 2}, cfg_cuda);
-  const auto ones = pluss::ones({2, 2}, cfg_cuda);
-  const auto full = pluss::full({2, 2}, 2.5, cfg_cuda);
-  const auto range = pluss::arange(0, 5, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA));
-  const auto line = pluss::linspace(0.0, 1.0, 5, cfg_cuda);
-  const auto eye = pluss::eye(3, cfg_cuda);
-  const auto rand = pluss::rand({2, 2}, cfg_cuda, /*seed=*/7);
-  const auto randn = pluss::randn({2, 2}, cfg_cuda, /*seed=*/11);
-  const auto nan = pluss::nan(cfg_cuda);
-  const auto inf = pluss::inf(cfg_cuda);
-  const auto logspace = pluss::logspace(0.0, 2.0, 4, 10.0, cfg_cuda);
-  const auto rand_btw = pluss::rand_btw(-2.0, 3.0, {2, 2}, cfg_cuda, /*seed=*/17);
-  const auto randint = pluss::randint(
+  const auto zeros = pluss::series::zeros({2, 2}, cfg_cuda);
+  const auto ones = pluss::series::ones({2, 2}, cfg_cuda);
+  const auto full = pluss::series::full({2, 2}, 2.5, cfg_cuda);
+  const auto range = pluss::series::arange(0, 5, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA));
+  const auto line = pluss::series::linspace(0.0, 1.0, 5, cfg_cuda);
+  const auto eye = pluss::series::eye(3, cfg_cuda);
+  const auto rand = pluss::series::rand({2, 2}, cfg_cuda, /*seed=*/7);
+  const auto randn = pluss::series::randn({2, 2}, cfg_cuda, /*seed=*/11);
+  const auto nan = pluss::series::nan(cfg_cuda);
+  const auto inf = pluss::series::inf(cfg_cuda);
+  const auto logspace = pluss::series::logspace(0.0, 2.0, 4, 10.0, cfg_cuda);
+  const auto rand_btw = pluss::series::rand_btw(-2.0, 3.0, {2, 2}, cfg_cuda, /*seed=*/17);
+  const auto randint = pluss::series::randint(
       2,
       10,
       {4},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA),
       /*seed=*/13);
-  const auto real = pluss::linspace(1.0, 3.0, 3, cfg_cuda);
-  const auto imag = pluss::full({3}, 0.5, cfg_cuda);
-  const auto complex = pluss::complex(real, imag, pluss::ScalarType::Complex64);
-  const auto polar = pluss::polar(real, imag, pluss::ScalarType::Complex64);
+  const auto real = pluss::series::linspace(1.0, 3.0, 3, cfg_cuda);
+  const auto imag = pluss::series::full({3}, 0.5, cfg_cuda);
+  const auto complex = pluss::series::complex(real, imag, pluss::ScalarType::Complex64);
+  const auto polar = pluss::series::polar(real, imag, pluss::ScalarType::Complex64);
 
   REQUIRE(zeros.platform() == pluss::pCUDA);
   REQUIRE(ones.platform() == pluss::pCUDA);
@@ -224,18 +224,18 @@ TEST_CASE("CUDA strict native factory executes supported lanes without CPU bridg
   {
     const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
     const ScopedEnvVar allow_materialize("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "0");
-    require_close_f32_(ones, pluss::ones({2, 2}, pluss::ScalarType::Float32));
-    require_close_f32_(full, pluss::full({2, 2}, 2.5, pluss::ScalarType::Float32));
-    require_equal_i64_(range, pluss::arange(0, 5, pluss::ScalarType::Int64));
-    require_close_f32_(line, pluss::linspace(0.0, 1.0, 5, pluss::ScalarType::Float32));
-    require_close_f32_(eye, pluss::eye(3, -1, pluss::ScalarType::Float32));
+    require_close_f32_(ones, pluss::series::ones({2, 2}, pluss::ScalarType::Float32));
+    require_close_f32_(full, pluss::series::full({2, 2}, 2.5, pluss::ScalarType::Float32));
+    require_equal_i64_(range, pluss::series::arange(0, 5, pluss::ScalarType::Int64));
+    require_close_f32_(line, pluss::series::linspace(0.0, 1.0, 5, pluss::ScalarType::Float32));
+    require_close_f32_(eye, pluss::series::eye(3, -1, pluss::ScalarType::Float32));
     const auto nan_v = to_cpu_f32_(nan);
     const auto inf_v = to_cpu_f32_(inf);
     REQUIRE(nan_v.size() == 1);
     REQUIRE(std::isnan(nan_v[0]));
     REQUIRE(inf_v.size() == 1);
     REQUIRE(std::isinf(inf_v[0]));
-    require_close_f32_(logspace, pluss::logspace(0.0, 2.0, 4, 10.0, pluss::ScalarType::Float32), 5.0e-5f);
+    require_close_f32_(logspace, pluss::series::logspace(0.0, 2.0, 4, 10.0, pluss::ScalarType::Float32), 5.0e-5f);
     REQUIRE(to_cpu_f32_(rand).size() == 4);
     REQUIRE(to_cpu_f32_(randn).size() == 4);
     REQUIRE(to_cpu_f32_(rand_btw).size() == 4);
@@ -255,8 +255,8 @@ TEST_CASE("CUDA strict native factory rejects unsupported policy lanes", "[cuda]
   }
 
   const pluss::Config cfg_cuda = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA);
-  REQUIRE_THROWS(pluss::zeros({2, 2}, cfg_cuda));
-  REQUIRE_THROWS(pluss::rand({2, 2}, cfg_cuda, /*seed=*/11));
+  REQUIRE_THROWS(pluss::series::zeros({2, 2}, cfg_cuda));
+  REQUIRE_THROWS(pluss::series::rand({2, 2}, cfg_cuda, /*seed=*/11));
 }
 
 TEST_CASE("CUDA bridge executes factory like-routes", "[cuda][bridge][factory]") {
@@ -273,20 +273,20 @@ TEST_CASE("CUDA bridge executes factory like-routes", "[cuda][bridge][factory]")
   const pluss::Config cfg_cuda = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA);
   const pluss::Config cfg_cpu = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
 
-  require_close_f32_(pluss::zeros_like(like_gpu, cfg_cuda), pluss::zeros_like(like_cpu, cfg_cpu));
-  require_close_f32_(pluss::ones_like(like_gpu, cfg_cuda), pluss::ones_like(like_cpu, cfg_cpu));
-  require_close_f32_(pluss::full_like(like_gpu, 3.0, cfg_cuda), pluss::full_like(like_cpu, 3.0, cfg_cpu));
-  require_close_f32_(pluss::eye_like(like_gpu, cfg_cuda), pluss::eye_like(like_cpu, cfg_cpu));
-  require_close_f32_(pluss::rand_like(like_gpu, cfg_cuda, /*seed=*/97), pluss::rand_like(like_cpu, cfg_cpu, /*seed=*/97));
-  require_close_f32_(pluss::randn_like(like_gpu, cfg_cuda, /*seed=*/31), pluss::randn_like(like_cpu, cfg_cpu, /*seed=*/31));
+  require_close_f32_(pluss::series::zeros_like(like_gpu, cfg_cuda), pluss::series::zeros_like(like_cpu, cfg_cpu));
+  require_close_f32_(pluss::series::ones_like(like_gpu, cfg_cuda), pluss::series::ones_like(like_cpu, cfg_cpu));
+  require_close_f32_(pluss::series::full_like(like_gpu, 3.0, cfg_cuda), pluss::series::full_like(like_cpu, 3.0, cfg_cpu));
+  require_close_f32_(pluss::series::eye_like(like_gpu, cfg_cuda), pluss::series::eye_like(like_cpu, cfg_cpu));
+  require_close_f32_(pluss::series::rand_like(like_gpu, cfg_cuda, /*seed=*/97), pluss::series::rand_like(like_cpu, cfg_cpu, /*seed=*/97));
+  require_close_f32_(pluss::series::randn_like(like_gpu, cfg_cuda, /*seed=*/31), pluss::series::randn_like(like_cpu, cfg_cpu, /*seed=*/31));
   require_equal_i64_(
-      pluss::randint_like(
+      pluss::series::randint_like(
           like_gpu,
           2,
           11,
           pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA),
           /*seed=*/53),
-      pluss::randint_like(
+      pluss::series::randint_like(
           like_cpu,
           2,
           11,
@@ -305,7 +305,7 @@ TEST_CASE("CUDA strict native factory rejects unsupported like-routes", "[cuda][
     const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
     const ScopedEnvVar factory_off("PLUSS_CUDA_NATIVE_FACTORY", "0");
     const ScopedEnvVar strict_off("PLUSS_CUDA_NATIVE_FACTORY_STRICT", "0");
-    like_gpu = pluss::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
+    like_gpu = pluss::series::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
   }
 
   const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
@@ -316,6 +316,6 @@ TEST_CASE("CUDA strict native factory rejects unsupported like-routes", "[cuda][
   const pluss::Config cfg_cuda = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA);
 
   REQUIRE(like_gpu.has_value());
-  REQUIRE_THROWS(pluss::zeros_like(*like_gpu, cfg_cuda));
-  REQUIRE_THROWS(pluss::rand_like(*like_gpu, cfg_cuda, /*seed=*/7));
+  REQUIRE_THROWS(pluss::series::zeros_like(*like_gpu, cfg_cuda));
+  REQUIRE_THROWS(pluss::series::rand_like(*like_gpu, cfg_cuda, /*seed=*/7));
 }

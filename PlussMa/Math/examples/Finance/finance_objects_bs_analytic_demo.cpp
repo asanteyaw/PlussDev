@@ -10,16 +10,16 @@ int main() {
 
   const auto inst = obj::Vanilla{
       .type = prc::OptionType::Call,
-      .strike = pluss::full({7}, 100.0, cfg),
-      .maturity = pluss::full({7}, 1.0, cfg),
+      .strike = pluss::series::full({7}, 100.0, cfg),
+      .maturity = pluss::series::full({7}, 1.0, cfg),
   };
   const auto mkt = obj::MarketState{
-      .spot = pluss::linspace(70.0, 130.0, 7, cfg),
-      .rate = pluss::full({1}, 0.03, cfg),
-      .dividend_yield = pluss::full({1}, 0.01, cfg),
+      .spot = pluss::series::linspace(70.0, 130.0, 7, cfg),
+      .rate = pluss::series::full({1}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.01, cfg),
   };
   const auto mdl = obj::model::BlackScholes{
-      .volatility = pluss::full({7}, 0.22, cfg),
+      .volatility = pluss::series::full({7}, 0.22, cfg),
   };
 
   const auto out = obj::price(inst, mdl, mkt, obj::pricer::Analytic{.with_greeks = true}, cfg);

@@ -536,8 +536,8 @@ AssessReport Coach::assess_source_(const Model& model,
   }
   PLUSS_CHECK(total_rows > 0,
               "pluss::ai::ice::Coach::assess: source produced no test rows.");
-  const Series all_predictions = predictions.size() == 1 ? predictions.front() : pluss::unite(predictions, 0);
-  const Series all_targets = targets.size() == 1 ? targets.front() : pluss::unite(targets, 0);
+  const Series all_predictions = predictions.size() == 1 ? predictions.front() : pluss::series::unite(predictions, 0);
+  const Series all_targets = targets.size() == 1 ? targets.front() : pluss::series::unite(targets, 0);
 
   AssessReport report{};
   report.loss = weighted_loss_sum / static_cast<double>(total_rows);
@@ -649,7 +649,7 @@ Series Coach::infer_source_(const Model& model, Source& source) const {
                e.what());
   }
   const_cast<Model&>(model).train(was_training);
-  return chunks.size() == 1 ? chunks.front() : pluss::unite(chunks, 0);
+  return chunks.size() == 1 ? chunks.front() : pluss::series::unite(chunks, 0);
 }
 
 void Coach::learn(Model& model, Source& source) const {

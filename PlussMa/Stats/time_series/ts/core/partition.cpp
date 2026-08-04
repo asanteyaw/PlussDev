@@ -226,19 +226,19 @@ std::vector<PartitionWindow> build_holdout_window_(std::int64_t num_observations
 Series range_indices_(std::int64_t start, std::int64_t end, Config cfg) {
   const Config idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
   if (end < start) {
-    return pluss::empty({0}, idx_cfg);
+    return pluss::series::empty({0}, idx_cfg);
   }
-  return pluss::arange(start, end + 1, idx_cfg);
+  return pluss::series::arange(start, end + 1, idx_cfg);
 }
 
 Series range_mask_(std::int64_t n, std::int64_t start, std::int64_t end, Config cfg) {
   const Config mask_cfg = Config{}.with_dtype(ScalarType::Bool).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  Series mask = pluss::zeros({n}, mask_cfg);
+  Series mask = pluss::series::zeros({n}, mask_cfg);
   if (end < start) {
     return mask;
   }
   const Series idx = range_indices_(start, end, cfg);
-  const Series values = pluss::ones({idx.numel()}, mask_cfg);
+  const Series values = pluss::series::ones({idx.numel()}, mask_cfg);
   return pluss::index_put(mask, std::vector<Series>{idx}, values, false);
 }
 

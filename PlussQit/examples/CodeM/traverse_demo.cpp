@@ -56,7 +56,7 @@ int main() {
   const std::vector<ExtractSpec> middle_cols{
       pluss::Slicing::SliceAll(),
       pluss::Slicing::SliceRange(1, 3, 1)};
-  writable.traverse_put_(as_specs(middle_cols), pluss::full({3, 2}, -1.0));
+  writable.traverse_put_(as_specs(middle_cols), pluss::series::full({3, 2}, -1.0));
   std::cout << "traverse_put_(all, 1:3) = -1:\n" << writable << "\n\n";
 
   std::cout << "slice(dim=1, start=1, end=4, step=2):\n"

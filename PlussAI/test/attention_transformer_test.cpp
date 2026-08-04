@@ -35,7 +35,7 @@ bool same_shape(const Series& x, std::initializer_list<std::int64_t> expected) {
 
 bool run_attention_transformer_checks(std::ostream* err = nullptr) {
   const Config cfg = f64();
-  const Series x = pluss::rand({2, 4, 8}, cfg, 71ULL);
+  const Series x = pluss::series::rand({2, 4, 8}, cfg, 71ULL);
 
   const auto [sa_out, sa_w] = pluss::scaled_attention(x, x, x);
   if (!same_shape(sa_out, {2, 4, 8}) || !same_shape(sa_w, {2, 4, 4})) {
@@ -90,14 +90,14 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  const Series wq = pluss::rand({8, 8}, cfg, 73ULL);
-  const Series wk = pluss::rand({8, 8}, cfg, 79ULL);
-  const Series wv = pluss::rand({8, 8}, cfg, 83ULL);
-  const Series wo = pluss::rand({8, 8}, cfg, 89ULL);
-  const Series bq = pluss::zeros({8}, cfg);
-  const Series bk = pluss::zeros({8}, cfg);
-  const Series bv = pluss::zeros({8}, cfg);
-  const Series bo = pluss::zeros({8}, cfg);
+  const Series wq = pluss::series::rand({8, 8}, cfg, 73ULL);
+  const Series wk = pluss::series::rand({8, 8}, cfg, 79ULL);
+  const Series wv = pluss::series::rand({8, 8}, cfg, 83ULL);
+  const Series wo = pluss::series::rand({8, 8}, cfg, 89ULL);
+  const Series bq = pluss::series::zeros({8}, cfg);
+  const Series bk = pluss::series::zeros({8}, cfg);
+  const Series bv = pluss::series::zeros({8}, cfg);
+  const Series bo = pluss::series::zeros({8}, cfg);
 
   pluss::MultiheadWeights weights{
       .q_weight = wq,

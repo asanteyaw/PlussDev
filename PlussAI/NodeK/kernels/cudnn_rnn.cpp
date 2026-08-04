@@ -396,7 +396,7 @@ Series to_cuda_dtype_contiguous_(const Series& x, ScalarType dtype) {
 
 Series zeros_cuda_(std::initializer_list<std::int64_t> sizes, ScalarType dtype) {
   const Config cfg = Config{}.with_dtype(dtype).with_platform(pluss::pCUDA);
-  return pluss::zeros(sizes, cfg);
+  return pluss::series::zeros(sizes, cfg);
 }
 
 bool cuda_copy_(void* dst, const Series& src_raw, std::int64_t expected_numel, ScalarType dtype, const char* what, std::string* reason) {

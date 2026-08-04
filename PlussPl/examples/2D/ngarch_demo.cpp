@@ -23,7 +23,7 @@ struct ModelPaths {
     const pluss::Series& alpha,
     const pluss::Series& beta_raw,
     const pluss::Series& gamma) {
-  const auto phi_target = pluss::full(beta_raw.sizes(), 0.985, pluss::ScalarType::Float64);
+  const auto phi_target = pluss::series::full(beta_raw.sizes(), 0.985, pluss::ScalarType::Float64);
   const auto beta_cap = phi_target - alpha * (1.0 + gamma.pow(2));
   return beta_raw.clamp(1.0e-5, 0.995).minimum(beta_cap.clamp(1.0e-5, 0.995));
 }
@@ -42,15 +42,15 @@ ModelPaths simulate_paths(const pluss::Series& omega,
   const auto phi = beta + alpha * (1.0 + gamma.pow(2));
   PLUSS_CHECK(scalar_f64(phi.max()) < 1.0, "NGARCH stationarity violated: phi = beta + alpha * (1 + gamma^2) must be < 1");
   auto sigma2_prev = (omega / (1.0 - phi)).clamp(1.0e-8, 0.35);
-  auto eps_prev = pluss::zeros({assets}, pluss::ScalarType::Float64);
-  const auto eps_all = pluss::randn({steps, assets}, pluss::ScalarType::Float64, seed);
-  auto returns_all = pluss::zeros({steps, assets}, pluss::ScalarType::Float64);
-  auto sigma_all = pluss::zeros({steps, assets}, pluss::ScalarType::Float64);
+  auto eps_prev = pluss::series::zeros({assets}, pluss::ScalarType::Float64);
+  const auto eps_all = pluss::series::randn({steps, assets}, pluss::ScalarType::Float64, seed);
+  auto returns_all = pluss::series::zeros({steps, assets}, pluss::ScalarType::Float64);
+  auto sigma_all = pluss::series::zeros({steps, assets}, pluss::ScalarType::Float64);
 
   const double r_daily = risk_free_rate / 252.0;
 
   for (std::int64_t t = 0; t < steps; ++t) {
-    const auto t_idx = pluss::arange(t, t + 1, 1, pluss::ScalarType::Int64);
+    const auto t_idx = pluss::series::arange(t, t + 1, 1, pluss::ScalarType::Int64);
     const auto eps_t = eps_all.index_select(0, t_idx).reshape({assets});
     const auto scaled_shock = eps_prev + gamma;
     const auto sigma2_t = (omega + beta * sigma2_prev + alpha * sigma2_prev * scaled_shock * scaled_shock)
@@ -76,7 +76,7 @@ pluss::Series sigma_spread_rms(const ModelPaths& ngarch, const ModelPaths& garch
 }
 
 pluss::Series asset_column(const pluss::Series& matrix, std::int64_t asset_index) {
-  const auto index = pluss::arange(asset_index, asset_index + 1, 1, pluss::ScalarType::Int64);
+  const auto index = pluss::series::arange(asset_index, asset_index + 1, 1, pluss::ScalarType::Int64);
   return matrix.index_select(1, index).reshape({matrix.sizes()[0]});
 }
 
@@ -105,12 +105,12 @@ int main() {
   const auto lambda = pluss::make_series({0.0234, 0.0195, 0.0272, 0.0218, 0.0254}, {assets_count});
   const auto gamma = pluss::make_series({-1.2365, -1.0500, -1.3400, -1.1800, -1.2800}, {assets_count});
   const auto beta = stabilize_ngarch_beta(alpha, beta_raw, gamma);
-  const auto gamma_garch = pluss::zeros({assets_count}, pluss::ScalarType::Float64);
+  const auto gamma_garch = pluss::series::zeros({assets_count}, pluss::ScalarType::Float64);
 
   const auto ngarch = simulate_paths(omega, alpha, beta, lambda, gamma, risk_free_rate, steps, 2026030501ULL);
   const auto garch = simulate_paths(omega, alpha, beta, lambda, gamma_garch, risk_free_rate, steps, 2026030502ULL);
   const auto spread_rms = sigma_spread_rms(ngarch, garch);
-  const auto t = pluss::linspace(1.0, static_cast<double>(steps), steps, pluss::ScalarType::Float64);
+  const auto t = pluss::series::linspace(1.0, static_cast<double>(steps), steps, pluss::ScalarType::Float64);
 
   pl::Studio studio("ngarch-demo", pl::Theme::paper());
   studio.size(1680.0, 980.0);

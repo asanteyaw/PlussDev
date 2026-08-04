@@ -1,11 +1,11 @@
-# pluss::date_range
+# pluss::timeline::date_range
 
 [Back to Timeline API Reference](../../timeline_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::date_range(const Timeline& start, const Timeline& end, std::string_view freq, std::int64_t step = 1) -> Timeline
+pluss::timeline::date_range(const Timeline& start, const Timeline& end, std::string_view freq, std::int64_t step = 1) -> Timeline
 ```
 
 Builds a regular temporal sequence between two scalar endpoints.
@@ -80,11 +80,11 @@ The default `step = 1` means every unit. Larger values coarsen the grid:
 Example 1. Build a daily calendar range.
 
 ```cpp
-auto out = pluss::date_range(
-    pluss::make_timeline("2026-03-14T00:00:00Z"),
-    pluss::make_timeline("2026-03-17T00:00:00Z"),
+auto out = pluss::timeline::date_range(
+    pluss::timeline::make("2026-03-14T00:00:00Z"),
+    pluss::timeline::make("2026-03-17T00:00:00Z"),
     "D");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output
@@ -98,12 +98,12 @@ Example 2. Keep the same endpoint style but switch to a 15-minute intraday
 grid by changing `freq` and `step`.
 
 ```cpp
-auto out = pluss::date_range(
-    pluss::make_timeline("2026-03-14T09:00:00Z"),
-    pluss::make_timeline("2026-03-14T10:00:00Z"),
+auto out = pluss::timeline::date_range(
+    pluss::timeline::make("2026-03-14T09:00:00Z"),
+    pluss::timeline::make("2026-03-14T10:00:00Z"),
     "min",
     15);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output
@@ -116,12 +116,12 @@ Timeline(shape=[5], tz=UTC)
 Example 3. Use hour units with a coarser step to build a 2-hour schedule.
 
 ```cpp
-auto out = pluss::date_range(
-    pluss::make_timeline("2026-03-14T00:00:00Z"),
-    pluss::make_timeline("2026-03-14T06:00:00Z"),
+auto out = pluss::timeline::date_range(
+    pluss::timeline::make("2026-03-14T00:00:00Z"),
+    pluss::timeline::make("2026-03-14T06:00:00Z"),
     "H",
     2);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

@@ -79,9 +79,9 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
 
   // conv strict parity
-  const auto x = pluss::rand({2, 4, 9, 9}, cfg, 9101ULL);
-  const auto w = pluss::rand({8, 2, 3, 3}, cfg, 9103ULL);
-  const auto b = pluss::rand({8}, cfg, 9107ULL);
+  const auto x = pluss::series::rand({2, 4, 9, 9}, cfg, 9101ULL);
+  const auto w = pluss::series::rand({8, 2, 3, 3}, cfg, 9103ULL);
+  const auto b = pluss::series::rand({8}, cfg, 9107ULL);
   const auto y_cpu = pluss::conv(x, w, b, {1, 1}, {1, 1}, {1, 1}, 2);
   const auto y_gpu = pluss::conv(
       x.to(pluss::pCUDA),
@@ -98,9 +98,9 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
   }
 
   // attention strict parity
-  const auto q = pluss::rand({2, 2, 6, 8}, cfg, 9111ULL);
-  const auto k = pluss::rand({2, 2, 6, 8}, cfg, 9113ULL);
-  const auto v = pluss::rand({2, 2, 6, 8}, cfg, 9117ULL);
+  const auto q = pluss::series::rand({2, 2, 6, 8}, cfg, 9111ULL);
+  const auto k = pluss::series::rand({2, 2, 6, 8}, cfg, 9113ULL);
+  const auto v = pluss::series::rand({2, 2, 6, 8}, cfg, 9117ULL);
   const auto mask = pluss::square_subsequent_mask(6, q);
   const auto [out_cpu, w_cpu] = pluss::scaled_attention(q, k, v, mask);
   const auto [out_gpu, w_gpu] = pluss::scaled_attention(

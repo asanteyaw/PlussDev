@@ -90,7 +90,7 @@ private:
 
     pluss::Series x = (x_cols.size() == 1)
         ? x_cols.front().reshape({df.ncases(), 1})
-        : pluss::pile(x_cols, 0).transpose(0, 1);
+        : pluss::series::pile(x_cols, 0).transpose(0, 1);
 
     std::vector<pluss::Series> fields;
     fields.push_back(std::move(x));

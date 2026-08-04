@@ -63,9 +63,9 @@ Series average_with_counts_(const Series& sum, const Series& count, Config cfg) 
   const auto out_cfg = f64_cfg_(cfg);
   const Series count_f64 = count.to(out_cfg.platform, out_cfg.dtype);
   const Series valid = count_f64.gt(0.0);
-  const Series safe_denom = valid.where(count_f64, pluss::ones(count_f64.sizes(), out_cfg));
+  const Series safe_denom = valid.where(count_f64, pluss::series::ones(count_f64.sizes(), out_cfg));
   const Series mean = sum.to(out_cfg.platform, out_cfg.dtype).div(safe_denom);
-  const Series nan_fill = pluss::full(sum.sizes(), std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  const Series nan_fill = pluss::series::full(sum.sizes(), std::numeric_limits<double>::quiet_NaN(), out_cfg);
   return valid.where(mean, nan_fill);
 }
 
@@ -79,9 +79,9 @@ Series loss_by_column_(const Series& pred, const Series& y, RegressionLoss kind,
   const Series den = value.isfinite().to(out_cfg.platform, out_cfg.dtype).sum(0, false).reshape({h});
   const Series num = value.nan_to_num(0.0, 0.0, 0.0).sum(0, false).reshape({h});
   const Series valid = den.gt(0.0);
-  const Series safe_denom = valid.where(den, pluss::ones({h}, out_cfg));
+  const Series safe_denom = valid.where(den, pluss::series::ones({h}, out_cfg));
   const Series mean = num.div(safe_denom);
-  const Series nan_fill = pluss::full({h}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  const Series nan_fill = pluss::series::full({h}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   return valid.where(mean, nan_fill);
 }
 
@@ -152,8 +152,8 @@ Series DirectCVForecaster::cvpredict(const Series& x, const Series& y, Config cf
   }
 
   const std::int64_t h = models_.front().num_steps();
-  Series sum = pluss::zeros({nobs, h}, out_cfg);
-  Series cnt = pluss::zeros({nobs, h}, out_cfg);
+  Series sum = pluss::series::zeros({nobs, h}, out_cfg);
+  Series cnt = pluss::series::zeros({nobs, h}, out_cfg);
 
   for (std::int64_t i = 0; i < partition_.num_test_sets(); ++i) {
     const Series test_idx = partition_.test(i, idx_cfg);
@@ -162,7 +162,7 @@ Series DirectCVForecaster::cvpredict(const Series& x, const Series& y, Config cf
     const Series old_sum = sum.index_select(0, test_idx);
     sum = pluss::index_put(sum, std::vector<Series>{test_idx}, old_sum.add(pred_test), false);
 
-    const Series ones = pluss::ones({test_idx.numel(), h}, out_cfg);
+    const Series ones = pluss::series::ones({test_idx.numel(), h}, out_cfg);
     const Series old_cnt = cnt.index_select(0, test_idx);
     cnt = pluss::index_put(cnt, std::vector<Series>{test_idx}, old_cnt.add(ones), false);
   }
@@ -201,7 +201,7 @@ Series DirectCVForecaster::cvloss(const Series& x, const Series& y, CVLossMode m
     fold_losses.push_back(loss_by_column_(pred_test, y_test, kind, out_cfg).reshape({1, h}));
   }
   if (fold_losses.empty()) {
-    return pluss::empty({0, h}, out_cfg);
+    return pluss::series::empty({0, h}, out_cfg);
   }
   if (fold_losses.size() == 1) {
     return fold_losses.front();

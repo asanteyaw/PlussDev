@@ -71,10 +71,10 @@ TEST_CASE("optima rejects nonlinear jacobian shape mismatches", "[optim][optima]
     eval.equality = make_vec({});
     eval.inequality = make_scalar(0.25).reshape({1});
     eval.equality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({0, 2}, ScalarType::Float64)},
+        {"x", pluss::series::zeros({0, 2}, ScalarType::Float64)},
     });
     eval.inequality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({2, 2}, ScalarType::Float64)},
+        {"x", pluss::series::zeros({2, 2}, ScalarType::Float64)},
     });
     return eval;
   };
@@ -104,7 +104,7 @@ TEST_CASE("optima reports non-finite nonlinear jacobians", "[optim][optima][vali
     eval.equality = make_vec({});
     eval.inequality = make_scalar(0.25).reshape({1});
     eval.equality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({0, 2}, ScalarType::Float64)},
+        {"x", pluss::series::zeros({0, 2}, ScalarType::Float64)},
     });
     eval.inequality_jacobian = ParameterPack<Series>({
         {"x", make_series(std::vector<double>{nan, 1.0}, {1, 2}).to(ScalarType::Float64)},

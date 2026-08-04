@@ -106,9 +106,9 @@ LatencyStats summarize_latencies(const std::vector<double>& values_ms) {
 
 BenchResult run_bench(pluss::Platform p, std::int64_t n, int inner_iters, int rounds, std::uint64_t seed) {
   pluss::Config cpu_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const auto x0_cpu = pluss::randn({n, n}, cpu_cfg, seed);
-  const auto w1_cpu = pluss::randn({n, n}, cpu_cfg, seed + 1);
-  const auto w2_cpu = pluss::randn({n, n}, cpu_cfg, seed + 2);
+  const auto x0_cpu = pluss::series::randn({n, n}, cpu_cfg, seed);
+  const auto w1_cpu = pluss::series::randn({n, n}, cpu_cfg, seed + 1);
+  const auto w2_cpu = pluss::series::randn({n, n}, cpu_cfg, seed + 2);
   const auto x0 = x0_cpu.to(p);
   const auto w1 = w1_cpu.to(p);
   const auto w2 = w2_cpu.to(p);
@@ -289,9 +289,9 @@ void trace_parity_chain(std::int64_t n, int trace_iters, std::uint64_t seed) {
 
   pluss::Config cpu_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
 
-  auto x_cpu = pluss::randn({n, n}, cpu_cfg, seed);
-  auto w1_cpu = pluss::randn({n, n}, cpu_cfg, seed + 1);
-  auto w2_cpu = pluss::randn({n, n}, cpu_cfg, seed + 2);
+  auto x_cpu = pluss::series::randn({n, n}, cpu_cfg, seed);
+  auto w1_cpu = pluss::series::randn({n, n}, cpu_cfg, seed + 1);
+  auto w2_cpu = pluss::series::randn({n, n}, cpu_cfg, seed + 2);
   auto x_mps = x_cpu.to(pluss::pMPS);
   auto w1_mps = w1_cpu.to(pluss::pMPS);
   auto w2_mps = w2_cpu.to(pluss::pMPS);

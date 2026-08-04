@@ -44,8 +44,8 @@ inline Series causal_attention_mask(
   PLUSS_CHECK(target_len > 0, "pluss::ai::causal_attention_mask: target_len must be > 0");
   PLUSS_CHECK(source_len > 0, "pluss::ai::causal_attention_mask: source_len must be > 0");
   const Config idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform);
-  const Series rows = pluss::arange(0, target_len, 1, idx_cfg).reshape({target_len, 1});
-  const Series cols = pluss::arange(0, source_len, 1, idx_cfg).reshape({1, source_len});
+  const Series rows = pluss::series::arange(0, target_len, 1, idx_cfg).reshape({target_len, 1});
+  const Series cols = pluss::series::arange(0, source_len, 1, idx_cfg).reshape({1, source_len});
   Series mask = cols.gt(rows);
   if (cfg.dtype != ScalarType::Bool) {
     mask = mask.to(cfg.platform, cfg.dtype);
@@ -97,13 +97,13 @@ inline void require_qkv_shapes_(const Series& query, const Series& key, const Se
 }
 
 inline Series make_blocked_mask_(std::int64_t target_len, std::int64_t source_len, const Series& like) {
-  const Series rows = pluss::arange(0, target_len, 1, idx_cfg_like_(like)).reshape({target_len, 1});
-  const Series cols = pluss::arange(0, source_len, 1, idx_cfg_like_(like)).reshape({1, source_len});
+  const Series rows = pluss::series::arange(0, target_len, 1, idx_cfg_like_(like)).reshape({target_len, 1});
+  const Series cols = pluss::series::arange(0, source_len, 1, idx_cfg_like_(like)).reshape({1, source_len});
   return cols.gt(rows);
 }
 
 inline Series mask_penalty_like_(const Series& like) {
-  return pluss::full({}, -1.0e30, scalar_cfg_like_(like));
+  return pluss::series::full({}, -1.0e30, scalar_cfg_like_(like));
 }
 
 inline Series apply_mask_(const Series& logits, const Series& mask) {

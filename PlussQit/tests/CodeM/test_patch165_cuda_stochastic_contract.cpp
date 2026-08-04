@@ -181,7 +181,7 @@ TEST_CASE("CUDA bridge enables stochastic fallback when strict native is off", "
     require_close_f32_(gpu, cpu);
   }
   {
-    auto cpu = pluss::zeros({8}, pluss::ScalarType::Int64);
+    auto cpu = pluss::series::zeros({8}, pluss::ScalarType::Int64);
     auto gpu = cpu.to(pluss::pCUDA);
     cpu.random_(2.0, 11.0);
     gpu.random_(2.0, 11.0);
@@ -204,16 +204,16 @@ TEST_CASE("CUDA strict stochastic factories execute supported lanes without CPU 
     return;
   }
 
-  const auto gpu = pluss::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
+  const auto gpu = pluss::series::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
   REQUIRE(pluss::cuda::supports_normal_stochastic(gpu));
   REQUIRE_FALSE(pluss::cuda::supports_log_normal_stochastic(gpu));
   REQUIRE(pluss::cuda::supports_uniform_stochastic(gpu));
   REQUIRE_FALSE(pluss::cuda::supports_multinomial_stochastic(gpu, 2, false));
   REQUIRE_FALSE(pluss::cuda::supports_poisson_stochastic(pluss::ScalarType::Int64));
 
-  const auto y = pluss::normal(0.0, 1.0, {2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA), /*seed=*/29);
-  const auto b = pluss::bernoulli({2, 3}, 0.4, pluss::Config{}.with_dtype(pluss::ScalarType::Bool).with_platform(pluss::pCUDA), /*seed=*/31);
-  const auto rp = pluss::randperm(8, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/37);
+  const auto y = pluss::series::normal(0.0, 1.0, {2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA), /*seed=*/29);
+  const auto b = pluss::series::bernoulli({2, 3}, 0.4, pluss::Config{}.with_dtype(pluss::ScalarType::Bool).with_platform(pluss::pCUDA), /*seed=*/31);
+  const auto rp = pluss::series::randperm(8, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/37);
 
   REQUIRE(y.platform() == pluss::pCUDA);
   REQUIRE(b.platform() == pluss::pCUDA);
@@ -223,7 +223,7 @@ TEST_CASE("CUDA strict stochastic factories execute supported lanes without CPU 
   REQUIRE(rp.storage().location() == pluss::codem::StorageLocation::CudaDevice);
 
   REQUIRE_THROWS(gpu.flatten(0, -1).multinomial(2));
-  REQUIRE_THROWS(pluss::poisson(
+  REQUIRE_THROWS(pluss::series::poisson(
       {2, 3},
       2.75,
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA),
@@ -241,7 +241,7 @@ TEST_CASE("CUDA strict stochastic rejects unsupported policy lanes", "[cuda][bri
     return;
   }
 
-  auto gpu = pluss::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
+  auto gpu = pluss::series::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
   REQUIRE_THROWS(gpu.normal_(0.0, 1.0));
   REQUIRE_THROWS(gpu.random_(0.0, 1.0));
   REQUIRE_THROWS(gpu.multinomial(2));
@@ -261,33 +261,33 @@ TEST_CASE("CUDA bridge executes stochastic factory routes", "[cuda][bridge][stoc
   const std::array<double, 3> probs{0.1, 0.2, 0.7};
 
   require_close_f32_(
-      pluss::normal(0.0, 1.0, {2, 3}, cfg_cuda, /*seed=*/17),
-      pluss::normal(0.0, 1.0, {2, 3}, cfg_cpu, /*seed=*/17));
+      pluss::series::normal(0.0, 1.0, {2, 3}, cfg_cuda, /*seed=*/17),
+      pluss::series::normal(0.0, 1.0, {2, 3}, cfg_cpu, /*seed=*/17));
   require_close_f32_(
-      pluss::bernoulli({2, 3}, 0.35, cfg_cuda, /*seed=*/23),
-      pluss::bernoulli({2, 3}, 0.35, cfg_cpu, /*seed=*/23));
+      pluss::series::bernoulli({2, 3}, 0.35, cfg_cuda, /*seed=*/23),
+      pluss::series::bernoulli({2, 3}, 0.35, cfg_cpu, /*seed=*/23));
   require_equal_i64_(
-      pluss::randperm(10, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/5),
-      pluss::randperm(10, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCPU), /*seed=*/5));
+      pluss::series::randperm(10, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/5),
+      pluss::series::randperm(10, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCPU), /*seed=*/5));
   require_equal_i64_(
-      pluss::poisson(
+      pluss::series::poisson(
           {2, 3},
           4.5,
           pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA),
           /*seed=*/19),
-      pluss::poisson(
+      pluss::series::poisson(
           {2, 3},
           4.5,
           pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCPU),
           /*seed=*/19));
   require_equal_i64_(
-      pluss::multinomial(
+      pluss::series::multinomial(
           std::span<const double>(probs.data(), probs.size()),
           /*num_samples=*/3,
           /*replacement=*/false,
           pluss::Config{}.with_platform(pluss::pCUDA),
           /*seed=*/11),
-      pluss::multinomial(
+      pluss::series::multinomial(
           std::span<const double>(probs.data(), probs.size()),
           /*num_samples=*/3,
           /*replacement=*/false,
@@ -307,7 +307,7 @@ TEST_CASE("CUDA strict stochastic rejects unsupported factory routes", "[cuda][b
   }
 
   const pluss::Config cfg_cuda = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA);
-  REQUIRE_THROWS(pluss::normal(0.0, 1.0, {2, 3}, cfg_cuda, /*seed=*/13));
-  REQUIRE_THROWS(pluss::bernoulli({2, 3}, 0.5, cfg_cuda, /*seed=*/13));
-  REQUIRE_THROWS(pluss::poisson({2, 3}, 4.5, cfg_cuda, /*seed=*/13));
+  REQUIRE_THROWS(pluss::series::normal(0.0, 1.0, {2, 3}, cfg_cuda, /*seed=*/13));
+  REQUIRE_THROWS(pluss::series::bernoulli({2, 3}, 0.5, cfg_cuda, /*seed=*/13));
+  REQUIRE_THROWS(pluss::series::poisson({2, 3}, 4.5, cfg_cuda, /*seed=*/13));
 }

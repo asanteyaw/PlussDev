@@ -32,7 +32,7 @@ void expect(bool cond, const std::string& msg) {
 }
 
 double scalar_at(const Series& x, std::int64_t i) {
-  return x.index_select(0, pluss::full({1}, i, Config{}.with_dtype(ScalarType::Int64)))
+  return x.index_select(0, pluss::series::full({1}, i, Config{}.with_dtype(ScalarType::Int64)))
       .reshape({1})
       .to(pluss::pCPU, ScalarType::Float64)
       .item<double>();
@@ -67,9 +67,9 @@ void test_filter_missing_and_shapes() {
          "kalman_gain shape mismatch");
   expect(std::isfinite(out.loglik), "loglik must be finite");
 
-  const Series f3 = out.filtered_states.index_select(0, pluss::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
-  const Series p3 = out.forecasted_states.index_select(0, pluss::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
-  const Series used3 = out.data_used.index_select(0, pluss::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
+  const Series f3 = out.filtered_states.index_select(0, pluss::series::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
+  const Series p3 = out.forecasted_states.index_select(0, pluss::series::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
+  const Series used3 = out.data_used.index_select(0, pluss::series::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
   const double f3v = f3.to(pluss::pCPU, ScalarType::Float64).item<double>();
   const double p3v = p3.to(pluss::pCPU, ScalarType::Float64).item<double>();
   const double u3v = used3.to(pluss::pCPU, ScalarType::Float64).item<double>();

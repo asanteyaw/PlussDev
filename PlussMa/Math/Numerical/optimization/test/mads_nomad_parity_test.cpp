@@ -31,9 +31,9 @@ int main() {
   int failures = 0;
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
-  const Series x0 = pluss::full({2}, 5.0, cfg);
-  const Series lb = pluss::full({2}, -20.0, cfg);
-  const Series ub = pluss::full({2}, 20.0, cfg);
+  const Series x0 = pluss::series::full({2}, 5.0, cfg);
+  const Series lb = pluss::series::full({2}, -20.0, cfg);
+  const Series ub = pluss::series::full({2}, 20.0, cfg);
 
   MadsBlackboxConfig base_cfg;
   base_cfg.max_iterations = 400;

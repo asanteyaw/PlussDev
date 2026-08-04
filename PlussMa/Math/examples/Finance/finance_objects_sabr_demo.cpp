@@ -8,21 +8,21 @@ int main() {
 
   const fin::instrument::Vanilla inst{
       .type = fin::pricing::OptionType::Call,
-      .strike = pluss::linspace(80.0, 120.0, 9, cfg),
-      .maturity = pluss::full({9}, 1.0, cfg),
+      .strike = pluss::series::linspace(80.0, 120.0, 9, cfg),
+      .maturity = pluss::series::full({9}, 1.0, cfg),
   };
 
   const fin::market::State mkt{
-      .spot = pluss::full({9}, 100.0, cfg),
-      .rate = pluss::full({9}, 0.02, cfg),
-      .dividend_yield = pluss::full({9}, 0.0, cfg),
+      .spot = pluss::series::full({9}, 100.0, cfg),
+      .rate = pluss::series::full({9}, 0.02, cfg),
+      .dividend_yield = pluss::series::full({9}, 0.0, cfg),
   };
 
   const fin::model::Sabr sabr{
-      .alpha0 = pluss::full({1}, 0.20, cfg),
-      .beta = pluss::full({1}, 0.50, cfg),
-      .nu = pluss::full({1}, 0.40, cfg),
-      .rho = pluss::full({1}, -0.30, cfg),
+      .alpha0 = pluss::series::full({1}, 0.20, cfg),
+      .beta = pluss::series::full({1}, 0.50, cfg),
+      .nu = pluss::series::full({1}, 0.40, cfg),
+      .rho = pluss::series::full({1}, -0.30, cfg),
       .vol_type = fin::pricing::SabrVolType::Lognormal,
       .approx = fin::pricing::SabrApproxOptions{
           .model = fin::pricing::SabrApproxModel::Hagan2002,

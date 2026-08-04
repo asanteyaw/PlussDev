@@ -38,10 +38,10 @@ struct ClassificationData {
 
 ClassificationData make_classification_data(std::int64_t rows, std::uint64_t seed) {
   const auto cfg = float_cfg();
-  const Series x = pluss::randn({rows, 4}, cfg, seed);
+  const Series x = pluss::series::randn({rows, 4}, cfg, seed);
   const Series true_weight = pluss::make_series(
       std::vector<float>{2.0F, -3.0F, 1.0F, 0.5F}, std::vector<std::int64_t>{4, 1}, cfg);
-  const Series noise = pluss::randn({rows, 1}, cfg, seed + 1).mul(0.1);
+  const Series noise = pluss::series::randn({rows, 1}, cfg, seed + 1).mul(0.1);
   const Series y = x.matmul(true_weight).add(noise).gt(0.0).to(cfg.platform, cfg.dtype);
   return ClassificationData{x, y};
 }
@@ -134,10 +134,10 @@ bool run_ice_outline_classification_checks(std::ostream* err = nullptr) {
 bool run_ice_outline_regression_checks(std::ostream* err = nullptr) {
   const auto cfg = float_cfg();
   const std::int64_t rows = 400;
-  const Series x = pluss::randn({rows, 3}, cfg, 100);
+  const Series x = pluss::series::randn({rows, 3}, cfg, 100);
   const Series true_weight = pluss::make_series(std::vector<float>{1.5F, -2.0F, 0.5F},
                                                 std::vector<std::int64_t>{3, 1}, cfg);
-  const Series noise = pluss::randn({rows, 1}, cfg, 101).mul(0.05);
+  const Series noise = pluss::series::randn({rows, 1}, cfg, 101).mul(0.05);
   const Series y = x.matmul(true_weight).add(noise);
 
   auto model = ice::Outline(pluss::nn::Fusion(3, 12), pluss::nn::ReLU(), pluss::nn::Fusion(12, 1));
@@ -400,8 +400,8 @@ bool run_ice_dataframe_standardize_checks(std::ostream* err = nullptr) {
   // Deliberately very different raw scales (x1 ~1000x x0) so a caller who
   // skipped standardization would visibly struggle -- this is what
   // standardize=true exists to neutralize.
-  const Series x0 = pluss::randn({rows}, cfg, 201ULL);
-  const Series x1 = pluss::randn({rows}, cfg, 202ULL).mul(1000.0);
+  const Series x0 = pluss::series::randn({rows}, cfg, 201ULL);
+  const Series x1 = pluss::series::randn({rows}, cfg, 202ULL).mul(1000.0);
   const Series label = x0.add(x1.div(1000.0)).gt(0.0).to(ScalarType::Float32);
 
   const DataFrame df({

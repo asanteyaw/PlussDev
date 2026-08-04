@@ -10,8 +10,8 @@ int main() {
   std::filesystem::create_directories(root / "outputs" / "svg");
   std::filesystem::create_directories(root / "outputs" / "pdf");
 
-  const auto maturity_bins = pluss::linspace(1.0, 4.0, 4, pluss::ScalarType::Float64);
-  const auto moneyness_bins = pluss::linspace(1.0, 12.0, 12, pluss::ScalarType::Float64);
+  const auto maturity_bins = pluss::series::linspace(1.0, 4.0, 4, pluss::ScalarType::Float64);
+  const auto moneyness_bins = pluss::series::linspace(1.0, 12.0, 12, pluss::ScalarType::Float64);
   const auto avg_price = pluss::make_series(
                              std::vector<double>{
                                  1.0, 1.8, 3.0, 5.5, 10.0, 14.0, 7.0, 3.8, 2.0, 1.1, 0.6, 0.3,

@@ -25,7 +25,12 @@ inline std::int64_t checked_numel(pluss::detail::ShapeSpec sizes) {
   return sizes.numel();
 }
 
-inline std::vector<std::string_view> split_lines_views(std::string_view text, bool keep_ends) {
+// The one canonical line-splitter -- pluss::note::from_lines and
+// pluss::note::content's Lines mode both call this directly (rather than one
+// calling the other) to share the splitting logic without an include-order
+// dependency between note_factory.h and note_content.h.
+inline std::vector<std::string_view> split_lines_views(std::string_view text, bool keep_ends,
+                                                        bool drop_empty = false) {
   std::vector<std::string_view> out;
   const auto newline_count = static_cast<std::size_t>(std::count(text.begin(), text.end(), '\n'));
   out.reserve(newline_count + ((text.empty() || text.back() == '\n') ? 0ULL : 1ULL));
@@ -34,11 +39,17 @@ inline std::vector<std::string_view> split_lines_views(std::string_view text, bo
   while (start < text.size()) {
     const auto nl = text.find('\n', start);
     if (nl == std::string_view::npos) {
-      out.emplace_back(text.data() + start, text.size() - start);
+      std::string_view tail(text.data() + start, text.size() - start);
+      if (!drop_empty || !tail.empty()) {
+        out.push_back(tail);
+      }
       break;
     }
     const std::size_t len = keep_ends ? (nl - start + 1) : (nl - start);
-    out.emplace_back(text.data() + start, len);
+    std::string_view item(text.data() + start, len);
+    if (!drop_empty || !item.empty()) {
+      out.push_back(item);
+    }
     start = nl + 1;
   }
   return out;

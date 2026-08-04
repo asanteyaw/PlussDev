@@ -654,7 +654,7 @@ Unified DFO facade selects or forces solvers and unifies diagnostics.
 namespace dfo = pluss::subsp::math::optimization;
 
 dfo::DfoProblem p;
-p.initial = pluss::full({8}, 2.0, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+p.initial = pluss::series::full({8}, 2.0, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
 p.objective = [](const pluss::Series& x) { return x.square().sum(); };
 
 dfo::DfoOptions opt{};

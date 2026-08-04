@@ -45,7 +45,7 @@ TEST_CASE("DFO PatternSearch propagates time-budget termination", "[pattern_sear
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
 
   DfoProblem problem;
-  problem.initial = pluss::full({4}, 2.0, cfg);
+  problem.initial = pluss::series::full({4}, 2.0, cfg);
   problem.objective = [](const Series& x) { return x.square().sum(); };
 
   DfoOptions options;
@@ -76,8 +76,8 @@ TEST_CASE("PatternSearch random-search diagnostics and AL feasibility are preser
     c.equality = x.sum().sub(1.0).reshape({1});
     return c;
   };
-  constrained.lower_bounds = pluss::full({2}, -2.0, cfg);
-  constrained.upper_bounds = pluss::full({2}, 2.0, cfg);
+  constrained.lower_bounds = pluss::series::full({2}, -2.0, cfg);
+  constrained.upper_bounds = pluss::series::full({2}, 2.0, cfg);
 
   DfoOptions options;
   options.solver = DfoSolverKind::PatternSearch;

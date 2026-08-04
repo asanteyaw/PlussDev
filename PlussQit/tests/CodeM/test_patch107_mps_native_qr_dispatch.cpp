@@ -64,7 +64,7 @@ TEST_CASE("MPS native qr avoids bridge counters on deterministic cases", "[mps][
   REQUIRE(max_abs_diff_(recon, a_cpu.to(pluss::ScalarType::Float32)) < 1.5e-2f);
 
   const auto qtq = q_mps.transpose(0, 1).matmul(q_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  const auto eye = pluss::eye(q_mps.sizes()[1], q_mps.sizes()[1], pluss::ScalarType::Float32);
+  const auto eye = pluss::series::eye(q_mps.sizes()[1], q_mps.sizes()[1], pluss::ScalarType::Float32);
   REQUIRE(max_abs_diff_(qtq, eye) < 2.0e-2f);
 
   const auto c = linearalg_dispatch_counters();
@@ -102,7 +102,7 @@ TEST_CASE("MPS native qr stress/repeat stability", "[mps][linearalg][native][qr]
     REQUIRE(max_abs_diff_(recon, a_cpu.to(pluss::ScalarType::Float32)) < 2.5e-2f);
 
     const auto qtq = q.transpose(0, 1).matmul(q).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-    const auto eye = pluss::eye(q.sizes()[1], q.sizes()[1], pluss::ScalarType::Float32);
+    const auto eye = pluss::series::eye(q.sizes()[1], q.sizes()[1], pluss::ScalarType::Float32);
     REQUIRE(max_abs_diff_(qtq, eye) < 3.5e-2f);
   }
 
@@ -115,7 +115,7 @@ TEST_CASE("MPS native qr stress/repeat stability", "[mps][linearalg][native][qr]
       {4, 4});
   const auto stable_mps = stable_cpu.to(pluss::pMPS);
   const auto a_ref = stable_cpu.to(pluss::ScalarType::Float32);
-  const auto eye4 = pluss::eye(4, 4, pluss::ScalarType::Float32);
+  const auto eye4 = pluss::series::eye(4, 4, pluss::ScalarType::Float32);
 
   for (std::int64_t rep = 0; rep < 220; ++rep) {
     const auto q = qr_q(stable_mps, true);

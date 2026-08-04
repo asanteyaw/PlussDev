@@ -28,13 +28,13 @@ inline Series zero_pad_(const Series& input, const Padding1d& padding) {
   pieces.reserve(3);
   const Config cfg = Config{}.with_dtype(input.scalar_type()).with_platform(input.platform());
   if (padding[0] > 0) {
-    pieces.push_back(pluss::zeros({input.sizes()[0], input.sizes()[1], padding[0]}, cfg));
+    pieces.push_back(pluss::series::zeros({input.sizes()[0], input.sizes()[1], padding[0]}, cfg));
   }
   pieces.push_back(input);
   if (padding[1] > 0) {
-    pieces.push_back(pluss::zeros({input.sizes()[0], input.sizes()[1], padding[1]}, cfg));
+    pieces.push_back(pluss::series::zeros({input.sizes()[0], input.sizes()[1], padding[1]}, cfg));
   }
-  return pluss::unite(pieces, 2);
+  return pluss::series::unite(pieces, 2);
 }
 
 } // namespace detail::conv1d

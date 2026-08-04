@@ -10,8 +10,15 @@
 pluss::Duration pluss::duration::nanos(std::int64_t count);
 pluss::Duration pluss::duration::nanos(std::initializer_list<NestedInt64Literal> nested);
 pluss::Duration pluss::duration::nanos(pluss::RangeView<std::int64_t> flat, pluss::RangeView<std::int64_t> sizes);
-// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the
-// same three overloads as nanos above.
+// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the same three overloads as nanos above.
+
+pluss::Duration pluss::duration::microseconds()
+pluss::Duration pluss::duration::milliseconds();
+pluss::Duration pluss::duration::seconds();
+pluss::Duration pluss::duration::minutes();
+pluss::Duration pluss::duration::hours();
+pluss::Duration pluss::duration::days();
+pluss::Duration pluss::duration::weeks()
 
 enum class pluss::duration::Unit { Nanos, Microseconds, Milliseconds, Seconds, Minutes, Hours, Days, Weeks };
 pluss::Duration pluss::duration::make(std::int64_t count, Unit unit);
@@ -30,7 +37,7 @@ Builds a `Duration` — an elapsed-time value or array — from scratch, with no
 construction statics of its own — `Duration()` is deleted, and there is no
 `Duration::from_scalar_nanos`/`Duration::range` to call directly. Construction
 lives entirely in its own namespace, `pluss::duration` (lowercase), the same
-split as `pluss::make_timeline`/`pluss::from_epoch_nanos` being kept separate
+split as `pluss::timeline::make`/`pluss::timeline::from_epoch` being kept separate
 from `Timeline` itself:
 
 - `pluss::duration::nanos(...)`: the base unit. `microseconds`/`milliseconds`/
@@ -40,7 +47,7 @@ from `Timeline` itself:
 - **Every one of those eight functions has three overloads**, not just a
   scalar one — see Example 2. A single count builds a scalar (0D) `Duration`;
   a braced list builds 1D; a nested braced list (up to 3D) or an explicit
-  `(flat, shape)` pair builds any N-D array — mirroring `pluss::make_timeline`'s
+  `(flat, shape)` pair builds any N-D array — mirroring `pluss::timeline::make`'s
   own scalar/1D/nested/flat+shape overload set exactly. Plain `{...}` braces
   work directly for the `flat`/`shape` arguments too (see Example 3) — no
   explicit `RangeView` wrapping needed.
@@ -68,7 +75,7 @@ of counts in the named unit.
 
 An explicit flat buffer of counts plus the target shape, for constructing any
 rank without going through nested braces — the same explicit-shape escape
-hatch `pluss::from_epoch_nanos(flat, sizes)` offers for `Timeline`. Accepts a
+hatch `pluss::timeline::from_epoch(flat, sizes)` offers for `Timeline`. Accepts a
 plain `{...}` brace list directly; `pluss::RangeView<T>` converts implicitly
 from `std::initializer_list<T>`.
 
@@ -79,7 +86,7 @@ Which unit `count`/`nested`/`flat` are expressed in.
 **start**, **end**, **step** (`const Duration&`, `range` only)
 
 Inclusive start, exclusive-past-end stop, and step size, exactly like
-`pluss::date_range` for `Timeline` or Python's `range()`. All three are
+`pluss::timeline::date_range` for `Timeline` or Python's `range()`. All three are
 themselves `Duration` values (typically scalar, built from one of the unit
 factories above), not raw integers.
 
@@ -98,18 +105,22 @@ auto ninety_min = pluss::duration::minutes(90);
 auto one_hour = pluss::duration::hours(1);
 auto one_day = pluss::duration::days(1);
 auto neg_fifteen_min = pluss::duration::minutes(-15);
-std::cout << pluss::print_series(ninety_min.total_nanoseconds());
+std::cout << pluss::duration::print(ninety_min);
 ```
 
 ### Output
 
 ```text
-Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=5.4000e+12
+Duration(shape=[], dim=0, numel=1)
+0 days 01:30:00.000000000
 ```
 
-`90 * 60 * 1e9 = 5.4e12` nanoseconds — `duration::minutes` scales up from
-`duration::nanos` exactly as documented above.
+`pluss::duration::print` (or `std::cout << ninety_min` directly, since
+`Duration` has an `operator<<`) is the natural way to read a `Duration`
+back — no unit conversion needed. `ninety_min.total().nanoseconds()`, which
+would give the same value as a plain number (`5.4e12` nanoseconds), is the
+[`total().nanoseconds()`](total_nanoseconds.md) family's job instead, useful when
+you need a numeric `Series` rather than a human-readable rendering.
 
 Example 2. N-D construction: a 1D list and a nested 2D literal, for
 `minutes`/`hours` respectively.
@@ -119,7 +130,7 @@ auto minutes_1d = pluss::duration::minutes({15, 30, 45, 60});
 auto hours_2d = pluss::duration::hours({{1, 2}, {3, 4}, {5, 6}});
 std::cout << "1d.dim=" << minutes_1d.dim() << " 1d.numel=" << minutes_1d.numel() << "\n";
 std::cout << "2d.dim=" << hours_2d.dim() << " 2d.numel=" << hours_2d.numel() << "\n";
-std::cout << pluss::print_series(hours_2d.total_hours());
+std::cout << pluss::print_series(hours_2d.total().hours());
 ```
 
 ### Output
@@ -142,7 +153,7 @@ Example 3. Explicit `(flat, shape)` construction with plain braces — no
 
 ```cpp
 auto days_2x2 = pluss::duration::days({1, 2, 3, 4}, {2, 2});
-std::cout << pluss::print_series(days_2x2.total_days());
+std::cout << pluss::print_series(days_2x2.total().days());
 ```
 
 ### Output
@@ -159,8 +170,8 @@ Example 4. `pluss::duration::make` — the same construction, with the unit pick
 ```cpp
 auto made_scalar = pluss::duration::make(3, pluss::duration::Unit::Days);
 auto made_1d = pluss::duration::make({1, 2, 3}, pluss::duration::Unit::Hours);
-std::cout << "scalar=" << pluss::print_series(made_scalar.total_days()) << "\n";
-std::cout << "1d=" << pluss::print_series(made_1d.total_hours());
+std::cout << "scalar=" << pluss::print_series(made_scalar.total().days()) << "\n";
+std::cout << "1d=" << pluss::print_series(made_1d.total().hours());
 ```
 
 ### Output
@@ -179,19 +190,19 @@ involved.
 auto steps = pluss::duration::range(
     pluss::duration::days(0), pluss::duration::days(10), pluss::duration::days(2));
 std::cout << "dim=" << steps.dim() << " numel=" << steps.numel() << "\n";
-std::cout << pluss::print_series(steps.total_days());
+std::cout << pluss::duration::print(steps);
 ```
 
 ### Output
 
 ```text
 dim=1 numel=6
-Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=[0.0000, 2.0000, 4.0000, 6.0000, 8.0000, 10.0000]
+Duration(shape=[6], dim=1, numel=6)
+[ 0 days 00:00:00.000000000, 2 days 00:00:00.000000000, 4 days 00:00:00.000000000, 6 days 00:00:00.000000000, 8 days 00:00:00.000000000, 10 days 00:00:00.000000000 ]
 ```
 
 Six values from `0` up to (but not including) `10`, stepping by `2` — the same
-half-open range convention as `pluss::date_range`.
+half-open range convention as `pluss::timeline::date_range`.
 
 ## Notes
 
@@ -212,9 +223,10 @@ half-open range convention as `pluss::date_range`.
 
 ## See Also
 
-- [`arithmetic`](arithmetic.md): combining `Duration` values once constructed.
-- [`total`](total.md): converting a `Duration` back into a plain `Series` in a
-  chosen unit.
+- [`add`](add.md), [`sub`](sub.md), [`mul`](mul.md), [`div`](div.md): combining
+  and scaling `Duration` values once constructed.
+- [`total().seconds()`](total_seconds.md): converting a `Duration` back into a
+  plain `Series` in a chosen unit.
 - [`Timeline::diff`](../timeline/diff.md): the `Timeline`-side source of a
   `Duration`.
 
@@ -223,8 +235,8 @@ half-open range convention as `pluss::date_range`.
     <span class="label">Previous</span>
     <span class="title">Duration API Reference</span>
   </a>
-  <a class="next-link" href="arithmetic.html">
+  <a class="next-link" href="add.html">
     <span class="label">Next</span>
-    <span class="title">arithmetic</span>
+    <span class="title">add</span>
   </a>
 </div>

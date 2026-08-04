@@ -47,10 +47,10 @@ ConstrainedProblem make_consistent_problem() {
   problem.nonlinear.analytic = [](const ParameterPack<Series>& p) {
     NonlinearConstraintEvaluation eval;
     const auto x = p.at("x").to_vec<double>();
-    eval.equality = pluss::empty({0}, ScalarType::Float64);
+    eval.equality = pluss::series::empty({0}, ScalarType::Float64);
     eval.inequality = make_series(x[0] + x[1] - 1.0).reshape({1}).to(ScalarType::Float64);
     eval.equality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({0, 2}, ScalarType::Float64)},
+        {"x", pluss::series::zeros({0, 2}, ScalarType::Float64)},
     });
     eval.inequality_jacobian = ParameterPack<Series>({
         {"x", make_series(std::vector<double>{1.0, 1.0}, {1, 2}).to(ScalarType::Float64)},

@@ -4,7 +4,7 @@
 #include <vector>
 
 int main() {
-  const auto idx = pluss::make_timeindex({
+  const auto idx = pluss::timeindex::make({
       "2024-01-01T00:00:00Z",
       "2024-01-01T00:15:00Z",
       "2024-01-01T00:45:00Z",
@@ -12,7 +12,7 @@ int main() {
       "2024-01-01T01:25:00Z",
   });
   const auto t = idx.timeline();
-  std::cout << "Timeline axis:\n" << pluss::print_timeline(t) << "\n\n";
+  std::cout << "Timeline axis:\n" << pluss::timeline::print(t) << "\n\n";
   std::cout << "Inferred frequency: " << idx.freq() << "\n";
   std::cout << "Is monotonic: " << (idx.is_monotonic_increasing() ? "true" : "false") << "\n\n";
 

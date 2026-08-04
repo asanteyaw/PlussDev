@@ -9,21 +9,21 @@ int main() {
 
   const auto inst = fin::instrument::Vanilla{
       .type = fin::pricing::OptionType::Call,
-      .strike = pluss::linspace(80.0, 120.0, 9, cfg),
-      .maturity = pluss::full({9}, 1.0, cfg),
+      .strike = pluss::series::linspace(80.0, 120.0, 9, cfg),
+      .maturity = pluss::series::full({9}, 1.0, cfg),
   };
   const auto mkt = fin::market::State{
-      .spot = pluss::full({9}, 100.0, cfg),
-      .rate = pluss::full({9}, 0.03, cfg),
-      .dividend_yield = pluss::full({9}, 0.01, cfg),
+      .spot = pluss::series::full({9}, 100.0, cfg),
+      .rate = pluss::series::full({9}, 0.03, cfg),
+      .dividend_yield = pluss::series::full({9}, 0.01, cfg),
   };
 
   const auto p0 = fin::model::Heston{
-      .kappa = pluss::full({1}, 1.5, cfg),
-      .theta = pluss::full({1}, 0.04, cfg),
-      .sigma = pluss::full({1}, 0.30, cfg),
-      .rho = pluss::full({1}, -0.70, cfg),
-      .v0 = pluss::full({1}, 0.04, cfg),
+      .kappa = pluss::series::full({1}, 1.5, cfg),
+      .theta = pluss::series::full({1}, 0.04, cfg),
+      .sigma = pluss::series::full({1}, 0.30, cfg),
+      .rho = pluss::series::full({1}, -0.70, cfg),
+      .v0 = pluss::series::full({1}, 0.04, cfg),
   };
 
   const auto fft = fin::pricer::Fft{

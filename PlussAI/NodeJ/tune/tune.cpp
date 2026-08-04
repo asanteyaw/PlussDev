@@ -90,7 +90,7 @@ void populate_tune_ledger(TuneReport& report);
   StatusOr<std::int64_t> index_or = metric_index(assess, metric);
   if (!index_or.ok()) return StatusOr<double>(index_or.status());
   const std::int64_t i = index_or.value();
-  const Series idx = pluss::arange(i, i + 1, Config{}.with_dtype(ScalarType::Int64).with_platform(assess.mean_metrics.platform()));
+  const Series idx = pluss::series::arange(i, i + 1, Config{}.with_dtype(ScalarType::Int64).with_platform(assess.mean_metrics.platform()));
   const Series objective = assess.mean_metrics.reshape({assess.mean_metrics.numel()}).index_select(0, idx);
   const double value = objective.reshape({1}).to(ScalarType::Float64).item<double>();
   if (!std::isfinite(value)) {

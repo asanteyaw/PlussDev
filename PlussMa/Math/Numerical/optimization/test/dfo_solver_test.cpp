@@ -42,7 +42,7 @@ int main() {
   int failures = 0;
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
-  const Series x0 = pluss::full({4}, 2.0, cfg);
+  const Series x0 = pluss::series::full({4}, 2.0, cfg);
 
   // Auto: low-dimensional unconstrained -> NelderMead.
   DfoProblem unconstrained;
@@ -65,8 +65,8 @@ int main() {
 
   // Auto: boxed problem -> DifferentialEvolution.
   DfoProblem boxed = unconstrained;
-  boxed.lower_bounds = pluss::full({4}, -1.0, cfg);
-  boxed.upper_bounds = pluss::full({4}, 1.0, cfg);
+  boxed.lower_bounds = pluss::series::full({4}, -1.0, cfg);
+  boxed.upper_bounds = pluss::series::full({4}, 1.0, cfg);
 
   DfoOptions auto_boxed;
   auto_boxed.max_iterations = 250;
@@ -89,8 +89,8 @@ int main() {
   // Auto: constraints provided -> PatternSearch.
   DfoProblem constrained = unconstrained;
   constrained.constraints = sum_le_one_constraint;
-  constrained.lower_bounds = pluss::full({4}, -2.0, cfg);
-  constrained.upper_bounds = pluss::full({4}, 2.0, cfg);
+  constrained.lower_bounds = pluss::series::full({4}, -2.0, cfg);
+  constrained.upper_bounds = pluss::series::full({4}, 2.0, cfg);
 
   DfoOptions auto_constrained;
   auto_constrained.max_iterations = 500;
@@ -130,9 +130,9 @@ int main() {
 
   // Equality-aware adapter via constraints_values with AL policy.
   DfoProblem constrained_values = unconstrained;
-  constrained_values.initial = pluss::full({4}, 1.5, cfg);
-  constrained_values.lower_bounds = pluss::full({4}, -2.0, cfg);
-  constrained_values.upper_bounds = pluss::full({4}, 2.0, cfg);
+  constrained_values.initial = pluss::series::full({4}, 1.5, cfg);
+  constrained_values.lower_bounds = pluss::series::full({4}, -2.0, cfg);
+  constrained_values.upper_bounds = pluss::series::full({4}, 2.0, cfg);
   constrained_values.constraints_values = [](const Series& x) {
     DfoConstraintValues c;
     c.inequality = x.square().sum().sub(1.0).reshape({1});
@@ -181,7 +181,7 @@ int main() {
   const DfoResult rb = DFO::build()
                            .with_initial(x0)
                            .with_objective(sphere)
-                           .with_bounds(pluss::full({4}, -1.0, cfg), pluss::full({4}, 1.0, cfg))
+                           .with_bounds(pluss::series::full({4}, -1.0, cfg), pluss::series::full({4}, 1.0, cfg))
                            .with_max_iterations(250)
                            .with_max_evaluations(10000)
                            .with_check_every(10)

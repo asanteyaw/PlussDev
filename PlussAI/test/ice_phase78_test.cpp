@@ -31,10 +31,10 @@ struct RegressionData {
 
 RegressionData make_regression_data(std::int64_t rows, std::uint64_t seed) {
   const auto cfg = float_cfg();
-  const Series x = pluss::randn({rows, 3}, cfg, seed);
+  const Series x = pluss::series::randn({rows, 3}, cfg, seed);
   const Series true_weight = pluss::make_series(
       std::vector<float>{1.4F, -1.8F, 0.65F}, std::vector<std::int64_t>{3, 1}, cfg);
-  const Series noise = pluss::randn({rows, 1}, cfg, seed + 1).mul(0.02);
+  const Series noise = pluss::series::randn({rows, 1}, cfg, seed + 1).mul(0.02);
   const Series y = x.matmul(true_weight).add(noise);
   return RegressionData{x, y};
 }

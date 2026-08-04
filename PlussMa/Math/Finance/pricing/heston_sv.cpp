@@ -228,7 +228,7 @@ Series as_f64_series_(const Series& x, Config cfg) {
 }
 
 Series scalar_series_(double value, Config cfg) {
-  return pluss::full({}, value, f64_cfg_(cfg));
+  return pluss::series::full({}, value, f64_cfg_(cfg));
 }
 
 struct ComplexSeries_ {
@@ -337,11 +337,11 @@ CosSeriesInterval_ heston_cos_interval_series_(const Series& spot,
                                                const CosOptions& options,
                                                Config cfg) {
   const double h = std::max(options.cumulant_step, 1.0e-6);
-  const Series um2 = pluss::full({1, 1}, -2.0 * h, f64_cfg_(cfg));
-  const Series um1 = pluss::full({1, 1}, -h, f64_cfg_(cfg));
-  const Series u0 = pluss::full({1, 1}, 0.0, f64_cfg_(cfg));
-  const Series up1 = pluss::full({1, 1}, h, f64_cfg_(cfg));
-  const Series up2 = pluss::full({1, 1}, 2.0 * h, f64_cfg_(cfg));
+  const Series um2 = pluss::series::full({1, 1}, -2.0 * h, f64_cfg_(cfg));
+  const Series um1 = pluss::series::full({1, 1}, -h, f64_cfg_(cfg));
+  const Series u0 = pluss::series::full({1, 1}, 0.0, f64_cfg_(cfg));
+  const Series up1 = pluss::series::full({1, 1}, h, f64_cfg_(cfg));
+  const Series up2 = pluss::series::full({1, 1}, 2.0 * h, f64_cfg_(cfg));
 
   const ComplexSeries_ fm2 = c_log_(heston_logspot_cf_series_(um2, spot, maturity, rate, dividend_yield, p, cfg));
   const ComplexSeries_ fm1 = c_log_(heston_logspot_cf_series_(um1, spot, maturity, rate, dividend_yield, p, cfg));
@@ -499,7 +499,7 @@ Series importance_lr_(const Series& innovation_spot, double shift) {
   const std::int64_t steps = s[0];
   const std::int64_t paths = s[1];
   if (std::abs(shift) <= kEps) {
-    return pluss::full({paths}, 1.0, Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(innovation_spot.platform()));
+    return pluss::series::full({paths}, 1.0, Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(innovation_spot.platform()));
   }
   const Series sum_z = innovation_spot.sum(0, false).reshape({paths});
   const double c = 0.5 * static_cast<double>(steps) * shift * shift;
@@ -1086,9 +1086,9 @@ double heston_price_cos(OptionType type,
   validate_heston_(params, "heston_price_cos");
   validate_cos_options_(options, "heston_price_cos");
   const Config out_cfg = f64_cfg_(cfg);
-  const Series s = pluss::full({1}, spot, out_cfg);
-  const Series k = pluss::full({1}, strike, out_cfg);
-  const Series t = pluss::full({1}, maturity, out_cfg);
+  const Series s = pluss::series::full({1}, spot, out_cfg);
+  const Series k = pluss::series::full({1}, strike, out_cfg);
+  const Series t = pluss::series::full({1}, maturity, out_cfg);
   return heston_price_cos(type, s, k, rate, dividend_yield, t, params, options, out_cfg).reshape({1}).item<double>();
 }
 
@@ -1168,7 +1168,7 @@ double heston_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
 
   if (!options.control_variate) {
@@ -1218,7 +1218,7 @@ double sv_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
 
   if (!options.control_variate) {
@@ -1315,7 +1315,7 @@ double heston_nandi_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
 
   if (!options.control_variate) {
@@ -1365,7 +1365,7 @@ double bates_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
 
   if (!options.control_variate) {
@@ -1414,7 +1414,7 @@ double sabr_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
 
   if (!options.control_variate) {
@@ -1465,7 +1465,7 @@ double slv_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
 
   if (!options.control_variate) {
@@ -1515,7 +1515,7 @@ double rough_heston_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
   if (!options.control_variate) return target.mean().item<double>();
 
@@ -1562,7 +1562,7 @@ double rough_bergomi_price_mc(OptionType type,
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
-                                                : pluss::full({options.paths}, 1.0, out_cfg);
+                                                : pluss::series::full({options.paths}, 1.0, out_cfg);
   const Series target = disc_payoff.mul(lr);
   if (!options.control_variate) return target.mean().item<double>();
 

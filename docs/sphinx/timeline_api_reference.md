@@ -11857,7 +11857,7 @@ Selects values from `self` or fallback inputs based on a boolean condition/mask.
 ```cpp
 auto t = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
 auto other_t = pluss::make_timeline({"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"});
-auto mask = pluss::ones({2}, pluss::ScalarType::Bool);
+auto mask = pluss::series::ones({2}, pluss::ScalarType::Bool);
 
 auto out = t.where(mask, other_t);
 ```

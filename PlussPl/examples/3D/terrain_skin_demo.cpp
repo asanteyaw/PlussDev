@@ -7,8 +7,8 @@
 namespace {
 
 pluss::Series peaks_skin(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = pluss::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = pluss::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -28,8 +28,8 @@ int main() {
   std::filesystem::create_directories(root / "outputs" / "svg");
   std::filesystem::create_directories(root / "outputs" / "pdf");
 
-  const auto x = pluss::linspace(-3.0, 3.0, 41, pluss::ScalarType::Float64);
-  const auto y = pluss::linspace(-3.0, 3.0, 41, pluss::ScalarType::Float64);
+  const auto x = pluss::series::linspace(-3.0, 3.0, 41, pluss::ScalarType::Float64);
+  const auto y = pluss::series::linspace(-3.0, 3.0, 41, pluss::ScalarType::Float64);
   const auto z = peaks_skin(41, 41);
 
   pl::Studio studio("plusspl-terrain-skin", pl::Theme::paper());

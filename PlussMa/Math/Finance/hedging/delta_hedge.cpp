@@ -58,8 +58,8 @@ DeltaHedgeResult delta_hedge(const Series& spot_path,
 
   const double dt = maturity / static_cast<double>(n - 1);
   const double growth = std::exp(rate * dt);
-  const Series tau = pluss::full({n}, maturity, out_cfg)
-                         .sub(pluss::linspace(0.0, maturity, n, out_cfg))
+  const Series tau = pluss::series::full({n}, maturity, out_cfg)
+                         .sub(pluss::series::linspace(0.0, maturity, n, out_cfg))
                          .clamp_min(0.0);
 
   const Series option_value =
@@ -67,7 +67,7 @@ DeltaHedgeResult delta_hedge(const Series& spot_path,
   const Series delta = pricing::black_scholes_greeks(type, spot, tau, strike, rate, dividend_yield, volatility, out_cfg)
                            .delta;
 
-  Series cash = pluss::zeros({n}, out_cfg);
+  Series cash = pluss::series::zeros({n}, out_cfg);
   const Series idx0 = scalar_index_(0, out_cfg);
   const Series cash0 = option_value.select(0, 0).sub(delta.select(0, 0).mul(spot.select(0, 0)));
   cash = pluss::index_put(cash, std::vector<Series>{idx0}, cash0.reshape({1}), false);

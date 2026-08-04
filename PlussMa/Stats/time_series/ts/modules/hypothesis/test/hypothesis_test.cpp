@@ -27,7 +27,7 @@ void expect(bool condition, const std::string& message) {
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = phi * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -37,7 +37,7 @@ Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
 
 Series make_random_walk(std::int64_t n, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -47,7 +47,7 @@ Series make_random_walk(std::int64_t n, std::uint64_t seed) {
 
 Series make_arch1(std::int64_t n, double omega, double alpha, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto z = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto z = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   std::vector<double> v(static_cast<std::size_t>(n), omega / std::max(1e-9, 1.0 - alpha));
   for (std::int64_t t = 1; t < n; ++t) {
@@ -61,7 +61,7 @@ Series make_arch1(std::int64_t n, double omega, double alpha, std::uint64_t seed
 
 void test_arch_lm_detects_arch_effects() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series wn = pluss::randn({5000}, cfg, 20260321ULL);
+  const Series wn = pluss::series::randn({5000}, cfg, 20260321ULL);
   const Series arch = make_arch1(5000, 0.1, 0.7, 20260322ULL);
 
   ArchLmOptions opt;
@@ -109,7 +109,7 @@ void test_kpss_stationary_vs_unit_root() {
 
 void test_dm_forecast_loss_difference() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series base = pluss::randn({4000}, cfg, 20260406ULL);
+  const Series base = pluss::series::randn({4000}, cfg, 20260406ULL);
   const Series err_b = base;
   const Series err_a = base.add(1.0);
 
@@ -133,7 +133,7 @@ void test_dm_forecast_loss_difference() {
 
 void test_error_paths() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({64}, cfg, 20260420ULL);
+  const Series y = pluss::series::randn({64}, cfg, 20260420ULL);
 
   bool threw = false;
   try {

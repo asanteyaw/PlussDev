@@ -45,8 +45,8 @@ bool run_module_snapshot_checks(std::ostream* err = nullptr) {
   const Series y_before = layer->forward(x);
   const auto snap = layer->snapshot();
 
-  layer->weight() = pluss::zeros(layer->weight().sizes(), cfg);
-  layer->bias() = pluss::zeros(layer->bias().sizes(), cfg);
+  layer->weight() = pluss::series::zeros(layer->weight().sizes(), cfg);
+  layer->bias() = pluss::series::zeros(layer->bias().sizes(), cfg);
   const Series y_mutated = layer->forward(x);
   if (approx_vec(y_before.to_vec<double>(), y_mutated.to_vec<double>())) {
     if (err) *err << "mutation should change model output\n";
@@ -74,7 +74,7 @@ bool run_module_snapshot_checks(std::ostream* err = nullptr) {
   auto noisy = snap;
   noisy.parameters.push_back(pluss::nn::Module::SnapshotEntry{
       .name = "ghost.weight",
-      .value = pluss::zeros({1}, cfg),
+      .value = pluss::series::zeros({1}, cfg),
   });
   const auto non_strict = layer->restore(noisy, false);
   if (non_strict.unexpected.empty()) {

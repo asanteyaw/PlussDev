@@ -12,7 +12,7 @@ int main() {
   using namespace pluss::pl::flash;
 
   constexpr std::int64_t n = 720;
-  const auto t = pluss::linspace(0.0, 1.0, n, pluss::ScalarType::Float64);
+  const auto t = pluss::series::linspace(0.0, 1.0, n, pluss::ScalarType::Float64);
 
   // Stock-path style trajectory in 3D (time, price, volatility-like axis).
   const auto price =
@@ -30,7 +30,7 @@ int main() {
   }
 
   // Engineering-style damped oscillation trajectory.
-  const auto tau = pluss::linspace(0.0, 22.0, n, pluss::ScalarType::Float64);
+  const auto tau = pluss::series::linspace(0.0, 22.0, n, pluss::ScalarType::Float64);
   const auto envelope = tau.mul(-0.085).exp();
   const auto x = tau.mul(3.2).cos().mul(envelope);
   const auto y = tau.mul(3.2).sin().mul(envelope);

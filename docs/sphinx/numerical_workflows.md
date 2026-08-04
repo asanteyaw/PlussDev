@@ -34,11 +34,11 @@ auto shaped = pluss::make_series(flat, {2, 3});
 Factory helpers:
 
 ```cpp
-auto zeros = pluss::zeros({2, 3});
-auto ones = pluss::ones({2, 3});
-auto full = pluss::full({2, 3}, 7.5);
-auto grid = pluss::linspace(0.0, 1.0, 11);
-auto noise = pluss::randn({1000});
+auto zeros = pluss::series::zeros({2, 3});
+auto ones = pluss::series::ones({2, 3});
+auto full = pluss::series::full({2, 3}, 7.5);
+auto grid = pluss::series::linspace(0.0, 1.0, 11);
+auto noise = pluss::series::randn({1000});
 ```
 
 ## Inspect and extract values
@@ -59,7 +59,7 @@ extraction helpers for vectors and matrices.
 ## Elementwise math
 
 ```cpp
-auto x = pluss::linspace(-1.0, 1.0, 5);
+auto x = pluss::series::linspace(-1.0, 1.0, 5);
 auto y = x.pow(2.0) + 2.0 * x + 1.0;
 
 auto positive = y.gt(0.0);
@@ -180,8 +180,8 @@ When Pluss is built with `PLUSS_ENABLE_TORCH=ON`, the SDK exports Torch interop
 helpers through `<pluss/pluss.h>` / `<pluss/core.h>`:
 
 ```cpp
-auto pluss_series = pluss::from_torch(tensor);
-auto torch_tensor = pluss::to_torch(pluss_series);
+auto pluss_series = pluss::series::from_torch(tensor);
+auto torch_tensor = pluss::series::to_torch(pluss_series);
 ```
 
 Use a Torch-enabled SDK and keep Torch visible to your downstream CMake project
@@ -192,7 +192,7 @@ when your application also uses `torch::Tensor` directly.
 Use unified save/load for core numeric artifacts:
 
 ```cpp
-auto weights = pluss::randn({16, 8});
+auto weights = pluss::series::randn({16, 8});
 pluss::save(weights, "weights.plio");
 
 auto loaded = pluss::load<pluss::Series>("weights.plio");

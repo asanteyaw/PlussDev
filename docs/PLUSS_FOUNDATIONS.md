@@ -15,12 +15,12 @@ It is positioned as:
 
 Vision framing:
 
-- one integrated C++ stack that plays the role of multiple major technical-computing libraries in one space.
+- one integrated C++ stack that plays the role of multiple major technical-computing libraries in one place.
 
 ## Nutshell
 Namespace: `pluss`
 Product: `Plusses` (satirically can be referred to as `the Plusses`)
-Spaces: PlussQit, PlussMa, PlussMic, etc
+Spaces: PlussQit, PlussMa, PlussMic, PlussPl, PlussAI, PlussTils
 
 ## Problem We Are Solving
 
@@ -37,12 +37,12 @@ Modern C++ data/ML/scientific workflows are fragmented:
 
 Conceptual mapping of Plusses spaces:
 
-- The `PlussQit` space: This is the core space, with numerical computing and text processing engine supporting the other spaces.
+- The `PlussQit` space: This is the core space, with numerical computing, temporal and text processing engine supporting the other spaces.
 - The `PlussMic` space: Efficient data analysis and manipulation functionalities and utilities.
 - The `PlussPl` space: Immersive plotting engine for visual workflows and pictorial representations of data.
-- The `PlussMa` space: High performance scientific computing spanning across different scientific and engineering domains, with numerical methods and optimization engines
+- The `PlussMa` space: High performance scientific computing spanning across different scientific and engineering domains, with numerical methods and optimization engines.
 - The `PlussAI` space: Artificial intelligence with machine learning, deep learning, robotics and other AI functionalities
-- The `PlussTilsView` space: Graphical user interface for outputting results and visualizing workflows in real time.
+- The `PlussTils` space: General utility space for convenience. Also provides graphical user interface for outputting results and visualizing workflows in real time.
 
 This mapping is directional and maturity-dependent, with growing implementations and incoporation. More spaces may be added with time.
 
@@ -55,8 +55,8 @@ Top-level organization model:
 Examples:
 
 - `PlussAI` (space) -> `NodeJ` / `NodeK` (subspaces)
-- `PlussMa` (space) -> math/stat/finance/natsci subspaces
-- `PlussQit` (space) -> `CodeM` / `CodeN` / `CodeH` libraries
+- `PlussMa` (space) -> math/stat/finance/natsci (subspaces)
+- `PlussQit` (space) -> `CodeM` / `CodeN` / `CodeH` (subspaces)
 
 ## Primary Users
 
@@ -81,12 +81,12 @@ Users should be able to:
 
 Current stack structure by space:
 
-- `PlussQit` space: core primitives and runtime (`Series`, `Note`, `Timeline/Timeline`). `Series` is the core tensor engine for numerical computing. `Note` is the core tensor-like engine for word and text processing. `Timeline` and `TimeIndex` provide utilities for date-time operations and time series data processing.
-- `PlussMic` space: Offers three data processing models. `Table` provides `DataFrame` for 2D structured data processing and `Atlas` for 3D structured data processing. `Kindle` provides a more slightly more general 2D(`Catalog`) and 3D(`Archive`) for data processing. Unlike `Table`, it can handle data of unequal column length. `Bundle` is the most general data processing model on offer. Unlike the other two, it can handle data with columns of heterogeneous types, with `Registry` for 2D and `Aisle` for 3D data processing. I/O workflows are also offered in the space.
+- `PlussQit` space: core primitives and runtime (`Series`, `Note`, `Timeline/Timeline/Duration`). `Series` is the core tensor engine for numerical computing. `Note` is the core tensor-like engine for word and text processing. `Duration`, `Timeline` and `TimeIndex` provide utilities temporal data processing.
+- `PlussMic` space: Offers three data processing models. `Table` provides `DataFrame` for 2D structured data processing and `Atlas` for 3D structured data processing. It also offers `Nexus`, a workspace for cordinating a collection of dataframes. `Kindle` provides a more slightly more general 2D(`Catalog`) and 3D(`Archive`) for data processing. Unlike `Table`, it can handle data of unequal column length. `Bundle` is the most general data processing model on offer. Unlike the other two, it can handle data with columns of heterogeneous types, with `Registry` for 2D and `Axel` for 3D data processing. I/O workflows are also offered in the space.
 - `PlussPl` space: Responsible for all plotting utilities and functionalities. Offers the platform for `Flash`, a higher level engine built on top of `PlussPl` functionalities to provide a convenient way of plotting, with complex plots made easier.
-- `PlussMa` space: Provides several subspaces for a wide range of scientific computing tasks, quantiative modelling and numerical optimization work. The `Math` subspace provides libraries for tasks in linear algebra, optimization, finance, etc. The `Stats` subspace provides various libraries for statistical tasks like hypothesis testing, time series and inference. `NatSci` and `Eng` subspaces provide the platform natural sciences and engineering work.
+- `PlussMa` space: Provides several subspaces for a wide range of scientific computing tasks, quantiative modelling and numerical optimization work. The `Math` subspace provides libraries for tasks in linear algebra, optimization, finance, etc. The `Stats` subspace provides various libraries for statistical tasks like hypothesis testing, time series analysis and inference. `NatSci` and `Eng` subspaces provide the platform natural sciences and engineering work.
 - `PlussAI` space: Provides Machine and Deep learning surfaces (functional and module-style APIs), robotics and other artificial intelligence tools for AI work. 
-- `PlussTilsView` space: Responsible for rendering/window/session infrastructure
+- `PlussTils` space: Responsible for rendering/window/session infrastructure and general convenient utilities.
 
 ## Product Goals
 

@@ -2,7 +2,7 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("scatter_add basic (float reduce suite)", "[scatter]") {
-  auto a = pluss::zeros({2,3}, pluss::config({{"dtype","float32"}}));
+  auto a = pluss::series::zeros({2,3}, pluss::config({{"dtype","float32"}}));
   auto index = pluss::make_series(std::vector<std::int64_t>{0,1,2,  2,1,0}, {2,3});
   auto src = pluss::make_series(std::vector<float>{1,2,3,  4,5,6}, {2,3});
   auto out = a.scatter_add(1, index, src);
@@ -11,7 +11,7 @@ TEST_CASE("scatter_add basic (float reduce suite)", "[scatter]") {
 }
 
 TEST_CASE("scatter_reduce amax", "[scatter]") {
-  auto a = pluss::zeros({1,4}, pluss::config({{"dtype","float32"}}));
+  auto a = pluss::series::zeros({1,4}, pluss::config({{"dtype","float32"}}));
   auto index = pluss::make_series(std::vector<std::int64_t>{0,0,1,1}, {1,4});
   auto src = pluss::make_series(std::vector<float>{1,7,3,5}, {1,4});
   auto out = a.scatter_reduce(1, index, src, "amax", false);

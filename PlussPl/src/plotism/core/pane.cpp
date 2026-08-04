@@ -499,9 +499,9 @@ void require_category_spec(
 
 [[nodiscard]] Series category_positions(double first, double step, std::size_t count) {
   if (count == 0) {
-    return pluss::empty({0}, ScalarType::Float64);
+    return pluss::series::empty({0}, ScalarType::Float64);
   }
-  const auto idx = pluss::arange(0, static_cast<std::int64_t>(count), 1, ScalarType::Float64);
+  const auto idx = pluss::series::arange(0, static_cast<std::int64_t>(count), 1, ScalarType::Float64);
   return idx.mul(step).add(first);
 }
 

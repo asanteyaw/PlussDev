@@ -25,7 +25,7 @@ Example 1. Convert localized wall-clock values back into UTC.
 
 ```cpp
 auto out = ny.to_utc();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

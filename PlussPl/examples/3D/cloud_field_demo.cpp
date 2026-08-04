@@ -8,7 +8,7 @@ int main() {
   std::filesystem::create_directories(root / "outputs" / "svg");
   std::filesystem::create_directories(root / "outputs" / "pdf");
 
-  auto t = pluss::linspace(-2.6, 2.6, 84, pluss::ScalarType::Float64);
+  auto t = pluss::series::linspace(-2.6, 2.6, 84, pluss::ScalarType::Float64);
   auto x = t.cos().mul(1.7).add(t.mul(0.6).sin().mul(0.4));
   auto y = t.sin().mul(1.35).add(t.mul(1.2).cos().mul(0.25));
   auto z = t.mul(0.8).sin().mul(1.6).add(t.mul(0.35));

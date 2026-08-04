@@ -332,7 +332,7 @@ void sync_target_(DuelingTower& target, DuelingTower& online) {
   } else {
     next_value = target.forward(batch.next_observation).amax(1, false);
   }
-  const Series alive = pluss::ones_like(batch.done, ScalarType::Float32).sub(batch.done);
+  const Series alive = pluss::series::ones_like(batch.done, ScalarType::Float32).sub(batch.done);
   return batch.reward.add(alive.mul(model_options.discount).mul(next_value));
 }
 

@@ -22,15 +22,15 @@ int main() {
 
   const Series bell = distr::pdf(dst::Normal, grid, {0.0, 1.0});
   const Series bell_series_params =
-      distr::logpdf(dst::Normal, grid, pluss::sign_list(pluss::zeros_like(grid), pluss::ones_like(grid)));
+      distr::logpdf(dst::Normal, grid, pluss::sign_list(pluss::series::zeros_like(grid), pluss::series::ones_like(grid)));
   const Series bell_series_braces =
-      distr::logpdf(dst::Normal, grid, {pluss::zeros_like(grid), pluss::ones_like(grid)});
+      distr::logpdf(dst::Normal, grid, {pluss::series::zeros_like(grid), pluss::series::ones_like(grid)});
   const Series bell_log = distr::Normal{0.0, 1.0}.logpdf(grid);
   const Series bern_logcdf = bernoulli.logcdf(make_series(std::vector<double>{0.0, 1.0}, {2}, f64));
   const Series normal_cgf = normal.cgf(make_series(std::vector<double>{0.0, 1.0}, {2}, f64));
   const Series tail = distr::cdf(dst::StudentT, grid, {5.0});
 
-  const Series like = zeros({2, 4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
+  const Series like = series::zeros({2, 4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
   const Series shaped = distr::sample_like(dst::Gamma, {2.0}, like, 19ULL);
 
   const Series weights = make_series(std::vector<double>{0.65, 0.35}, {2}, f64);

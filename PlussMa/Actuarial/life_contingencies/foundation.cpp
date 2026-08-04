@@ -166,7 +166,7 @@ Series survival_from_force(const Series& force) {
     return one;
   }
   const Series surv_tail = mu.cumsum(0).mul(-1.0).exp();
-  return pluss::unite({one, surv_tail}, 0, true);
+  return pluss::series::unite({one, surv_tail}, 0, true);
 }
 
 Series future_lifetime_pmf(const Series& qx) {
@@ -178,7 +178,7 @@ Series future_lifetime_pmf(const Series& qx) {
   }
   const Series head = surv.slice(/*dim=*/0, /*start=*/0, /*end=*/n, /*step=*/1).mul(q);
   const Series tail = surv.select(/*dim=*/0, /*index=*/n).reshape({1});
-  return pluss::unite({head, tail}, 0, true);
+  return pluss::series::unite({head, tail}, 0, true);
 }
 
 Series curtate_expectation_of_life(const Series& qx) {
@@ -204,7 +204,7 @@ Series curtate_expectation_curve(const Series& qx) {
   const Series future_mass = tail_sum.slice(/*dim=*/0, /*start=*/1, /*end=*/n + 1, /*step=*/1);
   const Series mask = lx.gt(0.0).to(ScalarType::Float64);
   const Series e_head = future_mass.div(lx.maximum(1e-30)).mul(mask);
-  return pluss::unite({e_head, zero1}, 0, true);
+  return pluss::series::unite({e_head, zero1}, 0, true);
 }
 
 Series lx_from_qx(const Series& qx, double radix) {
@@ -271,7 +271,7 @@ Series compose_select_ultimate_qx(const Series& select_qx,
   if (select_take == 0) {
     return tail_part;
   }
-  return pluss::unite({select_part, tail_part.to(select_part.platform())}, /*dim=*/0, /*strict_dtype=*/true);
+  return pluss::series::unite({select_part, tail_part.to(select_part.platform())}, /*dim=*/0, /*strict_dtype=*/true);
 }
 
 } // namespace pluss::subsp::actuarial::life_contingencies

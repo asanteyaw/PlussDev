@@ -90,7 +90,7 @@ int main() {
   raw.push_back(static_cast<char>(0x7F));
   raw.push_back(static_cast<char>(0xC3));
   raw.push_back(static_cast<char>(0xA9));
-  pluss::Note bytes = pluss::bytes_content(raw);
+  pluss::Note bytes = pluss::note::bytes(raw);
 
   pluss::NotePrintOptions bytes_escaped;
   bytes_escaped.escape_controls = true;

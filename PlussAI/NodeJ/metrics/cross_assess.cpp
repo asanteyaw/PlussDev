@@ -64,7 +64,7 @@ using pluss::ScalarType;
                                                            Platform platform,
                                                            const char* where) {
   if (!weights.defined()) {
-    return StatusOr<Series>(pluss::ones({expected}, f64_on(platform)));
+    return StatusOr<Series>(pluss::series::ones({expected}, f64_on(platform)));
   }
   const Series flat = weights.to(platform, ScalarType::Float64).reshape({weights.numel()});
   if (flat.numel() != expected) {

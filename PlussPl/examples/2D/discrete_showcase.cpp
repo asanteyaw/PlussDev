@@ -21,7 +21,7 @@ int main() {
       .x_label("sample")
       .y_label("amplitude")
       .caption("stem-like discrete sequence");
-  auto x = pluss::linspace(1.0, 12.0, 12, pluss::ScalarType::Float64);
+  auto x = pluss::series::linspace(1.0, 12.0, 12, pluss::ScalarType::Float64);
   auto y = x.mul(0.75).sin().abs().mul(1.4).add(x.mul(0.18).cos().mul(0.25));
   pulse.spike(x, y, 0.0).label("sequence").stroke(pl::Rgba::from_u8(25, 98, 156));
 

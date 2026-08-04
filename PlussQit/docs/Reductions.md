@@ -3,7 +3,7 @@
 PlussQit exposes Torch-inspired reductions as **Series methods**:
 
 ```cpp
-pluss::Series a = pluss::rand({2,3,4});
+pluss::Series a = pluss::series::rand({2,3,4});
 auto s = a.sum();           // scalar
 auto s0 = a.sum(0);         // reduce over dim 0
 auto m1 = a.mean(1, true);  // keepdim

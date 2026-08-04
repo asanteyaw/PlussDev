@@ -22,9 +22,9 @@ bool has_shape(const pluss::Series& x, std::initializer_list<std::int64_t> expec
 
 bool run_cudnn_conv_route_checks(std::ostream* err = nullptr) {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  const pluss::Series x = pluss::rand({2, 4, 8, 8}, cfg, 11ULL);
-  const pluss::Series w = pluss::rand({6, 2, 3, 3}, cfg, 13ULL);
-  const pluss::Series b = pluss::rand({6}, cfg, 17ULL);
+  const pluss::Series x = pluss::series::rand({2, 4, 8, 8}, cfg, 11ULL);
+  const pluss::Series w = pluss::series::rand({6, 2, 3, 3}, cfg, 13ULL);
+  const pluss::Series b = pluss::series::rand({6}, cfg, 17ULL);
 
   std::string why{};
   const bool supported = pluss::ai::kernels::cudnn::supports_conv2d(

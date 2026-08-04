@@ -231,9 +231,9 @@ int main() {
     const std::uint64_t seed = 20260226ULL;
 
     const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
-    const Series x0 = pluss::full({n_dim}, 5.0, cfg);
-    const Series lb = pluss::full({n_dim}, -20.0, cfg);
-    const Series ub = pluss::full({n_dim}, 20.0, cfg);
+    const Series x0 = pluss::series::full({n_dim}, 5.0, cfg);
+    const Series lb = pluss::series::full({n_dim}, -20.0, cfg);
+    const Series ub = pluss::series::full({n_dim}, 20.0, cfg);
 
     const fs::path run_dir = fs::temp_directory_path() / "pluss_nomad_external_parity";
     fs::create_directories(run_dir);

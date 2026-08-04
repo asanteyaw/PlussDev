@@ -41,14 +41,14 @@ void test_linear_kalman() {
   const std::int64_t t_obs = 64;
 
   KalmanModel model;
-  model.transition = pluss::full({1, 1}, 1.0, cfg);
-  model.observation = pluss::full({1, 1}, 1.0, cfg);
-  model.process_cov = pluss::full({1, 1}, 0.01, cfg);
-  model.observation_cov = pluss::full({1, 1}, 0.04, cfg);
-  model.initial_mean = pluss::full({1}, 0.0, cfg);
-  model.initial_cov = pluss::full({1, 1}, 1.0, cfg);
+  model.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  model.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  model.process_cov = pluss::series::full({1, 1}, 0.01, cfg);
+  model.observation_cov = pluss::series::full({1, 1}, 0.04, cfg);
+  model.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  model.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
 
-  const Series y = pluss::full({t_obs}, 1.25, cfg);
+  const Series y = pluss::series::full({t_obs}, 1.25, cfg);
   const auto out = kalman_filter(y, model, cfg);
 
   expect(out.filtered_mean.sizes().size() == 2, "kalman filtered_mean rank mismatch");
@@ -69,18 +69,18 @@ void test_linear_kalman_missing_and_tol() {
   const std::int64_t t_obs = 48;
 
   KalmanModel model;
-  model.transition = pluss::full({1, 1}, 1.0, cfg);
-  model.observation = pluss::full({1, 1}, 1.0, cfg);
-  model.process_cov = pluss::full({1, 1}, 0.01, cfg);
-  model.observation_cov = pluss::full({1, 1}, 0.04, cfg);
-  model.initial_mean = pluss::full({1}, 0.0, cfg);
-  model.initial_cov = pluss::full({1, 1}, 1.0, cfg);
+  model.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  model.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  model.process_cov = pluss::series::full({1, 1}, 0.01, cfg);
+  model.observation_cov = pluss::series::full({1, 1}, 0.04, cfg);
+  model.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  model.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
 
-  Series y = pluss::full({t_obs}, 1.1, cfg);
-  const Series idx_nan = pluss::full({1}, 20, Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform));
+  Series y = pluss::series::full({t_obs}, 1.1, cfg);
+  const Series idx_nan = pluss::series::full({1}, 20, Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform));
   y = pluss::index_put(y,
                        std::vector<Series>{idx_nan},
-                       pluss::full({1}, std::numeric_limits<double>::quiet_NaN(), cfg),
+                       pluss::series::full({1}, std::numeric_limits<double>::quiet_NaN(), cfg),
                        false);
 
   const auto out = kalman_filter(y, model, cfg);
@@ -96,7 +96,7 @@ void test_linear_kalman_missing_and_tol() {
 
   KalmanModel tol_model = model;
   tol_model.info_tol = 1e9;
-  const auto out_tol = kalman_filter(pluss::full({t_obs}, 3.0, cfg), tol_model, cfg);
+  const auto out_tol = kalman_filter(pluss::series::full({t_obs}, 3.0, cfg), tol_model, cfg);
   const double f0 = out_tol.filtered_mean.select(0, 0).reshape({1}).item<double>();
   const double p0 = out_tol.predicted_mean.select(0, 0).reshape({1}).item<double>();
   expect(std::abs(f0 - p0) < 1e-10, "kalman info_tol: first-step filtered should equal predicted when all info is ignored");
@@ -111,14 +111,14 @@ void test_ekf() {
   EkfModel model;
   model.transition = [](const Series& x, std::int64_t) { return x; };
   model.observation = [](const Series& x, std::int64_t) { return x.square(); };
-  model.transition_jacobian = [](const Series&, std::int64_t) { return pluss::full({1, 1}, 1.0, f64_cpu()); };
+  model.transition_jacobian = [](const Series&, std::int64_t) { return pluss::series::full({1, 1}, 1.0, f64_cpu()); };
   model.observation_jacobian = [](const Series& x, std::int64_t) { return x.mul(2.0).reshape({1, 1}); };
-  model.process_cov = pluss::full({1, 1}, 0.01, cfg);
-  model.observation_cov = pluss::full({1, 1}, 0.05, cfg);
-  model.initial_mean = pluss::full({1}, 1.0, cfg);
-  model.initial_cov = pluss::full({1, 1}, 0.5, cfg);
+  model.process_cov = pluss::series::full({1, 1}, 0.01, cfg);
+  model.observation_cov = pluss::series::full({1, 1}, 0.05, cfg);
+  model.initial_mean = pluss::series::full({1}, 1.0, cfg);
+  model.initial_cov = pluss::series::full({1, 1}, 0.5, cfg);
 
-  const Series y = pluss::full({t_obs}, 1.0, cfg);
+  const Series y = pluss::series::full({t_obs}, 1.0, cfg);
   const auto out = ekf_filter(y, model, cfg);
 
   expect(out.filtered_mean.sizes()[0] == t_obs, "ekf filtered_mean length mismatch");
@@ -134,12 +134,12 @@ void test_ukf() {
   UkfModel model;
   model.transition = [](const Series& x, std::int64_t) { return x; };
   model.observation = [](const Series& x, std::int64_t) { return x.square(); };
-  model.process_cov = pluss::full({1, 1}, 0.01, cfg);
-  model.observation_cov = pluss::full({1, 1}, 0.05, cfg);
-  model.initial_mean = pluss::full({1}, 1.0, cfg);
-  model.initial_cov = pluss::full({1, 1}, 0.5, cfg);
+  model.process_cov = pluss::series::full({1, 1}, 0.01, cfg);
+  model.observation_cov = pluss::series::full({1, 1}, 0.05, cfg);
+  model.initial_mean = pluss::series::full({1}, 1.0, cfg);
+  model.initial_cov = pluss::series::full({1, 1}, 0.5, cfg);
 
-  const Series y = pluss::full({t_obs}, 1.0, cfg);
+  const Series y = pluss::series::full({t_obs}, 1.0, cfg);
   const auto out = ukf_filter(y, model, cfg);
   expect(out.filtered_mean.sizes()[0] == t_obs, "ukf filtered_mean length mismatch");
   expect(out.data_used.sizes()[0] == t_obs && out.data_used.sizes()[1] == 1, "ukf data_used shape mismatch");
@@ -153,13 +153,13 @@ void test_particle_filter() {
   const std::int64_t n_particles = 1200;
 
   ParticleFilterModel model;
-  model.initial_particles = pluss::randn({n_particles, 1}, cfg, 20260701ULL);
+  model.initial_particles = pluss::series::randn({n_particles, 1}, cfg, 20260701ULL);
   model.options.resample = true;
   model.options.ess_threshold = 0.6;
   model.options.store_particles = true;
 
   model.transition = [=](const Series& particles, std::int64_t t) {
-    const Series eps = pluss::randn({particles.sizes()[0], particles.sizes()[1]}, cfg,
+    const Series eps = pluss::series::randn({particles.sizes()[0], particles.sizes()[1]}, cfg,
                                     0xC0FFEEULL + static_cast<std::uint64_t>(t + 1));
     return particles.mul(0.98).add(eps.mul(0.12));
   };
@@ -171,7 +171,7 @@ void test_particle_filter() {
     return resid.square().div(var).add(kLog2Pi + std::log(var)).mul(-0.5).reshape({n});
   };
 
-  const Series y = pluss::full({t_obs}, 0.0, cfg);
+  const Series y = pluss::series::full({t_obs}, 0.0, cfg);
   const auto out = particle_filter(y, model, cfg);
 
   expect(out.filtered_mean.sizes().size() == 2, "particle filtered_mean rank mismatch");
@@ -190,7 +190,7 @@ void test_particle_filter_resampling_modes() {
   const std::int64_t n_particles = 1000;
 
   ParticleFilterModel model;
-  model.initial_particles = pluss::randn({n_particles, 1}, cfg, 12345ULL);
+  model.initial_particles = pluss::series::randn({n_particles, 1}, cfg, 12345ULL);
   model.options.resample = true;
   model.options.resample_trigger = ParticleResampleTrigger::Interval;
   model.options.resample_interval = 2;
@@ -199,7 +199,7 @@ void test_particle_filter_resampling_modes() {
   model.options.resample_seed = 67890ULL;
 
   model.transition = [=](const Series& particles, std::int64_t t) {
-    const Series eps = pluss::randn({particles.sizes()[0], particles.sizes()[1]}, cfg,
+    const Series eps = pluss::series::randn({particles.sizes()[0], particles.sizes()[1]}, cfg,
                                     3333ULL + static_cast<std::uint64_t>(t + 1));
     return particles.add(eps.mul(0.05));
   };
@@ -211,7 +211,7 @@ void test_particle_filter_resampling_modes() {
     return resid.square().div(var).add(kLog2Pi + std::log(var)).mul(-0.5).reshape({n});
   };
 
-  const Series y = pluss::full({t_obs}, 0.0, cfg);
+  const Series y = pluss::series::full({t_obs}, 0.0, cfg);
   const auto out = particle_filter(y, model, cfg);
   expect(out.filtered_mean.sizes()[0] == t_obs && out.filtered_mean.sizes()[1] == 1,
          "particle resample modes: filtered_mean shape mismatch");
@@ -233,7 +233,7 @@ void test_sv_particle_filter() {
   p.rho = -0.55;
   p.logvar0 = -3.2;
 
-  const Series r = pluss::randn({56}, cfg, 20260702ULL).mul(0.02);
+  const Series r = pluss::series::randn({56}, cfg, 20260702ULL).mul(0.02);
   const auto out = sv_particle_filter(r, p, 1400, 1.0 / 252.0, 0.6, cfg, 20260703ULL);
 
   expect(out.filtered_mean.sizes()[0] == 56 && out.filtered_mean.sizes()[1] == 1,

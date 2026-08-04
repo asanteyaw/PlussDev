@@ -19,7 +19,7 @@ TEST_CASE("parallel contiguous copy preserves expanded int64 broadcast lanes", "
   const Config i64 = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
   const std::vector<std::int64_t> shape{1, 2311, 128}; // 295,808 > parallel threshold
 
-  const Series seed = pluss::arange(7, 8, 1, i64);
+  const Series seed = pluss::series::arange(7, 8, 1, i64);
   const Series expanded =
       seed.reshape({1, 1, 1})
           .expand(std::span<const std::int64_t>(shape.data(), shape.size()), true)
@@ -37,8 +37,8 @@ TEST_CASE("index_select remains stable on large 3D lane selection", "[index_sele
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
   const Config i64 = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
 
-  const Series x = pluss::rand({40, 2311, 128}, cfg, 20260314ULL);
-  const Series idx = pluss::arange(30, 31, 1, i64);
+  const Series x = pluss::series::rand({40, 2311, 128}, cfg, 20260314ULL);
+  const Series idx = pluss::series::arange(30, 31, 1, i64);
   const Series y = x.index_select(0, idx);
 
   REQUIRE(y.sizes()[0] == 1);

@@ -21,7 +21,7 @@ using pluss::subsp::stats::ts::PacfOptions;
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = phi * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -33,7 +33,7 @@ Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
 
 TEST_CASE("ts diagnostics: constant series is stable", "[ts][diagnostics][edge]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::ones({128}, cfg).mul(5.0);
+  const Series y = pluss::series::ones({128}, cfg).mul(5.0);
 
   AcfOptions aopt;
   aopt.max_lag = 12;
@@ -50,7 +50,7 @@ TEST_CASE("ts diagnostics: constant series is stable", "[ts][diagnostics][edge]"
 
 TEST_CASE("ts diagnostics: numerical stability and sensitivity", "[ts][diagnostics][numerics][sensitivity]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series eps = pluss::randn({5000}, cfg, 20260314ULL).mul(1e-8).add(1.0);
+  const Series eps = pluss::series::randn({5000}, cfg, 20260314ULL).mul(1e-8).add(1.0);
 
   AcfOptions biased;
   biased.max_lag = 15;
@@ -69,7 +69,7 @@ TEST_CASE("ts diagnostics: numerical stability and sensitivity", "[ts][diagnosti
 
 TEST_CASE("ts diagnostics: ljung-box distinguishes correlated process", "[ts][diagnostics][accuracy]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series wn = pluss::randn({4000}, cfg, 20260315ULL);
+  const Series wn = pluss::series::randn({4000}, cfg, 20260315ULL);
   const Series ar = make_ar1(4000, 0.75, 20260316ULL);
 
   LjungBoxOptions opt;
@@ -84,7 +84,7 @@ TEST_CASE("ts diagnostics: ljung-box distinguishes correlated process", "[ts][di
 
 TEST_CASE("ts diagnostics: stress and crash checks", "[ts][diagnostics][stress][crash]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series y = pluss::randn({120000}, cfg, 20260317ULL);
+  const Series y = pluss::series::randn({120000}, cfg, 20260317ULL);
 
   AcfOptions aopt;
   aopt.max_lag = 40;

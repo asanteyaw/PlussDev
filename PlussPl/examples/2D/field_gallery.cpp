@@ -64,7 +64,7 @@ int main() {
 
   auto& halo = gallery.pane2("Polar envelope");
   halo.grid(pl::GridStyle::Major).caption("beam shape with broadside emphasis").place(0, 1);
-  auto theta = pluss::linspace(0.0, 2.0 * 3.14159265358979323846, 241, pluss::ScalarType::Float64);
+  auto theta = pluss::series::linspace(0.0, 2.0 * 3.14159265358979323846, 241, pluss::ScalarType::Float64);
   auto rho = theta.mul(4.0).sin().mul(0.25).add(theta.mul(9.0).cos().mul(0.1)).add(0.8);
   halo.radial(theta, rho).label("beam pattern").width(2.0F);
 
@@ -81,8 +81,8 @@ int main() {
   gallery.x_caption("terrain-x", "shared x field axis");
   gallery.y_caption("terrain-y", "shared y field axis");
 
-  auto gx = pluss::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
-  auto gy = pluss::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
+  auto gx = pluss::series::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
+  auto gy = pluss::series::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
   const auto bands = std::vector<double>{-6.0, -3.0, -1.0, 0.0, 1.5, 3.0, 5.5, 8.0};
 
   terrain.isoband(gx, gy, peaks_like(45, 45), bands)
@@ -104,7 +104,7 @@ int main() {
        .y_label("response")
        .scale_guide()
        .color_limits({-1.4, 1.4});
-  auto mark_x = pluss::linspace(-4.0, 4.0, 64, pluss::ScalarType::Float64);
+  auto mark_x = pluss::series::linspace(-4.0, 4.0, 64, pluss::ScalarType::Float64);
   auto mark_y = mark_x.sin().add(mark_x.mul(0.7).cos().mul(0.35));
   auto mark_size = mark_y.abs().mul(42.0).add(16.0);
   marks.cloud(mark_x, mark_y, mark_size, mark_y)
@@ -119,7 +119,7 @@ int main() {
         .place(2, 0)
         .x_label("value")
         .y_label("count");
-  auto sample_axis = pluss::linspace(-2.8, 2.8, 260, pluss::ScalarType::Float64);
+  auto sample_axis = pluss::series::linspace(-2.8, 2.8, 260, pluss::ScalarType::Float64);
   auto sample_values = sample_axis.sin().mul(1.15).add(sample_axis.mul(0.5).cos().mul(0.55));
   bucket.bucket(sample_values, 18).label("bucket count").palette(pl::PaletteRamp::meadow());
 
@@ -154,7 +154,7 @@ int main() {
         .place(3, 0)
         .x_label("frame")
         .y_label("load");
-  auto frame = pluss::linspace(0.0, 11.0, 12, pluss::ScalarType::Float64);
+  auto frame = pluss::series::linspace(0.0, 11.0, 12, pluss::ScalarType::Float64);
   auto base_a = frame.mul(0.55).sin().add(1.35);
   auto base_b = frame.mul(0.35).cos().mul(0.8).add(1.0);
   auto base_c = frame.mul(0.22).sin().mul(0.55).add(0.65);
@@ -179,7 +179,7 @@ int main() {
        .place(3, 1)
        .x_label("trial")
        .y_label("yield");
-  auto trial = pluss::linspace(1.0, 8.0, 8, pluss::ScalarType::Float64);
+  auto trial = pluss::series::linspace(1.0, 8.0, 8, pluss::ScalarType::Float64);
   auto center = trial.mul(0.6).sin().mul(0.45).add(1.55);
   auto down = trial.mul(0.45).cos().abs().mul(0.18).add(0.08);
   auto up = trial.mul(0.25).sin().abs().mul(0.22).add(0.1);

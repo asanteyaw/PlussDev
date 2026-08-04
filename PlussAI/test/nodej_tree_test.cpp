@@ -116,7 +116,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
 
   {
     // Constant feature edge case: tree should stay at a single majority-class leaf.
-    const Series x = pluss::ones({5, 2}, f64());
+    const Series x = pluss::series::ones({5, 2}, f64());
     const Series y = pluss::make_series(std::vector<double>{1.0, 1.0, 1.0, 1.0, 0.0}, {5}, f64());
     const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
     const LabeledBatch batch{.features = features, .y = y};

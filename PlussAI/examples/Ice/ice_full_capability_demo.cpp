@@ -78,8 +78,8 @@ void report(const ice::AssessReport& r) {
 class LinearRegressionModel final : public ice::Model {
  public:
   LinearRegressionModel(std::int64_t in_features, const Config& cfg, std::uint64_t seed) {
-    weight_ = pluss::randn({in_features, 1}, cfg, seed).mul(0.1);
-    bias_ = pluss::randn({1}, cfg, seed + 1).mul(0.1);
+    weight_ = pluss::series::randn({in_features, 1}, cfg, seed).mul(0.1);
+    bias_ = pluss::series::randn({1}, cfg, seed + 1).mul(0.1);
     weight_.tracks_slope_(true);
     bias_.tracks_slope_(true);
     register_parameter(weight_);
@@ -104,8 +104,8 @@ int main() {
   {
     const std::int64_t n = 400;
     const Series true_w = pluss::make_series(std::vector<float>{3.0f, -2.0f}, {2, 1}, cfg);
-    const Series x = pluss::randn({n, 2}, cfg, 1001ULL);
-    const Series noise = pluss::randn({n, 1}, cfg, 1002ULL).mul(0.05);
+    const Series x = pluss::series::randn({n, 2}, cfg, 1001ULL);
+    const Series noise = pluss::series::randn({n, 1}, cfg, 1002ULL).mul(0.05);
     const Series y = x.matmul(true_w).add(1.0).add(noise);
 
     LinearRegressionModel model(2, cfg, 2001ULL);
@@ -142,10 +142,10 @@ int main() {
       pluss::nn::Fusion(16, 1, true, cfg, 4002ULL));
   {
     const std::int64_t n = 500;
-    const Series x = pluss::randn({n, 2}, cfg, 3001ULL);
+    const Series x = pluss::series::randn({n, 2}, cfg, 3001ULL);
     const Series x0 = x.select(1, 0).reshape({n, 1});
     const Series x1 = x.select(1, 1).reshape({n, 1});
-    const Series noise = pluss::randn({n, 1}, cfg, 3002ULL).mul(0.05);
+    const Series noise = pluss::series::randn({n, 1}, cfg, 3002ULL).mul(0.05);
     const Series y = x0.square().sub(x1.mul(2.0)).add(1.0).add(noise); // nonlinear -- needs the hidden layer
 
     const std::int64_t split = static_cast<std::int64_t>(n * 0.8);
@@ -170,7 +170,7 @@ int main() {
   // -------------------------------------------------------------------------
   {
     const std::int64_t n = 400;
-    const Series x = pluss::randn({n, 2}, cfg, 5001ULL);
+    const Series x = pluss::series::randn({n, 2}, cfg, 5001ULL);
     const Series x0 = x.select(1, 0).reshape({n});
     const Series x1 = x.select(1, 1).reshape({n});
     const Series label = x0.add(x1).gt(0.0).to(ScalarType::Float32);
@@ -221,7 +221,7 @@ int main() {
   // -------------------------------------------------------------------------
   {
     const std::int64_t n = 450;
-    const Series x = pluss::randn({n, 3}, cfg, 7001ULL);
+    const Series x = pluss::series::randn({n, 3}, cfg, 7001ULL);
     const Series y = x.argmax(1).to(ScalarType::Int64); // [N] class indices: which raw feature is largest
 
     ice::Outline model_d(
@@ -244,7 +244,7 @@ int main() {
   print_section("5. Model::infer() with and without chunk_size -- results must match");
   // -------------------------------------------------------------------------
   {
-    const Series x = pluss::randn({37, 2}, cfg, 9001ULL); // not a multiple of the chunk size below
+    const Series x = pluss::series::randn({37, 2}, cfg, 9001ULL); // not a multiple of the chunk size below
     const Series whole = model_b.infer(x);          // chunk_size=0 -> one batched forward() call
     const Series chunked = model_b.infer(x, 8);      // chunk_size=8 -> 5 chunks (4x8 + 1x5), concatenated
     std::cout << "  max |chunked - whole| = " << scalar(whole.sub(chunked).abs().max())
@@ -257,7 +257,7 @@ int main() {
   {
     LinearRegressionModel trained(2, cfg, 2001ULL);
     const std::int64_t n = 200;
-    const Series x = pluss::randn({n, 2}, cfg, 1001ULL);
+    const Series x = pluss::series::randn({n, 2}, cfg, 1001ULL);
     const Series true_w = pluss::make_series(std::vector<float>{3.0f, -2.0f}, {2, 1}, cfg);
     const Series y = x.matmul(true_w).add(1.0);
     ice::TrainOptions options{};
@@ -273,7 +273,7 @@ int main() {
     LinearRegressionModel reloaded(2, cfg, /*seed=*/999999ULL); // architecture must match; values get overwritten
     reloaded.load(model_path.string());
 
-    const Series probe = pluss::randn({5, 2}, cfg, 10001ULL);
+    const Series probe = pluss::series::randn({5, 2}, cfg, 10001ULL);
     const double diff = scalar(trained.infer(probe).sub(reloaded.infer(probe)).abs().max());
     std::cout << "  save/load round-trip max diff = " << diff << " (should be ~0)\n";
     std::cout << "  saved to " << model_path.string() << "\n";
@@ -283,8 +283,8 @@ int main() {
   print_section("7. Standalone ice::make_optimizer() -- for training loops that don't fit Model's shape");
   // -------------------------------------------------------------------------
   {
-    Series w = pluss::randn({2, 1}, cfg, 11001ULL).mul(0.1);
-    Series b = pluss::randn({1}, cfg, 11002ULL).mul(0.1);
+    Series w = pluss::series::randn({2, 1}, cfg, 11001ULL).mul(0.1);
+    Series b = pluss::series::randn({1}, cfg, 11002ULL).mul(0.1);
     w.tracks_slope_(true);
     b.tracks_slope_(true);
     const std::vector<Series*> raw_parameters{&w, &b};
@@ -296,7 +296,7 @@ int main() {
 
     const std::int64_t n = 128;
     const Series true_w = pluss::make_series(std::vector<float>{2.0f, -1.0f}, {2, 1}, cfg);
-    const Series x = pluss::randn({n, 2}, cfg, 11003ULL);
+    const Series x = pluss::series::randn({n, 2}, cfg, 11003ULL);
     const Series y = x.matmul(true_w).add(0.5);
 
     double last_loss = 0.0;
@@ -327,8 +327,8 @@ int main() {
   print_section("9. ice::io::save_parameters()/load_parameters() used directly (not through Model)");
   // -------------------------------------------------------------------------
   {
-    Series a = pluss::randn({3, 3}, cfg, 12001ULL);
-    Series b = pluss::randn({4}, cfg, 12002ULL);
+    Series a = pluss::series::randn({3, 3}, cfg, 12001ULL);
+    Series b = pluss::series::randn({4}, cfg, 12002ULL);
     const fs::path out_dir = fs::path(PLUSSAI_SOURCE_DIR) / "examples" / "outputs" / "ice_full_capability_demo";
     fs::create_directories(out_dir);
     const fs::path raw_path = out_dir / "raw_parameters.icemodel";
@@ -346,7 +346,7 @@ int main() {
   print_section("10. ice::NoGradGuard used directly -- shared thread-local no-grad scope");
   // -------------------------------------------------------------------------
   {
-    Series w = pluss::randn({2, 1}, cfg, 13001ULL);
+    Series w = pluss::series::randn({2, 1}, cfg, 13001ULL);
     w.tracks_slope_(true);
     std::cout << "  grad mode before guard:      " << std::boolalpha << pluss::nn::GradMode::is_enabled() << "\n";
     {
@@ -487,7 +487,7 @@ int main() {
     const std::int64_t n = 300;
     const std::int64_t seq_len = 8;
     const std::int64_t d_model = 16;
-    const Series x = pluss::randn({n, seq_len, d_model}, cfg, 16001ULL);
+    const Series x = pluss::series::randn({n, seq_len, d_model}, cfg, 16001ULL);
     // label: 1 iff the time-averaged first feature channel is positive --
     // forces the model to aggregate over the whole sequence, not just one
     // timestep.
@@ -528,7 +528,7 @@ int main() {
     const std::int64_t input_size = 4;
     const std::int64_t hidden_size = 16;
 
-    const Series x = pluss::randn({n, seq_len, input_size}, cfg, 17001ULL);
+    const Series x = pluss::series::randn({n, seq_len, input_size}, cfg, 17001ULL);
     const Series last_step = x.select(1, seq_len - 1); // [N, input_size]
     // label: 1 iff the last timestep's first two features sum positive.
     const Series label =

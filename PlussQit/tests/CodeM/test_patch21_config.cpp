@@ -9,6 +9,6 @@ using pluss::Config;
 
 TEST_CASE("Config factories dtype", "[config]") {
   Config cfg = Config{}.with_dtype(ScalarType::Int64);
-  Series a = pluss::zeros({3,2}, cfg);
+  Series a = pluss::series::zeros({3,2}, cfg);
   REQUIRE(a.scalar_type() == ScalarType::Int64);
 }

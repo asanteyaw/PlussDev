@@ -17,9 +17,9 @@ bool run_fusion_route_checks(std::ostream* err = nullptr) {
   }
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
-  const pluss::Series x = pluss::rand({5, 7}, cfg, 13ULL);
-  const pluss::Series w = pluss::rand({3, 7}, cfg, 17ULL);
-  const pluss::Series b = pluss::rand({3}, cfg, 19ULL);
+  const pluss::Series x = pluss::series::rand({5, 7}, cfg, 13ULL);
+  const pluss::Series w = pluss::series::rand({3, 7}, cfg, 17ULL);
+  const pluss::Series b = pluss::series::rand({3}, cfg, 19ULL);
   const pluss::Series y = pluss::fusion(x, w, b);
   const pluss::Series y_ref = x.matmul(w.t()).add(b);
   const double max_abs = y.sub(y_ref).abs().max().item<double>();

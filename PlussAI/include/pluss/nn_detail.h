@@ -57,7 +57,7 @@ inline Series select_dim_(const Series& x, std::int64_t dim, std::int64_t index)
   if (index < 0) index += dim_size;
   PLUSS_CHECK(index >= 0 && index < dim_size, "pluss::select_dim: index out of range");
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(x.platform());
-  const Series idx = pluss::arange(index, index + 1, 1, icfg);
+  const Series idx = pluss::series::arange(index, index + 1, 1, icfg);
   Series picked = x.index_select(dim, idx);
   std::vector<std::int64_t> out_shape(x.sizes().begin(), x.sizes().end());
   out_shape.erase(out_shape.begin() + static_cast<std::size_t>(dim));
@@ -75,7 +75,7 @@ inline Series narrow_dim_(const Series& x, std::int64_t dim, std::int64_t start,
   PLUSS_CHECK(start >= 0 && start <= dim_size, "pluss::narrow_dim: start out of range");
   PLUSS_CHECK(start + len <= dim_size, "pluss::narrow_dim: start + len out of range");
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(x.platform());
-  return x.index_select(dim, pluss::arange(start, start + len, 1, icfg));
+  return x.index_select(dim, pluss::series::arange(start, start + len, 1, icfg));
 }
 
 inline Series cast_like_(const Series& x, const Series& like) {
@@ -85,7 +85,7 @@ inline Series cast_like_(const Series& x, const Series& like) {
 }
 
 inline Series zeros_state_(pluss::msharp::RangeView::Int sizes, const Series& like) {
-  return pluss::zeros(sizes, Config{}.with_dtype(like.scalar_type()).with_platform(like.platform()));
+  return pluss::series::zeros(sizes, Config{}.with_dtype(like.scalar_type()).with_platform(like.platform()));
 }
 
 inline Series zeros_state_(std::initializer_list<std::int64_t> sizes, const Series& like) {
@@ -94,7 +94,7 @@ inline Series zeros_state_(std::initializer_list<std::int64_t> sizes, const Seri
 
 inline Series uniform_(pluss::msharp::RangeView::Int sizes, double lo, double hi, Config cfg, std::uint64_t seed) {
   const Config fcfg = floating_cfg_(cfg);
-  return pluss::rand(sizes, fcfg, seed).mul(hi - lo).add(lo);
+  return pluss::series::rand(sizes, fcfg, seed).mul(hi - lo).add(lo);
 }
 
 inline Series uniform_(std::initializer_list<std::int64_t> sizes, double lo, double hi, Config cfg, std::uint64_t seed) {
@@ -106,10 +106,10 @@ inline Series dropout_(const Series& x, double p, bool training, std::uint64_t s
   PLUSS_CHECK(p >= 0.0 && p <= 1.0, "pluss::dropout: expected p in [0, 1]");
   if (!training || p == 0.0) return x;
   if (p == 1.0) {
-    return pluss::zeros(x.sizes(), Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
+    return pluss::series::zeros(x.sizes(), Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
   }
   const ScalarType mask_dtype = x.platform() == pMPS ? ScalarType::Float32 : ScalarType::Float64;
-  const Series mask = pluss::rand(
+  const Series mask = pluss::series::rand(
                           x.sizes(),
                           Config{}.with_dtype(mask_dtype).with_platform(x.platform()),
                           seed)

@@ -92,7 +92,7 @@ Series stabilize_cov_(Series covariance, Config cfg) {
   const auto sizes = cov.sizes();
   PLUSS_CHECK(sizes.size() == 2 && sizes[0] == sizes[1], "subsp::stats::ts::Vecm: covariance must be square");
   const std::int64_t k = sizes[0];
-  const Series eye = pluss::eye(k, k, f64_cfg_(cfg));
+  const Series eye = pluss::series::eye(k, k, f64_cfg_(cfg));
   double jitter = 1e-12;
   for (std::int64_t i = 0; i < 8; ++i) {
     const Series slogdet = pluss::subsp::math::linalg::slogdet(cov).reshape({2});
@@ -135,7 +135,7 @@ VecmDesign build_design_(const Series& y_in,
   std::vector<Series> cols;
   cols.reserve(static_cast<std::size_t>((include_intercept ? 1 : 0) + (include_trend ? 1 : 0) + lag_order));
   if (include_intercept) {
-    cols.push_back(pluss::ones({t, 1}, out_cfg));
+    cols.push_back(pluss::series::ones({t, 1}, out_cfg));
   }
   if (include_trend) {
     cols.push_back(Series::arange(1, t + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({t, 1}));
@@ -188,10 +188,10 @@ Series coeff_from_fit_(const VecmFit& fit, Config cfg, const char* op_name) {
 Series svd_diag_(const Series& singular_values, std::int64_t rank, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   if (rank <= 0) {
-    return pluss::zeros({0, 0}, out_cfg);
+    return pluss::series::zeros({0, 0}, out_cfg);
   }
   const Series s = singular_values.index_select(0, i64_range_(0, rank, out_cfg)).reshape({rank});
-  return pluss::eye(rank, rank, out_cfg).mul(s.reshape({1, rank}));
+  return pluss::series::eye(rank, rank, out_cfg).mul(s.reshape({1, rank}));
 }
 
 Series inv_sqrt_spd_(const Series& a, Config cfg, const char* op_name) {
@@ -201,7 +201,7 @@ Series inv_sqrt_spd_(const Series& a, Config cfg, const char* op_name) {
   const std::int64_t k = sizes[0];
   const Series u = svd.U.to(out_cfg.platform, out_cfg.dtype);
   const Series s = svd.S.to(out_cfg.platform, out_cfg.dtype).clamp_min(kEps).sqrt();
-  const Series d_inv = pluss::eye(k, k, out_cfg).div(s.reshape({1, k}));
+  const Series d_inv = pluss::series::eye(k, k, out_cfg).div(s.reshape({1, k}));
   const Series out = u.matmul(d_inv).matmul(u.transpose(0, 1));
   PLUSS_CHECK(out.isfinite().all().item<double>() == 1.0,
               std::string("subsp::stats::ts::") + op_name + ": inverse sqrt produced non-finite values");
@@ -256,7 +256,7 @@ Series reduced_rank_impact_(const Series& pi, std::int64_t rank, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t k = pi.sizes()[0];
   if (rank <= 0) {
-    return pluss::zeros({k, k}, out_cfg);
+    return pluss::series::zeros({k, k}, out_cfg);
   }
   if (rank >= k) {
     return pi.to(out_cfg.platform, out_cfg.dtype);
@@ -272,7 +272,7 @@ std::pair<Series, Series> alpha_beta_from_impact_(const Series& impact, std::int
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t k = impact.sizes()[0];
   if (rank <= 0) {
-    return {pluss::empty({k, 0}, out_cfg), pluss::empty({k, 0}, out_cfg)};
+    return {pluss::series::empty({k, 0}, out_cfg), pluss::series::empty({k, 0}, out_cfg)};
   }
   const auto svd = pluss::subsp::math::linalg::svd(impact.to(out_cfg.platform, out_cfg.dtype), false);
   const Series beta = svd.Vh.transpose(0, 1).index_select(1, i64_range_(0, rank, out_cfg));
@@ -304,7 +304,7 @@ JohansenResult johansen_test(const Series& y, const JohansenOptions& options, Co
   if (layout.impact_row0 > 0) {
     w = design.design.index_select(1, i64_range_(0, layout.impact_row0, out_cfg));
   } else {
-    w = pluss::empty({t, 0}, out_cfg);
+    w = pluss::series::empty({t, 0}, out_cfg);
   }
 
   const Series y0 = design.target;
@@ -375,8 +375,8 @@ JohansenResult johansen_test(const Series& y, const JohansenOptions& options, Co
   }
   selected_rank = std::min<std::int64_t>(selected_rank, k - 1);
 
-  Series alpha = pluss::empty({k, 0}, out_cfg);
-  Series beta = pluss::empty({k, 0}, out_cfg);
+  Series alpha = pluss::series::empty({k, 0}, out_cfg);
+  Series beta = pluss::series::empty({k, 0}, out_cfg);
   if (selected_rank > 0) {
     beta = evec.index_select(1, i64_range_(0, selected_rank, out_cfg));
     const Series denom = beta.transpose(0, 1).matmul(s11).matmul(beta);
@@ -411,7 +411,7 @@ VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options, Config cfg) {
   Series x_fit = design.design;
   Series y_fit = design.target;
   if (options.ridge > 0.0) {
-    Series penalty = pluss::eye(design.d, design.d, out_cfg).mul(std::sqrt(options.ridge));
+    Series penalty = pluss::series::eye(design.d, design.d, out_cfg).mul(std::sqrt(options.ridge));
     const CoeffLayout layout = coeff_layout_(options, k);
     const std::int64_t protected_rows = layout.impact_row0;
     if (protected_rows > 0) {
@@ -420,11 +420,11 @@ VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options, Config cfg) {
       penalty = pluss::index_put(
           penalty,
           std::vector<Series>{diag_idx, diag_idx},
-          pluss::zeros({protected_rows}, out_cfg),
+          pluss::series::zeros({protected_rows}, out_cfg),
           false);
     }
     x_fit = x_fit.unite({penalty}, 0);
-    y_fit = y_fit.unite({pluss::zeros({design.d, k}, out_cfg)}, 0);
+    y_fit = y_fit.unite({pluss::series::zeros({design.d, k}, out_cfg)}, 0);
   }
 
   const Series coeff = pluss::subsp::math::linalg::pinverse(x_fit, options.pinv_rcond).matmul(y_fit);
@@ -443,13 +443,13 @@ VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options, Config cfg) {
   rank = std::clamp<std::int64_t>(rank, 0, k);
 
   Series constant = options.include_intercept ? coeff.select(0, layout.intercept).reshape({k})
-                                              : pluss::zeros({k}, out_cfg);
+                                              : pluss::series::zeros({k}, out_cfg);
   Series trend = options.include_trend ? coeff.select(0, layout.trend).reshape({k})
-                                       : pluss::zeros({k}, out_cfg);
+                                       : pluss::series::zeros({k}, out_cfg);
   Series impact_full = coeff.index_select(0, i64_range_(layout.impact_row0, layout.impact_row0 + k, out_cfg));
   Series impact = reduced_rank_impact_(impact_full, rank, out_cfg);
 
-  Series gamma = pluss::empty({0, k, k}, out_cfg);
+  Series gamma = pluss::series::empty({0, k, k}, out_cfg);
   if (options.lag_order > 1) {
     const Series gflat = coeff.index_select(
         0, i64_range_(layout.gamma_row0, layout.gamma_row0 + (options.lag_order - 1) * k, out_cfg));
@@ -523,7 +523,7 @@ Series VecmFit::forecast(std::int64_t horizon, const Series& y, Config cfg) cons
   PLUSS_CHECK(k == impact.sizes()[0], "subsp::stats::ts::VecmFit::forecast: response dimension mismatch");
   PLUSS_CHECK(ys[0] >= lag_order, "subsp::stats::ts::VecmFit::forecast: expected at least lag_order observations");
 
-  Series out = pluss::zeros({horizon, k}, out_cfg);
+  Series out = pluss::series::zeros({horizon, k}, out_cfg);
   for (std::int64_t h = 0; h < horizon; ++h) {
     const std::int64_t ncur = y_hist.sizes()[0];
     const Series y_prev = y_hist.select(0, ncur - 1).reshape({1, k});
@@ -554,10 +554,10 @@ Series VecmFit::simulate(std::int64_t num_observations, Config cfg, std::uint64_
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t k = impact.sizes()[0];
 
-  Series y = pluss::zeros({num_observations, k}, out_cfg);
+  Series y = pluss::series::zeros({num_observations, k}, out_cfg);
   const Series cov = stabilize_cov_(covariance, out_cfg);
   const Series chol_t = pluss::subsp::math::linalg::cholesky(cov).transpose(0, 1);
-  const Series z = pluss::randn({num_observations, k}, out_cfg, seed);
+  const Series z = pluss::series::randn({num_observations, k}, out_cfg, seed);
   const Series eps = z.matmul(chol_t);
 
   for (std::int64_t t = 1; t < num_observations; ++t) {

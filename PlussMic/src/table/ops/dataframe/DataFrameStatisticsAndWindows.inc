@@ -91,9 +91,9 @@ Thread reduce_numeric_threads_(const detail::DataFrameImpl& src,
   }
   PLUSS_CHECK(!values.empty(), std::string(where) + ": no numeric features");
   return Thread(
-             pluss::pile(values, 0).reshape(
+             pluss::series::pile(values, 0).reshape(
                  {static_cast<std::int64_t>(values.size())}),
-             pluss::pile(validity, 0).reshape(
+             pluss::series::pile(validity, 0).reshape(
                  {static_cast<std::int64_t>(validity.size())}))
       .label().set(make_note_thread(names));
 }
@@ -819,9 +819,9 @@ Thread DataFrame::corr_with(const DataFrame& other,
     values.push_back(correlated.as_series());
   }
   PLUSS_CHECK(!names.empty(), "DataFrame::corr_with: no common numeric features");
-  auto output = pluss::pile(values, 0).reshape(
+  auto output = pluss::series::pile(values, 0).reshape(
       {static_cast<std::int64_t>(values.size())});
-  auto output_valid = pluss::pile(valid, 0).reshape(
+  auto output_valid = pluss::series::pile(valid, 0).reshape(
       {static_cast<std::int64_t>(valid.size())});
   return Thread(output, output_valid).caselbl(make_note_thread(names));
 }

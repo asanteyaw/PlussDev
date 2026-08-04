@@ -18,7 +18,7 @@ Pluss APIs normalize runtime failures to `pluss::Error`.
 
 int main() {
   try {
-    auto a = pluss::zeros({2, 2});
+    auto a = pluss::series::zeros({2, 2});
     auto bad = a.view({3, 3}); // shape mismatch
     (void)bad;
   } catch (const pluss::Error& e) {

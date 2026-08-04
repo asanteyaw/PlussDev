@@ -499,10 +499,10 @@ private:
 
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints_.lower_bounds.empty() && constraints_.lower_bounds[i].defined()) {
-        lower_multipliers_[i] = pluss::zeros_like(*params[i], params[i]->scalar_type());
+        lower_multipliers_[i] = pluss::series::zeros_like(*params[i], params[i]->scalar_type());
       }
       if (!constraints_.upper_bounds.empty() && constraints_.upper_bounds[i].defined()) {
-        upper_multipliers_[i] = pluss::zeros_like(*params[i], params[i]->scalar_type());
+        upper_multipliers_[i] = pluss::series::zeros_like(*params[i], params[i]->scalar_type());
       }
     }
 
@@ -515,7 +515,7 @@ private:
       const auto residuals = constraints_.equalities(params_value);
       eq_multipliers_.reserve(residuals.size());
       for (const auto& r : residuals) {
-        eq_multipliers_.push_back(pluss::zeros_like(r, r.scalar_type()));
+        eq_multipliers_.push_back(pluss::series::zeros_like(r, r.scalar_type()));
       }
     }
 
@@ -523,7 +523,7 @@ private:
       const auto residuals = constraints_.inequalities(params_value);
       ineq_multipliers_.reserve(residuals.size());
       for (const auto& r : residuals) {
-        ineq_multipliers_.push_back(pluss::zeros_like(r, r.scalar_type()));
+        ineq_multipliers_.push_back(pluss::series::zeros_like(r, r.scalar_type()));
       }
     }
   }

@@ -43,14 +43,14 @@ Series column_(const Series& x, std::int64_t j) {
 
 Series floor_positive_(const Series& x, double eps, Config cfg) {
   const Series s = x.to(cfg.platform, cfg.dtype);
-  const Series floor_s = pluss::full({}, eps, cfg);
+  const Series floor_s = pluss::series::full({}, eps, cfg);
   return s.ge(floor_s).where(s, floor_s);
 }
 
 Series stabilize_corr_(const Series& corr_in, double jitter, Config cfg, const char* op) {
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t k = corr_in.sizes()[0];
-  const Series eye = pluss::eye(k, out_cfg);
+  const Series eye = pluss::series::eye(k, out_cfg);
   const Series corr = corr_in.to(out_cfg.platform, out_cfg.dtype);
 
   Series candidate = corr;
@@ -78,7 +78,7 @@ Series estimate_corr_(const Series& z, double shrinkage, double jitter, Config c
   const auto sizes = z64.sizes();
   const std::int64_t n = sizes[0];
   const std::int64_t k = sizes[1];
-  const Series eye = pluss::eye(k, out_cfg);
+  const Series eye = pluss::series::eye(k, out_cfg);
   if (k == 1 || n <= 1) {
     return eye;
   }
@@ -91,7 +91,7 @@ Series estimate_corr_(const Series& z, double shrinkage, double jitter, Config c
   const Series den = std.reshape({k, 1}).matmul(std.reshape({1, k}));
   Series corr = cov.div(den);
   corr = corr.add(corr.transpose(0, 1)).mul(0.5);
-  corr = corr.mul(pluss::ones({k, k}, out_cfg).sub(eye)).add(eye);
+  corr = corr.mul(pluss::series::ones({k, k}, out_cfg).sub(eye)).add(eye);
 
   const double sh = std::clamp(shrinkage, 0.0, 1.0);
   if (sh > 0.0) {
@@ -180,7 +180,7 @@ Series loglik_per_obs_matrix_(const Series& y,
   const Series corr_inv = corr_pd.linearalg().inverse();
   const Series q = z.matmul(corr_inv).mul(z).sum(1, false);
   const Series logh = h_floor.log().sum(1, false);
-  const Series c = pluss::full({}, static_cast<double>(k) * kLog2Pi, out_cfg).add(corr_pd.linearalg().logdet());
+  const Series c = pluss::series::full({}, static_cast<double>(k) * kLog2Pi, out_cfg).add(corr_pd.linearalg().logdet());
   return q.add(logh).add(c).mul(-0.5);
 }
 

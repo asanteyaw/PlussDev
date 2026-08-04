@@ -162,9 +162,9 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
   for (const auto& tc : cases) {
     try {
       log.line("CASE begin: " + tc.name);
-      const pluss::Series x_cpu = pluss::rand(tc.x_shape, cfg_cpu, tc.seed);
-      const pluss::Series w_cpu = pluss::rand(tc.w_shape, cfg_cpu, tc.seed + 1ULL);
-      const pluss::Series b_cpu = pluss::rand(tc.b_shape, cfg_cpu, tc.seed + 2ULL);
+      const pluss::Series x_cpu = pluss::series::rand(tc.x_shape, cfg_cpu, tc.seed);
+      const pluss::Series w_cpu = pluss::series::rand(tc.w_shape, cfg_cpu, tc.seed + 1ULL);
+      const pluss::Series b_cpu = pluss::series::rand(tc.b_shape, cfg_cpu, tc.seed + 2ULL);
 
       const pluss::Series y_cpu = pluss::conv(x_cpu, w_cpu, b_cpu, tc.stride, tc.padding, tc.dilation, tc.groups);
       const pluss::Series y_gpu = pluss::conv(

@@ -38,19 +38,19 @@ std::vector<std::string> flat{"a","b","c","d"};
 auto n3 = pluss::make_note(flat, std::array<std::int64_t,2>{2,2});
 
 // Derived constructors
-auto by_lines = pluss::note_from_lines("l1\nl2\nl3");
-auto by_words = pluss::note_from_words("alpha beta gamma");
+auto by_lines = pluss::note::from_lines("l1\nl2\nl3");
+auto by_words = pluss::note::from_words("alpha beta gamma");
 
 // Fill helpers
-auto fulln = pluss::full_note({2,3}, "x");
-auto emptyn = pluss::empty_note_like(fulln);
+auto fulln = pluss::note::full({2,3}, "x");
+auto emptyn = pluss::note::empty_like(fulln);
 ```
 
 ```cpp
 // Bytes mode (raw bytes, not UTF-8 semantic text)
-auto b0 = pluss::bytes_content("\x01\x02");
-auto b1 = pluss::bytes_content({"\x01", "\x02", "\x03"});
-auto b2 = pluss::make_bytes_note({{"\x0A", "\x0B"}, {"\x0C", "\x0D"}});
+auto b0 = pluss::note::bytes("\x01\x02");
+auto b1 = pluss::note::bytes({"\x01", "\x02", "\x03"});
+auto b2 = pluss::note::bytes({{"\x0A", "\x0B"}, {"\x0C", "\x0D"}});
 ```
 
 ## Core Text Cleanup and Normalization

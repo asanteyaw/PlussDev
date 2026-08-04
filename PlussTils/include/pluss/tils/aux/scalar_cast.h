@@ -23,19 +23,19 @@ inline Series as_dtype(const Series& x, ScalarType dtype, Config cfg = {}) {
 }
 
 inline Series as_dtype(double value, ScalarType dtype, Config cfg = {}) {
-  return full({}, value, as_dtype(cfg, dtype));
+  return pluss::series::full({}, value, as_dtype(cfg, dtype));
 }
 
 inline Series as_c64(const codem::Complex64& value, Config cfg = {}) {
-  const auto real = full({}, static_cast<double>(value.real()), as_dtype(cfg, ScalarType::Float32));
-  const auto imag = full({}, static_cast<double>(value.imag()), as_dtype(cfg, ScalarType::Float32));
-  return complex(real, imag, ScalarType::Complex64).to(cfg.platform);
+  const auto real = pluss::series::full({}, static_cast<double>(value.real()), as_dtype(cfg, ScalarType::Float32));
+  const auto imag = pluss::series::full({}, static_cast<double>(value.imag()), as_dtype(cfg, ScalarType::Float32));
+  return pluss::series::complex(real, imag, ScalarType::Complex64).to(cfg.platform);
 }
 
 inline Series as_c128(const codem::Complex128& value, Config cfg = {}) {
-  const auto real = full({}, value.real(), as_dtype(cfg, ScalarType::Float64));
-  const auto imag = full({}, value.imag(), as_dtype(cfg, ScalarType::Float64));
-  return complex(real, imag, ScalarType::Complex128).to(cfg.platform);
+  const auto real = pluss::series::full({}, value.real(), as_dtype(cfg, ScalarType::Float64));
+  const auto imag = pluss::series::full({}, value.imag(), as_dtype(cfg, ScalarType::Float64));
+  return pluss::series::complex(real, imag, ScalarType::Complex128).to(cfg.platform);
 }
 
 inline Config as_bool(Config cfg = {}) { return as_dtype(cfg, ScalarType::Bool); }

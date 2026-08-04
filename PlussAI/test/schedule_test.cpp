@@ -38,7 +38,7 @@ bool run_schedule_checks(std::ostream* err = nullptr) {
 
   pluss::nn::Schedule empty_schedule;
   if (!throws([&] {
-        const Series x = pluss::zeros({1, 2}, cfg);
+        const Series x = pluss::series::zeros({1, 2}, cfg);
         (void)empty_schedule->forward(x);
       })) {
     if (err) *err << "empty schedule should fail loudly\n";

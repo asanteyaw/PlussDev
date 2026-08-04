@@ -43,7 +43,7 @@ TEST_CASE("interior-point can use conjugate-gradient subproblem solves", "[optim
     return sum(square(err));
   };
   problem.bounds.lower = ParameterPack<Series>({
-      {"x", pluss::zeros({n}, ScalarType::Float64).to(pluss::pCPU)},
+      {"x", pluss::series::zeros({n}, ScalarType::Float64).to(pluss::pCPU)},
   });
 
   const ParameterPack<Series> initial({

@@ -60,12 +60,12 @@ ConstrainedProblem make_constraint_stationary_problem() {
   problem.nonlinear.analytic = [](const ParameterPack<Series>&) {
     NonlinearConstraintEvaluation eval;
     eval.equality = make_scalar(1.0).reshape({1});
-    eval.inequality = pluss::empty({0}, ScalarType::Float64);
+    eval.inequality = pluss::series::empty({0}, ScalarType::Float64);
     eval.equality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({1, 2}, ScalarType::Float64)},
+        {"x", pluss::series::zeros({1, 2}, ScalarType::Float64)},
     });
     eval.inequality_jacobian = ParameterPack<Series>({
-        {"x", pluss::zeros({0, 2}, ScalarType::Float64)},
+        {"x", pluss::series::zeros({0, 2}, ScalarType::Float64)},
     });
     return eval;
   };

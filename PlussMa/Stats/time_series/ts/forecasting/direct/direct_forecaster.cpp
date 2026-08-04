@@ -50,7 +50,7 @@ Series as_vector_(const Series& x, const char* name) {
 
 Series i64_range_(std::int64_t start, std::int64_t end_exclusive, Config cfg) {
   const Config idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  return pluss::arange(start, end_exclusive, idx_cfg);
+  return pluss::series::arange(start, end_exclusive, idx_cfg);
 }
 
 Series active_columns_index_for_horizon_(const Series& mask, std::int64_t hidx, Config cfg) {
@@ -58,7 +58,7 @@ Series active_columns_index_for_horizon_(const Series& mask, std::int64_t hidx, 
   const Series row = mask.select(0, hidx).to(out_cfg.platform, ScalarType::Bool).reshape({mask.sizes()[1]});
   const Series nz = row.nonzero();
   if (!nz.defined() || nz.numel() == 0) {
-    return pluss::empty({0}, Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform));
+    return pluss::series::empty({0}, Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform));
   }
   return nz.select(1, 0).reshape({nz.sizes()[0]}).to(out_cfg.platform, ScalarType::Int64);
 }
@@ -79,7 +79,7 @@ Series select_columns_(const Series& x, const Series& col_idx, Config cfg) {
 
 Series prepend_intercept_(const Series& x, Config cfg) {
   const Config out_cfg = work_cfg_(cfg);
-  const Series intercept = pluss::ones({x.sizes()[0], 1}, out_cfg);
+  const Series intercept = pluss::series::ones({x.sizes()[0], 1}, out_cfg);
   return intercept.unite({x.to(out_cfg.platform, out_cfg.dtype)}, 1);
 }
 
@@ -91,15 +91,15 @@ Series fit_beta_(const Series& x, const Series& y, const DirectForecasterOptions
   if (opts.learner == DirectLearnerKind::Ridge) {
     PLUSS_CHECK(opts.ridge_lambda >= 0.0, "subsp::stats::ts::DirectForecaster: ridge_lambda must be >= 0");
     if (opts.ridge_lambda > 0.0) {
-      Series penalty = pluss::eye(x64.sizes()[1], x64.sizes()[1], cfg).mul(std::sqrt(opts.ridge_lambda));
+      Series penalty = pluss::series::eye(x64.sizes()[1], x64.sizes()[1], cfg).mul(std::sqrt(opts.ridge_lambda));
       if (opts.fit_intercept) {
         const Series idx = pluss::make_series(std::vector<std::int64_t>{0},
                                               {1},
                                               Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform));
-        penalty = pluss::index_put(penalty, std::vector<Series>{idx, idx}, pluss::zeros({1}, cfg), false);
+        penalty = pluss::index_put(penalty, std::vector<Series>{idx, idx}, pluss::series::zeros({1}, cfg), false);
       }
       x_aug = x64.unite({penalty}, 0);
-      y_aug = y64.unite({pluss::zeros({x64.sizes()[1], 1}, cfg)}, 0);
+      y_aug = y64.unite({pluss::series::zeros({x64.sizes()[1], 1}, cfg)}, 0);
     }
   }
 
@@ -120,7 +120,7 @@ Series fit_beta_(const Series& x, const Series& y, const DirectForecasterOptions
 Series concat_columns_(const std::vector<Series>& columns, std::int64_t rows, Config cfg) {
   const Config out_cfg = work_cfg_(cfg);
   if (columns.empty()) {
-    return pluss::empty({rows, 0}, out_cfg);
+    return pluss::series::empty({rows, 0}, out_cfg);
   }
   if (columns.size() == 1) {
     return columns.front();
@@ -268,7 +268,7 @@ Series DirectForecaster::forecast(const Series& x, const Series& y, Config cfg) 
     out_cols.push_back(x_row.matmul(step_model.beta.reshape({step_model.beta.numel(), 1})));
   }
   if (out_cols.empty()) {
-    return pluss::empty({0}, out_cfg);
+    return pluss::series::empty({0}, out_cfg);
   }
   if (out_cols.size() == 1) {
     return out_cols.front().reshape({1});

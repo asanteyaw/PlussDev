@@ -11,8 +11,8 @@
 namespace {
 
 pluss::Series peaks_like(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = pluss::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = pluss::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -38,7 +38,7 @@ int main() {
   gallery.headline("Flash-Style Plot Gallery (PlussPl Mappings)");
   gallery.legend(pl::KeyDock::East);
 
-  const auto x = pluss::linspace(0.0, 12.0, 180, pluss::ScalarType::Float64);
+  const auto x = pluss::series::linspace(0.0, 12.0, 180, pluss::ScalarType::Float64);
   const auto y = x.mul(0.72).sin().add(x.mul(0.17).cos().mul(0.28)).add(x.mul(0.04));
   const auto yhat = x.mul(0.37).add(0.18);
   const auto residual = y.sub(yhat);
@@ -55,7 +55,7 @@ int main() {
 
   auto& kde = gallery.pane2("kdeplot");
   kde.place(0, 2).grid(pl::GridStyle::Major).caption("density estimate");
-  const auto kde_x = pluss::linspace(-2.5, 2.5, 160, pluss::ScalarType::Float64);
+  const auto kde_x = pluss::series::linspace(-2.5, 2.5, 160, pluss::ScalarType::Float64);
   const auto kde_y = kde_x.pow(2.0).mul(-0.9).exp().mul(0.7).add(kde_x.sub(0.9).pow(2.0).mul(-2.1).exp().mul(0.42));
   kde.trend(kde_x, kde_y).label("kdeplot").width(2.0F);
 
@@ -108,8 +108,8 @@ int main() {
   resid.cloud(yhat, residual).label("residuals");
   resid.rule_y(0.0, "zero residual");
 
-  const auto gx = pluss::linspace(-3.0, 3.0, 32, pluss::ScalarType::Float64);
-  const auto gy = pluss::linspace(-3.0, 3.0, 32, pluss::ScalarType::Float64);
+  const auto gx = pluss::series::linspace(-3.0, 3.0, 32, pluss::ScalarType::Float64);
+  const auto gy = pluss::series::linspace(-3.0, 3.0, 32, pluss::ScalarType::Float64);
   const auto gz = peaks_like(32, 32);
   auto& heat = gallery.pane2("heatmap");
   heat.place(2, 1).grid(pl::GridStyle::Major).caption("matrix heatmap");

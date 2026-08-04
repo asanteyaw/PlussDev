@@ -2,7 +2,7 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("permute/unsqueeze/squeeze/flatten basics", "[views]") {
-  auto x = pluss::zeros({2,3,4}, pluss::config({{"dtype","float32"}}));
+  auto x = pluss::series::zeros({2,3,4}, pluss::config({{"dtype","float32"}}));
   auto y = x.permute(std::array<std::int64_t,3>{2,0,1});
   REQUIRE(y.sizes()[0] == 4);
   REQUIRE(y.sizes()[1] == 2);

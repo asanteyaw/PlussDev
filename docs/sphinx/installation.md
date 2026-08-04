@@ -69,8 +69,8 @@ cmake -S . -B build-torch-sdk \
 ```
 
 Keep Torch and non-Torch SDKs in different build directories. The Torch-enabled
-SDK exports the compile definitions needed for `pluss::from_torch(...)` and
-`pluss::to_torch(...)` when consumers link `Pluss::SDK`.
+SDK exports the compile definitions needed for `pluss::series::from_torch(...)` and
+`pluss::series::to_torch(...)` when consumers link `Pluss::SDK`.
 
 ## Consume Pluss from another project
 

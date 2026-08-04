@@ -113,9 +113,9 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
 
   // 1) scaled_attention forward + backward parity
   {
-    const pluss::Series q = pluss::rand({2, 3, 7, 16}, cfg_cpu, 1101ULL);
-    const pluss::Series k = pluss::rand({2, 3, 7, 16}, cfg_cpu, 1103ULL);
-    const pluss::Series v = pluss::rand({2, 3, 7, 16}, cfg_cpu, 1107ULL);
+    const pluss::Series q = pluss::series::rand({2, 3, 7, 16}, cfg_cpu, 1101ULL);
+    const pluss::Series k = pluss::series::rand({2, 3, 7, 16}, cfg_cpu, 1103ULL);
+    const pluss::Series v = pluss::series::rand({2, 3, 7, 16}, cfg_cpu, 1107ULL);
     const pluss::Series mask = pluss::square_subsequent_mask(7, q);
     const auto [out_cpu, w_cpu] = pluss::scaled_attention(q, k, v, mask);
     const auto [out_gpu, w_gpu] = pluss::scaled_attention(
@@ -223,8 +223,8 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
       if (p != nullptr && p->defined()) p->tracks_slope_(false);
     }
 
-    const pluss::Series src = pluss::rand({2, 10, 16}, cfg_cpu, 1211ULL);
-    const pluss::Series tgt = pluss::rand({2, 10, 16}, cfg_cpu, 1213ULL);
+    const pluss::Series src = pluss::series::rand({2, 10, 16}, cfg_cpu, 1211ULL);
+    const pluss::Series tgt = pluss::series::rand({2, 10, 16}, cfg_cpu, 1213ULL);
     const pluss::Series tgt_mask = pluss::nn::generate_square_subsequent_mask(tgt.sizes()[1], tgt);
 
     auto src_cpu_g = src.clone();

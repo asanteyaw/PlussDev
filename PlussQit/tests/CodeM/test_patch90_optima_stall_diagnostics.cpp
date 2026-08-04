@@ -34,7 +34,7 @@ Series make_scalar(double x) {
 }
 
 Series make_empty() {
-  return pluss::empty({0}, ScalarType::Float64).to(pluss::pCPU);
+  return pluss::series::empty({0}, ScalarType::Float64).to(pluss::pCPU);
 }
 
 ParameterPack<Series> make_params() {

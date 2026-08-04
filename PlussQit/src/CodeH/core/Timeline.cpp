@@ -312,6 +312,13 @@ Timeline timeline_from_epoch_nanos(std::span<const std::int64_t> ticks_flat,
   return Timeline(std::move(s), "UTC");
 }
 
+Timeline timeline_from_series(pluss::codem::Series ticks, std::string tz_name) {
+  CODEM_CHECK(ticks.scalar_type() == pluss::codem::ScalarType::Int64,
+              "timeline_from_series: expected an Int64 epoch-nanoseconds Series");
+  check_timeline_core(ticks);
+  return Timeline(std::move(ticks), std::move(tz_name));
+}
+
 Timeline timeline_from_utf8(std::span<const std::string_view> utf8_flat,
                             std::span<const std::int64_t> sizes) {
   std::vector<std::int64_t> shape(sizes.begin(), sizes.end());

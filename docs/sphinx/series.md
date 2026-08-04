@@ -38,7 +38,7 @@ auto idx23 = pluss::make_series({
   {0,1,2}
 });
 auto flat_idx = pluss::make_series({0,3,5});
-auto mask23 = pluss::ones({2,3}, pluss::ScalarType::Bool);
+auto mask23 = pluss::series::ones({2,3}, pluss::ScalarType::Bool);
 ```
 
 ## Construction: Real Ways You Will Use
@@ -57,17 +57,17 @@ auto s4 = pluss::make_series(flat, {2,3});
 
 ```cpp
 // Factory families
-auto z = pluss::zeros({2,3});
-auto o = pluss::ones({2,3});
-auto f = pluss::full({2,3}, 7.5);
-auto e = pluss::empty({2,3}, pluss::ScalarType::Float64);
+auto z = pluss::series::zeros({2,3});
+auto o = pluss::series::ones({2,3});
+auto f = pluss::series::full({2,3}, 7.5);
+auto e = pluss::series::empty({2,3}, pluss::ScalarType::Float64);
 
 // Ranges / random
-auto r0 = pluss::arange(0, 10);
-auto r1 = pluss::linspace(-1.0, 1.0, 9);
-auto rn = pluss::randn({2,3});
-auto ri = pluss::randint(0, 10, {2,3});
-auto nb = pluss::bernoulli({2,3}, 0.25);
+auto r0 = pluss::series::arange(0, 10);
+auto r1 = pluss::series::linspace(-1.0, 1.0, 9);
+auto rn = pluss::series::randn({2,3});
+auto ri = pluss::series::randint(0, 10, {2,3});
+auto nb = pluss::series::bernoulli({2,3}, 0.25);
 ```
 
 ## Shape and Indexing Methods
@@ -207,7 +207,7 @@ auto ms = m.masked_select(mask23);
 auto src = pluss::make_series(std::vector<double>{10,20,30,40,50,60}, {2,3});
 auto g = src.gather(1, idx23);
 
-auto base = pluss::zeros({2,3}, pluss::ScalarType::Float64);
+auto base = pluss::series::zeros({2,3}, pluss::ScalarType::Float64);
 auto sc = base.scatter(1, idx23, src);
 auto sca = base.scatter_add(1, idx23, src);
 auto scr = base.scatter_reduce_sum(1, idx23, src, true);

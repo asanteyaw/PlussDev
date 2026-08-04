@@ -14,8 +14,8 @@ int main() {
   std::cout << "cudnn_transformer_ready=" << (pluss::cudnn_transformer_ready() ? 1 : 0) << "\n";
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
-  const Series src = pluss::rand({2, 10, 16}, cfg, 701ULL);
-  const Series tgt = pluss::rand({2, 10, 16}, cfg, 709ULL);
+  const Series src = pluss::series::rand({2, 10, 16}, cfg, 701ULL);
+  const Series tgt = pluss::series::rand({2, 10, 16}, cfg, 709ULL);
 
   pluss::nn::Transformer model(pluss::nn::TransformerOptions{
       .d_model = 16,

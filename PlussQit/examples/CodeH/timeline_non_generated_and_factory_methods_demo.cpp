@@ -24,7 +24,7 @@ void show_timeline(std::string_view label, const pluss::codeh::Timeline& t) {
   std::cout << "\n== " << label << " ==\n";
   std::cout << "rank=" << t.dim() << " shape=" << shape_string(t.sizes())
             << " tz=" << t.tz() << "\n";
-  std::cout << pluss::print_timeline(t) << "\n";
+  std::cout << pluss::timeline::print(t) << "\n";
 }
 
 void show_series(std::string_view label, const pluss::Series& s) {
@@ -41,34 +41,34 @@ int main() {
   // --------------------------------------------------------------------------
   // Factory methods: Timeline
   // --------------------------------------------------------------------------
-  const auto t_scalar_sv = pluss::make_timeline(std::string_view{"2024-01-01T00:00:00Z"});
+  const auto t_scalar_sv = pluss::timeline::make(std::string_view{"2024-01-01T00:00:00Z"});
   const char* scalar_c = "2024-01-01T00:00:01Z";
-  const auto t_scalar_c = pluss::make_timeline(scalar_c);
+  const auto t_scalar_c = pluss::timeline::make(scalar_c);
 
   const std::array<std::string_view, 3> flat_sv_arr{
       "2024-01-01T00:00:00Z",
       "2024-01-01T01:00:00Z",
       "2024-01-01T02:00:00Z"};
-  const auto t_1d_span = pluss::make_timeline(std::span<const std::string_view>(flat_sv_arr));
+  const auto t_1d_span = pluss::timeline::make(std::span<const std::string_view>(flat_sv_arr));
 
   const std::vector<std::string_view> flat_sv_vec{
       "2024-01-02T00:00:00Z",
       "2024-01-02T01:00:00Z",
       "2024-01-02T02:00:00Z"};
-  const auto t_1d_vecsv = pluss::make_timeline(flat_sv_vec);
+  const auto t_1d_vecsv = pluss::timeline::make(flat_sv_vec);
 
-  const auto t_1d_init = pluss::make_timeline({
+  const auto t_1d_init = pluss::timeline::make({
       "2024-01-03T00:00:00Z",
       "2024-01-03T01:00:00Z",
       "2024-01-03T02:00:00Z",
   });
 
-  const auto t_2d_nested = pluss::make_timeline({
+  const auto t_2d_nested = pluss::timeline::make({
       {"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"},
       {"2024-02-02T00:00:00Z", "2024-02-02T01:00:00Z"},
   });
 
-  const auto t_3d_nested = pluss::make_timeline({
+  const auto t_3d_nested = pluss::timeline::make({
       {
           {"2024-03-01T00:00:00Z", "2024-03-01T01:00:00Z"},
           {"2024-03-01T02:00:00Z", "2024-03-01T03:00:00Z"},
@@ -86,14 +86,14 @@ int main() {
       "2024-05-01T00:00:00Z", "2024-05-01T01:00:00Z",
       "2024-05-02T00:00:00Z", "2024-05-02T01:00:00Z"};
   const std::array<std::int64_t, 2> shape_2d{2, 2};
-  const auto t_make_vecstr = pluss::make_timeline(flat_str, {2, 2});
-  const auto t_make_vecsv = pluss::make_timeline(flat_sv, {2, 2});
-  const auto t_make_span = pluss::make_timeline(
+  const auto t_make_vecstr = pluss::timeline::make(flat_str, {2, 2});
+  const auto t_make_vecsv = pluss::timeline::make(flat_sv, {2, 2});
+  const auto t_make_span = pluss::timeline::make(
       std::span<const std::string_view>(flat_sv),
       std::span<const std::int64_t>(shape_2d));
 
-  const auto t_epoch_scalar = pluss::from_epoch_nanos(0LL);
-  const auto t_epoch_nested = pluss::from_epoch_nanos({
+  const auto t_epoch_scalar = pluss::timeline::from_epoch(0LL);
+  const auto t_epoch_nested = pluss::timeline::from_epoch({
       {
           {0LL, 1'000'000'000LL},
           {2'000'000'000LL, 3'000'000'000LL},
@@ -106,10 +106,10 @@ int main() {
   const std::vector<std::int64_t> epoch_flat{
       10'000'000'000LL, 11'000'000'000LL, 12'000'000'000LL, 13'000'000'000LL};
   const std::array<std::int64_t, 2> epoch_shape{2, 2};
-  const auto t_epoch_span = pluss::from_epoch_nanos(
+  const auto t_epoch_span = pluss::timeline::from_epoch(
       std::span<const std::int64_t>(epoch_flat),
       std::span<const std::int64_t>(epoch_shape));
-  const auto t_epoch_vec = pluss::from_epoch_nanos(epoch_flat, {2, 2});
+  const auto t_epoch_vec = pluss::timeline::from_epoch(epoch_flat, {2, 2});
 
   show_timeline("factory moment(string_view)", t_scalar_sv);
   show_timeline("factory moment(const char*)", t_scalar_c);
@@ -142,9 +142,9 @@ int main() {
   std::cout << "duration_days dim=" << d_days.dim() << " numel=" << d_days.numel() << "\n";
   std::cout << "timedelta_range dim=" << d_range.dim() << " numel=" << d_range.numel() << "\n";
 
-  const auto t_date_range_factory = pluss::date_range(
-      pluss::make_timeline("2024-06-01T00:00:00Z"),
-      pluss::make_timeline("2024-06-04T00:00:00Z"),
+  const auto t_date_range_factory = pluss::timeline::date_range(
+      pluss::timeline::make("2024-06-01T00:00:00Z"),
+      pluss::timeline::make("2024-06-04T00:00:00Z"),
       "D",
       1);
   show_timeline("factory date_range(start, end, freq, step)", t_date_range_factory);
@@ -152,28 +152,28 @@ int main() {
   // --------------------------------------------------------------------------
   // Factory methods: TimeIndex (1D axis only)
   // --------------------------------------------------------------------------
-  const auto idx_from_timeline = pluss::make_timeindex(t_1d_init, true);
-  const auto idx_scalar_sv = pluss::make_timeindex(std::string_view{"2024-07-01T00:00:00Z"});
-  const auto idx_scalar_c = pluss::make_timeindex("2024-07-01T00:00:01Z");
-  const auto idx_span = pluss::make_timeindex(std::span<const std::string_view>(flat_sv_arr), true);
-  const auto idx_vecsv = pluss::make_timeindex(flat_sv_vec, true);
+  const auto idx_from_timeline = pluss::timeindex::make(t_1d_init, true);
+  const auto idx_scalar_sv = pluss::timeindex::make(std::string_view{"2024-07-01T00:00:00Z"});
+  const auto idx_scalar_c = pluss::timeindex::make("2024-07-01T00:00:01Z");
+  const auto idx_span = pluss::timeindex::make(std::span<const std::string_view>(flat_sv_arr), true);
+  const auto idx_vecsv = pluss::timeindex::make(flat_sv_vec, true);
   const std::vector<std::string> idx_vecstr_data{
       "2024-08-01T00:00:00Z", "2024-08-01T01:00:00Z", "2024-08-01T02:00:00Z"};
-  const auto idx_vecstr = pluss::make_timeindex(idx_vecstr_data, true);
-  const auto idx_init = pluss::make_timeindex({
+  const auto idx_vecstr = pluss::timeindex::make(idx_vecstr_data, true);
+  const auto idx_init = pluss::timeindex::make({
       "2024-09-01T00:00:00Z",
       "2024-09-01T01:00:00Z",
       "2024-09-01T02:00:00Z",
   });
-  const auto idx_nested = pluss::make_timeindex({
+  const auto idx_nested = pluss::timeindex::make({
       pluss::detail::NestedTimelineLiteral("2024-10-01T00:00:00Z"),
       pluss::detail::NestedTimelineLiteral("2024-10-01T01:00:00Z"),
       pluss::detail::NestedTimelineLiteral("2024-10-01T02:00:00Z"),
   });
   const std::vector<std::int64_t> idx_epoch{
       0LL, 1'000'000'000LL, 2'000'000'000LL, 3'000'000'000LL};
-  const auto idx_epoch_span = pluss::make_timeindex(std::span<const std::int64_t>(idx_epoch), true);
-  const auto idx_epoch_vec = pluss::make_timeindex(idx_epoch, true);
+  const auto idx_epoch_span = pluss::timeindex::make(std::span<const std::int64_t>(idx_epoch), true);
+  const auto idx_epoch_vec = pluss::timeindex::make(idx_epoch, true);
 
   show_timeline("factory make_timeindex(Timeline)", idx_from_timeline.timeline());
   show_timeline("factory make_timeindex(string_view)", idx_scalar_sv.timeline());
@@ -328,7 +328,7 @@ int main() {
   // --------------------------------------------------------------------------
   // Non-generated TimeIndex methods
   // --------------------------------------------------------------------------
-  const auto idx = pluss::make_timeindex({
+  const auto idx = pluss::timeindex::make({
       "2024-11-01T00:00:00Z",
       "2024-11-01T00:20:00Z",
       "2024-11-01T00:40:00Z",
@@ -339,14 +339,14 @@ int main() {
   std::cout << "size=" << idx.size() << "\n";
   show_timeline("timeline()", idx.timeline());
 
-  const auto key = pluss::make_timeline("2024-11-01T00:41:00Z");
+  const auto key = pluss::timeline::make("2024-11-01T00:41:00Z");
   std::cout << "searchsorted(left)=" << idx.searchsorted(key, false)
             << " searchsorted(right)=" << idx.searchsorted(key, true) << "\n";
   std::cout << "asof(key)=" << idx.asof(key) << "\n";
 
   show_series("slice(start, end)",
-              idx.slice(pluss::make_timeline("2024-11-01T00:20:00Z"),
-                        pluss::make_timeline("2024-11-01T01:00:00Z")));
+              idx.slice(pluss::timeline::make("2024-11-01T00:20:00Z"),
+                        pluss::timeline::make("2024-11-01T01:00:00Z")));
   show_series("slice_time(start, end)",
               idx.slice_time("2024-11-01T00:20:00Z", "2024-11-01T01:00:00Z"));
 
@@ -368,7 +368,7 @@ int main() {
   show_series("rolling_count", idx.rolling_count(win));
   show_series("rolling_sum", idx.rolling_sum(values, win));
 
-  const auto idx_right = pluss::make_timeindex({
+  const auto idx_right = pluss::timeindex::make({
       "2024-11-01T00:05:00Z",
       "2024-11-01T00:35:00Z",
       "2024-11-01T01:05:00Z",

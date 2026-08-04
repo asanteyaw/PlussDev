@@ -413,7 +413,7 @@ TEST_CASE("distribution objects stay aligned with functional pdf/logpdf/cdf rout
 }
 
 TEST_CASE("distribution objects preserve sample_like shape platform and requested visible dtype", "[distr][objects][sample_like]") {
-  const Series like = pluss::zeros(
+  const Series like = pluss::series::zeros(
       {2, 3},
       Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU).with_pinned(true));
   const auto like_shape = as_shape_vec(like);

@@ -445,7 +445,7 @@ private:
       if (group.options.initial_accumulator_value == 0.0) continue;
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
-        sum_square_[i] = pluss::full_like(*p, group.options.initial_accumulator_value, p->scalar_type());
+        sum_square_[i] = pluss::series::full_like(*p, group.options.initial_accumulator_value, p->scalar_type());
       }
     }
     initialize_group_capture_state_();

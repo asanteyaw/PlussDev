@@ -198,7 +198,7 @@ void maybe_print_iteration(const MadsState& state, BlackboxSolverDisplay display
 }
 
 Series poll_offsets_ortho_2n(std::int64_t n_dim, double frame_size, const Config& cfg) {
-  const Series basis = pluss::eye(n_dim, n_dim, cfg).mul(frame_size);
+  const Series basis = pluss::series::eye(n_dim, n_dim, cfg).mul(frame_size);
   const Series opposite = basis.neg();
   return basis.unite(std::vector<Series>{opposite}, 0);
 }
@@ -399,7 +399,7 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
 
     bool improved = false;
     if (config.search_points > 0 && next.evaluations < max_evaluations) {
-      const Series search_offsets = pluss::rand(
+      const Series search_offsets = pluss::series::rand(
                                         {config.search_points, n_dim},
                                         setup.work_cfg,
                                         series_rng.next())
@@ -1103,7 +1103,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     if (config.search_points > 0 &&
         state.evaluations < max_evaluations &&
         state.total_evaluations < max_total_evaluations) {
-      Series search_offsets = pluss::rand(
+      Series search_offsets = pluss::series::rand(
                                   {config.search_points, n_dim},
                                   setup.work_cfg,
                                   series_rng.next())
@@ -1539,7 +1539,7 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
     const std::int64_t trials = std::max<std::int64_t>(0, config.rescue_trials);
     for (std::int64_t t = 0; t < trials; ++t) {
       const double radius = config.rescue_radius * std::pow(config.rescue_radius_decay, static_cast<double>(t));
-      Series noise = pluss::randn({n}, setup.work_cfg, config.rng_seed + rescue_counter++)
+      Series noise = pluss::series::randn({n}, setup.work_cfg, config.rng_seed + rescue_counter++)
                          .mul(radius);
       Series cand = x_flat.add(noise);
       if (bounds.enabled) {
@@ -1599,7 +1599,7 @@ BlackboxAdvancedOutcome vnsmads_blackbox_minimizer(
     Series base_flat = best.minimizer.reshape({best.minimizer.numel()})
                            .to(setup.work_cfg.platform, setup.work_cfg.dtype)
                            .contiguous();
-    Series perturb = pluss::randn({n}, setup.work_cfg, seed++).mul(kick);
+    Series perturb = pluss::series::randn({n}, setup.work_cfg, seed++).mul(kick);
     Series start_flat = base_flat.add(perturb);
     if (bounds.enabled) {
       start_flat = project_flat_to_bounds(start_flat, bounds.lower, bounds.upper);

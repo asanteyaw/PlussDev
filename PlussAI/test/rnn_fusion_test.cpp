@@ -93,7 +93,7 @@ struct TinyForecastImpl final : pluss::nn::Module {
         fc1(2, 2, true, cfg, 41ULL),
         softplus(pluss::nn::SoftplusOptions{.beta = 1.0, .threshold = 20.0}),
         fc2(2, 1, true, cfg, 43ULL),
-        running_mean(pluss::zeros({2}, cfg)) {
+        running_mean(pluss::series::zeros({2}, cfg)) {
     module_record("fc1", fc1);
     module_record("softplus", softplus);
     module_record("fc2", fc2);
@@ -249,7 +249,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
       pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, cfg),
       pluss::make_series(std::vector<double>{3.0, 4.0}, {2}, cfg),
   };
-  if (!approx_vec(vec_f64(pluss::pile(stack_items, 0)), std::vector<double>{1.0, 2.0, 3.0, 4.0})) {
+  if (!approx_vec(vec_f64(pluss::series::pile(stack_items, 0)), std::vector<double>{1.0, 2.0, 3.0, 4.0})) {
     if (err) *err << "pile StackArray mismatch\n";
     return false;
   }
@@ -308,7 +308,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
                                             0.7, -0.1},
                                         {2, 2, 2},
                                         cfg);
-  const Series h0 = pluss::zeros({1, 2, 1}, cfg);
+  const Series h0 = pluss::series::zeros({1, 2, 1}, cfg);
   bool bad_gru_layout_threw = false;
   try {
     auto bad_cfg = run_cfg;
@@ -396,8 +396,8 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
   }
 
   const auto lstm_params = make_lstm_params();
-  const Series lstm_h0 = pluss::zeros({1, 2, 1}, cfg);
-  const Series lstm_c0 = pluss::zeros({1, 2, 1}, cfg);
+  const Series lstm_h0 = pluss::series::zeros({1, 2, 1}, cfg);
+  const Series lstm_c0 = pluss::series::zeros({1, 2, 1}, cfg);
   const auto [lstm_func_out, lstm_state] =
       pluss::lstm(seq, lstm_h0, lstm_c0, std::vector<pluss::ai::rnn::NetWeight>{lstm_params},
                   pluss::ai::rnn::NetConfig{

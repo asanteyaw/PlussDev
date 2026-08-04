@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("scalar operators", "[scalar]") {
-  Series a = pluss::full({4}, 2.0, ScalarType::Float32);
+  Series a = pluss::series::full({4}, 2.0, ScalarType::Float32);
   Series b = a.add(3.0);
   auto* bp = reinterpret_cast<const float*>(b.raw_data());
   REQUIRE(bp[0] == 5.0f);
@@ -21,7 +21,7 @@ TEST_CASE("scalar operators", "[scalar]") {
 }
 
 TEST_CASE("nonzero/take/put", "[index]") {
-  Series x = pluss::zeros({5}, ScalarType::Int64);
+  Series x = pluss::series::zeros({5}, ScalarType::Int64);
   auto* xp = reinterpret_cast<std::int64_t*>(x.raw_data());
   xp[1] = 7; xp[3] = 9;
 
@@ -29,7 +29,7 @@ TEST_CASE("nonzero/take/put", "[index]") {
   REQUIRE(nz.dim() == 2);
 
   // take
-  Series idx = pluss::zeros({2}, ScalarType::Int64);
+  Series idx = pluss::series::zeros({2}, ScalarType::Int64);
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   ip[0]=1; ip[1]=3;
   Series t = x.take(idx);
@@ -37,7 +37,7 @@ TEST_CASE("nonzero/take/put", "[index]") {
   REQUIRE(tp[0] == 7);
   REQUIRE(tp[1] == 9);
 
-  Series src = pluss::full({2}, 1.0, ScalarType::Int64);
+  Series src = pluss::series::full({2}, 1.0, ScalarType::Int64);
   x = x.put(idx, src, false);
   auto* outp = reinterpret_cast<const std::int64_t*>(x.raw_data());
   REQUIRE(outp[1] == 1);
@@ -60,7 +60,7 @@ TEST_CASE("Series::pos bounds-checked scalar selection", "[index][pos]") {
   REQUIRE_THROWS(s.pos(-1));
   REQUIRE_THROWS(s.pos(3));
 
-  Series m = pluss::ones({2, 2}, ScalarType::Float64);
+  Series m = pluss::series::ones({2, 2}, ScalarType::Float64);
   REQUIRE_THROWS(m.pos(0));
 }
 
@@ -217,7 +217,7 @@ TEST_CASE("Series::extract supports ellipsis/new-axis/scalar+range/advanced", "[
 }
 
 TEST_CASE("Series::extract_put_ supports writable slice semantics", "[index][extract][write]") {
-  Series x = pluss::zeros({2, 3}, ScalarType::Float64);
+  Series x = pluss::series::zeros({2, 3}, ScalarType::Float64);
   Series values = pluss::make_series(std::vector<double>{9.0, 8.0}, {2});
 
   x.extract_put_({1, {1, 3}}, values);

@@ -44,7 +44,7 @@ Example 1. Snap every timestamp down to the containing hour boundary.
 
 ```cpp
 auto out = base.floor("H");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output

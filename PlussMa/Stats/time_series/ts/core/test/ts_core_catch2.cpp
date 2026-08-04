@@ -156,8 +156,8 @@ TEST_CASE("ts lag stress and crash resilience", "[ts][lag][stress][crash]") {
 
   // Stress: moderate-large design generation should complete and preserve expected shape.
   const std::int64_t n = 40000;
-  const Series x = pluss::rand({n, 8}, cfg, 20260309ULL);
-  const Series y = pluss::rand({n}, cfg, 20260310ULL);
+  const Series x = pluss::series::rand({n, 8}, cfg, 20260309ULL);
+  const Series y = pluss::series::rand({n}, cfg, 20260310ULL);
 
   LagPlanOptions stress_opts;
   stress_opts.horizon = {1, 5, 10};
@@ -174,7 +174,7 @@ TEST_CASE("ts lag stress and crash resilience", "[ts][lag][stress][crash]") {
 
   // Crash tests: invalid plan usage should throw cleanly.
   REQUIRE_THROWS(build_lag_plan(-1, stress_opts));
-  REQUIRE_THROWS(build_lagged_predictors(x, pluss::rand({n + 1}, cfg, 11ULL), plan, cfg));
+  REQUIRE_THROWS(build_lagged_predictors(x, pluss::series::rand({n + 1}, cfg, 11ULL), plan, cfg));
   REQUIRE_THROWS(build_lagged_predictors(Series::undefined(), y, plan, cfg));
 }
 

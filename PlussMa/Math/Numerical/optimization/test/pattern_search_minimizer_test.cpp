@@ -74,8 +74,8 @@ int main() {
     ps.constraint_policy = PSConstraintPolicy::MeritPenalty;
     ps.initial_penalty = 50.0;
     ps.penalty_growth = 8.0;
-    ps.lower_bounds = pluss::full({2}, 0.0, cfg);
-    ps.upper_bounds = pluss::full({2}, 2.0, cfg);
+    ps.lower_bounds = pluss::series::full({2}, 0.0, cfg);
+    ps.upper_bounds = pluss::series::full({2}, 2.0, cfg);
     ps.linear_ineq_matrix = pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}, cfg);
     ps.linear_ineq_rhs = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
 
@@ -176,8 +176,8 @@ int main() {
     ps.al_penalty_growth = 4.0;
     ps.al_max_outer_iterations = 5;
     ps.al_violation_reduction_ratio = 0.6;
-    ps.lower_bounds = pluss::full({1}, -1.0, cfg);
-    ps.upper_bounds = pluss::full({1}, 1.0, cfg);
+    ps.lower_bounds = pluss::series::full({1}, -1.0, cfg);
+    ps.upper_bounds = pluss::series::full({1}, 1.0, cfg);
     ps.nonlinear_constraints = [](const Series& x) {
       PSConstraintValues c;
       c.inequality = x.square().sub(0.25).reshape({1});
@@ -213,8 +213,8 @@ int main() {
     ps.basis_refresh_interval = 2;
     ps.initial_penalty = 100.0;
     ps.penalty_growth = 4.0;
-    ps.lower_bounds = pluss::full({2}, -1.0, cfg);
-    ps.upper_bounds = pluss::full({2}, 2.0, cfg);
+    ps.lower_bounds = pluss::series::full({2}, -1.0, cfg);
+    ps.upper_bounds = pluss::series::full({2}, 2.0, cfg);
     ps.linear_eq_matrix = pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}, cfg);
     ps.linear_eq_rhs = pluss::make_series(std::vector<double>{1.0}, {1}, cfg);
 
@@ -253,8 +253,8 @@ int main() {
     ps.direction_family = PSDirectionFamily::GSSAugmented;
     ps.basis_family = PSBasisFamily::RandomOrtho;
     ps.basis_refresh_interval = 2;
-    ps.lower_bounds = pluss::full({2}, -2.0, cfg);
-    ps.upper_bounds = pluss::full({2}, 2.0, cfg);
+    ps.lower_bounds = pluss::series::full({2}, -2.0, cfg);
+    ps.upper_bounds = pluss::series::full({2}, 2.0, cfg);
     ps.nonlinear_constraints = [](const Series& x) {
       PSConstraintValues c;
       c.inequality = x.square().sum().sub(1.0).reshape({1});
@@ -299,8 +299,8 @@ int main() {
     ps.al_penalty_growth = 4.0;
     ps.al_max_outer_iterations = 6;
     ps.al_violation_reduction_ratio = 0.7;
-    ps.lower_bounds = pluss::full({2}, -2.0, cfg);
-    ps.upper_bounds = pluss::full({2}, 2.0, cfg);
+    ps.lower_bounds = pluss::series::full({2}, -2.0, cfg);
+    ps.upper_bounds = pluss::series::full({2}, 2.0, cfg);
     ps.nonlinear_constraints = [](const Series& x) {
       PSConstraintValues c;
       c.inequality = x.square().sum().sub(1.0).reshape({1});

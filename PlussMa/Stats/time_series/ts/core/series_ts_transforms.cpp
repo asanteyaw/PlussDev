@@ -51,13 +51,13 @@ Series as_real_vector_(const Series& x, const char* op) {
 }
 
 Series nan_like_(const Series& x) {
-  return pluss::full({x.numel()}, std::numeric_limits<double>::quiet_NaN(), cfg_like_(x, x.scalar_type()));
+  return pluss::series::full({x.numel()}, std::numeric_limits<double>::quiet_NaN(), cfg_like_(x, x.scalar_type()));
 }
 
 Series shift_nan_(const Series& x, std::int64_t periods) {
   const std::int64_t n = x.numel();
   if (n == 0) {
-    return pluss::empty({0}, cfg_like_(x, x.scalar_type()));
+    return pluss::series::empty({0}, cfg_like_(x, x.scalar_type()));
   }
   if (periods == 0) {
     return x.clone();
@@ -69,8 +69,8 @@ Series shift_nan_(const Series& x, std::int64_t periods) {
     if (periods >= n) {
       return out;
     }
-    const Series src_idx = pluss::arange(0, n - periods, idx_cfg);
-    const Series dst_idx = pluss::arange(periods, n, idx_cfg);
+    const Series src_idx = pluss::series::arange(0, n - periods, idx_cfg);
+    const Series dst_idx = pluss::series::arange(periods, n, idx_cfg);
     const Series values = x.index_select(0, src_idx);
     return pluss::index_put(out, std::vector<Series>{dst_idx}, values, false);
   }
@@ -79,8 +79,8 @@ Series shift_nan_(const Series& x, std::int64_t periods) {
   if (k >= n) {
     return out;
   }
-  const Series src_idx = pluss::arange(k, n, idx_cfg);
-  const Series dst_idx = pluss::arange(0, n - k, idx_cfg);
+  const Series src_idx = pluss::series::arange(k, n, idx_cfg);
+  const Series dst_idx = pluss::series::arange(0, n - k, idx_cfg);
   const Series values = x.index_select(0, src_idx);
   return pluss::index_put(out, std::vector<Series>{dst_idx}, values, false);
 }
@@ -99,7 +99,7 @@ std::string resample_op_name_(ResampleOp op) {
 }
 
 Series rolling_count_(const Series& x, std::int64_t window) {
-  return pluss::ones({x.numel()}, cfg_like_(x, x.scalar_type())).stat.movsum(window);
+  return pluss::series::ones({x.numel()}, cfg_like_(x, x.scalar_type())).stat.movsum(window);
 }
 
 Series apply_min_periods_(const Series& stat, const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -131,7 +131,7 @@ Series lead(const Series& x, std::int64_t periods) {
 Series diff(const Series& x, std::int64_t periods) {
   const Series xr = as_real_vector_(x, "diff");
   if (periods == 0) {
-    return pluss::zeros({xr.numel()}, cfg_like_(xr, xr.scalar_type()));
+    return pluss::series::zeros({xr.numel()}, cfg_like_(xr, xr.scalar_type()));
   }
   if (periods > 0) {
     return xr.sub(lag(xr, periods));
@@ -215,7 +215,7 @@ Series ema(const Series& x, double alpha) {
 
   const double beta = 1.0 - alpha;
   const double log_beta = std::log(beta);
-  const Series idx = pluss::arange(0, n, cfg_like_(xr, ScalarType::Int64)).to(xr.scalar_type());
+  const Series idx = pluss::series::arange(0, n, cfg_like_(xr, ScalarType::Int64)).to(xr.scalar_type());
   const Series beta_pow = idx.mul(log_beta).exp();
   const Series beta_pow_inv = idx.mul(-log_beta).exp();
   const Series weighted = xr.mul(beta_pow_inv);
@@ -247,7 +247,7 @@ Series expanding_mean(const Series& x, std::int64_t min_periods) {
   if (n == 0) {
     return xr;
   }
-  const Series idx = pluss::arange(0, n, cfg_like_(xr, ScalarType::Int64)).to(xr.scalar_type());
+  const Series idx = pluss::series::arange(0, n, cfg_like_(xr, ScalarType::Int64)).to(xr.scalar_type());
   const Series count = idx.add(1.0);
   const Series mean = xr.cumsum(0).div(count);
   if (min_periods == 1) {
@@ -265,7 +265,7 @@ Series expanding_std(const Series& x, std::int64_t min_periods, double epsilon) 
   if (n == 0) {
     return xr;
   }
-  const Series idx = pluss::arange(0, n, cfg_like_(xr, ScalarType::Int64)).to(xr.scalar_type());
+  const Series idx = pluss::series::arange(0, n, cfg_like_(xr, ScalarType::Int64)).to(xr.scalar_type());
   const Series count = idx.add(1.0);
   const Series mean = xr.cumsum(0).div(count);
   const Series mean_sq = xr.square().cumsum(0).div(count);

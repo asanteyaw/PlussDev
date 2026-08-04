@@ -54,10 +54,10 @@ Series expand_like_(const Series& x, const Series& like, Config cfg) {
 
 Series option_is_call_mask_(const Vanilla& inst, const Series& ref, Config cfg, const char* op) {
   if (inst.type == pricing::OptionType::Call) {
-    return pluss::full(ref.sizes(), 1.0, cfg);
+    return pluss::series::full(ref.sizes(), 1.0, cfg);
   }
   if (inst.type == pricing::OptionType::Put) {
-    return pluss::full(ref.sizes(), 0.0, cfg);
+    return pluss::series::full(ref.sizes(), 0.0, cfg);
   }
   PLUSS_CHECK(inst.type == pricing::OptionType::Auto,
               std::string("subsp::math::finance::object::") + op + ": unsupported option type");
@@ -222,11 +222,11 @@ PriceResult bs_price_analytic_(const Vanilla& inst,
   const Series div = expand_like_(as_series_vec_(mkt.dividend_yield, "market.dividend_yield"), ref, out_cfg);
   const Series vol = expand_like_(as_series_vec_(mdl.volatility, "model.volatility"), ref, out_cfg).clamp_min(kTiny);
 
-  const Series zeros = pluss::full(ref.sizes(), 0.0, out_cfg);
-  const Series ones = pluss::full(ref.sizes(), 1.0, out_cfg);
-  const Series half = pluss::full(ref.sizes(), 0.5, out_cfg);
-  const Series neg_ones = pluss::full(ref.sizes(), -1.0, out_cfg);
-  const Series neg_half = pluss::full(ref.sizes(), -0.5, out_cfg);
+  const Series zeros = pluss::series::full(ref.sizes(), 0.0, out_cfg);
+  const Series ones = pluss::series::full(ref.sizes(), 1.0, out_cfg);
+  const Series half = pluss::series::full(ref.sizes(), 0.5, out_cfg);
+  const Series neg_ones = pluss::series::full(ref.sizes(), -1.0, out_cfg);
+  const Series neg_half = pluss::series::full(ref.sizes(), -0.5, out_cfg);
 
   const Series tau_eff = tau.clamp_min(kTiny);
   const Series sqrt_tau = tau_eff.sqrt();
@@ -332,7 +332,7 @@ PriceResult bs_price_mc_(const Vanilla& inst,
 
   Series price_vec;
   if (!eng.options.antithetic) {
-    const Series z = pluss::randn({eng.options.paths, n}, out_cfg, eng.options.seed);
+    const Series z = pluss::series::randn({eng.options.paths, n}, out_cfg, eng.options.seed);
     const Series terminal = drift.add(volsqrt.mul(z)).exp().mul(s0);
     const Series call_payoff = terminal.sub(k).clamp_min(0.0);
     const Series put_payoff = k.sub(terminal).clamp_min(0.0);
@@ -340,7 +340,7 @@ PriceResult bs_price_mc_(const Vanilla& inst,
     price_vec = payoff.mul(disc).mean(0, false);
   } else {
     const std::int64_t half_paths = std::max<std::int64_t>(1, eng.options.paths / 2);
-    const Series z = pluss::randn({half_paths, n}, out_cfg, eng.options.seed);
+    const Series z = pluss::series::randn({half_paths, n}, out_cfg, eng.options.seed);
     const Series terminal_pos = drift.add(volsqrt.mul(z)).exp().mul(s0);
     const Series terminal_neg = drift.sub(volsqrt.mul(z)).exp().mul(s0);
     const Series call_payoff_pos = terminal_pos.sub(k).clamp_min(0.0);
@@ -388,7 +388,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -424,7 +424,7 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::heston_price_fft(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
-        .price = pluss::full({1}, px, out_cfg),
+        .price = pluss::series::full({1}, px, out_cfg),
     };
   }
 
@@ -457,7 +457,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -493,7 +493,7 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::bates_price_fft(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
-        .price = pluss::full({1}, px, out_cfg),
+        .price = pluss::series::full({1}, px, out_cfg),
     };
   }
 
@@ -526,7 +526,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -549,7 +549,7 @@ PriceResult price(const Vanilla& inst,
                                                 params,
                                                 eng.options,
                                                 out_cfg);
-    return PriceResult{.price = pluss::full({1}, px, out_cfg)};
+    return PriceResult{.price = pluss::series::full({1}, px, out_cfg)};
   }
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
@@ -584,7 +584,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -607,7 +607,7 @@ PriceResult price(const Vanilla& inst,
                                                params,
                                                eng.options,
                                                out_cfg);
-    return PriceResult{.price = pluss::full({1}, px, out_cfg)};
+    return PriceResult{.price = pluss::series::full({1}, px, out_cfg)};
   }
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
@@ -642,7 +642,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -663,7 +663,7 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::heston_price_mc(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
-        .price = pluss::full({1}, px, out_cfg),
+        .price = pluss::series::full({1}, px, out_cfg),
     };
   }
 
@@ -696,7 +696,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -717,7 +717,7 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::bates_price_mc(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
-        .price = pluss::full({1}, px, out_cfg),
+        .price = pluss::series::full({1}, px, out_cfg),
     };
   }
 
@@ -750,7 +750,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -772,7 +772,7 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::sabr_price_approx(type, forward, strike, rate, maturity, params, mdl.vol_type, mdl.approx);
     return PriceResult{
-        .price = pluss::full({1}, px, out_cfg),
+        .price = pluss::series::full({1}, px, out_cfg),
     };
   }
 
@@ -806,7 +806,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -828,7 +828,7 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::sabr_price_mc(type, forward, strike, rate, maturity, params, eng.options, out_cfg);
     return PriceResult{
-        .price = pluss::full({1}, px, out_cfg),
+        .price = pluss::series::full({1}, px, out_cfg),
     };
   }
 
@@ -861,7 +861,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -884,7 +884,7 @@ PriceResult price(const Vanilla& inst,
                                                      params,
                                                      eng.options,
                                                      out_cfg);
-    return PriceResult{.price = pluss::full({1}, px, out_cfg)};
+    return PriceResult{.price = pluss::series::full({1}, px, out_cfg)};
   }
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
@@ -919,7 +919,7 @@ PriceResult price(const Vanilla& inst,
                                     as_series_vec_(inst.maturity, "instrument.maturity"),
                                     as_series_vec_(mkt.rate, "market.rate"),
                                     as_series_vec_(mkt.dividend_yield, "market.dividend_yield"),
-                                    pluss::full({1}, 0.0, out_cfg),
+                                    pluss::series::full({1}, 0.0, out_cfg),
                                     out_cfg);
   const Series spot_v = expand_like_(as_series_vec_(mkt.spot, "market.spot"), ref, out_cfg).reshape({ref.numel()});
   const Series strike_v =
@@ -942,7 +942,7 @@ PriceResult price(const Vanilla& inst,
                                                       params,
                                                       eng.options,
                                                       out_cfg);
-    return PriceResult{.price = pluss::full({1}, px, out_cfg)};
+    return PriceResult{.price = pluss::series::full({1}, px, out_cfg)};
   }
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
@@ -1264,16 +1264,16 @@ namespace pluss::subsp::math::finance {
 instrument::Vanilla instrument::make(pricing::OptionType type, double strike, double maturity, pluss::codem::Config cfg) {
   return instrument::Vanilla{
       .type = type,
-      .strike = pluss::full({1}, strike, cfg),
-      .maturity = pluss::full({1}, maturity, cfg),
+      .strike = pluss::series::full({1}, strike, cfg),
+      .maturity = pluss::series::full({1}, maturity, cfg),
   };
 }
 
 market::State market::make(double spot, double rate, double dividend_yield, pluss::codem::Config cfg) {
   return market::State{
-      .spot = pluss::full({1}, spot, cfg),
-      .rate = pluss::full({1}, rate, cfg),
-      .dividend_yield = pluss::full({1}, dividend_yield, cfg),
+      .spot = pluss::series::full({1}, spot, cfg),
+      .rate = pluss::series::full({1}, rate, cfg),
+      .dividend_yield = pluss::series::full({1}, dividend_yield, cfg),
   };
 }
 
@@ -1284,11 +1284,11 @@ model::Heston model::make(double kappa,
                           double v0,
                           pluss::codem::Config cfg) {
   return model::Heston{
-      .kappa = pluss::full({1}, kappa, cfg),
-      .theta = pluss::full({1}, theta, cfg),
-      .sigma = pluss::full({1}, sigma, cfg),
-      .rho = pluss::full({1}, rho, cfg),
-      .v0 = pluss::full({1}, v0, cfg),
+      .kappa = pluss::series::full({1}, kappa, cfg),
+      .theta = pluss::series::full({1}, theta, cfg),
+      .sigma = pluss::series::full({1}, sigma, cfg),
+      .rho = pluss::series::full({1}, rho, cfg),
+      .v0 = pluss::series::full({1}, v0, cfg),
   };
 }
 
@@ -1302,14 +1302,14 @@ model::Bates model::make(double kappa,
                          double jump_vol,
                          pluss::codem::Config cfg) {
   return model::Bates{
-      .kappa = pluss::full({1}, kappa, cfg),
-      .theta = pluss::full({1}, theta, cfg),
-      .sigma = pluss::full({1}, sigma, cfg),
-      .rho = pluss::full({1}, rho, cfg),
-      .v0 = pluss::full({1}, v0, cfg),
-      .jump_intensity = pluss::full({1}, jump_intensity, cfg),
-      .jump_mean = pluss::full({1}, jump_mean, cfg),
-      .jump_vol = pluss::full({1}, jump_vol, cfg),
+      .kappa = pluss::series::full({1}, kappa, cfg),
+      .theta = pluss::series::full({1}, theta, cfg),
+      .sigma = pluss::series::full({1}, sigma, cfg),
+      .rho = pluss::series::full({1}, rho, cfg),
+      .v0 = pluss::series::full({1}, v0, cfg),
+      .jump_intensity = pluss::series::full({1}, jump_intensity, cfg),
+      .jump_mean = pluss::series::full({1}, jump_mean, cfg),
+      .jump_vol = pluss::series::full({1}, jump_vol, cfg),
   };
 }
 
@@ -1321,10 +1321,10 @@ model::Sabr model::make(double alpha0,
                         pricing::SabrApproxOptions approx,
                         pluss::codem::Config cfg) {
   return model::Sabr{
-      .alpha0 = pluss::full({1}, alpha0, cfg),
-      .beta = pluss::full({1}, beta, cfg),
-      .nu = pluss::full({1}, nu, cfg),
-      .rho = pluss::full({1}, rho, cfg),
+      .alpha0 = pluss::series::full({1}, alpha0, cfg),
+      .beta = pluss::series::full({1}, beta, cfg),
+      .nu = pluss::series::full({1}, nu, cfg),
+      .rho = pluss::series::full({1}, rho, cfg),
       .vol_type = vol_type,
       .approx = approx,
   };

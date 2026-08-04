@@ -59,7 +59,7 @@ Example 1. Interpret stored wall-clock values as New York local time.
 
 ```cpp
 auto out = local_wall.tz_localize("America/New_York");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

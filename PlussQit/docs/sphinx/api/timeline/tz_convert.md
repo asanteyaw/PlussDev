@@ -40,7 +40,7 @@ Example 1. Convert localized New York wall-clock times into UTC.
 
 ```cpp
 auto out = ny.tz_convert("UTC");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

@@ -253,8 +253,8 @@ namespace pl = pluss::pl;
 auto book = pl::studio("demo");
 auto& pane = book.pane3();
 
-auto xs = pluss::linspace(-3.0, 3.0, 121);
-auto ys = pluss::linspace(-3.0, 3.0, 121);
+auto xs = pluss::series::linspace(-3.0, 3.0, 121);
+auto ys = pluss::series::linspace(-3.0, 3.0, 121);
 auto zz = some_surface(xs, ys);
 
 pane.sheet(xs, ys, zz)

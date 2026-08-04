@@ -41,7 +41,7 @@ Represents a Gaussian with fixed `mean` and `stddev`. `cumulant(1)` returns the 
 ```cpp
 pluss::distr::Normal normal{0.0, 1.0};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -95,7 +95,7 @@ Binds a success probability once and exposes the full 0/1 event model. `cumulant
 ```cpp
 pluss::distr::Bernoulli bernoulli{0.25};
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -149,7 +149,7 @@ Models the number of successes across `count` Bernoulli trials with success rate
 ```cpp
 pluss::distr::Binomial binomial{4, 0.25};
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -203,7 +203,7 @@ Wraps the Poisson count model for a fixed event rate `lambda`. Every cumulant eq
 ```cpp
 pluss::distr::Poisson poisson{2.5};
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -257,7 +257,7 @@ Uses the success-probability parameterization of the geometric law. The demo eva
 ```cpp
 pluss::distr::Geometric geometric{0.25};
 auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -311,7 +311,7 @@ Represents the negative-binomial count law with dispersion-like parameter `r` an
 ```cpp
 pluss::distr::NegativeBinomial negative_binomial{3.0, 0.4};
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -365,7 +365,7 @@ Encodes the shifted gamma family directly as object state. `cgf(...)` enforces t
 ```cpp
 pluss::distr::Gamma gamma{2.0, 1.0, 0.0};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -419,7 +419,7 @@ Wraps the chi-square family in terms of degrees of freedom. Its cumulants grow q
 ```cpp
 pluss::distr::ChiSquare chi_square{5};
 auto x = pluss::make_series({1.0, 2.0, 2.5, 3.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -473,7 +473,7 @@ Represents the inverse-Gaussian family with mean-like parameter `theta` and shap
 ```cpp
 pluss::distr::InverseGaussian inverse_gaussian{1.5, 3.0};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -527,7 +527,7 @@ Stores the normal parameters in log-space and evaluates on the positive real lin
 ```cpp
 pluss::distr::Lognormal lognormal{0.1, 0.4};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.5, -0.25, 0.0});
 
@@ -581,7 +581,7 @@ Represents a bounded continuous law on `[low, high]`. Higher-order cumulants com
 ```cpp
 pluss::distr::Uniform uniform{0.0, 1.0};
 auto x = pluss::make_series({0.0, 0.5, 0.75, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -635,7 +635,7 @@ Uses the rate parameterization. `cgf(...)` enforces `t < rate`, and `cumulant(or
 ```cpp
 pluss::distr::Exponential exponential{2.0};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -689,7 +689,7 @@ Represents the double-exponential law centered at `location`. Odd cumulants abov
 ```cpp
 pluss::distr::Laplace laplace{0.0, 0.5};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -743,7 +743,7 @@ Wraps the logistic family with explicit location and scale. It is a good alterna
 ```cpp
 pluss::distr::Logistic logistic{0.0, 0.75};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -797,7 +797,7 @@ Represents the magnitude distribution induced by two independent centered Gaussi
 ```cpp
 pluss::distr::Rayleigh rayleigh{1.0};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -851,7 +851,7 @@ Represents a Gaussian truncated to `[lower, upper]`. The support bounds change b
 ```cpp
 pluss::distr::NormalTrunc normal_trunc{-1.0, 1.0, 0.0, 1.0};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -905,7 +905,7 @@ Represents a Student-t law with location and scale. In this implementation the C
 ```cpp
 pluss::distr::StudentT student_t{9.0, 0.0, 1.0};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({0.0});
 
@@ -959,7 +959,7 @@ Models the ratio of two scaled chi-square variates. Like `StudentT`, the CGF is 
 ```cpp
 pluss::distr::FDistribution f_dist{5.0, 12.0};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({0.0});
 
@@ -1013,7 +1013,7 @@ Encodes the Weibull family directly as an object. It is the natural choice for l
 ```cpp
 pluss::distr::Weibull weibull{2.0, 1.5};
 auto x = pluss::make_series({0.5, 1.5, 2.0, 2.5});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -1067,7 +1067,7 @@ Represents a beta law rescaled onto `[low, high]`. Use it for bounded proportion
 ```cpp
 pluss::distr::Beta beta{0.0, 1.0, 2.0, 3.0};
 auto x = pluss::make_series({0.0, 0.4, 0.6, 0.8});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -1121,7 +1121,7 @@ Represents the difference of two independent Poisson counts. Odd cumulants track
 ```cpp
 pluss::distr::Skellam skellam{2.0, 1.0};
 auto x = pluss::make_series({-1.0, 0.0, 1.0, 2.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -1175,7 +1175,7 @@ Normal-inverse-Gaussian wrapper for skewed heavy-tailed location-scale modeling.
 ```cpp
 pluss::distr::Nig nig{2.0, 0.5, 0.0, 1.0};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -1229,7 +1229,7 @@ Generalized hyperbolic wrapper for asymmetric heavy-tailed modeling. It generali
 ```cpp
 pluss::distr::Gh gh{1.0, 2.0, 0.5, 0.0, 1.0};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 
@@ -1286,7 +1286,7 @@ auto means = pluss::make_series({-1.0, 2.0});
 auto stddevs = pluss::make_series({0.5, 1.25});
 pluss::distr::GaussianMixture gm{weights, means, stddevs};
 auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-auto like = pluss::zeros({4},
+auto like = pluss::series::zeros({4},
     pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU));
 auto t = pluss::make_series({-0.25, 0.0, 0.25});
 

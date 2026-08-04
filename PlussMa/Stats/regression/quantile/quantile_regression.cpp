@@ -197,7 +197,7 @@ Series build_design_(const Series& x, bool add_intercept, Config cfg) {
   if (!add_intercept) {
     return x;
   }
-  const Series ones = pluss::ones({x.sizes()[0], 1}, cfg);
+  const Series ones = pluss::series::ones({x.sizes()[0], 1}, cfg);
   return ones.unite({x}, 1);
 }
 
@@ -300,8 +300,8 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
     iters = it + 1;
     const Series rcol = resid.reshape({n, 1});
     const Series base = rcol.ge(0.0).where(
-        pluss::full({n, 1}, options.tau, out_cfg),
-        pluss::full({n, 1}, 1.0 - options.tau, out_cfg));
+        pluss::series::full({n, 1}, options.tau, out_cfg),
+        pluss::series::full({n, 1}, 1.0 - options.tau, out_cfg));
     const Series wcol = base.div(rcol.abs().maximum(options.eps));
     const Series sw = wcol.sqrt();
     const Series Xw = X.mul(sw);
@@ -348,7 +348,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
 
   const Series coef = beta.reshape({k});
   const Series t_v = coef.div(std_err.maximum(std::sqrt(kEps)));
-  const Series p_v = pluss::ones({k}, out_cfg)
+  const Series p_v = pluss::series::ones({k}, out_cfg)
                          .sub(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(t_v.abs()))
                          .mul(2.0)
                          .clamp(0.0, 1.0);
@@ -407,7 +407,7 @@ Series quantile_predict(const QuantileFitResult& fit, const Series& x, Config cf
 
   if (fit.has_intercept) {
     if (cols == fit.num_predictors) {
-      const Series ones = pluss::ones({n, 1}, out_cfg);
+      const Series ones = pluss::series::ones({n, 1}, out_cfg);
       design = ones.unite({xm}, 1);
     } else {
       PLUSS_CHECK(cols == fit.k_params,

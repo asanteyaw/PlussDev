@@ -42,13 +42,13 @@ int main() {
   std::cout << "Type kind after lower: " << qn_lower.kind_name() << "\n";
   std::cout << "lower note[0]: " << qn_lower.as<pluss::Note>().at(0) << "\n\n";
 
-  pluss::Type qt = pluss::make_timeline("2024-01-15T10:11:12Z");
+  pluss::Type qt = pluss::timeline::make("2024-01-15T10:11:12Z");
   std::cout << "Type.timeline().hour(): " << qt.timeline().hour().to_vec<std::int32_t>(0) << "\n";
   auto qt_year = qt.invoke("year");
   std::cout << "Type Timeline->year kind: " << qt_year.kind_name() << "\n";
   std::cout << "year: " << qt_year.as<pluss::Series>().to_vec<std::int32_t>(0) << "\n\n";
 
-  pluss::Type qt1d = pluss::make_timeline({
+  pluss::Type qt1d = pluss::timeline::make({
       "2024-01-15T10:11:12Z",
       "2024-01-16T10:11:12Z",
   });
@@ -77,7 +77,7 @@ int main() {
             << static_cast<int>(starts_with_a[1]) << ", "
             << static_cast<int>(starts_with_a[2]) << "]\n";
 
-  auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
+  auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   pluss::args floor_args;
   floor_args.emplace_back(std::string_view("D"));
   auto day_floor = pluss::dispense_as<pluss::Timeline>(

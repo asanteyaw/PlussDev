@@ -3617,7 +3617,7 @@ Thread ts_align_right_to_left_(const Thread& left,
   if (mode == TsAlignMode::Exact) {
     if (n_right == 0) {
       const auto platform = right.as_series().platform();
-      return Thread(pluss::full({n_left},
+      return Thread(pluss::series::full({n_left},
                                 std::numeric_limits<double>::quiet_NaN(),
                                 pluss::Config{}.with_dtype(pluss::codem::ScalarType::Float64).with_platform(platform)),
                     pluss::Series::zeros({n_left}, pluss::codem::ScalarType::Bool, platform))
@@ -3675,7 +3675,7 @@ Thread ts_align_right_to_left_(const Thread& left,
 
   pluss::Series idx;
   if (n_right == 0) {
-    idx = pluss::full({n_left}, -1.0, pluss::codem::ScalarType::Int64);
+    idx = pluss::series::full({n_left}, -1.0, pluss::codem::ScalarType::Int64);
   } else {
     idx = left_ti.join_asof(right_ti, ts_asof_direction_(mode), nullptr, true);
   }
@@ -3683,7 +3683,7 @@ Thread ts_align_right_to_left_(const Thread& left,
   auto valid = idx.ge(0.0);
   if (n_left == 0 || n_right == 0) {
     const auto platform = right.as_series().platform();
-    return Thread(pluss::full({n_left},
+    return Thread(pluss::series::full({n_left},
                               std::numeric_limits<double>::quiet_NaN(),
                               pluss::Config{}.with_dtype(pluss::codem::ScalarType::Float64).with_platform(platform)),
                   valid.to(platform));
@@ -4234,7 +4234,7 @@ Thread TimeSeriesResampler::asfreq(std::optional<double> fill_value) const {
   const auto target_ti = ts_axis_to_index_(target_axis, "TimeSeriesResampler::asfreq");
   const auto n_source = source_ti.size();
   const auto n_target = target_ti.size();
-  Series idx = pluss::full({n_target}, -1.0, ScalarType::Int64);
+  Series idx = pluss::series::full({n_target}, -1.0, ScalarType::Int64);
   if (n_source > 0 && n_target > 0) {
     idx = target_ti.join_asof(source_ti, pluss::TimeIndex::AsofDirection::Backward, nullptr, true);
   }

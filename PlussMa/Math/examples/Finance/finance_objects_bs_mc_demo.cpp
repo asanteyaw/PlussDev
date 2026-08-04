@@ -10,16 +10,16 @@ int main() {
 
   const auto inst = obj::Vanilla{
       .type = prc::OptionType::Put,
-      .strike = pluss::full({5}, 105.0, cfg),
-      .maturity = pluss::full({5}, 0.75, cfg),
+      .strike = pluss::series::full({5}, 105.0, cfg),
+      .maturity = pluss::series::full({5}, 0.75, cfg),
   };
   const auto mkt = obj::MarketState{
-      .spot = pluss::linspace(90.0, 120.0, 5, cfg),
-      .rate = pluss::full({1}, 0.025, cfg),
-      .dividend_yield = pluss::full({1}, 0.005, cfg),
+      .spot = pluss::series::linspace(90.0, 120.0, 5, cfg),
+      .rate = pluss::series::full({1}, 0.025, cfg),
+      .dividend_yield = pluss::series::full({1}, 0.005, cfg),
   };
   const auto mdl = obj::model::BlackScholes{
-      .volatility = pluss::full({5}, 0.20, cfg),
+      .volatility = pluss::series::full({5}, 0.20, cfg),
   };
 
   obj::pricer::MonteCarlo mc;

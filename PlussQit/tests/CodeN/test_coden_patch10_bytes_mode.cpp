@@ -6,7 +6,7 @@ using pluss::coden::Note;
 TEST_CASE("Bytes-mode Note basic behavior", "[coden][patch10]") {
   // raw bytes including a NUL
   const unsigned char raw[] = {0x41, 0x00, 0x42};
-  auto b = pluss::bytes_content(std::span<const std::byte>(reinterpret_cast<const std::byte*>(raw), 3));
+  auto b = pluss::note::bytes(std::span<const std::byte>(reinterpret_cast<const std::byte*>(raw), 3));
 
   REQUIRE(b.defined());
   REQUIRE(b.dim() == 0);

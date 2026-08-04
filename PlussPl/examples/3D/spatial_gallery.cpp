@@ -9,8 +9,8 @@
 namespace {
 
 pluss::Series peaks_like(std::int64_t rows, std::int64_t cols) {
-  const auto x_axis = pluss::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
-  const auto y_axis = pluss::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
+  const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
+  const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
   const std::array<std::int64_t, 2> x_tile{rows, 1};
   const std::array<std::int64_t, 2> y_tile{1, cols};
   const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
@@ -40,8 +40,8 @@ int main() {
       .y_caption("terrain-plane", "shared terrain y axis")
       .z_caption("terrain-plane", "elevation family");
 
-  auto xs = pluss::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
-  auto ys = pluss::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
+  auto xs = pluss::series::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
+  auto ys = pluss::series::linspace(-3.0, 3.0, 45, pluss::ScalarType::Float64);
   auto zz = peaks_like(45, 45);
   const auto bands = std::vector<double>{-6.0, -3.0, -1.0, 0.0, 1.5, 3.0, 5.5, 8.0};
 
@@ -90,7 +90,7 @@ int main() {
   orbit.lens().look(-22.0, 20.0);
   orbit.lights().headlight();
   orbit.band_z({1.2, 2.1}, "transfer shell");
-  const auto t = pluss::linspace(0.0, 10.0, 321, pluss::ScalarType::Float64);
+  const auto t = pluss::series::linspace(0.0, 10.0, 321, pluss::ScalarType::Float64);
   const auto x3 = t.mul(2.0).cos();
   const auto y3 = t.mul(2.0).sin();
   const auto z3 = t.mul(0.35);

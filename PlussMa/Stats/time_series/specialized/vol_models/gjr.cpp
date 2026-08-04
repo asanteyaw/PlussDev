@@ -602,7 +602,7 @@ Series GjrFit::forecast(std::int64_t horizon, const Series& y, Config cfg) const
 Series GjrFit::simulate(std::int64_t num_observations, Config cfg, std::uint64_t seed) const {
   PLUSS_CHECK(num_observations > 0, "subsp::stats::ts::GjrFit::simulate: num_observations must be > 0");
   const auto out_cfg = f64_cfg_(cfg);
-  const auto z = flat_f64_values_(pluss::randn({num_observations}, out_cfg, seed));
+  const auto z = flat_f64_values_(pluss::series::randn({num_observations}, out_cfg, seed));
   const auto p = to_params_(*this);
 
   const double var0_candidate = omega / std::max(1e-15, 1.0 - persistence());

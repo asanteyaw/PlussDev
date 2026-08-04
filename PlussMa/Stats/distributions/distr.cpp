@@ -195,7 +195,7 @@ Series as_f64_(const Series& x, const char* op) {
 }
 
 Series full_like_f64_(const Series& x, double value) {
-  return pluss::full(x.sizes(), value, float64_cfg_like_(x));
+  return pluss::series::full(x.sizes(), value, float64_cfg_like_(x));
 }
 
 Series zeros_like_f64_(const Series& x) {
@@ -210,7 +210,7 @@ Series unit_uniform_(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint6
   const Config out_cfg = float64_cfg_on_(cfg);
   switch (g_sample_rng_method) {
     case RngMethod::Pseudo:
-      return pluss::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
+      return pluss::series::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
     case RngMethod::Sobol:
     case RngMethod::Halton:
     case RngMethod::Torus:
@@ -219,7 +219,7 @@ Series unit_uniform_(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint6
           .clamp_max(1.0 - kEps);
     default:
       PLUSS_CHECK(false, "subsp::stats::distr::sample: unsupported rng method");
-      return pluss::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
+      return pluss::series::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
   }
 }
 
@@ -700,7 +700,7 @@ Series normal_sample_(double mean,
                       std::uint64_t seed) {
   PLUSS_CHECK(stddev >= 0.0, "subsp::stats::distr::normal sample: std must be >= 0");
   if (g_sample_rng_method == RngMethod::Pseudo) {
-    return pluss::normal(mean, stddev, sizes, cfg, seed);
+    return pluss::series::normal(mean, stddev, sizes, cfg, seed);
   }
 
   return pluss::rng::standard_normal(sizes, g_sample_rng_method, float64_cfg_on_(cfg), seed)
@@ -793,7 +793,7 @@ Series uniform_sample_(double lo,
                        Config cfg,
                        std::uint64_t seed) {
   PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform sample: expected hi > lo");
-  return pluss::rand(sizes, cfg, seed).mul(hi - lo).add(lo);
+  return pluss::series::rand(sizes, cfg, seed).mul(hi - lo).add(lo);
 }
 
 Series exponential_pdf_(const Series& x, double rate) {
@@ -855,7 +855,7 @@ Series bernoulli_sample_(double p,
                          Config cfg,
                          std::uint64_t seed) {
   PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stats::distr::bernoulli sample: expected 0 <= p <= 1");
-  return pluss::bernoulli(sizes, p, natural_cfg_(cfg, ScalarType::Bool), seed);
+  return pluss::series::bernoulli(sizes, p, natural_cfg_(cfg, ScalarType::Bool), seed);
 }
 
 Series cauchy_pdf_(const Series& x, double location, double scale) {
@@ -4435,7 +4435,7 @@ Series mixture_normal(const Series& weights,
   const Config sample_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
   const Series selector_u = (use_sobol
           ? pluss::rng::uniform({total, 1}, RngMethod::Sobol, sample_cfg, seed)
-          : pluss::rand({total, 1}, sample_cfg, seed))
+          : pluss::series::rand({total, 1}, sample_cfg, seed))
                                 .clamp_min(kEps)
                                 .clamp_max(1.0 - kEps);
   const Series weights_2d = params.weights.reshape({1, k});

@@ -12,7 +12,7 @@ int main() {
   using namespace pluss::pl::flash;
 
   constexpr std::int64_t count = 620;
-  const auto t = pluss::linspace(0.0, 2.0 * kPi, count, pluss::ScalarType::Float64);
+  const auto t = pluss::series::linspace(0.0, 2.0 * kPi, count, pluss::ScalarType::Float64);
   const auto x4 = t.cos();
   const auto y4 = t.sin();
   const auto z4 = t.mul(2.0).cos().mul(0.72);

@@ -29,8 +29,8 @@ std::vector<std::string_view> flat{"2024-03-01T00:00:00Z", "2024-03-01T01:00:00Z
 auto t3 = pluss::make_timeline(flat, std::vector<std::int64_t>{2});
 
 // Epoch nanos -> Timeline
-auto t4 = pluss::from_epoch_nanos(0);
-auto t5 = pluss::from_epoch_nanos(std::vector<std::int64_t>{0, 1'000'000'000}, std::vector<std::int64_t>{2});
+auto t4 = pluss::timeline::from_epoch(0);
+auto t5 = pluss::timeline::from_epoch(std::vector<std::int64_t>{0, 1'000'000'000}, std::vector<std::int64_t>{2});
 ```
 
 ## Timeline Arithmetic, Compare, and Field Extraction

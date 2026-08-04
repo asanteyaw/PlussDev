@@ -66,7 +66,7 @@ Uses the same distribution parameters as `sample(...)`, but takes shape, dtype, 
 ### Examples
 
 ```cpp
-auto like = pluss::zeros(
+auto like = pluss::series::zeros(
     {2, 4},
     pluss::Config{}
         .with_dtype(pluss::ScalarType::Float32)

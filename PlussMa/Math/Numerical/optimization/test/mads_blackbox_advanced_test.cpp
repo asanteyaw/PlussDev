@@ -55,8 +55,8 @@ int main() {
 
   // Cache-hit behavior via degenerate bounds (all candidates collapse to one point).
   {
-    const Series x0 = pluss::full({3}, 2.0, cfg);
-    const Series lock = pluss::full({3}, 0.0, cfg);
+    const Series x0 = pluss::series::full({3}, 2.0, cfg);
+    const Series lock = pluss::series::full({3}, 0.0, cfg);
 
     MadsBlackboxAdvancedConfig c;
     c.max_iterations = 20;
@@ -125,9 +125,9 @@ int main() {
 
   // Family variants: ensure they execute and return finite scalarized values.
   {
-    const Series x0 = pluss::full({3}, 0.7, cfg);
-    const Series lb = pluss::full({3}, -2.0, cfg);
-    const Series ub = pluss::full({3}, 2.0, cfg);
+    const Series x0 = pluss::series::full({3}, 0.7, cfg);
+    const Series lb = pluss::series::full({3}, -2.0, cfg);
+    const Series ub = pluss::series::full({3}, 2.0, cfg);
 
     MadsBlackboxAdvancedConfig base;
     base.max_iterations = 80;
