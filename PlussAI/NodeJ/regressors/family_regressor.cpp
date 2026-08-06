@@ -1,4 +1,5 @@
 #include "pluss/ai/nodej/builders.h"
+#include "pluss/ai/nodej/spatial_index.h"
 
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
@@ -706,37 +707,30 @@ struct LinearPenalty {
                                      bool distance_weighted) {
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
-  const std::int64_t d = train_rows.sizes()[1];
-  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(k, nt));
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   constexpr double eps = 1e-12;
 
+  // SpatialIndex (a real KD-tree) replaces the brute-force triple-nested
+  // distance loop + per-query max-heap below -- see the identical migration
+  // note on family_classifier.cpp's knn_probability_cpu.
+  StatusOr<SpatialIndex> index_or = SpatialIndex::build(train_rows);
+  if (!index_or.ok()) return pluss::make_series(out, {nq}, f64_cpu());
+  const SpatialIndex index = index_or.move_value();
+  StatusOr<KNearestResult> knn_or = index.query_k(query_rows, kk);
+  if (!knn_or.ok()) return pluss::make_series(out, {nq}, f64_cpu());
+  const KNearestResult knn = knn_or.move_value();
+  const auto knn_idx = knn.indices.to(pluss::pCPU, ScalarType::Int64).reshape({knn.indices.numel()}).to_vec<std::int64_t>();
+  const auto knn_d2 = knn.distances2.to(pluss::pCPU, ScalarType::Float64).reshape({knn.distances2.numel()}).to_vec<double>();
+
   for (std::int64_t qi = 0; qi < nq; ++qi) {
     std::vector<std::pair<double, std::int64_t>> best{};
     best.reserve(static_cast<std::size_t>(kk));
-    const std::size_t qbase = static_cast<std::size_t>(qi * d);
-    for (std::int64_t ti = 0; ti < nt; ++ti) {
-      const std::size_t tbase = static_cast<std::size_t>(ti * d);
-      double d2 = 0.0;
-      for (std::int64_t f = 0; f < d; ++f) {
-        const double dv = qv[qbase + static_cast<std::size_t>(f)] - tv[tbase + static_cast<std::size_t>(f)];
-        d2 += dv * dv;
-      }
-      if (static_cast<std::int64_t>(best.size()) < kk) {
-        best.emplace_back(d2, ti);
-        if (static_cast<std::int64_t>(best.size()) == kk) {
-          std::make_heap(best.begin(), best.end());
-        }
-      } else if (d2 < best.front().first) {
-        std::pop_heap(best.begin(), best.end());
-        best.back() = std::pair<double, std::int64_t>{d2, ti};
-        std::push_heap(best.begin(), best.end());
-      }
+    for (std::int64_t j = 0; j < kk; ++j) {
+      const std::size_t pos = static_cast<std::size_t>(qi * kk + j);
+      best.emplace_back(knn_d2[pos], knn_idx[pos]);
     }
-    std::sort_heap(best.begin(), best.end());
 
     if (distance_weighted) {
       double zero_sum = 0.0;

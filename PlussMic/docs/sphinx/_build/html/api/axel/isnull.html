@@ -36,18 +36,25 @@
 
           <div class="body" role="main">
             
-  <section id="axel-isnull">
+  <!-- pluss-hand-authored -->
+<section id="axel-isnull">
 <h1>Axel::isnull<a class="headerlink" href="#axel-isnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="o">::</span><span class="n">isnull</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Axel</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">isnull</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.</p>
+<p>Returns a new axel where every field’s values, in every registry frame,
+are replaced by a boolean flag for whether each value is null — applies
+<a class="reference internal" href="../registry/isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::isnull()</span></code></span></a> to every frame via
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a>, which in turn applies
+<a class="reference internal" href="../slot/isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::isnull()</span></code></span></a> to every field. Works uniformly
+across every field regardless of its own value kind — the result is
+always <code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code>-valued.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,27 +63,53 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>
-Value produced by this call.</p>
+A new axel with every field’s values replaced by boolean null-flags.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
+<p>Example 1. A field with one null value among numeric values reports
+<code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code> per value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">monostate</span><span class="p">{}},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">to_json</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Slot&quot;,
+  &quot;defined&quot;: true,
+  &quot;size&quot;: 3,
+  &quot;values&quot;: [
+    &quot;Series[bool]&quot;,
+    &quot;Series[bool]&quot;,
+    &quot;Series[bool]&quot;
+  ]
+}
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Unlike <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> never throws on a field
+whose kind doesn’t match a fill payload — it works identically on
+every kind.</p></li>
+<li><p>Never mutates the receiver — always returns a new <code class="docutils literal notranslate"><span class="pre">Axel</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::notnull</span></code></span></a>: the logical complement.</p></li>
+<li><p><a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::invalid</span></code></span></a>: a related but distinct check —
+invalid (not-a-value) rather than strictly null.</p></li>
+<li><p><a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::dropnull</span></code></span></a>: removes null values instead of
+flagging them.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="invalid.html">
     <span class="label">Previous</span>
@@ -87,7 +120,6 @@ Value produced by this call.</p>
     <span class="title">kindelize</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

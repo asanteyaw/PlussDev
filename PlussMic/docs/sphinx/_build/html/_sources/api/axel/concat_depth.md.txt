@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::concat_depth
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,54 +7,121 @@
 ## Signature
 
 ```cpp
-Axel::concat_depth(const Axel& other) -> Axel
+Axel Axel::concat_depth(const Axel& other) const
 ```
 
 ## What It Does
 
-Appends the registries from another axel onto the current depth axis.
+Concatenates `other`'s registry frames after this axel's own frames
+along the depth axis, returning a new `Axel` with
+`depth() + other.depth()` frames.
+
+```{danger} Labels are dropped entirely unless BOTH sides have them
+If exactly one of the two axels carries [`labels()`](labels.md), the
+result has **no labels at all** — the surviving side's labels are
+silently discarded rather than padded or partially kept. Labels only
+carry through when both `this` and `other` have them, in which case
+they're concatenated with [`Slot::concat`](../slot/concat.md). See
+Example 2.
+```
 
 ## Parameters
 
-**other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+**other** (`const Axel&`)
+    The axel whose frames are appended after this one's. Must be
+    defined.
 
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel holding this axel's frames followed by `other`'s frames.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Concatenate two two-frame axels into one four-frame axel.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto a = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+auto b = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
 });
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.concat_depth(axel);
+auto out = a.concat_depth(b);
+std::cout << out.depth();
 ```
 
 ### Output
 
 ```text
-depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
-depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
-depth2 -> Registry(ids -> Slot([Series(1), Series(2)]))
-depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))
+4
 ```
 
-## Practical Behavior
+Example 2. Labels only survive when *both* sides have them — here `a`
+is labeled and `b` is not, so the concatenated result has no labels.
 
-- `concat_depth(other)` appends the other axel’s registries onto the current depth axis.
-- If both axels have labels, the labels are concatenated too.
+```cpp
+auto a = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+}, pluss::bundle::Slot({pluss::make_note("l0"), pluss::make_note("l1")}));
+auto b = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+});
+auto out = a.concat_depth(b);
+std::cout << std::boolalpha << out.labels().has_value();
+```
 
+### Output
 
+```text
+false
+```
+
+Example 3. When both sides are labeled, the labels concatenate too.
+
+```cpp
+auto a = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+}, pluss::bundle::Slot({pluss::make_note("l0"), pluss::make_note("l1")}));
+auto b = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+}, pluss::bundle::Slot({pluss::make_note("l2"), pluss::make_note("l3")}));
+auto out = a.concat_depth(b);
+std::cout << "has_value=" << std::boolalpha << out.labels().has_value() << " size=" << out.labels()->size();
+```
+
+### Output
+
+```text
+has_value=true size=4
+```
+
+## Notes
+
+- See the danger callout above — an asymmetric label presence between
+  `this` and `other` is not an error, but it silently produces an
+  unlabeled result. If your workflow depends on labels surviving a
+  `concat_depth()` call, ensure both sides are labeled first (or neither
+  is).
+- `other` must be `defined()` — an undefined `other` throws
+  `"Axel::concat_depth: other axel undefined"`. This axel itself must
+  also be `defined()`, throwing `"Axel: undefined handle"` otherwise.
+- Registry frames are not merged or validated against each other for
+  schema compatibility here — `concat_depth()` only concatenates the
+  depth-axis list; each frame keeps whatever fields it already had.
+
+## See Also
+
+- [`Axel::labels`](labels.md): the depth-axis label slot this method
+  can silently drop.
+- [`Axel::slice`](slice.md): the inverse-flavored operation, selecting a
+  sub-range of frames instead of appending more.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="cast.html">

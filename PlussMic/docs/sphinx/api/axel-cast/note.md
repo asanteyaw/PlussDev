@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelCastAccessor::note
 
 [Back to AxelCastAccessor API Reference](../../axel_cast_accessor_api_reference)
@@ -5,12 +7,15 @@
 ## Signature
 
 ```cpp
-AxelCastAccessor::note() -> Axel
+Axel AxelCastAccessor::note() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Casts every bound field's values, in every registry frame, to
+`Note`-kind (text) and returns a new axel with those fields replaced.
+Applies [`RegistryCastAccessor::note`](../registry-cast/note.md) to
+every frame via [`Axel::map`](../axel/map.md).
 
 ## Parameters
 
@@ -19,32 +24,43 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every bound field, in every frame, cast to
+    `Note`-kind; every unbound field unchanged.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Cast a `Series` field of integers to text.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto cast = axel.fields({"ids"}).cast();
+auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}});
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = cast.note();
-std::cout << out;
+auto out = axel.fields({"id"}).cast().note();
+auto ids = out.registry(0).fields("id");
+std::cout << std::get<pluss::Note>(ids.at(0)).at(0) << " " << std::get<pluss::Note>(ids.at(1)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+1 2
 ```
 
+## Notes
+
+- Bound via [`Axel::cast()`](../axel/cast.md) — remember that entry
+  point binds *every* field of every frame it's called on, so scope it
+  with [`fields(keys)`](../axel/fields.md) first if you only want to
+  cast some fields.
+
+## See Also
+
+- [`AxelCastAccessor::series`](series.md): the inverse direction,
+  casting text fields to numeric.
+- [`Axel::cast`](../axel/cast.md): the entry point this accessor is
+  reached from.
+- [`RegistryCastAccessor::note`](../registry-cast/note.md): the
+  single-frame operation this method broadcasts.
 
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="series.html">

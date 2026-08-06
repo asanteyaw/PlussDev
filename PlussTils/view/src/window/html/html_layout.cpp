@@ -1521,6 +1521,22 @@ void collect_table_rows_recursive(const HtmlNode& node,
                 (style.padding * 2) + (style.border * 2) + 22;
   }
 
+  if (preferred <= 0 && node.tag == "table") {
+    // render_table/render_virtual_table both size a table to fill whatever
+    // width they're given whenever explicit_width/min_width aren't set
+    // (resolved_outer_w falls back to `width`, not to a shrink-to-fit
+    // content measurement) -- so the table's *preferred* width, for the
+    // parent's layout purposes, is that same cap, not a measurement of its
+    // rows. Without this, a table with many/wide columns (or, for a
+    // virtual table, literally no DOM rows to recurse into at all) reports
+    // a preferred width equal to its full unclipped natural content size
+    // (or the generic 140px fallback below, for the childless virtual
+    // case) -- both far wider or narrower than what's actually painted --
+    // and the document ends up drawing its own extra, spuriously-triggered
+    // horizontal scrollbar to "reach" content that was never really there.
+    preferred = cap_width;
+  }
+
   if (preferred <= 0 && !node.children.empty()) {
     lineage.push_back(&node);
     if (style.display == "flex") {
@@ -1715,7 +1731,18 @@ void collect_table_rows_recursive(const HtmlNode& node,
 
   const auto rows = extract_table_rows(node, lineage);
   if (rows.empty()) {
-    const int empty_h = std::max(style.explicit_height, 40);
+    // A virtual table's rows never live in the DOM -- they're painted
+    // straight from the model at render time (see render_virtual_table) --
+    // so `rows` is always empty here for it. Without this check, this
+    // function reports a ~40px height while render_virtual_table actually
+    // paints a >=400px box, and every downstream measurement that trusts
+    // this return value (sibling cursor_y, the document's own scroll
+    // extents) goes stale relative to what's on screen.
+    const HtmlAttribute* virtual_attr = find_attribute(node, "data-virtual-table");
+    const bool is_virtual_table = virtual_attr != nullptr && virtual_attr->value == "true";
+    const int empty_h = is_virtual_table
+                             ? std::max({400, style.explicit_height, style.min_height})
+                             : std::max(style.explicit_height, 40);
     return (margin * 2) + (padding * 2) + (border * 2) + empty_h;
   }
 
@@ -2825,8 +2852,11 @@ int render_virtual_table(
       row_h > 0 ? static_cast<std::int64_t>(scroll_y / row_h) : 0;
   int row_y = body_y - (scroll_y % row_h);
   const int body_bottom = body_y + body_viewport_h;
+  // Stop before a row that would extend past the viewport rather than
+  // drawing it and trusting the clip rect to cut it off cleanly -- see the
+  // identical fix in render_table's row loop for why.
   for (std::int64_t display_row = first_row;
-       display_row < row_count && row_y < body_bottom;
+       display_row < row_count && row_y + row_h <= body_bottom;
        ++display_row, row_y += row_h) {
     if (row_y + row_h <= body_y) {
       continue;
@@ -2908,8 +2938,15 @@ int render_virtual_table(
   RectI vertical_thumb{};
   if (max_scroll_x > 0) {
     const int track_h = 10;
-    const int track_y =
+    // Anchor to the content's actual bottom edge first, falling back to the
+    // outer-box heuristic only when that leaves enough room -- the old
+    // heuristic alone (padding / 2 + track_h) could be narrower than the
+    // real border+padding gutter, which let the track sit on top of the
+    // table's last visible row instead of below it.
+    const int below_content = content_y + viewport_h + 2;
+    const int near_outer_edge =
         outer_y + outer_h - std::max(14, padding / 2 + track_h);
+    const int track_y = std::max(below_content, near_outer_edge);
     const int track_w = std::max(36, scrollable_view_w - 6);
     const int track_x = content_x + row_header_w + 3;
     horizontal_track = RectI{track_x, track_y, track_w, track_h};
@@ -2933,8 +2970,14 @@ int render_virtual_table(
   }
   if (max_scroll_y > 0) {
     const int track_w = 10;
-    const int track_x =
+    // Same reasoning as the horizontal track above: anchor to the content's
+    // actual right edge first so the track can never land on top of the
+    // rightmost visible column, only falling back to the outer-box
+    // heuristic when that's already clear of content.
+    const int right_of_content = content_x + content_w + 2;
+    const int near_outer_edge =
         outer_x + outer_w - std::max(14, padding / 2 + track_w);
+    const int track_x = std::max(right_of_content, near_outer_edge);
     const int track_h = std::max(36, body_viewport_h - 6);
     const int track_y = body_y + 3;
     vertical_track = RectI{track_x, track_y, track_w, track_h};
@@ -3466,7 +3509,12 @@ int render_table(Scene& scene,
       for (std::size_t idx = first_visible; idx < body_order.size(); ++idx) {
         const std::size_t r = body_order[idx];
         const int row_h = row_heights[r];
-        if (cursor_y >= body_clip_bottom) {
+        // Stop before a row that would extend past the viewport, rather
+        // than drawing it and trusting the clip rect to cut it off cleanly
+        // -- text glyphs aren't clipped as tightly as fills/lines, so a
+        // partial last row was bleeding its full text underneath (and
+        // through) the scrollbar instead of being visually cut short.
+        if (cursor_y + row_h > body_clip_bottom) {
           break;
         }
         if (cursor_y + row_h > body_clip_y) {
@@ -3495,7 +3543,11 @@ int render_table(Scene& scene,
   RectI vertical_thumb{};
   if (max_scroll_x > 0) {
     const int track_h = 10;
-    const int track_y = outer_y + outer_h - std::max(14, padding / 2 + track_h);
+    // See render_virtual_table's identical fix: anchor to the content's
+    // real bottom edge so the track can't land on top of the last row.
+    const int below_content = content_y + viewport_h + 2;
+    const int near_outer_edge = outer_y + outer_h - std::max(14, padding / 2 + track_h);
+    const int track_y = std::max(below_content, near_outer_edge);
     const int track_w = std::max(36, scrollable_view_w - 6);
     const int track_x = content_x + sticky_total_w + 3;
     horizontal_track = RectI{track_x, track_y, track_w, track_h};
@@ -3517,7 +3569,11 @@ int render_table(Scene& scene,
   }
   if (max_scroll_y > 0) {
     const int track_w = 10;
-    const int track_x = outer_x + outer_w - std::max(14, padding / 2 + track_w);
+    // See render_virtual_table's identical fix: anchor to the content's
+    // real right edge so the track can't land on top of the last column.
+    const int right_of_content = content_x + content_w + 2;
+    const int near_outer_edge = outer_x + outer_w - std::max(14, padding / 2 + track_w);
+    const int track_x = std::max(right_of_content, near_outer_edge);
     const int track_h = std::max(36, body_viewport_h - 6);
     const int track_y = content_y + header_h + 3;
     vertical_track = RectI{track_x, track_y, track_w, track_h};
@@ -3973,8 +4029,12 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
   for (const auto& child : document.root.children) {
     const int child_h = measure_node_height(document, child, body_width, measure_lineage, nullptr, width);
     content_height += std::max(0, child_h);
-    content_pref_w = std::max(content_pref_w,
-                              estimate_node_preferred_width(document, child, measure_lineage, nullptr, body_width, width));
+    const int child_w =
+        estimate_node_preferred_width(document, child, measure_lineage, nullptr, body_width, width);
+    std::fprintf(stderr, "[DEBUG-DOC] child tag=%s class=%s child_w=%d body_width=%d\n", child.tag.c_str(),
+                 find_attribute(child, "class") != nullptr ? find_attribute(child, "class")->value.c_str() : "",
+                 child_w, body_width);
+    content_pref_w = std::max(content_pref_w, child_w);
   }
 
   const int max_scroll_x = std::max(0, content_pref_w - body_width);

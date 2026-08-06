@@ -296,6 +296,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
     }
     case SlotKind::Timeline: {
       std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
+      std::optional<std::string> tz_name;
       for (std::int64_t i = 0; i < n; ++i) {
         const auto& value = slot.at(i);
         if (std::holds_alternative<std::monostate>(value)) {
@@ -306,13 +307,28 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         const auto& ts = std::get<pluss::Timeline>(value);
         PLUSS_CHECK(ts.numel() == 1, std::string(where) + ": Timeline values must be scalar-like");
         ticks[static_cast<std::size_t>(i)] = ts.to_epoch_nanos_vector()[0];
+        std::string value_tz(ts.tz());
+        if (!tz_name.has_value()) {
+          tz_name = std::move(value_tz);
+        } else {
+          PLUSS_CHECK(*tz_name == value_tz,
+                      std::string(where) + ": Timeline slot values carry mismatched timezones ('" +
+                          *tz_name + "' vs '" + value_tz +
+                          "'); a Stream's Timeline column has one shared tz, so relabel with tz() "
+                          "(or localize()) to a common zone before combining");
+        }
       }
+      // A kindle::Stream's Timeline column carries exactly one shared tz label
+      // (mirroring Thread/DataFrame). An all-null slot has nothing to derive a
+      // tz from, so it falls back to "UTC" -- same default every other
+      // tz-less Timeline factory in this codebase already uses.
       return pluss::kindle::Stream(
-          pluss::timeline::from_epoch(ticks, {n}),
+          pluss::timeline::from_epoch(ticks, {n}, tz_name.value_or("UTC")),
           has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
     }
     case SlotKind::TimeIndex: {
       std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
+      std::optional<std::string> tz_name;
       for (std::int64_t i = 0; i < n; ++i) {
         const auto& value = slot.at(i);
         if (std::holds_alternative<std::monostate>(value)) {
@@ -323,9 +339,19 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         const auto& index = std::get<pluss::TimeIndex>(value);
         PLUSS_CHECK(index.size() == 1, std::string(where) + ": TimeIndex values must be scalar-like");
         ticks[static_cast<std::size_t>(i)] = index.timeline().to_epoch_nanos_vector()[0];
+        std::string value_tz(index.timeline().tz());
+        if (!tz_name.has_value()) {
+          tz_name = std::move(value_tz);
+        } else {
+          PLUSS_CHECK(*tz_name == value_tz,
+                      std::string(where) + ": TimeIndex slot values carry mismatched timezones ('" +
+                          *tz_name + "' vs '" + value_tz +
+                          "'); a Stream's TimeIndex column has one shared tz, so relabel with tz() "
+                          "(or localize()) to a common zone before combining");
+        }
       }
       return pluss::kindle::Stream(
-          pluss::make_timeindex(ticks, false),
+          pluss::make_timeindex(pluss::timeline::from_epoch(ticks, {n}, tz_name.value_or("UTC")), false),
           has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
     }
     case SlotKind::Empty:

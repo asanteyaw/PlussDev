@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::to_string
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Slot::to_string() -> std::string
+std::string Slot::to_string() const
 ```
 
 ## What It Does
 
-Serializes or renders the current object into a text form you can inspect, log, or export.
+Renders the slot as a string. Byte-identical to
+[`to_json()`](to_json.md) — `to_string()` simply forwards to it.
 
 ## Parameters
 
@@ -19,24 +22,36 @@ Serializes or renders the current object into a text form you can inspect, log, 
 ## Returns
 
 `std::string`
-    Rendered string result.
+    The same JSON rendering [`to_json()`](to_json.md) produces.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. `to_string()` and `to_json()` produce identical output.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
-auto out = slot.to_string();
+std::cout << std::boolalpha << (slot.to_string() == slot.to_json());
 ```
 
 ### Output
 
 ```text
-Slot([Series(1), Series(2), Series(3)])
+true
 ```
 
+## Notes
+
+- Unlike [`Registry::to_string()`](../registry/to_string.md), which
+  differs from `Registry::to_json()`, `Slot::to_string()` is exactly
+  `to_json()` — see [`to_json()`](to_json.md)'s important callout for the
+  full explanation.
+
+## See Also
+
+- [`Slot::to_json`](to_json.md): the method this one forwards to, with the
+  full output format documented.
+- [`Slot::show`](show.md): writes this same string to a caller-provided
+  stream instead of returning it.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_kindle.html">

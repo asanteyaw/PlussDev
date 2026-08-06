@@ -1775,8 +1775,7 @@ Thread Thread::matches(std::string_view pattern) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::matches: expected Note payload");
   (void)compile_regex_(pattern, "Thread::matches");
-  const auto anchored = "^(?:" + std::string(pattern) + ")";
-  return note_bool_result_(*this, as_note().regex_search(anchored));
+  return note_bool_result_(*this, as_note().regex_search(pattern));
 }
 
 Thread Thread::fullmatch(std::string_view pattern) const {

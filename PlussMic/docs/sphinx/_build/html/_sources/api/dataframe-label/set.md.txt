@@ -161,7 +161,7 @@ west/SF     | 40
 `grouped` now has a genuine 2-level `case_axis_` (`region`, `city`); the composite display
 text uses the custom `"/"` separator here, and that separator is preserved by later
 operations that rebuild the composite string from the levels, such as
-[`order()`](order.md)/[`swap()`](swap.md) and [`cast()`](cast.md). Passing `true` here
+[`order()`](order.md)/[`swap()`](swap.md) and [`cast()`](../dataframe/cast.md). Passing `true` here
 explicitly is redundant with the default, but spelled out for clarity alongside the custom
 separator argument.
 
@@ -298,7 +298,7 @@ instead rejects the duplicate outright — independent of, and unaffected by, `d
 - `separator` only affects the displayed composite string. It's preserved
   across operations that rebuild that string from the levels — including
   [`order()`](order.md), [`swap()`](swap.md), [`drop()`](drop.md), and
-  [`cast()`](cast.md) — so a custom separator sticks once set.
+  [`cast()`](../dataframe/cast.md) — so a custom separator sticks once set.
 - `SetLabelOptions.verify = true` throws if the resulting case labels aren't
   unique; without it, duplicates are allowed freely. `verify` and `drop` are independent.
 

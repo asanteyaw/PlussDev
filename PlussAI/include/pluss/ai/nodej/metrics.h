@@ -145,4 +145,54 @@ StatusOr<Series> classification_metrics(const ClassifierBase& classifier,
                                         const LabeledBatch& batch,
                                         const AssessOptions& options = {});
 
+// Regression counterpart to classification_metrics above, from already-computed
+// truth/prediction vectors rather than a model + batch -- the shape a caller
+// needs whenever predictions came from somewhere other than a plain
+// RegressorBase::infer (e.g. after inverse-transforming them back out of a
+// rescaled label space). An empty `metrics` list defaults to {Mse, Rmse, R2},
+// matching every other regression assess() default in this file.
+StatusOr<Series> regression_metrics(const Series& truth,
+                                    const Series& prediction,
+                                    const std::vector<MetricKind>& metrics = {});
+
+namespace detail {
+
+// Everything a binary score-vs-label curve (ROC, precision-recall, ...) needs
+// falls out of one descending stable sort plus two cumulative sums -- this is
+// that shared shape, factored out of what were previously two independent
+// copies of the same ~30 lines (family_classifier.cpp's inline RocAuc branch
+// and its ovr_auc_binary01 helper). threshold_curve() below is a third
+// consumer, not a fourth copy.
+struct BinaryScoreCurve {
+  Series score_sorted = Series::undefined();          // descending, stable order
+  Series true_positive_cumulative = Series::undefined();
+  Series false_positive_cumulative = Series::undefined();
+  Series is_threshold_boundary = Series::undefined();  // last position of each distinct score
+  Series positive_count = Series::undefined();         // shape [1]
+  Series negative_count = Series::undefined();         // shape [1]
+};
+
+StatusOr<BinaryScoreCurve> binary_score_curve(const Series& scores, const Series& labels01);
+
+} // namespace detail
+
+struct ThresholdCurve {
+  Series thresholds = Series::undefined();  // every achievable decision threshold, descending
+  Series precision = Series::undefined();
+  Series recall = Series::undefined();
+  Series f1 = Series::undefined();
+};
+
+// One sort + two cumulative sums computes precision/recall/F1 at every
+// achievable threshold in a single O(n log n) pass, by sweeping cumulative
+// true/false positives rather than re-scoring the model once per candidate
+// cutoff.
+StatusOr<ThresholdCurve> threshold_curve(const Series& scores, const Series& labels);
+
+// The threshold that maximizes `objective` (Precision, Recall/Sensitivity, or
+// F1 -- anything else falls back to F1) over threshold_curve's full sweep.
+StatusOr<double> best_threshold(const Series& scores,
+                                const Series& labels,
+                                MetricKind objective = MetricKind::F1);
+
 } // namespace pluss::ai::nodej

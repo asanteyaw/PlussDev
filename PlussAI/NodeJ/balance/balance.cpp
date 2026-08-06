@@ -1,4 +1,5 @@
 #include "pluss/ai/nodej/balance.h"
+#include "pluss/ai/nodej/spatial_index.h"
 #include "pluss/ai/nodej/split.h"
 
 #include "pluss/codem/series_factory.h"
@@ -554,10 +555,28 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
     const std::int64_t neighbor_count = std::max<std::int64_t>(1, std::min<std::int64_t>(target.neighbors, have - 1));
     const Series class_x = feature_rows.index_select(0, class_indices.to(feature_rows.platform(), ScalarType::Int64))
                                .reshape({have, batch.features.feature_count()});
-    const Series dist2 = pairwise_distance2(class_x, class_x);
-    const Series sort_idx = dist2.argsort(1, false, true);
-    const Series neighbor_cols = pluss::series::arange(1, neighbor_count + 1, i64_on(sort_idx.platform()));
-    const Series neighbor_pos = sort_idx.index_select(1, neighbor_cols).reshape({have, neighbor_count});
+
+    // SpatialIndex (a real KD-tree) replaces the dense pairwise_distance2 +
+    // argsort self-search on CPU, where it's an exact drop-in and typically
+    // faster for anything but tiny classes -- it's a host-memory recursive
+    // structure, so GPU keeps the existing Series/matmul path unchanged.
+    // Bonus: query_self_k excludes each point's own index directly, rather
+    // than assuming column 0 of the sorted distance matrix is self (which
+    // isn't guaranteed when duplicate points tie at distance 0).
+    Series neighbor_pos = Series::undefined();
+    if (class_x.platform() == pluss::pCPU) {
+      StatusOr<SpatialIndex> index_or = SpatialIndex::build(class_x);
+      if (!index_or.ok()) return StatusOr<BalancePlan>(index_or.status());
+      const SpatialIndex index = index_or.move_value();
+      StatusOr<KNearestResult> knn_or = index.query_self_k(neighbor_count);
+      if (!knn_or.ok()) return StatusOr<BalancePlan>(knn_or.status());
+      neighbor_pos = knn_or.move_value().indices;
+    } else {
+      const Series dist2 = pairwise_distance2(class_x, class_x);
+      const Series sort_idx = dist2.argsort(1, false, true);
+      const Series neighbor_cols = pluss::series::arange(1, neighbor_count + 1, i64_on(sort_idx.platform()));
+      neighbor_pos = sort_idx.index_select(1, neighbor_cols).reshape({have, neighbor_count});
+    }
 
     const Series base_pos = pluss::series::randint(0, have, {extra}, i64_on(platform), splitmix64(class_seed ^ 0xfeed1234ULL))
                                 .reshape({extra});

@@ -34,18 +34,35 @@
 
           <div class="body" role="main">
             
-  <section id="axelnoteaccessor-casefold">
+  <!-- pluss-hand-authored -->
+<section id="axelnoteaccessor-casefold">
 <h1>AxelNoteAccessor::casefold<a class="headerlink" href="#axelnoteaccessor-casefold" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_note_accessor_api_reference.html"><span class="doc std std-doc">Back to AxelNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AxelNoteAccessor</span><span class="o">::</span><span class="n">casefold</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Axel</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="w"> </span><span class="n">AxelNoteAccessor</span><span class="o">::</span><span class="n">casefold</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Applies aggressive, locale-independent case folding to every bound
+field’s text, in every registry frame, and returns a new axel with
+those fields replaced. Applies
+<a class="reference internal" href="../registry-note/casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryNoteAccessor::casefold</span></code></span></a> to
+every frame via <a class="reference internal" href="../axel/map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::map</span></code></span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>casefold() is not just lower() with a different name
+<code class="docutils literal notranslate"><span class="pre">casefold()</span></code> and <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a> look similar and often produce
+identical output for plain ASCII text, but they’re not the same
+transform. Case folding is designed for <em>case-insensitive comparison</em>,
+not display — it can normalize characters that <code class="docutils literal notranslate"><span class="pre">lower()</span></code> leaves alone
+(for example, the German <code class="docutils literal notranslate"><span class="pre">ß</span></code> folds toward <code class="docutils literal notranslate"><span class="pre">ss</span></code> under full Unicode case
+folding, where lowercasing leaves it as <code class="docutils literal notranslate"><span class="pre">ß</span></code>). If you’re about to
+compare two text fields for equality regardless of case, prefer
+<code class="docutils literal notranslate"><span class="pre">casefold()</span></code> on both sides over <code class="docutils literal notranslate"><span class="pre">lower()</span></code>.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -54,36 +71,57 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>
-Value produced by this call.</p>
+A new axel with every bound field case-folded, in every frame;
+every unbound field unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Takoradi&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">();</span>
+<p>Example 1. Case-fold a projected <code class="docutils literal notranslate"><span class="pre">city</span></code> field.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra City&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;TEMA town&quot;</span><span class="p">)})}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">casefold</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">casefold</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">city</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; | &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">city</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>accra city | tema town
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above for how this differs from
+<a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>.</p></li>
+<li><p>Requires every bound field, in every frame, to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind —
+calling it (or any other method on this accessor) with a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code>
+field bound throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::nt:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Note&quot;</span></code>.</p></li>
+<li><p>Bound via <a class="reference internal" href="../axel/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::nt()</span></code></span></a> — remember that entry point
+binds <em>every</em> field of every frame unless you project first with
+<a class="reference internal" href="../axel/fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields(keys)</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AxelNoteAccessor::lower</span></code></span></a>: the plain, non-comparison-oriented
+lowercasing transform.</p></li>
+<li><p><a class="reference internal" href="upper.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AxelNoteAccessor::upper</span></code></span></a> / <a class="reference internal" href="titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">titlecase()</span></code></span></a>:
+the other case transforms on this accessor.</p></li>
+<li><p><a class="reference internal" href="../axel/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::nt</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="chars.html">
     <span class="label">Next</span>
     <span class="title">chars</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

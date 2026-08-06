@@ -2,7 +2,10 @@
 
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/metrics.h"
-#include "pluss/ai/lymph/workflow.h"
+#include "pluss/ai/lymph/workflow_model.h"
+#include "pluss/tils/aux/transmit.h"
+
+#include <random>
 
 namespace pluss::ai::lymph {
 
@@ -10,10 +13,26 @@ namespace selection {
 
 struct Candidate {
   std::string name{};
-  Workflow workflow{};
+  // Was Workflow -- the lazy std::optional<WorkflowModel>-holding facade
+  // (workflow.h) this session retired. A Candidate never needed the lazy
+  // indirection in the first place (it always already has a fully-built
+  // model by construction time); holding the WorkflowModel directly removes
+  // the std::move(x.workflow_model())-style unwrap that facade forced on
+  // every caller reaching for a trained result. No `{}` here -- WorkflowModel
+  // has no default constructor (a "model" with no ModelSpec at all isn't a
+  // meaningful state), and the constructor below always initializes this
+  // explicitly via its member-initializer-list, so there is nothing for a
+  // default member initializer to do anyway.
+  WorkflowModel model;
+  // nullopt (default) = use tune()'s shared train_options, matching prior
+  // behavior exactly. Set this when one candidate genuinely needs different
+  // training settings than the rest of the grid (e.g. calibration on a
+  // logistic candidate but not on a tree candidate) -- the reason tune() used
+  // to get abandoned in favor of a hand-rolled loop whenever that came up.
+  std::optional<TrainOptions> train_options{};
 
-  Candidate(std::string in_name, Workflow in_workflow)
-      : name(std::move(in_name)), workflow(std::move(in_workflow)) {}
+  Candidate(std::string in_name, WorkflowModel in_model, std::optional<TrainOptions> in_train_options = std::nullopt)
+      : name(std::move(in_name)), model(std::move(in_model)), train_options(std::move(in_train_options)) {}
   Candidate(Candidate&&) noexcept = default;
   Candidate& operator=(Candidate&&) noexcept = default;
   Candidate(const Candidate&) = delete;
@@ -26,7 +45,13 @@ struct Trial {
   CrossValidationReport cv{};
 };
 
-struct TuneReport {
+// Named compare, not tune: this ranks candidates the caller has already
+// fully built (a fixed name + Workflow + optional TrainOptions each) via
+// cross-validation -- model *selection*, not hyperparameter *search*. See
+// selection::tune further down for the latter; keeping the two verbs
+// distinct is deliberate after this exact function briefly carried the name
+// "tune" and was mistaken for a hyperparameter search entry point.
+struct CompareReport {
   std::vector<Trial> trials{};
   std::int64_t best_index = -1;
   std::string best_name{};
@@ -34,24 +59,47 @@ struct TuneReport {
   TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto;
   std::vector<std::int64_t> objective_rank{};
   std::vector<std::int64_t> ranked_indices{};
+
+  // One row per trial: name, objective, rank, and every requested metric's
+  // fold mean (all trials share the same metric set within one compare() call).
+  [[nodiscard]] pluss::table::DataFrame board() const;
 };
 
-struct TuneResult {
-  TuneReport report{};
-  Workflow best_workflow{};
-  std::vector<Workflow> fitted{};
+struct CompareResult {
+  CompareReport report{};
+  // Was best_workflow: Workflow -- field renamed alongside the type change
+  // (WorkflowModel now, not the retired Workflow facade) so the name keeps
+  // describing what it actually holds. Wrapped in std::optional because
+  // WorkflowModel has no default constructor (unlike the old Workflow facade,
+  // whose `std::optional<WorkflowModel> model{}` member made an empty
+  // Workflow trivially default-constructible) -- compare_batch_ needs
+  // `CompareResult result{};` to be well-formed before the actual winner is
+  // known partway through the function. .best() unwraps it, so callers never
+  // see the optional themselves.
+  std::optional<WorkflowModel> best_model{};
+  std::vector<WorkflowModel> fitted{};
 
-  [[nodiscard]] const Workflow& best() const noexcept { return best_workflow; }
-  [[nodiscard]] Workflow& best() noexcept { return best_workflow; }
+  [[nodiscard]] const WorkflowModel& best() const {
+    if (!best_model.has_value()) {
+      ::pluss::throw_error("selection::CompareResult::best: no best model has been computed.");
+    }
+    return *best_model;
+  }
+  [[nodiscard]] WorkflowModel& best() {
+    if (!best_model.has_value()) {
+      ::pluss::throw_error("selection::CompareResult::best: no best model has been computed.");
+    }
+    return *best_model;
+  }
 
-  [[nodiscard]] std::vector<std::reference_wrapper<Workflow>> topk(std::int64_t k) {
+  [[nodiscard]] std::vector<std::reference_wrapper<WorkflowModel>> topk(std::int64_t k) {
     if (k < 0) {
-      ::pluss::throw_error("selection::TuneResult::topk: k must be non-negative.");
+      ::pluss::throw_error("selection::CompareResult::topk: k must be non-negative.");
     }
     if (k > static_cast<std::int64_t>(fitted.size())) {
-      ::pluss::throw_error("selection::TuneResult::topk: requested k exceeds fitted model count; increase FitOptions.fit_top.");
+      ::pluss::throw_error("selection::CompareResult::topk: requested k exceeds fitted model count; increase FitOptions.fit_top.");
     }
-    std::vector<std::reference_wrapper<Workflow>> out{};
+    std::vector<std::reference_wrapper<WorkflowModel>> out{};
     out.reserve(static_cast<std::size_t>(k));
     for (std::int64_t i = 0; i < k; ++i) {
       out.emplace_back(fitted[static_cast<std::size_t>(i)]);
@@ -59,14 +107,14 @@ struct TuneResult {
     return out;
   }
 
-  [[nodiscard]] std::vector<std::reference_wrapper<const Workflow>> topk(std::int64_t k) const {
+  [[nodiscard]] std::vector<std::reference_wrapper<const WorkflowModel>> topk(std::int64_t k) const {
     if (k < 0) {
-      ::pluss::throw_error("selection::TuneResult::topk: k must be non-negative.");
+      ::pluss::throw_error("selection::CompareResult::topk: k must be non-negative.");
     }
     if (k > static_cast<std::int64_t>(fitted.size())) {
-      ::pluss::throw_error("selection::TuneResult::topk: requested k exceeds fitted model count; increase FitOptions.fit_top.");
+      ::pluss::throw_error("selection::CompareResult::topk: requested k exceeds fitted model count; increase FitOptions.fit_top.");
     }
-    std::vector<std::reference_wrapper<const Workflow>> out{};
+    std::vector<std::reference_wrapper<const WorkflowModel>> out{};
     out.reserve(static_cast<std::size_t>(k));
     for (std::int64_t i = 0; i < k; ++i) {
       out.emplace_back(fitted[static_cast<std::size_t>(i)]);
@@ -74,6 +122,47 @@ struct TuneResult {
     return out;
   }
 };
+
+[[nodiscard]] inline pluss::table::DataFrame CompareReport::board() const {
+  std::vector<std::string> names{};
+  std::vector<double> objectives{};
+  std::vector<std::int64_t> ranks{};
+  names.reserve(trials.size());
+  objectives.reserve(trials.size());
+  ranks.reserve(trials.size());
+
+  const std::vector<MetricKind> metrics = trials.empty() ? std::vector<MetricKind>{} : trials.front().cv.mean.requested;
+  std::vector<std::vector<double>> metric_columns(metrics.size());
+  for (auto& column : metric_columns) column.reserve(trials.size());
+
+  for (std::size_t i = 0; i < trials.size(); ++i) {
+    names.push_back(trials[i].name);
+    objectives.push_back(trials[i].objective);
+    ranks.push_back(i < objective_rank.size() ? objective_rank[i] : 0);
+    const auto values = trials[i].cv.mean.values.to(pluss::pCPU, ScalarType::Float64)
+                             .reshape({trials[i].cv.mean.values.numel()})
+                             .to_vec<double>();
+    for (std::size_t m = 0; m < metrics.size(); ++m) {
+      metric_columns[m].push_back(m < values.size() ? values[m] : std::numeric_limits<double>::quiet_NaN());
+    }
+  }
+
+  const Config f64_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
+  const auto n = static_cast<std::int64_t>(trials.size());
+
+  std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
+  columns.reserve(3 + metrics.size());
+  columns.emplace_back("name", pluss::table::Thread(pluss::make_note(names)));
+  columns.emplace_back("objective", pluss::table::Thread(pluss::make_series(objectives, {n}, f64_cfg)));
+  columns.emplace_back("rank", pluss::table::Thread(pluss::make_series(ranks, {n}, i64_cfg)));
+  for (std::size_t m = 0; m < metrics.size(); ++m) {
+    columns.emplace_back(metric_kind_name_(metrics[m]),
+                         pluss::table::Thread(pluss::make_series(metric_columns[m], {n}, f64_cfg)));
+  }
+
+  return pluss::table::DataFrame(std::move(columns)).title("Candidate Comparison Ranking");
+}
 
 struct FitOptions {
   std::int64_t fit_top = 0;
@@ -131,7 +220,7 @@ struct SpecTuneResult {
   ::pluss::throw_error("selection::tune: objective metric not present in assessment metrics.");
 }
 
-inline void assign_objective_ranks_(TuneReport& report) {
+inline void assign_objective_ranks_(CompareReport& report) {
   const bool minimize = minimize_metric_(report.objective_metric, report.objective_policy);
   report.objective_rank.assign(report.trials.size(), 0);
   report.ranked_indices.clear();
@@ -173,20 +262,24 @@ inline void assign_objective_ranks_(TuneReport& report) {
   }
 }
 
-[[nodiscard]] inline TuneResult tune(std::vector<Candidate> candidates,
-                                     const pluss::table::DataFrame& x,
-                                     const Series& y,
-                                     CrossValidationOptions cv = {},
-                                     TrainOptions train_options = {},
-                                     AssessOptions assess_options = {},
-                                     MetricKind objective_metric = MetricKind::Accuracy,
-                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
-                                     FitOptions fit_options = {}) {
+// Shared body for every compare() overload below -- takes an already-built
+// LabeledBatch so the (x, y), (x, Thread), and (frame, DataFrameBatchOptions)
+// entry points only differ in how they construct that one batch (Reject-only
+// vs. the caller's own note_policy, e.g. DataNotePolicy::Factorize) and
+// otherwise share every line of the actual grid-scheduling/ranking logic.
+[[nodiscard]] inline CompareResult compare_batch_(std::vector<Candidate> candidates,
+                                                   const LabeledBatch& batch,
+                                                   CrossValidationOptions cv,
+                                                   TrainOptions train_options,
+                                                   AssessOptions assess_options,
+                                                   MetricKind objective_metric,
+                                                   TuneObjectivePolicy objective_policy,
+                                                   FitOptions fit_options) {
   if (candidates.empty()) {
-    ::pluss::throw_error("selection::tune: at least one candidate is required.");
+    ::pluss::throw_error("selection::compare: at least one candidate is required.");
   }
   if (fit_options.fit_top < 0) {
-    ::pluss::throw_error("selection::tune: FitOptions.fit_top must be non-negative.");
+    ::pluss::throw_error("selection::compare: FitOptions.fit_top must be non-negative.");
   }
   if (assess_options.metrics.empty()) {
     assess_options.metrics = {objective_metric};
@@ -195,49 +288,94 @@ inline void assign_objective_ranks_(TuneReport& report) {
   }
 
   const bool minimize = minimize_metric_(objective_metric, objective_policy);
-  TuneResult result{};
+  CompareResult result{};
   result.report.objective_metric = objective_metric;
   result.report.objective_policy = objective_policy;
   result.report.trials.reserve(candidates.size());
 
-  const auto feature_names = cross_validate_default_feature_names_(x, "selection::tune");
-  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, feature_names, "selection::tune");
-  const TaskKind task = candidates.front().workflow.task_kind();
+  const TaskKind task = candidates.front().model.task_kind();
   for (std::size_t i = 1; i < candidates.size(); ++i) {
-    if (candidates[i].workflow.task_kind() != task) {
-      ::pluss::throw_error("selection::tune: all workflow candidates must have the same task kind.");
+    if (candidates[i].model.task_kind() != task) {
+      ::pluss::throw_error("selection::compare: all candidates must have the same task kind.");
     }
   }
   const SplitOptions split = effective_workflow_split_options_(cv, task);
-  const SplitPlan plan = workflow_split_plan_(batch, split, task, "selection::tune");
-  const std::vector<FoldBatchPair> fold_batches = materialize_fold_batches_(batch, plan, "selection::tune");
+  const SplitPlan plan = workflow_split_plan_(batch, split, task, "selection::compare");
+  const std::vector<FoldBatchPair> fold_batches = materialize_fold_batches_(batch, plan, "selection::compare");
 
   std::int64_t best_index = -1;
   double best_objective = std::numeric_limits<double>::quiet_NaN();
 
-  for (std::size_t i = 0; i < candidates.size(); ++i) {
-    auto cv_report = cross_validate_batches_(candidates[i].workflow.workflow_model(),
-                                             fold_batches,
-                                             plan,
-                                             split.max_parallel,
-                                             train_options,
-                                             assess_options,
-                                             "selection::tune");
+  // Flatten every (candidate, fold) pair into one pluss::aux::transmit(...,
+  // par) dispatch instead of nesting "parallel folds, sequential
+  // candidates" (cross_validate_batches_'s own shape, used one candidate at
+  // a time by the loop this replaced): on an 8+ core machine tuning 5
+  // candidates x 3 folds, that shape used at most 3 threads at a time, 5
+  // times in a row. This uses up to hardware_concurrency() threads across
+  // the whole grid at once.
+  struct GridCell_ {
+    std::size_t candidate_index;
+    std::size_t fold_index;
+  };
+  const std::size_t candidate_n = candidates.size();
+  const std::size_t fold_n = fold_batches.size();
+  std::vector<GridCell_> cells{};
+  cells.reserve(candidate_n * fold_n);
+  for (std::size_t ci = 0; ci < candidate_n; ++ci) {
+    for (std::size_t fi = 0; fi < fold_n; ++fi) {
+      cells.push_back(GridCell_{ci, fi});
+    }
+  }
+
+  const std::int64_t metric_count = static_cast<std::int64_t>(assess_options.metrics.size());
+  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldAssessResult {
+    const Candidate& candidate = candidates[cell.candidate_index];
+    const auto& fold = plan.folds[cell.fold_index];
+    const FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
+    const WorkflowModel trained = candidate.model.learn(
+        fold_batch.train, candidate.train_options.value_or(train_options));
+    const Series fold_metrics =
+        trained.assess_series(fold_batch.test, assess_options).to(ScalarType::Float64).reshape({metric_count});
+    return FoldAssessResult{
+        .metrics = fold_metrics,
+        .train_indices = fold.train_indices,
+        .test_indices = fold.test_indices,
+    };
+  };
+
+  pluss::aux::transmit_options topts{};
+  topts.grain_size = 1;
+  if (split.max_parallel == 1 || cells.size() <= 1) {
+    topts.exec = pluss::aux::transmit_exec::seq;
+  } else {
+    topts.exec = pluss::aux::transmit_exec::par;
+    topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
+  }
+  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+
+  for (std::size_t ci = 0; ci < candidate_n; ++ci) {
+    CrossAssessReport report{};
+    report.metrics = assess_options.metrics;
+    report.folds.resize(fold_n);
+    for (std::size_t fi = 0; fi < fold_n; ++fi) {
+      report.folds[fi] = cell_results[ci * fold_n + fi];
+    }
+    CrossValidationReport cv_report = cross_validation_report_from_folds_(std::move(report));
     const double objective = scalar_metric_(cv_report.mean, objective_metric);
     result.report.trials.push_back(Trial{
-        .name = candidates[i].name,
+        .name = candidates[ci].name,
         .objective = objective,
         .cv = std::move(cv_report),
     });
 
     if (best_index < 0) {
-      best_index = static_cast<std::int64_t>(i);
+      best_index = static_cast<std::int64_t>(ci);
       best_objective = objective;
       continue;
     }
     const bool better = minimize ? (objective < best_objective) : (objective > best_objective);
     if (better) {
-      best_index = static_cast<std::int64_t>(i);
+      best_index = static_cast<std::int64_t>(ci);
       best_objective = objective;
     }
   }
@@ -246,7 +384,7 @@ inline void assign_objective_ranks_(TuneReport& report) {
   result.report.best_name = candidates[static_cast<std::size_t>(best_index)].name;
   assign_objective_ranks_(result.report);
   if (result.report.ranked_indices.empty()) {
-    ::pluss::throw_error("selection::tune: no finite objective candidate was available to fit.");
+    ::pluss::throw_error("selection::compare: no finite objective candidate was available to fit.");
   }
 
   if (fit_options.fit_top > 0) {
@@ -255,38 +393,96 @@ inline void assign_objective_ranks_(TuneReport& report) {
     result.fitted.reserve(static_cast<std::size_t>(fit_count));
     for (std::int64_t i = 0; i < fit_count; ++i) {
       const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(i)];
-      Workflow fitted = candidates[static_cast<std::size_t>(candidate_index)].workflow.learn(batch, train_options);
+      const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
+      WorkflowModel fitted = candidate.model.learn(batch, candidate.train_options.value_or(train_options));
       result.fitted.push_back(std::move(fitted));
     }
-    // NOTE: ranked_indices.front() == best_index here (assign_objective_ranks_
-    // sorts with the same minimize/maximize comparator used to pick best_index
+    // ranked_indices.front() == best_index here (assign_objective_ranks_ sorts
+    // with the same minimize/maximize comparator used to pick best_index
     // above, both breaking ties by keeping the earliest candidate), so
-    // result.fitted[0] is already a trained copy of the best candidate. This
-    // retrain is therefore redundant — but Workflow/WorkflowModel are
-    // deliberately move-only (no copy constructor/assignment), so reusing
-    // fitted[0] here isn't a free reference/copy; it would need a real clone
-    // path (WorkflowModel already has one internally as
-    // clone_for_out_of_place_(), which dumps+reloads trained state instead of
-    // retraining, but it isn't exposed publicly). Left as a known, scoped
-    // follow-up rather than adding new public clone API in this pass.
-    result.best_workflow = candidates[static_cast<std::size_t>(best_index)].workflow.learn(batch, train_options);
+    // result.fitted[0] is already a trained copy of the best candidate --
+    // clone it (dump+reload trained state, not a retrain) instead of training
+    // the winner a second time.
+    result.best_model = result.fitted.front().clone();
     return result;
   }
 
-  result.best_workflow = candidates[static_cast<std::size_t>(best_index)].workflow.learn(batch, train_options);
+  const auto& best_candidate = candidates[static_cast<std::size_t>(best_index)];
+  result.best_model = best_candidate.model.learn(batch, best_candidate.train_options.value_or(train_options));
   return result;
 }
 
-[[nodiscard]] inline TuneResult tune(std::vector<Candidate> candidates,
-                                     const pluss::table::DataFrame& x,
-                                     const pluss::table::Thread& y,
-                                     CrossValidationOptions cv = {},
-                                     TrainOptions train_options = {},
-                                     AssessOptions assess_options = {},
-                                     MetricKind objective_metric = MetricKind::Accuracy,
-                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
-                                     FitOptions fit_options = {}) {
-  return tune(std::move(candidates),
+// Direct LabeledBatch entry point -- every other compare() overload below
+// just builds a LabeledBatch from a DataFrame (deliberately CPU-only, see
+// DataFrame's own docs) and forwards to compare_batch_ regardless; this one
+// skips that step entirely; so it is the one to reach for when the caller
+// already has raw x/y Series (LabeledBatch is nothing but
+// {FeatureBatch{x}, y, sample_weights}, no DataFrame anywhere in its
+// definition -- see nodej/dataset.h). Nothing in compare_batch_/
+// WorkflowModel::learn_ cares which platform those Series live on: NodeJ's
+// model cores dispatch on the tensor's own device, so a Series built with
+// `Config{}.with_platform(pluss::pGPU)` trains/evaluates on GPU straight
+// through this path with no separate "target platform" argument to pass --
+// the platform is a property of the data you hand in, not a policy knob.
+[[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
+                                           const LabeledBatch& batch,
+                                           CrossValidationOptions cv = {},
+                                           TrainOptions train_options = {},
+                                           AssessOptions assess_options = {},
+                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                           FitOptions fit_options = {}) {
+  return compare_batch_(std::move(candidates), batch, cv, train_options, assess_options,
+                        objective_metric, objective_policy, fit_options);
+}
+
+[[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
+                                           const pluss::table::DataFrame& x,
+                                           const Series& y,
+                                           CrossValidationOptions cv = {},
+                                           TrainOptions train_options = {},
+                                           AssessOptions assess_options = {},
+                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                           FitOptions fit_options = {}) {
+  const auto feature_names = cross_validate_default_feature_names_(x, "selection::compare");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, feature_names, "selection::compare");
+  return compare_batch_(std::move(candidates), batch, cv, train_options, assess_options,
+                        objective_metric, objective_policy, fit_options);
+}
+
+// (frame, DataFrameBatchOptions) sibling of the (x, y) overload above -- see
+// workflow_model.h's confusion_table/classification_summary/threshold_curve/
+// best_threshold twins for why this exists: the (x, y) form has no
+// DataFrameBatchOptions to carry a note_policy on, so it can never see a raw
+// Note column; this one threads the caller's own `data_options` (e.g.
+// `note_policy = DataNotePolicy::Factorize`) straight into
+// `labeled_batch_from_dataframe` instead.
+[[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
+                                           const pluss::table::DataFrame& frame,
+                                           const DataFrameBatchOptions& data_options,
+                                           CrossValidationOptions cv = {},
+                                           TrainOptions train_options = {},
+                                           AssessOptions assess_options = {},
+                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                           FitOptions fit_options = {}) {
+  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
+                                     "selection::compare(frame,data_options).labeled_batch_from_dataframe");
+  return compare_batch_(std::move(candidates), batch, cv, train_options, assess_options,
+                        objective_metric, objective_policy, fit_options);
+}
+
+[[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
+                                           const pluss::table::DataFrame& x,
+                                           const pluss::table::Thread& y,
+                                           CrossValidationOptions cv = {},
+                                           TrainOptions train_options = {},
+                                           AssessOptions assess_options = {},
+                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                           FitOptions fit_options = {}) {
+  return compare(std::move(candidates),
               x,
               as_stratify_series(y),
               cv,
@@ -539,6 +735,258 @@ inline void assign_objective_ranks_(TuneReport& report) {
                      assess_options,
                      objective_metric,
                      objective_policy);
+}
+
+// ---------------------------------------------------------------------------
+// Genuine hyperparameter tuning.
+//
+// Everything above this point (compare, tune_specs, probe_specs) ranks
+// candidates the caller already built one at a time. Nothing in this file so
+// far turns "learning_rate in {0.01, 0.05, 0.1}, max_depth in {3, 4, 5}" into
+// the 9 ModelSpecs that describes -- that expansion is the actual missing
+// piece, not a new cross-validation engine (probe_specs's sampler dispatch
+// already is one, with the same parallel-trial shape sweep/compare use).
+// GridAxis/GridPoint/tune/tune_sample are that missing front end.
+// ---------------------------------------------------------------------------
+
+// One axis of a search space: a name (for GridPoint::at(...) lookup and for
+// labeling trials) and the discrete values to sweep over it. Continuous
+// ranges aren't sampled directly -- list however many points along the
+// range are worth trying. A deliberate v1 scope cut: see the blueprint for
+// why, and what a continuous-distribution axis would need on top of this.
+struct GridAxis {
+  std::string name{};
+  std::vector<double> values{};
+};
+
+// One point in an expanded search space, with both positional and
+// name-keyed access -- passed to a search's `make_spec` factory so its body
+// can read `point.at("learning_rate")` instead of juggling a bare index
+// against a separate axis list.
+class GridPoint {
+ public:
+  GridPoint(const std::vector<GridAxis>& axes, std::vector<double> values)
+      : axes_(&axes), values_(std::move(values)) {}
+
+  [[nodiscard]] double at(std::string_view axis_name) const {
+    for (std::size_t i = 0; i < axes_->size(); ++i) {
+      if ((*axes_)[i].name == axis_name) return values_[i];
+    }
+    ::pluss::throw_error("selection::GridPoint::at: unknown axis \"" + std::string(axis_name) + "\".");
+  }
+
+  [[nodiscard]] double operator[](std::size_t index) const { return values_.at(index); }
+  [[nodiscard]] std::size_t size() const noexcept { return values_.size(); }
+
+  // "learning_rate=0.05, max_depth=4" -- the auto-generated trial name, so
+  // compare()-style .board() output stays readable without the caller
+  // having to name every expanded point themselves.
+  [[nodiscard]] std::string label() const {
+    std::string out{};
+    for (std::size_t i = 0; i < axes_->size(); ++i) {
+      if (i > 0) out += ", ";
+      out += (*axes_)[i].name + "=" + std::to_string(values_[i]);
+    }
+    return out;
+  }
+
+ private:
+  const std::vector<GridAxis>* axes_;
+  std::vector<double> values_;
+};
+
+// Total point count across every axis -- the product every axis's size
+// multiplies into, the same one ParameterGrid.__len__ computes for a dict of
+// value lists. Exposed on its own so a caller can sanity-check a search
+// space's size before committing to an exhaustive sweep of it.
+[[nodiscard]] inline std::int64_t grid_size(const std::vector<GridAxis>& axes) {
+  std::int64_t total = 1;
+  for (const auto& axis : axes) {
+    if (axis.values.empty()) return 0;
+    total *= static_cast<std::int64_t>(axis.values.size());
+  }
+  return total;
+}
+
+// Mixed-radix decode: point `index`'s value on axis `a` is
+// `axes[a].values[(index / stride_a) % axes[a].values.size()]`, where
+// stride_a is the product of every earlier axis's size -- so the last axis
+// varies fastest as `index` counts up, matching itertools.product's own
+// iteration order for an equivalent nested-loop expansion. This computes one
+// point directly, without ever materializing the other grid_size(axes) - 1
+// points, which is what lets tune_sample(...) below draw a random handful of
+// points from a space too large to enumerate in full.
+[[nodiscard]] inline GridPoint grid_point_at(std::int64_t index, const std::vector<GridAxis>& axes) {
+  std::vector<double> point(axes.size());
+  std::int64_t stride = 1;
+  for (std::size_t a = 0; a < axes.size(); ++a) {
+    const auto n = static_cast<std::int64_t>(axes[a].values.size());
+    point[a] = axes[a].values[static_cast<std::size_t>((index / stride) % n)];
+    stride *= n;
+  }
+  return GridPoint(axes, std::move(point));
+}
+
+// Every point in the space, in the same cross-product order grid_point_at
+// produces them one at a time. Exhaustive by construction -- only reach for
+// this when every resulting candidate is actually going to be evaluated
+// (tune(...) below uses it internally for exactly that reason); a randomized
+// search draws individual points via grid_point_at(...) instead, so it never
+// pays to materialize points it won't use.
+[[nodiscard]] inline std::vector<GridPoint> grid_points(const std::vector<GridAxis>& axes) {
+  const std::int64_t total = grid_size(axes);
+  std::vector<GridPoint> out{};
+  out.reserve(static_cast<std::size_t>(total));
+  for (std::int64_t i = 0; i < total; ++i) {
+    out.push_back(grid_point_at(i, axes));
+  }
+  return out;
+}
+
+// Shuffle-and-take without-replacement index sample -- the same algorithm
+// NodeJ's own sample_candidates_without_replacement (NodeJ/tune/tune.cpp)
+// uses for its candidate-list random search, applied here to raw grid
+// indices instead of already-built ModelSpecs so a huge space never needs
+// materializing just to draw a small sample from it.
+[[nodiscard]] inline std::vector<std::int64_t> grid_sample_indices_(std::int64_t population,
+                                                                    std::int64_t sample_size,
+                                                                    RandomState random) {
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(population));
+  std::iota(indices.begin(), indices.end(), std::int64_t{0});
+  std::mt19937_64 rng(random.deterministic ? random.seed : std::random_device{}());
+  std::shuffle(indices.begin(), indices.end(), rng);
+  const std::int64_t count = std::min(sample_size, population);
+  indices.resize(static_cast<std::size_t>(count));
+  std::sort(indices.begin(), indices.end());
+  return indices;
+}
+
+// Shared body for tune(...)/tune_sample(...) below: builds a ProbeSpecSampler
+// restricted to exactly the grid indices in `indices` (every index for an
+// exhaustive search, a without-replacement subset for a sampled one) and
+// hands off to probe_specs -- so this file still has exactly one parallel
+// (trial, fold) dispatch engine, not a second one bolted on for grids.
+// `make_spec` runs concurrently across trials the same way every other
+// factory closure in this file already does (evaluate_cell above, sweep's
+// and probe's own eval_trial); it must be safe to call from multiple threads
+// at once, which holds automatically as long as it only reads `point` and
+// builds a fresh ModelSpec value from it.
+[[nodiscard]] inline SpecTuneResult tune_indices_(const std::vector<GridAxis>& axes,
+                                                  const std::function<ModelSpec(const GridPoint&)>& make_spec,
+                                                  std::vector<std::int64_t> indices,
+                                                  const LabeledBatch& batch,
+                                                  const SplitOptions& split,
+                                                  const TrainOptions& train_options,
+                                                  const AssessOptions& assess_options,
+                                                  MetricKind objective_metric,
+                                                  TuneObjectivePolicy objective_policy,
+                                                  RandomState random) {
+  const auto trials = static_cast<std::int64_t>(indices.size());
+  const ProbeSpecSampler sampler = [&axes, &make_spec, &indices](std::int64_t trial_index,
+                                                                 std::uint64_t) -> StatusOr<ModelSpec> {
+    return StatusOr<ModelSpec>(make_spec(grid_point_at(indices[static_cast<std::size_t>(trial_index)], axes)));
+  };
+  return probe_specs(sampler, trials, batch, split, train_options, assess_options,
+                     objective_metric, objective_policy, random);
+}
+
+// Genuine hyperparameter tuning: expands points of `axes` (the sorted-axis
+// cross product grid_points/grid_point_at compute) into ModelSpecs via
+// `make_spec`, then cross-validates them through the same parallel dispatch
+// every other search in this file already uses. Distinct from compare(...)
+// further up, which ranks candidates the caller has already fully built one
+// at a time -- this one builds them from a handful of axis definitions
+// instead.
+//
+// `tune_options.search` picks the strategy, the same TuneOptions.search field
+// tune_specs/probe_specs already dispatch on above:
+//   - None/Grid -- evaluate every point of the cross product.
+//   - Random    -- draw tune_options.trials distinct points without
+//                  replacement (shuffle-and-take over grid_sample_indices_,
+//                  seeded from tune_options.random); trials above
+//                  grid_size(axes) just falls back to the exhaustive sweep,
+//                  matching ParameterSampler's own
+//                  n_iter = min(n_iter, grid_size) clamp. This used to be a
+//                  separate public tune_sample(...) entry point; it is now an
+//                  internal branch here instead, reached only through
+//                  SearchKind::Random.
+//   - Bayesian/SuccessiveHalving -- not wired through this GridAxis front end
+//     yet (see LYMPH_BLUEPRINT.md Sec 8/9); call probe_specs directly with a
+//     custom sampler if you need those today.
+[[nodiscard]] inline SpecTuneResult tune(const std::vector<GridAxis>& axes,
+                                         const std::function<ModelSpec(const GridPoint&)>& make_spec,
+                                         const LabeledBatch& batch,
+                                         const TuneOptions& tune_options = {},
+                                         const TrainOptions& train_options = {},
+                                         const AssessOptions& assess_options = {},
+                                         MetricKind objective_metric = MetricKind::Accuracy,
+                                         TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const std::int64_t total = grid_size(axes);
+  if (total <= 0) {
+    ::pluss::throw_error("selection::tune: search space is empty (an axis has zero values).");
+  }
+  if (tune_options.search == SearchKind::Random) {
+    if (tune_options.trials <= 0) {
+      ::pluss::throw_error("selection::tune: SearchKind::Random requires TuneOptions.trials > 0.");
+    }
+    return tune_indices_(axes, make_spec, grid_sample_indices_(total, tune_options.trials, tune_options.random),
+                         batch, tune_options.split, train_options, assess_options, objective_metric,
+                         objective_policy, tune_options.random);
+  }
+  if (tune_options.search == SearchKind::None || tune_options.search == SearchKind::Grid) {
+    std::vector<std::int64_t> indices(static_cast<std::size_t>(total));
+    std::iota(indices.begin(), indices.end(), std::int64_t{0});
+    return tune_indices_(axes, make_spec, std::move(indices), batch, tune_options.split, train_options,
+                         assess_options, objective_metric, objective_policy, tune_options.random);
+  }
+  ::pluss::throw_error(
+      "selection::tune: only SearchKind::Grid (or None) and SearchKind::Random are supported here -- "
+      "call probe_specs directly with a custom sampler for Bayesian/SuccessiveHalving.");
+}
+
+[[nodiscard]] inline SpecTuneResult tune(const std::vector<GridAxis>& axes,
+                                         const std::function<ModelSpec(const GridPoint&)>& make_spec,
+                                         const pluss::table::DataFrame& x,
+                                         const Series& y,
+                                         const TuneOptions& tune_options = {},
+                                         const TrainOptions& train_options = {},
+                                         const AssessOptions& assess_options = {},
+                                         MetricKind objective_metric = MetricKind::Accuracy,
+                                         TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const auto names = cross_validate_default_feature_names_(x, "selection::tune(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "selection::tune(x,y)");
+  return tune(axes, make_spec, batch, tune_options, train_options, assess_options, objective_metric,
+             objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult tune(const std::vector<GridAxis>& axes,
+                                         const std::function<ModelSpec(const GridPoint&)>& make_spec,
+                                         const pluss::table::DataFrame& x,
+                                         const pluss::table::Thread& y,
+                                         const TuneOptions& tune_options = {},
+                                         const TrainOptions& train_options = {},
+                                         const AssessOptions& assess_options = {},
+                                         MetricKind objective_metric = MetricKind::Accuracy,
+                                         TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  return tune(axes, make_spec, x, as_stratify_series(y), tune_options, train_options, assess_options,
+             objective_metric, objective_policy);
+}
+
+// (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
+// workflow_model.h for why this exists alongside the (x, y) form.
+[[nodiscard]] inline SpecTuneResult tune(const std::vector<GridAxis>& axes,
+                                         const std::function<ModelSpec(const GridPoint&)>& make_spec,
+                                         const pluss::table::DataFrame& frame,
+                                         const DataFrameBatchOptions& data_options,
+                                         const TuneOptions& tune_options = {},
+                                         const TrainOptions& train_options = {},
+                                         const AssessOptions& assess_options = {},
+                                         MetricKind objective_metric = MetricKind::Accuracy,
+                                         TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
+                                     "selection::tune(frame,data_options).labeled_batch_from_dataframe");
+  return tune(axes, make_spec, batch, tune_options, train_options, assess_options, objective_metric,
+             objective_policy);
 }
 
 } // namespace selection

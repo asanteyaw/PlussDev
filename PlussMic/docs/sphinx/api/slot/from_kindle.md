@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::from_kindle
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,39 +7,57 @@
 ## Signature
 
 ```cpp
-Slot::from_kindle(const pluss::kindle::Stream& stream) -> Slot
+static Slot Slot::from_kindle(const pluss::kindle::Stream& stream)
 ```
 
 ## What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts a kindle `Stream` into a `Slot`, unpacking the stream's single
+shared column into independent per-value entries — the inverse of
+[`to_kindle()`](to_kindle.md).
 
 ## Parameters
 
-**stream**
-    Stream payload supplied to this overload.
+**stream** (`const pluss::kindle::Stream&`)
+    The stream to convert. Must be defined.
 
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new slot, one value per row in `stream`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Round-trip a `Series` stream through `Slot`.
 
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = pluss::bundle::Slot::from_kindle(stream);
+auto stream = pluss::kindle::Stream(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}));
+auto slot = pluss::bundle::Slot::from_kindle(stream);
+std::cout << "size=" << slot.size() << " val0="
+          << std::get<pluss::Series>(slot.at(0)).to_vec<double>()[0];
 ```
 
 ### Output
 
 ```text
-Slot([Series(1), Series(2), Series(3)])
+size=3 val0=10
 ```
 
+## Notes
+
+- `stream` must be defined — an undefined stream throws
+  `"Slot::from_kindle: stream undefined"`.
+- A row with a null validity flag becomes `std::monostate` in the
+  resulting slot.
+- A static method — call it as `Slot::from_kindle(stream)`, not on an
+  existing instance.
+
+## See Also
+
+- [`Slot::to_kindle`](to_kindle.md) / [`Slot::as_kindle`](as_kindle.md) /
+  [`Slot::kindelize`](kindelize.md): the inverse conversion.
+- [`Registry::from_kindle`](../registry/from_kindle.md): the equivalent
+  conversion at the `Registry` level, from a `Catalog`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="freq.html">

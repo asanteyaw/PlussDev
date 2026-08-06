@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <future>
+#include <limits>
 #include <memory>
 #include <string>
 #include <thread>
@@ -668,6 +669,60 @@ StatusOr<Series> classification_metrics(const Series& truth_labels,
   }
   if (out.empty()) {
     return StatusOr<Series>(pluss::make_series(std::vector<double>{}, {0}, f64_on(platform)));
+  }
+  Series merged = out.front();
+  for (std::size_t i = 1; i < out.size(); ++i) {
+    merged = merged.unite({out[i]}, 0);
+  }
+  return StatusOr<Series>(merged.reshape({static_cast<std::int64_t>(out.size())}).to(platform, ScalarType::Float64));
+}
+
+StatusOr<Series> regression_metrics(const Series& truth, const Series& prediction, const std::vector<MetricKind>& metrics) {
+  if (!truth.defined() || !prediction.defined()) {
+    return StatusOr<Series>(Status::invalid_argument("regression_metrics requires defined truth/prediction vectors."));
+  }
+  const Series y = truth.to(ScalarType::Float64).reshape({truth.numel()});
+  const Series yhat = prediction.to(ScalarType::Float64).reshape({prediction.numel()});
+  if (y.numel() != yhat.numel()) {
+    return StatusOr<Series>(Status::shape_mismatch("regression_metrics requires equal truth/prediction lengths."));
+  }
+  if (y.numel() == 0) {
+    return StatusOr<Series>(Status::invalid_argument("regression_metrics requires at least one sample."));
+  }
+
+  std::vector<MetricKind> requested = metrics;
+  if (requested.empty()) requested = default_metrics(TaskKind::Regression);
+
+  const Platform platform = y.platform();
+  const Series err = yhat.sub(y);
+  const Series mse = err.square().mean();
+  const Series mae = err.abs().mean();
+  const Series sse = err.square().sum();
+  const Series sst = y.sub(y.mean()).square().sum();
+  const Series one = pluss::series::ones({1}, f64_on(platform));
+  const Series zero = pluss::series::zeros({1}, f64_on(platform));
+  const Series r2 = sst.gt(std::numeric_limits<double>::epsilon()).where(one.sub(sse.div(sst)), zero);
+
+  std::vector<Series> out{};
+  out.reserve(requested.size());
+  for (MetricKind metric : requested) {
+    switch (metric) {
+      case MetricKind::Mse:
+        out.push_back(mse.reshape({1}));
+        break;
+      case MetricKind::Rmse:
+        out.push_back(mse.sqrt().reshape({1}));
+        break;
+      case MetricKind::Mae:
+        out.push_back(mae.reshape({1}));
+        break;
+      case MetricKind::R2:
+        out.push_back(r2.reshape({1}));
+        break;
+      default:
+        return StatusOr<Series>(
+            Status::invalid_argument("regression_metrics supports Mse/Rmse/Mae/R2 only."));
+    }
   }
   Series merged = out.front();
   for (std::size_t i = 1; i < out.size(); ++i) {

@@ -245,6 +245,39 @@ bool read_series_vector(BinaryReader& r, std::vector<Series>& values) {
   return true;
 }
 
+void write_category_maps(BinaryWriter& w, const CategoryMaps& maps) {
+  w.pod(static_cast<std::uint64_t>(maps.size()));
+  for (const auto& [column_name, map] : maps) {
+    w.string(column_name);
+    w.pod(static_cast<std::uint64_t>(map.categories.size()));
+    for (const auto& category : map.categories) {
+      w.string(category);
+    }
+  }
+}
+
+bool read_category_maps(BinaryReader& r, CategoryMaps& maps) {
+  std::uint64_t map_count = 0;
+  if (!r.pod(map_count)) return false;
+  maps.clear();
+  maps.reserve(static_cast<std::size_t>(map_count));
+  for (std::uint64_t i = 0; i < map_count; ++i) {
+    std::string column_name{};
+    if (!r.string(column_name)) return false;
+    std::uint64_t category_count = 0;
+    if (!r.pod(category_count)) return false;
+    CategoryMap map{};
+    map.categories.reserve(static_cast<std::size_t>(category_count));
+    for (std::uint64_t j = 0; j < category_count; ++j) {
+      std::string category{};
+      if (!r.string(category)) return false;
+      map.categories.push_back(std::move(category));
+    }
+    maps.emplace(std::move(column_name), std::move(map));
+  }
+  return true;
+}
+
 void write_family_options(BinaryWriter& w, const ModelSpec& spec) {
   if (spec.family == ModelFamily::Linear) {
     const auto& o = std::get<LinearFamilyOptions>(spec.options);
@@ -675,7 +708,8 @@ Status save(const std::string& path,
             const Flow& flow,
             const LabeledBatch& train_batch,
             const TrainOptions& train_options,
-            FlowBundleMetadata metadata) {
+            FlowBundleMetadata metadata,
+            const CategoryMaps& category_maps) {
   if (!flow.has_model_spec() || !flow.model_spec().has_value()) {
     return Status::invalid_argument("save requires a Flow configured via set_model(ModelSpec).");
   }
@@ -739,6 +773,7 @@ Status save(const std::string& path,
   } else {
     write_labeled_batch(writer, LabeledBatch{});
   }
+  write_category_maps(writer, category_maps);
   if (!writer.ok()) return Status::internal("save failed while writing bundle bytes.");
   return Status::success();
 }
@@ -818,6 +853,9 @@ StatusOr<FlowBundle> load(const std::string& path) {
       }
       bundle.train_batch = LabeledBatch{};
     }
+  }
+  if (!read_category_maps(reader, bundle.category_maps)) {
+    return StatusOr<FlowBundle>(Status::internal("load failed while reading category maps."));
   }
   return StatusOr<FlowBundle>(std::move(bundle));
 }

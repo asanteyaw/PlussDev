@@ -36,18 +36,32 @@
 
           <div class="body" role="main">
             
-  <section id="slot-unique">
+  <!-- pluss-hand-authored -->
+<section id="slot-unique">
 <h1>Slot::unique<a class="headerlink" href="#slot-unique" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_api_reference.html"><span class="doc std std-doc">Back to Slot API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
+<p>Reports whether this <code class="docutils literal notranslate"><span class="pre">Slot</span></code> handle is the <em>sole owner</em> of its underlying
+payload — a reference-count check, not a data check.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Not about duplicate values — about shared ownership
+<code class="docutils literal notranslate"><span class="pre">unique()</span></code> does <strong>not</strong> ask “does this slot’s data contain duplicate
+values.” It asks “is this handle the only reference to its underlying
+storage,” the same sense as <code class="docutils literal notranslate"><span class="pre">std::shared_ptr::use_count()</span> <span class="pre">==</span> <span class="pre">1</span></code>. Copying a
+<code class="docutils literal notranslate"><span class="pre">Slot</span></code> (which is cheap — <code class="docutils literal notranslate"><span class="pre">Slot</span></code> shares its storage via an internal
+intrusive pointer) makes <code class="docutils literal notranslate"><span class="pre">unique()</span></code> return <code class="docutils literal notranslate"><span class="pre">false</span></code> on <em>both</em> the original
+and the copy, even though nothing about the data changed. If you’re looking
+for “does this slot have any repeated values,” that’s
+<a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distinct()</span></code></span></a>/<a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code></span></a>, not this method.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,14 +70,14 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-Boolean status or membership result.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> if no other <code class="docutils literal notranslate"><span class="pre">Slot</span></code> handle currently shares this payload;
+<code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise (including when the slot is undefined).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
+<p>Example 1. A freshly constructed slot is its own sole owner.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
@@ -71,6 +85,36 @@ Boolean status or membership result.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
+<p>Example 2. Copying the slot means <em>neither</em> handle is unique anymore — see
+the danger callout above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">copy</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the danger callout above — this is about shared ownership, not
+duplicate data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noexcept</span></code> — safe to call even on an undefined <code class="docutils literal notranslate"><span class="pre">Slot</span></code> (returns <code class="docutils literal notranslate"><span class="pre">false</span></code>).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="defined.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::defined</span></code></span></a>: the other <code class="docutils literal notranslate"><span class="pre">noexcept</span></code> state check.</p></li>
+<li><p><a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::distinct</span></code></span></a> / <a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::ndistinct</span></code></span></a>: what
+to reach for when the goal is actually detecting duplicate values.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="type_counts.html">
     <span class="label">Previous</span>
@@ -81,7 +125,6 @@ Boolean status or membership result.</p>
     <span class="title">values</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

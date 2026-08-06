@@ -125,15 +125,15 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
 
 } // namespace stage
 } // namespace workflow
-// Defined in Lymph/workflow_dsl.cpp (real logic, not a one-line forwarder).
+// Defined in Lymph/src/workflow_dsl.cpp (real logic, not a one-line forwarder).
 [[nodiscard]] std::vector<std::string> resolved_feature_order_for_features_(
     const pluss::table::DataFrame& frame,
     const DataFrameBatchOptions& data_options);
 
-// Defined in Lymph/workflow_dsl.cpp (real logic, not a one-line forwarder).
+// Defined in Lymph/src/workflow_dsl.cpp (real logic, not a one-line forwarder).
 [[nodiscard]] std::unique_ptr<TransformerBase> make_core_transformer_from_spec_(const TransformSpec& spec);
 
-// Defined in Lymph/workflow_dsl.cpp (real logic, not a one-line forwarder) —
+// Defined in Lymph/src/workflow_dsl.cpp (real logic, not a one-line forwarder) —
 // every other make_feature_transformer/make_branch_transformer/branch_transformer
 // overload below is a thin forwarder onto this one.
 [[nodiscard]] ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(

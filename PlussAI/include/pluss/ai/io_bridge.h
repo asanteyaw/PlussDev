@@ -29,15 +29,6 @@ inline void save(
 }
 
 inline void save(
-    const ::pluss::ai::lymph::Workflow& workflow,
-    std::string_view path,
-    const ::pluss::ai::nodej::LabeledBatch& train_batch,
-    const ::pluss::ai::nodej::TrainOptions& train_options = {},
-    ::pluss::ai::nodej::io::FlowBundleMetadata metadata = {}) {
-  workflow.save(std::string(path), train_batch, train_options, std::move(metadata));
-}
-
-inline void save(
     const ::pluss::ai::lymph::WorkflowModel& workflow_model,
     std::string_view path,
     const ::pluss::ai::nodej::LabeledBatch& train_batch,
@@ -80,13 +71,6 @@ inline T load(std::string_view path, const ::pluss::io::LoadOptions& options = {
 }
 
 template <class T>
-  requires std::is_same_v<std::remove_cvref_t<T>, ::pluss::ai::lymph::Workflow>
-inline T load(std::string_view path, const ::pluss::io::LoadOptions& options = {}) {
-  warn_model_load_options_ignored_(options, "load<lymph::Workflow>");
-  return ::pluss::ai::lymph::Workflow::load(std::string(path));
-}
-
-template <class T>
   requires std::is_same_v<std::remove_cvref_t<T>, ::pluss::ai::lymph::WorkflowModel>
 inline T load(std::string_view path, const ::pluss::io::LoadOptions& options = {}) {
   warn_model_load_options_ignored_(options, "load<lymph::WorkflowModel>");
@@ -105,13 +89,6 @@ inline void load(
     std::string_view path,
     const ::pluss::io::LoadOptions& options = {}) {
   out = load<::pluss::ai::nodej::Flow>(path, options);
-}
-
-inline void load(
-    ::pluss::ai::lymph::Workflow& out,
-    std::string_view path,
-    const ::pluss::io::LoadOptions& options = {}) {
-  out = load<::pluss::ai::lymph::Workflow>(path, options);
 }
 
 inline void load(

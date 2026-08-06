@@ -35,7 +35,6 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d88a07f091ea -->
 <section id="registrytimelineaccessor-utc">
 <h1>RegistryTimelineAccessor::utc<a class="headerlink" href="#registrytimelineaccessor-utc" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryTimelineAccessor API Reference</span></a></p>
@@ -47,18 +46,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Intended as a shorthand for <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz(&quot;UTC&quot;)</span></code></span></a> — relabel each bound
-field’s display timezone back to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> without changing the underlying
-instant.</p>
-<div class="admonition danger">
-<p class="admonition-title">Danger</p>
-<p>Subject to the same display-label limitation as tz()
-Since <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> itself doesn’t make a display-timezone relabel survive
-being read back at the <code class="docutils literal notranslate"><span class="pre">Registry</span></code>/<code class="docutils literal notranslate"><span class="pre">Slot</span></code> layer (see its page for the full
-explanation), <code class="docutils literal notranslate"><span class="pre">utc()</span></code> is effectively unobservable here too — a field’s
-timestamps already read back as UTC by default on every <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call,
-<code class="docutils literal notranslate"><span class="pre">utc()</span></code> included, regardless of any prior <code class="docutils literal notranslate"><span class="pre">tz()</span></code>/<code class="docutils literal notranslate"><span class="pre">localize()</span></code> call.</p>
-</div>
+<p>Shorthand for <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz(&quot;UTC&quot;)</span></code></span></a> — relabels each bound field’s display
+timezone back to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> without changing the underlying instant.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -67,27 +56,33 @@ timestamps already read back as UTC by default on every <code class="docutils li
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>
-A new registry with every bound field nominally relabeled to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>
-display — see the danger callout above.</p>
+A new registry with every bound field relabeled to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> display.
+Reading the result back through any further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call reflects the
+<code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> relabeling.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Calling <code class="docutils literal notranslate"><span class="pre">utc()</span></code> after <code class="docutils literal notranslate"><span class="pre">tz()</span></code> produces the same displayed values
-as not calling <code class="docutils literal notranslate"><span class="pre">tz()</span></code> at all, since neither call’s relabeling persists past
-the next <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> read.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">tz(&quot;America/New_York&quot;)</span></code> relabels the display timezone (visible
+on the first <code class="docutils literal notranslate"><span class="pre">fmt()</span></code> read below); a follow-up <code class="docutils literal notranslate"><span class="pre">utc()</span></code> relabels it back to
+<code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>, and that too is visible on the next read — the instant itself never
+changes across either call.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">ny</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rg</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">tz</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NY-relabeled: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ny</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">utc</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">fmted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fmted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC-relabeled: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2024-01-31 09:15:30
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>NY-relabeled: 2024-01-31 04:15:30
+UTC-relabeled: 2024-01-31 09:15:30
 </pre></div>
 </div>
 </section>
@@ -95,19 +90,20 @@ the next <code class="docutils literal notranslate"><span class="pre">.tl()</spa
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>See the danger callout above and <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>’s page for the full
-explanation of why this doesn’t behave the way the equivalent
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>/<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>/<code class="docutils literal notranslate"><span class="pre">Atlas</span></code> method does.</p></li>
 <li><p>Requires every bound field to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field
 throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+<li><p>Internally, each bound field stores its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> values independently
+(one scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> per row, not one shared column); the resulting
+per-row tz labels round-trip correctly through the <code class="docutils literal notranslate"><span class="pre">kindle::Stream</span></code>
+boundary every further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call goes through, the same as
+<a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::tz</span></code></span></a>: the general form this method is
-a fixed <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> shorthand for, with the full explanation of the
-round-trip limitation.</p></li>
+a fixed <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> shorthand for.</p></li>
 <li><p><a class="reference internal" href="localize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::localize</span></code></span></a>: the operation that
 actually changes the underlying instant.</p></li>
 <li><p><a class="reference internal" href="../registry/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::tl</span></code></span></a>: the entry point this accessor is

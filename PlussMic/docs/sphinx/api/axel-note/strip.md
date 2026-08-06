@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelNoteAccessor::strip
 
 [Back to AxelNoteAccessor API Reference](../../axel_note_accessor_api_reference)
@@ -5,70 +7,122 @@
 ## Signatures
 
 ```cpp
-AxelNoteAccessor::strip() -> Axel
+Axel AxelNoteAccessor::strip() const
 
-AxelNoteAccessor::strip(std::string_view chars) -> Axel
+Axel AxelNoteAccessor::strip(std::string_view chars) const
 ```
 
 ## What It Does
 
-Applies an elementwise cleanup or transformation while preserving the surrounding alignment, labels, and payload family whenever possible.
+Trims characters from **both** edges of each bound field's text, in
+every registry frame, returning a new axel with those fields replaced.
+The no-argument overload trims whitespace; the `chars`-argument
+overload trims any of the given characters, in any order, from either
+end. Applies
+[`RegistryNoteAccessor::strip`](../registry-note/strip.md) to every
+frame via [`Axel::map`](../axel/map.md).
+
+```{important} AxelNoteAccessor requires every bound field, in every frame, to be Note-kind
+Every method on this accessor — not just `strip()` — routes through
+`Registry::nt()` per frame, which itself routes through `Slot::nt()`
+per field. If any bound field in any frame isn't `Note`-kind (`Series`,
+`Timeline`, `TimeIndex`, `Mixed`, `Null`, or `Empty`), the call throws
+`"Slot::nt: slot kind must be Note"`. Since [`Axel::nt()`](../axel/nt.md)
+binds *every* field of *every* frame by default, this is the most
+common way to trip the throw — project down to just the text fields
+first with [`fields(keys)`](../axel/fields.md) before calling `.nt()`.
+```
 
 ## Parameters
 
-**chars**
-    Characters to trim from the edge of each text value.
+**chars** (`std::string_view`, one-argument overload only)
+    The set of characters to strip from both edges. Every leading or
+    trailing character that appears anywhere in `chars` is removed,
+    stopping at the first character on each side that doesn't.
 
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every bound field's text trimmed on both edges, in
+    every frame; every unbound field unchanged.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. No-argument overload trims leading and trailing whitespace.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto notes = axel.fields({"city"}).nt();
+auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")})}});
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = notes.strip();
-std::cout << out;
+auto out = axel.fields({"city"}).nt().strip();
+auto city = out.registry(0).fields("city");
+std::cout << "'" << std::get<pluss::Note>(city.at(0)).at(0) << "' '"
+          << std::get<pluss::Note>(city.at(1)).at(0) << "'";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+'Accra' 'Tema'
 ```
-Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+Example 2. `chars`-argument overload trims a specific character set
+from both edges.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto notes = axel.fields({"city"}).nt();
+auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("xxAccraxx")})}});
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = notes.strip("units");
-std::cout << out;
+auto out = axel.fields({"code"}).nt().strip("x");
+std::cout << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+Accra
 ```
 
+Example 3. Calling any method on this accessor with a non-`Note` field
+bound throws — see the important callout above.
+
+```cpp
+auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
+auto axel = pluss::bundle::Axel({r0});
+
+try {
+  auto out = axel.fields({"id"}).nt().strip();
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Slot::nt: slot kind must be Note
+```
+
+## Notes
+
+- See the important callout above — this precondition applies to every
+  method on `AxelNoteAccessor`, not only `strip()`.
+- The `chars`-argument overload treats `chars` as a *set* of characters,
+  not a literal prefix/suffix — order within `chars` doesn't matter.
+- For a one-sided trim, see [`lstrip()`](lstrip.md) and
+  [`rstrip()`](rstrip.md).
+
+## See Also
+
+- [`AxelNoteAccessor::lstrip`](lstrip.md) / [`rstrip()`](rstrip.md): the
+  one-sided variants.
+- [`AxelNoteAccessor::pad`](pad.md): the inverse operation, adding
+  characters instead of removing them.
+- [`Axel::nt`](../axel/nt.md): the entry point this accessor is reached
+  from.
+- [`Axel::fields`](../axel/fields.md): project down to text-only fields
+  before calling `.nt()`, per the important callout above.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="starts.html">

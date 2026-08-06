@@ -36,49 +36,68 @@
 
           <div class="body" role="main">
             
-  <section id="axel-show">
+  <!-- pluss-hand-authored -->
+<section id="axel-show">
 <h1>Axel::show<a class="headerlink" href="#axel-show" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This renders a human-readable view for inspection instead of creating a new analytic object.</p>
+<p>Writes the exact same summary string <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>
+produces to <code class="docutils literal notranslate"><span class="pre">os</span></code>. <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> for <code class="docutils literal notranslate"><span class="pre">Axel</span></code> calls this method internally,
+so <code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">axel</span></code> and <code class="docutils literal notranslate"><span class="pre">axel.show(os)</span></code> are equivalent.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>os</strong>
-Destination output stream used instead of the default display or print target.</p>
+<p><strong>os</strong> (<code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>)
+The stream to write the summary to.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">void</span></code>
-Performs the side effect and returns no value.</p>
+<p><code class="docutils literal notranslate"><span class="pre">void</span></code></p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Write the output to a caller-provided stream.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">show()</span></code>’s output matches <code class="docutils literal notranslate"><span class="pre">to_string()</span></code>’s return value
+exactly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})}}),</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-
-<span class="n">axel</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">ostringstream</span><span class="w"> </span><span class="n">oss</span><span class="p">;</span>
+<span class="n">axel</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">oss</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">oss</span><span class="p">.</span><span class="n">str</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">to_string</span><span class="p">());</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>depth0 -&gt; Registry(ids -&gt; Slot([Series(1), Series(2)]))
-depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">show()</span></code> is <code class="docutils literal notranslate"><span class="pre">to_string()</span></code>’s content routed to a stream — see
+<a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> for the format, including its
+depth-<code class="docutils literal notranslate"><span class="pre">6</span></code> truncation behavior and the important asymmetry with
+<a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span> <span class="pre">operator&lt;&lt;(std::ostream&amp;,</span> <span class="pre">const</span> <span class="pre">Axel&amp;)</span></code> calls <code class="docutils literal notranslate"><span class="pre">show()</span></code>
+internally, so <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">axel</span></code> is equivalent to
+<code class="docutils literal notranslate"><span class="pre">axel.show(std::cout)</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::to_string</span></code></span></a>: the string this method streams.</p></li>
+<li><p><a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::to_json</span></code></span></a>: the alternative, unabridged dump.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rename.html">
     <span class="label">Previous</span>
@@ -89,7 +108,6 @@ depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
     <span class="title">size</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

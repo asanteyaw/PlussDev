@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::defined
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,21 @@
 ## Signature
 
 ```cpp
-Slot::defined() -> bool
+bool Slot::defined() const noexcept
 ```
 
 ## What It Does
 
-Reports whether the current object owns a concrete payload that can be used safely in later operations.
+Reports whether the `Slot` handle owns a concrete, usable payload. A
+default-constructed `Slot` is undefined; every other constructor produces a
+defined one.
+
+```{important} Almost every other method requires defined() to be true
+Calling `size()`, `values()`, `at()`, or nearly any other method on an
+undefined `Slot` throws `"Slot: undefined handle"`. `defined()` (and its
+sibling [`unique()`](unique.md)) are the two exceptions — both are
+`noexcept` and safe to call on any `Slot`, defined or not.
+```
 
 ## Parameters
 
@@ -19,16 +30,16 @@ Reports whether the current object owns a concrete payload that can be used safe
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` if the slot owns a payload; `false` for a default-constructed
+    `Slot`.
 
 ## Examples
 
-Example 1. Inspect the `defined` property of the current object.
+Example 1. A slot built from values is defined.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
-auto out = slot.defined();
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+std::cout << std::boolalpha << slot.defined();
 ```
 
 ### Output
@@ -37,6 +48,31 @@ auto out = slot.defined();
 true
 ```
 
+Example 2. A default-constructed slot is not.
+
+```cpp
+pluss::bundle::Slot slot;
+std::cout << std::boolalpha << slot.defined();
+```
+
+### Output
+
+```text
+false
+```
+
+## Notes
+
+- See the important callout above — this is the one check safe to make
+  before calling anything else on a `Slot` that might be undefined.
+- `noexcept` — never throws, regardless of state.
+
+## See Also
+
+- [`Slot::unique`](unique.md): the other `noexcept` state check, reporting
+  reference-count uniqueness rather than payload presence.
+- [`Slot::empty`](empty.md): a defined slot can still be empty (zero
+  values) — a different condition from being undefined.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="concat.html">

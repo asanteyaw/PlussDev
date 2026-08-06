@@ -1,5 +1,4 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d88a07f091ea -->
 
 # RegistryTimelineAccessor::utc
 
@@ -13,17 +12,8 @@ Registry RegistryTimelineAccessor::utc() const
 
 ## What It Does
 
-Intended as a shorthand for [`tz("UTC")`](tz.md) — relabel each bound
-field's display timezone back to `"UTC"` without changing the underlying
-instant.
-
-```{danger} Subject to the same display-label limitation as tz()
-Since [`tz()`](tz.md) itself doesn't make a display-timezone relabel survive
-being read back at the `Registry`/`Slot` layer (see its page for the full
-explanation), `utc()` is effectively unobservable here too — a field's
-timestamps already read back as UTC by default on every `.tl()` call,
-`utc()` included, regardless of any prior `tz()`/`localize()` call.
-```
+Shorthand for [`tz("UTC")`](tz.md) — relabels each bound field's display
+timezone back to `"UTC"` without changing the underlying instant.
 
 ## Parameters
 
@@ -32,14 +22,16 @@ timestamps already read back as UTC by default on every `.tl()` call,
 ## Returns
 
 `Registry`
-    A new registry with every bound field nominally relabeled to `"UTC"`
-    display — see the danger callout above.
+    A new registry with every bound field relabeled to `"UTC"` display.
+    Reading the result back through any further `.tl()` call reflects the
+    `"UTC"` relabeling.
 
 ## Examples
 
-Example 1. Calling `utc()` after `tz()` produces the same displayed values
-as not calling `tz()` at all, since neither call's relabeling persists past
-the next `.tl()` read.
+Example 1. `tz("America/New_York")` relabels the display timezone (visible
+on the first `fmt()` read below); a follow-up `utc()` relabels it back to
+`"UTC"`, and that too is visible on the next read — the instant itself never
+changes across either call.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -47,30 +39,35 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto ny = rg.fields({"ts"}).tl().tz("America/New_York");
+std::cout << "NY-relabeled: "
+          << std::get<pluss::Note>(ny.fields("ts").tl().fmt("%Y-%m-%d %H:%M:%S").at(0)).at(0) << "\n";
+
 auto out = ny.fields({"ts"}).tl().utc();
-auto fmted = out.fields("ts").tl().fmt("%Y-%m-%d %H:%M:%S");
-std::cout << std::get<pluss::Note>(fmted.at(0)).at(0);
+std::cout << "UTC-relabeled: "
+          << std::get<pluss::Note>(out.fields("ts").tl().fmt("%Y-%m-%d %H:%M:%S").at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-2024-01-31 09:15:30
+NY-relabeled: 2024-01-31 04:15:30
+UTC-relabeled: 2024-01-31 09:15:30
 ```
 
 ## Notes
 
-- See the danger callout above and [`tz()`](tz.md)'s page for the full
-  explanation of why this doesn't behave the way the equivalent
-  `Thread`/`DataFrame`/`Atlas` method does.
 - Requires every bound field to be `Timeline`-kind — a non-`Timeline` field
   throws `"Slot::tl: slot kind must be Timeline"`.
+- Internally, each bound field stores its `Timeline` values independently
+  (one scalar `Timeline` per row, not one shared column); the resulting
+  per-row tz labels round-trip correctly through the `kindle::Stream`
+  boundary every further `.tl()` call goes through, the same as
+  [`tz()`](tz.md).
 
 ## See Also
 
 - [`RegistryTimelineAccessor::tz`](tz.md): the general form this method is
-  a fixed `"UTC"` shorthand for, with the full explanation of the
-  round-trip limitation.
+  a fixed `"UTC"` shorthand for.
 - [`RegistryTimelineAccessor::localize`](localize.md): the operation that
   actually changes the underlying instant.
 - [`Registry::tl`](../registry/tl.md): the entry point this accessor is

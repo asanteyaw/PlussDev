@@ -34,50 +34,105 @@
 
           <div class="body" role="main">
             
-  <section id="axeltimelineaccessor-localize">
+  <!-- pluss-hand-authored -->
+<section id="axeltimelineaccessor-localize">
 <h1>AxelTimelineAccessor::localize<a class="headerlink" href="#axeltimelineaccessor-localize" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to AxelTimelineAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AxelTimelineAccessor</span><span class="o">::</span><span class="n">localize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimelineLocalizeOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Axel</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="w"> </span><span class="n">AxelTimelineAccessor</span><span class="o">::</span><span class="n">localize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimelineLocalizeOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Reinterprets each bound field’s <em>current</em> clock reading as a naive
+local wall-clock time in <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>, and converts it to the true UTC
+instant that local reading corresponds to, in every registry frame.
+<strong>This changes the underlying instant</strong> (unlike <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>, which
+only relabels display). The <code class="docutils literal notranslate"><span class="pre">options.tz</span></code> label attached by
+<code class="docutils literal notranslate"><span class="pre">localize()</span></code> also survives being read back through any further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code>
+call — see Example 1. Applies
+<a class="reference internal" href="../registry-timeline/localize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::localize</span></code></span></a>
+to every frame via <a class="reference internal" href="../axel/map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::map</span></code></span></a>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::TimelineLocalizeOptions&amp;</span></code>)
+<code class="docutils literal notranslate"><span class="pre">tz</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>; must be one of the four supported names —
+see <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> — and cannot be empty), <code class="docutils literal notranslate"><span class="pre">fold</span></code> (<code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>;
+disambiguates the daylight-saving fall-back overlap), and
+<code class="docutils literal notranslate"><span class="pre">nonexistent</span></code> (only <code class="docutils literal notranslate"><span class="pre">&quot;shift_forward&quot;</span></code> is a recognized handling mode
+for a spring-forward-gap reading; anything else, including the
+default <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code>, throws).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>
-Value produced by this call.</p>
+A new axel with every bound field’s underlying instant, in every
+frame, recomputed as if its prior reading were local time in
+<code class="docutils literal notranslate"><span class="pre">options.tz</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:40:00Z&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:40:00Z&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">timelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">();</span>
+<p>Example 1. Localize a timestamp to <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">epoch()</span></code>
+confirms the instant actually moved; a follow-up <code class="docutils literal notranslate"><span class="pre">fmt()</span></code> shows the
+shifted instant correctly rendered in NY-local wall-clock time.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)})}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timelines</span><span class="p">.</span><span class="n">localize</span><span class="p">({});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">localized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">before</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">after</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">localized</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;epoch before: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">before</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;epoch after: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">after</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">fmted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">localized</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;displayed: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fmted</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>epoch before: 1706692530
+epoch after: 1706710530
+displayed: 2024-01-31 09:15:30
 </pre></div>
 </div>
+<p>The 18,000-second delta (5 hours) confirms the instant genuinely
+moved — the correct behavior for <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code> in January
+(Eastern Standard Time, <code class="docutils literal notranslate"><span class="pre">-5:00</span></code>). The displayed text, <code class="docutils literal notranslate"><span class="pre">09:15:30</span></code>, is
+the shifted instant correctly rendered as NY-local wall-clock time.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">localize()</span></code> changes the underlying instant; <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> never
+does.</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.tz</span></code> only accepts the same four names as <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, and cannot
+be empty.</p></li>
+<li><p>Requires every bound field, in every frame, to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a
+non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+<li><p>Internally, each <code class="docutils literal notranslate"><span class="pre">Registry</span></code> frame stores each row’s <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> value
+independently (one scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> per row, not one shared column);
+the resulting per-row tz labels round-trip correctly through the
+<code class="docutils literal notranslate"><span class="pre">kindle::Stream</span></code> boundary every further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call goes through,
+the same as <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AxelTimelineAccessor::tz</span></code></span></a>: relabels display without
+changing the instant.</p></li>
+<li><p><a class="reference internal" href="epoch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AxelTimelineAccessor::epoch</span></code></span></a>: used above to confirm the
+instant shift independent of display.</p></li>
+<li><p><a class="reference internal" href="../axel/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::tl</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="leap.html">
     <span class="label">Previous</span>
@@ -88,7 +143,6 @@ Value produced by this call.</p>
     <span class="title">minute</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

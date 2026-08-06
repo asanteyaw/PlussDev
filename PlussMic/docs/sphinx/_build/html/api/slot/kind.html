@@ -36,18 +36,30 @@
 
           <div class="body" role="main">
             
-  <section id="slot-kind">
+  <!-- pluss-hand-authored -->
+<section id="slot-kind">
 <h1>Slot::kind<a class="headerlink" href="#slot-kind" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_api_reference.html"><span class="doc std std-doc">Back to Slot API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="o">::</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SlotKind</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotKind</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Classifies the slot’s values into one of seven <code class="docutils literal notranslate"><span class="pre">SlotKind</span></code> categories:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">SlotKind</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">   </span><span class="c1">// zero values</span>
+<span class="w">  </span><span class="n">Null</span><span class="p">,</span><span class="w">        </span><span class="c1">// every value is std::monostate (null)</span>
+<span class="w">  </span><span class="n">Series</span><span class="p">,</span><span class="w">      </span><span class="c1">// every value is Series, all the same scalar dtype</span>
+<span class="w">  </span><span class="n">Note</span><span class="p">,</span><span class="w">        </span><span class="c1">// every value is Note</span>
+<span class="w">  </span><span class="n">Timeline</span><span class="p">,</span><span class="w">    </span><span class="c1">// every value is Timeline</span>
+<span class="w">  </span><span class="n">TimeIndex</span><span class="p">,</span><span class="w">   </span><span class="c1">// every value is TimeIndex</span>
+<span class="w">  </span><span class="n">Mixed</span><span class="w">        </span><span class="c1">// anything else (mixed kinds, or Series with differing dtypes)</span>
+<span class="p">};</span>
+</pre></div>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +68,55 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SlotKind</span></code>
-Value produced by this call.</p>
+The slot’s classification.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect the <code class="docutils literal notranslate"><span class="pre">kind</span></code> property of the current object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">kind</span><span class="p">();</span>
+<p>Example 1. A homogeneous <code class="docutils literal notranslate"><span class="pre">int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> slot classifies as <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">slot</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">SlotKind</span><span class="o">::</span><span class="n">Series</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
 </pre></div>
 </div>
+<p>Example 2. A slot mixing <code class="docutils literal notranslate"><span class="pre">Series</span></code> and <code class="docutils literal notranslate"><span class="pre">Note</span></code> values classifies as <code class="docutils literal notranslate"><span class="pre">Mixed</span></code> —
+so does a <code class="docutils literal notranslate"><span class="pre">Series</span></code> slot whose values don’t all share one scalar dtype.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">slot</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">SlotKind</span><span class="o">::</span><span class="n">Mixed</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Empty</span></code> (zero values) and <code class="docutils literal notranslate"><span class="pre">Null</span></code> (every value present but <code class="docutils literal notranslate"><span class="pre">std::monostate</span></code>)
+are distinct kinds — an empty slot and an all-null slot are not the same
+thing.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">Series</span></code> slot only stays <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind if every value shares the exact
+same scalar dtype; mixing <code class="docutils literal notranslate"><span class="pre">int64</span></code> and <code class="docutils literal notranslate"><span class="pre">float64</span></code> values demotes the slot to
+<code class="docutils literal notranslate"><span class="pre">Mixed</span></code>.</p></li>
+<li><p>Requires the slot to be defined — an undefined <code class="docutils literal notranslate"><span class="pre">Slot</span></code> throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::ptype</span></code></span></a>: the same classification rendered as a string,
+plus finer type-name detail.</p></li>
+<li><p><a class="reference internal" href="type_counts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::type_counts</span></code></span></a>: a full per-value type tally, useful
+for diagnosing exactly <em>why</em> a slot came out <code class="docutils literal notranslate"><span class="pre">Mixed</span></code>.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnull.html">
     <span class="label">Previous</span>
@@ -81,7 +127,6 @@ Value produced by this call.</p>
     <span class="title">kindelize</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

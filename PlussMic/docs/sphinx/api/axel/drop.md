@@ -1,94 +1,70 @@
+<!-- pluss-hand-authored -->
+
 # Axel::drop
 
 [Back to Axel API Reference](../../axel_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Axel::drop(const NameRange& fields) -> template <pluss::detail::StringViewNameRange NameRange> Axel
-
-Axel::drop(std::initializer_list<std::string_view> fields) -> Axel
-
-Axel::drop(std::span<const std::string_view> fields) -> Axel
+Axel Axel::drop(std::span<const std::string_view> fields) const
+Axel Axel::drop(std::initializer_list<std::string_view> fields) const
+template <pluss::detail::StringViewNameRange NameRange>
+Axel Axel::drop(const NameRange& fields) const
 ```
 
 ## What It Does
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named field(s) from every registry frame in the depth
+stack, returning a new `Axel`. The complementary operation to
+[`fields()`](fields.md), which keeps only the named fields instead of
+removing them. Implemented as [`map()`](map.md) applying
+`Registry::drop(fields)` per frame.
 
 ## Parameters
 
-**fields**
-    Reusable feature-name range object. Use it when the same projected column subset will be passed to several calls.
+**fields** (`std::span<const std::string_view>`, `std::initializer_list<std::string_view>`, or any range of string-view-like names)
+    One or more field names to drop from every frame.
 
 ## Returns
 
-`template <pluss::detail::StringViewNameRange NameRange> Axel`
-    Value produced by this call.
-
 `Axel`
-    Value produced by this call.
+    A new axel with every frame missing `fields`, same depth as the
+    original.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Drop `"city"` from every frame, keeping `"ids"`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({
+        {"ids", pluss::bundle::Slot({pluss::make_series(1)})},
+        {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+    }),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.drop();
+auto out = axel.drop({"city"});
+std::cout << out.registry(0).nfields();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
-```
-Example 2. Pass several feature names inline.
-
-```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.drop();
+1
 ```
 
-### Output
+## Notes
 
-```text
-The call completes and returns the contract described under Output.
-```
-Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+- Whatever `Registry::drop()` throws for a missing field name in a
+  given frame propagates the same way here — every frame the drop is
+  applied to must actually contain each named field.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"` (via the underlying `map()` call).
 
-```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
+## See Also
 
-auto out = axel.drop();
-```
-
-### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
+- [`Axel::fields`](fields.md): the complementary keep-only operation.
+- [`Axel::map`](map.md): the general mechanism `drop()` is built on.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="distinct.html">

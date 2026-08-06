@@ -1,5 +1,7 @@
 #include "pluss/ai/nodej/builders.h"
 #include "pluss/ai/nodej/balance.h"
+#include "pluss/ai/nodej/metrics.h"
+#include "pluss/ai/nodej/spatial_index.h"
 
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
@@ -295,38 +297,34 @@ struct DenseFeatureMatrix {
                                          bool distance_weighted) {
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
-  const std::int64_t d = train_rows.sizes()[1];
-  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
   const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().to_vec<double>();
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(k, nt));
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   constexpr double eps = 1e-12;
 
+  // SpatialIndex (a real KD-tree) replaces the brute-force triple-nested
+  // distance loop + per-query max-heap below -- train_rows/query_rows are
+  // already validated non-empty rank-2 matrices by the time infer_scores()
+  // calls this, so build()/query_k() are not expected to fail here; the
+  // all-zero fallback exists only so a violated invariant degrades instead
+  // of crashing.
+  StatusOr<SpatialIndex> index_or = SpatialIndex::build(train_rows);
+  if (!index_or.ok()) return pluss::make_series(out, {nq}, f64_cpu());
+  const SpatialIndex index = index_or.move_value();
+  StatusOr<KNearestResult> knn_or = index.query_k(query_rows, kk);
+  if (!knn_or.ok()) return pluss::make_series(out, {nq}, f64_cpu());
+  const KNearestResult knn = knn_or.move_value();
+  const auto knn_idx = knn.indices.to(pluss::pCPU, ScalarType::Int64).reshape({knn.indices.numel()}).to_vec<std::int64_t>();
+  const auto knn_d2 = knn.distances2.to(pluss::pCPU, ScalarType::Float64).reshape({knn.distances2.numel()}).to_vec<double>();
+
   for (std::int64_t qi = 0; qi < nq; ++qi) {
     std::vector<std::pair<double, std::int64_t>> best{};
     best.reserve(static_cast<std::size_t>(kk));
-    const std::size_t qbase = static_cast<std::size_t>(qi * d);
-    for (std::int64_t ti = 0; ti < nt; ++ti) {
-      const std::size_t tbase = static_cast<std::size_t>(ti * d);
-      double d2 = 0.0;
-      for (std::int64_t f = 0; f < d; ++f) {
-        const double dv = qv[qbase + static_cast<std::size_t>(f)] - tv[tbase + static_cast<std::size_t>(f)];
-        d2 += dv * dv;
-      }
-      if (static_cast<std::int64_t>(best.size()) < kk) {
-        best.emplace_back(d2, ti);
-        if (static_cast<std::int64_t>(best.size()) == kk) {
-          std::make_heap(best.begin(), best.end());
-        }
-      } else if (d2 < best.front().first) {
-        std::pop_heap(best.begin(), best.end());
-        best.back() = std::pair<double, std::int64_t>{d2, ti};
-        std::push_heap(best.begin(), best.end());
-      }
+    for (std::int64_t j = 0; j < kk; ++j) {
+      const std::size_t pos = static_cast<std::size_t>(qi * kk + j);
+      best.emplace_back(knn_d2[pos], knn_idx[pos]);
     }
-    std::sort_heap(best.begin(), best.end());
 
     if (distance_weighted) {
       double zero_sum = 0.0;
@@ -3627,37 +3625,23 @@ struct LinearPenalty {
     return StatusOr<Series>(Status::shape_mismatch(std::string(where) + " requires equal non-empty vectors."));
   }
 
-  const Series pos_count = yb.sum();
-  const Series neg_count = yb.mul(-1.0).add(1.0).sum();
-  const Series has_both = pos_count.gt(0.0).to(ScalarType::Float64).mul(neg_count.gt(0.0).to(ScalarType::Float64));
-  const Series pos_safe = pos_count.clamp_min(1.0);
-  const Series neg_safe = neg_count.clamp_min(1.0);
-  const std::int64_t n = p.numel();
+  // Sort + cumulative-sum curve shared with threshold_curve()
+  // (NodeJ/metrics/threshold_curve.cpp) instead of re-deriving it here.
+  StatusOr<detail::BinaryScoreCurve> curve_or = detail::binary_score_curve(p, yb);
+  if (!curve_or.ok()) return StatusOr<Series>(curve_or.status());
+  const detail::BinaryScoreCurve curve = curve_or.move_value();
+
+  const Series has_both = curve.positive_count.gt(0.0).to(ScalarType::Float64)
+                              .mul(curve.negative_count.gt(0.0).to(ScalarType::Float64));
+  const Series pos_safe = curve.positive_count.clamp_min(1.0);
+  const Series neg_safe = curve.negative_count.clamp_min(1.0);
   const Platform platform = p.platform();
   const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
 
-  const Series order = p.argsort(0, true, true);
-  const Series p_sorted = p.index_select(0, order);
-  const Series y_sorted = yb.index_select(0, order);
-  const Series one_vec = pluss::series::ones({n}, f64_on(platform));
-  const Series tp_cum = y_sorted.cumsum(0, false);
-  const Series fp_cum = one_vec.sub(y_sorted).cumsum(0, false);
-
-  Series idx_next = pluss::series::arange(1, n, i64_cfg);
-  if (idx_next.numel() == 0) {
-    idx_next = pluss::make_series(std::vector<std::int64_t>{0}, {1}, i64_cfg);
-  }
-  Series p_next = p_sorted.index_select(0, idx_next).reshape({idx_next.numel()});
-  if (n == 1) {
-    p_next = p_sorted.add(1.0);
-  } else {
-    p_next = p_next.unite({p_sorted.reshape({n}).index_select(0, pluss::series::arange(n - 1, n, i64_cfg)).add(1.0)}, 0);
-  }
-  const Series boundary = p_sorted.ne(p_next).reshape({n});
-  const Series tpr_curve = tp_cum.div(pos_safe);
-  const Series fpr_curve = fp_cum.div(neg_safe);
-  const Series tpr_u = tpr_curve.masked_select(boundary);
-  const Series fpr_u = fpr_curve.masked_select(boundary);
+  const Series tpr_curve = curve.true_positive_cumulative.div(pos_safe);
+  const Series fpr_curve = curve.false_positive_cumulative.div(neg_safe);
+  const Series tpr_u = tpr_curve.masked_select(curve.is_threshold_boundary);
+  const Series fpr_u = fpr_curve.masked_select(curve.is_threshold_boundary);
   const std::int64_t m = fpr_u.numel();
   const Series tpr_prev = (m > 1)
                               ? pluss::series::zeros({1}, f64_on(platform)).unite(

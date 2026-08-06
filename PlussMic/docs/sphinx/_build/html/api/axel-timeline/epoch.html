@@ -34,50 +34,120 @@
 
           <div class="body" role="main">
             
-  <section id="axeltimelineaccessor-epoch">
+  <!-- pluss-hand-authored -->
+<section id="axeltimelineaccessor-epoch">
 <h1>AxelTimelineAccessor::epoch<a class="headerlink" href="#axeltimelineaccessor-epoch" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to AxelTimelineAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AxelTimelineAccessor</span><span class="o">::</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="w"> </span><span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Nanos</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Axel</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="w"> </span><span class="n">AxelTimelineAccessor</span><span class="o">::</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="w"> </span><span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Nanos</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Extracts each bound field’s timestamp as a Unix epoch value in <code class="docutils literal notranslate"><span class="pre">unit</span></code>,
+in every registry frame, replacing each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field with an
+<code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> field. Applies
+<a class="reference internal" href="../registry-timeline/epoch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::epoch</span></code></span></a> to
+every frame via <a class="reference internal" href="../axel/map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::map</span></code></span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The default unit is Nanos, not Seconds
+A bare <code class="docutils literal notranslate"><span class="pre">epoch()</span></code> call reports nanoseconds since the Unix epoch, not
+seconds — easy to assume otherwise, since seconds is the more familiar
+epoch unit in casual use. Pass <code class="docutils literal notranslate"><span class="pre">TimeUnit::Seconds</span></code> explicitly for the
+more commonly expected scale.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>unit</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+<p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::TimeUnit</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">pluss::table::TimeUnit::Nanos</span></code>)
+One of the fixed-duration units: <code class="docutils literal notranslate"><span class="pre">Nanos</span></code>, <code class="docutils literal notranslate"><span class="pre">Micros</span></code>, <code class="docutils literal notranslate"><span class="pre">Millis</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Seconds</span></code>, or <code class="docutils literal notranslate"><span class="pre">Days</span></code>. Passing a span-only unit (<code class="docutils literal notranslate"><span class="pre">Weeks</span></code>, <code class="docutils literal notranslate"><span class="pre">Months</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Years</span></code>, <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code>) throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>
-Value produced by this call.</p>
+A new axel with every bound field, in every frame, replaced by an
+<code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> field of epoch counts in <code class="docutils literal notranslate"><span class="pre">unit</span></code>; every unbound
+field unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:40:00Z&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:40:00Z&quot;</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">timelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">();</span>
+<p>Example 1. Default call reports nanoseconds — see the important
+callout above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)})}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timelines</span><span class="p">.</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Nanos</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1706692530000000000
 </pre></div>
 </div>
+<p>Example 2. Pass <code class="docutils literal notranslate"><span class="pre">TimeUnit::Seconds</span></code> explicitly for the more commonly
+expected scale.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-02-29T23:45:00Z&quot;</span><span class="p">)})}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;ts&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ts</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ts</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1706692530 1709250300
+</pre></div>
+</div>
+<p>Example 3. A span-only unit throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)})}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ts&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Weeks</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::tl().epoch: unit is span-only; use Thread::tl().span
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above — the default unit is <code class="docutils literal notranslate"><span class="pre">Nanos</span></code>.</p></li>
+<li><p>Only fixed-duration units are accepted; passing <code class="docutils literal notranslate"><span class="pre">Weeks</span></code>, <code class="docutils literal notranslate"><span class="pre">Months</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Years</span></code>, or <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code> throws. The throw message references
+<code class="docutils literal notranslate"><span class="pre">Thread::tl().span</span></code>, a suggestion that comes from the shared
+underlying engine — <code class="docutils literal notranslate"><span class="pre">Axel</span></code>’s <code class="docutils literal notranslate"><span class="pre">tl()</span></code> accessor has no <code class="docutils literal notranslate"><span class="pre">span()</span></code> method
+of its own.</p></li>
+<li><p>Requires every bound field, in every frame, to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a
+non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fmt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AxelTimelineAccessor::fmt</span></code></span></a> / <a class="reference internal" href="iso.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">iso()</span></code></span></a>: render as
+text instead of a raw epoch count.</p></li>
+<li><p><a class="reference internal" href="../axel/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::tl</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="day.html">
     <span class="label">Previous</span>
@@ -88,7 +158,6 @@ Value produced by this call.</p>
     <span class="title">floor</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

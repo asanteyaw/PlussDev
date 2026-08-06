@@ -35,7 +35,6 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c495b1a2b48d -->
 <section id="registrytimelineaccessor-localize">
 <h1>RegistryTimelineAccessor::localize<a class="headerlink" href="#registrytimelineaccessor-localize" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../registry_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to RegistryTimelineAccessor API Reference</span></a></p>
@@ -50,22 +49,9 @@
 <p>Reinterprets each bound field’s <em>current</em> clock reading as a naive local
 wall-clock time in <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>, and converts it to the true UTC instant
 that local reading corresponds to. <strong>This changes the underlying instant</strong>
-(unlike <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>, which only relabels display).</p>
-<div class="admonition danger">
-<p class="admonition-title">Danger</p>
-<p>The instant shift persists; the resulting display label does not
-Verified: the underlying epoch instant genuinely moves — reading
-<a class="reference internal" href="epoch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">epoch()</span></code></span></a> before and after <code class="docutils literal notranslate"><span class="pre">localize()</span></code> confirms the correct
-UTC-offset delta (e.g. 18,000 seconds for <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code> in January).
-But the same round-trip limitation documented on <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> applies
-here too: the timezone label attached by <code class="docutils literal notranslate"><span class="pre">localize()</span></code> does not survive being
-read back through any further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call. The practical effect is
-surprising in the <em>opposite</em> direction from <code class="docutils literal notranslate"><span class="pre">tz()</span></code>’s no-op: instead of the
-display staying unchanged, a follow-up <code class="docutils literal notranslate"><span class="pre">fmt()</span></code>/calendar read shows the
-<em>shifted</em> instant rendered as if it, too, were plain UTC — see Example 1,
-where the displayed wall-clock text visibly changes by the timezone offset,
-which is not what <code class="docutils literal notranslate"><span class="pre">localize()</span></code> is supposed to look like from the outside.</p>
-</div>
+(unlike <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>, which only relabels display). The <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>
+label attached by <code class="docutils literal notranslate"><span class="pre">localize()</span></code> also survives being read back through any
+further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call — see Example 1.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -87,7 +73,7 @@ as if its prior reading were local time in <code class="docutils literal notrans
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Localize a timestamp to <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">epoch()</span></code> confirms
 the instant actually moved; a follow-up <code class="docutils literal notranslate"><span class="pre">fmt()</span></code> shows the shifted instant
-rendered without the expected NY relabeling — see the danger callout above.</p>
+correctly rendered in NY-local wall-clock time.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
@@ -109,35 +95,37 @@ rendered without the expected NY relabeling — see the danger callout above.</p
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>epoch before: 1706692530
 epoch after: 1706710530
-displayed: 2024-01-31 14:15:30
+displayed: 2024-01-31 09:15:30
 </pre></div>
 </div>
 <p>The 18,000-second delta (5 hours) confirms the instant genuinely moved — the
 correct behavior for <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code> in January (Eastern Standard
-Time, <code class="docutils literal notranslate"><span class="pre">-5:00</span></code>). But the displayed text, <code class="docutils literal notranslate"><span class="pre">14:15:30</span></code>, is the <em>shifted</em> instant
-rendered as bare UTC, not <code class="docutils literal notranslate"><span class="pre">09:15:30</span></code> relabeled as NY-local — see the danger
-callout above.</p>
+Time, <code class="docutils literal notranslate"><span class="pre">-5:00</span></code>). The displayed text, <code class="docutils literal notranslate"><span class="pre">09:15:30</span></code>, is the shifted instant
+correctly rendered as NY-local wall-clock time.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">localize()</span></code> changes the underlying instant; <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> never
-does.</strong> That part works correctly and persists.</p></li>
-<li><p>See the danger callout above for the display-label limitation that
-applies on top of the correct instant shift.</p></li>
+does.</strong></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">options.tz</span></code> only accepts the same four names as <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, and cannot be
 empty.</p></li>
 <li><p>Requires every bound field to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field
 throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+<li><p>Internally, each bound field stores its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> values independently
+(one scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> per row, not one shared column); the resulting
+per-row tz labels round-trip correctly through the <code class="docutils literal notranslate"><span class="pre">kindle::Stream</span></code>
+boundary every further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call goes through. If every row does not
+already share the same display timezone going into a <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call, the
+call throws rather than picking one arbitrarily.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::tz</span></code></span></a>: relabels display without
-changing the instant — and documents the same underlying round-trip
-limitation.</p></li>
+changing the instant.</p></li>
 <li><p><a class="reference internal" href="epoch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryTimelineAccessor::epoch</span></code></span></a>: used above to confirm the
 instant shift independent of display.</p></li>
 <li><p><a class="reference internal" href="../registry/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::tl</span></code></span></a>: the entry point this accessor is

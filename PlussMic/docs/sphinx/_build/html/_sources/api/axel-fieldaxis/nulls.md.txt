@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelFieldAxisAccessor::nulls
 
 [Back to AxelFieldAxisAccessor API Reference](../../axel_fieldaxis_accessor_api_reference)
@@ -5,12 +7,14 @@
 ## Signature
 
 ```cpp
-AxelFieldAxisAccessor::nulls() -> Axel
+Axel AxelFieldAxisAccessor::nulls() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Named shorthand for [`kind(SlotKind::Null)`](kind.md) — returns a new
+axel where every registry frame is narrowed to only its `Null`-kind
+fields — fields whose every value is the null sentinel.
 
 ## Parameters
 
@@ -19,32 +23,42 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every frame narrowed to its `Null`-kind fields.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Keep only the all-null field in every frame.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"nullfield", pluss::bundle::Slot({pluss::bundle::Slot::Value{std::monostate{}}})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto fieldaxis = axel.fieldaxis();
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = fieldaxis.nulls();
-std::cout << out;
+auto out = axel.fieldaxis().nulls();
+for (const auto& key : out.registry(0).fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+nullfield
 ```
 
+## Notes
+
+- Equivalent to `kind(SlotKind::Null)` — see [`kind()`](kind.md) for
+  the general form.
+- Applied independently per frame — different frames can end up with
+  different resulting field sets if their schemas differ.
+
+## See Also
+
+- [`AxelFieldAxisAccessor::kind`](kind.md): the general form this
+  method is a fixed shorthand for.
+- [`AxelFieldAxisAccessor::empty`](empty.md): the shorthand for
+  zero-value fields, a related but distinct category.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="note.html">

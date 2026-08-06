@@ -36,48 +36,122 @@
 
           <div class="body" role="main">
             
-  <section id="axel-to-string">
+  <!-- pluss-hand-authored -->
+<section id="axel-to-string">
 <h1>Axel::to_string<a class="headerlink" href="#axel-to-string" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="o">::</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Rendered string result.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
+<p>Renders a curated, human-readable JSON-formatted summary of this
+<code class="docutils literal notranslate"><span class="pre">Axel</span></code> — depth, label summary (if labeled), and per-frame field
+lists with slot sizes. For a depth greater than <code class="docutils literal notranslate"><span class="pre">6</span></code>, the middle frames
+are elided with a <code class="docutils literal notranslate"><span class="pre">&quot;...</span> <span class="pre">N</span> <span class="pre">registries</span> <span class="pre">omitted&quot;</span></code> marker, showing only the
+first <code class="docutils literal notranslate"><span class="pre">3</span></code> and last <code class="docutils literal notranslate"><span class="pre">2</span></code> frames.</p>
+<p>```{important} <code class="docutils literal notranslate"><span class="pre">to_string()</span></code> is a curated summary; <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> is a full, unabridged dump
+Unlike <code class="docutils literal notranslate"><span class="pre">Slot</span></code>, where <code class="docutils literal notranslate"><span class="pre">to_string()</span></code>/<code class="docutils literal notranslate"><span class="pre">to_json()</span></code>/<code class="docutils literal notranslate"><span class="pre">show()</span></code> are byte-identical,
+<code class="docutils literal notranslate"><span class="pre">Axel::to_string()</span></code> and <a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::to_json()</span></code></span></a> diverge sharply:
+<code class="docutils literal notranslate"><span class="pre">to_string()</span></code> never grows unbounded (it truncates past 6 frames and only
+shows field names + slot sizes, not values), while <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> embeds
+every frame’s full <a class="reference internal" href="../registry/to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_json()</span></code></span></a>
+output — including every value — with no truncation at all. Use
+<code class="docutils literal notranslate"><span class="pre">to_string()</span></code>/<code class="docutils literal notranslate"><span class="pre">show()</span></code> for a quick console-friendly overview; use
+<code class="docutils literal notranslate"><span class="pre">to_json()</span></code> when you need the complete, machine-readable structure.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Parameters
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
+`None`
+
+## Returns
+
+`std::string`
+    A pretty-printed JSON-formatted summary string.
+
+## Examples
+
+Example 1. A small, unlabeled, two-frame `Axel`.
+
+```cpp
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{&quot;ids&quot;, pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{&quot;ids&quot;, pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})}}),
+});
+std::cout &lt;&lt; axel.to_string();
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>depth0 -&gt; Registry(ids -&gt; Slot([Series(1), Series(2)]))
-depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Axel&quot;,
+  &quot;defined&quot;: true,
+  &quot;depth&quot;: 2,
+  &quot;labels&quot;: false,
+  &quot;registries&quot;: [
+    {
+      &quot;index&quot;: 0,
+      &quot;nfields&quot;: 1,
+      &quot;fields&quot;: [
+        &quot;ids&quot;
+      ],
+      &quot;slot_sizes&quot;: {
+        &quot;ids&quot;: 2
+      }
+    },
+    {
+      &quot;index&quot;: 1,
+      &quot;nfields&quot;: 1,
+      &quot;fields&quot;: [
+        &quot;ids&quot;
+      ],
+      &quot;slot_sizes&quot;: {
+        &quot;ids&quot;: 2
+      }
+    }
+  ]
+}
 </pre></div>
 </div>
+<p>Notice <code class="docutils literal notranslate"><span class="pre">slot_sizes</span></code> reports each field’s row count, not its values —
+<code class="docutils literal notranslate"><span class="pre">to_string()</span></code> never renders actual value content, only shape.</p>
+<p>Example 2. An undefined <code class="docutils literal notranslate"><span class="pre">Axel</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="w"> </span><span class="n">undef</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">undef</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{ &quot;_type&quot;: &quot;Axel&quot;, &quot;defined&quot;: false }
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above — <code class="docutils literal notranslate"><span class="pre">to_string()</span></code> and
+<a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></span></a> are genuinely different, unlike the
+Slot-level trio (<code class="docutils literal notranslate"><span class="pre">to_string()</span></code>/<code class="docutils literal notranslate"><span class="pre">to_json()</span></code>/<code class="docutils literal notranslate"><span class="pre">show()</span></code> there are all
+identical).</p></li>
+<li><p>Past a depth of <code class="docutils literal notranslate"><span class="pre">6</span></code>, only the first <code class="docutils literal notranslate"><span class="pre">3</span></code> and last <code class="docutils literal notranslate"><span class="pre">2</span></code> frames are shown,
+with a <code class="docutils literal notranslate"><span class="pre">&quot;...</span> <span class="pre">N</span> <span class="pre">registries</span> <span class="pre">omitted&quot;</span></code> marker in between — the summary
+stays bounded regardless of how deep the <code class="docutils literal notranslate"><span class="pre">Axel</span></code> is.</p></li>
+<li><p><a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> writes this exact string to an <code class="docutils literal notranslate"><span class="pre">std::ostream</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::to_json</span></code></span></a>: the full, unabridged, value-including
+dump.</p></li>
+<li><p><a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::show</span></code></span></a>: streams this same string to an
+<code class="docutils literal notranslate"><span class="pre">std::ostream</span></code>.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_kindle.html">
     <span class="label">Previous</span>
@@ -88,7 +162,6 @@ depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
     <span class="title">unique</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

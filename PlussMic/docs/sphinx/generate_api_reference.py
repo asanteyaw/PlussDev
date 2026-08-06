@@ -6404,10 +6404,6 @@ def registry_timeline_accessor_base() -> str:
 auto timelines = rg.fields({\"ts\"}).tl();"""
 
 
-def axel_field_accessor_base() -> str:
-    return axel_base() + '\n' + 'auto fields = axel.fields({"ids"});'
-
-
 def axel_fieldaxis_accessor_base() -> str:
     return axel_base() + '\n' + 'auto fieldaxis = axel.fieldaxis();'
 

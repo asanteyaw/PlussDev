@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::cast(pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) const -> Catalog
+Catalog::cast() const -> CatalogCastAccessor
 ```
 
 ## What It Does

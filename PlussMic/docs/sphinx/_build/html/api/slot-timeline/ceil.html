@@ -34,51 +34,80 @@
 
           <div class="body" role="main">
             
-  <section id="slottimelineaccessor-ceil">
+  <!-- pluss-hand-authored -->
+<section id="slottimelineaccessor-ceil">
 <h1>SlotTimelineAccessor::ceil<a class="headerlink" href="#slottimelineaccessor-ceil" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to SlotTimelineAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotTimelineAccessor</span><span class="o">::</span><span class="n">ceil</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slot</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">SlotTimelineAccessor</span><span class="o">::</span><span class="n">ceil</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+<p>Rounds each value in the bound slot <em>up</em> to the nearest <code class="docutils literal notranslate"><span class="pre">unit</span></code>
+boundary, replacing each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> value’s values in place (stays
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind).</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>unit</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
+<p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+One of <code class="docutils literal notranslate"><span class="pre">&quot;S&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;s&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;sec&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;second&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;m&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;minute&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;h&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;hour&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>. Cannot be empty. An
+unsupported unit throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
-Value produced by this call.</p>
+A new slot with each value ceiled to <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:40:00Z&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">timelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timelines</span><span class="p">.</span><span class="n">ceil</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<p>Example 1. Ceil two timestamps to the nearest hour.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-02-29T23:45:00Z&quot;</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">ceil</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fmted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fmted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; | &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fmted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2024-01-31 10:00:00 | 2024-03-01 00:00:00
 </pre></div>
 </div>
+<p>Both values advance to the start of their <em>next</em> hour — <code class="docutils literal notranslate"><span class="pre">09:15:30</span></code> to
+<code class="docutils literal notranslate"><span class="pre">10:00:00</span></code>, and <code class="docutils literal notranslate"><span class="pre">23:45:00</span></code> rolling over the day boundary into
+<code class="docutils literal notranslate"><span class="pre">2024-03-01</span> <span class="pre">00:00:00</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>A value already exactly on a <code class="docutils literal notranslate"><span class="pre">unit</span></code> boundary is left unchanged, not
+advanced to the next boundary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code> cannot be empty, and only accepts the fixed clock units listed
+above — an unrecognized unit throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Timeline:</span> <span class="pre">unsupported</span> <span class="pre">unit</span> <span class="pre">(expected</span> <span class="pre">S/min/H/D)&quot;</span></code>.</p></li>
+<li><p>Requires the slot to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> slot throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="floor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotTimelineAccessor::floor</span></code></span></a> / <a class="reference internal" href="round.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">round()</span></code></span></a>:
+round down, or to the nearest boundary, instead of always up.</p></li>
+<li><p><a class="reference internal" href="../slot/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::tl</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="date.html">
     <span class="label">Next</span>
     <span class="title">date</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

@@ -66,7 +66,7 @@ out-of-range index, only clamping.</p>
 <p>The new feature’s name. Must not be empty, and must not already exist on the frame —
 both throw (<code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::insert:</span> <span class="pre">feature</span> <span class="pre">name</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code> and
 <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::insert:</span> <span class="pre">duplicate</span> <span class="pre">feature</span> <span class="pre">name</span> <span class="pre">'&lt;name&gt;'&quot;</span></code> respectively). Use
-<a class="reference internal" href="#set_features.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">set_features()</span></code></span></a> instead when you want to <em>replace</em> an existing
+<a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a> instead when you want to <em>replace</em> an existing
 feature’s values rather than add a new one.</p>
 <p><strong>feature_value</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
 <p>The new feature’s values. Must be defined, and — unless the frame currently has zero
@@ -169,7 +169,7 @@ the frame’s current feature count — which places <code class="docutils liter
 <li><p>An out-of-range <code class="docutils literal notranslate"><span class="pre">feature_index</span></code> is silently clamped into <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">nfeatures()]</span></code>; it is
 never a validation error on its own.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> colliding with an existing feature <em>is</em> a validation error — <code class="docutils literal notranslate"><span class="pre">insert()</span></code> never
-overwrites an existing column; use <a class="reference internal" href="#set_features.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">set_features()</span></code></span></a> for that.</p></li>
+overwrites an existing column; use <a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a> for that.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">feature_value</span></code>’s length must match <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> unless the frame currently has no
 features at all (in which case the new feature also defines the frame’s case count
 going forward).</p></li>
@@ -181,7 +181,7 @@ going forward).</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="place.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::place</span></code></span></a>: position a feature relative to an existing “anchor”
 feature by name, rather than by a raw numeric index.</p></li>
-<li><p><a class="reference internal" href="#set_features.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">DataFrame::set_features</span></code></span></a>: replace an <em>existing</em> feature’s values
+<li><p><a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::assign</span></code></span></a>: replace an <em>existing</em> feature’s values
 in place of adding a new one.</p></li>
 <li><p><a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::drop</span></code></span></a>: the inverse operation — remove a named feature instead
 of adding one.</p></li>

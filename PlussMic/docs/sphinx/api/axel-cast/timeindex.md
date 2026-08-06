@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelCastAccessor::timeindex
 
 [Back to AxelCastAccessor API Reference](../../axel_cast_accessor_api_reference)
@@ -5,12 +7,15 @@
 ## Signature
 
 ```cpp
-AxelCastAccessor::timeindex() -> Axel
+Axel AxelCastAccessor::timeindex() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Casts every bound field's values, in every registry frame, to
+`TimeIndex`-kind and returns a new axel with those fields replaced.
+Applies [`RegistryCastAccessor::timeindex`](../registry-cast/timeindex.md)
+to every frame via [`Axel::map`](../axel/map.md).
 
 ## Parameters
 
@@ -19,32 +24,56 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every bound field, in every frame, cast to
+    `TimeIndex`-kind; every unbound field unchanged.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Cast a `Timeline` field to `TimeIndex`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto cast = axel.fields({"ids"}).cast();
+auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-01T00:00:00Z")})}});
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = cast.timeindex();
-std::cout << out;
+auto out = axel.fields({"ts"}).cast().timeindex();
+std::cout << out.registry(0).fields("ts").to_json();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+{
+  "_type": "Slot",
+  "defined": true,
+  "size": 1,
+  "values": [
+    "TimeIndex[size=1]"
+  ]
+}
 ```
 
+Each row's `Timeline` value converts to its own single-element
+`TimeIndex` — a `Slot` stores one independent value per row rather than
+one shared column, mirroring
+[`Slot::tl().index()`](../slot-timeline/index.md)'s per-row behavior.
+
+## Notes
+
+- Bound via [`Axel::cast()`](../axel/cast.md) — remember that entry
+  point binds *every* field of every frame it's called on, so scope it
+  with [`fields(keys)`](../axel/fields.md) first if you only want to
+  cast some fields.
+- Whatever `Slot::cast()` throws for a non-`Timeline`-compatible source
+  value propagates the same way here.
+
+## See Also
+
+- [`AxelCastAccessor::timeline`](timeline.md): the related cast target
+  for calendar timestamps without the sortedness requirement.
+- [`Axel::cast`](../axel/cast.md): the entry point this accessor is
+  reached from.
+- [`RegistryCastAccessor::timeindex`](../registry-cast/timeindex.md):
+  the single-frame operation this method broadcasts.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="series.html">

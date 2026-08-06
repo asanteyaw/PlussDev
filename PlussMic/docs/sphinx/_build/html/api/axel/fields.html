@@ -37,12 +37,11 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b6af95492a76 -->
 <section id="axel-fields">
 <h1>Axel::fields<a class="headerlink" href="#axel-fields" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">fields</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">fields</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
@@ -52,40 +51,68 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Projects every registry in the axel down to the requested field set.</p>
-<p>This is the bundle-stack equivalent of <code class="docutils literal notranslate"><span class="pre">Registry::fields(keys)</span></code>: selection happens first, and any later <code class="docutils literal notranslate"><span class="pre">cast()</span></code>, <code class="docutils literal notranslate"><span class="pre">nt()</span></code>, <code class="docutils literal notranslate"><span class="pre">tl()</span></code>, <code class="docutils literal notranslate"><span class="pre">fillnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">distinct()</span></code>, or similar operation runs against the projected registries.</p>
+<p>Narrows every registry frame in the depth stack down to only the named
+field(s), returning a new <code class="docutils literal notranslate"><span class="pre">Axel</span></code>. Internally, this calls
+<a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> with <code class="docutils literal notranslate"><span class="pre">Registry::fields(keys)</span></code> applied to each frame —
+the same narrowing <code class="docutils literal notranslate"><span class="pre">Registry::fields()</span></code> performs, just broadcast across
+every depth index at once.</p>
+<p>This is the idiom used to scope every accessor entry point
+(<a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a>, <a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nt()</span></code></span></a>, <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tl()</span></code></span></a>) to a specific
+field before calling one of its methods — see those pages’ examples,
+which all start with <code class="docutils literal notranslate"><span class="pre">axel.fields({&quot;...&quot;}).accessor().method()</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>keys</strong>
-Field names to keep in every registry.</p>
+<p><strong>keys</strong> (<code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::string_view&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>, or any range of string-view-like names)
+One or more field names to keep in every frame. Cannot be empty.
+Field names must be non-empty and unique within the call — duplicate
+or blank names throw.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>
-A new axel whose registries contain only the requested fields.</p>
+A new axel with every frame narrowed to <code class="docutils literal notranslate"><span class="pre">keys</span></code>, same depth as the
+original.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Narrow a two-field, two-frame <code class="docutils literal notranslate"><span class="pre">Axel</span></code> down to just <code class="docutils literal notranslate"><span class="pre">&quot;ids&quot;</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tamale&quot;</span><span class="p">)})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Takoradi&quot;</span><span class="p">)})},</span>
 <span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">ax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ax</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">nt</span><span class="p">().</span><span class="n">upper</span><span class="p">();</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">nfields</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">str</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">narrowed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;ids&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">narrowed</span><span class="p">.</span><span class="n">registry</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">nfields</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1 ACCRA
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+<p>Example 2. Calling <code class="docutils literal notranslate"><span class="pre">fields()</span></code> with no names throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})}}),</span>
+<span class="p">});</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">empty_keys</span><span class="p">;</span>
+<span class="w">  </span><span class="n">axel</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">empty_keys</span><span class="p">));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Axel::fields: at least one field is required
 </pre></div>
 </div>
 </section>
@@ -93,16 +120,28 @@ A new axel whose registries contain only the requested fields.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Every registry must contain the requested fields or the call throws.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fields(keys)</span></code> is projection, not a hidden field-accessor wrapper.</p></li>
-<li><p>Use root <code class="docutils literal notranslate"><span class="pre">cast()</span></code>, <code class="docutils literal notranslate"><span class="pre">nt()</span></code>, and <code class="docutils literal notranslate"><span class="pre">tl()</span></code> when you want the operation over the entire current axel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keys</span></code> cannot be empty (<code class="docutils literal notranslate"><span class="pre">&quot;Axel::fields:</span> <span class="pre">at</span> <span class="pre">least</span> <span class="pre">one</span> <span class="pre">field</span> <span class="pre">is</span> <span class="pre">required&quot;</span></code>), each name must be non-empty (<code class="docutils literal notranslate"><span class="pre">&quot;Axel:</span> <span class="pre">field</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>), and names cannot repeat within one call
+(<code class="docutils literal notranslate"><span class="pre">&quot;Axel:</span> <span class="pre">duplicate</span> <span class="pre">field</span> <span class="pre">'x'&quot;</span></code>).</p></li>
+<li><p>Because this delegates to <code class="docutils literal notranslate"><span class="pre">Registry::fields(keys)</span></code> per frame, a field
+missing from any individual frame throws whatever
+<code class="docutils literal notranslate"><span class="pre">Registry::fields()</span></code> throws for that frame — every frame does not
+need an identical schema for other <code class="docutils literal notranslate"><span class="pre">Axel</span></code> methods, but <code class="docutils literal notranslate"><span class="pre">fields()</span></code>
+requires the selected names to exist in <em>every</em> frame it’s applied
+to.</p></li>
+<li><p>Requires <code class="docutils literal notranslate"><span class="pre">defined()</span></code> — an undefined handle throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Axel:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../registry/fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields</span></code></span></a>: the per-registry equivalent.</p></li>
-<li><p><a class="reference internal" href="fieldaxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::fieldaxis</span></code></span></a>: project by pattern or slot kind instead of explicit names.</p></li>
+<li><p><a class="reference internal" href="fieldaxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::fieldaxis</span></code></span></a>: select fields by pattern or <code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+kind instead of by exact name.</p></li>
+<li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::cast</span></code></span></a>, <a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::nt</span></code></span></a>, <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::tl</span></code></span></a>:
+the three accessor entry points typically chained after <code class="docutils literal notranslate"><span class="pre">fields()</span></code> to
+scope their effect to one field.</p></li>
+<li><p><a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::drop</span></code></span></a>: the complementary operation, removing named
+fields instead of keeping only them.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fieldaxis.html">

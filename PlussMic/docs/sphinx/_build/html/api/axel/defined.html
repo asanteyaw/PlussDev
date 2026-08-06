@@ -36,18 +36,24 @@
 
           <div class="body" role="main">
             
-  <section id="axel-defined">
+  <!-- pluss-hand-authored -->
+<section id="axel-defined">
 <h1>Axel::defined<a class="headerlink" href="#axel-defined" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="o">::</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reports whether the current object owns a concrete payload that can be used safely in later operations.</p>
+<p>Reports whether the <code class="docutils literal notranslate"><span class="pre">Axel</span></code> handle is bound to actual storage. A
+default-constructed <code class="docutils literal notranslate"><span class="pre">Axel</span></code> (<code class="docutils literal notranslate"><span class="pre">Axel()</span></code>) is undefined; every other
+constructor — including one built from an empty vector of registries —
+produces a defined handle. Almost every other <code class="docutils literal notranslate"><span class="pre">Axel</span></code> method requires
+<code class="docutils literal notranslate"><span class="pre">defined()</span></code> to be <code class="docutils literal notranslate"><span class="pre">true</span></code> and throws <code class="docutils literal notranslate"><span class="pre">&quot;Axel:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>
+otherwise.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,27 +62,48 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-Boolean status or membership result.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> if the handle is bound to storage, <code class="docutils literal notranslate"><span class="pre">false</span></code> for a
+default-constructed handle.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Inspect the <code class="docutils literal notranslate"><span class="pre">defined</span></code> property of the current object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<p>Example 1. A default-constructed <code class="docutils literal notranslate"><span class="pre">Axel</span></code> is undefined; one built from a
+registry vector — even an empty one — is defined.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})}}),</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="w"> </span><span class="n">undef</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">empty_axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">&gt;</span><span class="p">{});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">undef</span><span class="p">.</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">empty_axel</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true false true
 </pre></div>
 </div>
+<p>An <code class="docutils literal notranslate"><span class="pre">Axel</span></code> built from zero registries is still <code class="docutils literal notranslate"><span class="pre">defined()</span></code> — <code class="docutils literal notranslate"><span class="pre">empty()</span></code>
+is the check for zero depth, not <code class="docutils literal notranslate"><span class="pre">defined()</span></code>. See <a class="reference internal" href="empty.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">empty()</span></code></span></a>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">defined()</span></code> is <code class="docutils literal notranslate"><span class="pre">noexcept</span></code> and never throws, unlike almost every other
+<code class="docutils literal notranslate"><span class="pre">Axel</span></code> method — it’s the one safe check to run on a handle you’re not
+sure about.</p></li>
+<li><p>Copying or moving an <code class="docutils literal notranslate"><span class="pre">Axel</span></code> copies/moves the underlying handle
+reference (via an intrusive pointer), so a copy of a defined <code class="docutils literal notranslate"><span class="pre">Axel</span></code> is
+also defined.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="unique.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::unique</span></code></span></a>: whether this handle is the sole owner of
+its storage — a separate, stronger question than <code class="docutils literal notranslate"><span class="pre">defined()</span></code>.</p></li>
+<li><p><a class="reference internal" href="empty.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::empty</span></code></span></a>: whether a <em>defined</em> handle has zero depth.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="concat_depth.html">
     <span class="label">Previous</span>
@@ -87,7 +114,6 @@ Boolean status or membership result.</p>
     <span class="title">depth</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

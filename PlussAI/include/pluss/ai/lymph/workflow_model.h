@@ -4,6 +4,8 @@
 #include "pluss/ai/lymph/prep.h"
 #include "pluss/ai/lymph/metrics.h"
 #include "pluss/ai/lymph/inspection.h"
+#include "pluss/ai/lymph/stage.h"
+#include "pluss/ai/lymph/transform.h"
 
 namespace pluss::ai::lymph {
 
@@ -153,8 +155,29 @@ public:
     return *this;
   }
 
+  // Model::append(Stage, ColumnRouter) -- the one method the redesign
+  // replaces the 16 builders above with (kept, unmodified, alongside this
+  // one per LYMPH_REDESIGN_PLAN.md phase 2: nothing above breaks while this
+  // gets proven out). Deliberately does not resolve `router` here: .append()
+  // is always called before any DataFrame exists (at model-building time),
+  // so resolution is deferred to whichever learn_(...) overload first sees
+  // real column names -- see materialize_pending_stages_() below. A bare
+  // learn_(LabeledBatch) has no column names to resolve against at all and
+  // throws if any stage is still pending.
+  WorkflowModel& append(Stage stage, ColumnRouter router) {
+    pending_stages_.emplace_back(std::move(stage), std::move(router));
+    return *this;
+  }
+
   WorkflowModel& learn_(const LabeledBatch& batch, const TrainOptions& options = {}) {
-    resolve(workflow_.learn(batch, options), "learn");
+    if (!pending_stages_.empty()) {
+      ::pluss::throw_error(
+          "learn_: " + std::to_string(pending_stages_.size()) +
+          " append()'d stage(s) still pending -- a bare LabeledBatch carries no column names to "
+          "resolve their ColumnRouter against. Use the (frame, DataFrameBatchOptions) or (x, y) "
+          "overload instead.");
+    }
+    resolve(workflow_.learn(apply_target_transform_forward_(batch), options), "learn");
     refresh_linear_summary_();
     return *this;
   }
@@ -162,8 +185,14 @@ public:
   WorkflowModel& learn_(const pluss::table::DataFrame& frame,
                         const DataFrameBatchOptions& data_options,
                         const TrainOptions& options = {}) {
-    resolve(workflow_.learn(frame, data_options, options), "learn");
-    feature_names_ = resolve_feature_names_from_options_(frame, data_options, "learn_");
+    category_maps_.clear();
+    const auto names = resolve_feature_names_from_options_(frame, data_options, "learn_");
+    materialize_pending_stages_(frame, names);
+    const LabeledBatch batch = resolve(
+        labeled_batch_from_dataframe(frame, data_options, nullptr, &category_maps_),
+        "learn_.labeled_batch_from_dataframe");
+    resolve(workflow_.learn(apply_target_transform_forward_(batch), options), "learn");
+    feature_names_ = names;
     refresh_linear_summary_();
     return *this;
   }
@@ -171,8 +200,10 @@ public:
   WorkflowModel& learn_(const pluss::table::DataFrame& x,
                         const Series& y,
                         const TrainOptions& options = {}) {
+    category_maps_.clear();
     const auto names = default_series_feature_names_(x, "learn_(x,y)");
-    const LabeledBatch batch = labeled_from_xy_(x, y, names, "learn_(x,y)");
+    materialize_pending_stages_(x, names);
+    const LabeledBatch batch = labeled_from_xy_(x, y, names, "learn_(x,y)", nullptr, &category_maps_);
     feature_names_ = names;
     return learn_(batch, options);
   }
@@ -213,6 +244,37 @@ public:
     return out;
   }
 
+  // Folds a TargetTransform onto this model (LYMPH_REDESIGN_PLAN.md phase
+  // 7) -- an optional field + chainable method, replacing the old separate
+  // TargetTransformedModel wrapper class. Chainable, so it composes with
+  // .append(...) the same way: `model.append(stage, router).target_transform
+  // (transform::log1p())`. Regression only -- there is no meaningful
+  // inverse-transform of a predicted *class* -- and every learn_/infer/
+  // assess_series overload funnels through the one chokepoint each already
+  // shares, so this applies uniformly regardless of which overload a caller
+  // reaches for.
+  WorkflowModel& target_transform(TargetTransform transform) {
+    if (!transform.forward || !transform.inverse) {
+      ::pluss::throw_error("WorkflowModel::target_transform: transform.forward and transform.inverse must both be set.");
+    }
+    if (task_kind() != TaskKind::Regression) {
+      ::pluss::throw_error(
+          "WorkflowModel::target_transform: only meaningful for TaskKind::Regression models "
+          "(there is no invertible mapping back from a predicted class through a target transform).");
+    }
+    target_transform_ = std::move(transform);
+    return *this;
+  }
+
+  [[nodiscard]] bool has_target_transform() const noexcept { return target_transform_.has_value(); }
+
+  [[nodiscard]] const TargetTransform& target_transform() const {
+    if (!target_transform_.has_value()) {
+      ::pluss::throw_error("WorkflowModel::target_transform: no transform has been set.");
+    }
+    return *target_transform_;
+  }
+
   [[nodiscard]] Series map(const FeatureBatch& batch, const InferOptions& options = {}) const {
     return resolve(workflow_.map(batch, options), "map");
   }
@@ -220,7 +282,9 @@ public:
   [[nodiscard]] Series map(const pluss::table::DataFrame& frame,
                            const DataFrameBatchOptions& data_options,
                            const InferOptions& options = {}) const {
-    const auto batch = resolve(feature_batch_from_dataframe(frame, data_options), "map.feature_batch_from_dataframe");
+    const auto batch = resolve(
+        feature_batch_from_dataframe(frame, data_options, &category_maps_, nullptr),
+        "map.feature_batch_from_dataframe");
     return map(batch, options);
   }
 
@@ -242,7 +306,10 @@ public:
                                  const DataFrameBatchOptions& data_options,
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {}) {
-    const auto batch = resolve(feature_batch_from_dataframe(frame, data_options), "learn_map.feature_batch_from_dataframe");
+    category_maps_.clear();
+    const auto batch = resolve(
+        feature_batch_from_dataframe(frame, data_options, nullptr, &category_maps_),
+        "learn_map.feature_batch_from_dataframe");
     const Series mapped = learn_map(batch, learn_options, infer_options);
     feature_names_ = resolve_feature_names_from_options_(frame, data_options, "learn_map");
     return mapped;
@@ -256,19 +323,23 @@ public:
   }
 
   [[nodiscard]] Series infer(const FeatureBatch& batch, const InferOptions& options = {}) const {
-    return resolve(workflow_.infer(batch, options), "infer");
+    const Series predicted = resolve(workflow_.infer(batch, options), "infer");
+    return target_transform_.has_value() ? target_transform_->inverse(predicted) : predicted;
   }
 
   [[nodiscard]] Series infer(const pluss::table::DataFrame& frame,
                              const DataFrameBatchOptions& data_options,
                              const InferOptions& options = {}) const {
-    return resolve(workflow_.infer(frame, data_options, options), "infer");
+    const auto batch = resolve(
+        feature_batch_from_dataframe(frame, data_options, &category_maps_, nullptr),
+        "infer.feature_batch_from_dataframe");
+    return infer(batch, options);
   }
 
   [[nodiscard]] Series infer(const pluss::table::DataFrame& x,
                              const InferOptions& options = {}) const {
     const auto names = !feature_names_.empty() ? feature_names_ : default_series_feature_names_(x, "infer(x)");
-    return resolve(workflow_.infer(x, default_data_options_(names), options), "infer");
+    return infer(x, default_data_options_(names), options);
   }
 
   [[nodiscard]] Series infer_scores(const FeatureBatch& batch, const InferOptions& options = {}) const {
@@ -278,30 +349,47 @@ public:
   [[nodiscard]] Series infer_scores(const pluss::table::DataFrame& frame,
                                     const DataFrameBatchOptions& data_options,
                                     const InferOptions& options = {}) const {
-    return resolve(workflow_.infer_scores(frame, data_options, options), "infer_scores");
+    const auto batch = resolve(
+        feature_batch_from_dataframe(frame, data_options, &category_maps_, nullptr),
+        "infer_scores.feature_batch_from_dataframe");
+    return infer_scores(batch, options);
   }
 
   [[nodiscard]] Series infer_scores(const pluss::table::DataFrame& x,
                                     const InferOptions& options = {}) const {
     const auto names = !feature_names_.empty() ? feature_names_ : default_series_feature_names_(x, "infer_scores(x)");
-    return resolve(workflow_.infer_scores(x, default_data_options_(names), options), "infer_scores");
+    return infer_scores(x, default_data_options_(names), options);
   }
 
   [[nodiscard]] Series assess_series(const LabeledBatch& batch, const AssessOptions& options = {}) const {
+    if (target_transform_.has_value()) {
+      // Score against the ORIGINAL (untransformed) y -- infer(...) above
+      // already inverse-transforms, so calling workflow_.assess(batch, ...)
+      // directly here would silently compare transformed-space predictions
+      // against batch.y, which is in the original space. This is exactly
+      // the bug the old TargetTransformedModel::assess() avoided by never
+      // delegating to the wrapped model's own .assess() -- same fix, folded
+      // into the chokepoint every assess()/assess_series() overload shares.
+      const Series predicted = infer(batch.features, InferOptions{});
+      return regression_metric_series(batch.y, predicted, resolved_metrics_(options));
+    }
     return resolve(workflow_.assess(batch, options), "assess");
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& frame,
                                      const DataFrameBatchOptions& data_options,
                                      const AssessOptions& options = {}) const {
-    return resolve(workflow_.assess(frame, data_options, options), "assess");
+    const LabeledBatch batch = resolve(
+        labeled_batch_from_dataframe(frame, data_options, &category_maps_, nullptr),
+        "assess.labeled_batch_from_dataframe");
+    return assess_series(batch, options);
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
                                      const Series& y,
                                      const AssessOptions& options = {}) const {
     const auto names = !feature_names_.empty() ? feature_names_ : default_series_feature_names_(x, "assess(x,y)");
-    const LabeledBatch batch = labeled_from_xy_(x, y, names, "assess(x,y)");
+    const LabeledBatch batch = labeled_from_xy_(x, y, names, "assess(x,y)", &category_maps_, nullptr);
     return assess_series(batch, options);
   }
 
@@ -435,7 +523,8 @@ public:
             const LabeledBatch& train_batch,
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
-    resolve(io::save(path, workflow_, train_batch, train_options, std::move(metadata)), "save");
+    throw_if_target_transform_unsaveable_();
+    resolve(io::save(path, workflow_, train_batch, train_options, std::move(metadata), category_maps_), "save");
   }
 
   void save(const std::string& path,
@@ -443,9 +532,10 @@ public:
             const Series& y_train,
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
+    throw_if_target_transform_unsaveable_();
     const auto names = !feature_names_.empty() ? feature_names_ : default_series_feature_names_(x_train, "save(x,y)");
-    const LabeledBatch batch = labeled_from_xy_(x_train, y_train, names, "save(x,y)");
-    resolve(io::save(path, workflow_, batch, train_options, std::move(metadata)), "save");
+    const LabeledBatch batch = labeled_from_xy_(x_train, y_train, names, "save(x,y)", &category_maps_, nullptr);
+    resolve(io::save(path, workflow_, batch, train_options, std::move(metadata), category_maps_), "save");
   }
 
   void save(const std::string& path,
@@ -456,12 +546,31 @@ public:
     save(path, x_train, as_stratify_series(y_train), train_options, std::move(metadata));
   }
 
+  // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin
+  // comment further down for why this exists alongside the (x, y) form. Also
+  // reuses the model's own frozen category_maps_ (as `existing_categories`)
+  // to encode the saved reference train_batch, so it stays consistent with
+  // the codes the model was actually trained on rather than a fresh refit.
+  void save(const std::string& path,
+            const pluss::table::DataFrame& frame,
+            const DataFrameBatchOptions& data_options,
+            const TrainOptions& train_options = {},
+            io::FlowBundleMetadata metadata = {}) const {
+    throw_if_target_transform_unsaveable_();
+    const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options, &category_maps_, nullptr),
+                                       "save(frame,data_options).labeled_batch_from_dataframe");
+    resolve(io::save(path, workflow_, batch, train_options, std::move(metadata), category_maps_), "save");
+  }
+
   [[nodiscard]] static WorkflowModel restore(const io::FlowBundle& bundle) {
-    return WorkflowModel(resolve(io::restore(bundle), "restore"));
+    WorkflowModel out(resolve(io::restore(bundle), "restore"));
+    out.category_maps_ = bundle.category_maps;
+    return out;
   }
 
   [[nodiscard]] static WorkflowModel load(const std::string& path) {
-    return WorkflowModel(resolve(io::load_and_restore(path), "load_and_restore"));
+    const io::FlowBundle bundle = resolve(io::load(path), "load");
+    return restore(bundle);
   }
 
   [[nodiscard]] std::vector<std::vector<Series>> dump_transform_states() const {
@@ -498,7 +607,48 @@ public:
   [[nodiscard]] const Workflow& workflow() const noexcept { return workflow_; }
   [[nodiscard]] Workflow& workflow() noexcept { return workflow_; }
 
+  // Out-of-place copy that dumps + reloads trained transform/model state
+  // instead of retraining -- cheap even for an already-fitted model. Throws
+  // under the same conditions as the out-of-place learn(...) path (opaque
+  // transforms, or a trained model with no clonable ModelSpec).
+  [[nodiscard]] WorkflowModel clone() const { return clone_for_out_of_place_(); }
+
 private:
+  // target_transform_ support -- see the public .target_transform(...)
+  // chainable setter further up for the field's role.
+  void check_target_transform_inverse_(const Series& y) const {
+    if (!target_transform_->check_inverse) return;
+    const Series roundtrip = target_transform_->inverse(target_transform_->forward(y));
+    const double diff = max_abs_diff(roundtrip, y);
+    if (!(diff <= target_transform_->check_inverse_tolerance)) {
+      ::pluss::throw_error("WorkflowModel::target_transform: transform \"" + target_transform_->name +
+                           "\" does not round-trip (forward then inverse max abs diff " + std::to_string(diff) +
+                           " exceeds tolerance " + std::to_string(target_transform_->check_inverse_tolerance) +
+                           "). Check it is actually invertible over this y's range.");
+    }
+  }
+
+  [[nodiscard]] LabeledBatch apply_target_transform_forward_(LabeledBatch batch) const {
+    if (!target_transform_.has_value()) return batch;
+    check_target_transform_inverse_(batch.y);
+    batch.y = target_transform_->forward(batch.y);
+    return batch;
+  }
+
+  // target_transform_ closures aren't serializable (same limitation
+  // prep::FunctionTransformer already has) -- fail loudly at save() rather
+  // than silently dropping the transform on a save/load round-trip, the
+  // same guarantee the old TargetTransformedModel gave by simply never
+  // having a save() method at all.
+  void throw_if_target_transform_unsaveable_() const {
+    if (target_transform_.has_value()) {
+      ::pluss::throw_error(
+          "WorkflowModel::save: target_transform is not persistable yet (forward/inverse closures aren't "
+          "serializable) -- save before calling .target_transform(...), or reattach the same transform "
+          "again after .load(...).");
+    }
+  }
+
   [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
     options.feature_names = copy_range_values(feature_names);
@@ -537,9 +687,12 @@ private:
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
                                                      pluss::msharp::RangeView::Of<std::string> feature_names,
-                                                     const char* where) {
+                                                     const char* where,
+                                                     const CategoryMaps* existing_categories = nullptr,
+                                                     CategoryMaps* fitted_categories_out = nullptr) {
     const auto x_batch =
-        resolve(feature_batch_from_dataframe(x, default_data_options_(feature_names)), std::string(where) + ".feature_batch_from_dataframe");
+        resolve(feature_batch_from_dataframe(x, default_data_options_(feature_names), existing_categories, fitted_categories_out),
+                std::string(where) + ".feature_batch_from_dataframe");
     const Series y_aligned = y.to(x_batch.x.platform(), ScalarType::Float64).reshape({x_batch.sample_count()});
     LabeledBatch batch{
         .features = x_batch,
@@ -548,6 +701,30 @@ private:
     };
     resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
     return batch;
+  }
+
+  // Resolves every (Stage, ColumnRouter) queued by append() against `frame`/
+  // `ordered_names` -- the first real column-name context any learn_(...)
+  // overload sees -- and folds each into workflow_ via the same
+  // append_transform_from_spec_() dispatch clone_for_out_of_place_() below
+  // already uses, so materializing a pending stage is not a second code
+  // path, just a different TransformSpec source. Small, fixed-size
+  // bookkeeping (a handful of prep stages, never a per-row/per-feature
+  // loop), so this is plain control flow, not something with a
+  // Series/vectorization angle -- the actual per-row work still happens
+  // entirely inside NodeJ's Flow/TransformerBase once materialized,
+  // unchanged by any of this.
+  void materialize_pending_stages_(const pluss::table::DataFrame& frame, const std::vector<std::string>& ordered_names) {
+    for (auto& [stage, router] : pending_stages_) {
+      const TransformSpec spec{
+          .kind = stage.kind,
+          .options = stage.options,
+          .feature_route = router.resolve(frame, ordered_names),
+          .remainder = router.remainder,
+      };
+      resolve(append_transform_from_spec_(workflow_, spec), "append(pending stage)");
+    }
+    pending_stages_.clear();
   }
 
   [[nodiscard]] static Status append_transform_from_spec_(Workflow& flow, const TransformSpec& spec) {
@@ -614,6 +791,13 @@ private:
     }
     WorkflowModel out(std::move(cloned));
     out.feature_names_ = feature_names_;
+    out.category_maps_ = category_maps_;
+    // Un-materialized append()'d stages travel with the clone too -- the
+    // non-mutating learn(...) siblings clone first, then call the matching
+    // mutating learn_(...) overload on the clone, which is exactly where
+    // these get resolved and folded in.
+    out.pending_stages_ = pending_stages_;
+    out.target_transform_ = target_transform_;
     return out;
   }
 
@@ -689,6 +873,17 @@ private:
 
   Workflow workflow_{};
   std::vector<std::string> feature_names_{};
+  // Fitted at learn() time for any DataNotePolicy::Factorize column;
+  // reused (not refit) by every later infer()/map()/assess()/save() call so
+  // a raw text column keeps encoding to the same codes throughout this
+  // model's lifetime, including after save()/load(). See nodej/data.h's
+  // CategoryMaps doc comment for the fit/reuse contract.
+  CategoryMaps category_maps_{};
+  // append()'d (Stage, ColumnRouter) pairs not yet folded into workflow_ --
+  // cleared by materialize_pending_stages_() the first time a DataFrame-
+  // based learn_(...) overload runs. See append()'s own doc comment.
+  std::vector<std::pair<Stage, ColumnRouter>> pending_stages_{};
+  std::optional<TargetTransform> target_transform_{};
 };
 [[nodiscard]] inline SplitOptions effective_workflow_split_options_(CrossValidationOptions cv, TaskKind task) {
   SplitOptions split = make_cross_validation_split_options(cv);
@@ -762,6 +957,31 @@ private:
   return out;
 }
 
+// Turns a filled-in CrossAssessReport (one FoldAssessResult per fold already
+// computed, by any dispatch strategy) into fold mean/stdev + the final
+// CrossValidationReport -- the tail every cross-validation caller needs,
+// factored out so cross_validate_batches_ and selection::compare's flattened
+// candidate-fold scheduler don't each derive it separately.
+[[nodiscard]] inline CrossValidationReport cross_validation_report_from_folds_(CrossAssessReport report) {
+  const std::vector<MetricKind>& metrics = report.metrics;
+  const std::int64_t fold_count = static_cast<std::int64_t>(report.folds.size());
+  const std::int64_t metric_count = static_cast<std::int64_t>(metrics.size());
+  Series fold_matrix = report.folds.front().metrics.reshape({1, metric_count});
+  for (std::size_t i = 1; i < report.folds.size(); ++i) {
+    fold_matrix = fold_matrix.unite({report.folds[i].metrics.reshape({1, metric_count})}, 0);
+  }
+  fold_matrix = fold_matrix.reshape({fold_count, metric_count});
+  report.mean_metrics = fold_matrix.mean(0, false).reshape({metric_count});
+  const Series centered = fold_matrix.sub(report.mean_metrics.reshape({1, metric_count}));
+  report.std_metrics = centered.square().mean(0, false).sqrt().reshape({metric_count});
+
+  return CrossValidationReport{
+      .report = report,
+      .mean = metric_report_from_series_(report.mean_metrics, metrics),
+      .stdev = metric_report_from_series_(report.std_metrics, metrics),
+  };
+}
+
 [[nodiscard]] inline CrossValidationReport cross_validate_batches_(const WorkflowModel& model,
                                                                    const std::vector<FoldBatchPair>& fold_batches,
                                                                    const SplitPlan& plan,
@@ -833,22 +1053,7 @@ private:
     }
   }
 
-  const std::int64_t fold_count = static_cast<std::int64_t>(report.folds.size());
-  const std::int64_t metric_count = static_cast<std::int64_t>(metrics.size());
-  Series fold_matrix = report.folds.front().metrics.reshape({1, metric_count});
-  for (std::size_t i = 1; i < report.folds.size(); ++i) {
-    fold_matrix = fold_matrix.unite({report.folds[i].metrics.reshape({1, metric_count})}, 0);
-  }
-  fold_matrix = fold_matrix.reshape({fold_count, metric_count});
-  report.mean_metrics = fold_matrix.mean(0, false).reshape({metric_count});
-  const Series centered = fold_matrix.sub(report.mean_metrics.reshape({1, metric_count}));
-  report.std_metrics = centered.square().mean(0, false).sqrt().reshape({metric_count});
-
-  return CrossValidationReport{
-      .report = report,
-      .mean = metric_report_from_series_(report.mean_metrics, metrics),
-      .stdev = metric_report_from_series_(report.std_metrics, metrics),
-  };
+  return cross_validation_report_from_folds_(std::move(report));
 }
 
 [[nodiscard]] inline CrossValidationReport cross_validate_plan_(const WorkflowModel& model,
@@ -1008,6 +1213,25 @@ private:
   return ::pluss::ai::lymph::confusion_table(model, batch, infer_options, options);
 }
 
+// (frame, DataFrameBatchOptions) sibling of the (x, y) overload above --
+// routes through `model.infer(frame, data_options, ...)`, which (unlike the
+// (x, y) form, which has no DataFrameBatchOptions to carry a note_policy on)
+// correctly reuses the model's own frozen `category_maps_` for any
+// DataNotePolicy::Factorize column, so a confusion matrix built this way on
+// held-out data stays code-consistent with how the model was trained.
+[[nodiscard]] inline ConfusionTable confusion_table(const WorkflowModel& model,
+                                                    const pluss::table::DataFrame& frame,
+                                                    const DataFrameBatchOptions& data_options,
+                                                    const InferOptions& infer_options = {},
+                                                    const ConfusionOptions& options = {}) {
+  if (!data_options.label_feature.has_value()) {
+    ::pluss::throw_error("confusion_table(model,frame,data_options): data_options.label_feature is required.");
+  }
+  const Series y = frame.features(*data_options.label_feature).as_series().reshape({frame.ncases()});
+  const Series predicted = model.infer(frame, data_options, infer_options);
+  return ::pluss::ai::lymph::confusion_table(y, predicted, options);
+}
+
 [[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
                                                         const pluss::table::DataFrame& x,
                                                         const Series& y,
@@ -1018,5 +1242,122 @@ private:
   return ::pluss::ai::lymph::classification_summary(model, batch, infer_options, options);
 }
 
+// (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin above
+// for why this exists alongside the (x, y) form.
+[[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
+                                                        const pluss::table::DataFrame& frame,
+                                                        const DataFrameBatchOptions& data_options,
+                                                        const InferOptions& infer_options = {},
+                                                        const ClassReportOptions& options = {}) {
+  if (!data_options.label_feature.has_value()) {
+    ::pluss::throw_error("classification_summary(model,frame,data_options): data_options.label_feature is required.");
+  }
+  const Series y = frame.features(*data_options.label_feature).as_series().reshape({frame.ncases()});
+  const Series predicted = model.infer(frame, data_options, infer_options);
+  return ::pluss::ai::lymph::classification_summary(y, predicted, options);
+}
+
+// infer_scores() isn't documented as uniformly [0,1]-valued across model
+// families: EnsembleClassifier's GradientBoost/AdaBoost branches return a raw,
+// unbounded logit-scale margin (see family_classifier.cpp), and every other
+// call site that needs a real probability from them (EnsembleClassifier::
+// assess(), for one) applies `.sigmoid()` first -- not doing that here would
+// have threshold_curve/best_threshold return a "best threshold" that's
+// literally outside the [0,1] range every classifier family's InferOptions::
+// positive_threshold requires, which just throws the next time anyone uses
+// it. Scores already inside [0,1] pass through untouched (the common case);
+// anything that escapes that range gets sigmoid-mapped into [0,1] first,
+// matching the same escape hatch other framework call sites already use.
+[[nodiscard]] inline Series as_probability_like_(const Series& scores) {
+  const Series s = scores.to(ScalarType::Float64);
+  if (s.numel() == 0) return s;
+  const bool out_of_range = s.lt(0.0).any().item<bool>() || s.gt(1.0).any().item<bool>();
+  return out_of_range ? s.sigmoid() : s;
+}
+
+// One sort + two cumulative sums over the model's scores computes
+// precision/recall/F1 at every achievable threshold in one pass -- see
+// nodej::threshold_curve (NodeJ/metrics/threshold_curve.cpp) for the
+// underlying O(n log n) sweep this replaces a naive re-score-per-candidate
+// loop with.
+[[nodiscard]] inline ThresholdCurve threshold_curve(const WorkflowModel& model,
+                                                    const LabeledBatch& batch,
+                                                    const InferOptions& infer_options = {}) {
+  const Series scores = as_probability_like_(model.infer_scores(batch.features, infer_options));
+  return resolve(::pluss::ai::nodej::threshold_curve(scores, batch.y), "threshold_curve");
+}
+
+[[nodiscard]] inline ThresholdCurve threshold_curve(const WorkflowModel& model,
+                                                    const pluss::table::DataFrame& x,
+                                                    const Series& y,
+                                                    const InferOptions& infer_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "threshold_curve(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "threshold_curve(model,x,y)");
+  return threshold_curve(model, batch, infer_options);
+}
+
+[[nodiscard]] inline ThresholdCurve threshold_curve(const WorkflowModel& model,
+                                                    const pluss::table::DataFrame& x,
+                                                    const pluss::table::Thread& y,
+                                                    const InferOptions& infer_options = {}) {
+  return threshold_curve(model, x, as_stratify_series(y), infer_options);
+}
+
+// (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin above
+// for why this exists alongside the (x, y) form.
+[[nodiscard]] inline ThresholdCurve threshold_curve(const WorkflowModel& model,
+                                                    const pluss::table::DataFrame& frame,
+                                                    const DataFrameBatchOptions& data_options,
+                                                    const InferOptions& infer_options = {}) {
+  if (!data_options.label_feature.has_value()) {
+    ::pluss::throw_error("threshold_curve(model,frame,data_options): data_options.label_feature is required.");
+  }
+  const Series y = frame.features(*data_options.label_feature).as_series().reshape({frame.ncases()});
+  const Series scores = as_probability_like_(model.infer_scores(frame, data_options, infer_options));
+  return resolve(::pluss::ai::nodej::threshold_curve(scores, y), "threshold_curve");
+}
+
+// The threshold maximizing `objective` (Precision, Recall/Sensitivity, or F1
+// -- anything else falls back to F1) over threshold_curve's full sweep.
+[[nodiscard]] inline double best_threshold(const WorkflowModel& model,
+                                           const LabeledBatch& batch,
+                                           MetricKind objective = MetricKind::F1,
+                                           const InferOptions& infer_options = {}) {
+  const Series scores = as_probability_like_(model.infer_scores(batch.features, infer_options));
+  return resolve(::pluss::ai::nodej::best_threshold(scores, batch.y, objective), "best_threshold");
+}
+
+[[nodiscard]] inline double best_threshold(const WorkflowModel& model,
+                                           const pluss::table::DataFrame& x,
+                                           const Series& y,
+                                           MetricKind objective = MetricKind::F1,
+                                           const InferOptions& infer_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "best_threshold(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "best_threshold(model,x,y)");
+  return best_threshold(model, batch, objective, infer_options);
+}
+
+[[nodiscard]] inline double best_threshold(const WorkflowModel& model,
+                                           const pluss::table::DataFrame& x,
+                                           const pluss::table::Thread& y,
+                                           MetricKind objective = MetricKind::F1,
+                                           const InferOptions& infer_options = {}) {
+  return best_threshold(model, x, as_stratify_series(y), objective, infer_options);
+}
+
+// (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin above
+// for why this exists alongside the (x, y) form.
+[[nodiscard]] inline double best_threshold(const WorkflowModel& model,
+                                           const pluss::table::DataFrame& frame,
+                                           const DataFrameBatchOptions& data_options,
+                                           MetricKind objective = MetricKind::F1,
+                                           const InferOptions& infer_options = {}) {
+  if (!data_options.label_feature.has_value()) {
+    ::pluss::throw_error("best_threshold(model,frame,data_options): data_options.label_feature is required.");
+  }
+  const Series y = frame.features(*data_options.label_feature).as_series().reshape({frame.ncases()});
+  const Series scores = as_probability_like_(model.infer_scores(frame, data_options, infer_options));
+  return resolve(::pluss::ai::nodej::best_threshold(scores, y, objective), "best_threshold");
+}
 
 } // namespace pluss::ai::lymph

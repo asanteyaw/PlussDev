@@ -1,5 +1,4 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: f9aea3826ee0 -->
 
 # RegistryTimelineAccessor::tz
 
@@ -18,6 +17,9 @@ changing the underlying instant — the same operation as
 [`Thread::tl().tz()`](../thread-timeline/tz.md)/
 [`DataFrame::tl().tz()`](../dataframe-timeline/tz.md) at the table layer.
 
+The relabeling survives being read back through any further `.tl()` call
+(`fmt()`, `hour()`, another `tz()`, anything) — see Example 1.
+
 ## Parameters
 
 **name** (`std::string_view`)
@@ -29,11 +31,13 @@ changing the underlying instant — the same operation as
 
 `Registry`
     A new registry with every bound field's timestamps relabeled to `name`.
+    Reading the result back through any further `.tl()` call reflects the
+    new display timezone.
 
 ## Examples
 
-Example 1. `tz()` relabels the display timezone, and the relabel survives a
-follow-up `.tl()` read.
+Example 1. `tz()` relabels the display timezone, and the relabeling is
+still in effect on the very next `.tl()` read.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -42,7 +46,7 @@ auto rg = pluss::bundle::Registry({
 
 auto shifted = rg.fields({"ts"}).tl().tz("America/New_York");
 auto fmted = shifted.fields("ts").tl().fmt("%Y-%m-%d %H:%M:%S");
-std::cout << std::get<pluss::Note>(fmted.select("ts").at(0)).at(0);
+std::cout << std::get<pluss::Note>(fmted.at(0)).at(0);
 ```
 
 ### Output
@@ -51,8 +55,8 @@ std::cout << std::get<pluss::Note>(fmted.select("ts").at(0)).at(0);
 2024-01-31 04:15:30
 ```
 
-The `"America/New_York"`-relative reading shows `04:15:30` (a `-5:00`
-offset in January), matching what
+`04:15:30` is the `"America/New_York"`-relative reading of the same instant
+(a `-5:00` offset in January) — matching what
 [`Thread::tl().tz()`](../thread-timeline/tz.md) produces on the same input.
 
 ## Notes
@@ -62,12 +66,21 @@ offset in January), matching what
   other name throws.
 - Requires every bound field to be `Timeline`-kind — a non-`Timeline` field
   throws `"Slot::tl: slot kind must be Timeline"`.
+- Internally, each bound field stores its `Timeline` values independently
+  (one scalar `Timeline` per row, not one shared column). `tz()` relabels
+  every row's `Timeline`, and that relabeling round-trips correctly through
+  the `kindle::Stream` boundary every further `.tl()` call goes through —
+  unlike an earlier version of this code path, which silently discarded the
+  label on every subsequent `.tl()` read. If every row does not already
+  share the same display timezone going into a `.tl()` call, the call
+  throws rather than picking one arbitrarily — combine to a common zone
+  with `tz()`/`localize()` first if needed.
 
 ## See Also
 
 - [`RegistryTimelineAccessor::utc`](utc.md): shorthand for `tz("UTC")`.
 - [`RegistryTimelineAccessor::localize`](localize.md): changes the
-  underlying instant (which also persists) rather than just the display
+  underlying instant (which *does* persist) rather than just the display
   label.
 - [`Registry::tl`](../registry/tl.md): the entry point this accessor is
   reached from.

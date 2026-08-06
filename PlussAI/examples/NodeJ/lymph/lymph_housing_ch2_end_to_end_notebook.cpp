@@ -156,33 +156,27 @@ int main() {
 
   //========== Cell 11: Train Baselines ========
   // Linear Regression baseline.
-  auto linear_wf = lymph::Workflow{
-      .model = lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
-          .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
-          .regularization = pluss::ai::nodej::RegularizationKind::None,
-          .regularization_strength = 0.0,
-          .fit_intercept = true,
-      }),
-  };
+  auto linear_wf = lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
+      .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
+      .regularization = pluss::ai::nodej::RegularizationKind::None,
+      .regularization_strength = 0.0,
+      .fit_intercept = true,
+  });
 
   // Decision Tree baseline.
-  auto tree_wf = lymph::Workflow{
-      .model = lymph::tree_factory::decision_tree_regressor(pluss::ai::nodej::TreeFamilyOptions{
-          .criterion = pluss::ai::nodej::TreeCriterion::Mse,
-          .max_depth = 18,
-          .min_samples_leaf = 4,
-          .min_samples_split = 8,
-      }),
-  };
+  auto tree_wf = lymph::tree_factory::decision_tree_regressor(pluss::ai::nodej::TreeFamilyOptions{
+      .criterion = pluss::ai::nodej::TreeCriterion::Mse,
+      .max_depth = 18,
+      .min_samples_leaf = 4,
+      .min_samples_split = 8,
+  });
 
   // Random Forest baseline.
-  auto forest_wf = lymph::Workflow{
-      .model = lymph::ensemble_factory::random_forest_regressor(pluss::ai::nodej::EnsembleFamilyOptions{
-          .method = pluss::ai::nodej::EnsembleMethod::RandomForest,
-          .learners = 120,
-          .subsample = 1.0,
-      }),
-  };
+  auto forest_wf = lymph::ensemble_factory::random_forest_regressor(pluss::ai::nodej::EnsembleFamilyOptions{
+      .method = pluss::ai::nodej::EnsembleMethod::RandomForest,
+      .learners = 120,
+      .subsample = 1.0,
+  });
 
   pluss::ai::nodej::TrainOptions train_options{};
   train_options.max_iterations = 2500;
@@ -245,73 +239,43 @@ int main() {
   //========== Cell 13: Tune Candidate Families ========
   // Equivalent in spirit to Grid/Random search over model hyperparameters.
   std::vector<lymph::selection::Candidate> candidates{};
-  {
-    auto wf = lymph::Workflow{
-        .model = lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
-            .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
-            .regularization = pluss::ai::nodej::RegularizationKind::L2,
-            .regularization_strength = 1e-6,
-            .fit_intercept = true,
-        }),
-    };
-    candidates.emplace_back("linear_l2_1e6", std::move(wf));
-  }
-  {
-    auto wf = lymph::Workflow{
-        .model = lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
-            .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
-            .regularization = pluss::ai::nodej::RegularizationKind::L2,
-            .regularization_strength = 1e-4,
-            .fit_intercept = true,
-        }),
-    };
-    candidates.emplace_back("linear_l2_1e4", std::move(wf));
-  }
-  {
-    auto wf = lymph::Workflow{
-        .model = lymph::tree_factory::decision_tree_regressor(pluss::ai::nodej::TreeFamilyOptions{
-            .criterion = pluss::ai::nodej::TreeCriterion::Mse,
-            .max_depth = 12,
-            .min_samples_leaf = 2,
-            .min_samples_split = 8,
-        }),
-    };
-    candidates.emplace_back("tree_d12_leaf2", std::move(wf));
-  }
-  {
-    auto wf = lymph::Workflow{
-        .model = lymph::tree_factory::decision_tree_regressor(pluss::ai::nodej::TreeFamilyOptions{
-            .criterion = pluss::ai::nodej::TreeCriterion::Mse,
-            .max_depth = 24,
-            .min_samples_leaf = 8,
-            .min_samples_split = 20,
-        }),
-    };
-    candidates.emplace_back("tree_d24_leaf8", std::move(wf));
-  }
-  {
-    auto wf = lymph::Workflow{
-        .model = lymph::ensemble_factory::random_forest_regressor(pluss::ai::nodej::EnsembleFamilyOptions{
-            .method = pluss::ai::nodej::EnsembleMethod::RandomForest,
-            .learners = 80,
-            .subsample = 0.9,
-        }),
-    };
-    candidates.emplace_back("forest_200_sub09", std::move(wf));
-  }
-  {
-    auto wf = lymph::Workflow{
-        .model = lymph::ensemble_factory::random_forest_regressor(pluss::ai::nodej::EnsembleFamilyOptions{
-            .method = pluss::ai::nodej::EnsembleMethod::RandomForest,
-            .learners = 140,
-            .subsample = 1.0,
-        }),
-    };
-    candidates.emplace_back("forest_500_sub10", std::move(wf));
-  }
+  candidates.emplace_back("linear_l2_1e6", lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
+      .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
+      .regularization = pluss::ai::nodej::RegularizationKind::L2,
+      .regularization_strength = 1e-6,
+      .fit_intercept = true,
+  }));
+  candidates.emplace_back("linear_l2_1e4", lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
+      .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
+      .regularization = pluss::ai::nodej::RegularizationKind::L2,
+      .regularization_strength = 1e-4,
+      .fit_intercept = true,
+  }));
+  candidates.emplace_back("tree_d12_leaf2", lymph::tree_factory::decision_tree_regressor(pluss::ai::nodej::TreeFamilyOptions{
+      .criterion = pluss::ai::nodej::TreeCriterion::Mse,
+      .max_depth = 12,
+      .min_samples_leaf = 2,
+      .min_samples_split = 8,
+  }));
+  candidates.emplace_back("tree_d24_leaf8", lymph::tree_factory::decision_tree_regressor(pluss::ai::nodej::TreeFamilyOptions{
+      .criterion = pluss::ai::nodej::TreeCriterion::Mse,
+      .max_depth = 24,
+      .min_samples_leaf = 8,
+      .min_samples_split = 20,
+  }));
+  candidates.emplace_back("forest_200_sub09", lymph::ensemble_factory::random_forest_regressor(pluss::ai::nodej::EnsembleFamilyOptions{
+      .method = pluss::ai::nodej::EnsembleMethod::RandomForest,
+      .learners = 80,
+      .subsample = 0.9,
+  }));
+  candidates.emplace_back("forest_500_sub10", lymph::ensemble_factory::random_forest_regressor(pluss::ai::nodej::EnsembleFamilyOptions{
+      .method = pluss::ai::nodej::EnsembleMethod::RandomForest,
+      .learners = 140,
+      .subsample = 1.0,
+  }));
 
   const auto t_tune0 = Clock::now();
-  auto tuned = lymph::selection::tune(
+  auto tuned = lymph::selection::compare(
       std::move(candidates),
       train_prepared,
       train_y,
@@ -329,7 +293,7 @@ int main() {
 
   //========== Cell 14: Final Model Eval + RMSE CI (Manual) ========
   // Manual CI computation to mirror chapter narrative.
-  auto final_workflow = std::move(tuned.best_workflow);
+  auto final_workflow = std::move(tuned.best());
   const Series final_pred = final_workflow.infer(test_prepared);
   const auto final_metrics = final_workflow.assess(test_prepared, test_y, assess_options);
   out.writeln("final test", final_metrics.rmse, final_metrics.r2, final_metrics.mae);
@@ -358,7 +322,7 @@ int main() {
   //========== Cell 15: Save, Load, Re-Infer ========
   const fs::path final_model_path = model_dir / "lymph_housing_ch2_best.bin";
   final_workflow.save(final_model_path.string(), train_prepared, train_y, train_options);
-  auto restored = lymph::Workflow::load(final_model_path.string());
+  auto restored = lymph::WorkflowModel::load(final_model_path.string());
   const Series restored_pred = restored.infer(test_prepared);
   const auto parity = lymph::compare_series(final_pred, restored_pred);
   out.writeln("restored parity", parity.max_abs_diff, parity.mae);

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::sum
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,12 @@
 ## Signature
 
 ```cpp
-Slot::sum() -> Slot
+Slot Slot::sum() const
 ```
 
 ## What It Does
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns a new, single-value slot holding the sum of the slot's values.
 
 ## Parameters
 
@@ -19,24 +21,36 @@ Use this when you want a summary view instead of carrying the full input forward
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new `Series` slot with exactly one value: the sum.
 
 ## Examples
 
-Example 1. Compute `sum` and inspect the resulting summary value or summary object.
+Example 1. Sum three values.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
 auto out = slot.sum();
+std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+6
 ```
 
+## Notes
+
+- Always collapses to exactly one value.
+- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+  slot to be stream-compatible (a single, homogeneous numeric kind).
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::mean`](mean.md), [`Slot::min`](min.md), [`Slot::max`](max.md):
+  the sibling reduction methods.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="slice.html">

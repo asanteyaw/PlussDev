@@ -29,6 +29,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/balance")
     add_subdirectory(NodeJ/balance)
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/neighbor")
+    add_subdirectory(NodeJ/neighbor)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/classifiers")
     add_subdirectory(NodeJ/classifiers)
 endif()

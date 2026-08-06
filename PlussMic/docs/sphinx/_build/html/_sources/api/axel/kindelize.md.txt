@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::kindelize
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,14 @@
 ## Signature
 
 ```cpp
-Axel::kindelize() -> pluss::kindle::Archive
+pluss::kindle::Archive Axel::kindelize() const
 ```
 
 ## What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts this `Axel` to its `kindle::Archive` representation. A
+backward-compatible alias for [`to_kindle()`](to_kindle.md) — the body
+is a single `return to_kindle();`, kept for older call sites.
 
 ## Parameters
 
@@ -19,31 +23,44 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 ## Returns
 
 `pluss::kindle::Archive`
-    Value produced by this call.
+    The same result [`to_kindle()`](to_kindle.md) would produce.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. `kindelize()` agrees with [`to_kindle()`](to_kindle.md) and
+[`as_kindle()`](as_kindle.md) on depth.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.kindelize();
+auto a1 = axel.to_kindle();
+auto a2 = axel.as_kindle();
+auto a3 = axel.kindelize();
+std::cout << a1.depth() << " " << a2.depth() << " " << a3.depth();
 ```
 
 ### Output
 
 ```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
+2 2 2
 ```
 
+## Notes
+
+- For new code, prefer [`to_kindle()`](to_kindle.md) or
+  [`as_kindle()`](as_kindle.md) — `kindelize()` exists purely for
+  backward compatibility with older call sites.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"`.
+
+## See Also
+
+- [`Axel::to_kindle`](to_kindle.md): the canonical name for this
+  operation.
+- [`Axel::as_kindle`](as_kindle.md): the semantic-switch-flavored
+  alias.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnull.html">

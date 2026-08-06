@@ -34,46 +34,86 @@
 
           <div class="body" role="main">
             
-  <section id="slotnoteaccessor-indicate">
+  <!-- pluss-hand-authored -->
+<section id="slotnoteaccessor-indicate">
 <h1>SlotNoteAccessor::indicate<a class="headerlink" href="#slotnoteaccessor-indicate" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_note_accessor_api_reference.html"><span class="doc std std-doc">Back to SlotNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">indicate</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">indicate</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;|&quot;</span><span class="p">,</span>
+<span class="w">                                                   </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Splits each value in the bound slot on <code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, collects every
+distinct non-empty token seen anywhere in the slot, and produces one
+<code class="docutils literal notranslate"><span class="pre">Bool</span></code> feature per distinct token (“level”) — the classic one-hot /
+multi-label indicator (“dummy variable”) encoding. Feature
+<code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> for a value if <code class="docutils literal notranslate"><span class="pre">level</span></code> is one of that value’s
+tokens, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+<p>Levels are collected into a sorted set, so output features always appear
+in <strong>alphabetical order</strong> — not first-seen order.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>delimiter</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>prefix</strong>
-Text prefix inserted ahead of the existing label or value.</p>
+<p><strong>delimiter</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code>)
+The literal text to split each value on before collecting tokens.
+Must not be empty.</p>
+<p><strong>prefix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)
+Text prepended to each level to form its feature name.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> feature per distinct non-empty token,
+sorted alphabetically, named <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">indicate</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
+<p>Example 1. The default <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code> delimiter.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;red|blue&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;blue|green&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;red&quot;</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">indicate</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | blue   green  red  
+--------------------------
+0    | true   false  true 
+1    | true   true   false
+2    | false  false  true 
+--------------------------
+[3 cs x 3 feat]
 </pre></div>
 </div>
+<p>Three distinct tokens appear — <code class="docutils literal notranslate"><span class="pre">&quot;blue&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;green&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;red&quot;</span></code> — in
+alphabetical feature order.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Output features are sorted alphabetically by token text, not
+first-appearance order.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">delimiter</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::indicate:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p>Requires the slot to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slot throws.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotNoteAccessor::split</span></code></span></a>: the same underlying
+delimiter-split mechanic, producing positional features instead of
+one-hot level features.</p></li>
+<li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotNoteAccessor::has</span></code></span></a>: test for a single specific
+substring instead of enumerating every token.</p></li>
+<li><p><a class="reference internal" href="../slot/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::nt</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="has.html">
     <span class="label">Previous</span>
@@ -84,7 +124,6 @@ Value produced by this call.</p>
     <span class="title">length</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

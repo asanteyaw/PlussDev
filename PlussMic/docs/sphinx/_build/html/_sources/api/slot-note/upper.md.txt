@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # SlotNoteAccessor::upper
 
 [Back to SlotNoteAccessor API Reference](../../slot_note_accessor_api_reference)
@@ -5,12 +7,12 @@
 ## Signature
 
 ```cpp
-SlotNoteAccessor::upper() -> Slot
+Slot SlotNoteAccessor::upper() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Uppercases every value in the bound slot and returns a new slot.
 
 ## Parameters
 
@@ -19,26 +21,37 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new slot, every value uppercased.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Uppercase two values.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.upper();
-std::cout << out;
+auto out = slot.nt().upper();
+std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " "
+          << std::get<pluss::Note>(out.at(1)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ACCRA TEMA
 ```
 
+## Notes
+
+- Requires the slot to be `Note`-kind — a non-`Note` slot throws
+  `"Slot::nt: slot kind must be Note"`.
+
+## See Also
+
+- [`SlotNoteAccessor::lower`](lower.md): the inverse transform.
+- [`SlotNoteAccessor::titlecase`](titlecase.md): capitalizes only the
+  first letter of each word instead.
+- [`Slot::nt`](../slot/nt.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="titlecase.html">

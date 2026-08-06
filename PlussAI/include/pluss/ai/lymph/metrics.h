@@ -101,6 +101,9 @@ struct CrossValidationReport {
   CrossAssessReport report{};
   MetricReport mean{};
   MetricReport stdev{};
+
+  // One row per requested metric: name, fold mean, fold stdev.
+  [[nodiscard]] pluss::table::DataFrame board() const;
 };
 
 struct FoldBatchPair {
@@ -267,6 +270,17 @@ struct FoldBatchPair {
                  "classification_metric_series");
 }
 
+// Regression counterpart -- from already-computed truth/prediction vectors
+// rather than a model + batch, the shape needed whenever predictions came
+// from somewhere other than a plain WorkflowModel::infer
+// (WorkflowModel::assess_series's own target_transform_ branch, workflow_model.h,
+// is the first caller).
+[[nodiscard]] inline Series regression_metric_series(const Series& truth,
+                                                     const Series& prediction,
+                                                     const std::vector<MetricKind>& metrics = {}) {
+  return resolve(::pluss::ai::nodej::regression_metrics(truth, prediction, metrics), "regression_metric_series");
+}
+
 [[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
   SplitOptions split{};
   split.holdout_fraction = options.test_size;
@@ -353,6 +367,53 @@ struct FoldBatchPair {
   return report;
 }
 
+[[nodiscard]] inline std::string metric_kind_name_(MetricKind metric) {
+  switch (metric) {
+    case MetricKind::Accuracy: return "accuracy";
+    case MetricKind::BalancedAccuracy: return "balanced_accuracy";
+    case MetricKind::Precision: return "precision";
+    case MetricKind::Recall: return "recall";
+    case MetricKind::Sensitivity: return "sensitivity";
+    case MetricKind::F1: return "f1";
+    case MetricKind::Specificity: return "specificity";
+    case MetricKind::GeometricMean: return "geometric_mean";
+    case MetricKind::BalanceQuality: return "balance_quality";
+    case MetricKind::RocAuc: return "roc_auc";
+    case MetricKind::LogLoss: return "logloss";
+    case MetricKind::Mse: return "mse";
+    case MetricKind::Rmse: return "rmse";
+    case MetricKind::Mae: return "mae";
+    case MetricKind::R2: return "r2";
+    case MetricKind::QuantileLoss: return "quantile_loss";
+  }
+  return "metric";
+}
+
+[[nodiscard]] inline pluss::table::DataFrame CrossValidationReport::board() const {
+  std::vector<std::string> metric_names{};
+  std::vector<double> mean_values{};
+  std::vector<double> stdev_values{};
+  metric_names.reserve(mean.requested.size());
+  mean_values.reserve(mean.requested.size());
+  stdev_values.reserve(mean.requested.size());
+
+  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).to_vec<double>();
+  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).to_vec<double>();
+  for (std::size_t i = 0; i < mean.requested.size(); ++i) {
+    metric_names.push_back(metric_kind_name_(mean.requested[i]));
+    mean_values.push_back(mean_vec[i]);
+    stdev_values.push_back(stdev_vec[i]);
+  }
+
+  const Config f64_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const auto count = static_cast<std::int64_t>(metric_names.size());
+  return pluss::table::DataFrame({
+      {"metric", pluss::table::Thread(pluss::make_note(metric_names))},
+      {"mean", pluss::table::Thread(pluss::make_series(mean_values, {count}, f64_cfg))},
+      {"stdev", pluss::table::Thread(pluss::make_series(stdev_values, {count}, f64_cfg))},
+  }).title("Cross-Validation Results");
+}
+
 [[nodiscard]] inline std::vector<MetricKind> default_assess_metrics_(TaskKind task, const AssessOptions& options) {
   if (!options.metrics.empty()) return options.metrics;
   if (task == TaskKind::Regression) return {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
@@ -393,6 +454,51 @@ struct FoldBatchPair {
   };
   resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
   return batch;
+}
+
+// plan_balance(labels) rejects BlendNeighbors/cleaning outright (they need
+// real feature vectors to find/blend neighbors) -- these DataFrame overloads
+// build the LabeledBatch every growth mode actually supports, matching the
+// convenience shape cross_validate/classification_summary/confusion_table
+// already offer, so reaching for the wrong overload isn't a runtime surprise.
+[[nodiscard]] inline BalancePlan plan_balance(const pluss::table::DataFrame& x,
+                                              const Series& y,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "plan_balance(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "plan_balance(x,y)");
+  return ::pluss::ai::lymph::plan_balance(batch, target, random);
+}
+
+[[nodiscard]] inline BalancePlan plan_balance(const pluss::table::DataFrame& x,
+                                              const pluss::table::Thread& y,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  return plan_balance(x, as_stratify_series(y), target, random);
+}
+
+// (frame, DataFrameBatchOptions) sibling of the (x, y) overloads above --
+// the caller's own `data_options` (e.g. `note_policy = DataNotePolicy::
+// Factorize`) is threaded straight into `labeled_batch_from_dataframe`
+// instead of the (x, y) forms' hardcoded Reject-policy default, so a raw
+// Note column can take part in balancing without a separate pre-factorize
+// step. plan_balance only ever reads this one frame to decide how to
+// resample it -- no train/inference persistence is involved -- so a fresh
+// per-call fit (no existing/fitted category map threading) is correct here,
+// unlike WorkflowModel::learn_/infer's frozen-map requirement.
+[[nodiscard]] inline BalancePlan plan_balance(const pluss::table::DataFrame& frame,
+                                              const DataFrameBatchOptions& data_options,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
+                                     "plan_balance(frame,data_options).labeled_batch_from_dataframe");
+  return ::pluss::ai::lymph::plan_balance(batch, target, random);
+}
+
+// class_mix only ever needs the label column -- pull it by name instead of
+// requiring a caller to already have it as a bare Series.
+[[nodiscard]] inline ClassMix class_mix(const pluss::table::DataFrame& frame, std::string_view label_feature) {
+  return ::pluss::ai::lymph::class_mix(frame.features(label_feature).as_series().reshape({frame.ncases()}));
 }
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,

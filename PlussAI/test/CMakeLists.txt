@@ -1,4 +1,6 @@
-# AI module tests
+# AI module tests (NodeJ/NodeB/Ice/...). lymph_*_test.cpp files live in
+# PlussAI/Lymph/test/ instead, not here -- standing convention as of this
+# project's lymph redesign.
 
 find_package(Catch2 3 QUIET)
 

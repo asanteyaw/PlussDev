@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # SlotNoteAccessor::encode
 
 [Back to SlotNoteAccessor API Reference](../../slot_note_accessor_api_reference)
@@ -5,41 +7,67 @@
 ## Signature
 
 ```cpp
-SlotNoteAccessor::encode(std::string_view encoding = "base64") -> Slot
+Slot SlotNoteAccessor::encode(std::string_view encoding = "base64") const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Encodes each value's text bytes using the named encoding, replacing each
+`Note` value with its encoded text form.
 
 ## Parameters
 
-**encoding**
-    Text encoding used when reading or writing text-based files.
+**encoding** (`std::string_view`, defaults to `"base64"`)
+    The name of the encoding scheme. `"base64"` and `"hex"` are the two
+    schemes exercised in the examples below.
 
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new slot, every value replaced by its encoded form.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Default call: base64-encode.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.encode("units");
-std::cout << out;
+auto slot = pluss::bundle::Slot({pluss::make_note("hi")});
+auto out = slot.nt().encode();
+std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+aGk=
 ```
 
+Example 2. Passing `"hex"` explicitly.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_note("hi")});
+auto out = slot.nt().encode("hex");
+std::cout << std::get<pluss::Note>(out.at(0)).at(0);
+```
+
+### Output
+
+```text
+6869
+```
+
+## Notes
+
+- The default encoding is `"base64"`.
+- Requires the slot to be `Note`-kind — a non-`Note` slot throws
+  `"Slot::nt: slot kind must be Note"`.
+
+## See Also
+
+- [`SlotNoteAccessor::normalize`](normalize.md): the other byte/text-level
+  transform on this accessor.
+- [`Slot::nt`](../slot/nt.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="count.html">

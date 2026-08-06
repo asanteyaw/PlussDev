@@ -36,18 +36,32 @@
 
           <div class="body" role="main">
             
-  <section id="slot-to-json">
+  <!-- pluss-hand-authored -->
+<section id="slot-to-json">
 <h1>Slot::to_json<a class="headerlink" href="#slot-to-json" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_api_reference.html"><span class="doc std std-doc">Back to Slot API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="o">::</span><span class="n">to_json</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">to_json</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
+<p>Renders the slot as a JSON object: <code class="docutils literal notranslate"><span class="pre">_type</span></code>, <code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">size</span></code>, and a
+<code class="docutils literal notranslate"><span class="pre">values</span></code> array with one type tag per value (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Series[int64]&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;Note[numel=1]&quot;</span></code>).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Identical to to_string() and show() — unlike Registry
+Unlike <a class="reference internal" href="../registry/to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_json()</span></code></span></a>, which renders
+different (and more detailed) content than
+<a class="reference internal" href="../registry/to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_string()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">Slot::to_json()</span></code> is
+byte-identical to <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::to_string()</span></code></span></a> and
+<a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::show()</span></code></span></a> — all three (plus <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>) call the exact
+same rendering path. There’s no separate “compact tally” form at the
+<code class="docutils literal notranslate"><span class="pre">Slot</span></code> level the way there is at the <code class="docutils literal notranslate"><span class="pre">Registry</span></code> level.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,21 +70,62 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-Rendered string result.</p>
+The JSON rendering described above.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. Render a homogeneous <code class="docutils literal notranslate"><span class="pre">Series</span></code> slot.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+  &quot;_type&quot;: &quot;Slot&quot;,
+  &quot;defined&quot;: true,
+  &quot;size&quot;: 3,
+  &quot;values&quot;: [
+    &quot;Series[int64]&quot;,
+    &quot;Series[int64]&quot;,
+    &quot;Series[int64]&quot;
+  ]
+}
 </pre></div>
 </div>
+<p>Example 2. An undefined slot renders without throwing.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="w"> </span><span class="n">undef</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">undef</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{ &quot;_type&quot;: &quot;Slot&quot;, &quot;defined&quot;: false }
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above.</p></li>
+<li><p>An undefined slot renders as <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">&quot;_type&quot;:</span> <span class="pre">&quot;Slot&quot;,</span> <span class="pre">&quot;defined&quot;:</span> <span class="pre">false</span> <span class="pre">}</span></code>
+rather than throwing — see Example 2.</p></li>
+<li><p>Each value’s tag reports its own kind — <code class="docutils literal notranslate"><span class="pre">&quot;Note[numel=N]&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;Timeline[numel=N]&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;TimeIndex[size=N]&quot;</span></code> for
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Series[dtype]&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;null&quot;</span></code> for
+<code class="docutils literal notranslate"><span class="pre">std::monostate</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::to_string</span></code></span></a> / <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::show</span></code></span></a>: identical
+renderings under different names.</p></li>
+<li><p><a class="reference internal" href="type_counts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::type_counts</span></code></span></a>: a per-kind tally instead of a
+per-value list.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tl.html">
     <span class="label">Previous</span>
@@ -81,7 +136,6 @@ Rendered string result.</p>
     <span class="title">to_kindle</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

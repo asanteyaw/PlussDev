@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # SlotNoteAccessor::length
 
 [Back to SlotNoteAccessor API Reference](../../slot_note_accessor_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-SlotNoteAccessor::length() -> Slot
+Slot SlotNoteAccessor::length() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Measures the character length of each value in the bound slot, replacing
+each `Note` value with an `Int64` `Series`.
 
 ## Parameters
 
@@ -19,26 +22,39 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new `Series[int64]` slot of character counts.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Measure city name lengths.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.length();
-std::cout << out;
+auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")});
+auto out = slot.nt().length();
+std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+5 6
 ```
 
+## Notes
+
+- Changes each value's kind from `Note` to `Series` (`Int64`).
+- Requires the slot to be `Note`-kind — a non-`Note` slot throws
+  `"Slot::nt: slot kind must be Note"`.
+
+## See Also
+
+- [`SlotNoteAccessor::chars`](chars.md): use a length result to compute
+  slice bounds relative to the end.
+- [`SlotNoteAccessor::count`](count.md): the other method on this
+  accessor that turns text into an `Int64` `Series`.
+- [`Slot::nt`](../slot/nt.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="indicate.html">

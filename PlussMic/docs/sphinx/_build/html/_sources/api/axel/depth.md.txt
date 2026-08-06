@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::depth
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Axel::depth() -> std::int64_t
+std::int64_t Axel::depth() const
 ```
 
 ## What It Does
 
-Returns a size/count summary for the current object without changing it.
+Returns the number of `Registry` frames stacked in this `Axel` — the
+size of the depth axis.
 
 ## Parameters
 
@@ -19,30 +22,57 @@ Returns a size/count summary for the current object without changing it.
 ## Returns
 
 `std::int64_t`
-    Integer count, size, or positional result.
+    The number of registries.
 
 ## Examples
 
-Example 1. Inspect the `depth` property of the current object.
+Example 1. A three-frame `Axel` reports a depth of `3`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.depth();
+std::cout << axel.depth();
 ```
 
 ### Output
 
 ```text
-2
+3
 ```
 
+Example 2. An undefined handle throws.
+
+```cpp
+pluss::bundle::Axel undef;
+try {
+  undef.depth();
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Axel: undefined handle
+```
+
+## Notes
+
+- [`Axel::size`](size.md) is a byte-identical alias for `depth()`.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"`.
+
+## See Also
+
+- [`Axel::size`](size.md): the exact same value under a second name.
+- [`Axel::empty`](empty.md): shorthand for `depth() == 0`.
+- [`Axel::registry`](registry.md): fetch a single frame by index within
+  `[0, depth())`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="defined.html">

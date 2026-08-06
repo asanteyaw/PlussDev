@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::defined
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,17 @@
 ## Signature
 
 ```cpp
-Axel::defined() -> bool
+bool Axel::defined() const noexcept
 ```
 
 ## What It Does
 
-Reports whether the current object owns a concrete payload that can be used safely in later operations.
+Reports whether the `Axel` handle is bound to actual storage. A
+default-constructed `Axel` (`Axel()`) is undefined; every other
+constructor — including one built from an empty vector of registries —
+produces a defined handle. Almost every other `Axel` method requires
+`defined()` to be `true` and throws `"Axel: undefined handle"`
+otherwise.
 
 ## Parameters
 
@@ -19,30 +26,46 @@ Reports whether the current object owns a concrete payload that can be used safe
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` if the handle is bound to storage, `false` for a
+    default-constructed handle.
 
 ## Examples
 
-Example 1. Inspect the `defined` property of the current object.
+Example 1. A default-constructed `Axel` is undefined; one built from a
+registry vector — even an empty one — is defined.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.defined();
+pluss::bundle::Axel undef;
+auto empty_axel = pluss::bundle::Axel(std::vector<pluss::bundle::Registry>{});
+std::cout << std::boolalpha << axel.defined() << " " << undef.defined() << " " << empty_axel.defined();
 ```
 
 ### Output
 
 ```text
-true
+true false true
 ```
 
+An `Axel` built from zero registries is still `defined()` — `empty()`
+is the check for zero depth, not `defined()`. See [`empty()`](empty.md).
+
+## Notes
+
+- `defined()` is `noexcept` and never throws, unlike almost every other
+  `Axel` method — it's the one safe check to run on a handle you're not
+  sure about.
+- Copying or moving an `Axel` copies/moves the underlying handle
+  reference (via an intrusive pointer), so a copy of a defined `Axel` is
+  also defined.
+
+## See Also
+
+- [`Axel::unique`](unique.md): whether this handle is the sole owner of
+  its storage — a separate, stronger question than `defined()`.
+- [`Axel::empty`](empty.md): whether a *defined* handle has zero depth.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="concat_depth.html">

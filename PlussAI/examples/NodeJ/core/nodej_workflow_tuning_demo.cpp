@@ -71,60 +71,54 @@ int main(int argc, char** argv) {
     cv_options.random_state = 73;
     cv_options.deterministic = true;
 
+    // Was built via the old Workflow{.model=..., .stages={...}} facade --
+    // WorkflowModel already has one builder method per TransformKind
+    // (.simple_imputer(...), .standard_scaler(...), ...) that attaches the
+    // stage immediately (no lazy replay needed), so this is a direct
+    // substitution: same options, called on the model itself before it's
+    // handed to a Candidate.
     std::vector<nja::selection::Candidate> candidates{};
     {
-      auto wf = nja::Workflow{
-          .model = nja::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf = nja::linear_factory::linear_regression(LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
-      }),
-          .stages = {
-              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
-              nja::workflow::stage::standard_scaler(),
-          },
-      };
+      });
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
+      wf.standard_scaler();
       candidates.emplace_back("linear_ridge", std::move(wf));
     }
     {
-      auto wf = nja::Workflow{
-          .model = nja::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf = nja::tree_factory::decision_tree_regressor(TreeFamilyOptions{
+          .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 8,
           .min_samples_split = 24,
-      }),
-          .stages = {
-              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
-          },
-      };
+      });
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
       candidates.emplace_back("decision_tree", std::move(wf));
     }
     {
-      auto wf = nja::Workflow{
-          .model = nja::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
+      auto wf = nja::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
+          .method = EnsembleMethod::RandomForest,
           .learners = 140,
           .subsample = 0.9,
-      }),
-          .stages = {
-              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
-          },
-      };
+      });
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
       candidates.emplace_back("random_forest", std::move(wf));
     }
     {
-      auto wf = nja::Workflow{
-          .model = nja::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 9,
+      auto wf = nja::neighbor_factory::knn_regressor(NeighborFamilyOptions{
+          .k = 9,
           .distance_weighted = true,
           .standardize = true,
-      }),
-          .stages = {
-              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
-          },
-      };
+      });
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
       candidates.emplace_back("knn_distance", std::move(wf));
     }
 
-    auto tuned = nja::selection::tune(
+    auto tuned = nja::selection::compare(
         std::move(candidates),
         train_x,
         train_y,
@@ -143,14 +137,14 @@ int main(int argc, char** argv) {
     }
     std::cout << "best candidate: " << tuned.report.best_name << "\n";
 
-    auto best = std::move(tuned.best_workflow);
+    auto best = std::move(tuned.best());
     const auto test_metrics = best.assess(test_x, test_y, assess_options);
     std::cout << "test metrics [rmse, r2, mae]: " << test_metrics.rmse << " " << test_metrics.r2 << " " << test_metrics.mae << "\n";
 
     const Series pred = best.infer(test_x);
     const fs::path best_model_path = model_dir / "hour_best_workflow.bin";
     best.save(best_model_path.string(), train_x, train_y, train_options);
-    auto restored = nja::Workflow::load(best_model_path.string());
+    auto restored = nja::WorkflowModel::load(best_model_path.string());
     const Series pred_restored = restored.infer(test_x);
     const double restored_max_abs_diff = nja::max_abs_diff(pred, pred_restored);
     std::cout << "restored prediction max_abs_diff: " << restored_max_abs_diff << "\n";

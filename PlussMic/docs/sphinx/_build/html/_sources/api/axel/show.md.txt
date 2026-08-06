@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::show
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,46 +7,58 @@
 ## Signature
 
 ```cpp
-Axel::show(std::ostream& os) -> void
+void Axel::show(std::ostream& os) const
 ```
 
 ## What It Does
 
-This renders a human-readable view for inspection instead of creating a new analytic object.
+Writes the exact same summary string [`to_string()`](to_string.md)
+produces to `os`. `operator<<` for `Axel` calls this method internally,
+so `os << axel` and `axel.show(os)` are equivalent.
 
 ## Parameters
 
-**os**
-    Destination output stream used instead of the default display or print target.
+**os** (`std::ostream&`)
+    The stream to write the summary to.
 
 ## Returns
 
 `void`
-    Performs the side effect and returns no value.
 
 ## Examples
 
-Example 1. Write the output to a caller-provided stream.
+Example 1. `show()`'s output matches `to_string()`'s return value
+exactly.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-axel.show(std::cout);
+std::ostringstream oss;
+axel.show(oss);
+std::cout << std::boolalpha << (oss.str() == axel.to_string());
 ```
 
 ### Output
 
 ```text
-depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
-depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
+true
 ```
 
+## Notes
+
+- `show()` is `to_string()`'s content routed to a stream — see
+  [`to_string()`](to_string.md) for the format, including its
+  depth-`6` truncation behavior and the important asymmetry with
+  [`to_json()`](to_json.md).
+- `std::ostream& operator<<(std::ostream&, const Axel&)` calls `show()`
+  internally, so `std::cout << axel` is equivalent to
+  `axel.show(std::cout)`.
+
+## See Also
+
+- [`Axel::to_string`](to_string.md): the string this method streams.
+- [`Axel::to_json`](to_json.md): the alternative, unabridged dump.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rename.html">

@@ -287,6 +287,62 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
     }
   }
 
+  {
+    // Hand-computed reference: 5 samples, distinct scores, 3 positives.
+    // tp/fp accumulate one at a time walking the sorted list, so every
+    // point below was checked by hand against tp/(tp+fp) and tp/positives.
+    const Series scores = pluss::make_series(std::vector<double>{0.9, 0.8, 0.7, 0.6, 0.5}, {5}, f64());
+    const Series labels = pluss::make_series(std::vector<double>{1.0, 0.0, 1.0, 1.0, 0.0}, {5}, f64());
+
+    auto curve_or = threshold_curve(scores, labels);
+    if (!curve_or.ok()) {
+      if (err) *err << "threshold_curve should succeed on a valid binary score/label pair\n";
+      return false;
+    }
+    const auto thresholds = as_f64(curve_or.value().thresholds);
+    const auto precision = as_f64(curve_or.value().precision);
+    const auto recall = as_f64(curve_or.value().recall);
+    const auto f1 = as_f64(curve_or.value().f1);
+
+    const std::vector<double> want_thresholds{0.9, 0.8, 0.7, 0.6, 0.5};
+    const std::vector<double> want_precision{1.0, 0.5, 2.0 / 3.0, 0.75, 0.6};
+    const std::vector<double> want_recall{1.0 / 3.0, 1.0 / 3.0, 2.0 / 3.0, 1.0, 1.0};
+    const std::vector<double> want_f1{0.5, 0.4, 2.0 / 3.0, 6.0 / 7.0, 0.75};
+
+    if (thresholds.size() != want_thresholds.size()) {
+      if (err) *err << "threshold_curve should report one point per distinct score\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < thresholds.size(); ++i) {
+      if (!approx(thresholds[i], want_thresholds[i], 1e-9) || !approx(precision[i], want_precision[i], 1e-9) ||
+          !approx(recall[i], want_recall[i], 1e-9) || !approx(f1[i], want_f1[i], 1e-9)) {
+        if (err) *err << "threshold_curve values should match hand-computed reference at index " << i << "\n";
+        return false;
+      }
+    }
+
+    auto best_f1_or = best_threshold(scores, labels, MetricKind::F1);
+    if (!best_f1_or.ok() || !approx(best_f1_or.value(), 0.6)) {
+      if (err) *err << "best_threshold(F1) should pick the highest-F1 score (0.6)\n";
+      return false;
+    }
+    auto best_precision_or = best_threshold(scores, labels, MetricKind::Precision);
+    if (!best_precision_or.ok() || !approx(best_precision_or.value(), 0.9)) {
+      if (err) *err << "best_threshold(Precision) should pick the highest-precision score (0.9)\n";
+      return false;
+    }
+
+    // Ties collapse onto their last (lowest-recall) position: two samples
+    // sharing score 0.5 must report one threshold point, not two.
+    const Series tied_scores = pluss::make_series(std::vector<double>{0.9, 0.5, 0.5, 0.1}, {4}, f64());
+    const Series tied_labels = pluss::make_series(std::vector<double>{1.0, 1.0, 0.0, 0.0}, {4}, f64());
+    auto tied_curve_or = threshold_curve(tied_scores, tied_labels);
+    if (!tied_curve_or.ok() || tied_curve_or.value().thresholds.numel() != 3) {
+      if (err) *err << "threshold_curve should collapse tied scores onto a single threshold point\n";
+      return false;
+    }
+  }
+
   return true;
 }
 

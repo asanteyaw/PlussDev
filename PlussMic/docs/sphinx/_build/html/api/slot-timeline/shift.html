@@ -34,46 +34,96 @@
 
           <div class="body" role="main">
             
-  <section id="slottimelineaccessor-shift">
+  <!-- pluss-hand-authored -->
+<section id="slottimelineaccessor-shift">
 <h1>SlotTimelineAccessor::shift<a class="headerlink" href="#slottimelineaccessor-shift" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to SlotTimelineAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotTimelineAccessor</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">periods</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">freq</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slot</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">SlotTimelineAccessor</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">periods</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">freq</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+<p>Shifts each value in the bound slot forward (or backward, if <code class="docutils literal notranslate"><span class="pre">periods</span></code>
+is negative) by <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">*</span> <span class="pre">freq</span></code>, replacing each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> value’s
+values in place. Month/year shifts are calendar-aware: a day-of-month
+that doesn’t exist in the target month is clamped down to that month’s
+last valid day.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>periods</strong>
-Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.</p>
-<p><strong>freq</strong>
-Bin or calendar frequency such as <code class="docutils literal notranslate"><span class="pre">&quot;1h&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;W&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;M&quot;</span></code>.</p>
+<p><strong>periods</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+How many <code class="docutils literal notranslate"><span class="pre">freq</span></code> units to shift by. Positive moves forward in time,
+negative moves backward.</p>
+<p><strong>freq</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+One of <code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;yr&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;years&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;annual&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;mo&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;mth&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;months&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;days&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;h&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;hr&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;hour&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;hours&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;t&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;minute&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;minutes&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;s&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;sec&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;second&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;seconds&quot;</span></code> (case-insensitive). Cannot be empty.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
-Value produced by this call.</p>
+A new slot with each value shifted by <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">*</span> <span class="pre">freq</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:40:00Z&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">timelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timelines</span><span class="p">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2D&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<p>Example 1. Shift two timestamps forward one calendar month, showing
+day-of-month clamping on the January value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-02-29T23:45:00Z&quot;</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;months&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fmted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fmted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; | &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fmted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2024-02-29 09:15:30 | 2024-03-29 23:45:00
 </pre></div>
 </div>
+<p>January 31st shifted one month forward lands on February 29th (2024 is a
+leap year) — day <code class="docutils literal notranslate"><span class="pre">31</span></code> is clamped down to February’s last valid day rather
+than overflowing into March.</p>
+<p>Example 2. An unrecognized frequency throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)});</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bogus&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline::shift: unsupported frequency
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code> accepts calendar units (<code class="docutils literal notranslate"><span class="pre">years</span></code>/<code class="docutils literal notranslate"><span class="pre">months</span></code>, day-of-month-clamping)
+and fixed units (<code class="docutils literal notranslate"><span class="pre">days</span></code>/<code class="docutils literal notranslate"><span class="pre">hours</span></code>/<code class="docutils literal notranslate"><span class="pre">minutes</span></code>/<code class="docutils literal notranslate"><span class="pre">seconds</span></code>, exact elapsed-time
+arithmetic with no clamping) — there’s no <code class="docutils literal notranslate"><span class="pre">&quot;week&quot;</span></code> frequency.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code> cannot be empty, and an unrecognized string throws, per Example 2.</p></li>
+<li><p>Requires the slot to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> slot throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="period.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotTimelineAccessor::period</span></code></span></a>: group timestamps into
+fixed periods rather than shifting each one.</p></li>
+<li><p><a class="reference internal" href="../slot/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::tl</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="second.html">
     <span class="label">Previous</span>
@@ -84,7 +134,6 @@ Value produced by this call.</p>
     <span class="title">time</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

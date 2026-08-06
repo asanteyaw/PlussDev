@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelTimelineAccessor::quarter
 
 [Back to AxelTimelineAccessor API Reference](../../axel_timeline_accessor_api_reference)
@@ -5,12 +7,16 @@
 ## Signature
 
 ```cpp
-AxelTimelineAccessor::quarter() -> Axel
+Axel AxelTimelineAccessor::quarter() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Extracts the calendar quarter (`1`-`4`) of each bound field's
+timestamp, in every registry frame, replacing each `Timeline` field
+with an `Int64` `Series` field. Applies
+[`RegistryTimelineAccessor::quarter`](../registry-timeline/quarter.md)
+to every frame via [`Axel::map`](../axel/map.md).
 
 ## Parameters
 
@@ -19,32 +25,50 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every bound field, in every frame, replaced by an
+    `Int64` `Series` field of quarter numbers; every unbound field
+    unchanged.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Extract the quarter from a July and a March timestamp.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-01T09:10:00Z"), pluss::make_timeline("2024-01-01T09:40:00Z")})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-02T09:10:00Z"), pluss::make_timeline("2024-01-02T09:40:00Z")})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto timelines = axel.fields({"ts"}).tl();
+auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})}});
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = timelines.quarter();
-std::cout << out;
+auto out = axel.fields({"ts"}).tl().quarter();
+auto ts = out.registry(0).fields("ts");
+std::cout << std::get<pluss::Series>(ts.at(0)).to_vec<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+3 1
 ```
 
+July falls in Q3 (months 7-9); March falls in Q1 (months 1-3).
+
+## Notes
+
+- `1` covers January-March, `2` April-June, `3` July-September, `4`
+  October-December.
+- Reads local calendar fields relative to whatever timezone the field's
+  `Timeline` currently carries (`"UTC"` unless changed via
+  [`tz()`](tz.md)/[`localize()`](localize.md)).
+- Requires every bound field, in every frame, to be `Timeline`-kind — a
+  non-`Timeline` field throws `"Slot::tl: slot kind must be Timeline"`.
+
+## See Also
+
+- [`AxelTimelineAccessor::month`](month.md): the finer-grained
+  component `quarter()` is derived from.
+- [`AxelTimelineAccessor::period`](period.md): group timestamps into
+  arbitrary frequency-based periods, not just quarters.
+- [`Axel::tl`](../axel/tl.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="period.html">

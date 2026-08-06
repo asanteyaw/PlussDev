@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # SlotTimelineAccessor::epoch
 
 [Back to SlotTimelineAccessor API Reference](../../slot_timeline_accessor_api_reference)
@@ -5,41 +7,81 @@
 ## Signature
 
 ```cpp
-SlotTimelineAccessor::epoch(pluss::table::TimeUnit unit = pluss::table::TimeUnit::Nanos) -> Slot
+Slot SlotTimelineAccessor::epoch(pluss::table::TimeUnit unit = pluss::table::TimeUnit::Nanos) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Extracts each value in the bound slot as a Unix epoch value in `unit`,
+replacing each `Timeline` value with an `Int64` `Series`.
+
+```{important} The default unit is Nanos, not Seconds
+A bare `epoch()` call reports nanoseconds since the Unix epoch, not
+seconds. Pass `TimeUnit::Seconds` explicitly for the more commonly
+expected scale.
+```
 
 ## Parameters
 
-**unit**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+**unit** (`pluss::table::TimeUnit`, defaults to `pluss::table::TimeUnit::Nanos`)
+    One of the fixed-duration units: `Nanos`, `Micros`, `Millis`,
+    `Seconds`, or `Days`. Passing a span-only unit (`Weeks`, `Months`,
+    `Years`, `BusinessDays`) throws.
 
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new `Series[int64]` slot of epoch counts in `unit`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Extract the epoch second from two timestamps.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-01T09:10:00Z"), pluss::make_timeline("2024-01-02T09:40:00Z")});
-auto timelines = slot.tl();
-
-auto out = timelines.epoch(pluss::table::TimeUnit::Nanos);
-std::cout << out;
+auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto out = slot.tl().epoch(pluss::table::TimeUnit::Seconds);
+std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+1706692530 1709250300
 ```
 
+Example 2. A span-only unit throws.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+try {
+  auto out = slot.tl().epoch(pluss::table::TimeUnit::Weeks);
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Thread::tl().epoch: unit is span-only; use Thread::tl().span
+```
+
+## Notes
+
+- See the important callout above — the default unit is `Nanos`.
+- Only fixed-duration units are accepted; `Weeks`, `Months`, `Years`, or
+  `BusinessDays` throw.
+- Requires the slot to be `Timeline`-kind — a non-`Timeline` slot throws
+  `"Slot::tl: slot kind must be Timeline"`.
+
+## See Also
+
+- [`SlotTimelineAccessor::fmt`](fmt.md) / [`iso()`](iso.md): render as
+  text instead of a raw epoch count.
+- [`Slot::tl`](../slot/tl.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="day.html">

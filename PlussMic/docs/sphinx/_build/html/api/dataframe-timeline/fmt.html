@@ -184,7 +184,7 @@ outright rather than silently producing an empty string for every row.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> cannot be empty — an empty pattern throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">%f</span></code> always emits all 9 nanosecond digits, zero-padded — there’s no way to
 ask for fewer digits (e.g. milliseconds only) directly; slice the resulting
-text with <a class="reference internal" href="#../dataframe/note.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">note()</span></code></span></a> accessor methods if you need
+text with <a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">note()</span></code></span></a> accessor methods if you need
 fewer digits.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">%z</span></code> always renders as a signed <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code> offset (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;+00:00&quot;</span></code>), never the
 bare <code class="docutils literal notranslate"><span class="pre">&quot;Z&quot;</span></code> suffix some ISO-8601 tooling uses for UTC.</p></li>

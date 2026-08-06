@@ -54,7 +54,7 @@ auto ticks = DataFrame({{"ts", Thread(valid_tl)}})
                  .tl().epoch().features("ts").as_series().to_vec<std::int64_t>();
 ticks[2] = pluss::codeh::Timeline::kNaT;
 std::vector<std::int64_t> sizes{(std::int64_t)ticks.size()};
-auto tl_with_nat = pluss::from_epoch_nanos(
+auto tl_with_nat = pluss::timeline::from_epoch(
     pluss::msharp::RangeView::Of<std::int64_t>(ticks.data(), ticks.size()),
     pluss::msharp::RangeView::Of<std::int64_t>(sizes.data(), sizes.size()));
 

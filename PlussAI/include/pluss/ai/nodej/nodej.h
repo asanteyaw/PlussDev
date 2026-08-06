@@ -6,6 +6,7 @@
 #include "pluss/ai/nodej/dataset.h"
 #include "pluss/ai/nodej/data.h"
 #include "pluss/ai/nodej/balance.h"
+#include "pluss/ai/nodej/spatial_index.h"
 #include "pluss/ai/nodej/split.h"
 #include "pluss/ai/nodej/prep.h"
 #include "pluss/ai/nodej/interfaces.h"

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelFieldAxisAccessor::like
 
 [Back to AxelFieldAxisAccessor API Reference](../../axel_fieldaxis_accessor_api_reference)
@@ -5,50 +7,90 @@
 ## Signature
 
 ```cpp
-AxelFieldAxisAccessor::like(std::string_view needle, bool case_sensitive = false) -> Axel
+Axel AxelFieldAxisAccessor::like(std::string_view needle, bool case_sensitive = false) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a new axel where every registry frame is narrowed to only the
+fields whose **name** contains `needle` as a substring — applies
+[`RegistryFieldAxisAccessor::like`](../registry-fieldaxis/like.md) to
+every frame independently via [`Axel::map`](../axel/map.md).
+Matching is case-insensitive by default.
 
 ## Parameters
 
-**needle**
-    Substring or token to search for.
+**needle** (`std::string_view`)
+    The substring to search for within each field name.
 
-**case_sensitive**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+**case_sensitive** (`bool`, optional, defaults to `false`)
+    Whether the substring search is case-sensitive.
 
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every frame narrowed to fields whose name contains
+    `needle`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. A case-insensitive search matches both `id` and `user_id` in
+every frame.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto fieldaxis = axel.fieldaxis();
+auto axel = pluss::bundle::Axel({r0, r0});
 
-auto out = fieldaxis.like("units", true);
-std::cout << out;
+auto out = axel.fieldaxis().like("ID");
+for (const auto& key : out.registry(0).fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+id user_id
 ```
 
+Example 2. A case-sensitive search against the same axel matches
+nothing, since no field name literally contains `"ID"` in that case.
+
+```cpp
+auto r0 = pluss::bundle::Registry({
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+});
+auto axel = pluss::bundle::Axel({r0});
+
+auto out = axel.fieldaxis().like("ID", true);
+std::cout << "nfields=" << out.registry(0).nfields();
+```
+
+### Output
+
+```text
+nfields=0
+```
+
+## Notes
+
+- Matches against field **names**, not field values.
+- Applied independently per frame — a frame with no matching fields
+  ends up with zero fields (still a valid, defined, empty registry),
+  not a throw; different frames can end up with different resulting
+  field sets if their schemas differ.
+
+## See Also
+
+- [`AxelFieldAxisAccessor::match`](match.md): the regex-based
+  counterpart, for more precise patterns than a plain substring.
+- [`AxelFieldAxisAccessor::prefix`](prefix.md) / [`suffix()`](suffix.md):
+  anchored variants of this same substring search.
+- [`RegistryFieldAxisAccessor::like`](../registry-fieldaxis/like.md):
+  the single-frame operation this method broadcasts.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kind.html">

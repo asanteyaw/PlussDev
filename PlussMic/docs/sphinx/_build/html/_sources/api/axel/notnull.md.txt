@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::notnull
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,16 @@
 ## Signature
 
 ```cpp
-Axel::notnull() -> Axel
+Axel Axel::notnull() const
 ```
 
 ## What It Does
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Returns a new axel where every field's values, in every registry frame,
+are replaced by a boolean flag for whether each value is **not**
+null — the logical complement of [`isnull()`](isnull.md). Applies
+[`Registry::notnull()`](../registry/notnull.md) to every frame via
+[`map()`](map.md).
 
 ## Parameters
 
@@ -19,30 +25,40 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every field's values replaced by boolean
+    not-null flags.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. A present value reports `true`; a null value reports
+`false`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
+auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)})}});
+auto axel = pluss::bundle::Axel({r0});
 
 auto out = axel.notnull();
+auto vals = out.registry(0).fields("id");
+std::cout << std::boolalpha << std::get<pluss::Series>(vals.at(0)).to_vec<bool>()[0] << " "
+          << std::get<pluss::Series>(vals.at(1)).to_vec<bool>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+true false
 ```
 
+## Notes
+
+- Never throws on a field whose kind doesn't match a fill payload — it
+  works identically on every kind.
+- Never mutates the receiver — always returns a new `Axel`.
+
+## See Also
+
+- [`Axel::isnull`](isnull.md): the logical complement.
+- [`Axel::invalid`](invalid.md): a related but distinct check.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ndistinct.html">

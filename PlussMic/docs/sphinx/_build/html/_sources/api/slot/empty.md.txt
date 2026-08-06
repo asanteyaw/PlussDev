@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::empty
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Slot::empty() -> bool
+bool Slot::empty() const
 ```
 
 ## What It Does
 
-Reports whether the current object has no rows, entries, slots, or depth items.
+Reports whether the slot holds zero values. Shorthand for
+`size() == 0`.
 
 ## Parameters
 
@@ -19,16 +22,15 @@ Reports whether the current object has no rows, entries, slots, or depth items.
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` if the slot has no values; `false` otherwise.
 
 ## Examples
 
-Example 1. Inspect the `empty` property of the current object.
+Example 1. A slot with values is not empty.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
-auto out = slot.empty();
+auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+std::cout << std::boolalpha << slot.empty();
 ```
 
 ### Output
@@ -37,6 +39,30 @@ auto out = slot.empty();
 false
 ```
 
+Example 2. A zero-value (but defined) slot is empty.
+
+```cpp
+auto slot = pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{});
+std::cout << std::boolalpha << slot.empty();
+```
+
+### Output
+
+```text
+true
+```
+
+## Notes
+
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"` (via `size()`, which `empty()` calls).
+- Different from [`defined()`](defined.md): a slot can be defined and
+  empty at the same time (zero values, but still a valid handle).
+
+## See Also
+
+- [`Slot::size`](size.md): the count `empty()` checks against zero.
+- [`Slot::defined`](defined.md): checks handle validity, not value count.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dropnull.html">

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::empty
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Axel::empty() -> bool
+bool Axel::empty() const
 ```
 
 ## What It Does
 
-Reports whether the current object has no rows, entries, slots, or depth items.
+Reports whether this `Axel` has zero depth (no registry frames at all).
+Equivalent to `depth() == 0`.
 
 ## Parameters
 
@@ -19,30 +22,44 @@ Reports whether the current object has no rows, entries, slots, or depth items.
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` if the axel has no registry frames; `false` otherwise.
 
 ## Examples
 
-Example 1. Inspect the `empty` property of the current object.
+Example 1. A three-frame `Axel` is not empty; one built from an empty
+registry vector is.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.empty();
+auto empty_axel = pluss::bundle::Axel(std::vector<pluss::bundle::Registry>{});
+std::cout << std::boolalpha << axel.empty() << " " << empty_axel.empty();
 ```
 
 ### Output
 
 ```text
-false
+false true
 ```
 
+## Notes
+
+- `empty()` is about depth (registry-frame count), not about whether
+  any individual registry inside has rows or fields — a one-frame
+  `Axel` wrapping a registry with zero rows is still *not* `empty()`.
+- An `Axel` with zero depth is still `defined()` (see
+  [`defined()`](defined.md)'s Example 1) — `empty()` and `defined()`
+  answer different questions.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"` (via the underlying `depth()` call).
+
+## See Also
+
+- [`Axel::depth`](depth.md) / [`size()`](size.md): the underlying count
+  `empty()` compares against zero.
+- [`Axel::defined`](defined.md): whether the handle is bound to storage
+  at all, independent of depth.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dropnull.html">

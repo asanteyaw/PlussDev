@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::isnull
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,18 @@
 ## Signature
 
 ```cpp
-Axel::isnull() -> Axel
+Axel Axel::isnull() const
 ```
 
 ## What It Does
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Returns a new axel where every field's values, in every registry frame,
+are replaced by a boolean flag for whether each value is null — applies
+[`Registry::isnull()`](../registry/isnull.md) to every frame via
+[`map()`](map.md), which in turn applies
+[`Slot::isnull()`](../slot/isnull.md) to every field. Works uniformly
+across every field regardless of its own value kind — the result is
+always `Series[bool]`-valued.
 
 ## Parameters
 
@@ -19,30 +27,50 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every field's values replaced by boolean null-flags.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. A field with one null value among numeric values reports
+`Series[bool]` per value.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
+auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)})}});
+auto axel = pluss::bundle::Axel({r0});
 
 auto out = axel.isnull();
+std::cout << out.registry(0).fields("id").to_json();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+{
+  "_type": "Slot",
+  "defined": true,
+  "size": 3,
+  "values": [
+    "Series[bool]",
+    "Series[bool]",
+    "Series[bool]"
+  ]
+}
 ```
 
+## Notes
+
+- Unlike [`fillnull()`](fillnull.md), `isnull()` never throws on a field
+  whose kind doesn't match a fill payload — it works identically on
+  every kind.
+- Never mutates the receiver — always returns a new `Axel`.
+
+## See Also
+
+- [`Axel::notnull`](notnull.md): the logical complement.
+- [`Axel::invalid`](invalid.md): a related but distinct check —
+  invalid (not-a-value) rather than strictly null.
+- [`Axel::dropnull`](dropnull.md): removes null values instead of
+  flagging them.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="invalid.html">

@@ -34,46 +34,88 @@
 
           <div class="body" role="main">
             
-  <section id="slotnoteaccessor-partition">
+  <!-- pluss-hand-authored -->
+<section id="slotnoteaccessor-partition">
 <h1>SlotNoteAccessor::partition<a class="headerlink" href="#slotnoteaccessor-partition" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_note_accessor_api_reference.html"><span class="doc std std-doc">Back to SlotNoteAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">partition</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;part&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">partition</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="p">,</span>
+<span class="w">                                                    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;part&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Splits each value in the bound slot at the <em>first</em> occurrence of a
+literal <code class="docutils literal notranslate"><span class="pre">separator</span></code>, always producing exactly <strong>three</strong> output features:
+the text before, the separator itself, and the text after. Narrower and
+simpler than <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>: always literal (no regex), always
+stops at the first match, always exactly three features.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>A missing separator produces empty strings, not NULL
+When <code class="docutils literal notranslate"><span class="pre">separator</span></code> doesn’t occur in a value at all, that value’s middle and
+third features are the <strong>empty string</strong> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — the value
+itself is still valid.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>separator</strong>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><strong>prefix</strong>
-Text prefix inserted ahead of the existing label or value.</p>
+<p><strong>separator</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The literal text to split on. Must not be empty.</p>
+<p><strong>prefix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>)
+Base name for the three output features: <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code> (before),
+<code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_1</span></code> (the separator, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> if not found), <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_2</span></code>
+(after, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> if not found).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with exactly three features: <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_2</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
+<p>Example 1. The not-found case’s empty strings.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;key=value&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;no-equals&quot;</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================
+     | part_0     part_1  part_2
+--------------------------------
+0    | key        =       value 
+1    | no-equals                
+--------------------------------
+[2 cs x 3 feat]
 </pre></div>
 </div>
+<p>The first value splits cleanly. The second has no <code class="docutils literal notranslate"><span class="pre">=</span></code> — its
+<code class="docutils literal notranslate"><span class="pre">part_1</span></code>/<code class="docutils literal notranslate"><span class="pre">part_2</span></code> cells are empty strings, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Always literal (no regex) and always stops at the <em>first</em> occurrence
+— for a regex-aware or multi-way split, use <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>.</p></li>
+<li><p>Always produces exactly three output features.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">separator</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::partition:</span> <span class="pre">separator</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p>Requires the slot to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slot throws.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotNoteAccessor::split</span></code></span></a>: the more general, possibly-regex,
+unlimited-pieces sibling.</p></li>
+<li><p><a class="reference internal" href="../slot/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::nt</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pad.html">
     <span class="label">Previous</span>
@@ -84,7 +126,6 @@ Value produced by this call.</p>
     <span class="title">replace</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

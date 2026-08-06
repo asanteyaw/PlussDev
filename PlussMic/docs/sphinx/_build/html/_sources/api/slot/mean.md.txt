@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::mean
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Slot::mean() -> Slot
+Slot Slot::mean() const
 ```
 
 ## What It Does
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns a new, single-value slot holding the arithmetic mean of the
+slot's values.
 
 ## Parameters
 
@@ -19,24 +22,37 @@ Use this when you want a summary view instead of carrying the full input forward
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new `Series[float64]` slot with exactly one value: the mean.
 
 ## Examples
 
-Example 1. Compute `mean` and inspect the resulting summary value or summary object.
+Example 1. Average three values.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
 auto out = slot.mean();
+std::cout << std::get<pluss::Series>(out.at(0)).to_vec<double>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+2
 ```
 
+## Notes
+
+- Always collapses to exactly one value, and the result is always
+  `float64` regardless of the source values' dtype.
+- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+  slot to be stream-compatible (a single, homogeneous numeric kind).
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::sum`](sum.md), [`Slot::min`](min.md), [`Slot::max`](max.md): the
+  sibling reduction methods.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="max.html">

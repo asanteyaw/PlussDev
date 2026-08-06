@@ -36,18 +36,29 @@
 
           <div class="body" role="main">
             
-  <section id="axel-unique">
+  <!-- pluss-hand-authored -->
+<section id="axel-unique">
 <h1>Axel::unique<a class="headerlink" href="#axel-unique" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Axel</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
+<p>Reports whether this handle is the sole owner of its underlying
+storage — <code class="docutils literal notranslate"><span class="pre">true</span></code> only when the handle is defined <em>and</em> no other <code class="docutils literal notranslate"><span class="pre">Axel</span></code>
+handle currently shares the same reference-counted storage.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This is a copy-on-write reference-count check, not a value-equality check
+<code class="docutils literal notranslate"><span class="pre">unique()</span></code> says nothing about whether the <em>content</em> of this <code class="docutils literal notranslate"><span class="pre">Axel</span></code> is
+distinct from any other <code class="docutils literal notranslate"><span class="pre">Axel</span></code>’s content — two independently-built
+<code class="docutils literal notranslate"><span class="pre">Axel</span></code>s holding identical registries are each still <code class="docutils literal notranslate"><span class="pre">unique()</span></code>. It only
+answers “does exactly one handle currently point at this storage?”</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,34 +67,55 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-Boolean status or membership result.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">defined()</span></code> and the storage’s reference count is exactly
+<code class="docutils literal notranslate"><span class="pre">1</span></code>; <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise (including for an undefined handle).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})},</span>
+<p>Example 1. A freshly-built <code class="docutils literal notranslate"><span class="pre">Axel</span></code> with no other handle sharing its
+storage is unique; copying it drops that to <code class="docutils literal notranslate"><span class="pre">false</span></code> on both handles
+until the copy goes out of scope.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})}}),</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">)})},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">r0</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;before copy: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after copy: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">copy</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>before copy: true
+after copy: false false
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>An undefined handle (<code class="docutils literal notranslate"><span class="pre">Axel()</span></code>) is never <code class="docutils literal notranslate"><span class="pre">unique()</span></code> — it returns
+<code class="docutils literal notranslate"><span class="pre">false</span></code>, not a throw, since <code class="docutils literal notranslate"><span class="pre">unique()</span></code> (like <code class="docutils literal notranslate"><span class="pre">defined()</span></code>) is
+<code class="docutils literal notranslate"><span class="pre">noexcept</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>’s registries and rows are immutable from the outside; nothing
+in the public API lets a caller mutate through one handle and have it
+observed via another — <code class="docutils literal notranslate"><span class="pre">unique()</span></code> exists to inspect this
+reference-counting detail, not to gate a mutation decision the way it
+might in a hand-rolled copy-on-write container.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="defined.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::defined</span></code></span></a>: whether the handle is bound to storage
+at all — <code class="docutils literal notranslate"><span class="pre">unique()</span></code> implies <code class="docutils literal notranslate"><span class="pre">defined()</span></code>, not the reverse.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_string.html">
     <span class="label">Previous</span>
     <span class="title">to_string</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

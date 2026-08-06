@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -823,23 +824,19 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     std::vector<lymph::selection::Candidate> candidates;
     candidates.emplace_back(
         "linear",
-        lymph::Workflow{
-            .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{
-                .objective = LinearObjective::LeastSquares,
-                .regularization = RegularizationKind::None,
-                .fit_intercept = true,
-            }),
-        });
+        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+            .objective = LinearObjective::LeastSquares,
+            .regularization = RegularizationKind::None,
+            .fit_intercept = true,
+        }));
     candidates.emplace_back(
         "ridge",
-        lymph::Workflow{
-            .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{
-                .objective = LinearObjective::LeastSquares,
-                .regularization = RegularizationKind::L2,
-                .regularization_strength = 10.0,
-                .fit_intercept = true,
-            }),
-        });
+        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+            .objective = LinearObjective::LeastSquares,
+            .regularization = RegularizationKind::L2,
+            .regularization_strength = 10.0,
+            .fit_intercept = true,
+        }));
 
     lymph::CrossValidationOptions cv{};
     cv.plan = CVPlanKind::CrossVal;
@@ -849,7 +846,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     lymph::AssessOptions assess{};
     assess.metrics = {MetricKind::Rmse};
 
-    auto tuned = lymph::selection::tune(
+    auto tuned = lymph::selection::compare(
         std::move(candidates),
         x,
         y,
@@ -859,28 +856,197 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
         MetricKind::Rmse,
         TuneObjectivePolicy::Minimize,
         lymph::selection::FitOptions{.fit_top = 5});
-    if (!tuned.best_workflow.trained() || !tuned.best().trained()) {
-      if (err) *err << "lymph selection::tune should return a fitted best workflow\n";
+    if (!tuned.best().trained()) {
+      if (err) *err << "lymph selection::compare should return a fitted best workflow\n";
       return false;
     }
     if (tuned.fitted.size() != tuned.report.trials.size() || tuned.fitted.empty() || !tuned.fitted[0].trained()) {
-      if (err) *err << "lymph selection::tune should fit requested top-k workflows in ranked order\n";
+      if (err) *err << "lymph selection::compare should fit requested top-k workflows in ranked order\n";
       return false;
     }
     auto top2 = tuned.topk(2);
     if (top2.size() != 2 || !top2[0].get().trained() || !top2[1].get().trained()) {
-      if (err) *err << "lymph selection::TuneResult::topk should expose fitted ranked workflows\n";
+      if (err) *err << "lymph selection::CompareResult::topk should expose fitted ranked workflows\n";
       return false;
     }
     if (tuned.report.objective_rank.size() != tuned.report.trials.size()
         || tuned.report.ranked_indices.size() != tuned.report.trials.size()
         || tuned.report.objective_rank[static_cast<std::size_t>(tuned.report.best_index)] != 1) {
-      if (err) *err << "lymph selection::tune should return ranked trial metadata\n";
+      if (err) *err << "lymph selection::compare should return ranked trial metadata\n";
       return false;
     }
-    const Series pred = tuned.best_workflow.infer(x);
+    const Series pred = tuned.best().infer(x);
     if (!pred.defined() || pred.numel() != y.numel()) {
       if (err) *err << "fitted lymph best workflow should infer without a second learn_ call\n";
+      return false;
+    }
+  }
+
+  {
+    // .board(): results collapse to a DataFrame instead of a hand-rolled
+    // std::vector<...> + push_back loop (CompareReport::board() and
+    // CrossValidationReport::board()).
+    namespace lymph = pluss::ai::lymph;
+    const Series x_series = pluss::make_series(
+        std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0}, {6}, f64());
+    const Series y = pluss::make_series(
+        std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0}, {6}, f64());
+    const pluss::table::DataFrame x({{"x", pluss::table::Thread(x_series)}});
+
+    std::vector<lymph::selection::Candidate> candidates;
+    candidates.emplace_back(
+        "linear",
+        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+            .objective = LinearObjective::LeastSquares,
+            .regularization = RegularizationKind::None,
+            .fit_intercept = true,
+        }));
+    candidates.emplace_back(
+        "ridge",
+        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+            .objective = LinearObjective::LeastSquares,
+            .regularization = RegularizationKind::L2,
+            .regularization_strength = 10.0,
+            .fit_intercept = true,
+        }));
+
+    lymph::CrossValidationOptions cv{};
+    cv.plan = CVPlanKind::CrossVal;
+    cv.folds = 3;
+    cv.shuffle = false;
+    cv.max_parallel = 2;
+    lymph::AssessOptions assess{};
+    assess.metrics = {MetricKind::Rmse};
+
+    auto tuned = lymph::selection::compare(
+        std::move(candidates), x, y, cv, TrainOptions{}, assess, MetricKind::Rmse, TuneObjectivePolicy::Minimize);
+
+    const auto board = tuned.report.board();
+    if (board.ncases() != static_cast<std::int64_t>(tuned.report.trials.size())) {
+      if (err) *err << "CompareReport::board() should have one row per trial\n";
+      return false;
+    }
+    if (!board.get("name").has_value() || !board.get("objective").has_value() ||
+        !board.get("rank").has_value() || !board.get("rmse").has_value()) {
+      if (err) *err << "CompareReport::board() should have name/objective/rank/<metric> columns\n";
+      return false;
+    }
+    const auto objective_col = as_f64(board.features("objective").as_series().reshape({board.ncases()}));
+    const auto rmse_col = as_f64(board.features("rmse").as_series().reshape({board.ncases()}));
+    for (std::size_t i = 0; i < tuned.report.trials.size(); ++i) {
+      if (std::abs(objective_col[i] - tuned.report.trials[i].objective) > 1e-10 ||
+          std::abs(rmse_col[i] - tuned.report.trials[i].objective) > 1e-10) {
+        if (err) *err << "CompareReport::board() objective/rmse columns should match trial objectives\n";
+        return false;
+      }
+    }
+
+    const auto cv_board = tuned.report.trials.front().cv.board();
+    if (cv_board.ncases() != 1) {
+      if (err) *err << "CrossValidationReport::board() should have one row per requested metric\n";
+      return false;
+    }
+    const auto cv_mean = as_f64(cv_board.features("mean").as_series().reshape({cv_board.ncases()}));
+    if (std::abs(cv_mean[0] - tuned.report.trials.front().objective) > 1e-10) {
+      if (err) *err << "CrossValidationReport::board() mean should match the trial's cross-validated metric\n";
+      return false;
+    }
+  }
+
+  {
+    // selection::tune: genuine hyperparameter search (expand a GridAxis space
+    // into ModelSpecs via a factory), dispatching on TuneOptions.search
+    // (Grid/None vs Random) the same way tune_specs/probe_specs already do.
+    // Distinct from selection::compare above, which only ranks candidates
+    // already fully built by the caller.
+    namespace lymph = pluss::ai::lymph;
+
+    // grid_size/grid_point_at/grid_points: a tiny 2x3 space, checked for
+    // exact point count and full coverage (every (a,b) pair appears once).
+    const std::vector<lymph::selection::GridAxis> tiny_axes = {
+        {.name = "a", .values = {10.0, 20.0}},
+        {.name = "b", .values = {1.0, 2.0, 3.0}},
+    };
+    if (lymph::selection::grid_size(tiny_axes) != 6) {
+      if (err) *err << "selection::grid_size should be the product of axis sizes\n";
+      return false;
+    }
+    const auto tiny_points = lymph::selection::grid_points(tiny_axes);
+    if (tiny_points.size() != 6) {
+      if (err) *err << "selection::grid_points should materialize grid_size() points\n";
+      return false;
+    }
+    std::set<std::pair<double, double>> seen_pairs;
+    for (const auto& point : tiny_points) {
+      seen_pairs.emplace(point.at("a"), point.at("b"));
+    }
+    if (seen_pairs.size() != 6) {
+      if (err) *err << "selection::grid_points should cover every axis combination exactly once\n";
+      return false;
+    }
+
+    // Real search: on noiseless y = 2x + 1 data, the least-biased
+    // (smallest regularization_strength) point should win.
+    const Series x_series = pluss::make_series(std::vector<double>{-2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {6}, f64());
+    const Series y_series = pluss::make_series(std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0}, {6}, f64());
+    const pluss::table::DataFrame tune_x({{"x", pluss::table::Thread(x_series)}});
+
+    const std::vector<lymph::selection::GridAxis> hp_axes = {
+        {.name = "regularization_strength", .values = {0.0001, 0.01, 1.0, 10.0}},
+    };
+    const auto make_linear_spec = [](const lymph::selection::GridPoint& point) {
+      return ModelSpec{
+          .task = TaskKind::Regression,
+          .family = ModelFamily::Linear,
+          .options = LinearFamilyOptions{
+              .objective = LinearObjective::LeastSquares,
+              .regularization = RegularizationKind::L2,
+              .regularization_strength = point.at("regularization_strength"),
+              .fit_intercept = true,
+          },
+      };
+    };
+
+    SplitOptions hp_split{};
+    hp_split.plan = CVPlanKind::CrossVal;
+    hp_split.folds = 3;
+    hp_split.shuffle = false;
+
+    // SearchKind::Grid (also the None default) -- exhaustive cross product.
+    TuneOptions grid_tune_options{};
+    grid_tune_options.search = SearchKind::Grid;
+    grid_tune_options.split = hp_split;
+    const auto exhaustive = lymph::selection::tune(
+        hp_axes, make_linear_spec, tune_x, y_series, grid_tune_options, TrainOptions{},
+        AssessOptions{.metrics = {MetricKind::Rmse}}, MetricKind::Rmse, TuneObjectivePolicy::Minimize);
+    if (exhaustive.report.trials.size() != 4) {
+      if (err) *err << "selection::tune(Grid) should evaluate exactly grid_size(axes) trials\n";
+      return false;
+    }
+    const auto& best_options = std::get<LinearFamilyOptions>(exhaustive.best_spec.options);
+    if (best_options.regularization_strength > 0.001) {
+      if (err) *err << "selection::tune(Grid) should prefer the least-biased fit on noiseless linear data\n";
+      return false;
+    }
+
+    // SearchKind::Random -- without-replacement sample, now dispatched from
+    // inside the same tune() entry point instead of a separate tune_sample().
+    TuneOptions random_tune_options{};
+    random_tune_options.search = SearchKind::Random;
+    random_tune_options.trials = 2;
+    random_tune_options.random = RandomState{.seed = 7, .deterministic = true};
+    random_tune_options.split = hp_split;
+    const auto sampled = lymph::selection::tune(
+        hp_axes, make_linear_spec, tune_x, y_series, random_tune_options, TrainOptions{},
+        AssessOptions{.metrics = {MetricKind::Rmse}}, MetricKind::Rmse, TuneObjectivePolicy::Minimize);
+    if (sampled.report.trials.size() != 2) {
+      if (err) *err << "selection::tune(Random) should evaluate exactly TuneOptions.trials trials\n";
+      return false;
+    }
+    const double first_strength = std::get<LinearFamilyOptions>(sampled.report.trials[0].spec.options).regularization_strength;
+    const double second_strength = std::get<LinearFamilyOptions>(sampled.report.trials[1].spec.options).regularization_strength;
+    if (first_strength == second_strength) {
+      if (err) *err << "selection::tune(Random) should draw distinct grid points without replacement\n";
       return false;
     }
   }

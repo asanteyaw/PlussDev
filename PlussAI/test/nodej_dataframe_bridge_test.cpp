@@ -166,6 +166,82 @@ bool run_nodej_dataframe_bridge_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  {
+    // Factorize: fresh fit assigns codes in lexicographically-sorted category order.
+    const DataFrame train_colors = DataFrame({{"color", Thread(pluss::make_note(
+        {"red", "green", "blue", "red", "green", "blue", "red", "blue"}))}});
+    DataFrameBatchOptions factorize_options{};
+    factorize_options.feature_names = {"color"};
+    factorize_options.note_policy = DataNotePolicy::Factorize;
+
+    CategoryMaps fitted{};
+    auto fit_or = feature_batch_from_dataframe(train_colors, factorize_options, nullptr, &fitted);
+    if (!fit_or.ok()) {
+      if (err) *err << "Factorize fresh fit should succeed\n";
+      return false;
+    }
+    const auto map_it = fitted.find("color");
+    const std::vector<std::string> expected_categories = {"blue", "green", "red"};
+    if (map_it == fitted.end() || map_it->second.categories != expected_categories) {
+      if (err) *err << "Factorize fresh fit should populate a sorted 3-category map for 'color'\n";
+      return false;
+    }
+
+    const auto fit_codes = as_f64(fit_or.value().x);
+    const std::vector<double> expected_fit_codes = {2.0, 1.0, 0.0, 2.0, 1.0, 0.0, 2.0, 0.0};
+    if (fit_codes != expected_fit_codes) {
+      if (err) *err << "Factorize fresh fit should encode rows using the fitted category order\n";
+      return false;
+    }
+
+    // Reusing the fitted map on new data must encode with the exact same
+    // codes (not refit fresh codes for this call's own distinct values).
+    const DataFrame reuse_colors = DataFrame({{"color", Thread(pluss::make_note({"green", "red", "blue"}))}});
+    auto reuse_or = feature_batch_from_dataframe(reuse_colors, factorize_options, &fitted, nullptr);
+    if (!reuse_or.ok() || as_f64(reuse_or.value().x) != std::vector<double>{1.0, 2.0, 0.0}) {
+      if (err) *err << "Factorize reuse should encode using the exact fitted codes, not a fresh refit\n";
+      return false;
+    }
+
+    // Unknown category ("purple") handling under all three UnknownCategoryPolicy values.
+    const DataFrame unseen_colors = DataFrame({{"color", Thread(pluss::make_note({"red", "purple", "blue"}))}});
+
+    DataFrameBatchOptions error_options = factorize_options;
+    error_options.factorize_unknown_categorical = UnknownCategoryPolicy::Error;
+    auto error_or = feature_batch_from_dataframe(unseen_colors, error_options, &fitted, nullptr);
+    if (error_or.ok() || error_or.status().code != StatusCode::InvalidArgument) {
+      if (err) *err << "Factorize UnknownCategoryPolicy::Error should reject an unseen category\n";
+      return false;
+    }
+
+    DataFrameBatchOptions missing_bucket_options = factorize_options;
+    missing_bucket_options.factorize_unknown_categorical = UnknownCategoryPolicy::MissingBucket;
+    auto missing_or = feature_batch_from_dataframe(unseen_colors, missing_bucket_options, &fitted, nullptr);
+    if (!missing_or.ok() || as_f64(missing_or.value().x) != std::vector<double>{2.0, 3.0, 0.0}) {
+      if (err) *err << "Factorize UnknownCategoryPolicy::MissingBucket should map unseen categories to the reserved code\n";
+      return false;
+    }
+
+    DataFrameBatchOptions ignore_options = factorize_options;
+    ignore_options.factorize_unknown_categorical = UnknownCategoryPolicy::Ignore;
+    auto ignore_or = feature_batch_from_dataframe(unseen_colors, ignore_options, &fitted, nullptr);
+    if (!ignore_or.ok()) {
+      if (err) *err << "Factorize UnknownCategoryPolicy::Ignore should succeed\n";
+      return false;
+    }
+    const auto ignore_codes = as_f64(ignore_or.value().x);
+    if (ignore_codes.size() != 3 || ignore_codes[0] != 2.0 || !std::isnan(ignore_codes[1]) || ignore_codes[2] != 0.0) {
+      if (err) *err << "Factorize UnknownCategoryPolicy::Ignore should map unseen categories to NaN\n";
+      return false;
+    }
+
+    // Reuse calls must never mutate the caller's existing map.
+    if (fitted.find("color")->second.categories != expected_categories) {
+      if (err) *err << "Factorize reuse calls must not mutate the caller's existing CategoryMaps\n";
+      return false;
+    }
+  }
+
   return true;
 }
 

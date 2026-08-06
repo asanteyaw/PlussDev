@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::astype
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,39 +7,81 @@
 ## Signature
 
 ```cpp
-Slot::astype(pluss::ScalarType dtype) -> Slot
+Slot Slot::astype(pluss::codem::ScalarType dtype) const
 ```
 
 ## What It Does
 
-This changes the semantic or numeric type so later operations route through the correct implementation path.
+Casts every value to `Series`-kind with scalar dtype `dtype`. A narrow
+shorthand for `cast(ThreadCastOptions{.series_dtype = dtype}).series()`.
 
 ## Parameters
 
-**dtype**
-    Target scalar dtype used by this conversion overload.
+**dtype** (`pluss::codem::ScalarType`)
+    The target numeric scalar dtype (e.g. `Int64`, `Float64`, `Bool`).
 
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new slot, every value cast to `Series`-kind with dtype `dtype`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Cast an `int64` `Series` slot to `float64`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
-auto out = slot.astype();
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto out = slot.astype(pluss::codem::ScalarType::Float64);
+std::cout << out.to_json();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+{
+  "_type": "Slot",
+  "defined": true,
+  "size": 2,
+  "values": [
+    "Series[float64]",
+    "Series[float64]"
+  ]
+}
 ```
 
+Example 2. A single-value slot converts the same way a multi-value one
+does.
+
+```cpp
+auto single = pluss::bundle::Slot({pluss::make_series(1)});
+auto out = single.astype(pluss::codem::ScalarType::Float64);
+std::cout << out.to_json();
+```
+
+### Output
+
+```text
+{
+  "_type": "Slot",
+  "defined": true,
+  "size": 1,
+  "values": [
+    "Series[float64]"
+  ]
+}
+```
+
+## Notes
+
+- Always targets `Series`-kind — for `Note`/`Timeline`/`TimeIndex` targets,
+  use [`cast()`](cast.md)'s full accessor instead.
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::cast`](cast.md): the general entry point `astype()` is a
+  narrower shorthand for.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="as_kindle.html">

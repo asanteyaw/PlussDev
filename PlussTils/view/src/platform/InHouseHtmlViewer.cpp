@@ -804,14 +804,21 @@ bool show_inhouse_html_window(const std::string& title,
     render_cfg.hit_regions = &hit_regions;
     render_cfg.render_stats = &render_stats;
     auto scene = window::build_html_document_scene(document, target_size, render_cfg);
-    if (has_table) {
-      render_stats.document_max_scroll_x = 0;
-      render_stats.document_max_scroll_y = 0;
-      render_stats.document_horizontal_track_rect = {};
-      render_stats.document_horizontal_thumb_rect = {};
-      render_stats.document_vertical_track_rect = {};
-      render_stats.document_vertical_thumb_rect = {};
-    }
+    // This used to unconditionally zero every document-level scroll limit and
+    // scrollbar rect whenever the page contained a <table> anywhere, on the
+    // apparent assumption that a table always owns its own bounded inner
+    // scroll viewport (table_scroll_regions) so the surrounding document
+    // never needs to scroll. That assumption doesn't hold for a table that
+    // isn't confined to a smaller box -- e.g. DataFrame::show()'s own
+    // output, or any table taller than the window -- which just extends the
+    // page and relies on document-level scrolling to reach the rest of it.
+    // has_table had no other reader in this file, so this was silently
+    // disabling all document scrolling (wheel, drag, and the scrollbar
+    // itself) on every page with a table, independent of whether that
+    // table's own inner region could scroll or even existed. Table-owned
+    // scroll regions aren't affected by removing this -- HtmlScrollModel
+    // checks table_scroll_regions first and only falls through to the
+    // document metrics below when a gesture isn't inside one of them.
     scroll_model.update_metrics(render_stats);
 
     const std::uint64_t base_frame_id = last_submitted_frame_id;
@@ -949,13 +956,25 @@ bool show_inhouse_html_window(const std::string& title,
           needs_render = scroll_model.command(event.note) || needs_render;
         }
       } else if (event.kind == window::ShellEventKind::PointerScroll) {
+        // Every RectI the layout/render engine hands back (scrollbar tracks
+        // and thumbs, hit regions) is computed against the pixel-space canvas
+        // (canvas_size = target_size * backing_scale, above), but the shells
+        // report pointer coordinates in logical/point space (NSView.bounds on
+        // Cocoa is never multiplied by backingScaleFactor). On any Retina/
+        // HiDPI display that mismatch means every hit-test compares a
+        // point-space click against a pixel-space rect -- a thin scrollbar
+        // thumb is the first thing to consistently miss. Scale event
+        // coordinates (and deltas, so drag/scroll distance matches the same
+        // pixel-space content extents) up to the layout engine's space here,
+        // once, rather than pushing backing_scale down into the layout/hit-
+        // test code itself.
         needs_render =
             scroll_model.scroll_wheel(
-                event.delta_x,
-                event.delta_y,
+                event.delta_x * backing_scale,
+                event.delta_y * backing_scale,
                 window::PointI{
-                    static_cast<int>(std::lround(event.x)),
-                    static_cast<int>(std::lround(event.y)),
+                    static_cast<int>(std::lround(event.x * backing_scale)),
+                    static_cast<int>(std::lround(event.y * backing_scale)),
                 },
                 event.precise_delta,
                 event.shift_modifier,
@@ -964,23 +983,23 @@ bool show_inhouse_html_window(const std::string& title,
       } else if (event.kind == window::ShellEventKind::PointerDrag) {
         needs_render =
             scroll_model.pointer_drag(
-                event.delta_x,
-                event.delta_y,
+                event.delta_x * backing_scale,
+                event.delta_y * backing_scale,
                 window::PointI{
-                    static_cast<int>(std::lround(event.x)),
-                    static_cast<int>(std::lround(event.y)),
+                    static_cast<int>(std::lround(event.x * backing_scale)),
+                    static_cast<int>(std::lround(event.y * backing_scale)),
                 }) ||
             needs_render;
       } else if (event.kind == window::ShellEventKind::PointerDown) {
         table_scroll_damage_only = false;
-        const int px = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.x)));
-        const int py = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.y)));
+        const int px = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.x * backing_scale)));
+        const int py = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.y * backing_scale)));
         bool consumed = scroll_model.pointer_down(window::PointI{px, py});
         needs_render = consumed || needs_render;
         auto hit_idx = find_hit_region_index(hit_regions, px, py);
         if (!consumed && !hit_idx.has_value() && size.height > 0) {
-          const int py_flipped =
-              clamp_nonneg_int64(static_cast<std::int64_t>(size.height) - static_cast<std::int64_t>(py));
+          const int py_flipped = clamp_nonneg_int64(
+              static_cast<std::int64_t>(std::llround(size.height * backing_scale)) - static_cast<std::int64_t>(py));
           hit_idx = find_hit_region_index(hit_regions, px, py_flipped);
         }
         if (!consumed && hit_idx.has_value()) {

@@ -27,7 +27,7 @@ in one shot and is a better fit when a query only runs once.
 both overloads just construct a `DataFrameSqlAccessor` and immediately call
 `.prepare(statement)` on it. There is no behavior here beyond skipping that
 intermediate `.sql()` call; every parameter, option, and gotcha documented on
-[`DataFrameSqlAccessor::prepare`](../../dataframe_sql_accessor_api_reference#prepare)
+[`DataFrameSqlAccessor::prepare`](../../dataframe_sql_accessor_api_reference)
 and [`DataFrameSqlPrepared::execute`](../../dataframe_sql_prepared_api_reference)
 applies identically here.
 ```

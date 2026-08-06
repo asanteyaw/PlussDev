@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelFieldAxisAccessor::mixed
 
 [Back to AxelFieldAxisAccessor API Reference](../../axel_fieldaxis_accessor_api_reference)
@@ -5,12 +7,15 @@
 ## Signature
 
 ```cpp
-AxelFieldAxisAccessor::mixed() -> Axel
+Axel AxelFieldAxisAccessor::mixed() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Named shorthand for [`kind(SlotKind::Mixed)`](kind.md) — returns a new
+axel where every registry frame is narrowed to only its heterogeneous
+(`Mixed`-kind) fields — fields whose values span more than one value
+kind.
 
 ## Parameters
 
@@ -19,32 +24,44 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every frame narrowed to its `Mixed`-kind fields.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Keep only the field mixing `Series` and `Note` values in
+every frame.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"mixed", pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("x")})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto fieldaxis = axel.fieldaxis();
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = fieldaxis.mixed();
-std::cout << out;
+auto out = axel.fieldaxis().mixed();
+for (const auto& key : out.registry(0).fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+mixed
 ```
 
+## Notes
+
+- Equivalent to `kind(SlotKind::Mixed)` — see [`kind()`](kind.md) for
+  the general form and [`Slot::kind`](../slot/kind.md) for exactly when
+  a slot is classified `Mixed`.
+- Applied independently per frame — different frames can end up with
+  different resulting field sets if their schemas differ.
+
+## See Also
+
+- [`AxelFieldAxisAccessor::kind`](kind.md): the general form this
+  method is a fixed shorthand for.
+- [`AxelFieldAxisAccessor::nulls`](nulls.md) / [`empty`](empty.md): the
+  shorthands for the remaining kind categories.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="match.html">

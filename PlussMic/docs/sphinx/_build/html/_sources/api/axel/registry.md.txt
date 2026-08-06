@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::registry
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,46 +7,81 @@
 ## Signature
 
 ```cpp
-Axel::registry(std::int64_t i) -> Registry
+Registry Axel::registry(std::int64_t i) const
 ```
 
 ## What It Does
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Returns the `Registry` frame at depth index `i`.
 
 ## Parameters
 
-**i**
-    Zero-based positional index used by this overload.
+**i** (`std::int64_t`)
+    The depth index to fetch, in `[0, depth())`. Out-of-range values
+    throw — there is no negative-index wraparound, unlike
+    [`slice()`](slice.md).
 
 ## Returns
 
 `Registry`
-    Value produced by this call.
+    The registry frame at index `i`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Fetch the second frame (index `1`) from a three-frame
+`Axel`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.registry(0);
+auto reg = axel.registry(1);
+std::cout << std::get<pluss::Series>(reg.fields("ids").at(0)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+2
 ```
 
+Example 2. An out-of-range index throws.
+
+```cpp
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+});
+try {
+  axel.registry(3);
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Axel::registry: index out of bounds
+```
+
+## Notes
+
+- `i` must satisfy `0 <= i < depth()`; unlike [`slice()`](slice.md),
+  negative indices are **not** interpreted as "from the end" here — any
+  negative `i` is out of bounds and throws.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"`.
+
+## See Also
+
+- [`Axel::registries`](registries.md): fetch every frame at once as a
+  `const std::vector<Registry>&`.
+- [`Axel::depth`](depth.md): the valid upper bound for `i`.
+- [`Axel::slice`](slice.md): select a contiguous *range* of frames
+  (with Python-style negative-index support) instead of one.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="registries.html">

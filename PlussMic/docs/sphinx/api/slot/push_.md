@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::push_
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,39 +7,70 @@
 ## Signature
 
 ```cpp
-Slot::push_(const Value& value) -> Slot&
+Slot& Slot::push_(const Value& value)
 ```
 
 ## What It Does
 
-Appends one additional value to the slot in place.
+Appends `value` to the slot in place and returns `*this` for chaining.
 
 ## Parameters
 
-**value**
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillnull(...)`, or `replace(...)`.
+**value** (`const Slot::Value&`)
+    The value to append.
 
 ## Returns
 
 `Slot&`
-    Value produced by this call.
+    A reference to the modified slot (`*this`).
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Append in place; the same handle grows.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
-slot.push_(pluss::make_note("tail"));
+slot.push_(pluss::make_series(99));
+std::cout << "size=" << slot.size() << " last=" << std::get<pluss::Series>(slot.at(3)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-Slot([Series(1), Series(2), Series(3)])
+size=4 last=99
 ```
 
+Example 2. Copy-on-write: mutating a copy leaves the original untouched.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto copy = slot;
+copy.push_(pluss::make_series(99));
+std::cout << "slot.size=" << slot.size() << " copy.size=" << copy.size();
+```
+
+### Output
+
+```text
+slot.size=2 copy.size=3
+```
+
+## Notes
+
+- Mutates the slot in place — see [`push()`](push.md) for the
+  non-mutating variant that returns a new `Slot`.
+- `Slot` is copy-on-write: if the handle isn't the sole owner of its
+  storage (see [`unique()`](unique.md)), `push_()` transparently clones the
+  underlying values before appending, so other handles that were sharing
+  the same storage are never affected by an in-place mutation.
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::push`](push.md): the non-mutating variant.
+- [`Slot::unique`](unique.md): the reference-count check `push_()` uses
+  internally to decide whether to clone before mutating.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="push.html">

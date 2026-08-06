@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelFieldAxisAccessor::suffix
 
 [Back to AxelFieldAxisAccessor API Reference](../../axel_fieldaxis_accessor_api_reference)
@@ -5,47 +7,67 @@
 ## Signature
 
 ```cpp
-AxelFieldAxisAccessor::suffix(std::string_view token) -> Axel
+Axel AxelFieldAxisAccessor::suffix(std::string_view token) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a new axel where every registry frame is narrowed to only the
+fields whose **name ends with** `token`. Applies
+[`RegistryFieldAxisAccessor::suffix`](../registry-fieldaxis/suffix.md)
+to every frame via [`Axel::map`](../axel/map.md).
 
 ## Parameters
 
-**token**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+**token** (`std::string_view`)
+    The suffix each surviving field name must end with.
 
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every frame narrowed to fields whose name ends with
+    `token`.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Select every field name ending with `id`, in every frame.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto fieldaxis = axel.fieldaxis();
+auto axel = pluss::bundle::Axel({r0, r0});
 
-auto out = fieldaxis.suffix("units");
-std::cout << out;
+auto out = axel.fieldaxis().suffix("id");
+for (const auto& key : out.registry(0).fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+id user_id
 ```
 
+`"id"` matches both `"id"` itself and `"user_id"`, since both end with
+`"id"`.
+
+## Notes
+
+- Anchored at the end of the name — this is not a substring search like
+  [`like()`](like.md); the match must reach exactly to the name's end.
+- Applied independently per frame — different frames can end up with
+  different resulting field sets if their schemas differ.
+
+## See Also
+
+- [`AxelFieldAxisAccessor::prefix`](prefix.md): the mirror-image,
+  start-anchored search.
+- [`AxelFieldAxisAccessor::like`](like.md): the unanchored substring
+  search.
+- [`RegistryFieldAxisAccessor::suffix`](../registry-fieldaxis/suffix.md):
+  the single-frame operation this method broadcasts.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="series.html">

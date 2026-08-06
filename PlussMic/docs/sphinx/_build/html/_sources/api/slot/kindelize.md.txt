@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::kindelize
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,14 @@
 ## Signature
 
 ```cpp
-Slot::kindelize() -> pluss::kindle::Stream
+pluss::kindle::Stream Slot::kindelize() const
 ```
 
 ## What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+An identical alias for [`to_kindle()`](to_kindle.md), kept for
+backward-compatible call sites written before `to_kindle()`/`as_kindle()`
+were introduced.
 
 ## Parameters
 
@@ -19,24 +23,36 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 ## Returns
 
 `pluss::kindle::Stream`
-    Value produced by this call.
+    The slot's values as a single kindle `Stream`.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Convert a homogeneous `Series` slot.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
-auto out = slot.kindelize();
+auto stream = slot.kindelize();
+std::cout << stream.as_series().numel();
 ```
 
 ### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+3
 ```
 
+## Notes
+
+- Byte-identical behavior to [`to_kindle()`](to_kindle.md), including its
+  stream-compatibility requirement and throw text.
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::to_kindle`](to_kindle.md): the primary name for this
+  conversion, with the full stream-compatibility explanation.
+- [`Slot::as_kindle`](as_kindle.md): another identical alias.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kind.html">

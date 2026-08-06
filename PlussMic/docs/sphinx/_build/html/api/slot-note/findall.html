@@ -34,62 +34,98 @@
 
           <div class="body" role="main">
             
-  <section id="slotnoteaccessor-findall">
+  <!-- pluss-hand-authored -->
+<section id="slotnoteaccessor-findall">
 <h1>SlotNoteAccessor::findall<a class="headerlink" href="#slotnoteaccessor-findall" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_note_accessor_api_reference.html"><span class="doc std std-doc">Back to SlotNoteAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">findall</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">findall</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 
-<span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">findall</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">SlotNoteAccessor</span><span class="o">::</span><span class="n">findall</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span>
+<span class="w">                                                  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Finds every match of <code class="docutils literal notranslate"><span class="pre">pattern</span></code> in each value of the bound slot and
+expands the result into one output feature per match position — feature
+<code class="docutils literal notranslate"><span class="pre">match_0</span></code> holds each value’s first match, <code class="docutils literal notranslate"><span class="pre">match_1</span></code> its second, and so
+on. A value with fewer matches than another has <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the features
+beyond its own match count; the feature count equals however many
+matches the <em>most-matching</em> value produced.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>The single-argument overload defaults to regex mode, same gotcha as count()
+Exactly like <a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a>, the single-argument <code class="docutils literal notranslate"><span class="pre">findall(pattern)</span></code>
+defaults internally to <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code> — a literal <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code> is interpreted
+as “match any character,” not a literal period.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>pattern</strong>
-Pattern string used for matching or extraction.</p>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A regular expression pattern under the single-argument overload
+(always regex mode), or literal/regex text under the two-argument
+overload depending on <code class="docutils literal notranslate"><span class="pre">options.regex</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::TextOptions</span></code>, two-argument overload only)
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">pattern</span></code> as regex.
+<code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>): case-insensitive when
+<code class="docutils literal notranslate"><span class="pre">false</span></code>. <code class="docutils literal notranslate"><span class="pre">options.limit</span></code> (default <code class="docutils literal notranslate"><span class="pre">-1</span></code>): caps matches collected per
+value, and therefore an upper bound on feature count. <code class="docutils literal notranslate"><span class="pre">options.prefix</span></code>
+is <strong>not</strong> used — feature names are always <code class="docutils literal notranslate"><span class="pre">match_0</span></code>, <code class="docutils literal notranslate"><span class="pre">match_1</span></code>, …</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span></code>
-Value produced by this call.</p>
+A new frame with <code class="docutils literal notranslate"><span class="pre">match_0</span></code>, <code class="docutils literal notranslate"><span class="pre">match_1</span></code>, … features (as many as the
+value with the most matches needed).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">);</span>
+<p>Example 1. Extract every run of digits, producing a ragged, <code class="docutils literal notranslate"><span class="pre">NULL</span></code>-padded
+result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;1 2 3 4&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;10 20&quot;</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">findall</span><span class="p">(</span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\d+</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=========================================
+     | match_0  match_1  match_2  match_3
+-----------------------------------------
+0    | 1        2        3        4      
+1    | 10       20       NULL     NULL   
+-----------------------------------------
+[2 cs x 4 feat]
 </pre></div>
 </div>
-<p>Example 2. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">nt</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>The first value has four number matches, driving the output to four
+features; the second (two matches) has <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in <code class="docutils literal notranslate"><span class="pre">match_2</span></code>/<code class="docutils literal notranslate"><span class="pre">match_3</span></code>.</p>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The single-argument overload defaults to <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code> — see the
+danger callout above.</p></li>
+<li><p>Output features are always named <code class="docutils literal notranslate"><span class="pre">match_0</span></code>, <code class="docutils literal notranslate"><span class="pre">match_1</span></code>, …</p></li>
+<li><p>Requires the slot to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slot throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::nt:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Note&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotNoteAccessor::count</span></code></span></a>: just the match count, without
+the matched text.</p></li>
+<li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotNoteAccessor::split</span></code></span></a>: delimiter-based splitting,
+another feature-expanding method.</p></li>
+<li><p><a class="reference internal" href="../slot/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::nt</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ends.html">
     <span class="label">Previous</span>
@@ -100,7 +136,6 @@ Value produced by this call.</p>
     <span class="title">fullmatch</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

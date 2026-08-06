@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::distinct
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,39 +7,58 @@
 ## Signature
 
 ```cpp
-Slot::distinct(pluss::kindle::DistinctOptions options = {}) -> Slot
+Slot Slot::distinct(pluss::kindle::DistinctOptions options = {}) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a new slot with duplicate values removed, preserving first-occurrence
+order.
 
 ## Parameters
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`pluss::kindle::DistinctOptions`, optional)
+    `{bool dropnull = true}` — whether null values are dropped before
+    deduplication. Defaults to dropping them.
 
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new slot holding each distinct value once, in first-occurrence order.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. A repeated value collapses to one occurrence.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
 auto out = slot.distinct();
+std::cout << "size=" << out.size() << " vals="
+          << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","
+          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+size=2 vals=1,2
 ```
 
+## Notes
+
+- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+  slot to be stream-compatible (a single, homogeneous value kind).
+- `options.dropnull` defaults to `true`; pass `{.dropnull = false}` to
+  keep a single null as one of the distinct values.
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::freq`](freq.md): the frequency count for each distinct value,
+  rather than just the values themselves.
+- [`Slot::ndistinct`](ndistinct.md): the distinct-value *count*, rather
+  than the values.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="defined.html">

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # SlotNoteAccessor::split
 
 [Back to SlotNoteAccessor API Reference](../../slot_note_accessor_api_reference)
@@ -5,70 +7,132 @@
 ## Signatures
 
 ```cpp
-SlotNoteAccessor::split(std::string_view delimiter, std::int64_t limit = -1, std::string prefix = "part") -> pluss::table::DataFrame
+pluss::table::DataFrame SlotNoteAccessor::split(std::string_view delimiter,
+                                                std::int64_t limit = -1,
+                                                std::string prefix = "part") const
 
-SlotNoteAccessor::split(std::string_view pattern, const pluss::table::TextOptions& options) -> pluss::table::DataFrame
+pluss::table::DataFrame SlotNoteAccessor::split(std::string_view pattern,
+                                                const pluss::table::TextOptions& options) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Splits every value in the bound slot on a delimiter, expanding the
+result into one output feature per split position. Two overloads with
+different delimiter semantics:
+
+- **`split(delimiter, limit, prefix)`**: always a literal substring
+  split (never regex).
+- **`split(pattern, options)`**: `pattern` is literal or regex depending
+  on `options.regex`; `options.limit` caps the split count,
+  `options.prefix` names the features.
+
+Both overloads produce ragged results — a value with fewer pieces than
+the widest one is `NULL` in the extra features.
 
 ## Parameters
 
-**delimiter**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+**delimiter** / **pattern** (`std::string_view`)
+    The literal delimiter (first overload) or literal/regex pattern
+    (second overload). Must not be empty.
 
-**limit**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+**limit** (`std::int64_t`, first overload, default `-1`)
+    Maximum number of splits to perform; `-1` means unlimited.
 
-**prefix**
-    Text prefix inserted ahead of the existing label or value.
+**prefix** (`std::string`, first overload, default `"part"`)
+    Base name for the output features: `<prefix>_0`, `<prefix>_1`, ...
 
-**pattern**
-    Pattern string used for matching or extraction.
-
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`pluss::table::TextOptions`, second overload)
+    `options.regex` (default `false`), `options.limit` (default `-1`),
+    `options.prefix` (default `"part"`).
 
 ## Returns
 
 `pluss::table::DataFrame`
-    Value produced by this call.
+    A new frame with one `<prefix>_0`, `<prefix>_1`, ... feature per
+    split position.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. A plain literal split, no limit.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.split("units", 1, {});
+auto slot = pluss::bundle::Slot({pluss::make_note("a/b/c"), pluss::make_note("x/y"), pluss::make_note("solo")});
+auto out = slot.nt().split("/");
 std::cout << out;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+=============================
+     | part_0  part_1  part_2
+-----------------------------
+0    | a       b       c     
+1    | x       y       NULL  
+2    | solo    NULL    NULL  
+-----------------------------
+[3 cs x 3 feat]
 ```
-Example 2. Pass an explicit options object to control the operation.
+
+Example 2. `limit` caps the number of splits — the remainder stays
+joined in the last feature.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.split("units", {});
+auto slot = pluss::bundle::Slot({pluss::make_note("a/b/c"), pluss::make_note("x/y"), pluss::make_note("solo")});
+auto out = slot.nt().split("/", 1);
 std::cout << out;
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+=====================
+     | part_0  part_1
+---------------------
+0    | a       b/c   
+1    | x       y     
+2    | solo    NULL  
+---------------------
+[3 cs x 2 feat]
 ```
 
+Example 3. The second overload: a regex pattern with a custom feature
+prefix.
+
+```cpp
+auto slot = pluss::bundle::Slot({pluss::make_note("a, b,c"), pluss::make_note("x , y"), pluss::make_note("single")});
+auto out = slot.nt().split(R"(\s*,\s*)", {.regex = true, .prefix = "field"});
+std::cout << out;
+```
+
+### Output
+
+```text
+================================
+     | field_0  field_1  field_2
+--------------------------------
+0    | a        b        c      
+1    | x        y        NULL   
+2    | single   NULL     NULL   
+--------------------------------
+[3 cs x 3 feat]
+```
+
+## Notes
+
+- An empty delimiter/pattern throws.
+- `limit` caps the *number of splits*, not the *number of output
+  features* directly.
+- `options.case_sensitive` has no effect on `split()`.
+- Requires the slot to be `Note`-kind — a non-`Note` slot throws.
+
+## See Also
+
+- [`SlotNoteAccessor::partition`](partition.md): a related but simpler
+  split — always exactly 3 features, first-occurrence-only.
+- [`Slot::nt`](../slot/nt.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rstrip.html">

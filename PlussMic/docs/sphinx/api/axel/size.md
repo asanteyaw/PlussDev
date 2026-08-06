@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::size
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,12 +7,14 @@
 ## Signature
 
 ```cpp
-Axel::size() -> std::int64_t
+std::int64_t Axel::size() const
 ```
 
 ## What It Does
 
-Returns a size/count summary for the current object without changing it.
+Returns the number of `Registry` frames stacked in this `Axel`.
+Byte-identical to [`depth()`](depth.md) — `size()`'s body is a single
+`return depth();`.
 
 ## Parameters
 
@@ -19,30 +23,41 @@ Returns a size/count summary for the current object without changing it.
 ## Returns
 
 `std::int64_t`
-    Integer count, size, or positional result.
+    The number of registries — the same value `depth()` returns.
 
 ## Examples
 
-Example 1. Inspect the `size` property of the current object.
+Example 1. `size()` and `depth()` agree on a three-frame `Axel`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.size();
+std::cout << axel.size() << " " << axel.depth();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+3 3
 ```
 
+## Notes
+
+- `size()` exists as a name-parity convenience with `Registry::size()`
+  and `Slot::size()`, but for `Axel`, "size" means the depth axis (how
+  many registries), not a row or value count — there is no separate
+  concept of `Axel` row count, since each registry frame can have its
+  own independent row shape.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"` (via the underlying `depth()` call).
+
+## See Also
+
+- [`Axel::depth`](depth.md): the canonical name for this same value.
+- [`Axel::empty`](empty.md): shorthand for `size() == 0`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="show.html">

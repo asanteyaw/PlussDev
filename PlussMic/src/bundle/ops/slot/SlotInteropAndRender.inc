@@ -52,24 +52,29 @@ Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
       break;
     }
     case pluss::kindle::StreamKind::Timeline: {
-      const auto x = stream.as_timeline().to_epoch_nanos_vector();
+      const auto& tl = stream.as_timeline();
+      const std::string tz_name(tl.tz());
+      const auto x = tl.to_epoch_nanos_vector();
       for (std::int64_t i = 0; i < n; ++i) {
         if (has_validity && !valid[static_cast<std::size_t>(i)]) {
           out.emplace_back(std::monostate{});
         } else {
-          out.emplace_back(pluss::timeline::from_epoch(x[static_cast<std::size_t>(i)]));
+          out.emplace_back(pluss::timeline::from_epoch(x[static_cast<std::size_t>(i)], tz_name));
         }
       }
       break;
     }
     case pluss::kindle::StreamKind::TimeIndex: {
-      const auto x = stream.as_timeindex().timeline().to_epoch_nanos_vector();
+      const auto& idx_tl = stream.as_timeindex().timeline();
+      const std::string tz_name(idx_tl.tz());
+      const auto x = idx_tl.to_epoch_nanos_vector();
       for (std::int64_t i = 0; i < n; ++i) {
         if (has_validity && !valid[static_cast<std::size_t>(i)]) {
           out.emplace_back(std::monostate{});
         } else {
           out.emplace_back(pluss::make_timeindex(
-              std::vector<std::int64_t>{x[static_cast<std::size_t>(i)]},
+              pluss::timeline::from_epoch(
+                  std::vector<std::int64_t>{x[static_cast<std::size_t>(i)]}, tz_name),
               false));
         }
       }

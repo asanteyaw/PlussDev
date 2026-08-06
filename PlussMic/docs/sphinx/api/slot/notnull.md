@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Slot::notnull
 
 [Back to Slot API Reference](../../slot_api_reference)
@@ -5,12 +7,13 @@
 ## Signature
 
 ```cpp
-Slot::notnull() -> Slot
+Slot Slot::notnull() const
 ```
 
 ## What It Does
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Returns a new `Series[bool]` slot flagging each value that's *not*
+missing. The exact logical inverse of [`isnull()`](isnull.md).
 
 ## Parameters
 
@@ -19,24 +22,39 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new `Series[bool]` slot, same length as the source: `true` where the
+    value is present, `false` where it's missing.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Flag which values are present.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-
+auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)});
 auto out = slot.notnull();
+std::cout << std::boolalpha
+          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(2)).to_vec<bool>()[0];
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+true false true
 ```
 
+## Notes
+
+- Exactly `!isnull()`.
+- Requires the slot to be defined — an undefined `Slot` throws
+  `"Slot: undefined handle"`.
+
+## See Also
+
+- [`Slot::isnull`](isnull.md): the logical inverse.
+- [`Slot::dropnull`](dropnull.md): keep only the values `notnull()` would
+  flag `true`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ndistinct.html">

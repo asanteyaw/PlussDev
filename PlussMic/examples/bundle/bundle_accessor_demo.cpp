@@ -265,7 +265,8 @@ int main() {
     std::cout << "fields(...).distinct()\n" << registry.fields({"quantity"}).distinct({.dropnull = false}) << "\n";
     std::cout << "fields(...).freq()\n" << registry.fields({"quantity"}).freq({.top = 3, .dropnull = false}) << "\n";
     std::cout << "fields(...).ndistinct()\n" << registry.fields({"quantity"}).ndistinct({.dropnull = false}) << "\n";
-    std::cout << "fields(...).astype(Float64)\n" << registry.fields({"numeric_text"}).astype(ScalarType::Float64) << "\n";
+    std::cout << "fields(...).cast(Float64).series()\n"
+              << registry.fields({"numeric_text"}).cast({.series_dtype = ScalarType::Float64}).series() << "\n";
 
     std::cout << "\n=== Registry Field-Axis Accessor ===\n";
     std::cout << "fieldaxis().like(\"date\")\n" << registry.fieldaxis().like("date") << "\n";
@@ -382,7 +383,9 @@ int main() {
     std::cout << "fields(...).distinct()\n" << axel.fields({"quantity"}).distinct({.dropnull = false}).registry(0).fields("quantity") << "\n";
     std::cout << "fields(...).freq()\n" << axel.fields({"quantity"}).freq({.top = 2, .dropnull = false}).registry(0).fields("quantity") << "\n";
     std::cout << "fields(...).ndistinct()\n" << axel.fields({"quantity"}).ndistinct({.dropnull = false}).registry(0).fields("quantity") << "\n";
-    std::cout << "fields(...).astype(Float64)\n" << axel.fields({"numeric_text"}).astype(ScalarType::Float64).registry(0).fields("numeric_text") << "\n";
+    std::cout << "fields(...).cast(Float64).series()\n"
+              << axel.fields({"numeric_text"}).cast({.series_dtype = ScalarType::Float64}).series().registry(0).fields("numeric_text")
+              << "\n";
 
     std::cout << "\n=== Axel Field-Axis Accessor ===\n";
     std::cout << "fieldaxis().like(\"date\") => " << axel.fieldaxis().like("date").registry(0).nfields() << "\n";

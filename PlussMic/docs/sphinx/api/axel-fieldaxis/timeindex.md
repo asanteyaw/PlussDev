@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # AxelFieldAxisAccessor::timeindex
 
 [Back to AxelFieldAxisAccessor API Reference](../../axel_fieldaxis_accessor_api_reference)
@@ -5,12 +7,14 @@
 ## Signature
 
 ```cpp
-AxelFieldAxisAccessor::timeindex() -> Axel
+Axel AxelFieldAxisAccessor::timeindex() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Named shorthand for [`kind(SlotKind::TimeIndex)`](kind.md) — returns a
+new axel where every registry frame is narrowed to only its
+`TimeIndex`-kind fields.
 
 ## Parameters
 
@@ -19,32 +23,43 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel with every frame narrowed to its `TimeIndex`-kind
+    fields.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. Keep only the `TimeIndex`-kind field in every frame.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"idx", pluss::bundle::Slot({pluss::make_timeindex(pluss::make_timeline({"2024-01-01T00:00:00Z"}))})},
+    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-auto fieldaxis = axel.fieldaxis();
+auto axel = pluss::bundle::Axel({r0});
 
-auto out = fieldaxis.timeindex();
-std::cout << out;
+auto out = axel.fieldaxis().timeindex();
+for (const auto& key : out.registry(0).fields()) std::cout << key << " ";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+idx
 ```
 
+## Notes
+
+- Equivalent to `kind(SlotKind::TimeIndex)` — see [`kind()`](kind.md)
+  for the general form.
+- Applied independently per frame — different frames can end up with
+  different resulting field sets if their schemas differ.
+
+## See Also
+
+- [`AxelFieldAxisAccessor::kind`](kind.md): the general form this
+  method is a fixed shorthand for.
+- [`AxelFieldAxisAccessor::timeline`](timeline.md): the shorthand for
+  the related `Timeline`-kind fields.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="suffix.html">

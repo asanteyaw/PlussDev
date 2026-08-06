@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # SlotNoteAccessor::replace
 
 [Back to SlotNoteAccessor API Reference](../../slot_note_accessor_api_reference)
@@ -5,64 +7,88 @@
 ## Signatures
 
 ```cpp
-SlotNoteAccessor::replace(std::string_view from, std::string_view to) -> Slot
+Slot SlotNoteAccessor::replace(std::string_view from, std::string_view to) const
 
-SlotNoteAccessor::replace(std::string_view from, std::string_view to, const pluss::table::TextOptions& options) -> Slot
+Slot SlotNoteAccessor::replace(std::string_view from,
+                               std::string_view to,
+                               const pluss::table::TextOptions& options) const
 ```
 
 ## What It Does
 
-This is part of the text-processing surface for note-backed or text-oriented data.
+Replaces occurrences of a substring or regex pattern within each value in
+the bound slot, returning a new slot. `replace(from, to)` and
+`replace(from, to, {})` are byte-identical.
 
 ## Parameters
 
-**from**
-    Boundary or replacement value used by this overload. Its type determines which payload family participates.
+**from** (`std::string_view`)
+    The literal text (or, with `options.regex = true`, the regular
+    expression) to search for.
 
-**to**
-    Boundary or replacement value used by this overload. Its type determines which payload family participates.
+**to** (`std::string_view`)
+    The replacement text. With `options.regex = true`, may contain `$1`,
+    `$2`, ... backreferences.
 
-**options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+**options** (`pluss::table::TextOptions`, three-argument overload only)
+    `options.regex` (default `false`), `options.case_sensitive` (default
+    `true`), `options.limit` (default `-1`, unlimited).
 
 ## Returns
 
 `Slot`
-    Value produced by this call.
+    A new slot, matching text replaced.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Default: literal, case-sensitive, unlimited substring
+replacement.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.replace("units", "units");
-std::cout << out;
+auto slot = pluss::bundle::Slot({pluss::make_note("banana")});
+auto out = slot.nt().replace("a", "o");
+std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+bonono
 ```
-Example 2. Pass an explicit options object to control the operation.
+
+Example 2. `case_sensitive = false` matches regardless of case, but `to`
+is still inserted exactly as written.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
-auto notes = slot.nt();
-
-auto out = notes.replace("units", "units", {});
-std::cout << out;
+auto slot = pluss::bundle::Slot({pluss::make_note("BANANA")});
+pluss::table::TextOptions opts;
+opts.case_sensitive = false;
+auto out = slot.nt().replace("A", "o", opts);
+std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+BoNoNo
 ```
 
+## Notes
+
+- `replace(from, to)` and `replace(from, to, {})` are byte-identical.
+- Matches never overlap.
+- With `options.regex = true`, `to` may reference capture groups.
+- Requires the slot to be `Note`-kind — a non-`Note` slot throws
+  `"Slot::nt: slot kind must be Note"`.
+
+## See Also
+
+- [`SlotNoteAccessor::has`](has.md): test for a substring without
+  changing the text.
+- [`SlotNoteAccessor::count`](count.md): count matches instead of
+  replacing them.
+- [`Slot::nt`](../slot/nt.md): the entry point this accessor is reached
+  from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="partition.html">

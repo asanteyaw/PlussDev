@@ -1,7 +1,9 @@
 #include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
 
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <vector>
 
@@ -14,6 +16,8 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
+using pluss::table::DataFrame;
+using pluss::table::Thread;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -59,6 +63,129 @@ LabeledBatch make_xor_batch() {
       .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
       .y = y,
   };
+}
+
+DataFrame make_factorize_train_frame() {
+  const Series x0 = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}, {8}, f64());
+  const Series x1 = pluss::make_series(std::vector<double>{0.1, 0.2, 0.1, 0.3, 0.2, 0.1, 0.3, 0.2}, {8}, f64());
+  const auto color = pluss::make_note({"red", "green", "blue", "red", "green", "blue", "red", "green"});
+  const Series y = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0}, {8}, f64());
+  return DataFrame({
+      {"x0", Thread(x0)},
+      {"x1", Thread(x1)},
+      {"color", Thread(color)},
+      {"target", Thread(y)},
+  });
+}
+
+DataFrame make_factorize_known_frame() {
+  const Series x0 = pluss::make_series(std::vector<double>{1.0, 4.0, 6.0}, {3}, f64());
+  const Series x1 = pluss::make_series(std::vector<double>{0.2, 0.2, 0.1}, {3}, f64());
+  const auto color = pluss::make_note({"blue", "green", "red"});
+  return DataFrame({
+      {"x0", Thread(x0)},
+      {"x1", Thread(x1)},
+      {"color", Thread(color)},
+  });
+}
+
+DataFrame make_factorize_unseen_frame() {
+  const Series x0 = pluss::make_series(std::vector<double>{1.0, 4.0, 6.0}, {3}, f64());
+  const Series x1 = pluss::make_series(std::vector<double>{0.2, 0.2, 0.1}, {3}, f64());
+  const auto color = pluss::make_note({"blue", "purple", "red"});
+  return DataFrame({
+      {"x0", Thread(x0)},
+      {"x1", Thread(x1)},
+      {"color", Thread(color)},
+  });
+}
+
+// End-to-end DataNotePolicy::Factorize check: WorkflowModel must fit the
+// raw-text "color" column's category map once at learn_() time, reuse
+// (never refit) that frozen map on every later infer() call, and carry it
+// through save()/load() unchanged.
+bool run_lymph_factorize_checks(std::ostream* err = nullptr) {
+  const DataFrame train_frame = make_factorize_train_frame();
+
+  DataFrameBatchOptions data_options{};
+  data_options.feature_names = {"x0", "x1", "color"};
+  data_options.label_feature = "target";
+  data_options.note_policy = DataNotePolicy::Factorize;
+
+  LinearFamilyOptions linear{};
+  linear.objective = LinearObjective::Logistic;
+  linear.regularization = RegularizationKind::L2;
+  linear.regularization_strength = 1e-6;
+  linear.fit_intercept = true;
+
+  WorkflowModel model = linear_factory::logistic_regression(linear);
+  TrainOptions train{};
+  train.max_iterations = 2000;
+  train.tolerance = 1e-8;
+  model.learn_(train_frame, data_options, train);
+
+  if (!model.trained()) {
+    if (err) *err << "Factorize learn_(frame,...) should leave the model trained\n";
+    return false;
+  }
+
+  // The train-time category map is {blue, green, red}; "purple" must be
+  // rejected under UnknownCategoryPolicy::Error at infer time -- if infer()
+  // were refitting fresh codes per call instead of reusing the frozen map,
+  // "purple" would just get accepted as a legitimate new category.
+  DataFrameBatchOptions error_options = data_options;
+  error_options.factorize_unknown_categorical = UnknownCategoryPolicy::Error;
+  bool threw = false;
+  try {
+    (void)model.infer(make_factorize_unseen_frame(), error_options);
+  } catch (...) {
+    threw = true;
+  }
+  if (!threw) {
+    if (err) *err << "infer() on an unseen category with UnknownCategoryPolicy::Error should throw\n";
+    return false;
+  }
+
+  const DataFrame known_frame = make_factorize_known_frame();
+  const Series predicted_before = model.infer(known_frame, data_options);
+  const auto predicted_before_vec = as_f64(predicted_before);
+  if (predicted_before_vec.size() != 3) {
+    if (err) *err << "infer() on known categories should produce one prediction per row\n";
+    return false;
+  }
+
+  const std::filesystem::path tmp = std::filesystem::temp_directory_path() / "lymph_factorize_roundtrip.bundle";
+  const LabeledBatch train_batch_for_save =
+      resolve(labeled_batch_from_dataframe(train_frame, data_options), "test.labeled_batch_from_dataframe(save)");
+  model.save(tmp.string(), train_batch_for_save, train);
+  const WorkflowModel restored = WorkflowModel::load(tmp.string());
+  std::filesystem::remove(tmp);
+
+  if (!restored.trained()) {
+    if (err) *err << "WorkflowModel::load should restore a trained model\n";
+    return false;
+  }
+
+  const auto predicted_after_vec = as_f64(restored.infer(known_frame, data_options));
+  if (predicted_after_vec != predicted_before_vec) {
+    if (err) *err << "infer() predictions on known categories should be identical before/after save/load\n";
+    return false;
+  }
+
+  // The restored model's category map must still be frozen at the
+  // train-time set, not silently widened/reset by the round trip.
+  bool threw_after_reload = false;
+  try {
+    (void)restored.infer(make_factorize_unseen_frame(), error_options);
+  } catch (...) {
+    threw_after_reload = true;
+  }
+  if (!threw_after_reload) {
+    if (err) *err << "restored model should still reject an unseen category after save/load\n";
+    return false;
+  }
+
+  return true;
 }
 
 bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
@@ -129,32 +256,38 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  // Was routed through the old Workflow facade (make_pipeline(...) wrapping
+  // a WorkflowModel just to call confusion_table/classification_summary/
+  // classification_metric_series/cross_validate_scores/cross_validate_score
+  // on it) -- every one of those already has a WorkflowModel overload
+  // directly (confirmed in workflow_model.h/metrics.h before dropping the
+  // wrapper), so calling them on wf_model itself is the same operation with
+  // one less layer of indirection.
   WorkflowModel wf_model = linear_factory::logistic_regression(linear);
   wf_model.learn_(batch, train);
-  pluss::ai::lymph::Workflow wf = make_pipeline(std::move(wf_model));
-  const ConfusionTable wf_cm = wf.confusion_table(batch);
+  const ConfusionTable wf_cm = confusion_table(wf_model, batch);
   if (wf_cm.counts.numel() != cm.counts.numel()) {
-    if (err) *err << "Workflow::confusion_table should mirror WorkflowModel wrapper behavior\n";
+    if (err) *err << "confusion_table(model,...) should mirror wrapper behavior\n";
     return false;
   }
-  const ClassReport wf_report = wf.classification_summary(batch);
+  const ClassReport wf_report = classification_summary(wf_model, batch);
   if (wf_report.macro_average.numel() != 3) {
-    if (err) *err << "Workflow::classification_summary should expose aggregate metrics\n";
+    if (err) *err << "classification_summary(model,...) should expose aggregate metrics\n";
     return false;
   }
-  const Series wf_metric_series = wf.classification_metric_series(batch, AssessOptions{.metrics = {MetricKind::Accuracy}});
+  const Series wf_metric_series = classification_metric_series(wf_model, batch, AssessOptions{.metrics = {MetricKind::Accuracy}});
   if (wf_metric_series.numel() <= 0) {
-    if (err) *err << "Workflow::classification_metric_series should produce requested metrics\n";
+    if (err) *err << "classification_metric_series(model,...) should produce requested metrics\n";
     return false;
   }
-  const Series wf_fold_scores = cross_validate_scores(wf, batch, MetricKind::Accuracy, cv, train);
+  const Series wf_fold_scores = cross_validate_scores(wf_model, batch, MetricKind::Accuracy, cv, train);
   if (wf_fold_scores.numel() != 4) {
-    if (err) *err << "cross_validate_scores(workflow,...) should emit one score per fold\n";
+    if (err) *err << "cross_validate_scores(model,...) should emit one score per fold\n";
     return false;
   }
-  const double wf_score = cross_validate_score(wf, batch, MetricKind::Accuracy, cv, train);
+  const double wf_score = cross_validate_score(wf_model, batch, MetricKind::Accuracy, cv, train);
   if (!std::isfinite(wf_score) || wf_score < 0.0 || wf_score > 1.0) {
-    if (err) *err << "cross_validate_score(workflow,...) should produce finite score in [0,1]\n";
+    if (err) *err << "cross_validate_score(model,...) should produce finite score in [0,1]\n";
     return false;
   }
 
@@ -234,9 +367,17 @@ TEST_CASE("lymph metrics wrappers", "[lymph][metrics]") {
     FAIL("lymph metrics checks failed");
   }
 }
+TEST_CASE("lymph WorkflowModel DataNotePolicy::Factorize", "[lymph][factorize]") {
+  if (!run_lymph_factorize_checks(&std::cerr)) {
+    FAIL("lymph factorize checks failed");
+  }
+}
 #else
 int main() {
   if (!run_lymph_metrics_checks(&std::cerr)) {
+    return 1;
+  }
+  if (!run_lymph_factorize_checks(&std::cerr)) {
     return 1;
   }
   std::cout << "lymph metrics checks passed\n";

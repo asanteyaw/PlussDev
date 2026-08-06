@@ -215,7 +215,7 @@ Example 1.
 - [`DataFrameTsAccessor::asfreq`](asfreq.md): resample-then-fill-gaps in one call.
 - [`DataFrameTsAccessor::insert_gaps`](insert_gaps.md): the non-aggregating,
   `NULL`-preserving sibling of this method.
-- [`DataFrameTsResampler`](../dataframe_ts_resampler_api_reference): the
+- [`DataFrameTsResampler`](../../dataframe_ts_resampler_api_reference): the
   chainable accessor this method's no-`op` overloads return.
 
 <div class="pluss-inline-prev-next">

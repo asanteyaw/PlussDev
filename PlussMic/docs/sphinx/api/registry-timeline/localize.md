@@ -1,5 +1,4 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c495b1a2b48d -->
 
 # RegistryTimelineAccessor::localize
 
@@ -16,10 +15,9 @@ Registry RegistryTimelineAccessor::localize(const pluss::table::TimelineLocalize
 Reinterprets each bound field's *current* clock reading as a naive local
 wall-clock time in `options.tz`, and converts it to the true UTC instant
 that local reading corresponds to. **This changes the underlying instant**
-(unlike [`tz()`](tz.md), which only relabels display). The display label
-is updated to `options.tz` at the same time, so a follow-up `fmt()`/calendar
-read shows the shifted instant rendered in local wall-clock terms, not as
-plain UTC.
+(unlike [`tz()`](tz.md), which only relabels display). The `options.tz`
+label attached by `localize()` also survives being read back through any
+further `.tl()` call — see Example 1.
 
 ## Parameters
 
@@ -41,7 +39,7 @@ plain UTC.
 
 Example 1. Localize a timestamp to `"America/New_York"`. `epoch()` confirms
 the instant actually moved; a follow-up `fmt()` shows the shifted instant
-rendered as NY-local wall-clock time.
+correctly rendered in NY-local wall-clock time.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -54,11 +52,11 @@ auto localized = rg.fields({"ts"}).tl().localize(options);
 
 auto before = rg.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Seconds);
 auto after = localized.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Seconds);
-std::cout << "epoch before: " << std::get<pluss::Series>(before.select("ts").at(0)).to_vec<std::int64_t>()[0] << "\n";
-std::cout << "epoch after: " << std::get<pluss::Series>(after.select("ts").at(0)).to_vec<std::int64_t>()[0] << "\n";
+std::cout << "epoch before: " << std::get<pluss::Series>(before.fields("ts").at(0)).to_vec<std::int64_t>()[0] << "\n";
+std::cout << "epoch after: " << std::get<pluss::Series>(after.fields("ts").at(0)).to_vec<std::int64_t>()[0] << "\n";
 
 auto fmted = localized.fields("ts").tl().fmt("%Y-%m-%d %H:%M:%S");
-std::cout << "displayed: " << std::get<pluss::Note>(fmted.select("ts").at(0)).at(0);
+std::cout << "displayed: " << std::get<pluss::Note>(fmted.at(0)).at(0);
 ```
 
 ### Output
@@ -71,19 +69,23 @@ displayed: 2024-01-31 09:15:30
 
 The 18,000-second delta (5 hours) confirms the instant genuinely moved — the
 correct behavior for `"America/New_York"` in January (Eastern Standard
-Time, `-5:00`). The displayed text, `09:15:30`, is the original wall-clock
-reading now correctly relabeled as NY-local, matching the reinterpretation
-`localize()` performs.
+Time, `-5:00`). The displayed text, `09:15:30`, is the shifted instant
+correctly rendered as NY-local wall-clock time.
 
 ## Notes
 
 - **`localize()` changes the underlying instant; [`tz()`](tz.md) never
-  does.** Both the instant shift and the resulting display label persist
-  through subsequent `.tl()` calls.
+  does.**
 - `options.tz` only accepts the same four names as `tz()`, and cannot be
   empty.
 - Requires every bound field to be `Timeline`-kind — a non-`Timeline` field
   throws `"Slot::tl: slot kind must be Timeline"`.
+- Internally, each bound field stores its `Timeline` values independently
+  (one scalar `Timeline` per row, not one shared column); the resulting
+  per-row tz labels round-trip correctly through the `kindle::Stream`
+  boundary every further `.tl()` call goes through. If every row does not
+  already share the same display timezone going into a `.tl()` call, the
+  call throws rather than picking one arbitrarily.
 
 ## See Also
 

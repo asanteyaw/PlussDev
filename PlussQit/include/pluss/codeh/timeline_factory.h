@@ -73,6 +73,25 @@ inline pluss::Timeline from_epoch(pluss::msharp::RangeView::Of<std::int64_t> fla
   return from_epoch(pluss::codeh::detail::Int64FlatReader(flat, sizes));
 }
 
+// Same as from_epoch(data)/from_epoch(flat, sizes) above, but stamps the
+// resulting Timeline with an explicit display timezone instead of defaulting
+// to UTC. The underlying instant is identical either way -- epoch nanoseconds
+// are canonical and tz-independent (see Timeline.h's class comment); only
+// which timezone .fmt()/.hour()/.dt-field accessors read wall-clock
+// components in changes. Reuses timeline_from_epoch_nanos for the shape
+// validation/construction it already does, then re-wraps the resulting
+// ticks Series through timeline_from_series (already used directly in this
+// file, see epoch() above) to attach the requested tz label.
+inline pluss::Timeline from_epoch(pluss::codeh::detail::Int64FlatReader data, std::string_view tz_name) {
+  pluss::Timeline t = pluss::codeh::ops_internal::timeline_from_epoch_nanos(data.flat(), data.sizes());
+  return pluss::codeh::ops_internal::timeline_from_series(t.unsafe_ticks(), std::string(tz_name));
+}
+inline pluss::Timeline from_epoch(pluss::msharp::RangeView::Of<std::int64_t> flat,
+                                  pluss::msharp::RangeView::Of<std::int64_t> sizes,
+                                  std::string_view tz_name) {
+  return from_epoch(pluss::codeh::detail::Int64FlatReader(flat, sizes), tz_name);
+}
+
 inline pluss::Timeline date_range(const pluss::Timeline& start,
                                   const pluss::Timeline& end,
                                   std::string_view freq,

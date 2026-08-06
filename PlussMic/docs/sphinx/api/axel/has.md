@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::has
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,45 +7,71 @@
 ## Signature
 
 ```cpp
-Axel::has(std::string_view field) -> bool
+bool Axel::has(std::string_view field) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Checks whether `field` exists in **any** registry frame across the
+depth stack.
+
+```{important} "any", not "every"
+`has()` returns `true` as soon as *one* frame contains `field` — it
+does not mean every frame does. `Axel` does not require every frame to
+share an identical schema, so a `true` result here doesn't guarantee
+[`fields({field})`](fields.md) will succeed on the whole `Axel` (that
+call requires the field to exist in every frame it's applied to and
+throws otherwise).
+```
 
 ## Parameters
 
-**field**
-    Name of the target stream in the catalog.
+**field** (`std::string_view`)
+    The field name to look for.
 
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` if at least one frame has a field named `field`; `false` if
+    no frame does.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Two frames with disjoint schemas — `has()` is `true` for a
+field that only exists in one of them.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-});
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
+auto r0 = pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}});
+auto r1 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra")})}});
 auto axel = pluss::bundle::Axel({r0, r1});
 
-auto out = axel.has();
+std::cout << std::boolalpha << axel.has("ids") << " " << axel.has("city") << " " << axel.has("zzz");
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+true true false
 ```
 
+`"ids"` only exists in frame `0` and `"city"` only in frame `1`, but
+both report `true` — `has()` only needs a single matching frame.
+
+## Notes
+
+- See the important callout above — don't treat a `true` result as
+  "every frame has this field."
+- Never throws, regardless of the answer — same contract as
+  `Registry::has()`.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"`.
+
+## See Also
+
+- [`Axel::fields`](fields.md): the operation that actually requires a
+  field to exist in every frame it touches.
+- [`Registry::has`](../registry/has.md): the single-frame equivalent
+  this method loops over internally.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="from_kindle.html">

@@ -33,7 +33,7 @@ out-of-range index, only clamping.
 The new feature's name. Must not be empty, and must not already exist on the frame —
 both throw (`"DataFrame::insert: feature name cannot be empty"` and
 `"DataFrame::insert: duplicate feature name '<name>'"` respectively). Use
-[`set_features()`](set_features.md) instead when you want to *replace* an existing
+[`assign()`](assign.md) instead when you want to *replace* an existing
 feature's values rather than add a new one.
 
 **feature_value** (`const Thread&`)
@@ -144,7 +144,7 @@ the frame's current feature count — which places `flag` at the end, exactly as
 - An out-of-range `feature_index` is silently clamped into `[0, nfeatures()]`; it is
   never a validation error on its own.
 - `name` colliding with an existing feature *is* a validation error — `insert()` never
-  overwrites an existing column; use [`set_features()`](set_features.md) for that.
+  overwrites an existing column; use [`assign()`](assign.md) for that.
 - `feature_value`'s length must match `ncases()` unless the frame currently has no
   features at all (in which case the new feature also defines the frame's case count
   going forward).
@@ -154,7 +154,7 @@ the frame's current feature count — which places `flag` at the end, exactly as
 
 - [`DataFrame::place`](place.md): position a feature relative to an existing "anchor"
   feature by name, rather than by a raw numeric index.
-- [`DataFrame::set_features`](set_features.md): replace an *existing* feature's values
+- [`DataFrame::assign`](assign.md): replace an *existing* feature's values
   in place of adding a new one.
 - [`DataFrame::drop`](drop.md): the inverse operation — remove a named feature instead
   of adding one.

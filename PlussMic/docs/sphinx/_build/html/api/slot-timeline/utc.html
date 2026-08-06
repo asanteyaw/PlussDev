@@ -34,18 +34,20 @@
 
           <div class="body" role="main">
             
-  <section id="slottimelineaccessor-utc">
+  <!-- pluss-hand-authored -->
+<section id="slottimelineaccessor-utc">
 <h1>SlotTimelineAccessor::utc<a class="headerlink" href="#slottimelineaccessor-utc" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to SlotTimelineAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlotTimelineAccessor</span><span class="o">::</span><span class="n">utc</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slot</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">SlotTimelineAccessor</span><span class="o">::</span><span class="n">utc</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Shorthand for <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz(&quot;UTC&quot;)</span></code></span></a> — relabels each value’s display
+timezone back to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> without changing the underlying instant.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -54,23 +56,57 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
-Value produced by this call.</p>
+A new slot with every value relabeled to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> display. Reading
+the result back through any further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call reflects the
+<code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> relabeling.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-02T09:40:00Z&quot;</span><span class="p">)});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">timelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">tz(&quot;America/New_York&quot;)</span></code> relabels the display timezone
+(visible on the first <code class="docutils literal notranslate"><span class="pre">fmt()</span></code> read below); a follow-up <code class="docutils literal notranslate"><span class="pre">utc()</span></code> relabels
+it back to <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>, and that too is visible on the next read — the
+instant itself never changes across either call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">)});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timelines</span><span class="p">.</span><span class="n">utc</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ny</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">tz</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NY-relabeled: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ny</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">utc</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC-relabeled: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>NY-relabeled: 2024-01-31 04:15:30
+UTC-relabeled: 2024-01-31 09:15:30
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the slot to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> slot throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>.</p></li>
+<li><p>Internally, a <code class="docutils literal notranslate"><span class="pre">Slot</span></code> stores each row’s <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> value independently
+(one scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> per row, not one shared column); the resulting
+per-row tz labels round-trip correctly through the <code class="docutils literal notranslate"><span class="pre">kindle::Stream</span></code>
+boundary every further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call goes through, the same as
+<a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotTimelineAccessor::tz</span></code></span></a>: the general form this method is a
+fixed <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> shorthand for.</p></li>
+<li><p><a class="reference internal" href="localize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlotTimelineAccessor::localize</span></code></span></a>: the operation that
+actually changes the underlying instant.</p></li>
+<li><p><a class="reference internal" href="../slot/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::tl</span></code></span></a>: the entry point this accessor is reached
+from.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tz.html">
     <span class="label">Previous</span>
@@ -81,7 +117,6 @@ Value produced by this call.</p>
     <span class="title">valid</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

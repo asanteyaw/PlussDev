@@ -417,7 +417,16 @@ pluss::kindle::Stream Slot::to_kindle() const {
               "Slot::to_kindle: slot is not stream-compatible (kind=" + slot_kind_name(profile.kind) + ")");
 
   if (profile.kind == SlotKind::Series) {
-    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Series>(values().front()));
+    // A single scalar value is stored as a 0D Series (numel() == 1, dim() ==
+    // 0) -- every kindle::Stream payload must be strictly 1D (see Thread's
+    // constructor-time checks in ThreadInternals.inc), the same invariant the
+    // N>1 path below already produces via make_series(out, {n}). reshape()
+    // is a pure metadata change here (numel is already 1), so this is exact:
+    // no dtype round-trip, no precision loss, unlike the N>1 non-Bool/Int64
+    // path's Float64 staging below.
+    if (values().size() == 1) {
+      return pluss::kindle::Stream(std::get<pluss::Series>(values().front()).reshape({1}));
+    }
 
     const auto dtype = std::get<pluss::Series>(values().front()).scalar_type();
     if (dtype == pluss::codem::ScalarType::Bool) {
@@ -448,7 +457,10 @@ pluss::kindle::Stream Slot::to_kindle() const {
   }
 
   if (profile.kind == SlotKind::Note) {
-    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Note>(values().front()));
+    // Same 0D-scalar-must-become-1D reshape as the Series branch above.
+    if (values().size() == 1) {
+      return pluss::kindle::Stream(std::get<pluss::Note>(values().front()).reshape({1}));
+    }
     std::vector<std::string> out;
     out.reserve(values().size());
     for (const auto& v : values()) out.emplace_back(std::get<pluss::Note>(v).at(0));
@@ -456,21 +468,71 @@ pluss::kindle::Stream Slot::to_kindle() const {
   }
 
   if (profile.kind == SlotKind::Timeline) {
-    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Timeline>(values().front()));
+    // Timeline has no reshape() of its own (unlike Series/Note above); its
+    // ticks_ Series does, and unsafe_ticks()/timeline_from_series() are the
+    // same public "reshape while preserving tz" pair already used to keep
+    // display-timezone labels intact across this same Slot<->Stream boundary
+    // (see slot_family_stream() above). tz() is preserved explicitly since
+    // timeline_from_series would otherwise default it back to "UTC".
+    if (values().size() == 1) {
+      const auto& t = std::get<pluss::Timeline>(values().front());
+      return pluss::kindle::Stream(pluss::codeh::ops_internal::timeline_from_series(
+          t.unsafe_ticks().reshape({1}), std::string(t.tz())));
+    }
     std::vector<std::int64_t> ticks;
     ticks.reserve(values().size());
-    for (const auto& v : values()) ticks.push_back(std::get<pluss::Timeline>(v).to_epoch_nanos_vector()[0]);
+    std::optional<std::string> tz_name;
+    for (const auto& v : values()) {
+      const auto& t = std::get<pluss::Timeline>(v);
+      ticks.push_back(t.to_epoch_nanos_vector()[0]);
+      std::string value_tz(t.tz());
+      if (!tz_name.has_value()) {
+        tz_name = std::move(value_tz);
+      } else {
+        PLUSS_CHECK(*tz_name == value_tz,
+                    std::string("Slot::to_kindle: Timeline slot values carry mismatched timezones ('") +
+                        *tz_name + "' vs '" + value_tz +
+                        "'); a Stream's Timeline column has one shared tz, so relabel with tz() "
+                        "(or localize()) to a common zone before combining");
+      }
+    }
     return pluss::kindle::Stream(pluss::timeline::from_epoch(
         ticks,
-        std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())}));
+        std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())},
+        tz_name.value_or("UTC")));
   }
 
   if (profile.kind == SlotKind::TimeIndex) {
-    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::TimeIndex>(values().front()));
+    // Same 0D-scalar reshape as the Timeline branch above, via TimeIndex's
+    // own underlying Timeline.
+    if (values().size() == 1) {
+      const auto& tl = std::get<pluss::TimeIndex>(values().front()).timeline();
+      auto reshaped = pluss::codeh::ops_internal::timeline_from_series(
+          tl.unsafe_ticks().reshape({1}), std::string(tl.tz()));
+      return pluss::kindle::Stream(pluss::make_timeindex(reshaped, false));
+    }
     std::vector<std::int64_t> ticks;
     ticks.reserve(values().size());
-    for (const auto& v : values()) ticks.push_back(std::get<pluss::TimeIndex>(v).timeline().to_epoch_nanos_vector()[0]);
-    return pluss::kindle::Stream(pluss::make_timeindex(ticks, false));
+    std::optional<std::string> tz_name;
+    for (const auto& v : values()) {
+      const auto& tl = std::get<pluss::TimeIndex>(v).timeline();
+      ticks.push_back(tl.to_epoch_nanos_vector()[0]);
+      std::string value_tz(tl.tz());
+      if (!tz_name.has_value()) {
+        tz_name = std::move(value_tz);
+      } else {
+        PLUSS_CHECK(*tz_name == value_tz,
+                    std::string("Slot::to_kindle: TimeIndex slot values carry mismatched timezones ('") +
+                        *tz_name + "' vs '" + value_tz +
+                        "'); a Stream's TimeIndex column has one shared tz, so relabel with tz() "
+                        "(or localize()) to a common zone before combining");
+      }
+    }
+    auto merged = pluss::timeline::from_epoch(
+        ticks,
+        std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())},
+        tz_name.value_or("UTC"));
+    return pluss::kindle::Stream(pluss::make_timeindex(merged, false));
   }
 
   throw pluss::Error("Slot::to_kindle: unsupported slot kind");

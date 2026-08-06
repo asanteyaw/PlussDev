@@ -1126,6 +1126,7 @@ std::string html_shell_(std::string_view title,
     table {{
       width: 100%;
       height: 400px;
+      margin: 0;
       border-collapse: collapse;
       border-radius: 6px;
       overflow: hidden;

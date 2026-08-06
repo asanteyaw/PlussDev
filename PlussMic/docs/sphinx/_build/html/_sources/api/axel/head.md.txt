@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Axel::head
 
 [Back to Axel API Reference](../../axel_api_reference)
@@ -5,46 +7,80 @@
 ## Signature
 
 ```cpp
-Axel::head(std::int64_t n) -> Axel
+Axel Axel::head(std::int64_t n) const
 ```
 
 ## What It Does
 
-Returns the first `n` registries from the axel depth axis.
+Returns the first `n` registry frames (depth-wise), clamped to
+`[0, depth()]`. Equivalent to `slice(0, n)` after clamping.
 
 ## Parameters
 
-**n**
-    Number of rows, entries, or depth items to keep in the preview.
+**n** (`std::int64_t`)
+    The number of leading frames to keep. Values greater than `depth()`
+    are clamped down to `depth()`; negative values are clamped up to
+    `0`.
 
 ## Returns
 
 `Axel`
-    Value produced by this call.
+    A new axel holding the first (clamped) `n` frames. If
+    [`labels()`](labels.md) is engaged, the label `Slot` is sliced
+    alongside the frames.
 
 ## Examples
 
-Example 1. Inspect the first part of the current object without changing the source data.
+Example 1. Keep the first two frames of a five-frame `Axel`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(4)})}}),
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-});
-auto axel = pluss::bundle::Axel({r0, r1});
-
-auto out = axel.head(1);
+auto out = axel.head(2);
+std::cout << "depth=" << out.depth() << " last_id="
+          << std::get<pluss::Series>(out.registry(out.depth() - 1).fields("ids").at(0)).to_vec<std::int64_t>()[0];
 ```
 
 ### Output
 
 ```text
-depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
-depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
+depth=2 last_id=1
 ```
 
+Example 2. Asking for more frames than exist clamps to `depth()`
+instead of throwing.
+
+```cpp
+auto axel = pluss::bundle::Axel({
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
+    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+});
+auto out = axel.head(100);
+std::cout << out.depth();
+```
+
+### Output
+
+```text
+2
+```
+
+## Notes
+
+- `n` is silently clamped, never throws for an out-of-range value.
+- Requires `defined()` — an undefined handle throws
+  `"Axel: undefined handle"` (via the underlying `slice()` call).
+
+## See Also
+
+- [`Axel::tail`](tail.md): the same clamped-count idiom, from the end.
+- [`Axel::slice`](slice.md): the general-purpose range selector `head()`
+  delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="has.html">
