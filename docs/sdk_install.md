@@ -39,7 +39,7 @@ rm -rf build-torch-sdk
 cmake -S . -B build-torch-sdk \
   -DPLUSS_ENABLE_TORCH=ON \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \
+  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \ 
   -DPKG_CONFIG_EXECUTABLE="$CONDA_PREFIX/bin/pkg-config"
   
 cmake --build build-torch-sdk --target pluss_sdk_stage --parallel "$(sysctl -n hw.logicalcpu)"

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "CodeM/core/Errors.h"
+#include "bundle/Axel.h"
 #include "kindle/Archive.h"
 #include "table/display/Display.h"
 

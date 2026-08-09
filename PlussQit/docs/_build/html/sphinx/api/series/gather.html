@@ -48,59 +48,63 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Collects one element per position in <code class="docutils literal notranslate"><span class="pre">index</span></code>, choosing which source element along
-<code class="docutils literal notranslate"><span class="pre">dim</span></code> each output position pulls from. Every dimension except <code class="docutils literal notranslate"><span class="pre">dim</span></code> is walked
-positionally in lockstep between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code>; only along <code class="docutils literal notranslate"><span class="pre">dim</span></code> does <code class="docutils literal notranslate"><span class="pre">index</span></code>’s
-value pick which source row/column/… to read.</p>
-<p>For a 2-D <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code>, this is:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out[i][j] = self[i][index[i][j]]
-</pre></div>
-</div>
-<p>and symmetrically for <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out[i][j] = self[index[i][j]][j]
-</pre></div>
-</div>
-<p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select</span></code></span></a> is the special case of <code class="docutils literal notranslate"><span class="pre">gather</span></code> where the same
-index list applies to <em>every</em> row (or column) uniformly — <code class="docutils literal notranslate"><span class="pre">gather</span></code> is strictly more
-general, since <code class="docutils literal notranslate"><span class="pre">index</span></code> can vary per row.</p>
+<p>Reads values from <code class="docutils literal notranslate"><span class="pre">self</span></code> by looking up positions along one chosen axis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> is easiest to understand as “positional alignment everywhere except
+one axis.” Along every axis other than <code class="docutils literal notranslate"><span class="pre">dim</span></code>, <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code> move in
+lockstep. Along <code class="docutils literal notranslate"><span class="pre">dim</span></code>, the integer stored in <code class="docutils literal notranslate"><span class="pre">index</span></code> decides which source
+position to read.</p>
+<p>That gives <code class="docutils literal notranslate"><span class="pre">gather()</span></code> a different role from <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select</span></code></span></a>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index_select()</span></code> reuses one index list everywhere</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> can vary the lookup pattern from row to row, column to column, or
+more generally from lane to lane</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>Which axis <code class="docutils literal notranslate"><span class="pre">index</span></code>’s values are looked up along. Every other axis is matched
-positionally between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code> (<code class="docutils literal notranslate"><span class="pre">index</span></code>’s shape must match <code class="docutils literal notranslate"><span class="pre">self</span></code>’s shape
-except possibly along <code class="docutils literal notranslate"><span class="pre">dim</span></code>).</p>
+<p>The axis along which lookup happens.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">==</span> <span class="pre">1</span></code> for a 2-D series, then each output position chooses a column from
+its own row. If <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">==</span> <span class="pre">0</span></code>, each output position chooses a row for its own
+column slot.</p>
 <p><strong>index</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
-<p>Integer indices into <code class="docutils literal notranslate"><span class="pre">self</span></code> along <code class="docutils literal notranslate"><span class="pre">dim</span></code>. <code class="docutils literal notranslate"><span class="pre">index</span></code>’s values must be in
-<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">self.sizes()[dim])</span></code>. Indices may repeat — see the Gradient section for what
-that means for the backward pass.</p>
+<p>Integer positions to read from <code class="docutils literal notranslate"><span class="pre">self</span></code> along <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</p>
+<p>Important constraints:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> must be integral</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> does not broadcast the way binary elementwise ops do</p></li>
+<li><p>every non-<code class="docutils literal notranslate"><span class="pre">dim</span></code> axis must already line up positionally with <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
+<li><p>repeated positions are allowed</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> with <code class="docutils literal notranslate"><span class="pre">index</span></code>’s shape, where <code class="docutils literal notranslate"><span class="pre">out[...,</span> <span class="pre">j,</span> <span class="pre">...]</span> <span class="pre">=</span> <span class="pre">self[...,</span> <span class="pre">index[...,</span> <span class="pre">j,</span> <span class="pre">...],</span> <span class="pre">...]</span></code>
-(the substitution happening only along <code class="docutils literal notranslate"><span class="pre">dim</span></code>).</p>
+A new series with the same shape as <code class="docutils literal notranslate"><span class="pre">index</span></code>, filled from <code class="docutils literal notranslate"><span class="pre">self</span></code> according
+to the requested lookup positions.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">gather</span></code> is differentiable in <code class="docutils literal notranslate"><span class="pre">self</span></code>. The backward pass is a <code class="docutils literal notranslate"><span class="pre">scatter_add</span></code>: each
-output position’s incoming gradient is added back onto the exact source position
-<code class="docutils literal notranslate"><span class="pre">gather</span></code> read it from.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Repeated indices sum their gradient, they don’t overwrite it
-If <code class="docutils literal notranslate"><span class="pre">index</span></code> reads the same source position more than once, that position’s gradient
-is the <strong>sum</strong> of every output position that read it — not just the last one, and
-not split between them. See Example 2.</p>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> is differentiable in <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>Its backward is a <code class="docutils literal notranslate"><span class="pre">scatter_add</span></code>: every output position sends its incoming
+gradient back to the exact source position that supplied its value.</p>
+<p>That means repeated indices do not overwrite one another in the backward pass.
+They accumulate.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> on a 2×3 input: each output row picks two columns from the
-same-numbered input row, independently per row.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="p">);</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> means “for each row, pick these columns.”</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">gather_cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gather_cols</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
@@ -110,54 +114,67 @@ data=[[1, 3],
   [5, 4]]
 </pre></div>
 </div>
-<p>Row 0 of <code class="docutils literal notranslate"><span class="pre">index</span></code> is <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2]</span></code>, so row 0 of the output is <code class="docutils literal notranslate"><span class="pre">input[0][0],</span> <span class="pre">input[0][2]</span></code>
-= <code class="docutils literal notranslate"><span class="pre">1,</span> <span class="pre">3</span></code>. Row 1 of <code class="docutils literal notranslate"><span class="pre">index</span></code> is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">0]</span></code>, so row 1 of the output is
-<code class="docutils literal notranslate"><span class="pre">input[1][1],</span> <span class="pre">input[1][0]</span></code> = <code class="docutils literal notranslate"><span class="pre">5,</span> <span class="pre">4</span></code> — each row’s index list is independent, which
-is exactly what distinguishes <code class="docutils literal notranslate"><span class="pre">gather</span></code> from <code class="docutils literal notranslate"><span class="pre">index_select</span></code>.</p>
-<p>Example 2. Gradient with a repeated index: position <code class="docutils literal notranslate"><span class="pre">0</span></code> is read twice, position <code class="docutils literal notranslate"><span class="pre">1</span></code>
-never.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">input</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code> asked for columns <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>. Row <code class="docutils literal notranslate"><span class="pre">1</span></code> asked for columns <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+That row-specific variability is exactly why <code class="docutils literal notranslate"><span class="pre">gather()</span></code> exists.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code> means “for each column slot, pick which row to read.”</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">gather_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
+<span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;out=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;input.sensitivity()=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">gather_rows</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 5, 3],
+  [4, 2, 6]]
+</pre></div>
+</div>
+<p>The axis toggle changes the meaning completely even though the source table is
+the same.</p>
+<p>Example 3. Repeated indices accumulate gradient on the source position they
+read from more than once.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="n">input</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">repeated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">gathered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">repeated</span><span class="p">);</span>
+<span class="n">gathered</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;out=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">gathered</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[10, 10, 30]
-input.sensitivity()=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2, 0, 1]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">index</span> <span class="pre">=</span> <span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">2]</span></code> reads position <code class="docutils literal notranslate"><span class="pre">0</span></code> twice (into output positions 0 and 1) and
-position <code class="docutils literal notranslate"><span class="pre">2</span></code> once; position <code class="docutils literal notranslate"><span class="pre">1</span></code> is never read. <code class="docutils literal notranslate"><span class="pre">out.sum()</span></code> gives every output
-position gradient <code class="docutils literal notranslate"><span class="pre">1</span></code>, so position <code class="docutils literal notranslate"><span class="pre">0</span></code>’s two reads each contribute <code class="docutils literal notranslate"><span class="pre">1</span></code>, summing to
-<code class="docutils literal notranslate"><span class="pre">2</span></code> — not <code class="docutils literal notranslate"><span class="pre">1</span></code>, and not <code class="docutils literal notranslate"><span class="pre">0.5</span></code> each. Position <code class="docutils literal notranslate"><span class="pre">1</span></code>, never read, correctly gets <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> was read twice, so it receives gradient <code class="docutils literal notranslate"><span class="pre">2</span></code>. Position <code class="docutils literal notranslate"><span class="pre">1</span></code> was
+never read, so it receives <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">gather</span></code>’s <code class="docutils literal notranslate"><span class="pre">index</span></code> must match <code class="docutils literal notranslate"><span class="pre">self</span></code>’s shape on every axis except <code class="docutils literal notranslate"><span class="pre">dim</span></code> — it does
-not broadcast the way <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum</span></code></span></a>/<a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">minimum</span></code></span></a>’s
-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-argument overloads do.</p></li>
-<li><p>Repeated indices are not an error; they just mean that source position’s
-gradient accumulates from every output position that read it (Example 2).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> is the more general indexed-read primitive.</p></li>
+<li><p>If the same index list should apply uniformly everywhere, use
+<a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select</span></code></span></a> instead.</p></li>
+<li><p>The output shape follows <code class="docutils literal notranslate"><span class="pre">index</span></code>, not <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_select</span></code></span></a>: the simpler “same index list for every
-row” special case of <code class="docutils literal notranslate"><span class="pre">gather</span></code>.</p></li>
-<li><p><a class="reference internal" href="copy_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::copy_</span></code></span></a>: the typical way a <code class="docutils literal notranslate"><span class="pre">gather</span></code>-consuming parameter gets
-its initial values.</p></li>
+<li><p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_select</span></code></span></a>: the uniform-index special case.</p></li>
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::take</span></code></span></a>: flat linear-index reading rather than axis-based
+gathering.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="copy_.html">

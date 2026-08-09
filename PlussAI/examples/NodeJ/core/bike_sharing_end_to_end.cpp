@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     AssessOptions assess_options{};
     assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
-    auto linear_workflow = lymph::linear_factory::linear_regression(LinearFamilyOptions{
+    auto linear_workflow = lymph::models::linear_regression(LinearFamilyOptions{
         .objective = LinearObjective::LeastSquares,
         .regularization = RegularizationKind::None,
         .regularization_strength = 0.0,
@@ -108,12 +108,13 @@ int main(int argc, char** argv) {
     const auto linear_metrics = linear_workflow.assess(test_x, test_y, assess_options);
     std::cout << "linear test metrics [rmse, r2, mae]: " << linear_metrics.rmse << " " << linear_metrics.r2 << " "
               << linear_metrics.mae << "\n";
-    std::cout << "linear params: intercept=" << linear_workflow.intercept << " coeff=" << linear_workflow.coeff << "\n";
+    std::cout << "linear params: intercept=" << linear_workflow.intercept()
+              << " coeff=" << linear_workflow.coeff() << "\n";
 
     const Series linear_pred_series = linear_workflow.infer(test_x);
     const fs::path linear_model_path = model_dir / "bike_sharing_linear.bin";
     linear_workflow.save(linear_model_path.string(), train_x, train_y, train_options);
-    const auto linear_restored = lymph::WorkflowModel::load(linear_model_path.string());
+    const auto linear_restored = lymph::Model::load(linear_model_path.string());
     const Series linear_pred_restored_series = linear_restored.infer(test_x);
     const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
 
@@ -137,7 +138,7 @@ int main(int argc, char** argv) {
         .save_pdf((out_dir / "bike_residual_hist_linear.pdf").string());
     std::cout << "saved model (linear): " << linear_model_path << "\n";
 
-    auto tree_workflow = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
+    auto tree_workflow = lymph::models::decision_tree_regressor(TreeFamilyOptions{
         .criterion = TreeCriterion::Mse,
         .max_depth = 18,
         .min_samples_leaf = 8,
@@ -152,7 +153,7 @@ int main(int argc, char** argv) {
     const Series tree_pred_series = tree_workflow.infer(test_x);
     const fs::path tree_model_path = model_dir / "bike_sharing_tree.bin";
     tree_workflow.save(tree_model_path.string(), train_x, train_y, train_options);
-    const auto tree_restored = lymph::WorkflowModel::load(tree_model_path.string());
+    const auto tree_restored = lymph::Model::load(tree_model_path.string());
     const Series tree_pred_restored_series = tree_restored.infer(test_x);
 
     const Series tree_pred = tree_pred_series.to(pluss::pCPU, ScalarType::Float64).reshape({tree_pred_series.numel()});

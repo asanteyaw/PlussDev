@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=55000b1c"></script>
+    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Archive::catalog" href="catalog.html" />
-    <link rel="prev" title="Archive::bfill" href="bfill.html" />
+    <link rel="prev" title="Archive::bundelize" href="bundelize.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -37,45 +37,64 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e499216c9918 -->
+<!-- pluss-signature-hash: ecbe33da4857 -->
 <section id="archive-cast">
 <h1>Archive::cast<a class="headerlink" href="#archive-cast" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../archive_api_reference.html"><span class="doc std std-doc">Back to Archive API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Archive</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Archive</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Archive</span><span class="o">::</span><span class="n">cast</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ArchiveCastAccessor</span>
+<span class="n">Archive</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ArchiveCastAccessor</span>
+<span class="n">Archive</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Archive</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Casts <strong>every</strong> stream in <strong>every</strong> catalog to the same target payload kind, in one call —
-delegating to each catalog’s own <a class="reference internal" href="../catalog/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::cast()</span></code></span></a>, applied uniformly
-regardless of each stream’s current kind.</p>
+<p>Archive casting follows the same two-surface pattern as catalog casting:</p>
+<ul class="simple">
+<li><p>accessor-first: <code class="docutils literal notranslate"><span class="pre">archive.cast().series()</span></code> / <code class="docutils literal notranslate"><span class="pre">.note()</span></code> / <code class="docutils literal notranslate"><span class="pre">.timeline()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code></p></li>
+<li><p>direct root overload: <code class="docutils literal notranslate"><span class="pre">archive.cast(target,</span> <span class="pre">options)</span></code></p></li>
+</ul>
+<p>Both cast <strong>every</strong> stream in <strong>every</strong> catalog to the same target payload kind by
+delegating to each catalog’s own <a class="reference internal" href="../catalog/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::cast()</span></code></span></a>, applied
+uniformly regardless of each stream’s current kind.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Preferred surface
+Prefer the accessor form in new code: <code class="docutils literal notranslate"><span class="pre">archive.cast().timeline()</span></code> reads better than
+passing an explicit target enum at the root. The direct root overload still exists and
+returns the same result.</p>
+</div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Applies to every stream in every catalog uniformly
 Same behavior as <a class="reference internal" href="../catalog/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::cast()</span></code></span></a>, just archive-wide: <code class="docutils literal notranslate"><span class="pre">cast()</span></code>
 doesn’t skip streams that are already the target kind, or streams for which the target
 doesn’t make obvious sense — it calls <code class="docutils literal notranslate"><span class="pre">cast()</span></code> on all of them, in every catalog. If you
-only want to cast specific streams, use <a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::keys(names)</span></code></span></a><code class="docutils literal notranslate"><span class="pre">.cast()</span></code> instead.</p>
+only want to cast specific streams, use <a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::keys(names)</span></code></span></a> followed by
+<code class="docutils literal notranslate"><span class="pre">.cast()</span></code> on the selection instead.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::ThreadCastTarget</span></code>)
-The payload kind to cast every stream to — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::ThreadCastOptions&amp;</span></code>, optional)
-Conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> picks the numeric dtype for a <code class="docutils literal notranslate"><span class="pre">Series</span></code> target;
-<code class="docutils literal notranslate"><span class="pre">invalid</span></code> chooses parse-failure behavior. See <a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a> for
-the full breakdown.</p>
+For the accessor overloads, stores conversion policy on the accessor before you pick
+the terminal target.</p>
+<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::ThreadCastTarget</span></code>)
+For the direct root overload, the payload kind to cast every stream to — <code class="docutils literal notranslate"><span class="pre">Series</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::ThreadCastOptions&amp;</span></code>, optional)
+For the direct root overload, conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> picks the numeric
+dtype for a <code class="docutils literal notranslate"><span class="pre">Series</span></code> target; <code class="docutils literal notranslate"><span class="pre">invalid</span></code> chooses parse-failure behavior. See
+<a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a> for the full breakdown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Archive</span></code>
-A new archive, same depth and depth labels as the receiver, with every stream in every
-catalog cast to <code class="docutils literal notranslate"><span class="pre">target</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ArchiveCastAccessor</span></code> / <code class="docutils literal notranslate"><span class="pre">Archive</span></code>
+The no-target overloads return an accessor; the target overload returns the fully
+cast archive directly.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -89,7 +108,7 @@ catalog.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Archive</span><span class="p">({</span><span class="n">c0</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">series</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">catalog</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -113,6 +132,8 @@ score                    | Series       | Series[float64]  | 2       | [1.5, 2.5
 <ul class="simple">
 <li><p>Applies to every stream in every catalog, unconditionally — see the important callout
 above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Archive::cast(target,</span> <span class="pre">options)</span></code> and <code class="docutils literal notranslate"><span class="pre">Archive::cast(options).series()</span></code> are equivalent
+in result; they differ only in surface style.</p></li>
 <li><p>Requires a defined archive; throws <code class="docutils literal notranslate"><span class="pre">&quot;Archive:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise.</p></li>
 <li><p>Follows the same per-target conversion rules as
 <a class="reference internal" href="../catalog/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::cast</span></code></span></a>/<a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a>.</p></li>
@@ -178,6 +199,9 @@ every catalog.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
@@ -187,7 +211,7 @@ every catalog.</p></li>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../archive_api_reference.html">Archive API Reference</a><ul>
-      <li>Previous: <a href="bfill.html" title="previous chapter">Archive::bfill</a></li>
+      <li>Previous: <a href="bundelize.html" title="previous chapter">Archive::bundelize</a></li>
       <li>Next: <a href="catalog.html" title="next chapter">Archive::catalog</a></li>
   </ul></li>
   </ul></li>

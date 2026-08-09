@@ -130,6 +130,8 @@
   // Typed wrappers for `add_` (staged migration off variadic surface).
   Series& add_(const Series& rhs) const { return pluss::codem::_compat::invoke_("add_", *this, {rhs, 1.0}); }
 
+  // `add_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `addbmm` (staged migration off variadic surface).
   Series addbmm(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const { return pluss::codem::_compat::invoke("addbmm", *this, {batch1, batch2, beta, alpha}); }
 
@@ -609,6 +611,8 @@
   Series& div_(const Series& rhs) const { return pluss::codem::_compat::invoke_("div_", *this, {rhs}); }
 
   Series& div_(double rhs) const { return pluss::codem::_compat::invoke_("div_", *this, {rhs}); }
+
+  // `div_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `divide` (staged migration off variadic surface).
   Series divide(const Series& rhs) const { return pluss::codem::_compat::invoke("divide", *this, {rhs}); }
@@ -1251,6 +1255,8 @@
   // Typed wrappers for `mm` (staged migration off variadic surface).
   Series mm(const Series& rhs) const { return pluss::codem::_compat::invoke("mm", *this, {rhs}); }
 
+  // `mod_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `mode` (staged migration off variadic surface).
   Series mode() const { return pluss::codem::_compat::invoke("mode", *this); }
 
@@ -1284,6 +1290,8 @@
   Series& mul_(const Series& rhs) const { return pluss::codem::_compat::invoke_("mul_", *this, {rhs}); }
 
   Series& mul_(double rhs) const { return pluss::codem::_compat::invoke_("mul_", *this, {rhs}); }
+
+  // `mul_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `multinomial` (staged migration off variadic surface).
   Series multinomial() const { return pluss::codem::_compat::invoke("multinomial", *this); }
@@ -1839,6 +1847,8 @@
 
   // Typed wrappers for `sub_` (staged migration off variadic surface).
   Series& sub_(const Series& rhs) const { return pluss::codem::_compat::invoke_("sub_", *this, {rhs, 1.0}); }
+
+  // `sub_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `subtract` (staged migration off variadic surface).
   Series subtract(const Series& rhs) const { return pluss::codem::_compat::invoke("subtract", *this, {rhs}); }

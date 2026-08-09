@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 255e8f05fef0 -->
 
 # Slot::take
 

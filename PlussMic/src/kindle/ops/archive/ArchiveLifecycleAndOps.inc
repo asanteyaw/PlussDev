@@ -362,3 +362,8 @@ pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {
   }
   return pluss::table::Atlas(std::move(frames), std::move(labels));
 }
+
+pluss::bundle::Axel Archive::bundelize() const {
+  PLUSS_CHECK(defined(), "Archive::bundelize: archive undefined");
+  return pluss::bundle::Axel::from_kindle(*this);
+}

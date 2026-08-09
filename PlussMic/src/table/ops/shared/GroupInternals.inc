@@ -17,14 +17,20 @@ pluss::Series group_bool_mask_(const std::vector<bool>& values,
   return out;
 }
 
-Thread group_i64_thread_(const std::vector<std::int64_t>& values) {
+pluss::Series group_i64_series_(const std::vector<std::int64_t>& values,
+                                pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
   auto out = pluss::Series::empty(
       {static_cast<std::int64_t>(values.size())},
-      pluss::codem::ScalarType::Int64);
+      pluss::codem::ScalarType::Int64,
+      platform);
   if (!values.empty()) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
-  return Thread(out);
+  return out;
+}
+
+Thread group_i64_thread_(const std::vector<std::int64_t>& values) {
+  return Thread(group_i64_series_(values));
 }
 
 Thread group_f64_thread_(const std::vector<double>& values,
@@ -79,24 +85,242 @@ std::string group_key_name_(std::size_t index, const Thread& key) {
   return index == 0 ? std::string("key") : fmt::format("key_{}", index + 1);
 }
 
-std::string group_row_part_(const Thread& value, std::int64_t row) {
-  if (!detail::valid_at(value, row)) {
-    return std::string("__NULL__");
-  }
-  return thread_scalar_string_at(value, row);
+std::size_t group_hash_mix_(std::size_t seed, std::size_t value) {
+  return seed ^ (value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U));
 }
 
-std::string group_row_token_(std::span<const Thread> keys, std::int64_t row) {
-  std::string token;
+constexpr std::size_t kGroupNullHash_ = 0x9ae16a3b2f90404fULL;
+
+int group_compare_key_rows_(std::span<const Thread> keys,
+                            std::int64_t lhs_row,
+                            std::int64_t rhs_row,
+                            bool nulls_last = true) {
   for (const auto& key : keys) {
-    const auto part = group_row_part_(key, row);
-    token.append(part);
-    token.push_back('\x1E');
+    const auto cmp = detail::compare_rows(key, lhs_row, rhs_row, nulls_last);
+    if (cmp != 0) {
+      return cmp;
+    }
   }
-  return token;
+  return 0;
+}
+
+std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
+                                                   std::int64_t nrows) {
+  std::vector<std::size_t> row_hashes(static_cast<std::size_t>(nrows), 0);
+  for (const auto& key : keys) {
+    switch (key.kind()) {
+      case ThreadKind::Note: {
+        const auto& note = key.as_note();
+        for (std::int64_t row = 0; row < nrows; ++row) {
+          const auto idx = static_cast<std::size_t>(row);
+          row_hashes[idx] = group_hash_mix_(
+              row_hashes[idx],
+              detail::valid_at(key, row)
+                  ? std::hash<std::string_view>{}(note.at(row))
+                  : kGroupNullHash_);
+        }
+        break;
+      }
+      case ThreadKind::Timeline: {
+        const auto ticks = key.as_timeline().epoch_nanos();
+        const auto* raw = reinterpret_cast<const std::int64_t*>(ticks.raw_data());
+        for (std::int64_t row = 0; row < nrows; ++row) {
+          const auto idx = static_cast<std::size_t>(row);
+          row_hashes[idx] = group_hash_mix_(
+              row_hashes[idx],
+              detail::valid_at(key, row)
+                  ? std::hash<std::int64_t>{}(raw[idx])
+                  : kGroupNullHash_);
+        }
+        break;
+      }
+      case ThreadKind::TimeIndex: {
+        const auto ticks = key.as_timeindex().timeline().epoch_nanos();
+        const auto* raw = reinterpret_cast<const std::int64_t*>(ticks.raw_data());
+        for (std::int64_t row = 0; row < nrows; ++row) {
+          const auto idx = static_cast<std::size_t>(row);
+          row_hashes[idx] = group_hash_mix_(
+              row_hashes[idx],
+              detail::valid_at(key, row)
+                  ? std::hash<std::int64_t>{}(raw[idx])
+                  : kGroupNullHash_);
+        }
+        break;
+      }
+      case ThreadKind::Series: {
+        const auto series = key.as_series();
+        switch (series.scalar_type()) {
+          case pluss::codem::ScalarType::Bool: {
+            const auto* raw = reinterpret_cast<const bool*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::uint8_t>{}(raw[idx] ? 1U : 0U)
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::Int8: {
+            const auto* raw = reinterpret_cast<const std::int8_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::int8_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::UInt8: {
+            const auto* raw = reinterpret_cast<const std::uint8_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::uint8_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::Int16: {
+            const auto* raw = reinterpret_cast<const std::int16_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::int16_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::UInt16: {
+            const auto* raw = reinterpret_cast<const std::uint16_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::uint16_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::Int32: {
+            const auto* raw = reinterpret_cast<const std::int32_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::int32_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::UInt32: {
+            const auto* raw = reinterpret_cast<const std::uint32_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::uint32_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::Int64: {
+            const auto* raw = reinterpret_cast<const std::int64_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::int64_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::UInt64: {
+            const auto* raw = reinterpret_cast<const std::uint64_t*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::uint64_t>{}(raw[idx])
+                      : kGroupNullHash_);
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::Float32: {
+            const auto* raw = reinterpret_cast<const float*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              if (!detail::valid_at(key, row)) {
+                row_hashes[idx] = group_hash_mix_(row_hashes[idx], kGroupNullHash_);
+                continue;
+              }
+              std::uint32_t bits = 0;
+              std::memcpy(&bits, raw + idx, sizeof(bits));
+              row_hashes[idx] = group_hash_mix_(row_hashes[idx], std::hash<std::uint32_t>{}(bits));
+            }
+            break;
+          }
+          case pluss::codem::ScalarType::Float64: {
+            const auto* raw = reinterpret_cast<const double*>(series.raw_data());
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              if (!detail::valid_at(key, row)) {
+                row_hashes[idx] = group_hash_mix_(row_hashes[idx], kGroupNullHash_);
+                continue;
+              }
+              std::uint64_t bits = 0;
+              std::memcpy(&bits, raw + idx, sizeof(bits));
+              row_hashes[idx] = group_hash_mix_(row_hashes[idx], std::hash<std::uint64_t>{}(bits));
+            }
+            break;
+          }
+          default:
+            for (std::int64_t row = 0; row < nrows; ++row) {
+              const auto idx = static_cast<std::size_t>(row);
+              row_hashes[idx] = group_hash_mix_(
+                  row_hashes[idx],
+                  detail::valid_at(key, row)
+                      ? std::hash<std::string>{}(thread_scalar_string_at(key, row))
+                      : kGroupNullHash_);
+            }
+            break;
+        }
+        break;
+      }
+    }
+  }
+  return row_hashes;
 }
 
 using GroupState_ = detail::GroupStateCache;
+
+struct GroupFactorization_ {
+  std::vector<bool> included{};
+  bool all_included{true};
+  std::vector<std::int64_t> included_rows{};
+  std::vector<std::int64_t> group_ids{};
+  std::vector<std::int64_t> included_group_ids{};
+  std::vector<std::int64_t> first_rows{};
+  std::int64_t ngroups{0};
+  std::vector<std::int64_t> order{};
+  std::vector<std::int64_t> order_positions{};
+  std::vector<std::int64_t> ordered_first_rows{};
+  std::vector<std::int64_t> broadcast_positions{};
+  std::vector<std::int64_t> group_offsets{};
+  std::vector<std::int64_t> grouped_rows{};
+};
 
 Thread group_count_thread_(const GroupState_& state,
                            std::optional<Thread> value = std::nullopt);
@@ -105,6 +329,124 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state);
 Thread group_numeric_thread_(const Thread& value,
                              const GroupState_& state,
                              GroupOp op);
+Thread reorder_group_thread_(const Thread& value, const GroupState_& state);
+
+template <class Token>
+struct GroupDistinctKey_ {
+  std::int64_t group_id{};
+  Token token{};
+
+  bool operator==(const GroupDistinctKey_& other) const {
+    return group_id == other.group_id && token == other.token;
+  }
+};
+
+template <class Token>
+struct GroupDistinctKeyHash_ {
+  std::size_t operator()(const GroupDistinctKey_<Token>& key) const {
+    const auto lhs = std::hash<std::int64_t>{}(key.group_id);
+    const auto rhs = std::hash<Token>{}(key.token);
+    return lhs ^ (rhs + 0x9e3779b97f4a7c15ULL + (lhs << 6U) + (lhs >> 2U));
+  }
+};
+
+template <class TokenFn>
+Thread group_ndistinct_tokens_(const GroupState_& state,
+                               TokenFn&& token_at) {
+  using Token = std::decay_t<decltype(token_at(std::declval<std::int64_t>()))>;
+
+  std::vector<std::int64_t> counts(static_cast<std::size_t>(state.ngroups), 0);
+  std::unordered_set<GroupDistinctKey_<Token>, GroupDistinctKeyHash_<Token>> seen;
+  seen.reserve(static_cast<std::size_t>(
+      std::max<std::int64_t>(16, static_cast<std::int64_t>(state.included_rows.size()))));
+  for (std::size_t i = 0; i < state.included_rows.size(); ++i) {
+    const auto row = state.included_rows[i];
+    const auto group_id = state.included_group_ids[i];
+    if (seen.insert(GroupDistinctKey_<Token>{.group_id = group_id, .token = token_at(row)}).second) {
+      ++counts[static_cast<std::size_t>(group_id)];
+    }
+  }
+  return reorder_group_thread_(group_i64_thread_(counts), state);
+}
+
+Thread group_ndistinct_series_thread_(const pluss::Series& series,
+                                      const GroupState_& state) {
+  switch (series.scalar_type()) {
+    case pluss::codem::ScalarType::Bool: {
+      const auto* raw = reinterpret_cast<const bool*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint8_t {
+        return raw[static_cast<std::size_t>(row)] ? 1U : 0U;
+      });
+    }
+    case pluss::codem::ScalarType::Int8: {
+      const auto* raw = reinterpret_cast<const std::int8_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int8_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::UInt8: {
+      const auto* raw = reinterpret_cast<const std::uint8_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint8_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::Int16: {
+      const auto* raw = reinterpret_cast<const std::int16_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int16_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::UInt16: {
+      const auto* raw = reinterpret_cast<const std::uint16_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint16_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::Int32: {
+      const auto* raw = reinterpret_cast<const std::int32_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int32_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::UInt32: {
+      const auto* raw = reinterpret_cast<const std::uint32_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint32_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::Int64: {
+      const auto* raw = reinterpret_cast<const std::int64_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int64_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::UInt64: {
+      const auto* raw = reinterpret_cast<const std::uint64_t*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint64_t {
+        return raw[static_cast<std::size_t>(row)];
+      });
+    }
+    case pluss::codem::ScalarType::Float32: {
+      const auto* raw = reinterpret_cast<const float*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint32_t {
+        std::uint32_t bits = 0;
+        std::memcpy(&bits, raw + static_cast<std::size_t>(row), sizeof(bits));
+        return bits;
+      });
+    }
+    case pluss::codem::ScalarType::Float64: {
+      const auto* raw = reinterpret_cast<const double*>(series.raw_data());
+      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint64_t {
+        std::uint64_t bits = 0;
+        std::memcpy(&bits, raw + static_cast<std::size_t>(row), sizeof(bits));
+        return bits;
+      });
+    }
+    default:
+      break;
+  }
+  PLUSS_FAIL("group ndistinct: unsupported Series scalar type");
+}
 
 std::string group_op_token_(GroupOp op) {
   switch (op) {
@@ -141,19 +483,15 @@ std::string group_value_output_name_(std::string_view value_name, GroupOp op) {
   return fmt::format("{}_{}", value_name, op_name);
 }
 
-GroupState_ build_group_state_(std::span<const Thread> keys,
-                               std::span<const std::string> names,
-                               std::int64_t nrows,
-                               const ThreadGroupOptions& options,
-                               std::string_view where) {
+GroupFactorization_ factor_group_keys_(std::span<const Thread> keys,
+                                       std::int64_t nrows,
+                                       const ThreadGroupOptions& options,
+                                       std::string_view where) {
   PLUSS_CHECK(!keys.empty(), std::string(where) + ": expected at least one key");
-  PLUSS_CHECK(keys.size() == names.size(), std::string(where) + ": key/name size mismatch");
 
-  GroupState_ state;
-  state.keys.assign(keys.begin(), keys.end());
-  state.names.assign(names.begin(), names.end());
-  state.included.assign(static_cast<std::size_t>(nrows), true);
-  state.group_ids.assign(static_cast<std::size_t>(nrows), -1);
+  GroupFactorization_ factor;
+  factor.included.assign(static_cast<std::size_t>(nrows), true);
+  factor.group_ids.assign(static_cast<std::size_t>(nrows), -1);
 
   for (const auto& key : keys) {
     PLUSS_CHECK(key.defined(), std::string(where) + ": key thread is undefined");
@@ -163,80 +501,137 @@ GroupState_ build_group_state_(std::span<const Thread> keys,
     }
     const auto valid = detail::validity_mask(key)->to_vec<bool>();
     std::transform(
-        state.included.begin(),
-        state.included.end(),
+        factor.included.begin(),
+        factor.included.end(),
         valid.begin(),
-        state.included.begin(),
+        factor.included.begin(),
         std::logical_and<bool>{});
   }
-  state.all_included = std::all_of(
-      state.included.begin(),
-      state.included.end(),
+  factor.all_included = std::all_of(
+      factor.included.begin(),
+      factor.included.end(),
       [](bool value) { return value; });
+  const auto row_hashes = prepare_group_row_hashes_(keys, nrows);
 
-  std::unordered_map<std::string, std::size_t> index_by_key;
-  index_by_key.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows / 8)));
+  std::unordered_map<std::size_t, std::vector<std::size_t>> groups_by_hash;
+  groups_by_hash.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows / 8)));
   for (std::int64_t row = 0; row < nrows; ++row) {
-    if (!state.included[static_cast<std::size_t>(row)]) {
+    if (!factor.included[static_cast<std::size_t>(row)]) {
       continue;
     }
-    const auto token = group_row_token_(keys, row);
-    const auto [it, inserted] = index_by_key.emplace(token, state.first_rows.size());
-    if (inserted) {
-      state.first_rows.push_back(row);
+    factor.included_rows.push_back(row);
+
+    auto& candidates = groups_by_hash[row_hashes[static_cast<std::size_t>(row)]];
+    std::int64_t group_id = -1;
+    for (const auto candidate : candidates) {
+      const auto first_row = factor.first_rows[candidate];
+      if (group_compare_key_rows_(keys, row, first_row) == 0) {
+        group_id = static_cast<std::int64_t>(candidate);
+        break;
+      }
     }
-    state.group_ids[static_cast<std::size_t>(row)] = static_cast<std::int64_t>(it->second);
+
+    if (group_id < 0) {
+      group_id = static_cast<std::int64_t>(factor.first_rows.size());
+      factor.first_rows.push_back(row);
+      candidates.push_back(static_cast<std::size_t>(group_id));
+    }
+    factor.group_ids[static_cast<std::size_t>(row)] = group_id;
+    factor.included_group_ids.push_back(group_id);
   }
 
-  state.ngroups = static_cast<std::int64_t>(state.first_rows.size());
-  state.order.resize(static_cast<std::size_t>(state.ngroups));
-  std::iota(state.order.begin(), state.order.end(), 0);
+  factor.ngroups = static_cast<std::int64_t>(factor.first_rows.size());
+  factor.order.resize(static_cast<std::size_t>(factor.ngroups));
+  std::iota(factor.order.begin(), factor.order.end(), 0);
 
-  if (options.sort && state.ngroups > 1) {
+  if (options.sort && factor.ngroups > 1) {
     std::stable_sort(
-        state.order.begin(),
-        state.order.end(),
+        factor.order.begin(),
+        factor.order.end(),
         [&](std::int64_t lhs_group, std::int64_t rhs_group) {
-          const auto lhs_row = state.first_rows[static_cast<std::size_t>(lhs_group)];
-          const auto rhs_row = state.first_rows[static_cast<std::size_t>(rhs_group)];
-          for (const auto& key : keys) {
-            const auto lhs = group_row_part_(key, lhs_row);
-            const auto rhs = group_row_part_(key, rhs_row);
-            if (lhs < rhs) {
-              return true;
-            }
-            if (lhs > rhs) {
-              return false;
-            }
-          }
-          return false;
+          const auto lhs_row = factor.first_rows[static_cast<std::size_t>(lhs_group)];
+          const auto rhs_row = factor.first_rows[static_cast<std::size_t>(rhs_group)];
+          return group_compare_key_rows_(keys, lhs_row, rhs_row) < 0;
         });
   }
 
-  state.order_positions.assign(static_cast<std::size_t>(state.ngroups), 0);
-  state.ordered_first_rows.resize(static_cast<std::size_t>(state.ngroups));
-  for (std::size_t sorted_pos = 0; sorted_pos < state.order.size(); ++sorted_pos) {
-    const auto group_id = state.order[sorted_pos];
-    state.order_positions[static_cast<std::size_t>(group_id)] =
+  factor.order_positions.assign(static_cast<std::size_t>(factor.ngroups), 0);
+  factor.ordered_first_rows.resize(static_cast<std::size_t>(factor.ngroups));
+  for (std::size_t sorted_pos = 0; sorted_pos < factor.order.size(); ++sorted_pos) {
+    const auto group_id = factor.order[sorted_pos];
+    factor.order_positions[static_cast<std::size_t>(group_id)] =
         static_cast<std::int64_t>(sorted_pos);
-    state.ordered_first_rows[sorted_pos] =
-        state.first_rows[static_cast<std::size_t>(group_id)];
+    factor.ordered_first_rows[sorted_pos] =
+        factor.first_rows[static_cast<std::size_t>(group_id)];
   }
 
-  state.broadcast_positions.assign(static_cast<std::size_t>(nrows), 0);
-  if (state.ngroups > 0) {
+  factor.broadcast_positions.assign(static_cast<std::size_t>(nrows), 0);
+  if (factor.ngroups > 0) {
     for (std::int64_t row = 0; row < nrows; ++row) {
-      if (!state.included[static_cast<std::size_t>(row)]) {
+      if (!factor.included[static_cast<std::size_t>(row)]) {
         continue;
       }
-      const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
+      const auto group_id = factor.group_ids[static_cast<std::size_t>(row)];
       if (group_id < 0) {
         continue;
       }
-      state.broadcast_positions[static_cast<std::size_t>(row)] =
-          state.order_positions[static_cast<std::size_t>(group_id)];
+      factor.broadcast_positions[static_cast<std::size_t>(row)] =
+          factor.order_positions[static_cast<std::size_t>(group_id)];
     }
   }
+
+  factor.group_offsets.assign(static_cast<std::size_t>(factor.ngroups + 1), 0);
+  for (const auto group_id : factor.included_group_ids) {
+    const auto ordered_pos = factor.order_positions[static_cast<std::size_t>(group_id)];
+    ++factor.group_offsets[static_cast<std::size_t>(ordered_pos + 1)];
+  }
+  std::partial_sum(
+      factor.group_offsets.begin(),
+      factor.group_offsets.end(),
+      factor.group_offsets.begin());
+  factor.grouped_rows.resize(factor.included_rows.size());
+  auto next_group_offsets = factor.group_offsets;
+  for (std::size_t i = 0; i < factor.included_rows.size(); ++i) {
+    const auto row = factor.included_rows[i];
+    const auto group_id = factor.included_group_ids[i];
+    const auto ordered_pos = factor.order_positions[static_cast<std::size_t>(group_id)];
+    auto& cursor = next_group_offsets[static_cast<std::size_t>(ordered_pos)];
+    factor.grouped_rows[static_cast<std::size_t>(cursor++)] = row;
+  }
+
+  return factor;
+}
+
+GroupState_ build_group_state_(std::span<const Thread> keys,
+                               std::span<const std::string> names,
+                               std::int64_t nrows,
+                               const ThreadGroupOptions& options,
+                               std::string_view where) {
+  PLUSS_CHECK(keys.size() == names.size(), std::string(where) + ": key/name size mismatch");
+
+  auto factor = factor_group_keys_(keys, nrows, options, where);
+
+  GroupState_ state;
+  state.keys.assign(keys.begin(), keys.end());
+  state.names.assign(names.begin(), names.end());
+  state.included = std::move(factor.included);
+  state.all_included = factor.all_included;
+  state.included_rows = std::move(factor.included_rows);
+  state.group_ids = std::move(factor.group_ids);
+  state.included_group_ids = std::move(factor.included_group_ids);
+  state.first_rows = std::move(factor.first_rows);
+  state.ngroups = factor.ngroups;
+  state.order = std::move(factor.order);
+  state.order_positions = std::move(factor.order_positions);
+  state.ordered_first_rows = std::move(factor.ordered_first_rows);
+  state.broadcast_positions = std::move(factor.broadcast_positions);
+  state.group_offsets = std::move(factor.group_offsets);
+  state.grouped_rows = std::move(factor.grouped_rows);
+
+  state.included_mask_cpu = group_bool_mask_(state.included);
+  state.included_rows_cpu = group_i64_series_(state.included_rows);
+  state.group_ids_cpu = group_i64_series_(state.group_ids);
+  state.included_group_ids_cpu = group_i64_series_(state.included_group_ids);
 
   return state;
 }
@@ -302,11 +697,9 @@ Thread group_broadcast_thread_(const Thread& grouped, const GroupState_& state) 
 
   std::vector<std::int64_t> indices = state.broadcast_positions;
   std::vector<bool> valid(state.group_ids.size(), false);
-  for (std::size_t row = 0; row < state.group_ids.size(); ++row) {
-    if (!state.included[row]) {
-      continue;
-    }
-    valid[row] = detail::valid_at(grouped, indices[row]);
+  for (const auto row : state.included_rows) {
+    valid[static_cast<std::size_t>(row)] =
+        detail::valid_at(grouped, indices[static_cast<std::size_t>(row)]);
   }
 
   auto out = grouped.take(indices);
@@ -353,11 +746,9 @@ pluss::Series group_keep_mask_(const Thread& keep,
   }
 
   std::vector<bool> row_keep(state.group_ids.size(), false);
-  for (std::size_t row = 0; row < state.group_ids.size(); ++row) {
-    if (!state.included[row]) {
-      continue;
-    }
-    row_keep[row] = keep_values[static_cast<std::size_t>(state.broadcast_positions[row])];
+  for (const auto row : state.included_rows) {
+    row_keep[static_cast<std::size_t>(row)] =
+        keep_values[static_cast<std::size_t>(state.broadcast_positions[static_cast<std::size_t>(row)])];
   }
   return group_bool_mask_(row_keep, platform);
 }
@@ -400,22 +791,29 @@ Thread group_count_thread_(const GroupState_& state,
     platform = value->as_series().platform();
   }
 
-  auto ids = pluss::Series::empty(
-      {static_cast<std::int64_t>(state.group_ids.size())},
-      pluss::codem::ScalarType::Int64,
-      platform);
-  if (!state.group_ids.empty()) {
-    std::memcpy(ids.raw_data(), state.group_ids.data(), state.group_ids.size() * sizeof(std::int64_t));
-  }
-  auto active = group_bool_mask_(state.included, platform);
+  pluss::Series ids;
   if (value.has_value() && detail::has_validity_mask(*value)) {
+    auto active = state.included_mask_cpu.platform() == platform
+        ? state.included_mask_cpu
+        : state.included_mask_cpu.to(platform);
     auto valid = *detail::validity_mask(*value);
     if (valid.platform() != platform) {
       valid = valid.to(platform);
     }
     active = active.logical_and(valid);
+    auto all_ids = state.group_ids_cpu.platform() == platform
+        ? state.group_ids_cpu
+        : state.group_ids_cpu.to(platform);
+    ids = all_ids.masked_select(active);
+  } else if (state.all_included) {
+    ids = state.group_ids_cpu.platform() == platform
+        ? state.group_ids_cpu
+        : state.group_ids_cpu.to(platform);
+  } else {
+    ids = state.included_group_ids_cpu.platform() == platform
+        ? state.included_group_ids_cpu
+        : state.included_group_ids_cpu.to(platform);
   }
-  ids = ids.masked_select(active);
 
   auto counts = pluss::Series::zeros(
       {state.ngroups},
@@ -430,25 +828,21 @@ Thread group_count_thread_(const GroupState_& state,
 }
 
 Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state) {
-  std::vector<std::int64_t> counts(static_cast<std::size_t>(state.ngroups), 0);
-  std::unordered_set<std::string> seen;
-  seen.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, value.size())));
-  for (std::int64_t row = 0; row < value.size(); ++row) {
-    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
-      continue;
-    }
-    const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
-    if (group_id < 0) {
-      continue;
-    }
-    auto token = std::to_string(group_id);
-    token.push_back('\x1D');
-    token.append(thread_scalar_string_at(value, row));
-    if (seen.insert(token).second) {
-      ++counts[static_cast<std::size_t>(group_id)];
+  switch (value.kind()) {
+    case ThreadKind::Series:
+      return group_ndistinct_series_thread_(value.as_series(), state);
+    case ThreadKind::Timeline:
+      return group_ndistinct_series_thread_(value.as_timeline().epoch_nanos(), state);
+    case ThreadKind::TimeIndex:
+      return group_ndistinct_series_thread_(value.as_timeindex().timeline().epoch_nanos(), state);
+    case ThreadKind::Note: {
+      const auto note = value.as_note();
+      return group_ndistinct_tokens_(state, [&note](std::int64_t row) -> std::string_view {
+        return note.at(row);
+      });
     }
   }
-  return reorder_group_thread_(group_i64_thread_(counts), state);
+  PLUSS_FAIL("group ndistinct: unsupported Thread kind");
 }
 
 Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
@@ -459,14 +853,12 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
 
   std::vector<std::unordered_map<std::string, ModeBucket>> buckets(
       static_cast<std::size_t>(state.ngroups));
-  for (std::int64_t row = 0; row < value.size(); ++row) {
-    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
+  for (std::size_t i = 0; i < state.included_rows.size(); ++i) {
+    const auto row = state.included_rows[i];
+    if (!detail::valid_at(value, row)) {
       continue;
     }
-    const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
-    if (group_id < 0) {
-      continue;
-    }
+    const auto group_id = state.included_group_ids[i];
     auto& bucket = buckets[static_cast<std::size_t>(group_id)][thread_scalar_string_at(value, row)];
     if (bucket.count == 0) {
       bucket.first_row = row;
@@ -519,14 +911,12 @@ std::vector<std::vector<std::string>> group_note_mode_ties_(const Thread& value,
                                                              const GroupState_& state) {
   std::vector<std::unordered_map<std::string, std::int64_t>> counts(
       static_cast<std::size_t>(state.ngroups));
-  for (std::int64_t row = 0; row < value.size(); ++row) {
-    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
+  for (std::size_t i = 0; i < state.included_rows.size(); ++i) {
+    const auto row = state.included_rows[i];
+    if (!detail::valid_at(value, row)) {
       continue;
     }
-    const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
-    if (group_id < 0) {
-      continue;
-    }
+    const auto group_id = state.included_group_ids[i];
     ++counts[static_cast<std::size_t>(group_id)][thread_scalar_string_at(value, row)];
   }
 
@@ -563,14 +953,12 @@ std::vector<std::vector<double>> group_numeric_mode_ties_(const Thread& value,
 
   std::vector<std::unordered_map<double, std::int64_t>> counts(
       static_cast<std::size_t>(state.ngroups));
-  for (std::int64_t row = 0; row < value.size(); ++row) {
-    if (!state.included[static_cast<std::size_t>(row)] || !detail::valid_at(value, row)) {
+  for (std::size_t i = 0; i < state.included_rows.size(); ++i) {
+    const auto row = state.included_rows[i];
+    if (!detail::valid_at(value, row)) {
       continue;
     }
-    const auto group_id = state.group_ids[static_cast<std::size_t>(row)];
-    if (group_id < 0) {
-      continue;
-    }
+    const auto group_id = state.included_group_ids[i];
     ++counts[static_cast<std::size_t>(group_id)][values[static_cast<std::size_t>(row)]];
   }
 
@@ -625,25 +1013,37 @@ Thread group_numeric_thread_(const Thread& value,
               "group: numeric aggregation requires a numeric Series thread");
   const auto platform = value.as_series().platform();
 
-  auto ids = pluss::Series::empty(
-      {static_cast<std::int64_t>(state.group_ids.size())},
-      pluss::codem::ScalarType::Int64,
-      platform);
-  if (!state.group_ids.empty()) {
-    std::memcpy(ids.raw_data(), state.group_ids.data(), state.group_ids.size() * sizeof(std::int64_t));
-  }
-
-  auto active = group_bool_mask_(state.included, platform);
+  pluss::Series ids;
+  pluss::Series values;
+  auto numeric = value.as_series().to(pluss::codem::ScalarType::Float64);
   if (detail::has_validity_mask(value)) {
+    auto active = state.included_mask_cpu.platform() == platform
+        ? state.included_mask_cpu
+        : state.included_mask_cpu.to(platform);
     auto valid = *detail::validity_mask(value);
     if (valid.platform() != platform) {
       valid = valid.to(platform);
     }
     active = active.logical_and(valid);
+    auto all_ids = state.group_ids_cpu.platform() == platform
+        ? state.group_ids_cpu
+        : state.group_ids_cpu.to(platform);
+    ids = all_ids.masked_select(active);
+    values = numeric.masked_select(active);
+  } else if (state.all_included) {
+    ids = state.group_ids_cpu.platform() == platform
+        ? state.group_ids_cpu
+        : state.group_ids_cpu.to(platform);
+    values = numeric;
+  } else {
+    auto included_rows = state.included_rows_cpu.platform() == platform
+        ? state.included_rows_cpu
+        : state.included_rows_cpu.to(platform);
+    ids = state.included_group_ids_cpu.platform() == platform
+        ? state.included_group_ids_cpu
+        : state.included_group_ids_cpu.to(platform);
+    values = numeric.take(included_rows);
   }
-
-  ids = ids.masked_select(active);
-  auto values = value.as_series().to(pluss::codem::ScalarType::Float64).masked_select(active);
 
   auto counts = pluss::Series::zeros(
       {state.ngroups},

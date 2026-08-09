@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7e105342c7e5 -->
 
 # SlotTimelineAccessor::yearday
 

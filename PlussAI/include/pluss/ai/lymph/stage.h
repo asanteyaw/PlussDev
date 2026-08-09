@@ -19,7 +19,7 @@
 // factory and its prep:: standalone-object counterpart take identical
 // arguments, only the return type and role differ). No route/remainder
 // here -- that lives on the ColumnRouter Model::append() takes alongside a
-// Stage, resolved lazily (see workflow_model.h's pending_stages_) once a
+// Stage, resolved lazily (see detail/model_core.h's pending_stages_) once a
 // real DataFrame is available, since .append() itself is always called
 // before any frame exists.
 

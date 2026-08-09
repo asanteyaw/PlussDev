@@ -46,7 +46,7 @@ bool run_model_append_checks(std::ostream* err) {
   const ColumnRouter numeric_router = columnrouter::remaining_of(categorical_router);
 
   // 1) append() before any frame exists, resolution deferred to learn_().
-  Model model = model::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model model = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
   model.append(stage::standard_scaler(), numeric_router)
        .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
 
@@ -77,7 +77,7 @@ bool run_model_append_checks(std::ostream* err) {
   // stages must throw a clear error rather than silently skip routing.
   bool threw = false;
   try {
-    Model unresolved = model::logistic_regression({.fit_intercept = true});
+    Model unresolved = models::logistic_regression({.fit_intercept = true});
     unresolved.append(stage::standard_scaler(), numeric_router);
     const LabeledBatch bare_batch{};  // never mind its contents -- should throw before touching them
     unresolved.learn_(bare_batch);
@@ -91,7 +91,7 @@ bool run_model_append_checks(std::ostream* err) {
 
   // 3) The non-mutating learn(...) sibling clones first; pending stages must
   // travel with the clone and still resolve correctly there.
-  Model unlearned = model::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model unlearned = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
   unlearned.append(stage::standard_scaler(), numeric_router)
            .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
   const Model learned = unlearned.learn(frame, data_options);

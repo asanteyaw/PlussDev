@@ -17,7 +17,7 @@
     <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Duration arithmetic" href="arithmetic.html" />
+    <link rel="next" title="Duration::add" href="add.html" />
     <link rel="prev" title="Duration API Reference" href="../../duration_api_reference.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -45,8 +45,15 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">NestedInt64Literal</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nested</span><span class="p">);</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">);</span>
-<span class="c1">// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the</span>
-<span class="c1">// same three overloads as nanos above.</span>
+<span class="c1">// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the same three overloads as nanos above.</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::microseconds</span><span class="p">()</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::seconds</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::minutes</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::hours</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::days</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::weeks</span><span class="p">()</span>
 
 <span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Nanos</span><span class="p">,</span><span class="w"> </span><span class="n">Microseconds</span><span class="p">,</span><span class="w"> </span><span class="n">Milliseconds</span><span class="p">,</span><span class="w"> </span><span class="n">Seconds</span><span class="p">,</span><span class="w"> </span><span class="n">Minutes</span><span class="p">,</span><span class="w"> </span><span class="n">Hours</span><span class="p">,</span><span class="w"> </span><span class="n">Days</span><span class="p">,</span><span class="w"> </span><span class="n">Weeks</span><span class="w"> </span><span class="p">};</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
@@ -65,7 +72,7 @@
 construction statics of its own — <code class="docutils literal notranslate"><span class="pre">Duration()</span></code> is deleted, and there is no
 <code class="docutils literal notranslate"><span class="pre">Duration::from_scalar_nanos</span></code>/<code class="docutils literal notranslate"><span class="pre">Duration::range</span></code> to call directly. Construction
 lives entirely in its own namespace, <code class="docutils literal notranslate"><span class="pre">pluss::duration</span></code> (lowercase), the same
-split as <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::from_epoch_nanos</span></code> being kept separate
+split as <code class="docutils literal notranslate"><span class="pre">pluss::timeline::make</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::timeline::from_epoch</span></code> being kept separate
 from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> itself:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pluss::duration::nanos(...)</span></code>: the base unit. <code class="docutils literal notranslate"><span class="pre">microseconds</span></code>/<code class="docutils literal notranslate"><span class="pre">milliseconds</span></code>/
@@ -75,7 +82,7 @@ time — <code class="docutils literal notranslate"><span class="pre">days(1)</s
 <li><p><strong>Every one of those eight functions has three overloads</strong>, not just a
 scalar one — see Example 2. A single count builds a scalar (0D) <code class="docutils literal notranslate"><span class="pre">Duration</span></code>;
 a braced list builds 1D; a nested braced list (up to 3D) or an explicit
-<code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">shape)</span></code> pair builds any N-D array — mirroring <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">shape)</span></code> pair builds any N-D array — mirroring <code class="docutils literal notranslate"><span class="pre">pluss::timeline::make</span></code>’s
 own scalar/1D/nested/flat+shape overload set exactly. Plain <code class="docutils literal notranslate"><span class="pre">{...}</span></code> braces
 work directly for the <code class="docutils literal notranslate"><span class="pre">flat</span></code>/<code class="docutils literal notranslate"><span class="pre">shape</span></code> arguments too (see Example 3) — no
 explicit <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> wrapping needed.</p></li>
@@ -99,14 +106,14 @@ of counts in the named unit.</p>
 <p><strong>flat</strong>, <strong>sizes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::int64_t&gt;</span></code>)</p>
 <p>An explicit flat buffer of counts plus the target shape, for constructing any
 rank without going through nested braces — the same explicit-shape escape
-hatch <code class="docutils literal notranslate"><span class="pre">pluss::from_epoch_nanos(flat,</span> <span class="pre">sizes)</span></code> offers for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>. Accepts a
+hatch <code class="docutils literal notranslate"><span class="pre">pluss::timeline::from_epoch(flat,</span> <span class="pre">sizes)</span></code> offers for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>. Accepts a
 plain <code class="docutils literal notranslate"><span class="pre">{...}</span></code> brace list directly; <code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;T&gt;</span></code> converts implicitly
 from <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;T&gt;</span></code>.</p>
 <p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::duration::Unit</span></code>, <code class="docutils literal notranslate"><span class="pre">make</span></code> only)</p>
 <p>Which unit <code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">nested</span></code>/<code class="docutils literal notranslate"><span class="pre">flat</span></code> are expressed in.</p>
 <p><strong>start</strong>, <strong>end</strong>, <strong>step</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Duration&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">range</span></code> only)</p>
 <p>Inclusive start, exclusive-past-end stop, and step size, exactly like
-<code class="docutils literal notranslate"><span class="pre">pluss::date_range</span></code> for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or Python’s <code class="docutils literal notranslate"><span class="pre">range()</span></code>. All three are
+<code class="docutils literal notranslate"><span class="pre">pluss::timeline::date_range</span></code> for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or Python’s <code class="docutils literal notranslate"><span class="pre">range()</span></code>. All three are
 themselves <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values (typically scalar, built from one of the unit
 factories above), not raw integers.</p>
 </section>
@@ -123,24 +130,28 @@ A scalar (0D), 1D, or N-D <code class="docutils literal notranslate"><span class
 <span class="k">auto</span><span class="w"> </span><span class="n">one_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">one_day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">neg_fifteen_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">-15</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">.</span><span class="n">total_nanoseconds</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=5.4000e+12
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Duration(shape=[], dim=0, numel=1)
+0 days 01:30:00.000000000
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">90</span> <span class="pre">*</span> <span class="pre">60</span> <span class="pre">*</span> <span class="pre">1e9</span> <span class="pre">=</span> <span class="pre">5.4e12</span></code> nanoseconds — <code class="docutils literal notranslate"><span class="pre">duration::minutes</span></code> scales up from
-<code class="docutils literal notranslate"><span class="pre">duration::nanos</span></code> exactly as documented above.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::duration::print</span></code> (or <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">ninety_min</span></code> directly, since
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> has an <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>) is the natural way to read a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+back — no unit conversion needed. <code class="docutils literal notranslate"><span class="pre">ninety_min.total().nanoseconds()</span></code>, which
+would give the same value as a plain number (<code class="docutils literal notranslate"><span class="pre">5.4e12</span></code> nanoseconds), is the
+<a class="reference internal" href="total_nanoseconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().nanoseconds()</span></code></span></a> family’s job instead, useful when
+you need a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> rather than a human-readable rendering.</p>
 <p>Example 2. N-D construction: a 1D list and a nested 2D literal, for
 <code class="docutils literal notranslate"><span class="pre">minutes</span></code>/<code class="docutils literal notranslate"><span class="pre">hours</span></code> respectively.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">minutes_1d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">({</span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">hours_2d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">({{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1d.dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">minutes_1d</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; 1d.numel=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">minutes_1d</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;2d.dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">hours_2d</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; 2d.numel=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">hours_2d</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">hours_2d</span><span class="p">.</span><span class="n">total_hours</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">hours_2d</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">hours</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -160,7 +171,7 @@ through <code class="docutils literal notranslate"><span class="pre">6</span></c
 <p>Example 3. Explicit <code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">shape)</span></code> construction with plain braces — no
 <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> wrapping needed, it converts implicitly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">days_2x2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">days_2x2</span><span class="p">.</span><span class="n">total_days</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">days_2x2</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">days</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -175,8 +186,8 @@ data=
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">pluss::duration::make</span></code> — the same construction, with the unit picked at runtime.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">made_scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="o">::</span><span class="n">Days</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">made_1d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="o">::</span><span class="n">Hours</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;scalar=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">made_scalar</span><span class="p">.</span><span class="n">total_days</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1d=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">made_1d</span><span class="p">.</span><span class="n">total_hours</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;scalar=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">made_scalar</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">days</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1d=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">made_1d</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">hours</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -193,19 +204,19 @@ involved.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">range</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">steps</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; numel=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">steps</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">steps</span><span class="p">.</span><span class="n">total_days</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">steps</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dim=1 numel=6
-Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=[0.0000, 2.0000, 4.0000, 6.0000, 8.0000, 10.0000]
+Duration(shape=[6], dim=1, numel=6)
+[ 0 days 00:00:00.000000000, 2 days 00:00:00.000000000, 4 days 00:00:00.000000000, 6 days 00:00:00.000000000, 8 days 00:00:00.000000000, 10 days 00:00:00.000000000 ]
 </pre></div>
 </div>
 <p>Six values from <code class="docutils literal notranslate"><span class="pre">0</span></code> up to (but not including) <code class="docutils literal notranslate"><span class="pre">10</span></code>, stepping by <code class="docutils literal notranslate"><span class="pre">2</span></code> — the same
-half-open range convention as <code class="docutils literal notranslate"><span class="pre">pluss::date_range</span></code>.</p>
+half-open range convention as <code class="docutils literal notranslate"><span class="pre">pluss::timeline::date_range</span></code>.</p>
 </section>
 </section>
 <section id="notes">
@@ -230,9 +241,10 @@ factory entirely — see <a class="reference internal" href="../timeline/diff.ht
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="arithmetic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arithmetic</span></code></span></a>: combining <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values once constructed.</p></li>
-<li><p><a class="reference internal" href="total.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total</span></code></span></a>: converting a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> back into a plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> in a
-chosen unit.</p></li>
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add</span></code></span></a>, <a class="reference internal" href="sub.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sub</span></code></span></a>, <a class="reference internal" href="mul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mul</span></code></span></a>, <a class="reference internal" href="div.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">div</span></code></span></a>: combining
+and scaling <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values once constructed.</p></li>
+<li><p><a class="reference internal" href="total_seconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().seconds()</span></code></span></a>: converting a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> back into a
+plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> in a chosen unit.</p></li>
 <li><p><a class="reference internal" href="../timeline/diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::diff</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-side source of a
 <code class="docutils literal notranslate"><span class="pre">Duration</span></code>.</p></li>
 </ul>
@@ -241,9 +253,9 @@ chosen unit.</p></li>
     <span class="label">Previous</span>
     <span class="title">Duration API Reference</span>
   </a>
-  <a class="next-link" href="arithmetic.html">
+  <a class="next-link" href="add.html">
     <span class="label">Next</span>
-    <span class="title">arithmetic</span>
+    <span class="title">add</span>
   </a>
 </div>
 </section>
@@ -337,7 +349,7 @@ chosen unit.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../duration_api_reference.html">Duration API Reference</a><ul>
       <li>Previous: <a href="../../duration_api_reference.html" title="previous chapter">Duration API Reference</a></li>
-      <li>Next: <a href="arithmetic.html" title="next chapter">Duration arithmetic</a></li>
+      <li>Next: <a href="add.html" title="next chapter">Duration::add</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

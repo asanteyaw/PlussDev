@@ -194,10 +194,10 @@ auto catalog = df.kindelize();
 auto roundtrip_df = catalog.tabelize();
 
 auto archive = atlas.kindelize();
-auto roundtrip_atlas = pluss::table::Atlas::tabelize(archive);
+auto roundtrip_atlas = archive.tabelize();
 
-auto registry = pluss::bundle::Registry::from_kindle(catalog);
-auto back_catalog = registry.to_kindle();
+auto registry = df.bundelize();
+auto back_catalog = registry.kindelize();
 ```
 
 Use these conversions when you need a different data model for a specific part

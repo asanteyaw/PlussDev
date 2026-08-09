@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="TimeIndex::timeline" href="api/timeindex/timeline.html" />
-    <link rel="prev" title="Duration::isnat" href="api/duration/isnat.html" />
+    <link rel="prev" title="Duration::where" href="api/duration/where.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -55,7 +55,7 @@ intend to search, slice, align, resample, and join against.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is the 1D time axis surface. It is where ordered lookup semantics
 live.</p></li>
 </ul>
-<p>Construction is intentionally routed through <code class="docutils literal notranslate"><span class="pre">pluss::make_timeindex(...)</span></code> or
+<p>Construction is intentionally routed through <code class="docutils literal notranslate"><span class="pre">pluss::timeindex::make(...)</span></code> or
 <code class="docutils literal notranslate"><span class="pre">Timeline::to_timeindex(...)</span></code>, not through public constructors.</p>
 </section>
 <section id="includes">
@@ -70,7 +70,7 @@ live.</p></li>
 <section id="practical-construction-patterns">
 <h2>Practical Construction Patterns<a class="headerlink" href="#practical-construction-patterns" title="Link to this heading">¶</a></h2>
 <p>Example 1. Build directly from ISO-like timestamp text.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T09:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T09:15:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T09:45:00Z&quot;</span><span class="p">,</span>
@@ -79,14 +79,14 @@ live.</p></li>
 </pre></div>
 </div>
 <p>Example 2. Start from a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, then promote it into index semantics.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T09:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T09:15:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T09:45:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-01-05T10:05:00Z&quot;</span><span class="p">,</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">(</span><span class="n">axis</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">axis</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Example 3. Build from raw epoch nanoseconds when you already have machine-time
@@ -97,7 +97,7 @@ data.</p>
 <span class="w">    </span><span class="mf">1&#39;767&#39;907&#39;500&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span>
 <span class="p">};</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">(</span><span class="n">ticks</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">ticks</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -258,7 +258,7 @@ returned <code class="docutils literal notranslate"><span class="pre">Timeline</
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
-      <li>Previous: <a href="api/duration/isnat.html" title="previous chapter">Duration::isnat</a></li>
+      <li>Previous: <a href="api/duration/where.html" title="previous chapter">Duration::where</a></li>
       <li>Next: <a href="api/timeindex/timeline.html" title="next chapter">TimeIndex::timeline</a></li>
   </ul></li>
   </ul></li>

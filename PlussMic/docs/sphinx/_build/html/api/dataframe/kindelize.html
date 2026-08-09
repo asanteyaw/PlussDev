@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=55000b1c"></script>
+    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,8 +54,8 @@
 independent <code class="docutils literal notranslate"><span class="pre">Stream</span></code>s, one per feature, rather than a single aligned table. This is
 the bridge into the Kindle module’s stream-oriented API, useful when downstream code
 wants to work with each feature as its own named, independently-sliceable stream
-instead of as columns of one shared frame. <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a> is the reverse
-direction: it takes a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> and rebuilds a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> from it.</p>
+instead of as columns of one shared frame. <a class="reference internal" href="../catalog/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize()</span></code></span></a>
+is the reverse direction: it takes a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> and rebuilds a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> from it.</p>
 <p>By default, every feature on the frame becomes one <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> entry, keyed by its
 existing feature name, and each resulting <code class="docutils literal notranslate"><span class="pre">Stream</span></code> carries the frame’s case labels
 along with it (so per-stream operations later can still refer back to which case each
@@ -156,8 +156,9 @@ streams.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> requires a defined frame; calling it on a default-constructed
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::kindelize</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">defined</span> <span class="pre">DataFrame&quot;</span></code>.</p></li>
-<li><p>The reverse conversion is <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tabelize(catalog,</span> <span class="pre">policy)</span></code></span></a> — a
-static method that rebuilds a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> from a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p></li>
+<li><p>The reverse conversion now lives on the source object: use
+<a class="reference internal" href="../catalog/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize(policy)</span></code></span></a> to rebuild a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+from a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">materialize_label</span></code>’s label key collides-with-an-existing-feature check only runs
 when <code class="docutils literal notranslate"><span class="pre">materialize_label</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>; leaving it at the default <code class="docutils literal notranslate"><span class="pre">false</span></code> never performs
 this check, since no extra entry is added.</p></li>
@@ -166,8 +167,8 @@ this check, since no extra entry is added.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tabelize</span></code></span></a>: the reverse conversion, from <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> back to
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
+<li><p><a class="reference internal" href="../catalog/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize</span></code></span></a>: the reverse conversion, from <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+back to <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
 <li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: the plain, in-frame way to pull out a single
 feature as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, without leaving the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> representation at all.</p></li>
 </ul>
@@ -222,6 +223,9 @@ feature as a <code class="docutils literal notranslate"><span class="pre">Thread
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
 </ul>
 
 <div class="relations">

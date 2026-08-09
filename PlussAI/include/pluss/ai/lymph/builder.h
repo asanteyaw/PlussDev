@@ -4,6 +4,8 @@
 #include "pluss/ai/lymph/model.h"
 #include "pluss/ai/lymph/selection.h"
 
+#include <initializer_list>
+#include <map>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -21,35 +23,14 @@
 // .describe(), since DataFrame already has its own unrelated .describe()
 // for summary statistics -- same name, different meaning, worth avoiding).
 //
-// Two real differences from Nexus, both from the same root cause -- Model
-// is deliberately move-only (WorkflowModel has no copy constructor; cloning
-// a trained model is an explicit, opt-in .clone() call, never implicit):
-//
-//   1. Nexus can be built directly from a braced list of DataFrames
-//      (`Nexus({{"customers", customers}, {"orders", orders}})`) because
-//      DataFrame is cheap to copy. The equivalent for Builder --
-//      populating a `std::vector<std::pair<std::string, Model>>` from a
-//      braced list -- does not compile for a move-only second element: a
-//      braced list is realized through std::initializer_list, whose
-//      backing array is permanently const, so std::vector's
-//      initializer_list constructor can only *copy* out of it. This was
-//      verified directly against clang++ -std=c++20 while designing this
-//      file (`std::vector<std::pair<std::string, MoveOnly>>` from a braced
-//      list fails with "call to implicitly-deleted copy constructor") --
-//      it's a hard language limitation, not a design choice this file
-//      could route around. So Builder starts empty and grows one model at
-//      a time via .inject(...) instead of through any braced-list
-//      constructor -- which also happens to be the exact fluent chain
-//      already wanted for verbosity reasons independent of this
-//      limitation.
-//   2. Nexus's named inject(...)/inject_(...) pair exists because
-//      inject(...) *returns* a new Nexus by value (cheap, DataFrame copies
-//      are cheap) alongside a mutating inject_(...) sibling. A
-//      value-returning inject on Builder would have to clone every
-//      already-held Model just to add one -- expensive, and against the
-//      point of Model being move-only. So Builder offers exactly one,
-//      mutating .inject(...); there is no non-mutating sibling to name
-//      distinctly.
+// Builder can now be populated Nexus-style from named Model pairs because
+// Model itself is a cheap intrusive-handle copy with copy-on-write detachment
+// before mutators. Copying a registry into Builder shares model state until
+// either side mutates; no std::move ceremony is required for ordinary use.
+// Builder still offers exactly one mutating .inject(...) operation. A
+// value-returning inject sibling would be API bloat here because the
+// coordinator is intentionally a mutable registry, not a data object whose
+// functional updates are the common path.
 //
 // Duplicate names: matches Nexus::inject(key, frame)'s real behavior
 // (NexusInternals.inc's append_named_frame -- PLUSS_CHECK's a duplicate key
@@ -60,9 +41,12 @@
 // is intended.
 //
 // Construction still goes through the lowercase `builder::` namespace per
-// the redesign's construction-vs-method rule (LYMPH_REDESIGN_PLAN.md 2.0);
-// here that is just `builder::build()`, handing back an empty Builder ready
-// for `.inject(...)` chaining.
+// the redesign's construction-vs-method rule (LYMPH_REDESIGN_PLAN.md 2.0):
+// `builder::build()` for an empty Builder,
+// `builder::build({{"name", model}, {"inline", models::...()}})` for
+// Nexus-like construction-time population, or the map/vector overloads for
+// preassembled registries. Builder entries are strictly named; there is no
+// unnamed injection or implicit model_0/model_1 counter in this surface.
 namespace pluss::ai::lymph {
 
 // TaskKind has no name() helper elsewhere in lymph (metrics.h's
@@ -87,13 +71,12 @@ class Builder final {
   Builder& operator=(const Builder&) = delete;
 
   // Registers `model` under `name`. Returns *this so calls chain:
-  //   builder.inject("logreg", model::logistic_regression())
-  //          .inject("tree", model::decision_tree_classifier());
+  //   builder.inject("logreg", models::logistic_regression())
+  //          .inject("tree", models::decision_tree_classifier());
   // A freshly-built prvalue needs no std::move at the call site; an
-  // already-named Model lvalue does (Model has no copy constructor -- the
-  // same unavoidable-by-design std::move as everywhere else Model changes
-  // hands, nothing specific to Builder). Throws on an empty name or a name
-  // already registered (see the duplicate-names note above).
+  // already-named Model lvalue is copied cheaply and detached only if one
+  // side later mutates. Throws on an empty name or a name already registered
+  // (see the duplicate-names note above).
   Builder& inject(std::string name, Model model) {
     if (name.empty()) {
       ::pluss::throw_error("lymph::Builder::inject: name must not be empty.");
@@ -105,9 +88,8 @@ class Builder final {
     return *this;
   }
 
-  // Removes and returns the model registered under `name` -- ownership
-  // transfers to the caller (Model is move-only, so this is the only way to
-  // get one back out); the Builder no longer holds it afterward.
+  // Removes and returns the model registered under `name`; the Builder no
+  // longer holds it afterward.
   [[nodiscard]] Model eject(std::string_view name) {
     for (std::size_t i = 0; i < items_.size(); ++i) {
       if (items_[i].first == name) {
@@ -169,11 +151,11 @@ class Builder final {
   // hand-rolled report) rather than inventing a second reporting format.
   [[nodiscard]] pluss::table::DataFrame report(std::int64_t n = -1) const;
 
-  // Clones every held model (WorkflowModel::clone() -- dump+reload trained
+  // Clones every held model (Model::clone() -- dump+reload trained
   // state, not a retrain) into a fresh selection::Candidate, leaving this
   // Builder's own copies untouched. Exposed on its own, not only used
   // internally by benchmark() below, so a caller can still reach for
-  // selection::compare(...)/tune(...) directly with the candidates if
+  // selection::compare(...) directly with the candidates if
   // benchmark()'s canned overload set doesn't fit.
   [[nodiscard]] std::vector<selection::Candidate> candidates() const {
     std::vector<selection::Candidate> out{};
@@ -221,7 +203,7 @@ class Builder final {
   }
 
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
-  // workflow_model.h for why this exists alongside the (x, y) form (a raw
+  // detail/model_core.h for why this exists alongside the (x, y) form (a raw
   // Note column, e.g. via DataNotePolicy::Factorize, has nowhere to go in
   // the (x, y) form).
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& frame,
@@ -275,6 +257,42 @@ class Builder final {
 namespace builder {
 
 [[nodiscard]] inline Builder build() { return Builder(); }
+
+[[nodiscard]] inline Builder build(std::initializer_list<std::pair<std::string, Model>> entries) {
+  Builder out;
+  for (const auto& entry : entries) {
+    out.inject(entry.first, entry.second);
+  }
+  return out;
+}
+
+[[nodiscard]] inline Builder build(const std::map<std::string, Model>& entries) {
+  Builder out;
+  for (const auto& [name, model] : entries) {
+    out.inject(name, model);
+  }
+  return out;
+}
+
+[[nodiscard]] inline Builder build(const std::vector<std::pair<std::string, Model>>& entries) {
+  Builder out;
+  for (const auto& entry : entries) {
+    out.inject(entry.first, entry.second);
+  }
+  return out;
+}
+
+[[nodiscard]] inline Builder build(std::map<std::string, Model>&& entries) {
+  Builder out;
+  for (auto& [name, model] : entries) out.inject(std::move(name), std::move(model));
+  return out;
+}
+
+[[nodiscard]] inline Builder build(std::vector<std::pair<std::string, Model>>&& entries) {
+  Builder out;
+  for (auto& entry : entries) out.inject(std::move(entry.first), std::move(entry.second));
+  return out;
+}
 
 } // namespace builder
 

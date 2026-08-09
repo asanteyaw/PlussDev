@@ -622,6 +622,110 @@ alias_lint/fast:
 .PHONY : alias_lint/fast
 
 #=============================================================================
+# Target rules for targets named lymph_balance_factory_test
+
+# Build rule for target.
+lymph_balance_factory_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_balance_factory_test
+.PHONY : lymph_balance_factory_test
+
+# fast build rule for target.
+lymph_balance_factory_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_balance_factory_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_balance_factory_test.dir/build
+.PHONY : lymph_balance_factory_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_builder_test
+
+# Build rule for target.
+lymph_builder_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_builder_test
+.PHONY : lymph_builder_test
+
+# fast build rule for target.
+lymph_builder_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_builder_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_builder_test.dir/build
+.PHONY : lymph_builder_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_column_router_test
+
+# Build rule for target.
+lymph_column_router_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_column_router_test
+.PHONY : lymph_column_router_test
+
+# fast build rule for target.
+lymph_column_router_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_column_router_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_column_router_test.dir/build
+.PHONY : lymph_column_router_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_metrics_test
+
+# Build rule for target.
+lymph_metrics_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_metrics_test
+.PHONY : lymph_metrics_test
+
+# fast build rule for target.
+lymph_metrics_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/build
+.PHONY : lymph_metrics_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_model_append_test
+
+# Build rule for target.
+lymph_model_append_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_model_append_test
+.PHONY : lymph_model_append_test
+
+# fast build rule for target.
+lymph_model_append_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_model_append_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_model_append_test.dir/build
+.PHONY : lymph_model_append_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_search_test
+
+# Build rule for target.
+lymph_search_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_search_test
+.PHONY : lymph_search_test
+
+# fast build rule for target.
+lymph_search_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_search_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_search_test.dir/build
+.PHONY : lymph_search_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_target_transform_test
+
+# Build rule for target.
+lymph_target_transform_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_target_transform_test
+.PHONY : lymph_target_transform_test
+
+# fast build rule for target.
+lymph_target_transform_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build
+.PHONY : lymph_target_transform_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_workflow_test
+
+# Build rule for target.
+lymph_workflow_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_workflow_test
+.PHONY : lymph_workflow_test
+
+# fast build rule for target.
+lymph_workflow_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_workflow_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_workflow_test.dir/build
+.PHONY : lymph_workflow_test/fast
+
+#=============================================================================
 # Target rules for targets named plussai_minimax_demo
 
 # Build rule for target.
@@ -1597,19 +1701,6 @@ ice_time_series_dataset_test/fast:
 .PHONY : ice_time_series_dataset_test/fast
 
 #=============================================================================
-# Target rules for targets named lymph_metrics_test
-
-# Build rule for target.
-lymph_metrics_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_metrics_test
-.PHONY : lymph_metrics_test
-
-# fast build rule for target.
-lymph_metrics_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build
-.PHONY : lymph_metrics_test/fast
-
-#=============================================================================
 # Target rules for targets named module_snapshot_test
 
 # Build rule for target.
@@ -2169,6 +2260,19 @@ nodej_rigorous_suite_test/fast:
 .PHONY : nodej_rigorous_suite_test/fast
 
 #=============================================================================
+# Target rules for targets named nodej_spatial_index_test
+
+# Build rule for target.
+nodej_spatial_index_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_spatial_index_test
+.PHONY : nodej_spatial_index_test
+
+# fast build rule for target.
+nodej_spatial_index_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build.make PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build
+.PHONY : nodej_spatial_index_test/fast
+
+#=============================================================================
 # Target rules for targets named nodej_split_test
 
 # Build rule for target.
@@ -2349,6 +2453,110 @@ plussqit_codem_series_methods_demo: cmake_check_build_system
 plussqit_codem_series_methods_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_methods_demo.dir/build
 .PHONY : plussqit_codem_series_methods_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_shape_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_shape_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_shape_reference_demo
+.PHONY : plussqit_codem_series_shape_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_shape_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_shape_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_shape_reference_demo.dir/build
+.PHONY : plussqit_codem_series_shape_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_read_index_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_read_index_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_read_index_reference_demo
+.PHONY : plussqit_codem_series_read_index_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_read_index_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_read_index_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_read_index_reference_demo.dir/build
+.PHONY : plussqit_codem_series_read_index_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_combine_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_combine_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_combine_reference_demo
+.PHONY : plussqit_codem_series_combine_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_combine_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_combine_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_combine_reference_demo.dir/build
+.PHONY : plussqit_codem_series_combine_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_extract_index_take_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_extract_index_take_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_extract_index_take_reference_demo
+.PHONY : plussqit_codem_series_extract_index_take_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_extract_index_take_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_extract_index_take_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_extract_index_take_reference_demo.dir/build
+.PHONY : plussqit_codem_series_extract_index_take_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_write_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_write_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_write_reference_demo
+.PHONY : plussqit_codem_series_write_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_write_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_write_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_write_reference_demo.dir/build
+.PHONY : plussqit_codem_series_write_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_selector_write_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_selector_write_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_selector_write_reference_demo
+.PHONY : plussqit_codem_series_selector_write_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_selector_write_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_selector_write_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_selector_write_reference_demo.dir/build
+.PHONY : plussqit_codem_series_selector_write_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_bounds_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_bounds_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_bounds_reference_demo
+.PHONY : plussqit_codem_series_bounds_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_bounds_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_bounds_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_bounds_reference_demo.dir/build
+.PHONY : plussqit_codem_series_bounds_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_copy_gather_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_copy_gather_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_copy_gather_reference_demo
+.PHONY : plussqit_codem_series_copy_gather_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_copy_gather_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_copy_gather_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_copy_gather_reference_demo.dir/build
+.PHONY : plussqit_codem_series_copy_gather_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codem_linear_alg_demo
@@ -2546,6 +2754,19 @@ plussqit_coden_note_base_methods_demo/fast:
 .PHONY : plussqit_coden_note_base_methods_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_coden_note_docverify_demo
+
+# Build rule for target.
+plussqit_coden_note_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_docverify_demo
+.PHONY : plussqit_coden_note_docverify_demo
+
+# fast build rule for target.
+plussqit_coden_note_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_docverify_demo.dir/build
+.PHONY : plussqit_coden_note_docverify_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_coden_cpu_perf_bench
 
 # Build rule for target.
@@ -2609,6 +2830,58 @@ plussqit_codeh_timeline_non_generated_and_factory_methods_demo: cmake_check_buil
 plussqit_codeh_timeline_non_generated_and_factory_methods_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_non_generated_and_factory_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_non_generated_and_factory_methods_demo.dir/build
 .PHONY : plussqit_codeh_timeline_non_generated_and_factory_methods_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_timeindex_docverify_demo
+
+# Build rule for target.
+plussqit_codeh_timeindex_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeindex_docverify_demo
+.PHONY : plussqit_codeh_timeindex_docverify_demo
+
+# fast build rule for target.
+plussqit_codeh_timeindex_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build
+.PHONY : plussqit_codeh_timeindex_docverify_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_timeline_docverify_demo
+
+# Build rule for target.
+plussqit_codeh_timeline_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_docverify_demo
+.PHONY : plussqit_codeh_timeline_docverify_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_docverify_demo.dir/build
+.PHONY : plussqit_codeh_timeline_docverify_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_duration_docverify_demo
+
+# Build rule for target.
+plussqit_codeh_duration_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_duration_docverify_demo
+.PHONY : plussqit_codeh_duration_docverify_demo
+
+# fast build rule for target.
+plussqit_codeh_duration_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_docverify_demo.dir/build
+.PHONY : plussqit_codeh_duration_docverify_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_timeline_duration_interop_docverify_demo
+
+# Build rule for target.
+plussqit_codeh_timeline_duration_interop_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_duration_interop_docverify_demo
+.PHONY : plussqit_codeh_timeline_duration_interop_docverify_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_duration_interop_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/build
+.PHONY : plussqit_codeh_timeline_duration_interop_docverify_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_dispense_demo
@@ -5562,6 +5835,19 @@ plussmic_kindle_model_demo/fast:
 .PHONY : plussmic_kindle_model_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_kindle_catalog_plot_demo
+
+# Build rule for target.
+plussmic_kindle_catalog_plot_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_kindle_catalog_plot_demo
+.PHONY : plussmic_kindle_catalog_plot_demo
+
+# fast build rule for target.
+plussmic_kindle_catalog_plot_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build.make PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build
+.PHONY : plussmic_kindle_catalog_plot_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_bundle_model_demo
 
 # Build rule for target.
@@ -5573,6 +5859,19 @@ plussmic_bundle_model_demo: cmake_check_build_system
 plussmic_bundle_model_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build
 .PHONY : plussmic_bundle_model_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_bundle_accessor_demo
+
+# Build rule for target.
+plussmic_bundle_accessor_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_bundle_accessor_demo
+.PHONY : plussmic_bundle_accessor_demo
+
+# fast build rule for target.
+plussmic_bundle_accessor_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build
+.PHONY : plussmic_bundle_accessor_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_table_csv_tests
@@ -6027,53 +6326,125 @@ PlussAI/Ice/models/ts/temporal_fusion_transformer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Ice/models/ts/temporal_fusion_transformer.cpp.s
 .PHONY : PlussAI/Ice/models/ts/temporal_fusion_transformer.cpp.s
 
-PlussAI/Lymph/prep.o: PlussAI/Lymph/prep.cpp.o
-.PHONY : PlussAI/Lymph/prep.o
+PlussAI/Lymph/src/prep.o: PlussAI/Lymph/src/prep.cpp.o
+.PHONY : PlussAI/Lymph/src/prep.o
 
 # target to build an object file
-PlussAI/Lymph/prep.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/prep.cpp.o
-.PHONY : PlussAI/Lymph/prep.cpp.o
+PlussAI/Lymph/src/prep.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/prep.cpp.o
+.PHONY : PlussAI/Lymph/src/prep.cpp.o
 
-PlussAI/Lymph/prep.i: PlussAI/Lymph/prep.cpp.i
-.PHONY : PlussAI/Lymph/prep.i
+PlussAI/Lymph/src/prep.i: PlussAI/Lymph/src/prep.cpp.i
+.PHONY : PlussAI/Lymph/src/prep.i
 
 # target to preprocess a source file
-PlussAI/Lymph/prep.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/prep.cpp.i
-.PHONY : PlussAI/Lymph/prep.cpp.i
+PlussAI/Lymph/src/prep.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/prep.cpp.i
+.PHONY : PlussAI/Lymph/src/prep.cpp.i
 
-PlussAI/Lymph/prep.s: PlussAI/Lymph/prep.cpp.s
-.PHONY : PlussAI/Lymph/prep.s
+PlussAI/Lymph/src/prep.s: PlussAI/Lymph/src/prep.cpp.s
+.PHONY : PlussAI/Lymph/src/prep.s
 
 # target to generate assembly for a file
-PlussAI/Lymph/prep.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/prep.cpp.s
-.PHONY : PlussAI/Lymph/prep.cpp.s
+PlussAI/Lymph/src/prep.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/prep.cpp.s
+.PHONY : PlussAI/Lymph/src/prep.cpp.s
 
-PlussAI/Lymph/workflow_dsl.o: PlussAI/Lymph/workflow_dsl.cpp.o
-.PHONY : PlussAI/Lymph/workflow_dsl.o
+PlussAI/Lymph/src/search.o: PlussAI/Lymph/src/search.cpp.o
+.PHONY : PlussAI/Lymph/src/search.o
 
 # target to build an object file
-PlussAI/Lymph/workflow_dsl.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/workflow_dsl.cpp.o
-.PHONY : PlussAI/Lymph/workflow_dsl.cpp.o
+PlussAI/Lymph/src/search.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/search.cpp.o
+.PHONY : PlussAI/Lymph/src/search.cpp.o
 
-PlussAI/Lymph/workflow_dsl.i: PlussAI/Lymph/workflow_dsl.cpp.i
-.PHONY : PlussAI/Lymph/workflow_dsl.i
+PlussAI/Lymph/src/search.i: PlussAI/Lymph/src/search.cpp.i
+.PHONY : PlussAI/Lymph/src/search.i
 
 # target to preprocess a source file
-PlussAI/Lymph/workflow_dsl.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/workflow_dsl.cpp.i
-.PHONY : PlussAI/Lymph/workflow_dsl.cpp.i
+PlussAI/Lymph/src/search.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/search.cpp.i
+.PHONY : PlussAI/Lymph/src/search.cpp.i
 
-PlussAI/Lymph/workflow_dsl.s: PlussAI/Lymph/workflow_dsl.cpp.s
-.PHONY : PlussAI/Lymph/workflow_dsl.s
+PlussAI/Lymph/src/search.s: PlussAI/Lymph/src/search.cpp.s
+.PHONY : PlussAI/Lymph/src/search.s
 
 # target to generate assembly for a file
-PlussAI/Lymph/workflow_dsl.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/workflow_dsl.cpp.s
-.PHONY : PlussAI/Lymph/workflow_dsl.cpp.s
+PlussAI/Lymph/src/search.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/search.cpp.s
+.PHONY : PlussAI/Lymph/src/search.cpp.s
+
+PlussAI/Lymph/src/select.o: PlussAI/Lymph/src/select.cpp.o
+.PHONY : PlussAI/Lymph/src/select.o
+
+# target to build an object file
+PlussAI/Lymph/src/select.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/select.cpp.o
+.PHONY : PlussAI/Lymph/src/select.cpp.o
+
+PlussAI/Lymph/src/select.i: PlussAI/Lymph/src/select.cpp.i
+.PHONY : PlussAI/Lymph/src/select.i
+
+# target to preprocess a source file
+PlussAI/Lymph/src/select.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/select.cpp.i
+.PHONY : PlussAI/Lymph/src/select.cpp.i
+
+PlussAI/Lymph/src/select.s: PlussAI/Lymph/src/select.cpp.s
+.PHONY : PlussAI/Lymph/src/select.s
+
+# target to generate assembly for a file
+PlussAI/Lymph/src/select.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/select.cpp.s
+.PHONY : PlussAI/Lymph/src/select.cpp.s
+
+PlussAI/Lymph/src/workflow.o: PlussAI/Lymph/src/workflow.cpp.o
+.PHONY : PlussAI/Lymph/src/workflow.o
+
+# target to build an object file
+PlussAI/Lymph/src/workflow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/workflow.cpp.o
+.PHONY : PlussAI/Lymph/src/workflow.cpp.o
+
+PlussAI/Lymph/src/workflow.i: PlussAI/Lymph/src/workflow.cpp.i
+.PHONY : PlussAI/Lymph/src/workflow.i
+
+# target to preprocess a source file
+PlussAI/Lymph/src/workflow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/workflow.cpp.i
+.PHONY : PlussAI/Lymph/src/workflow.cpp.i
+
+PlussAI/Lymph/src/workflow.s: PlussAI/Lymph/src/workflow.cpp.s
+.PHONY : PlussAI/Lymph/src/workflow.s
+
+# target to generate assembly for a file
+PlussAI/Lymph/src/workflow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/workflow.cpp.s
+.PHONY : PlussAI/Lymph/src/workflow.cpp.s
+
+PlussAI/Lymph/src/workflow_dsl.o: PlussAI/Lymph/src/workflow_dsl.cpp.o
+.PHONY : PlussAI/Lymph/src/workflow_dsl.o
+
+# target to build an object file
+PlussAI/Lymph/src/workflow_dsl.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/workflow_dsl.cpp.o
+.PHONY : PlussAI/Lymph/src/workflow_dsl.cpp.o
+
+PlussAI/Lymph/src/workflow_dsl.i: PlussAI/Lymph/src/workflow_dsl.cpp.i
+.PHONY : PlussAI/Lymph/src/workflow_dsl.i
+
+# target to preprocess a source file
+PlussAI/Lymph/src/workflow_dsl.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/workflow_dsl.cpp.i
+.PHONY : PlussAI/Lymph/src/workflow_dsl.cpp.i
+
+PlussAI/Lymph/src/workflow_dsl.s: PlussAI/Lymph/src/workflow_dsl.cpp.s
+.PHONY : PlussAI/Lymph/src/workflow_dsl.s
+
+# target to generate assembly for a file
+PlussAI/Lymph/src/workflow_dsl.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/src/workflow_dsl.cpp.s
+.PHONY : PlussAI/Lymph/src/workflow_dsl.cpp.s
 
 PlussAI/NodeB/core/doc_types.o: PlussAI/NodeB/core/doc_types.cpp.o
 .PHONY : PlussAI/NodeB/core/doc_types.o
@@ -6794,6 +7165,54 @@ PlussAI/NodeJ/metrics/cross_assess.s: PlussAI/NodeJ/metrics/cross_assess.cpp.s
 PlussAI/NodeJ/metrics/cross_assess.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/cross_assess.cpp.s
 .PHONY : PlussAI/NodeJ/metrics/cross_assess.cpp.s
+
+PlussAI/NodeJ/metrics/threshold_curve.o: PlussAI/NodeJ/metrics/threshold_curve.cpp.o
+.PHONY : PlussAI/NodeJ/metrics/threshold_curve.o
+
+# target to build an object file
+PlussAI/NodeJ/metrics/threshold_curve.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/threshold_curve.cpp.o
+.PHONY : PlussAI/NodeJ/metrics/threshold_curve.cpp.o
+
+PlussAI/NodeJ/metrics/threshold_curve.i: PlussAI/NodeJ/metrics/threshold_curve.cpp.i
+.PHONY : PlussAI/NodeJ/metrics/threshold_curve.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/metrics/threshold_curve.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/threshold_curve.cpp.i
+.PHONY : PlussAI/NodeJ/metrics/threshold_curve.cpp.i
+
+PlussAI/NodeJ/metrics/threshold_curve.s: PlussAI/NodeJ/metrics/threshold_curve.cpp.s
+.PHONY : PlussAI/NodeJ/metrics/threshold_curve.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/metrics/threshold_curve.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/threshold_curve.cpp.s
+.PHONY : PlussAI/NodeJ/metrics/threshold_curve.cpp.s
+
+PlussAI/NodeJ/neighbor/spatial_index.o: PlussAI/NodeJ/neighbor/spatial_index.cpp.o
+.PHONY : PlussAI/NodeJ/neighbor/spatial_index.o
+
+# target to build an object file
+PlussAI/NodeJ/neighbor/spatial_index.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/neighbor/spatial_index.cpp.o
+.PHONY : PlussAI/NodeJ/neighbor/spatial_index.cpp.o
+
+PlussAI/NodeJ/neighbor/spatial_index.i: PlussAI/NodeJ/neighbor/spatial_index.cpp.i
+.PHONY : PlussAI/NodeJ/neighbor/spatial_index.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/neighbor/spatial_index.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/neighbor/spatial_index.cpp.i
+.PHONY : PlussAI/NodeJ/neighbor/spatial_index.cpp.i
+
+PlussAI/NodeJ/neighbor/spatial_index.s: PlussAI/NodeJ/neighbor/spatial_index.cpp.s
+.PHONY : PlussAI/NodeJ/neighbor/spatial_index.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/neighbor/spatial_index.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/neighbor/spatial_index.cpp.s
+.PHONY : PlussAI/NodeJ/neighbor/spatial_index.cpp.s
 
 PlussAI/NodeJ/online/online_linear.o: PlussAI/NodeJ/online/online_linear.cpp.o
 .PHONY : PlussAI/NodeJ/online/online_linear.o
@@ -9154,7 +9573,14 @@ help:
 	@echo "... lag_features_test"
 	@echo "... life_contingencies_foundation_test"
 	@echo "... loss_models_foundation_test"
+	@echo "... lymph_balance_factory_test"
+	@echo "... lymph_builder_test"
+	@echo "... lymph_column_router_test"
 	@echo "... lymph_metrics_test"
+	@echo "... lymph_model_append_test"
+	@echo "... lymph_search_test"
+	@echo "... lymph_target_transform_test"
+	@echo "... lymph_workflow_test"
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
@@ -9203,6 +9629,7 @@ help:
 	@echo "... nodej_prep_test"
 	@echo "... nodej_reliability_io_unsupervised_test"
 	@echo "... nodej_rigorous_suite_test"
+	@echo "... nodej_spatial_index_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
 	@echo "... nodej_weighted_family_test"
@@ -9337,6 +9764,7 @@ help:
 	@echo "... plussma_ts_vecm_raw_demo"
 	@echo "... plussmic_atlas_plot_demo"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
+	@echo "... plussmic_bundle_accessor_demo"
 	@echo "... plussmic_bundle_gap_benchmark"
 	@echo "... plussmic_bundle_model_demo"
 	@echo "... plussmic_bundle_model_tests"
@@ -9359,6 +9787,7 @@ help:
 	@echo "... plussmic_display_policy_demo"
 	@echo "... plussmic_eda_us_accidents_demo"
 	@echo "... plussmic_hierarchical_cases_demo"
+	@echo "... plussmic_kindle_catalog_plot_demo"
 	@echo "... plussmic_kindle_catalog_tests"
 	@echo "... plussmic_kindle_model_demo"
 	@echo "... plussmic_loader_saver_parity_demo"
@@ -9400,7 +9829,11 @@ help:
 	@echo "... plusspl_catch2"
 	@echo "... plusspl_flash_api_capture_demo"
 	@echo "... plussqit_codeh"
+	@echo "... plussqit_codeh_duration_docverify_demo"
+	@echo "... plussqit_codeh_timeindex_docverify_demo"
 	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
+	@echo "... plussqit_codeh_timeline_docverify_demo"
+	@echo "... plussqit_codeh_timeline_duration_interop_docverify_demo"
 	@echo "... plussqit_codeh_timeline_non_generated_and_factory_methods_demo"
 	@echo "... plussqit_codeh_timeline_printing_2d_3d_demo"
 	@echo "... plussqit_codem"
@@ -9418,8 +9851,16 @@ help:
 	@echo "... plussqit_codem_mps_vs_cpu_demo"
 	@echo "... plussqit_codem_optim_tests"
 	@echo "... plussqit_codem_output_engine_demo"
+	@echo "... plussqit_codem_series_bounds_reference_demo"
+	@echo "... plussqit_codem_series_combine_reference_demo"
+	@echo "... plussqit_codem_series_copy_gather_reference_demo"
+	@echo "... plussqit_codem_series_extract_index_take_reference_demo"
 	@echo "... plussqit_codem_series_methods_demo"
+	@echo "... plussqit_codem_series_read_index_reference_demo"
+	@echo "... plussqit_codem_series_selector_write_reference_demo"
+	@echo "... plussqit_codem_series_shape_reference_demo"
 	@echo "... plussqit_codem_series_usage_demo"
+	@echo "... plussqit_codem_series_write_reference_demo"
 	@echo "... plussqit_codem_signal_demo"
 	@echo "... plussqit_codem_stats_demo"
 	@echo "... plussqit_codem_suppose_demo"
@@ -9429,6 +9870,7 @@ help:
 	@echo "... plussqit_coden_cpu_perf_bench"
 	@echo "... plussqit_coden_note_base_methods_demo"
 	@echo "... plussqit_coden_note_cleanup_demo"
+	@echo "... plussqit_coden_note_docverify_demo"
 	@echo "... plussqit_coden_note_factory_demo"
 	@echo "... plussqit_coden_note_method_families_demo"
 	@echo "... plussqit_coden_note_printing_demo"
@@ -9523,12 +9965,21 @@ help:
 	@echo "... PlussAI/Ice/models/ts/temporal_fusion_transformer.o"
 	@echo "... PlussAI/Ice/models/ts/temporal_fusion_transformer.i"
 	@echo "... PlussAI/Ice/models/ts/temporal_fusion_transformer.s"
-	@echo "... PlussAI/Lymph/prep.o"
-	@echo "... PlussAI/Lymph/prep.i"
-	@echo "... PlussAI/Lymph/prep.s"
-	@echo "... PlussAI/Lymph/workflow_dsl.o"
-	@echo "... PlussAI/Lymph/workflow_dsl.i"
-	@echo "... PlussAI/Lymph/workflow_dsl.s"
+	@echo "... PlussAI/Lymph/src/prep.o"
+	@echo "... PlussAI/Lymph/src/prep.i"
+	@echo "... PlussAI/Lymph/src/prep.s"
+	@echo "... PlussAI/Lymph/src/search.o"
+	@echo "... PlussAI/Lymph/src/search.i"
+	@echo "... PlussAI/Lymph/src/search.s"
+	@echo "... PlussAI/Lymph/src/select.o"
+	@echo "... PlussAI/Lymph/src/select.i"
+	@echo "... PlussAI/Lymph/src/select.s"
+	@echo "... PlussAI/Lymph/src/workflow.o"
+	@echo "... PlussAI/Lymph/src/workflow.i"
+	@echo "... PlussAI/Lymph/src/workflow.s"
+	@echo "... PlussAI/Lymph/src/workflow_dsl.o"
+	@echo "... PlussAI/Lymph/src/workflow_dsl.i"
+	@echo "... PlussAI/Lymph/src/workflow_dsl.s"
 	@echo "... PlussAI/NodeB/core/doc_types.o"
 	@echo "... PlussAI/NodeB/core/doc_types.i"
 	@echo "... PlussAI/NodeB/core/doc_types.s"
@@ -9619,6 +10070,12 @@ help:
 	@echo "... PlussAI/NodeJ/metrics/cross_assess.o"
 	@echo "... PlussAI/NodeJ/metrics/cross_assess.i"
 	@echo "... PlussAI/NodeJ/metrics/cross_assess.s"
+	@echo "... PlussAI/NodeJ/metrics/threshold_curve.o"
+	@echo "... PlussAI/NodeJ/metrics/threshold_curve.i"
+	@echo "... PlussAI/NodeJ/metrics/threshold_curve.s"
+	@echo "... PlussAI/NodeJ/neighbor/spatial_index.o"
+	@echo "... PlussAI/NodeJ/neighbor/spatial_index.i"
+	@echo "... PlussAI/NodeJ/neighbor/spatial_index.s"
 	@echo "... PlussAI/NodeJ/online/online_linear.o"
 	@echo "... PlussAI/NodeJ/online/online_linear.i"
 	@echo "... PlussAI/NodeJ/online/online_linear.s"

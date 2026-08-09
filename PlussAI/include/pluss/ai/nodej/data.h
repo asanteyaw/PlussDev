@@ -39,7 +39,7 @@ struct CategoryMap {
 // (DataNotePolicy::Factorize with no existing map for that column) and
 // consumed by reuse (Factorize with an existing map for that column) --
 // see feature_batch_from_dataframe below. Callers that need train/inference
-// consistency (WorkflowModel) capture the fitted maps at learn() time and
+// consistency (for example Lymph's Model) capture the fitted maps at learn() time and
 // pass them back in as `existing_categories` on every later infer() call,
 // the same way `feature_names_` is already cached and reused.
 using CategoryMaps = std::unordered_map<std::string, CategoryMap>;

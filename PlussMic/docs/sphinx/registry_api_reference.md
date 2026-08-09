@@ -92,6 +92,7 @@ api/registry/show
 api/registry/size
 api/registry/sizes
 api/registry/slice
+api/registry/tabelize
 api/registry/tail
 api/registry/take
 api/registry/take_

@@ -29,7 +29,7 @@ Use this to canonicalize an axis before you rely on ordered semantics such as
 Example 1. Sort an unsorted axis that also contains duplicates.
 
 ```cpp
-auto dup = pluss::make_timeindex({
+auto dup = pluss::timeindex::make({
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
@@ -38,7 +38,7 @@ auto dup = pluss::make_timeindex({
 }, false);
 
 auto out = dup.sort();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -55,7 +55,7 @@ plan applied to other aligned payloads too.
 auto order = dup.argsort();
 auto sorted_idx = dup.take(order);
 std::cout << pluss::print_series(order) << "\n";
-std::cout << pluss::print_timeline(sorted_idx) << "\n";
+std::cout << pluss::timeindex::print(sorted_idx) << "\n";
 ```
 
 ## Notes

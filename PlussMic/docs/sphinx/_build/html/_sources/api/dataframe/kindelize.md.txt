@@ -18,8 +18,8 @@ Converts a `DataFrame` into a `pluss::kindle::Catalog` — a keyed collection of
 independent `Stream`s, one per feature, rather than a single aligned table. This is
 the bridge into the Kindle module's stream-oriented API, useful when downstream code
 wants to work with each feature as its own named, independently-sliceable stream
-instead of as columns of one shared frame. [`tabelize()`](tabelize.md) is the reverse
-direction: it takes a `Catalog` and rebuilds a `DataFrame` from it.
+instead of as columns of one shared frame. [`Catalog::tabelize()`](../catalog/tabelize.md)
+is the reverse direction: it takes a `Catalog` and rebuilds a `DataFrame` from it.
 
 By default, every feature on the frame becomes one `Catalog` entry, keyed by its
 existing feature name, and each resulting `Stream` carries the frame's case labels
@@ -126,16 +126,17 @@ streams.
 
 - `kindelize()` requires a defined frame; calling it on a default-constructed
   `DataFrame` throws `"DataFrame::kindelize requires a defined DataFrame"`.
-- The reverse conversion is [`DataFrame::tabelize(catalog, policy)`](tabelize.md) — a
-  static method that rebuilds a `DataFrame` from a `Catalog`.
+- The reverse conversion now lives on the source object: use
+  [`Catalog::tabelize(policy)`](../catalog/tabelize.md) to rebuild a `DataFrame`
+  from a `Catalog`.
 - `materialize_label`'s label key collides-with-an-existing-feature check only runs
   when `materialize_label` is `true`; leaving it at the default `false` never performs
   this check, since no extra entry is added.
 
 ## See Also
 
-- [`DataFrame::tabelize`](tabelize.md): the reverse conversion, from `Catalog` back to
-  `DataFrame`.
+- [`Catalog::tabelize`](../catalog/tabelize.md): the reverse conversion, from `Catalog`
+  back to `DataFrame`.
 - [`DataFrame::features`](features.md): the plain, in-frame way to pull out a single
   feature as a `Thread`, without leaving the `DataFrame` representation at all.
 

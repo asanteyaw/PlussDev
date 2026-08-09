@@ -139,8 +139,13 @@ bool Thread::is_valid(std::int64_t row) const {
   if (!has_validity_mask()) {
     return true;
   }
-  const auto valid = validity_mask()->to_vec<bool>();
-  return valid[static_cast<std::size_t>(idx)];
+  const auto& mask = *validity_mask();
+  if (mask.platform() == pluss::codem::Platform::CPU &&
+      mask.scalar_type() == pluss::codem::ScalarType::Bool &&
+      mask.is_contiguous()) {
+    return reinterpret_cast<const bool*>(mask.raw_data())[static_cast<std::size_t>(idx)];
+  }
+  return mask.to_vec<bool>(idx);
 }
 
 bool Thread::has_validity_mask() const { return impl_ref_().validity_mask_.has_value(); }
@@ -1673,6 +1678,29 @@ Thread Thread::arrange(bool ascending, bool nulls_last) const {
   });
 
   return take(indices);
+}
+
+ThreadSortBuilder Thread::sort(bool ascending, bool nulls_last) const {
+  return ThreadSortBuilder(*this, ascending, nulls_last);
+}
+
+ThreadSortBuilder::ThreadSortBuilder(Thread base, bool ascending, bool nulls_last)
+    : base_(std::move(base)), ascending_(ascending), nulls_last_(nulls_last) {}
+
+Thread ThreadSortBuilder::asc() const {
+  return base_.arrange(true, nulls_last_);
+}
+
+Thread ThreadSortBuilder::desc() const {
+  return base_.arrange(false, nulls_last_);
+}
+
+Thread ThreadSortBuilder::done() const {
+  return base_.arrange(ascending_, nulls_last_);
+}
+
+ThreadSortBuilder::operator Thread() const {
+  return done();
 }
 
 Thread Thread::ffill(std::int64_t limit) const {

@@ -514,6 +514,42 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
       if (err) *err << "Flow classification outputs should be finite\n";
       return false;
     }
+
+    auto clone_or = flow.clone();
+    if (!clone_or.ok()) {
+      if (err) *err << "Flow::clone should succeed for trained serializable classification flows\n";
+      return false;
+    }
+    Flow cloned = clone_or.move_value();
+    if (!cloned.trained() || cloned.stage_count() != flow.stage_count() || cloned.task_kind() != flow.task_kind()) {
+      if (err) *err << "Flow::clone should preserve trained state, stage count, and task kind\n";
+      return false;
+    }
+    auto cloned_pred_or = cloned.infer(train.features);
+    if (!cloned_pred_or.ok()) {
+      if (err) *err << "Flow::clone inferred predictions should be available without retraining\n";
+      return false;
+    }
+    const auto original_pred = as_f64(pred_or.value());
+    const auto cloned_pred = as_f64(cloned_pred_or.value());
+    if (original_pred.size() != cloned_pred.size()) {
+      if (err) *err << "Flow::clone predictions should preserve row count\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < original_pred.size(); ++i) {
+      if (std::abs(original_pred[i] - cloned_pred[i]) > 1e-9) {
+        if (err) *err << "Flow::clone prediction " << i << " diverged from original\n";
+        return false;
+      }
+    }
+    if (!cloned.set_stage_key(0, "clone_only_imputer").ok()) {
+      if (err) *err << "Flow::clone should allow metadata mutation on the clone\n";
+      return false;
+    }
+    if (!flow.transform_specs().front().stage_key.empty()) {
+      if (err) *err << "Flow::clone mutation should not affect original stage metadata\n";
+      return false;
+    }
   }
 
   {

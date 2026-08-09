@@ -242,7 +242,8 @@ bool SessionController::launch_on_backend_(SessionBackend backend,
                                               snapshot_name,
                                               svg_payload,
                                               svg_snapshot_name,
-                                              virtual_table_model);
+                                              virtual_table_model,
+                                              options_.table_viewport_scroll_only);
     case SessionBackend::None:
       return false;
   }

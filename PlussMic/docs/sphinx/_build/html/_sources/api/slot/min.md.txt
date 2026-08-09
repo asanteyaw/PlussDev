@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7cad1b711f5e -->
 
 # Slot::min
 

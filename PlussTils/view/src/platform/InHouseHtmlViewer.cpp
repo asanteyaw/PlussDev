@@ -692,7 +692,8 @@ bool show_inhouse_html_window(const std::string& title,
                               const std::string& svg_payload,
                               const std::string& svg_snapshot_name,
                               std::shared_ptr<const VirtualTableModel>
-                                  virtual_table_model) {
+                                  virtual_table_model,
+                              const bool table_viewport_scroll_only) {
   if ((html.empty() && svg_payload.empty()) || !inhouse_html_viewer_available()) {
     return false;
   }
@@ -716,6 +717,7 @@ bool show_inhouse_html_window(const std::string& title,
   window::HtmlRenderConfig render_cfg{};
   render_cfg.draw_top_bar = false;
   render_cfg.draw_scrollbars = true;
+  render_cfg.enable_document_scroll = !table_viewport_scroll_only;
   render_cfg.virtual_table_model = virtual_table_model.get();
   window::HtmlRenderStats render_stats{};
   window::HtmlLayoutCache layout_cache;
@@ -775,8 +777,10 @@ bool show_inhouse_html_window(const std::string& title,
     };
     const auto document_offset = scroll_model.document_offset_px();
     const auto table_offsets = scroll_model.table_offsets_px();
-    render_cfg.document_scroll_x_px = document_offset.x;
-    render_cfg.document_scroll_y_px = document_offset.y;
+    render_cfg.document_scroll_x_px =
+        table_viewport_scroll_only ? 0 : document_offset.x;
+    render_cfg.document_scroll_y_px =
+        table_viewport_scroll_only ? 0 : document_offset.y;
     render_cfg.table_scroll_x_px = 0;
     render_cfg.table_scroll_y_px = 0;
     render_cfg.table_scroll_offsets = &table_offsets;
@@ -956,25 +960,18 @@ bool show_inhouse_html_window(const std::string& title,
           needs_render = scroll_model.command(event.note) || needs_render;
         }
       } else if (event.kind == window::ShellEventKind::PointerScroll) {
-        // Every RectI the layout/render engine hands back (scrollbar tracks
-        // and thumbs, hit regions) is computed against the pixel-space canvas
-        // (canvas_size = target_size * backing_scale, above), but the shells
-        // report pointer coordinates in logical/point space (NSView.bounds on
-        // Cocoa is never multiplied by backingScaleFactor). On any Retina/
-        // HiDPI display that mismatch means every hit-test compares a
-        // point-space click against a pixel-space rect -- a thin scrollbar
-        // thumb is the first thing to consistently miss. Scale event
-        // coordinates (and deltas, so drag/scroll distance matches the same
-        // pixel-space content extents) up to the layout engine's space here,
-        // once, rather than pushing backing_scale down into the layout/hit-
-        // test code itself.
+        // HTML layout and scroll metrics are computed in logical window
+        // coordinates. The scene is scaled only after layout, during final
+        // Retina/HiDPI presentation. Shell events are also reported in logical
+        // coordinates, so hit-testing must use them directly. Scaling input by
+        // backing_scale makes every table/scrollbar hit miss on Retina displays.
         needs_render =
             scroll_model.scroll_wheel(
-                event.delta_x * backing_scale,
-                event.delta_y * backing_scale,
+                event.delta_x,
+                event.delta_y,
                 window::PointI{
-                    static_cast<int>(std::lround(event.x * backing_scale)),
-                    static_cast<int>(std::lround(event.y * backing_scale)),
+                    static_cast<int>(std::lround(event.x)),
+                    static_cast<int>(std::lround(event.y)),
                 },
                 event.precise_delta,
                 event.shift_modifier,
@@ -983,23 +980,23 @@ bool show_inhouse_html_window(const std::string& title,
       } else if (event.kind == window::ShellEventKind::PointerDrag) {
         needs_render =
             scroll_model.pointer_drag(
-                event.delta_x * backing_scale,
-                event.delta_y * backing_scale,
+                event.delta_x,
+                event.delta_y,
                 window::PointI{
-                    static_cast<int>(std::lround(event.x * backing_scale)),
-                    static_cast<int>(std::lround(event.y * backing_scale)),
+                    static_cast<int>(std::lround(event.x)),
+                    static_cast<int>(std::lround(event.y)),
                 }) ||
             needs_render;
       } else if (event.kind == window::ShellEventKind::PointerDown) {
         table_scroll_damage_only = false;
-        const int px = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.x * backing_scale)));
-        const int py = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.y * backing_scale)));
+        const int px = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.x)));
+        const int py = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.y)));
         bool consumed = scroll_model.pointer_down(window::PointI{px, py});
         needs_render = consumed || needs_render;
         auto hit_idx = find_hit_region_index(hit_regions, px, py);
         if (!consumed && !hit_idx.has_value() && size.height > 0) {
           const int py_flipped = clamp_nonneg_int64(
-              static_cast<std::int64_t>(std::llround(size.height * backing_scale)) - static_cast<std::int64_t>(py));
+              static_cast<std::int64_t>(std::llround(size.height)) - static_cast<std::int64_t>(py));
           hit_idx = find_hit_region_index(hit_regions, px, py_flipped);
         }
         if (!consumed && hit_idx.has_value()) {

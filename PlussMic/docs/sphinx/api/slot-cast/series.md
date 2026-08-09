@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c6b57fd0dd92 -->
 
 # SlotCastAccessor::series
 

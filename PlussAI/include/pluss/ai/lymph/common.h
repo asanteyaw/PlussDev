@@ -28,7 +28,89 @@
 
 namespace pluss::ai::lymph {
 
-using namespace ::pluss::ai::nodej;
+using ::pluss::ai::nodej::AssessOptions;
+using ::pluss::ai::nodej::BalanceCleanKind;
+using ::pluss::ai::nodej::BalanceCleanVote;
+using ::pluss::ai::nodej::BalanceGrowthKind;
+using ::pluss::ai::nodej::BalancePlan;
+using ::pluss::ai::nodej::BalanceTarget;
+using ::pluss::ai::nodej::BalanceTargetKind;
+using ::pluss::ai::nodej::BayesFamilyOptions;
+using ::pluss::ai::nodej::BayesLikelihood;
+using ::pluss::ai::nodej::CategoryMap;
+using ::pluss::ai::nodej::CategoryMaps;
+using ::pluss::ai::nodej::ClassMix;
+using ::pluss::ai::nodej::ClassReport;
+using ::pluss::ai::nodej::ClassReportOptions;
+using ::pluss::ai::nodej::ClassWeightMode;
+using ::pluss::ai::nodej::ClassifierBase;
+using ::pluss::ai::nodej::ClusterFamilyOptions;
+using ::pluss::ai::nodej::ClusterMethod;
+using ::pluss::ai::nodej::ConfusionNormalize;
+using ::pluss::ai::nodej::ConfusionOptions;
+using ::pluss::ai::nodej::ConfusionTable;
+using ::pluss::ai::nodej::CrossAssessReport;
+using ::pluss::ai::nodej::CVPlanKind;
+using ::pluss::ai::nodej::DataFrameBatchOptions;
+using ::pluss::ai::nodej::DataNotePolicy;
+using ::pluss::ai::nodej::DataThreadPolicy;
+using ::pluss::ai::nodej::DependenceCurve;
+using ::pluss::ai::nodej::DependenceSurface;
+using ::pluss::ai::nodej::DecomposeFamilyOptions;
+using ::pluss::ai::nodej::DecomposeMethod;
+using ::pluss::ai::nodej::EnsembleFamilyOptions;
+using ::pluss::ai::nodej::EnsembleMethod;
+using ::pluss::ai::nodej::FeatureBatch;
+using ::pluss::ai::nodej::Flow;
+using ::pluss::ai::nodej::FlowGraphInfo;
+using ::pluss::ai::nodej::FlowStageInfo;
+using ::pluss::ai::nodej::FoldAssessResult;
+using ::pluss::ai::nodej::IndexSplit;
+using ::pluss::ai::nodej::InferOptions;
+using ::pluss::ai::nodej::KernelFamilyOptions;
+using ::pluss::ai::nodej::KernelForm;
+using ::pluss::ai::nodej::KernelKind;
+using ::pluss::ai::nodej::LabeledBatch;
+using ::pluss::ai::nodej::LinearFamilyOptions;
+using ::pluss::ai::nodej::LinearObjective;
+using ::pluss::ai::nodej::MetricKind;
+using ::pluss::ai::nodej::MissingPolicy;
+using ::pluss::ai::nodej::ModelFamily;
+using ::pluss::ai::nodej::ModelSpec;
+using ::pluss::ai::nodej::NeighborFamilyOptions;
+using ::pluss::ai::nodej::NeighborQueryMode;
+using ::pluss::ai::nodej::ObservationLayout;
+using ::pluss::ai::nodej::PermuteImpactReport;
+using ::pluss::ai::nodej::ProbeSpecSampler;
+using ::pluss::ai::nodej::RandomState;
+using ::pluss::ai::nodej::RegressorBase;
+using ::pluss::ai::nodej::RegularizationKind;
+using ::pluss::ai::nodej::RouteRemainderPolicy;
+using ::pluss::ai::nodej::ScoreCalibration;
+using ::pluss::ai::nodej::SearchKind;
+using ::pluss::ai::nodej::SplitOptions;
+using ::pluss::ai::nodej::SplitPlan;
+using ::pluss::ai::nodej::Status;
+using ::pluss::ai::nodej::StatusOr;
+using ::pluss::ai::nodej::TaskKind;
+using ::pluss::ai::nodej::ThresholdCurve;
+using ::pluss::ai::nodej::TrainOptions;
+using ::pluss::ai::nodej::TransformerBase;
+using ::pluss::ai::nodej::TransformKind;
+using ::pluss::ai::nodej::TransformOptions;
+using ::pluss::ai::nodej::TransformSpec;
+using ::pluss::ai::nodej::TreeCriterion;
+using ::pluss::ai::nodej::TreeFamilyOptions;
+using ::pluss::ai::nodej::TuneOptions;
+using ::pluss::ai::nodej::TuneObjectivePolicy;
+using ::pluss::ai::nodej::TuneReport;
+using ::pluss::ai::nodej::UnknownCategoryPolicy;
+using ::pluss::ai::nodej::WeightPlan;
+using ::pluss::Series;
+using ::pluss::Config;
+using ::pluss::ScalarType;
+
+namespace io = ::pluss::ai::nodej::io;
 
 
 template <class T>
@@ -248,7 +330,5 @@ namespace detail {
 // detail::as_string_views_ above, so it includes this file rather than the
 // other way around. Include "pluss/ai/lymph/columnrouter.h" directly, or
 // pull it in via the api.h umbrella.
-
-class WorkflowModel;
 
 } // namespace pluss::ai::lymph

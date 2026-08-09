@@ -515,20 +515,6 @@ ice_time_series_dataset_test/fast:
 .PHONY : ice_time_series_dataset_test/fast
 
 # Convenience name for target.
-PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
-.PHONY : PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
-
-# Convenience name for target.
-lymph_metrics_test: PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
-.PHONY : lymph_metrics_test
-
-# fast build rule for target.
-lymph_metrics_test/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build
-.PHONY : lymph_metrics_test/fast
-
-# Convenience name for target.
 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
@@ -1129,6 +1115,20 @@ nodej_rigorous_suite_test: PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir
 nodej_rigorous_suite_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build.make PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build
 .PHONY : nodej_rigorous_suite_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/rule
+
+# Convenience name for target.
+nodej_spatial_index_test: PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/rule
+.PHONY : nodej_spatial_index_test
+
+# fast build rule for target.
+nodej_spatial_index_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build.make PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build
+.PHONY : nodej_spatial_index_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_split_test.dir/rule:
@@ -1751,30 +1751,6 @@ ice_time_series_dataset_test.s: ice_time_series_dataset_test.cpp.s
 ice_time_series_dataset_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/build.make PlussAI/test/CMakeFiles/ice_time_series_dataset_test.dir/ice_time_series_dataset_test.cpp.s
 .PHONY : ice_time_series_dataset_test.cpp.s
-
-lymph_metrics_test.o: lymph_metrics_test.cpp.o
-.PHONY : lymph_metrics_test.o
-
-# target to build an object file
-lymph_metrics_test.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/lymph_metrics_test.cpp.o
-.PHONY : lymph_metrics_test.cpp.o
-
-lymph_metrics_test.i: lymph_metrics_test.cpp.i
-.PHONY : lymph_metrics_test.i
-
-# target to preprocess a source file
-lymph_metrics_test.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/lymph_metrics_test.cpp.i
-.PHONY : lymph_metrics_test.cpp.i
-
-lymph_metrics_test.s: lymph_metrics_test.cpp.s
-.PHONY : lymph_metrics_test.s
-
-# target to generate assembly for a file
-lymph_metrics_test.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/lymph_metrics_test.cpp.s
-.PHONY : lymph_metrics_test.cpp.s
 
 module_snapshot_test.o: module_snapshot_test.cpp.o
 .PHONY : module_snapshot_test.o
@@ -2808,6 +2784,30 @@ nodej_rigorous_suite_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build.make PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/nodej_rigorous_suite_test.cpp.s
 .PHONY : nodej_rigorous_suite_test.cpp.s
 
+nodej_spatial_index_test.o: nodej_spatial_index_test.cpp.o
+.PHONY : nodej_spatial_index_test.o
+
+# target to build an object file
+nodej_spatial_index_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build.make PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/nodej_spatial_index_test.cpp.o
+.PHONY : nodej_spatial_index_test.cpp.o
+
+nodej_spatial_index_test.i: nodej_spatial_index_test.cpp.i
+.PHONY : nodej_spatial_index_test.i
+
+# target to preprocess a source file
+nodej_spatial_index_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build.make PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/nodej_spatial_index_test.cpp.i
+.PHONY : nodej_spatial_index_test.cpp.i
+
+nodej_spatial_index_test.s: nodej_spatial_index_test.cpp.s
+.PHONY : nodej_spatial_index_test.s
+
+# target to generate assembly for a file
+nodej_spatial_index_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/build.make PlussAI/test/CMakeFiles/nodej_spatial_index_test.dir/nodej_spatial_index_test.cpp.s
+.PHONY : nodej_spatial_index_test.cpp.s
+
 nodej_split_test.o: nodej_split_test.cpp.o
 .PHONY : nodej_split_test.o
 
@@ -2966,7 +2966,6 @@ help:
 	@echo "... ice_text_judge_test"
 	@echo "... ice_tft_test"
 	@echo "... ice_time_series_dataset_test"
-	@echo "... lymph_metrics_test"
 	@echo "... module_snapshot_test"
 	@echo "... nn_dropout_parity_test"
 	@echo "... nn_elu_layernorm_embedding_test"
@@ -3010,6 +3009,7 @@ help:
 	@echo "... nodej_prep_test"
 	@echo "... nodej_reliability_io_unsupervised_test"
 	@echo "... nodej_rigorous_suite_test"
+	@echo "... nodej_spatial_index_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
 	@echo "... nodej_weighted_family_test"
@@ -3084,9 +3084,6 @@ help:
 	@echo "... ice_time_series_dataset_test.o"
 	@echo "... ice_time_series_dataset_test.i"
 	@echo "... ice_time_series_dataset_test.s"
-	@echo "... lymph_metrics_test.o"
-	@echo "... lymph_metrics_test.i"
-	@echo "... lymph_metrics_test.s"
 	@echo "... module_snapshot_test.o"
 	@echo "... module_snapshot_test.i"
 	@echo "... module_snapshot_test.s"
@@ -3216,6 +3213,9 @@ help:
 	@echo "... nodej_rigorous_suite_test.o"
 	@echo "... nodej_rigorous_suite_test.i"
 	@echo "... nodej_rigorous_suite_test.s"
+	@echo "... nodej_spatial_index_test.o"
+	@echo "... nodej_spatial_index_test.i"
+	@echo "... nodej_spatial_index_test.s"
 	@echo "... nodej_split_test.o"
 	@echo "... nodej_split_test.i"
 	@echo "... nodej_split_test.s"

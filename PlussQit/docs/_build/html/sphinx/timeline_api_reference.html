@@ -79,11 +79,11 @@ resampling, rolling windows, and alignment semantics.</p>
 <section id="practical-construction-patterns">
 <h2>Practical Construction Patterns<a class="headerlink" href="#practical-construction-patterns" title="Link to this heading">¶</a></h2>
 <p>Example 1. Build a scalar timestamp.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2026-03-14T09:26:53Z&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2026-03-14T09:26:53Z&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Example 2. Build a 1D temporal vector.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2026-03-14T09:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-03-14T10:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2026-03-14T11:00:00Z&quot;</span><span class="p">,</span>
@@ -91,14 +91,14 @@ resampling, rolling windows, and alignment semantics.</p>
 </pre></div>
 </div>
 <p>Example 3. Build a higher-rank temporal array.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;2026-03-14T09:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2026-03-14T10:00:00Z&quot;</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;2026-03-15T09:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2026-03-15T10:00:00Z&quot;</span><span class="p">},</span>
 <span class="p">});</span>
 </pre></div>
 </div>
 <p>Example 4. Build directly from raw epoch nanoseconds.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">from_epoch_nanos</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">({</span>
 <span class="w">    </span><span class="mf">1&#39;773&#39;484&#39;800&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span>
 <span class="w">    </span><span class="mf">1&#39;773&#39;488&#39;400&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span>
 <span class="p">});</span>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fea2beaf18cd -->
 
 # SlotNoteAccessor::count
 

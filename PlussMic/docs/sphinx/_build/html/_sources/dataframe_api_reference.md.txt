@@ -39,6 +39,7 @@ api/dataframe/astype
 api/dataframe/bfill
 api/dataframe/bottom
 api/dataframe/bucketize
+api/dataframe/bundelize
 api/dataframe/case_study
 api/dataframe/cast
 api/dataframe/clip
@@ -180,12 +181,12 @@ api/dataframe/show
 api/dataframe/shuffle
 api/dataframe/skew
 api/dataframe/slice
+api/dataframe/sort
 api/dataframe/sql
 api/dataframe/stack
 api/dataframe/std
 api/dataframe/sub
 api/dataframe/sum
-api/dataframe/tabelize
 api/dataframe/tail
 api/dataframe/take
 api/dataframe/tally

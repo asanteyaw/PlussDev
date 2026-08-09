@@ -15,5 +15,5 @@ It is inspired by `torch::TensorOptions`, but intentionally smaller:
 
 pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float16);
 
-auto x = pluss::zeros({128, 64}, cfg);
+auto x = pluss::series::zeros({128, 64}, cfg);
 ```

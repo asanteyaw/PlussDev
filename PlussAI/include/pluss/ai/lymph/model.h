@@ -1,100 +1,562 @@
 #pragma once
 
-#include "pluss/ai/lymph/workflow_model.h"
+#include "pluss/ai/lymph/detail/model_core.h"
 #include "pluss/ai/lymph/factories.h"
+#include "MSharp/IntrusivePtr.h"
 
-// model.h -- Model (LYMPH_REDESIGN_PLAN.md phase 3 + 6).
+// model.h -- Model (LYMPH_REDESIGN_PLAN.md phase 2.5 + 3 + 6).
 //
-// Phase 3 (rename): `Model` is a type alias for `WorkflowModel`, not a
-// physical rename yet -- every existing WorkflowModel call site (this
-// session's whole downstream history) keeps compiling unchanged while new
-// code can start writing `Model`. Retiring the `Workflow` lazy facade
-// (phase 4) is select.h's concern, not this file's, since that's about
-// what `Comparison`'s result holds, not `Model` itself.
+// Phase 2.5: `Model` becomes the public Lymph handle instead of a plain
+// detail::ModelCore alias. It follows the same cheap-copy shape as table
+// DataFrame/Thread: an intrusive ref-counted implementation pointer and
+// copy-on-write detachment before mutating operations. Copying an untrained
+// or trained Model is therefore cheap and ergonomic at the call site; the
+// first mutator on a shared handle pays the explicit detail::ModelCore::clone()
+// cost, preserving the old "do not accidentally mutate somebody else's
+// model" semantics without forcing std::move into normal user code.
 //
-// Phase 6 (consolidate factories): `lymph::model::` re-exports every
-// existing linear_factory::/tree_factory::/ensemble_factory::/
-// neighbor_factory::/kernel_factory::/bayes_factory::/cluster_factory::/
-// decompose_factory:: static method into one namespace. Attempted this as
-// bare `using linear_factory::linear_regression;`-style using-declarations
-// first -- C++ does not allow a using-declaration at namespace scope to
+// Phase 6 (consolidate factories): `lymph::models::` exposes the internal
+// detail::*_factory construction paths through one public namespace.
+// Attempted this as bare `using detail::linear_factory::linear_regression;`
+// using-declarations first -- C++ does not allow a using-declaration at namespace scope to
 // name a class's static member ("using declaration cannot refer to class
 // member"; that form is only valid inside another class body, for
 // inheritance). One-line forwarding wrapper functions below instead: each
-// just calls straight through to the existing *_factory:: static method,
+// just calls straight through to the existing detail::*_factory static method,
 // so there is still nothing to keep in sync by hand beyond the function
 // name itself. Where several families already share a name
 // (`regressor`/`classifier`/`transformer`, each taking a different
 // *FamilyOptions type), the wrappers become ordinary overloads resolved by
 // argument type -- exactly the behavior a caller already gets today spread
 // across seven different struct names, just reachable from one namespace
-// instead of seven.
+// instead of seven. The old singular `lymph::model` namespace alias is gone;
+// public code should spell the model-construction family as `lymph::models`.
 
 namespace pluss::ai::lymph {
 
-using Model = WorkflowModel;
+class Model;
 
-namespace model {
+namespace detail {
 
-[[nodiscard]] inline Model linear_regression(LinearFamilyOptions options = {}) { return linear_factory::linear_regression(options); }
-[[nodiscard]] inline Model logistic_regression(LinearFamilyOptions options = {}) { return linear_factory::logistic_regression(options); }
-[[nodiscard]] inline Model hinge_classifier(LinearFamilyOptions options = {}) { return linear_factory::hinge_classifier(options); }
+struct ModelImpl final : pluss::msharp::RefCounted {
+  explicit ModelImpl(ModelCore in_core) : core(std::move(in_core)) {}
 
-[[nodiscard]] inline Model decision_tree_regressor(TreeFamilyOptions options = {}) { return tree_factory::decision_tree_regressor(options); }
-[[nodiscard]] inline Model decision_tree_classifier(TreeFamilyOptions options = {}) { return tree_factory::decision_tree_classifier(options); }
+  ModelCore core;
+};
 
-[[nodiscard]] inline Model bagging_regressor(EnsembleFamilyOptions options = {}) { return ensemble_factory::bagging_regressor(options); }
-[[nodiscard]] inline Model random_forest_regressor(EnsembleFamilyOptions options = {}) { return ensemble_factory::random_forest_regressor(options); }
-[[nodiscard]] inline Model bagging_classifier(EnsembleFamilyOptions options = {}) { return ensemble_factory::bagging_classifier(options); }
-[[nodiscard]] inline Model random_forest_classifier(EnsembleFamilyOptions options = {}) { return ensemble_factory::random_forest_classifier(options); }
-[[nodiscard]] inline Model gradient_boost_regressor(EnsembleFamilyOptions options = {}) { return ensemble_factory::gradient_boost_regressor(options); }
-[[nodiscard]] inline Model gradient_boost_classifier(EnsembleFamilyOptions options = {}) { return ensemble_factory::gradient_boost_classifier(options); }
-[[nodiscard]] inline Model regressor(EnsembleFamilyOptions options = {}) { return ensemble_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(EnsembleFamilyOptions options = {}) { return ensemble_factory::classifier(options); }
+[[nodiscard]] inline const ModelCore& model_core(const Model& model) noexcept;
 
-[[nodiscard]] inline Model knn_regressor(NeighborFamilyOptions options = {}) { return neighbor_factory::knn_regressor(options); }
-[[nodiscard]] inline Model knn_classifier(NeighborFamilyOptions options = {}) { return neighbor_factory::knn_classifier(options); }
-[[nodiscard]] inline Model radius_neighbors_regressor(NeighborFamilyOptions options = {}) { return neighbor_factory::radius_neighbors_regressor(options); }
-[[nodiscard]] inline Model radius_neighbors_classifier(NeighborFamilyOptions options = {}) { return neighbor_factory::radius_neighbors_classifier(options); }
-[[nodiscard]] inline Model regressor(NeighborFamilyOptions options = {}) { return neighbor_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(NeighborFamilyOptions options = {}) { return neighbor_factory::classifier(options); }
+} // namespace detail
 
-[[nodiscard]] inline Model svm_regressor(KernelFamilyOptions options = {}) { return kernel_factory::svm_regressor(options); }
-[[nodiscard]] inline Model svm_classifier(KernelFamilyOptions options = {}) { return kernel_factory::svm_classifier(options); }
-[[nodiscard]] inline Model nu_svm_regressor(KernelFamilyOptions options = {}) { return kernel_factory::nu_svm_regressor(options); }
-[[nodiscard]] inline Model nu_svm_classifier(KernelFamilyOptions options = {}) { return kernel_factory::nu_svm_classifier(options); }
-[[nodiscard]] inline Model one_class_svm(KernelFamilyOptions options = {}) { return kernel_factory::one_class_svm(options); }
-[[nodiscard]] inline Model linear_kernel_regressor(KernelFamilyOptions options = {}) { return kernel_factory::linear_kernel_regressor(options); }
-[[nodiscard]] inline Model rbf_kernel_regressor(KernelFamilyOptions options = {}) { return kernel_factory::rbf_kernel_regressor(options); }
-[[nodiscard]] inline Model polynomial_kernel_regressor(KernelFamilyOptions options = {}) { return kernel_factory::polynomial_kernel_regressor(options); }
-[[nodiscard]] inline Model sigmoid_kernel_regressor(KernelFamilyOptions options = {}) { return kernel_factory::sigmoid_kernel_regressor(options); }
-[[nodiscard]] inline Model linear_kernel_classifier(KernelFamilyOptions options = {}) { return kernel_factory::linear_kernel_classifier(options); }
-[[nodiscard]] inline Model rbf_kernel_classifier(KernelFamilyOptions options = {}) { return kernel_factory::rbf_kernel_classifier(options); }
-[[nodiscard]] inline Model polynomial_kernel_classifier(KernelFamilyOptions options = {}) { return kernel_factory::polynomial_kernel_classifier(options); }
-[[nodiscard]] inline Model sigmoid_kernel_classifier(KernelFamilyOptions options = {}) { return kernel_factory::sigmoid_kernel_classifier(options); }
-[[nodiscard]] inline Model regressor(KernelFamilyOptions options = {}) { return kernel_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(KernelFamilyOptions options = {}) { return kernel_factory::classifier(options); }
-[[nodiscard]] inline Model transformer(KernelFamilyOptions options = {}) { return kernel_factory::transformer(options); }
+class Model final {
+  friend const detail::ModelCore& detail::model_core(const Model& model) noexcept;
 
-[[nodiscard]] inline Model gaussian_nb_classifier(BayesFamilyOptions options = {}) { return bayes_factory::gaussian_nb_classifier(options); }
-[[nodiscard]] inline Model gaussian_nb_regressor(BayesFamilyOptions options = {}) { return bayes_factory::gaussian_nb_regressor(options); }
-[[nodiscard]] inline Model bernoulli_nb_classifier(BayesFamilyOptions options = {}) { return bayes_factory::bernoulli_nb_classifier(options); }
-[[nodiscard]] inline Model bernoulli_nb_regressor(BayesFamilyOptions options = {}) { return bayes_factory::bernoulli_nb_regressor(options); }
-[[nodiscard]] inline Model multinomial_nb_classifier(BayesFamilyOptions options = {}) { return bayes_factory::multinomial_nb_classifier(options); }
-[[nodiscard]] inline Model complement_nb_classifier(BayesFamilyOptions options = {}) { return bayes_factory::complement_nb_classifier(options); }
-[[nodiscard]] inline Model multinomial_nb_regressor(BayesFamilyOptions options = {}) { return bayes_factory::multinomial_nb_regressor(options); }
-[[nodiscard]] inline Model regressor(BayesFamilyOptions options = {}) { return bayes_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(BayesFamilyOptions options = {}) { return bayes_factory::classifier(options); }
+ public:
+  explicit Model(const ModelSpec& spec)
+      : impl_(pluss::msharp::make_intrusive<detail::ModelImpl>(detail::ModelCore(spec))) {}
 
-[[nodiscard]] inline Model kmeans(ClusterFamilyOptions options = {}) { return cluster_factory::kmeans(options); }
-[[nodiscard]] inline Model transformer(ClusterFamilyOptions options = {}) { return cluster_factory::transformer(options); }
+  explicit Model(::pluss::ai::nodej::Workflow workflow)
+      : impl_(pluss::msharp::make_intrusive<detail::ModelImpl>(detail::ModelCore(std::move(workflow)))) {}
+
+  Model(detail::ModelCore core)
+      : impl_(pluss::msharp::make_intrusive<detail::ModelImpl>(std::move(core))) {}
+
+  Model(const Model&) noexcept = default;
+  Model& operator=(const Model&) noexcept = default;
+  Model(Model&&) noexcept = default;
+  Model& operator=(Model&&) noexcept = default;
+
+  [[nodiscard]] bool trained() const noexcept { return core_().trained(); }
+  [[nodiscard]] bool has_model() const noexcept { return core_().has_model(); }
+  [[nodiscard]] bool has_model_spec() const noexcept { return core_().has_model_spec(); }
+  [[nodiscard]] bool has_opaque_transforms() const noexcept { return core_().has_opaque_transforms(); }
+  [[nodiscard]] std::int64_t stage_count() const noexcept { return core_().stage_count(); }
+  [[nodiscard]] TaskKind task_kind() const noexcept { return core_().task_kind(); }
+  [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept { return core_().model_spec(); }
+  [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept { return core_().transform_specs(); }
+  [[nodiscard]] FlowGraphInfo graph_info() const { return core_().graph_info(); }
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const { return core_().nested_param_keys(); }
+  [[nodiscard]] double nested_param(std::string_view path) const { return core_().nested_param(path); }
+  [[nodiscard]] std::string flow_summary() const { return core_().flow_summary(); }
+  [[nodiscard]] std::string save_blueprint() const { return core_().save_blueprint(); }
+
+  Model& set_nested_param_(std::string_view path, double value) {
+    mut_core_().set_nested_param_(path, value);
+    return *this;
+  }
+
+  Model& load_blueprint_(std::string_view text) {
+    mut_core_().load_blueprint_(text);
+    return *this;
+  }
+
+  Model& set_stage_key_(std::int64_t stage_index, std::string stage_key) {
+    mut_core_().set_stage_key_(stage_index, std::move(stage_key));
+    return *this;
+  }
+
+  Model& set_stage_route_(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route) {
+    mut_core_().set_stage_route_(stage_index, feature_route);
+    return *this;
+  }
+
+  Model& set_stage_remainder_(std::int64_t stage_index, RouteRemainderPolicy remainder) {
+    mut_core_().set_stage_remainder_(stage_index, remainder);
+    return *this;
+  }
+
+  Model& standard_scaler(prep::StandardScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().standard_scaler(options, feature_route);
+    return *this;
+  }
+
+  Model& minmax_scaler(prep::MinMaxScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().minmax_scaler(options, feature_route);
+    return *this;
+  }
+
+  Model& robust_scaler(prep::RobustScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().robust_scaler(options, feature_route);
+    return *this;
+  }
+
+  Model& simple_imputer(prep::SimpleImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().simple_imputer(options, feature_route);
+    return *this;
+  }
+
+  Model& neighbor_imputer(prep::NeighborImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().neighbor_imputer(options, feature_route);
+    return *this;
+  }
+
+  Model& iterative_imputer(prep::IterativeImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().iterative_imputer(options, feature_route);
+    return *this;
+  }
+
+  Model& one_hot_encoder(prep::OneHotEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().one_hot_encoder(options, feature_route);
+    return *this;
+  }
+
+  Model& frequency_encoder(prep::FrequencyEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().frequency_encoder(options, feature_route);
+    return *this;
+  }
+
+  Model& ordinal_encoder(prep::OrdinalEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().ordinal_encoder(options, feature_route);
+    return *this;
+  }
+
+  Model& label_encoder(prep::LabelEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().label_encoder(options, feature_route);
+    return *this;
+  }
+
+  Model& vector_normalizer(prep::VectorNormalizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().vector_normalizer(options, feature_route);
+    return *this;
+  }
+
+  Model& maxabs_scaler(prep::MaxAbsScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().maxabs_scaler(options, feature_route);
+    return *this;
+  }
+
+  Model& quantile_map(prep::QuantileMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().quantile_map(options, feature_route);
+    return *this;
+  }
+
+  Model& power_map(prep::PowerMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().power_map(options, feature_route);
+    return *this;
+  }
+
+  Model& threshold_binarizer(prep::ThresholdBinarizerOptions options = {},
+                             pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().threshold_binarizer(options, feature_route);
+    return *this;
+  }
+
+  Model& polynomial_lift(prep::PolynomialLiftOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    mut_core_().polynomial_lift(options, feature_route);
+    return *this;
+  }
+
+  Model& function_transformer(prep::FunctionTransformer transformer) {
+    mut_core_().function_transformer(std::move(transformer));
+    return *this;
+  }
+
+  Model& feature_transformer(prep::FeatureTransformer transformer) {
+    mut_core_().feature_transformer(std::move(transformer));
+    return *this;
+  }
+
+  Model& append(Stage stage, ColumnRouter router) {
+    mut_core_().append(std::move(stage), std::move(router));
+    return *this;
+  }
+
+  Model& learn_(const LabeledBatch& batch, const TrainOptions& options = {}) {
+    mut_core_().learn_(batch, options);
+    return *this;
+  }
+
+  Model& learn_(const pluss::table::DataFrame& frame,
+                 const DataFrameBatchOptions& data_options,
+                 const TrainOptions& options = {}) {
+    mut_core_().learn_(frame, data_options, options);
+    return *this;
+  }
+
+  Model& learn_(const pluss::table::DataFrame& x,
+                 const Series& y,
+                 const TrainOptions& options = {}) {
+    mut_core_().learn_(x, y, options);
+    return *this;
+  }
+
+  Model& learn_(const pluss::table::DataFrame& x,
+                 const pluss::table::Thread& y,
+                 const TrainOptions& options = {}) {
+    mut_core_().learn_(x, y, options);
+    return *this;
+  }
+
+  [[nodiscard]] Model learn(const LabeledBatch& batch, const TrainOptions& options = {}) const {
+    Model out(*this);
+    out.learn_(batch, options);
+    return out;
+  }
+
+  [[nodiscard]] Model learn(const pluss::table::DataFrame& frame,
+                            const DataFrameBatchOptions& data_options,
+                            const TrainOptions& options = {}) const {
+    Model out(*this);
+    out.learn_(frame, data_options, options);
+    return out;
+  }
+
+  [[nodiscard]] Model learn(const pluss::table::DataFrame& x,
+                            const Series& y,
+                            const TrainOptions& options = {}) const {
+    Model out(*this);
+    out.learn_(x, y, options);
+    return out;
+  }
+
+  [[nodiscard]] Model learn(const pluss::table::DataFrame& x,
+                            const pluss::table::Thread& y,
+                            const TrainOptions& options = {}) const {
+    Model out(*this);
+    out.learn_(x, y, options);
+    return out;
+  }
+
+  Model& target_transform(TargetTransform transform) {
+    mut_core_().target_transform(std::move(transform));
+    return *this;
+  }
+
+  [[nodiscard]] bool has_target_transform() const noexcept { return core_().has_target_transform(); }
+  [[nodiscard]] const TargetTransform& target_transform() const { return core_().target_transform(); }
+
+  [[nodiscard]] Series map(const FeatureBatch& batch, const InferOptions& options = {}) const {
+    return core_().map(batch, options);
+  }
+
+  [[nodiscard]] Series map(const pluss::table::DataFrame& frame,
+                           const DataFrameBatchOptions& data_options,
+                           const InferOptions& options = {}) const {
+    return core_().map(frame, data_options, options);
+  }
+
+  [[nodiscard]] Series map(const pluss::table::DataFrame& x, const InferOptions& options = {}) const {
+    return core_().map(x, options);
+  }
+
+  [[nodiscard]] Series learn_map(const FeatureBatch& batch,
+                                 const TrainOptions& learn_options = {},
+                                 const InferOptions& infer_options = {}) {
+    return mut_core_().learn_map(batch, learn_options, infer_options);
+  }
+
+  [[nodiscard]] Series learn_map(const pluss::table::DataFrame& frame,
+                                 const DataFrameBatchOptions& data_options,
+                                 const TrainOptions& learn_options = {},
+                                 const InferOptions& infer_options = {}) {
+    return mut_core_().learn_map(frame, data_options, learn_options, infer_options);
+  }
+
+  [[nodiscard]] Series learn_map(const pluss::table::DataFrame& x,
+                                 const TrainOptions& learn_options = {},
+                                 const InferOptions& infer_options = {}) {
+    return mut_core_().learn_map(x, learn_options, infer_options);
+  }
+
+  [[nodiscard]] Series infer(const FeatureBatch& batch, const InferOptions& options = {}) const {
+    return core_().infer(batch, options);
+  }
+
+  [[nodiscard]] Series infer(const pluss::table::DataFrame& frame,
+                             const DataFrameBatchOptions& data_options,
+                             const InferOptions& options = {}) const {
+    return core_().infer(frame, data_options, options);
+  }
+
+  [[nodiscard]] Series infer(const pluss::table::DataFrame& x, const InferOptions& options = {}) const {
+    return core_().infer(x, options);
+  }
+
+  [[nodiscard]] Series infer_scores(const FeatureBatch& batch, const InferOptions& options = {}) const {
+    return core_().infer_scores(batch, options);
+  }
+
+  [[nodiscard]] Series infer_scores(const pluss::table::DataFrame& frame,
+                                    const DataFrameBatchOptions& data_options,
+                                    const InferOptions& options = {}) const {
+    return core_().infer_scores(frame, data_options, options);
+  }
+
+  [[nodiscard]] Series infer_scores(const pluss::table::DataFrame& x, const InferOptions& options = {}) const {
+    return core_().infer_scores(x, options);
+  }
+
+  [[nodiscard]] Series assess_series(const LabeledBatch& batch, const AssessOptions& options = {}) const {
+    return core_().assess_series(batch, options);
+  }
+
+  [[nodiscard]] Series assess_series(const pluss::table::DataFrame& frame,
+                                     const DataFrameBatchOptions& data_options,
+                                     const AssessOptions& options = {}) const {
+    return core_().assess_series(frame, data_options, options);
+  }
+
+  [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
+                                     const Series& y,
+                                     const AssessOptions& options = {}) const {
+    return core_().assess_series(x, y, options);
+  }
+
+  [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
+                                     const pluss::table::Thread& y,
+                                     const AssessOptions& options = {}) const {
+    return core_().assess_series(x, y, options);
+  }
+
+  [[nodiscard]] MetricReport assess(const LabeledBatch& batch, const AssessOptions& options = {}) const {
+    return core_().assess(batch, options);
+  }
+
+  [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& frame,
+                                    const DataFrameBatchOptions& data_options,
+                                    const AssessOptions& options = {}) const {
+    return core_().assess(frame, data_options, options);
+  }
+
+  [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
+                                    const Series& y,
+                                    const AssessOptions& options = {}) const {
+    return core_().assess(x, y, options);
+  }
+
+  [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
+                                    const pluss::table::Thread& y,
+                                    const AssessOptions& options = {}) const {
+    return core_().assess(x, y, options);
+  }
+
+  [[nodiscard]] PermuteImpactReport permutation_impact(const LabeledBatch& train,
+                                                        const LabeledBatch& eval,
+                                                        MetricKind metric = MetricKind::Accuracy,
+                                                        std::int64_t repeats = 5,
+                                                        RandomState random = {}) const {
+    return core_().permutation_impact(train, eval, metric, repeats, random);
+  }
+
+  [[nodiscard]] DependenceCurve dependence_curve(const LabeledBatch& train,
+                                                 const FeatureBatch& eval,
+                                                 std::int64_t feature_index,
+                                                 std::int64_t grid_points = 32) const {
+    return core_().dependence_curve(train, eval, feature_index, grid_points);
+  }
+
+  [[nodiscard]] DependenceSurface dependence_surface(const LabeledBatch& train,
+                                                     const FeatureBatch& eval,
+                                                     std::int64_t feature_a,
+                                                     std::int64_t feature_b,
+                                                     std::int64_t grid_points_a = 16,
+                                                     std::int64_t grid_points_b = 16) const {
+    return core_().dependence_surface(train, eval, feature_a, feature_b, grid_points_a, grid_points_b);
+  }
+
+  [[nodiscard]] LinearParameters linear_parameters() const { return core_().linear_parameters(); }
+  [[nodiscard]] std::vector<double> coefficients() const { return core_().coefficients(); }
+  [[nodiscard]] double intercept_term() const { return core_().intercept_term(); }
+  [[nodiscard]] const Series& coeff() const noexcept { return core_().coeff; }
+  [[nodiscard]] const Series& intercept() const noexcept { return core_().intercept; }
+
+  void save(const std::string& path,
+            const LabeledBatch& train_batch,
+            const TrainOptions& train_options = {},
+            io::FlowBundleMetadata metadata = {}) const {
+    core_().save(path, train_batch, train_options, std::move(metadata));
+  }
+
+  void save(const std::string& path,
+            const pluss::table::DataFrame& x_train,
+            const Series& y_train,
+            const TrainOptions& train_options = {},
+            io::FlowBundleMetadata metadata = {}) const {
+    core_().save(path, x_train, y_train, train_options, std::move(metadata));
+  }
+
+  void save(const std::string& path,
+            const pluss::table::DataFrame& x_train,
+            const pluss::table::Thread& y_train,
+            const TrainOptions& train_options = {},
+            io::FlowBundleMetadata metadata = {}) const {
+    core_().save(path, x_train, y_train, train_options, std::move(metadata));
+  }
+
+  void save(const std::string& path,
+            const pluss::table::DataFrame& frame,
+            const DataFrameBatchOptions& data_options,
+            const TrainOptions& train_options = {},
+            io::FlowBundleMetadata metadata = {}) const {
+    core_().save(path, frame, data_options, train_options, std::move(metadata));
+  }
+
+  [[nodiscard]] static Model restore(const io::FlowBundle& bundle) {
+    return Model(detail::ModelCore::restore(bundle));
+  }
+
+  [[nodiscard]] static Model load(const std::string& path) {
+    return Model(detail::ModelCore::load(path));
+  }
+
+  [[nodiscard]] std::vector<std::vector<Series>> dump_transform_states() const {
+    return core_().dump_transform_states();
+  }
+
+  [[nodiscard]] std::vector<Series> dump_model_state() const {
+    return core_().dump_model_state();
+  }
+
+  Model& load_transform_states_(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
+    mut_core_().load_transform_states_(states);
+    return *this;
+  }
+
+  Model& load_model_state_(pluss::msharp::RangeView::Series state) {
+    mut_core_().load_model_state_(state);
+    return *this;
+  }
+
+  Model& mark_trained_(bool trained = true) {
+    mut_core_().mark_trained_(trained);
+    return *this;
+  }
+
+  [[nodiscard]] const ::pluss::ai::nodej::Workflow& workflow() const noexcept { return core_().workflow(); }
+  [[nodiscard]] ::pluss::ai::nodej::Workflow& workflow() noexcept { return mut_core_().workflow(); }
+
+  [[nodiscard]] Model clone() const {
+    return Model(core_().clone());
+  }
+
+ private:
+  [[nodiscard]] const detail::ModelCore& core_() const noexcept { return impl_->core; }
+
+  [[nodiscard]] detail::ModelCore& mut_core_() {
+    detach_();
+    return impl_->core;
+  }
+
+  void detach_() {
+    if (!impl_) {
+      ::pluss::throw_error("lymph::Model: invalid empty model handle.");
+    }
+    if (impl_.unique()) return;
+    impl_ = pluss::msharp::make_intrusive<detail::ModelImpl>(impl_->core.clone());
+  }
+
+  pluss::msharp::intrusive_ptr<detail::ModelImpl> impl_{};
+};
+
+namespace detail {
+
+[[nodiscard]] inline const ModelCore& model_core(const Model& model) noexcept {
+  return model.core_();
+}
+
+} // namespace detail
+
+namespace models {
+
+[[nodiscard]] inline Model linear_regression(LinearFamilyOptions options = {}) { return detail::linear_factory::linear_regression(options); }
+[[nodiscard]] inline Model logistic_regression(LinearFamilyOptions options = {}) { return detail::linear_factory::logistic_regression(options); }
+[[nodiscard]] inline Model hinge_classifier(LinearFamilyOptions options = {}) { return detail::linear_factory::hinge_classifier(options); }
+
+[[nodiscard]] inline Model decision_tree_regressor(TreeFamilyOptions options = {}) { return detail::tree_factory::decision_tree_regressor(options); }
+[[nodiscard]] inline Model decision_tree_classifier(TreeFamilyOptions options = {}) { return detail::tree_factory::decision_tree_classifier(options); }
+
+[[nodiscard]] inline Model bagging_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::bagging_regressor(options); }
+[[nodiscard]] inline Model random_forest_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::random_forest_regressor(options); }
+[[nodiscard]] inline Model bagging_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::bagging_classifier(options); }
+[[nodiscard]] inline Model random_forest_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::random_forest_classifier(options); }
+[[nodiscard]] inline Model gradient_boost_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::gradient_boost_regressor(options); }
+[[nodiscard]] inline Model gradient_boost_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::gradient_boost_classifier(options); }
+[[nodiscard]] inline Model regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::regressor(options); }
+[[nodiscard]] inline Model classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::classifier(options); }
+
+[[nodiscard]] inline Model knn_regressor(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::knn_regressor(options); }
+[[nodiscard]] inline Model knn_classifier(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::knn_classifier(options); }
+[[nodiscard]] inline Model radius_neighbors_regressor(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::radius_neighbors_regressor(options); }
+[[nodiscard]] inline Model radius_neighbors_classifier(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::radius_neighbors_classifier(options); }
+[[nodiscard]] inline Model regressor(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::regressor(options); }
+[[nodiscard]] inline Model classifier(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::classifier(options); }
+
+[[nodiscard]] inline Model svm_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::svm_regressor(options); }
+[[nodiscard]] inline Model svm_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::svm_classifier(options); }
+[[nodiscard]] inline Model nu_svm_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::nu_svm_regressor(options); }
+[[nodiscard]] inline Model nu_svm_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::nu_svm_classifier(options); }
+[[nodiscard]] inline Model one_class_svm(KernelFamilyOptions options = {}) { return detail::kernel_factory::one_class_svm(options); }
+[[nodiscard]] inline Model linear_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::linear_kernel_regressor(options); }
+[[nodiscard]] inline Model rbf_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::rbf_kernel_regressor(options); }
+[[nodiscard]] inline Model polynomial_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::polynomial_kernel_regressor(options); }
+[[nodiscard]] inline Model sigmoid_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::sigmoid_kernel_regressor(options); }
+[[nodiscard]] inline Model linear_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::linear_kernel_classifier(options); }
+[[nodiscard]] inline Model rbf_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::rbf_kernel_classifier(options); }
+[[nodiscard]] inline Model polynomial_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::polynomial_kernel_classifier(options); }
+[[nodiscard]] inline Model sigmoid_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::sigmoid_kernel_classifier(options); }
+[[nodiscard]] inline Model regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::regressor(options); }
+[[nodiscard]] inline Model classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::classifier(options); }
+[[nodiscard]] inline Model transformer(KernelFamilyOptions options = {}) { return detail::kernel_factory::transformer(options); }
+
+[[nodiscard]] inline Model gaussian_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::gaussian_nb_classifier(options); }
+[[nodiscard]] inline Model gaussian_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::gaussian_nb_regressor(options); }
+[[nodiscard]] inline Model bernoulli_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::bernoulli_nb_classifier(options); }
+[[nodiscard]] inline Model bernoulli_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::bernoulli_nb_regressor(options); }
+[[nodiscard]] inline Model multinomial_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::multinomial_nb_classifier(options); }
+[[nodiscard]] inline Model complement_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::complement_nb_classifier(options); }
+[[nodiscard]] inline Model multinomial_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::multinomial_nb_regressor(options); }
+[[nodiscard]] inline Model regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::regressor(options); }
+[[nodiscard]] inline Model classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::classifier(options); }
+
+[[nodiscard]] inline Model kmeans(ClusterFamilyOptions options = {}) { return detail::cluster_factory::kmeans(options); }
+[[nodiscard]] inline Model transformer(ClusterFamilyOptions options = {}) { return detail::cluster_factory::transformer(options); }
 
 // PCA (and friends) as a standalone model in its own right -- distinct from
 // the (not yet built) lymph::stage::pca(...) planned for attaching PCA as
 // one step inside a larger pipeline (LYMPH_REDESIGN_PLAN.md 7.4).
-[[nodiscard]] inline Model pca(DecomposeFamilyOptions options = {}) { return decompose_factory::pca(options); }
-[[nodiscard]] inline Model transformer(DecomposeFamilyOptions options = {}) { return decompose_factory::transformer(options); }
+[[nodiscard]] inline Model pca(DecomposeFamilyOptions options = {}) { return detail::decompose_factory::pca(options); }
+[[nodiscard]] inline Model transformer(DecomposeFamilyOptions options = {}) { return detail::decompose_factory::transformer(options); }
 
-} // namespace model
+} // namespace models
 
 } // namespace pluss::ai::lymph

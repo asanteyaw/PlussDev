@@ -45,6 +45,7 @@ struct HtmlWindowOptions {
   std::int64_t height{760};
   BackendPreference backend_preference{BackendPreference::Auto};
   std::shared_ptr<const VirtualTableModel> virtual_table_model{};
+  bool table_viewport_scroll_only{false};
 };
 
 [[nodiscard]] bool runtime_gui_environment_available() noexcept;

@@ -29,7 +29,7 @@ How many timestamps to keep from the back.
 
 ```cpp
 auto out = base.tail(2);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -43,7 +43,7 @@ Example 2. Use the default when you only need a quick trailing preview.
 
 ```cpp
 auto preview = base.tail();
-std::cout << pluss::print_timeline(preview) << "\n";
+std::cout << pluss::timeindex::print(preview) << "\n";
 ```
 
 ## Notes

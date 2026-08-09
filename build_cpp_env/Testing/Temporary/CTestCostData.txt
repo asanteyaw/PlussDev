@@ -1926,4 +1926,11 @@ ice_time_series_dataset_test 3 0.236736
 ice_coach_test 4 0.162016
 ice_source_test 2 0.375138
 ice_callback_test 1 37.455
+lymph_builder_test 3 64.601
+lymph_frame_prep_test 1 16.514
+lymph_metrics_test 2 29.1321
+lymph_search_test 5 38.5247
+lymph_model_append_test 1 64.2998
+lymph_target_transform_test 1 111.436
+lymph_workflow_test 1 16.6021
 ---

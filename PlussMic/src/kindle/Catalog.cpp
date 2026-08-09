@@ -22,6 +22,7 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
+#include "bundle/registry.h"
 #include "loader/Config.h"
 #include "loader/Loader.h"
 #include "pluss/codem/series_factory.h"

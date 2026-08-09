@@ -108,7 +108,7 @@ const std::vector<ExtractSpec> row_tail{
 
 grid.traverse_put_(
     pluss::msharp::RangeView::Of<ExtractSpec>(row_tail),
-    pluss::codem::value(-5.0));
+    pluss::make_series(-5.0));
 
 std::cout << grid;
 ```
@@ -133,7 +133,7 @@ try {
 
   grid.traverse_put_(
       pluss::msharp::RangeView::Of<ExtractSpec>(reverse_specs),
-      pluss::codem::value(0.0));
+      pluss::make_series(0.0));
 } catch (const std::exception& e) {
   std::string msg = e.what();
   std::cout << msg.substr(0, msg.find('\n'));

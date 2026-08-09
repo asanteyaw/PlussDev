@@ -370,6 +370,24 @@ DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const {
       src.names_, std::move(out_cols), std::move(out_case), src.title_, std::move(out_axis)));
 }
 
+DataFrame DataFrame::take(const Thread& indices) const {
+  PLUSS_CHECK(indices.defined(), "DataFrame::take: indices thread is undefined");
+  PLUSS_CHECK(indices.kind() == ThreadKind::Series, "DataFrame::take: indices thread must be a Series");
+  const auto values = indices.as_series();
+  PLUSS_CHECK(values.dim() == 1, "DataFrame::take: indices thread must be 1D");
+  PLUSS_CHECK(
+      values.scalar_type() == pluss::codem::ScalarType::Int64
+          || values.scalar_type() == pluss::codem::ScalarType::Int32
+          || values.scalar_type() == pluss::codem::ScalarType::UInt64
+          || values.scalar_type() == pluss::codem::ScalarType::UInt32
+          || values.scalar_type() == pluss::codem::ScalarType::UInt16
+          || values.scalar_type() == pluss::codem::ScalarType::UInt8
+          || values.scalar_type() == pluss::codem::ScalarType::Int16
+          || values.scalar_type() == pluss::codem::ScalarType::Int8,
+      "DataFrame::take: indices thread must use an integer Series dtype");
+  return take(values.to_vec<std::int64_t>());
+}
+
 DataFrame DataFrame::where(const pluss::Series& bool_mask) const {
   return filter(bool_mask);
 }

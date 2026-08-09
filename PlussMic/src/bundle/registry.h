@@ -23,6 +23,11 @@
 
 namespace pluss::kindle {
 class Catalog;
+struct TabelizePolicy;
+}
+
+namespace pluss::table {
+class DataFrame;
 }
 
 namespace pluss::bundle {
@@ -183,6 +188,8 @@ public:
   // Backward-compatible alias for older call sites.
   pluss::kindle::Catalog kindelize() const;
   static Registry from_kindle(const pluss::kindle::Catalog& catalog);
+  pluss::table::DataFrame tabelize() const;
+  pluss::table::DataFrame tabelize(const pluss::kindle::TabelizePolicy& policy) const;
 
   void save_csv(std::string_view filepath) const;
   void save_csv(std::string_view filepath, const pluss::loader::Config& config) const;

@@ -38,6 +38,9 @@ class Catalog;
 struct KindelizePolicy;
 struct TabelizePolicy;
 }
+namespace pluss::bundle {
+class Registry;
+}
 
 namespace pluss::table {
 
@@ -90,6 +93,7 @@ class DataFrameFeatureAxisAccessor;
 class DataFrameCastAccessor;
 class DataFrameGroupBuilder;
 class DataFrameGrouped;
+class DataFrameSortBuilder;
 class AtlasPlotAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
@@ -772,11 +776,10 @@ public:
   static DataFrame load_json(std::string_view filepath, const pluss::loader::Config& config);
   static DataFrame load_json(std::string_view filepath,
                              std::initializer_list<pluss::loader::ConfigEntry> config_entries);
-  static DataFrame tabelize(const pluss::kindle::Catalog& catalog);
-  static DataFrame tabelize(const pluss::kindle::Catalog& catalog,
-                            const pluss::kindle::TabelizePolicy& policy);
   pluss::kindle::Catalog kindelize() const;
   pluss::kindle::Catalog kindelize(const pluss::kindle::KindelizePolicy& policy) const;
+  pluss::bundle::Registry bundelize() const;
+  pluss::bundle::Registry bundelize(const pluss::kindle::KindelizePolicy& policy) const;
   static DataFrame select(pluss::msharp::RangeView::Of<Thread> conditions,
                           pluss::msharp::RangeView::Of<DataFrame> choices,
                           const DataFrame& default_value);
@@ -869,6 +872,7 @@ public:
     return arrange(detail::stack_name_view(owned), ascending, nulls_last);
   }
   DataFrame arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const;
+  DataFrameSortBuilder sort(bool ascending = true, bool nulls_last = true) const;
   DataFrame top(std::string_view feature, std::int64_t n) const;
   DataFrame bottom(std::string_view feature, std::int64_t n) const;
   DataFrameView observe(std::int64_t row, bool render = false) const;
@@ -1005,6 +1009,7 @@ public:
   DataFrame shift(std::int64_t periods = 1) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(pluss::msharp::RangeView::Int indices) const;
+  DataFrame take(const Thread& indices) const;
   DataFrame where(const pluss::Series& bool_mask) const;
   DataFrame where(const Thread& bool_mask) const;
   DataFrame where(const Thread& bool_mask, const AlignOptions& options) const;
@@ -1688,6 +1693,7 @@ public:
 private:
   friend class DataFrameFeatureAxisAccessor;
   friend class DataFrameLabelAccessor;
+  friend class DataFrameSortBuilder;
   explicit DataFrame(pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl);
   detail::DataFrameImpl& mut_impl_();
   const detail::DataFrameImpl& impl_ref_() const;
@@ -2018,11 +2024,13 @@ class DataFrameGroupBuilder {
 public:
   explicit DataFrameGroupBuilder(DataFrame frame, DataFrame::GroupOptions options = {});
 
+  DataFrameGrouped by(std::string_view key) const;
   DataFrameGrouped by(std::initializer_list<std::string_view> keys) const;
   DataFrameGrouped by(pluss::msharp::RangeView::Of<std::string_view> keys) const;
+  DataFrameGrouped by(const DataFrame::LabelGroup& keys) const;
+
   template <detail::StringViewNameRange NameRange>
   DataFrameGrouped by(const NameRange& keys) const;
-  DataFrameGrouped by(const DataFrame::LabelGroup& keys) const;
 
 private:
   DataFrame frame_{};
@@ -2055,6 +2063,7 @@ public:
   DataFrame std() const;
   DataFrame var() const;
   DataFrame mode() const;
+  DataFrame yield() const;  // returns the dataframe unaggregated after grouping
 
   // Standalone terminal: unlike every op above, a group with a tie can
   // legitimately produce more than one output row, so this cannot be
@@ -2082,6 +2091,63 @@ private:
   mutable DataFrame keyed_frame_cache_{};
   mutable std::vector<std::string> key_names_cache_{};
   mutable std::shared_ptr<const detail::GroupStateCache> state_cache_{};
+};
+
+class DataFrameSortBuilder {
+public:
+  explicit DataFrameSortBuilder(DataFrame frame, bool ascending = true, bool nulls_last = true);
+
+  DataFrameSortBuilder by(std::string_view feature) const;
+  DataFrameSortBuilder by(std::initializer_list<std::string_view> features) const;
+  DataFrameSortBuilder by(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  DataFrameSortBuilder by(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec> specs) const;
+
+  template <detail::StringViewNameRange NameRange>
+  DataFrameSortBuilder by(const NameRange& features) const;
+
+  DataFrameSortBuilder then(std::string_view feature) const;
+  DataFrameSortBuilder then(std::initializer_list<std::string_view> features) const;
+  DataFrameSortBuilder then(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  DataFrameSortBuilder then(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec> specs) const;
+
+  template <detail::StringViewNameRange NameRange>
+  DataFrameSortBuilder then(const NameRange& features) const;
+
+  DataFrameSortBuilder within(std::string_view feature) const;
+  DataFrameSortBuilder within(std::initializer_list<std::string_view> features) const;
+  DataFrameSortBuilder within(pluss::msharp::RangeView::Of<std::string_view> features) const;
+
+  template <detail::StringViewNameRange NameRange>
+  DataFrameSortBuilder within(const NameRange& features) const;
+
+  DataFrameSortBuilder asc() const;
+  DataFrameSortBuilder desc() const;
+  DataFrameSortBuilder nulls_first() const;
+  DataFrameSortBuilder nulls_last() const;
+
+  Thread order() const;
+  DataFrame yield() const;
+  DataFrame head(std::int64_t n) const;
+  DataFrame tail(std::int64_t n) const;
+
+private:
+  DataFrameSortBuilder with_specs_(std::vector<DataFrame::ArrangeSpec> specs,
+                                   std::optional<std::size_t> active_spec = std::nullopt) const;
+  DataFrameSortBuilder mutate_active_(bool ascending, bool nulls_last) const;
+  std::vector<std::int64_t> ordered_indices_(std::string_view where) const;
+  std::vector<std::int64_t> ranked_indices_(std::int64_t n, bool tail, std::string_view where) const;
+
+  DataFrame frame_{};
+  bool ascending_{true};
+  bool nulls_last_{true};
+  std::vector<DataFrame::ArrangeSpec> specs_{};
+  std::vector<std::string> within_{};
+  std::optional<std::size_t> active_spec_{};
+  mutable std::shared_ptr<const std::vector<std::int64_t>> order_cache_{};
+  mutable std::optional<std::int64_t> head_cache_n_{};
+  mutable std::vector<std::int64_t> head_cache_{};
+  mutable std::optional<std::int64_t> tail_cache_n_{};
+  mutable std::vector<std::int64_t> tail_cache_{};
 };
 
 class DataFrameView final : public DataFrame {
@@ -2439,6 +2505,27 @@ template <detail::StringViewNameRange NameRange>
 inline DataFrameGrouped DataFrameGroupBuilder::by(const NameRange& keys) const {
   return detail::with_stack_name_view(keys, [&](auto values) {
     return by(values);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrameSortBuilder DataFrameSortBuilder::by(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return by(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrameSortBuilder DataFrameSortBuilder::then(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return then(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrameSortBuilder DataFrameSortBuilder::within(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return within(names);
   });
 }
 

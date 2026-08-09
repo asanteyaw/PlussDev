@@ -13,15 +13,15 @@
 
 // search.h -- Search / SearchResult (LYMPH_REDESIGN_PLAN.md phase 5).
 //
-// A reusable hyperparameter-search configuration wrapping today's
-// free-function GridAxis/TuneOptions pair (selection.h's tune()). The
-// deliberate improvement over tune(): the trial factory closure builds a
+// A reusable hyperparameter-search configuration wrapping today's old
+// GridAxis/TuneOptions pair behind an object. The deliberate improvement:
+// the trial factory closure builds a
 // full Model (prep stages included), not a bare ModelSpec, so Search::run
-// cross-validates a genuine end-to-end pipeline per trial instead of a raw,
+// cross-validates a genuine end-to-end workflow path per trial instead of a raw,
 // unscaled/un-one-hot-encoded model -- closing the scope cut documented in
 // LYMPH_BLUEPRINT.md 8.2.
 //
-// Why this can't just call the existing tune()/probe_specs(): those go
+// Why this can't just call the existing spec-level search helpers: those go
 // through NodeJ's own sweep/tune/probe engine, which only ever builds a bare
 // ModelSpec per trial -- no notion of an attached Stage pipeline exists at
 // that layer. Search::run's (trial x fold) dispatch is new, real lymph-level
@@ -61,11 +61,13 @@
 // (not yet started), at which point the qualification just drops.
 //
 // Construction goes through lymph::search::grid(...)/search::random(...)
-// per the construction-vs-method rule (LYMPH_REDESIGN_PLAN.md 2.0);
-// Search's own constructor stays private, friended to those two factories
-// only -- there is exactly one legitimate way to build a Search, unlike
-// Model/WorkflowModel where several genuinely different construction paths
-// coexist.
+// or search::build(axes, TuneOptions) per the construction-vs-method rule
+// (LYMPH_REDESIGN_PLAN.md 2.0). Split policy belongs to the Search object;
+// callers can still pass an explicit SplitOptions to one .run(...) when they
+// intentionally want to override the stored policy.
+// Search's own constructor stays private, friended to the search factories
+// only -- construction remains inside the `search::` family namespace, unlike
+// Model where several genuinely different construction paths coexist.
 
 namespace pluss::ai::lymph {
 
@@ -75,14 +77,24 @@ using selection::GridPoint;
 class Search;
 
 namespace search {
-[[nodiscard]] Search grid(std::vector<GridAxis> axes);
-[[nodiscard]] Search random(std::vector<GridAxis> axes, std::int64_t trials, RandomState random = {});
+[[nodiscard]] Search grid(std::vector<GridAxis> axes, SplitOptions split = {});
+[[nodiscard]] Search grid(std::vector<GridAxis> axes, CrossValidationOptions cv);
+[[nodiscard]] Search random(std::vector<GridAxis> axes,
+                            std::int64_t trials,
+                            RandomState random = {},
+                            SplitOptions split = {});
+[[nodiscard]] Search random(std::vector<GridAxis> axes,
+                            std::int64_t trials,
+                            CrossValidationOptions cv);
+[[nodiscard]] Search random(std::vector<GridAxis> axes,
+                            std::int64_t trials,
+                            RandomState random,
+                            CrossValidationOptions cv);
+[[nodiscard]] Search build(std::vector<GridAxis> axes, TuneOptions options);
 } // namespace search
 
-// Returned by Search::run(...). .top(k) hands back OWNED Models (not the
-// reference_wrappers selection::CompareResult::topk() returns) -- so the
-// result doesn't have to outlive what the caller keeps -- which means it
-// consumes `fitted` and is only callable once.
+// Returned by Search::run(...). .top(k) hands back cheap-copy Models, so the
+// result does not have to outlive what the caller keeps.
 struct SearchResult {
   selection::CompareReport report{};
   std::optional<Model> best_model{};
@@ -101,7 +113,7 @@ struct SearchResult {
     return *best_model;
   }
 
-  [[nodiscard]] std::vector<std::pair<std::string, Model>> top(std::int64_t k) {
+  [[nodiscard]] std::vector<std::pair<std::string, Model>> top(std::int64_t k) const {
     if (k < 0) {
       ::pluss::throw_error("Search::run: top(k) requires k >= 0.");
     }
@@ -113,7 +125,7 @@ struct SearchResult {
     for (std::int64_t i = 0; i < k; ++i) {
       const std::int64_t trial_index = report.ranked_indices[static_cast<std::size_t>(i)];
       out.emplace_back(report.trials[static_cast<std::size_t>(trial_index)].name,
-                       std::move(fitted[static_cast<std::size_t>(i)]));
+                       fitted[static_cast<std::size_t>(i)]);
     }
     return out;
   }
@@ -126,7 +138,18 @@ class Search final {
   // nowhere to go through DataFrame, which is deliberately CPU-only).
   [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
                                  const LabeledBatch& batch,
-                                 const SplitOptions& split = {},
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    const SplitOptions split = default_split_for_(make_model);
+    return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+  }
+
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const LabeledBatch& batch,
+                                 const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
                                  MetricKind objective_metric = MetricKind::Accuracy,
@@ -136,7 +159,19 @@ class Search final {
   [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
                                  const Series& y,
-                                 const SplitOptions& split = {},
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    const SplitOptions split = default_split_for_(make_model);
+    return run(make_model, x, y, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+  }
+
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const pluss::table::DataFrame& x,
+                                 const Series& y,
+                                 const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
                                  MetricKind objective_metric = MetricKind::Accuracy,
@@ -147,12 +182,49 @@ class Search final {
     return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
   }
 
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const pluss::table::DataFrame& x,
+                                 const pluss::table::Thread& y,
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    return run(make_model, x, as_stratify_series(y), train_options, assess_options,
+               objective_metric, objective_policy, fit_options);
+  }
+
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const pluss::table::DataFrame& x,
+                                 const pluss::table::Thread& y,
+                                 const SplitOptions& split,
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    return run(make_model, x, as_stratify_series(y), split, train_options, assess_options,
+               objective_metric, objective_policy, fit_options);
+  }
+
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
-  // workflow_model.h for why this exists alongside the (x, y) form.
+  // detail/model_core.h for why this exists alongside the (x, y) form.
   [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& frame,
                                  const DataFrameBatchOptions& data_options,
-                                 const SplitOptions& split = {},
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    const SplitOptions split = default_split_for_(make_model);
+    return run(make_model, frame, data_options, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+  }
+
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const pluss::table::DataFrame& frame,
+                                 const DataFrameBatchOptions& data_options,
+                                 const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
                                  MetricKind objective_metric = MetricKind::Accuracy,
@@ -164,17 +236,48 @@ class Search final {
   }
 
  private:
-  friend Search search::grid(std::vector<GridAxis> axes);
-  friend Search search::random(std::vector<GridAxis> axes, std::int64_t trials, RandomState random);
+  friend Search search::grid(std::vector<GridAxis> axes, SplitOptions split);
+  friend Search search::grid(std::vector<GridAxis> axes, CrossValidationOptions cv);
+  friend Search search::random(std::vector<GridAxis> axes, std::int64_t trials, RandomState random, SplitOptions split);
+  friend Search search::random(std::vector<GridAxis> axes, std::int64_t trials, CrossValidationOptions cv);
+  friend Search search::random(std::vector<GridAxis> axes,
+                               std::int64_t trials,
+                               RandomState random,
+                               CrossValidationOptions cv);
+  friend Search search::build(std::vector<GridAxis> axes, TuneOptions options);
 
-  Search(std::vector<GridAxis> axes, SearchKind kind, std::int64_t trials, RandomState random)
-      : axes_(std::move(axes)), kind_(kind), trials_(trials), random_(random) {}
+  Search(std::vector<GridAxis> axes, SearchKind kind, std::int64_t trials, RandomState random, SplitOptions split)
+      : axes_(std::move(axes)), kind_(kind), trials_(trials), random_(random), split_(std::move(split)) {}
+
+  Search(std::vector<GridAxis> axes, SearchKind kind, std::int64_t trials, RandomState random, CrossValidationOptions cv)
+      : axes_(std::move(axes)),
+        kind_(kind),
+        trials_(trials),
+        random_(random),
+        split_(make_cross_validation_split_options(cv)),
+        cv_(std::move(cv)) {}
+
+  [[nodiscard]] SplitOptions default_split_for_(const std::function<Model(const GridPoint&)>& make_model) const;
 
   std::vector<GridAxis> axes_{};
   SearchKind kind_ = SearchKind::Grid;
   std::int64_t trials_ = 0;
   RandomState random_{};
+  SplitOptions split_{};
+  std::optional<CrossValidationOptions> cv_{};
 };
+
+[[nodiscard]] inline SplitOptions Search::default_split_for_(const std::function<Model(const GridPoint&)>& make_model) const {
+  if (!cv_.has_value()) {
+    return split_;
+  }
+  const std::int64_t total = selection::grid_size(axes_);
+  if (total <= 0) {
+    ::pluss::throw_error("Search::run: search space is empty (an axis has zero values).");
+  }
+  const TaskKind task = make_model(selection::grid_point_at(0, axes_)).task_kind();
+  return detail::effective_workflow_split_options_(*cv_, task);
+}
 
 [[nodiscard]] inline SearchResult Search::run(const std::function<Model(const GridPoint&)>& make_model,
                                               const LabeledBatch& batch,
@@ -228,8 +331,8 @@ class Search final {
   // of this.
   const TaskKind task = make_model(points.front()).task_kind();
 
-  const SplitPlan plan = workflow_split_plan_(batch, split_options, task, "Search::run");
-  const std::vector<FoldBatchPair> fold_batches = materialize_fold_batches_(batch, plan, "Search::run");
+  const SplitPlan plan = detail::workflow_split_plan_(batch, split_options, task, "Search::run");
+  const std::vector<FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "Search::run");
 
   struct GridCell_ {
     std::size_t point_index;
@@ -287,7 +390,7 @@ class Search final {
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
       cross_report.folds[fi] = cell_results[pi * fold_n + fi];
     }
-    CrossValidationReport cv_report = cross_validation_report_from_folds_(std::move(cross_report));
+    CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(cross_report));
     const double objective = selection::scalar_metric_(cv_report.mean, objective_metric);
     result.report.trials.push_back(selection::Trial{
         .name = points[pi].label(),
@@ -340,12 +443,45 @@ class Search final {
 
 namespace search {
 
-[[nodiscard]] inline Search grid(std::vector<GridAxis> axes) {
-  return Search(std::move(axes), SearchKind::Grid, 0, RandomState{});
+[[nodiscard]] inline Search grid(std::vector<GridAxis> axes, SplitOptions split) {
+  return Search(std::move(axes), SearchKind::Grid, 0, RandomState{}, std::move(split));
 }
 
-[[nodiscard]] inline Search random(std::vector<GridAxis> axes, std::int64_t trials, RandomState random) {
-  return Search(std::move(axes), SearchKind::Random, trials, random);
+[[nodiscard]] inline Search grid(std::vector<GridAxis> axes, CrossValidationOptions cv) {
+  return Search(std::move(axes), SearchKind::Grid, 0, RandomState{}, std::move(cv));
+}
+
+[[nodiscard]] inline Search random(std::vector<GridAxis> axes,
+                                   std::int64_t trials,
+                                   RandomState random,
+                                   SplitOptions split) {
+  return Search(std::move(axes), SearchKind::Random, trials, random, std::move(split));
+}
+
+[[nodiscard]] inline Search random(std::vector<GridAxis> axes,
+                                   std::int64_t trials,
+                                   CrossValidationOptions cv) {
+  return Search(std::move(axes), SearchKind::Random, trials,
+                RandomState{.seed = cv.random_state, .deterministic = cv.deterministic},
+                std::move(cv));
+}
+
+[[nodiscard]] inline Search random(std::vector<GridAxis> axes,
+                                   std::int64_t trials,
+                                   RandomState random,
+                                   CrossValidationOptions cv) {
+  return Search(std::move(axes), SearchKind::Random, trials, random, std::move(cv));
+}
+
+[[nodiscard]] inline Search build(std::vector<GridAxis> axes, TuneOptions options) {
+  SplitOptions split = options.split;
+  if (split.max_parallel <= 0 && options.max_parallel > 0) {
+    split.max_parallel = options.max_parallel;
+  }
+  if (options.search == SearchKind::Random) {
+    return random(std::move(axes), options.trials, options.random, std::move(split));
+  }
+  return Search(std::move(axes), options.search, options.trials, options.random, std::move(split));
 }
 
 } // namespace search

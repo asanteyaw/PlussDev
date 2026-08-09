@@ -1,7 +1,7 @@
 # NodeJ Full API Reference: Method Index
 
-Total method pages: **177**
-Total data-type pages: **39**
+Total method pages: **185**
+Total data-type pages: **44**
 
 ## Data Types
 
@@ -10,6 +10,8 @@ Total data-type pages: **39**
 
 api/type-balanceplan
 api/type-balancetarget
+api/type-binaryscorecurve
+api/type-categorymap
 api/type-classmix
 api/type-classreport
 api/type-confusiontable
@@ -26,9 +28,11 @@ api/type-flowstageinfo
 api/type-foldassessresult
 api/type-indexsplit
 api/type-isolationtree
+api/type-knearestresult
 api/type-labeledbatch
 api/type-lexiconmapperstate
 api/type-modelspec
+api/type-node
 api/type-permuteimpactreport
 api/type-randomstate
 api/type-sparsecrossreport
@@ -41,6 +45,7 @@ api/type-sparsetunetrial
 api/type-splitplan
 api/type-stage
 api/type-status
+api/type-thresholdcurve
 api/type-transformspec
 api/type-tuneledger
 api/type-tunereport
@@ -56,6 +61,8 @@ api/type-weightplan
 
 api/method-apply-learn-map
 api/method-apply-map
+api/method-best-threshold
+api/method-binary-score-curve
 api/method-check-ready-for-infer
 api/method-class-mix
 api/method-classification-summary
@@ -210,6 +217,11 @@ api/method-sparselinearregressor-feature-count
 api/method-sparselinearregressor-infer
 api/method-sparselinearregressor-load-state
 api/method-sparselinearregressor-trained
+api/method-spatialindex-build
+api/method-spatialindex-dim
+api/method-spatialindex-query-k
+api/method-spatialindex-query-self-k
+api/method-spatialindex-size
 api/method-standardscaler-dump-state
 api/method-standardscaler-load-state
 api/method-standardscaler-trained
@@ -221,6 +233,7 @@ api/method-statusor-status
 api/method-statusor-statusor
 api/method-statusor-value
 api/method-take-features
+api/method-threshold-curve
 api/method-thresholdbinarizer-dump-state
 api/method-thresholdbinarizer-load-state
 api/method-thresholdbinarizer-trained

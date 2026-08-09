@@ -118,7 +118,7 @@ Example 2. A bool mask write is part of the same general overload family.
 auto mask = pluss::make_series(std::vector<bool>{false, true, false, true, false}, {5});
 auto mask_inplace = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4}, {5});
 
-mask_inplace.index_put_({mask}, pluss::codem::value(-1.0), false);
+mask_inplace.index_put_({mask}, pluss::make_series(-1.0), false);
 std::cout << mask_inplace;
 ```
 
@@ -156,7 +156,7 @@ Example 4. The scalar convenience overload is intentionally 1D-only, and
 negative indices count from the end.
 
 ```cpp
-accum_inplace.index_put_(-1, pluss::codem::value(999.0));
+accum_inplace.index_put_(-1, pluss::make_series(999.0));
 std::cout << accum_inplace;
 ```
 
@@ -170,7 +170,7 @@ data=[0, 31, 2, 33, 999]
 Example 5. The 1D `ExtractSpec` shorthand accepts a single scalar index spec.
 
 ```cpp
-accum_inplace.index_put_({std::int64_t{0}}, pluss::codem::value(123.0));
+accum_inplace.index_put_({std::int64_t{0}}, pluss::make_series(123.0));
 std::cout << accum_inplace;
 ```
 

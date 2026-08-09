@@ -93,7 +93,10 @@
 
 - (void)present {
   [window_ makeKeyAndOrderFront:nil];
+  [window_ displayIfNeeded];
   [NSApp activateIgnoringOtherApps:YES];
+  [window_ makeKeyWindow];
+  [NSApp updateWindows];
 }
 
 - (void)windowWillClose:(NSNotification*)notification {
@@ -178,6 +181,9 @@ bool show_macos_html_window(const std::string& title,
   @autoreleasepool {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    if (![NSApp isRunning]) {
+      [NSApp finishLaunching];
+    }
 
     NSString* title_ns = [NSString stringWithUTF8String:title.c_str()];
     NSString* html_ns = [NSString stringWithUTF8String:html.c_str()];
@@ -197,6 +203,9 @@ bool show_macos_html_window(const std::string& title,
     }
 
     [controller present];
+    if ([controller window] == nil || ![[controller window] isVisible]) {
+      return false;
+    }
     [NSApp runModalForWindow:[controller window]];
     return true;
   }

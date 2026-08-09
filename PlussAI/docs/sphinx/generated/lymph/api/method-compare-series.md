@@ -49,7 +49,7 @@ evaluation completed
   //========== Cell 15: Save, Load, Re-Infer ========
   const fs::path final_model_path = model_dir / "lymph_housing_ch2_best.bin";
   final_workflow.save(final_model_path.string(), train_prepared, train_y, train_options);
-  auto restored = lymph::Workflow::load(final_model_path.string());
+  auto restored = lymph::Model::load(final_model_path.string());
   const Series restored_pred = restored.infer(test_prepared);
   const auto parity = lymph::compare_series(final_pred, restored_pred);
   out.writeln("restored parity", parity.max_abs_diff, parity.mae);

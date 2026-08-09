@@ -272,8 +272,8 @@ struct FoldBatchPair {
 
 // Regression counterpart -- from already-computed truth/prediction vectors
 // rather than a model + batch, the shape needed whenever predictions came
-// from somewhere other than a plain WorkflowModel::infer
-// (WorkflowModel::assess_series's own target_transform_ branch, workflow_model.h,
+// from somewhere other than a plain Model::infer
+// (Model::assess_series's own target_transform_ branch, detail/model_core.h,
 // is the first caller).
 [[nodiscard]] inline Series regression_metric_series(const Series& truth,
                                                      const Series& prediction,
@@ -485,7 +485,7 @@ struct FoldBatchPair {
 // step. plan_balance only ever reads this one frame to decide how to
 // resample it -- no train/inference persistence is involved -- so a fresh
 // per-call fit (no existing/fitted category map threading) is correct here,
-// unlike WorkflowModel::learn_/infer's frozen-map requirement.
+// unlike Model::learn_/infer's frozen-map requirement.
 [[nodiscard]] inline BalancePlan plan_balance(const pluss::table::DataFrame& frame,
                                               const DataFrameBatchOptions& data_options,
                                               const BalanceTarget& target,

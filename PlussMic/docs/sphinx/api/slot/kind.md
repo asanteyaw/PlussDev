@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fba42e1dd254 -->
 
 # Slot::kind
 

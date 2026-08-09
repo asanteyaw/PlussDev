@@ -16,6 +16,9 @@ class Archive;
 struct KindelizePolicy;
 struct TabelizePolicy;
 }
+namespace pluss::bundle {
+class Axel;
+}
 
 namespace pluss::table {
 
@@ -83,11 +86,10 @@ public:
       const std::function<ThreadValue(const ThreadValue&)>& fn) const;
   Atlas flow(const std::function<Atlas(const Atlas&)>& fn) const;
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
-  static Atlas tabelize(const pluss::kindle::Archive& archive);
-  static Atlas tabelize(const pluss::kindle::Archive& archive,
-                        const pluss::kindle::TabelizePolicy& policy);
   pluss::kindle::Archive kindelize() const;
   pluss::kindle::Archive kindelize(const pluss::kindle::KindelizePolicy& policy) const;
+  pluss::bundle::Axel bundelize() const;
+  pluss::bundle::Axel bundelize(const pluss::kindle::KindelizePolicy& policy) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   void show(const display::DisplayOptions& options = {}) const;

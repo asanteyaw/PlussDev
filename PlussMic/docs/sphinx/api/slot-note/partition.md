@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0e0119463168 -->
 
 # SlotNoteAccessor::partition
 

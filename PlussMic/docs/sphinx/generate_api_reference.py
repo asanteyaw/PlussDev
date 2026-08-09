@@ -6775,8 +6775,8 @@ def example_for(class_name: str, method: Method) -> str:
             return f'auto out = pluss::table::DataFrame::{n}("{path}");'
         if n == 'tabelize':
             if 'TabelizePolicy' in sig:
-                return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\npluss::kindle::TabelizePolicy policy;\nauto out = pluss::table::DataFrame::tabelize(catalog, policy);'
-            return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\nauto out = pluss::table::DataFrame::tabelize(catalog);'
+                return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\npluss::kindle::TabelizePolicy policy;\nauto out = catalog.tabelize(policy);'
+            return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\nauto out = catalog.tabelize();'
         if n == 'kindelize':
             if 'KindelizePolicy' in sig:
                 return (
@@ -8075,7 +8075,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'relabel_depth' or n == 'align_depth': return atlas_base() + f'\n\nauto labels = pluss::table::Thread(pluss::make_note({{"baseline", "stress"}}));\nauto out = atlas.{n}(labels);'
             if n == 'map_frames': return atlas_base() + '\n\nauto out = atlas.map_frames([](const pluss::table::DataFrame& frame) { return frame.head(1, false); });'
             if n == 'aggregate_over_frames': return atlas_base() + '\n\nauto out = atlas.aggregate_over_frames([](const std::vector<pluss::table::DataFrame>& frames) { return frames.front(); });'
-            if n == 'tabelize': return 'using namespace pluss::kindle::literals;\nauto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});\nauto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});\nauto archive = pluss::kindle::Archive({c0, c1});\nauto out = pluss::table::Atlas::tabelize(archive);'
+            if n == 'tabelize': return 'using namespace pluss::kindle::literals;\nauto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});\nauto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});\nauto archive = pluss::kindle::Archive({c0, c1});\nauto out = archive.tabelize();'
             if n == 'kindelize': return atlas_base() + '\n\nauto out = atlas.kindelize();'
             if n == 'to_string': return atlas_base() + '\n\nauto out = atlas.to_string();'
             if n == 'show': return atlas_base() + '\n\natlas.show();'
@@ -8629,7 +8629,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'DataFrame' and n == 'tabelize':
             return bullets('Practical Behavior', [
-                '`tabelize(catalog)` is the explicit bridge from Kindle stream collections into the DataFrame model.',
+                '`catalog.tabelize()` is the explicit bridge from Kindle stream collections into the DataFrame model.',
                 'Aligned streams become DataFrame features, and stream position becomes row position.',
                 'Use the policy overload when you want explicit tabelization rules instead of the defaults.',
             ])

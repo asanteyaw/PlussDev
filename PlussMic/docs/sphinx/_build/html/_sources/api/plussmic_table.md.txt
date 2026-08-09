@@ -41,4 +41,9 @@ The helper/reference pages below stay in this same branch so the sidebar remains
 ../thread_note_accessor_api_reference
 ../thread_timeline_accessor_api_reference
 ../thread_label_accessor_api_reference
+../atlas_label_accessor_api_reference
+../atlas_timeline_accessor_api_reference
+../atlas_ts_accessor_api_reference
+../atlas_ts_resampler_api_reference
+../atlas_plot_accessor_api_reference
 ```

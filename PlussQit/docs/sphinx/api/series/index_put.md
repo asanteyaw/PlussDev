@@ -156,7 +156,7 @@ Example 4. A bool mask write is also part of the general overload family.
 
 ```cpp
 auto mask = pluss::make_series(std::vector<bool>{false, true, false, true, false}, {5});
-std::cout << vec.index_put({mask}, pluss::codem::value(-1.0), false);
+std::cout << vec.index_put({mask}, pluss::make_series(-1.0), false);
 ```
 
 ### Output
@@ -198,7 +198,7 @@ Example 6. The scalar convenience overload targets one 1D position, and
 negative indices count from the end.
 
 ```cpp
-std::cout << vec.index_put(-1, pluss::codem::value(555.0));
+std::cout << vec.index_put(-1, pluss::make_series(555.0));
 ```
 
 ### Output

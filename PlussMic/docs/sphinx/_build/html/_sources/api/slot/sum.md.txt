@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4c7d0d457c15 -->
 
 # Slot::sum
 

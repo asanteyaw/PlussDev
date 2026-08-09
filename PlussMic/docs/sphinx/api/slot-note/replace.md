@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a9efb26dd845 -->
 
 # SlotNoteAccessor::replace
 

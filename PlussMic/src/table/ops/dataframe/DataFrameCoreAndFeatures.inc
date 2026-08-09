@@ -1947,6 +1947,365 @@ DataFrame DataFrame::arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) co
   return arrange_impl_frame(*this, std::vector<ArrangeSpec>(specs.begin(), specs.end()));
 }
 
+namespace {
+
+std::vector<std::string> normalize_sort_group_names_(
+    const DataFrame& frame,
+    pluss::msharp::RangeView::Of<std::string_view> features,
+    std::string_view where) {
+  std::vector<std::string> names;
+  names.reserve(features.size());
+  std::unordered_set<std::string> seen;
+  seen.reserve(features.size());
+  for (const auto feature_sv : features) {
+    const auto feature = owned_name(feature_sv);
+    PLUSS_CHECK(!feature.empty(), std::string(where) + ": feature name cannot be empty");
+    PLUSS_CHECK(frame.get(feature).has_value(), std::string(where) + ": unknown feature '" + feature + "'");
+    if (seen.insert(feature).second) {
+      names.push_back(feature);
+    }
+  }
+  return names;
+}
+
+std::vector<DataFrame::ArrangeSpec> append_sort_specs_(
+    const std::vector<DataFrame::ArrangeSpec>& base,
+    const std::vector<DataFrame::ArrangeSpec>& incoming,
+    std::string_view where) {
+  std::vector<DataFrame::ArrangeSpec> out = base;
+  out.reserve(base.size() + incoming.size());
+  std::unordered_set<std::string> seen;
+  seen.reserve(base.size() + incoming.size());
+  for (const auto& spec : base) {
+    if (!spec.feature.empty()) {
+      seen.insert(spec.feature);
+    }
+  }
+  for (const auto& spec : incoming) {
+    PLUSS_CHECK(!spec.feature.empty(), std::string(where) + ": feature name cannot be empty");
+    PLUSS_CHECK(seen.insert(spec.feature).second,
+                std::string(where) + ": duplicate sort key '" + spec.feature + "'");
+    out.push_back(spec);
+  }
+  return out;
+}
+
+std::vector<std::int64_t> sort_builder_order_(
+    const DataFrame& frame,
+    const std::vector<DataFrame::ArrangeSpec>& specs,
+    const std::vector<std::string>& within,
+    std::string_view where) {
+  PLUSS_CHECK(!specs.empty(), std::string(where) + ": no sort keys configured; call .by(...) first");
+  const auto normalized_specs = normalize_arrange_specs_(frame, specs, where);
+  if (within.empty()) {
+    return arrange_order_impl_frame_(frame, normalized_specs, where);
+  }
+
+  std::vector<Thread> group_keys;
+  group_keys.reserve(within.size());
+  for (const auto& name : within) {
+    group_keys.push_back(frame.features(name));
+  }
+  const auto state = build_group_state_(
+      std::span<const Thread>(group_keys.data(), group_keys.size()),
+      std::span<const std::string>(within.data(), within.size()),
+      frame.ncases(),
+      ThreadGroupOptions{.dropnull = false, .sort = false},
+      where);
+
+  std::vector<std::int64_t> ordered;
+  ordered.reserve(static_cast<std::size_t>(frame.ncases()));
+  for (std::size_t g = 0; g + 1 < state.group_offsets.size(); ++g) {
+    const auto start = static_cast<std::size_t>(state.group_offsets[g]);
+    const auto stop = static_cast<std::size_t>(state.group_offsets[g + 1]);
+    if (stop <= start) {
+      continue;
+    }
+    const auto local = arrange_order_on_indices_(
+        frame,
+        normalized_specs,
+        std::span<const std::int64_t>(state.grouped_rows.data() + start, stop - start));
+    ordered.insert(ordered.end(), local.begin(), local.end());
+  }
+  PLUSS_CHECK(
+      ordered.size() == static_cast<std::size_t>(frame.ncases()),
+      std::string(where) + ": internal sort order size mismatch");
+  return ordered;
+}
+
+std::vector<std::int64_t> sort_builder_ranked_(
+    const DataFrame& frame,
+    const std::vector<DataFrame::ArrangeSpec>& specs,
+    const std::vector<std::string>& within,
+    std::int64_t keep,
+    bool tail,
+    std::string_view where) {
+  PLUSS_CHECK(!specs.empty(), std::string(where) + ": no sort keys configured; call .by(...) first");
+  PLUSS_CHECK(keep >= 0, std::string(where) + ": keep must be >= 0");
+  const auto clipped = std::clamp<std::int64_t>(keep, 0, frame.ncases());
+  if (clipped == 0) {
+    return {};
+  }
+
+  const auto normalized_specs = normalize_arrange_specs_(frame, specs, where);
+  const auto arrange_state = prepare_arrange_state_(frame, normalized_specs, where);
+  if (within.empty()) {
+    std::vector<std::int64_t> identity(static_cast<std::size_t>(frame.ncases()));
+    std::iota(identity.begin(), identity.end(), static_cast<std::int64_t>(0));
+    return arrange_partial_order_on_indices_(
+        arrange_state,
+        std::span<const std::int64_t>(identity.data(), identity.size()),
+        clipped,
+        tail);
+  }
+
+  std::vector<Thread> group_keys;
+  group_keys.reserve(within.size());
+  for (const auto& name : within) {
+    group_keys.push_back(frame.features(name));
+  }
+  const auto group_state = build_group_state_(
+      std::span<const Thread>(group_keys.data(), group_keys.size()),
+      std::span<const std::string>(within.data(), within.size()),
+      frame.ncases(),
+      ThreadGroupOptions{.dropnull = false, .sort = false},
+      where);
+
+  if (!tail) {
+    std::vector<std::int64_t> ordered;
+    ordered.reserve(static_cast<std::size_t>(clipped));
+    auto remaining = clipped;
+    for (std::size_t g = 0; g + 1 < group_state.group_offsets.size() && remaining > 0; ++g) {
+      const auto start = static_cast<std::size_t>(group_state.group_offsets[g]);
+      const auto stop = static_cast<std::size_t>(group_state.group_offsets[g + 1]);
+      if (stop <= start) {
+        continue;
+      }
+      const auto group_size = static_cast<std::int64_t>(stop - start);
+      const auto take_n = std::min<std::int64_t>(remaining, group_size);
+      const auto span = std::span<const std::int64_t>(group_state.grouped_rows.data() + start, stop - start);
+      auto local = (take_n == group_size)
+          ? arrange_order_on_indices_(frame, normalized_specs, span)
+          : arrange_partial_order_on_indices_(arrange_state, span, take_n, false);
+      ordered.insert(ordered.end(), local.begin(), local.end());
+      remaining -= take_n;
+    }
+    return ordered;
+  }
+
+  std::vector<std::vector<std::int64_t>> chunks;
+  auto remaining = clipped;
+  for (std::size_t g = group_state.group_offsets.size(); g > 1 && remaining > 0; --g) {
+    const auto idx = g - 2;
+    const auto start = static_cast<std::size_t>(group_state.group_offsets[idx]);
+    const auto stop = static_cast<std::size_t>(group_state.group_offsets[idx + 1]);
+    if (stop <= start) {
+      continue;
+    }
+    const auto group_size = static_cast<std::int64_t>(stop - start);
+    const auto take_n = std::min<std::int64_t>(remaining, group_size);
+    const auto span = std::span<const std::int64_t>(group_state.grouped_rows.data() + start, stop - start);
+    auto local = (take_n == group_size)
+        ? arrange_order_on_indices_(frame, normalized_specs, span)
+        : arrange_partial_order_on_indices_(arrange_state, span, take_n, true);
+    chunks.push_back(std::move(local));
+    remaining -= take_n;
+  }
+
+  std::vector<std::int64_t> ordered;
+  ordered.reserve(static_cast<std::size_t>(clipped));
+  for (auto it = chunks.rbegin(); it != chunks.rend(); ++it) {
+    ordered.insert(ordered.end(), it->begin(), it->end());
+  }
+  return ordered;
+}
+
+} // namespace
+
+DataFrameSortBuilder DataFrame::sort(bool ascending, bool nulls_last) const {
+  return DataFrameSortBuilder(*this, ascending, nulls_last);
+}
+
+DataFrameSortBuilder::DataFrameSortBuilder(DataFrame frame, bool ascending, bool nulls_last)
+    : frame_(std::move(frame)), ascending_(ascending), nulls_last_(nulls_last) {}
+
+DataFrameSortBuilder DataFrameSortBuilder::with_specs_(std::vector<DataFrame::ArrangeSpec> specs,
+                                                       std::optional<std::size_t> active_spec) const {
+  auto out = *this;
+  out.specs_ = std::move(specs);
+  out.active_spec_ = active_spec;
+  out.order_cache_.reset();
+  out.head_cache_n_.reset();
+  out.head_cache_.clear();
+  out.tail_cache_n_.reset();
+  out.tail_cache_.clear();
+  return out;
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::mutate_active_(bool ascending, bool nulls_last) const {
+  PLUSS_CHECK(active_spec_.has_value(), "DataFrame::sort: no active sort key; call .by(...) first");
+  auto out = *this;
+  auto& spec = out.specs_.at(*active_spec_);
+  spec.ascending = ascending;
+  spec.nulls_last = nulls_last;
+  out.order_cache_.reset();
+  out.head_cache_n_.reset();
+  out.head_cache_.clear();
+  out.tail_cache_n_.reset();
+  out.tail_cache_.clear();
+  return out;
+}
+
+std::vector<std::int64_t> DataFrameSortBuilder::ordered_indices_(std::string_view where) const {
+  if (!order_cache_) {
+    order_cache_ = std::make_shared<const std::vector<std::int64_t>>(
+        sort_builder_order_(frame_, specs_, within_, where));
+  }
+  return *order_cache_;
+}
+
+std::vector<std::int64_t> DataFrameSortBuilder::ranked_indices_(std::int64_t n,
+                                                                bool tail,
+                                                                std::string_view where) const {
+  PLUSS_CHECK(n >= 0, std::string(where) + ": n must be >= 0");
+  const auto clipped = std::clamp<std::int64_t>(n, 0, frame_.ncases());
+  if (clipped == 0) {
+    return {};
+  }
+
+  if (order_cache_) {
+    const auto& indices = *order_cache_;
+    if (!tail) {
+      return std::vector<std::int64_t>(indices.begin(), indices.begin() + clipped);
+    }
+    return std::vector<std::int64_t>(indices.end() - clipped, indices.end());
+  }
+
+  if (!tail && head_cache_n_.has_value() && *head_cache_n_ == clipped) {
+    return head_cache_;
+  }
+  if (tail && tail_cache_n_.has_value() && *tail_cache_n_ == clipped) {
+    return tail_cache_;
+  }
+
+  auto ranked = sort_builder_ranked_(frame_, specs_, within_, clipped, tail, where);
+  if (!tail) {
+    head_cache_n_ = clipped;
+    head_cache_ = ranked;
+  } else {
+    tail_cache_n_ = clipped;
+    tail_cache_ = ranked;
+  }
+  return ranked;
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::by(std::string_view feature) const {
+  return by(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::by(std::initializer_list<std::string_view> features) const {
+  return by(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::by(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  std::vector<DataFrame::ArrangeSpec> specs;
+  specs.reserve(features.size());
+  for (const auto feature_sv : features) {
+    specs.push_back(DataFrame::ArrangeSpec{owned_name(feature_sv), ascending_, nulls_last_});
+  }
+  return by(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec>(specs));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::by(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec> specs) const {
+  std::vector<DataFrame::ArrangeSpec> owned(specs.begin(), specs.end());
+  const auto active = owned.empty() ? std::nullopt : std::optional<std::size_t>(owned.size() - 1);
+  return with_specs_(std::move(owned), active);
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::then(std::string_view feature) const {
+  return then(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::then(std::initializer_list<std::string_view> features) const {
+  return then(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::then(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  std::vector<DataFrame::ArrangeSpec> specs;
+  specs.reserve(features.size());
+  for (const auto feature_sv : features) {
+    specs.push_back(DataFrame::ArrangeSpec{owned_name(feature_sv), ascending_, nulls_last_});
+  }
+  return then(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec>(specs));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::then(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec> specs) const {
+  PLUSS_CHECK(!specs_.empty(), "DataFrame::sort.then: no existing sort plan; call .by(...) first");
+  const std::vector<DataFrame::ArrangeSpec> incoming(specs.begin(), specs.end());
+  auto merged = append_sort_specs_(specs_, incoming, "DataFrame::sort.then");
+  const auto active = merged.empty() ? std::nullopt : std::optional<std::size_t>(merged.size() - 1);
+  return with_specs_(std::move(merged), active);
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::within(std::string_view feature) const {
+  return within(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::within(std::initializer_list<std::string_view> features) const {
+  return within(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::within(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  auto out = *this;
+  out.within_ = normalize_sort_group_names_(frame_, features, "DataFrame::sort.within");
+  out.order_cache_.reset();
+  out.head_cache_n_.reset();
+  out.head_cache_.clear();
+  out.tail_cache_n_.reset();
+  out.tail_cache_.clear();
+  return out;
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::asc() const {
+  return mutate_active_(true, active_spec_.has_value() ? specs_.at(*active_spec_).nulls_last : nulls_last_);
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::desc() const {
+  return mutate_active_(false, active_spec_.has_value() ? specs_.at(*active_spec_).nulls_last : nulls_last_);
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::nulls_first() const {
+  return mutate_active_(active_spec_.has_value() ? specs_.at(*active_spec_).ascending : ascending_, false);
+}
+
+DataFrameSortBuilder DataFrameSortBuilder::nulls_last() const {
+  return mutate_active_(active_spec_.has_value() ? specs_.at(*active_spec_).ascending : ascending_, true);
+}
+
+Thread DataFrameSortBuilder::order() const {
+  const auto indices = ordered_indices_("DataFrame::sort.order");
+  auto out = make_i64_thread(indices);
+  if (frame_.label().has()) {
+    out = out.label().set(frame_.label().values().take(
+        std::span<const std::int64_t>(indices.data(), indices.size())));
+  }
+  return out;
+}
+
+DataFrame DataFrameSortBuilder::yield() const {
+  return frame_.take(order());
+}
+
+DataFrame DataFrameSortBuilder::head(std::int64_t n) const {
+  const auto indices = ranked_indices_(n, false, "DataFrame::sort.head");
+  return frame_.take(std::span<const std::int64_t>(indices.data(), indices.size()));
+}
+
+DataFrame DataFrameSortBuilder::tail(std::int64_t n) const {
+  const auto indices = ranked_indices_(n, true, "DataFrame::sort.tail");
+  return frame_.take(std::span<const std::int64_t>(indices.data(), indices.size()));
+}
+
 DataFrame DataFrame::sort_caselbl(bool ascending, bool nulls_last) const {
   std::vector<std::int64_t> idx(static_cast<std::size_t>(ncases()));
   std::iota(idx.begin(), idx.end(), 0);

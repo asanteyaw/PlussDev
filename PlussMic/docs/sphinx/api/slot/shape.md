@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 76c25b5d84d4 -->
 
 # Slot::shape
 

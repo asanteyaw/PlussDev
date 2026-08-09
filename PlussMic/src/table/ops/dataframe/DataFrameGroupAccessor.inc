@@ -13,6 +13,10 @@ DataFrameGrouped DataFrameGroupBuilder::by(std::initializer_list<std::string_vie
   return by(pluss::msharp::RangeView::Of<std::string_view>(keys));
 }
 
+DataFrameGrouped DataFrameGroupBuilder::by(std::string_view key) const {
+  return by(pluss::msharp::RangeView::Of<std::string_view>({key}));
+}
+
 DataFrameGrouped DataFrameGroupBuilder::by(pluss::msharp::RangeView::Of<std::string_view> keys) const {
   return DataFrameGrouped(frame_, normalize_name_list(keys), options_);
 }
@@ -281,6 +285,15 @@ DataFrame DataFrameGrouped::max() const { return terminal_(DataFrame::GroupOp::M
 DataFrame DataFrameGrouped::std() const { return terminal_(DataFrame::GroupOp::Std); }
 DataFrame DataFrameGrouped::var() const { return terminal_(DataFrame::GroupOp::Var); }
 DataFrame DataFrameGrouped::mode() const { return terminal_(DataFrame::GroupOp::Mode); }
+DataFrame DataFrameGrouped::yield() const
+{
+    PLUSS_CHECK(
+        options_.layout == DataFrame::GroupLayout::Flat,
+        "DataFrameGrouped::yield: only Flat layout is currently supported");
+
+    const auto& state = state_cached_();
+    return frame_.take(state.grouped_rows).title(frame_.title());
+}
 
 DataFrame DataFrameGrouped::mode_ties(std::string_view feature, std::string_view output) const {
   PLUSS_CHECK(options_.layout == DataFrame::GroupLayout::Flat,

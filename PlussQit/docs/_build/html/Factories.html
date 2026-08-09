@@ -54,7 +54,7 @@ exposed by the single include:</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pluss::codem::*</span></code> factory implementations live in <code class="docutils literal notranslate"><span class="pre">src/CodeM/core/SeriesBody.h</span></code>.</p></li>
 </ul>
 <p>This keeps the public header stable and avoids accidental recursion/bloat where a public factory calls another public
-factory (e.g. <code class="docutils literal notranslate"><span class="pre">pluss::nan()</span></code> must not call <code class="docutils literal notranslate"><span class="pre">pluss::full()</span></code>), ensuring a single source of truth for behavior.</p>
+factory (e.g. <code class="docutils literal notranslate"><span class="pre">pluss::series::nan()</span></code> must not call <code class="docutils literal notranslate"><span class="pre">pluss::series::full()</span></code>), ensuring a single source of truth for behavior.</p>
 </section>
 </section>
 

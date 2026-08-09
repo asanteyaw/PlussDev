@@ -313,7 +313,10 @@ bool HtmlScrollModel::pointer_down(const PointI location) {
   for (auto it = metrics_.table_scroll_regions.rbegin();
        it != metrics_.table_scroll_regions.rend();
        ++it) {
-    if (!contains(it->viewport_rect, location)) {
+    const bool in_viewport = contains(it->viewport_rect, location);
+    const bool in_horizontal_scrollbar = contains(it->horizontal_track_rect, location);
+    const bool in_vertical_scrollbar = contains(it->vertical_track_rect, location);
+    if (!in_viewport && !in_horizontal_scrollbar && !in_vertical_scrollbar) {
       continue;
     }
     auto& offset = tables_[it->target];

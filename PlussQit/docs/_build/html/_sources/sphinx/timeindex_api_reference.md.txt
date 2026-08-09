@@ -22,7 +22,7 @@ That is the main difference from `Timeline`:
 - `TimeIndex` is the 1D time axis surface. It is where ordered lookup semantics
   live.
 
-Construction is intentionally routed through `pluss::make_timeindex(...)` or
+Construction is intentionally routed through `pluss::timeindex::make(...)` or
 `Timeline::to_timeindex(...)`, not through public constructors.
 
 ## Includes
@@ -39,7 +39,7 @@ Construction is intentionally routed through `pluss::make_timeindex(...)` or
 Example 1. Build directly from ISO-like timestamp text.
 
 ```cpp
-auto idx = pluss::make_timeindex({
+auto idx = pluss::timeindex::make({
     "2026-01-05T09:00:00Z",
     "2026-01-05T09:15:00Z",
     "2026-01-05T09:45:00Z",
@@ -50,14 +50,14 @@ auto idx = pluss::make_timeindex({
 Example 2. Start from a `Timeline`, then promote it into index semantics.
 
 ```cpp
-auto axis = pluss::make_timeline({
+auto axis = pluss::timeline::make({
     "2026-01-05T09:00:00Z",
     "2026-01-05T09:15:00Z",
     "2026-01-05T09:45:00Z",
     "2026-01-05T10:05:00Z",
 });
 
-auto idx = pluss::make_timeindex(axis);
+auto idx = pluss::timeindex::make(axis);
 ```
 
 Example 3. Build from raw epoch nanoseconds when you already have machine-time
@@ -70,7 +70,7 @@ std::vector<std::int64_t> ticks{
     1'767'907'500'000'000'000LL,
 };
 
-auto idx = pluss::make_timeindex(ticks);
+auto idx = pluss::timeindex::make(ticks);
 ```
 
 ## Reading ISO Timestamps: Why `T` and `Z` Appear

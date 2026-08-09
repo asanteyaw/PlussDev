@@ -49,64 +49,59 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Overwrites <code class="docutils literal notranslate"><span class="pre">self</span></code>’s storage in place with <code class="docutils literal notranslate"><span class="pre">src</span></code>’s values, broadcasting <code class="docutils literal notranslate"><span class="pre">src</span></code>
-against <code class="docutils literal notranslate"><span class="pre">self</span></code>’s shape if needed, and returns a reference to <code class="docutils literal notranslate"><span class="pre">self</span></code> — not a new
-<code class="docutils literal notranslate"><span class="pre">Series</span></code>. <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">src</span></code> may differ in dtype or platform; <code class="docutils literal notranslate"><span class="pre">copy_</span></code> converts and
-transfers as needed.</p>
-<p><code class="docutils literal notranslate"><span class="pre">copy_</span></code> is what every module’s <code class="docutils literal notranslate"><span class="pre">reset_parameters()</span></code> uses to fill a freshly
-allocated, already-registered parameter with real values (see the <strong>Gradient</strong>
-section) — it is deliberately a storage write, not a value-producing expression
-like most of the rest of the surface.</p>
+<p>Overwrites the current series with <code class="docutils literal notranslate"><span class="pre">src</span></code> and returns the same handle.</p>
+<p><code class="docutils literal notranslate"><span class="pre">copy_()</span></code> is a storage mutation, not a value-producing expression. That is the
+important mental model. After the call:</p>
+<ul class="simple">
+<li><p>the destination still has the same identity</p></li>
+<li><p>its storage now contains <code class="docutils literal notranslate"><span class="pre">src</span></code>’s values</p></li>
+<li><p>dtype/platform conversion and broadcasting happen as needed to make the write
+legal</p></li>
+</ul>
+<p>This is why <code class="docutils literal notranslate"><span class="pre">copy_()</span></code> shows up in parameter initialization code so often. A
+module can allocate the parameter object once, register it once, and then fill
+its storage with real values without replacing the parameter handle itself.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>src</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
-<p>The source of the values to write. Broadcast against <code class="docutils literal notranslate"><span class="pre">self</span></code>’s shape.</p>
-<p><strong>non_blocking</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, second overload)</p>
-<p>Requests an asynchronous transfer when <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">src</span></code> are on different
-platforms and the backend supports it. Has no observable effect on the result —
-only on whether the call blocks until the transfer completes.</p>
+<p>The source value to write into the current series.</p>
+<p><code class="docutils literal notranslate"><span class="pre">src</span></code> may differ from the destination in:</p>
+<ul class="simple">
+<li><p>shape, as long as it broadcasts to the destination shape</p></li>
+<li><p>dtype, in which case it is converted</p></li>
+<li><p>platform, in which case the data is transferred</p></li>
+</ul>
+<p><strong>non_blocking</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
+<p>Transfer hint for cross-platform copies. It affects scheduling, not the
+numerical result.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>
-A reference to <code class="docutils literal notranslate"><span class="pre">self</span></code>, now holding <code class="docutils literal notranslate"><span class="pre">src</span></code>’s values. This is the same object,
-not a copy — see Example 1.</p>
+The same destination series, after mutation.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">copy_</span></code> is differentiable when <code class="docutils literal notranslate"><span class="pre">self</span></code> and/or <code class="docutils literal notranslate"><span class="pre">src</span></code> track slope, but <em>what</em> the
-gradient means depends on what <code class="docutils literal notranslate"><span class="pre">self</span></code> was before the call:</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>A freshly allocated, tracked leaf keeps behaving like a leaf
-The common pattern across this engine’s modules — <code class="docutils literal notranslate"><span class="pre">Series::empty(shape,</span> <span class="pre">...)</span></code>,
-then <code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code>, then <code class="docutils literal notranslate"><span class="pre">copy_(some_untracked_init_values)</span></code> inside
-<code class="docutils literal notranslate"><span class="pre">reset_parameters()</span></code> — does <strong>not</strong> poison the parameter’s later gradient. Even
-though <code class="docutils literal notranslate"><span class="pre">copy_</span></code> technically gives <code class="docutils literal notranslate"><span class="pre">self</span></code> a source link back to “how it was
-initialized,” that link only ever redirects gradient to a real destination
-(existing graph history, or a tracked <code class="docutils literal notranslate"><span class="pre">src</span></code>). A one-time <code class="docutils literal notranslate"><span class="pre">copy_</span></code> from an untracked
-initializer has neither, so <code class="docutils literal notranslate"><span class="pre">self</span></code>’s own future sensitivity — accumulated normally
-from whatever forward computations use it later — is left untouched instead of
-being masked away. See Example 2.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Writing into a tracked view is a different case, and splits the gradient
-When <code class="docutils literal notranslate"><span class="pre">self</span></code> is a <em>view</em> into a larger tracked tensor (e.g. <code class="docutils literal notranslate"><span class="pre">root.slice(...)</span></code>), the
-overwritten region’s gradient is redirected to <code class="docutils literal notranslate"><span class="pre">src</span></code> instead of staying on <code class="docutils literal notranslate"><span class="pre">root</span></code> —
-<code class="docutils literal notranslate"><span class="pre">root</span></code> only keeps the gradient for the part <code class="docutils literal notranslate"><span class="pre">copy_</span></code> never touched. See Example 3.</p>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">copy_()</span></code> is one of the few methods where the backward story depends heavily on
+what the destination already was.</p>
+<p>If the destination is a freshly allocated tracked leaf that has not yet been
+used in a graph, <code class="docutils literal notranslate"><span class="pre">copy_()</span></code> is the normal and safe way to initialize it. Later
+gradients still accumulate on that leaf exactly as expected.</p>
+<p>If the destination is instead a tracked view into an existing tracked value,
+then the overwritten region stops attributing its future gradient to the old
+producer and starts attributing it to <code class="docutils literal notranslate"><span class="pre">src</span></code>. That is the correct semantics for
+“these positions now came from somewhere else.”</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">copy_</span></code> mutates and returns the same object; it does not allocate a new
-one.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dst</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">copy_()</span></code> mutates and returns the same destination object.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">same</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dst</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dst=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;same_object=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">ret</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&amp;</span><span class="n">dst</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;same_object=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">same</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&amp;</span><span class="n">dst</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -116,26 +111,36 @@ data=[1, 2, 3]
 same_object=true
 </pre></div>
 </div>
-<p>Example 2. A parameter allocated empty, marked as tracking slope, then filled via
-<code class="docutils literal notranslate"><span class="pre">copy_</span></code> from an untracked initializer — the exact <code class="docutils literal notranslate"><span class="pre">Series::empty()</span></code> +
-<code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> + <code class="docutils literal notranslate"><span class="pre">copy_()</span></code> sequence every module’s <code class="docutils literal notranslate"><span class="pre">reset_parameters()</span></code>
-uses. Its gradient from later use is not lost.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">empty</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+<p>Nothing new was allocated as the result of the method itself. The returned
+reference is just <code class="docutils literal notranslate"><span class="pre">dst</span></code>.</p>
+<p>Example 2. Initializing a tracked leaf parameter with <code class="docutils literal notranslate"><span class="pre">copy_()</span></code> does not poison
+its later gradient.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">::</span><span class="n">empty</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
 <span class="n">w</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-<span class="n">w</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}));</span>
+<span class="n">w</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span>
+<span class="p">}));</span>
 <span class="n">w</span><span class="p">.</span><span class="n">clear_sensitivity</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">w</span><span class="p">.</span><span class="n">index_select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">idx</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;w.sensitivity()=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">w</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">picked_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">picked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">w</span><span class="p">.</span><span class="n">index_select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">picked_rows</span><span class="p">);</span>
+<span class="n">picked</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;picked=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">picked</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dw=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">w</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>w.sensitivity()=pluss::Series(shape=[5,3], strides=[3,1], dtype=float64, platform=cpu, numel=15, contiguous=true)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>picked=pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel=9, contiguous=true)
+data=[[1, 1, 1],
+  [3, 3, 3],
+  [5, 5, 5]]
+dw=pluss::Series(shape=[5,3], strides=[3,1], dtype=float64, platform=cpu, numel=15, contiguous=true)
 data=[[1, 1, 1],
   [0, 0, 0],
   [1, 1, 1],
@@ -143,63 +148,58 @@ data=[[1, 1, 1],
   [1, 1, 1]]
 </pre></div>
 </div>
-<p>Rows 0, 2, and 4 (looked up by <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select</span></code></span></a>) correctly show
-gradient <code class="docutils literal notranslate"><span class="pre">1</span></code>; rows 1 and 3 (never touched downstream) correctly show <code class="docutils literal notranslate"><span class="pre">0</span></code>. The
-one-time <code class="docutils literal notranslate"><span class="pre">copy_</span></code> that initialized <code class="docutils literal notranslate"><span class="pre">w</span></code> did not zero any of this out.</p>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">copy_</span></code> into a <em>view</em> of a larger tracked tensor splits the gradient
-between the untouched region (stays on the root) and the overwritten region
-(redirected to <code class="docutils literal notranslate"><span class="pre">src</span></code>).</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
+<p>Rows <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, and <code class="docutils literal notranslate"><span class="pre">4</span></code> were looked up later, so those rows receive gradient.
+Rows <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> do not. The one-time <code class="docutils literal notranslate"><span class="pre">copy_()</span></code> initialization did not erase or
+misroute any of that later sensitivity.</p>
+<p>Example 3. Copying into a tracked view redirects the overwritten region’s
+gradient to the replacement source.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
 <span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-<span class="n">Series</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
-<span class="n">src</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
-<span class="n">Series</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w">  </span><span class="c1">// x[1:3], a view sharing x&#39;s storage</span>
-<span class="n">v</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">replacement</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+<span class="n">replacement</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
-<span class="n">Series</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sum</span><span class="p">();</span>
-<span class="n">loss</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;x.sensitivity()=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;src.sensitivity()=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">src</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">middle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">middle</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">replacement</span><span class="p">);</span>
+
+<span class="n">x</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;x=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dsrc=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">replacement</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x.sensitivity()=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1, 10, 20, 4]
+dx=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[1, 0, 0, 1]
-src.sensitivity()=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+dsrc=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[1, 1]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">x</span></code>’s untouched positions (0 and 3) keep gradient <code class="docutils literal notranslate"><span class="pre">1</span></code> from <code class="docutils literal notranslate"><span class="pre">x.sum()</span></code>. Positions 1
-and 2 — the ones <code class="docutils literal notranslate"><span class="pre">v.copy_(src)</span></code> overwrote — show <code class="docutils literal notranslate"><span class="pre">0</span></code> on <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> on <code class="docutils literal notranslate"><span class="pre">src</span></code>
-instead: <code class="docutils literal notranslate"><span class="pre">x.sum()</span></code>’s naive per-element gradient at those two positions has been
-redirected to whichever tensor actually produced their current values (<code class="docutils literal notranslate"><span class="pre">src</span></code>), not
-left sitting on <code class="docutils literal notranslate"><span class="pre">x</span></code> as if <code class="docutils literal notranslate"><span class="pre">x</span></code> had produced them itself.</p>
+<p>Positions <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> no longer attribute their future value to <code class="docutils literal notranslate"><span class="pre">x</span></code>’s old
+contents. Those positions now came from <code class="docutils literal notranslate"><span class="pre">replacement</span></code>, so the gradient follows
+that fact.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">copy_</span></code> always writes into <code class="docutils literal notranslate"><span class="pre">self</span></code>’s existing storage; it never reallocates. This
-is exactly what makes it safe to call from <code class="docutils literal notranslate"><span class="pre">reset_parameters()</span></code> on an
-already-registered parameter — see Example 2 above.</p></li>
-<li><p>The distinction between Example 2 (a fresh leaf) and Example 3 (a view into an
-existing tracked tensor) is not incidental — it is <em>why</em> the leaf case is safe:
-a fresh leaf has no prior graph history for <code class="docutils literal notranslate"><span class="pre">copy_</span></code> to redirect gradient toward,
-so nothing is masked; a view into existing history does have somewhere for the
-overwritten region’s gradient to go, so it gets redirected there instead.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">non_blocking=true</span></code> only affects transfer timing, never the numerical result.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">copy_()</span></code> is a mutation primitive. Reach for it when handle identity matters.</p></li>
+<li><p>It is the right tool for filling pre-existing parameter storage.</p></li>
+<li><p>It is not just “assignment with a different name”; its graph behavior matters
+in tracked view scenarios.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_select</span></code></span></a>, <a class="reference internal" href="gather.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::gather</span></code></span></a>: typical
-downstream consumers whose gradient flows back into a <code class="docutils literal notranslate"><span class="pre">copy_</span></code>-initialized
-parameter, as in Example 2.</p></li>
-<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::slice</span></code></span></a>: how to build the kind of view used in Example 3.</p></li>
+<li><p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_select</span></code></span></a>: the lookup pattern used in Example
+2.</p></li>
+<li><p><a class="reference internal" href="gather.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::gather</span></code></span></a>: the more general read-side gather primitive.</p></li>
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::slice</span></code></span></a>: how to create the kind of view used in Example 3.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="clamp_min.html">

@@ -1,50 +1,67 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0aee4dafc582 -->
+<!-- pluss-signature-hash: e20888f7fa1e -->
 
 # Catalog::cast
 
 [Back to Catalog API Reference](../../catalog_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Catalog::cast(pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) const -> Catalog
+Catalog::cast() const -> CatalogCastAccessor
+Catalog::cast(const pluss::table::ThreadCastOptions& options) const -> CatalogCastAccessor
+Catalog::cast(pluss::table::ThreadCastTarget target,
+              const pluss::table::ThreadCastOptions& options = {}) const -> Catalog
 ```
 
 ## What It Does
 
-Casts **every** stream in the catalog to the same target payload kind, in one call — each
-stream's own `Stream::cast(target, options)`, applied uniformly regardless of that
-stream's current kind. This is the whole-catalog counterpart to
-[`Thread::cast()`](../thread/cast.md); see that page for the full explanation of what each
-`ThreadCastTarget` means and how `ThreadCastOptions` (dtype selection, parse-failure
-handling) affects the conversion.
+Casting now has two entry styles:
+
+- accessor-first: `ct.cast().series()` / `.note()` / `.timeline()` / `.timeindex()`
+- direct root overload: `ct.cast(target, options)`
+
+Both apply each stream's own cast machinery uniformly across the catalog. This is the
+whole-catalog counterpart to [`Thread::cast()`](../thread/cast.md); see that page for
+the full explanation of what each `ThreadCastTarget` means and how
+`ThreadCastOptions` (dtype selection, parse-failure handling) affects the conversion.
+
+```{important} Preferred surface
+Prefer the accessor form in new code: `ct.cast().timeline()` or
+`ct.cast(options).series()`. The direct root overload still exists and returns the same
+result, but the accessor is the cleaner public surface.
+```
 
 ```{important} Applies to every stream uniformly — not just the ones that need it
 `cast()` doesn't skip streams that are already the target kind (that conversion is a cheap
 identity) or streams for which the target doesn't make obvious sense — it calls `cast()`
 on all of them. If you only want to cast specific streams, use
-[`Catalog::keys(names)`](keys.md)`.cast(options).series()` (or `.note()`/`.timeline()`/
-`.timeindex()`) instead — that path returns a `CatalogCastAccessor` scoped to your
-selection, with the target picked by which method you call rather than a `target`
-argument.
+[`Catalog::keys(names)`](keys.md) followed by `.cast(options).series()` (or `.note()` /
+`.timeline()` / `.timeindex()`) instead — that path returns a
+`CatalogCastAccessor` scoped to your selection, with the target picked by which method
+you call rather than a `target` argument.
 ```
 
 ## Parameters
 
+**options** (`const pluss::table::ThreadCastOptions&`, optional)
+    For the accessor overload, stores conversion policy on the accessor before you pick
+    the terminal target with `.series()` / `.note()` / `.timeline()` / `.timeindex()`.
+
 **target** (`pluss::table::ThreadCastTarget`)
-    The payload kind to cast every stream to — `Series`, `Note`, `Timeline`, or
-    `TimeIndex`.
+    For the direct root overload, the payload kind to cast every stream to — `Series`,
+    `Note`, `Timeline`, or `TimeIndex`.
 
 **options** (`const pluss::table::ThreadCastOptions&`, optional)
-    Conversion policy — `series_dtype` picks the numeric dtype for a `Series` target;
-    `invalid` chooses parse-failure behavior. See [`Thread::cast`](../thread/cast.md) for
-    the full breakdown.
+    For the direct root overload, conversion policy — `series_dtype` picks the numeric
+    dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
+    [`Thread::cast`](../thread/cast.md) for the full breakdown.
 
 ## Returns
 
-`Catalog`
-    A new catalog with every stream cast to `target`.
+`CatalogCastAccessor` / `Catalog`
+    The no-target overloads return an accessor; the target overload returns the fully
+    cast catalog directly.
 
 ## Examples
 
@@ -58,7 +75,7 @@ auto ct = pluss::kindle::Catalog({
     "score"_k = pluss::kindle::Stream(pluss::make_note({"1.5", "2.5", "3.5"})),
 });
 
-auto out = ct.cast(pluss::table::ThreadCastTarget::Series);
+auto out = ct.cast().series();
 std::cout << out;
 ```
 
@@ -84,7 +101,7 @@ auto ct = pluss::kindle::Catalog({
         "2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z"})),
 });
 
-auto out = ct.cast(pluss::table::ThreadCastTarget::Timeline);
+auto out = ct.cast().timeline();
 std::cout << out;
 ```
 
@@ -111,7 +128,7 @@ auto ct = pluss::kindle::Catalog({
 pluss::table::ThreadCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Int64;
 
-auto out = ct.cast(pluss::table::ThreadCastTarget::Series, options);
+auto out = ct.cast(options).series();
 std::cout << out;
 ```
 
@@ -131,6 +148,8 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
 ## Notes
 
 - Applies to every stream, unconditionally — see the important callout above.
+- `Catalog::cast(target, options)` and `Catalog::cast(options).series()` are equivalent
+  in result; they differ only in surface style.
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
 - Follows the same per-target conversion rules as [`Thread::cast`](../thread/cast.md),
   including its documented quirk that `ThreadCastOptions::invalid` only actually takes

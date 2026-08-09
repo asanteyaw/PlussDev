@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f2b7949d5dfd -->
 
 # AxelTimelineAccessor::period
 

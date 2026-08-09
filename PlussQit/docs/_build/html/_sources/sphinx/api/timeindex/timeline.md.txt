@@ -33,7 +33,7 @@ is, rather than where it sits on an ordered axis.
 Example 1. Expose the full time axis as a 1D `Timeline`.
 
 ```cpp
-auto idx = pluss::make_timeindex({
+auto idx = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
@@ -42,7 +42,7 @@ auto idx = pluss::make_timeindex({
 });
 
 auto axis = idx.timeline();
-std::cout << pluss::print_timeline(axis) << "\n";
+std::cout << pluss::timeline::print(axis) << "\n";
 ```
 
 ### Output
@@ -57,8 +57,8 @@ index if you need ordered lookup semantics again.
 
 ```cpp
 auto local_axis = idx.timeline().floor("H");
-auto local_idx = pluss::make_timeindex(local_axis);
-std::cout << pluss::print_timeline(local_axis) << "\n";
+auto local_idx = pluss::timeindex::make(local_axis);
+std::cout << pluss::timeline::print(local_axis) << "\n";
 ```
 
 ## Notes

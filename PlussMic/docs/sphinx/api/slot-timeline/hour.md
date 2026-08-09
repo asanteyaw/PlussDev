@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4c724ae67728 -->
 
 # SlotTimelineAccessor::hour
 

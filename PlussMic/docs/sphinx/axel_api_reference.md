@@ -54,6 +54,7 @@ api/axel/rename
 api/axel/show
 api/axel/size
 api/axel/slice
+api/axel/tabelize
 api/axel/tail
 api/axel/tl
 api/axel/to_json

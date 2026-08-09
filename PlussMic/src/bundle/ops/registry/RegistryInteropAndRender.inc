@@ -27,6 +27,15 @@ Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
   return Registry(std::move(out));
 }
 
+pluss::table::DataFrame Registry::tabelize() const {
+  return tabelize(pluss::kindle::TabelizePolicy{});
+}
+
+pluss::table::DataFrame Registry::tabelize(const pluss::kindle::TabelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "Registry::tabelize: registry undefined");
+  return to_kindle().tabelize(policy);
+}
+
 namespace {
 
 pluss::table::DataFrame registry_to_io_frame(const Registry& registry) {

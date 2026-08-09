@@ -1,45 +1,64 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e499216c9918 -->
+<!-- pluss-signature-hash: ecbe33da4857 -->
 
 # Archive::cast
 
 [Back to Archive API Reference](../../archive_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
+Archive::cast() const -> ArchiveCastAccessor
+Archive::cast(const pluss::table::ThreadCastOptions& options) const -> ArchiveCastAccessor
 Archive::cast(pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) const -> Archive
 ```
 
 ## What It Does
 
-Casts **every** stream in **every** catalog to the same target payload kind, in one call —
-delegating to each catalog's own [`Catalog::cast()`](../catalog/cast.md), applied uniformly
-regardless of each stream's current kind.
+Archive casting follows the same two-surface pattern as catalog casting:
+
+- accessor-first: `archive.cast().series()` / `.note()` / `.timeline()` /
+  `.timeindex()`
+- direct root overload: `archive.cast(target, options)`
+
+Both cast **every** stream in **every** catalog to the same target payload kind by
+delegating to each catalog's own [`Catalog::cast()`](../catalog/cast.md), applied
+uniformly regardless of each stream's current kind.
+
+```{important} Preferred surface
+Prefer the accessor form in new code: `archive.cast().timeline()` reads better than
+passing an explicit target enum at the root. The direct root overload still exists and
+returns the same result.
+```
 
 ```{important} Applies to every stream in every catalog uniformly
 Same behavior as [`Catalog::cast()`](../catalog/cast.md), just archive-wide: `cast()`
 doesn't skip streams that are already the target kind, or streams for which the target
 doesn't make obvious sense — it calls `cast()` on all of them, in every catalog. If you
-only want to cast specific streams, use [`Archive::keys(names)`](keys.md)`.cast()` instead.
+only want to cast specific streams, use [`Archive::keys(names)`](keys.md) followed by
+`.cast()` on the selection instead.
 ```
 
 ## Parameters
 
+**options** (`const pluss::table::ThreadCastOptions&`, optional)
+    For the accessor overloads, stores conversion policy on the accessor before you pick
+    the terminal target.
+
 **target** (`pluss::table::ThreadCastTarget`)
-    The payload kind to cast every stream to — `Series`, `Note`, `Timeline`, or
-    `TimeIndex`.
+    For the direct root overload, the payload kind to cast every stream to — `Series`,
+    `Note`, `Timeline`, or `TimeIndex`.
 
 **options** (`const pluss::table::ThreadCastOptions&`, optional)
-    Conversion policy — `series_dtype` picks the numeric dtype for a `Series` target;
-    `invalid` chooses parse-failure behavior. See [`Thread::cast`](../thread/cast.md) for
-    the full breakdown.
+    For the direct root overload, conversion policy — `series_dtype` picks the numeric
+    dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
+    [`Thread::cast`](../thread/cast.md) for the full breakdown.
 
 ## Returns
 
-`Archive`
-    A new archive, same depth and depth labels as the receiver, with every stream in every
-    catalog cast to `target`.
+`ArchiveCastAccessor` / `Archive`
+    The no-target overloads return an accessor; the target overload returns the fully
+    cast archive directly.
 
 ## Examples
 
@@ -55,7 +74,7 @@ auto c0 = pluss::kindle::Catalog({
 });
 auto archive = pluss::kindle::Archive({c0});
 
-auto out = archive.cast(pluss::table::ThreadCastTarget::Series);
+auto out = archive.cast().series();
 std::cout << out.catalog(0);
 ```
 
@@ -77,6 +96,8 @@ score                    | Series       | Series[float64]  | 2       | [1.5, 2.5
 
 - Applies to every stream in every catalog, unconditionally — see the important callout
   above.
+- `Archive::cast(target, options)` and `Archive::cast(options).series()` are equivalent
+  in result; they differ only in surface style.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
 - Follows the same per-target conversion rules as
   [`Catalog::cast`](../catalog/cast.md)/[`Thread::cast`](../thread/cast.md).

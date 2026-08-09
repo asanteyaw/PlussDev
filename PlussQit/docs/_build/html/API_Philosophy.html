@@ -47,14 +47,24 @@
 </div>
 <p>and gain access to the complete high-level API.</p>
 </section>
-<section id="short-names">
-<h2>Short names<a class="headerlink" href="#short-names" title="Link to this heading">¶</a></h2>
-<p>End users should prefer short scopes:</p>
+<section id="short-names-for-types-namespaced-factories">
+<h2>Short names for types, namespaced factories<a class="headerlink" href="#short-names-for-types-namespaced-factories" title="Link to this heading">¶</a></h2>
+<p>Core types stay flat:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pluss::ScalarType</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pluss::zeros(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::arange(...)</span></code>, …</p></li>
 </ul>
+<p>Construction factories live in a dedicated namespace per payload type:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::series::zeros(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::series::arange(...)</span></code>, …</p></li>
+</ul>
+<p>with <code class="docutils literal notranslate"><span class="pre">pluss::make_series(...)</span></code> kept as a permanent flat shortcut alongside
+<code class="docutils literal notranslate"><span class="pre">pluss::make_note</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::make_timeindex</span></code>/
+<code class="docutils literal notranslate"><span class="pre">pluss::make_duration</span></code> for the common construct-from-data case. Every other
+flat factory spelling (<code class="docutils literal notranslate"><span class="pre">pluss::zeros</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::full</span></code>, …) is a legacy
+compatibility alias for external consumers migrating off the old flat API –
+new code should call through <code class="docutils literal notranslate"><span class="pre">pluss::series::*</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::note::*</span></code>/
+<code class="docutils literal notranslate"><span class="pre">pluss::timeline::*</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::timeindex::*</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::duration::*</span></code> directly.</p>
 <p>Internally, the implementation lives in <code class="docutils literal notranslate"><span class="pre">pluss::codem</span></code>.</p>
 </section>
 <section id="method-first-operations">
@@ -64,7 +74,7 @@
 </pre></div>
 </div>
 <p>Factories remain free functions because they <em>create</em> a new object:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>This avoids API duplication and reduces mental load for users.</p>
@@ -73,7 +83,7 @@
 <h2>Interop<a class="headerlink" href="#interop" title="Link to this heading">¶</a></h2>
 <p>Interop functions are also “creation” operations:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pluss::from_torch(torch::Tensor)</span></code> creates a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> view.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::series::from_torch(torch::Tensor)</span></code> creates a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> view.</p></li>
 </ul>
 <p>Converting an existing Series is a method:</p>
 <ul class="simple">
@@ -133,12 +143,12 @@
 <section id="config-ergonomics">
 <h2>Config ergonomics<a class="headerlink" href="#config-ergonomics" title="Link to this heading">¶</a></h2>
 <p>In addition to <code class="docutils literal notranslate"><span class="pre">Config{}.with_dtype(...)</span></code>, PlussQit supports unordered, typed options:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">128</span><span class="p">,</span><span class="mi">64</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">cfg</span><span class="o">::</span><span class="n">dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float16</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">cfg</span><span class="o">::</span><span class="n">pinned</span><span class="p">(</span><span class="nb">true</span><span class="p">));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">128</span><span class="p">,</span><span class="mi">64</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">cfg</span><span class="o">::</span><span class="n">dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float16</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">cfg</span><span class="o">::</span><span class="n">pinned</span><span class="p">(</span><span class="nb">true</span><span class="p">));</span>
 </pre></div>
 </div>
 <p>Or a string-map builder (CPU-only subset):</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">config</span><span class="p">({{</span><span class="s">&quot;dtype&quot;</span><span class="p">,</span><span class="s">&quot;float16&quot;</span><span class="p">},{</span><span class="s">&quot;pinned&quot;</span><span class="p">,</span><span class="nb">true</span><span class="p">}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">128</span><span class="p">,</span><span class="mi">64</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">128</span><span class="p">,</span><span class="mi">64</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -194,7 +204,7 @@ Declarations are centralized in <code class="docutils literal notranslate"><span
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Philosophy</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#one-include">One include</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#short-names">Short names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#short-names-for-types-namespaced-factories">Short names for types, namespaced factories</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#method-first-operations">Method-first operations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#interop">Interop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-method-pairs">Common method pairs</a></li>

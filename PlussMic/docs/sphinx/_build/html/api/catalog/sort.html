@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=55000b1c"></script>
+    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 79c7e3e6e8e5 -->
+<!-- pluss-signature-hash: 5b1056818d63 -->
 <section id="catalog-sort">
 <h1>Catalog::sort<a class="headerlink" href="#catalog-sort" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
@@ -55,6 +55,8 @@
 <p>Reorders every stream’s rows by one or more named sort-key streams. Every stream in the
 catalog is reordered together, keeping row alignment intact across the whole catalog, not
 just the sort key itself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sort(...)</span></code> stays on the root catalog surface because the keys are intrinsic to the
+operation itself: this is a whole-catalog row-order plan, not a payload accessor.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -164,6 +166,8 @@ metric                   | Series       | Series[float64]  | 4       | [40, 30, 
 <ul class="simple">
 <li><p>Reorders <em>every</em> stream together, preserving cross-stream row alignment.</p></li>
 <li><p>The single-key overload is just the short form of the multi-key surface.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">NameRange</span></code> convenience overload forwards into the same multi-key logic as the
+listed span/vector overloads.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fields</span></code> must be non-empty for the multi-key overloads.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">ascending</span></code> is supplied for the multi-key overloads, it must either be empty or match
 <code class="docutils literal notranslate"><span class="pre">fields.size()</span></code>.</p></li>
@@ -227,6 +231,9 @@ sorting.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
 </ul>
 
 <div class="relations">

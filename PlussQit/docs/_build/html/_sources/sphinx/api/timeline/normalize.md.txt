@@ -35,7 +35,7 @@ Example 1. Normalize timestamps to daily anchors.
 
 ```cpp
 auto out = base.normalize();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output
@@ -49,7 +49,7 @@ Example 2. `date()` is the same day-level projection with a more literal name.
 
 ```cpp
 auto out = base.date();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output
@@ -63,7 +63,7 @@ Example 3. `time()` keeps the clock component and discards the calendar date.
 
 ```cpp
 auto out = base.time();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

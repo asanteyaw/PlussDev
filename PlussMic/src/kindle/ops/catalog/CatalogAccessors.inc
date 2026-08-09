@@ -1,3 +1,718 @@
+namespace {
+
+using Studio = pluss::pl::Studio;
+using Pane = pluss::pl::Pane;
+using Trace = pluss::pl::Trace;
+using Rgba = pluss::pl::Rgba;
+namespace flash = pluss::pl::flash;
+
+constexpr std::string_view kDefaultCatalogPlotName = "catalog";
+
+Studio make_catalog_studio() {
+  auto fig = pluss::pl::studio(std::string(kDefaultCatalogPlotName));
+  fig.theme(pluss::pl::themes::paper());
+  return fig;
+}
+
+Rgba catalog_color_for_index(std::size_t index) {
+  static const std::array<Rgba, 10> palette{{
+      Rgba::from_u8(15, 118, 110),
+      Rgba::from_u8(194, 65, 12),
+      Rgba::from_u8(29, 78, 216),
+      Rgba::from_u8(185, 28, 28),
+      Rgba::from_u8(77, 124, 15),
+      Rgba::from_u8(3, 105, 161),
+      Rgba::from_u8(180, 83, 9),
+      Rgba::from_u8(15, 23, 42),
+      Rgba::from_u8(190, 18, 60),
+      Rgba::from_u8(87, 83, 78),
+  }};
+  return palette[index % palette.size()];
+}
+
+void catalog_style_trace(Trace& trace,
+                         std::size_t index,
+                         double alpha = 1.0,
+                         double line_width = 1.5) {
+  auto color = catalog_color_for_index(index);
+  color.alpha = std::clamp(alpha, 0.05, 1.0);
+  trace.stroke(color);
+  trace.width(static_cast<float>(line_width));
+  if (color.alpha < 0.999) {
+    trace.transparent(true);
+  }
+}
+
+std::optional<double> catalog_resolved_x_tick_rotation(const pluss::table::DataFramePlotOptions& options) {
+  if (options.x_tick_rotation_deg.has_value()) {
+    return options.x_tick_rotation_deg;
+  }
+  if (options.labeled_tick_rotation_deg.has_value()) {
+    return options.labeled_tick_rotation_deg;
+  }
+  return std::nullopt;
+}
+
+void catalog_setup_pane(Pane& pane,
+                        bool show_legend,
+                        const pluss::table::DataFramePlotOptions& options) {
+  pane.grid(pluss::pl::GridStyle::Major);
+  pane.legend(show_legend ? pluss::pl::KeyPlace::Auto : pluss::pl::KeyPlace::None);
+  if (options.x_label_rotation_deg.has_value()) {
+    pane.x_label_rotation(*options.x_label_rotation_deg);
+  }
+  if (options.y_label_rotation_deg.has_value()) {
+    pane.y_label_rotation(*options.y_label_rotation_deg);
+  }
+  if (options.x_tick_format.has_value()) {
+    pane.x_tick_format(*options.x_tick_format);
+  }
+  if (options.y_tick_format.has_value()) {
+    pane.y_tick_format(*options.y_tick_format);
+  }
+  if (options.x_tick_label_gap_points.has_value()) {
+    pane.x_tick_label_gap(*options.x_tick_label_gap_points);
+  }
+  if (options.y_tick_label_gap_points.has_value()) {
+    pane.y_tick_label_gap(*options.y_tick_label_gap_points);
+  }
+  if (options.x_label_gap_points.has_value()) {
+    pane.x_label_gap(*options.x_label_gap_points);
+  }
+  if (options.y_label_gap_points.has_value()) {
+    pane.y_label_gap(*options.y_label_gap_points);
+  }
+}
+
+void catalog_apply_figure_options(Studio& figure, const pluss::table::DataFramePlotOptions& options) {
+  const double width = options.width.value_or(figure.extent().width);
+  const double height = options.height.value_or(figure.extent().height);
+  figure.size(width, height);
+  if (options.use_tight_layout) {
+    figure.tight_layout(true, options.tight_layout_padding);
+  }
+}
+
+std::vector<double> catalog_positional_plot_x(std::int64_t nrows) {
+  std::vector<double> out(static_cast<std::size_t>(nrows), 0.0);
+  std::iota(out.begin(), out.end(), 0.0);
+  return out;
+}
+
+pluss::Series catalog_thread_to_plot_numeric_series(const pluss::table::Thread& t) {
+  pluss::table::Thread numeric_thread = t;
+  switch (t.kind()) {
+    case pluss::table::ThreadKind::Series: {
+      break;
+    }
+    case pluss::table::ThreadKind::Timeline: {
+      numeric_thread = pluss::table::Thread(t.as_timeline().epoch_nanos(), pluss::table::detail::validity_mask(t));
+      break;
+    }
+    case pluss::table::ThreadKind::TimeIndex: {
+      numeric_thread = pluss::table::Thread(
+          t.as_timeindex().timeline().epoch_nanos(), pluss::table::detail::validity_mask(t));
+      break;
+    }
+    case pluss::table::ThreadKind::Note: {
+      numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
+      break;
+    }
+    default:
+      PLUSS_FAIL("Catalog::plot: unsupported thread kind for numeric plotting");
+  }
+
+  auto values = numeric_thread.as_series().to(pluss::codem::ScalarType::Float64);
+  if (pluss::table::detail::has_validity_mask(numeric_thread)) {
+    const auto nan_fill = pluss::Series::full(
+        {values.numel()},
+        std::numeric_limits<double>::quiet_NaN(),
+        pluss::codem::ScalarType::Float64);
+    values = values.where(pluss::table::detail::validity_mask(numeric_thread)->logical_not(), nan_fill);
+  }
+  return values.reshape({values.numel()});
+}
+
+std::vector<double> catalog_stream_to_plot_numeric_values(const Stream& stream) {
+  return catalog_thread_to_plot_numeric_series(stream.to_thread()).to_vec<double>();
+}
+
+bool catalog_series_all_zero_i64(const pluss::Series& s) {
+  return !s.to(pluss::codem::ScalarType::Int64).ne(0).any().item<bool>();
+}
+
+bool catalog_series_all_equal_i64(const pluss::Series& s, std::int64_t target) {
+  return !s.to(pluss::codem::ScalarType::Int64).ne(target).any().item<bool>();
+}
+
+enum class CatalogTemporalLabelKind : std::uint8_t {
+  Date,
+  Time,
+  DateTime,
+};
+
+CatalogTemporalLabelKind catalog_infer_temporal_label_kind(const pluss::Timeline& timeline) {
+  const auto has_subsecond = !catalog_series_all_zero_i64(timeline.nanosecond());
+  const auto has_clock_time = has_subsecond || !catalog_series_all_zero_i64(timeline.second())
+                              || !catalog_series_all_zero_i64(timeline.minute())
+                              || !catalog_series_all_zero_i64(timeline.hour());
+  if (!has_clock_time) {
+    return CatalogTemporalLabelKind::Date;
+  }
+
+  const auto epoch_day_anchor = catalog_series_all_equal_i64(timeline.year(), 1970)
+                                && catalog_series_all_equal_i64(timeline.month(), 1)
+                                && catalog_series_all_equal_i64(timeline.day(), 1);
+  if (epoch_day_anchor) {
+    return CatalogTemporalLabelKind::Time;
+  }
+  return CatalogTemporalLabelKind::DateTime;
+}
+
+std::vector<std::string> catalog_temporal_thread_to_plot_labels(
+    const pluss::table::Thread& t,
+    pluss::table::DateTimeLabelView datetime_label_view) {
+  const auto timeline =
+      (t.kind() == pluss::table::ThreadKind::Timeline) ? t.as_timeline() : t.as_timeindex().timeline();
+  const auto has_subsecond = !catalog_series_all_zero_i64(timeline.nanosecond());
+  const auto rendered = [&]() -> pluss::Note {
+    switch (catalog_infer_temporal_label_kind(timeline)) {
+      case CatalogTemporalLabelKind::Date:
+        return timeline.to_note_date();
+      case CatalogTemporalLabelKind::Time:
+        return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.to_note_time();
+      case CatalogTemporalLabelKind::DateTime:
+        switch (datetime_label_view) {
+          case pluss::table::DateTimeLabelView::Date:
+            return timeline.to_note_date();
+          case pluss::table::DateTimeLabelView::Time:
+            return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.to_note_time();
+          case pluss::table::DateTimeLabelView::Full:
+          default:
+            return has_subsecond ? timeline.to_note_datetime_nano() : timeline.to_note_datetime();
+        }
+    }
+    return timeline.to_note_datetime();
+  }();
+
+  std::vector<std::string> out;
+  out.reserve(static_cast<std::size_t>(rendered.numel()));
+  rendered.for_each_flat([&](std::string_view s) { out.emplace_back(s); });
+  return out;
+}
+
+std::vector<std::string> catalog_thread_to_plot_labels(const pluss::table::Thread& t,
+                                                       const pluss::table::DataFramePlotOptions& options) {
+  if (t.kind() == pluss::table::ThreadKind::Timeline || t.kind() == pluss::table::ThreadKind::TimeIndex) {
+    return catalog_temporal_thread_to_plot_labels(t, options.datetime_label_view);
+  }
+  const auto note_like = (t.kind() == pluss::table::ThreadKind::Note) ? t : t.cast().note();
+  std::vector<std::string> out;
+  const auto& note = note_like.as_note();
+  out.reserve(static_cast<std::size_t>(note.numel()));
+  note.for_each_flat([&](std::string_view s) { out.emplace_back(s); });
+  return out;
+}
+
+template <class Range>
+std::vector<std::string_view> catalog_label_views(const Range& labels) {
+  std::vector<std::string_view> out;
+  if constexpr (requires { labels.size(); }) {
+    out.reserve(static_cast<std::size_t>(labels.size()));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
+struct CatalogResolvedAxis {
+  std::vector<double> values{};
+  std::vector<std::string> labels{};
+  std::string label{"record"};
+  bool uses_labels{false};
+};
+
+bool catalog_thread_prefers_labeled_axis(const pluss::table::Thread& t) {
+  return t.kind() == pluss::table::ThreadKind::Note
+         || t.kind() == pluss::table::ThreadKind::Timeline
+         || t.kind() == pluss::table::ThreadKind::TimeIndex;
+}
+
+CatalogResolvedAxis catalog_resolve_axis_from_thread(const pluss::table::Thread& axis_thread,
+                                                     std::string_view axis_name,
+                                                     std::string_view where,
+                                                     const pluss::table::DataFramePlotOptions& options) {
+  CatalogResolvedAxis axis;
+  axis.label = std::string(axis_name);
+  if (catalog_thread_prefers_labeled_axis(axis_thread)) {
+    axis.values = catalog_positional_plot_x(axis_thread.size());
+    axis.labels = catalog_thread_to_plot_labels(axis_thread, options);
+    PLUSS_CHECK(static_cast<std::int64_t>(axis.labels.size()) == axis_thread.size(),
+                std::string(where) + ": axis '" + std::string(axis_name) + "' length mismatch");
+    axis.uses_labels = true;
+    return axis;
+  }
+
+  axis.values = catalog_stream_to_plot_numeric_values(Stream::from_thread(axis_thread));
+  PLUSS_CHECK(static_cast<std::int64_t>(axis.values.size()) == axis_thread.size(),
+              std::string(where) + ": axis '" + std::string(axis_name) + "' length mismatch");
+  return axis;
+}
+
+CatalogResolvedAxis catalog_resolve_self_axis(const Stream& stream,
+                                              const pluss::table::DataFramePlotOptions& options) {
+  if (!stream.has_label()) {
+    return CatalogResolvedAxis{
+        .values = catalog_positional_plot_x(stream.size()),
+        .labels = {},
+        .label = "record",
+        .uses_labels = false,
+    };
+  }
+  return catalog_resolve_axis_from_thread(*stream.label(), "record", "Catalog::plot", options);
+}
+
+std::pair<std::vector<double>, std::vector<std::string>> catalog_sampled_labeled_ticks(
+    const CatalogResolvedAxis& axis,
+    std::int64_t max_ticks) {
+  const auto total = std::min(axis.values.size(), axis.labels.size());
+  if (total == 0) {
+    return {};
+  }
+  const std::size_t capped = static_cast<std::size_t>(std::max<std::int64_t>(2, max_ticks));
+  if (total <= capped) {
+    return {axis.values, axis.labels};
+  }
+
+  std::vector<double> sampled_values;
+  std::vector<std::string> sampled_labels;
+  sampled_values.reserve(capped);
+  sampled_labels.reserve(capped);
+
+  std::size_t prev = std::numeric_limits<std::size_t>::max();
+  for (std::size_t i = 0; i < capped; ++i) {
+    const auto idx = static_cast<std::size_t>(
+        std::llround(static_cast<double>(i) * static_cast<double>(total - 1) / static_cast<double>(capped - 1)));
+    if (idx == prev) {
+      continue;
+    }
+    sampled_values.push_back(axis.values[idx]);
+    sampled_labels.push_back(axis.labels[idx]);
+    prev = idx;
+  }
+  return {std::move(sampled_values), std::move(sampled_labels)};
+}
+
+void catalog_apply_axis(Pane& pane,
+                        const CatalogResolvedAxis& axis,
+                        const pluss::table::DataFramePlotOptions& options,
+                        bool default_if_crowded = false) {
+  pane.x_label(axis.label);
+  if (!axis.uses_labels || axis.labels.empty()) {
+    return;
+  }
+  const auto [tick_values, tick_labels] = catalog_sampled_labeled_ticks(axis, options.max_labeled_ticks);
+  const auto tick_label_views = catalog_label_views(tick_labels);
+  pane.x_ticks(tick_values, pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
+  if (const auto rot = catalog_resolved_x_tick_rotation(options); rot.has_value()) {
+    pane.x_tick_rotation(*rot);
+  } else if (default_if_crowded || axis.labels.size() > tick_labels.size()) {
+    pane.x_tick_rotation(45.0);
+  }
+}
+
+std::optional<std::string_view> catalog_resolve_x_key(
+    std::optional<std::string_view> x_key,
+    const pluss::table::DataFramePlotOptions& options) {
+  if (x_key.has_value()) {
+    return x_key;
+  }
+  if (options.default_x_feature.has_value()) {
+    return std::string_view(*options.default_x_feature);
+  }
+  return std::nullopt;
+}
+
+std::optional<std::string_view> catalog_resolve_hue_key(
+    std::optional<std::string_view> hue_key,
+    const pluss::table::DataFramePlotOptions& options) {
+  if (hue_key.has_value()) {
+    return hue_key;
+  }
+  if (options.default_hue_feature.has_value()) {
+    return std::string_view(*options.default_hue_feature);
+  }
+  return std::nullopt;
+}
+
+std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
+                                                   pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                   std::string_view where) {
+  std::vector<std::string> out;
+  if (keys.size() == 0) {
+    for (const auto& key : base.keys()) {
+      const auto kind = base.at(key).kind();
+      if (kind == StreamKind::Series || kind == StreamKind::Timeline || kind == StreamKind::TimeIndex) {
+        out.push_back(key);
+      }
+    }
+    PLUSS_CHECK(!out.empty(), std::string(where) + ": no plottable streams found");
+    return out;
+  }
+
+  out.reserve(keys.size());
+  for (const auto key : keys) {
+    PLUSS_CHECK(base.has(key), std::string(where) + ": unknown key '" + std::string(key) + "'");
+    out.emplace_back(key);
+  }
+  return out;
+}
+
+bool catalog_thread_supports_hue(const pluss::table::Thread& thread) {
+  return thread.kind() == pluss::table::ThreadKind::Note
+         || thread.kind() == pluss::table::ThreadKind::Timeline
+         || thread.kind() == pluss::table::ThreadKind::TimeIndex;
+}
+
+template <class PlotOptions, class DrawFn>
+Studio catalog_make_xy_figure(const Catalog& base,
+                              pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                              std::optional<std::string_view> x_key,
+                              const pluss::table::DataFramePlotOptions& plot_options,
+                              const PlotOptions& style_options,
+                              std::string_view where,
+                              DrawFn&& draw) {
+  const auto names = catalog_resolve_plot_keys(base, y_keys, where);
+  const auto resolved_x = catalog_resolve_x_key(x_key, plot_options);
+  std::optional<CatalogResolvedAxis> shared_axis;
+  if (resolved_x.has_value()) {
+    PLUSS_CHECK(base.has(*resolved_x), std::string(where) + ": unknown x key '" + std::string(*resolved_x) + "'");
+    shared_axis = catalog_resolve_axis_from_thread(base.at(*resolved_x).to_thread(), *resolved_x, where, plot_options);
+  }
+
+  auto fig = make_catalog_studio();
+  catalog_apply_figure_options(fig, plot_options);
+  auto& pane = fig.pane2();
+  catalog_setup_pane(pane, names.size() > 1, plot_options);
+
+  if (shared_axis.has_value()) {
+    catalog_apply_axis(pane, *shared_axis, plot_options);
+  } else if (names.size() == 1) {
+    catalog_apply_axis(pane, catalog_resolve_self_axis(base.at(names.front()), plot_options), plot_options);
+  } else {
+    pane.x_label("record");
+  }
+  pane.y_label(names.size() == 1 ? names.front() : std::string("value"));
+
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    const auto& key = names[i];
+    const auto stream = base.at(key);
+    const auto axis = shared_axis.has_value() ? *shared_axis : catalog_resolve_self_axis(stream, plot_options);
+    const auto y_values = catalog_stream_to_plot_numeric_values(stream);
+    PLUSS_CHECK(axis.values.size() == y_values.size(),
+                std::string(where) + ": x/y length mismatch for key '" + key + "'");
+    draw(pane, axis.values, y_values, key, i, style_options);
+  }
+
+  return fig;
+}
+
+enum class ResolvedPairAlignBy : std::uint8_t {
+  Label = 0,
+  Pos = 1,
+};
+
+ResolvedPairAlignBy catalog_resolve_pair_align_by(const Stream& left,
+                                                  const Stream& right,
+                                                  PairAlignBy align_by) {
+  switch (align_by) {
+    case PairAlignBy::Label:
+      PLUSS_CHECK(left.has_label() && right.has_label(),
+                  "Catalog::plot pairwise alignment: label alignment requires labels on both streams");
+      return ResolvedPairAlignBy::Label;
+    case PairAlignBy::Pos:
+      return ResolvedPairAlignBy::Pos;
+    case PairAlignBy::Auto:
+      return (left.has_label() && right.has_label()) ? ResolvedPairAlignBy::Label : ResolvedPairAlignBy::Pos;
+  }
+  PLUSS_FAIL("Catalog::plot pairwise alignment: unsupported align_by");
+}
+
+ResolvedPairAlignBy catalog_resolve_group_align_by(const Catalog& base,
+                                                   const std::vector<std::string>& keys,
+                                                   PairAlignBy align_by) {
+  switch (align_by) {
+    case PairAlignBy::Label: {
+      for (const auto& key : keys) {
+        PLUSS_CHECK(base.at(key).has_label(),
+                    "Catalog::plot matrix alignment: label alignment requires labels on every selected stream");
+      }
+      return ResolvedPairAlignBy::Label;
+    }
+    case PairAlignBy::Pos:
+      return ResolvedPairAlignBy::Pos;
+    case PairAlignBy::Auto: {
+      const bool all_labeled =
+          std::all_of(keys.begin(), keys.end(), [&](const std::string& key) { return base.at(key).has_label(); });
+      return all_labeled ? ResolvedPairAlignBy::Label : ResolvedPairAlignBy::Pos;
+    }
+  }
+  PLUSS_FAIL("Catalog::plot matrix alignment: unsupported align_by");
+}
+
+std::vector<std::string> catalog_stream_axis_labels(const Stream& stream,
+                                                    const pluss::table::DataFramePlotOptions& options,
+                                                    std::string_view where) {
+  PLUSS_CHECK(stream.has_label(), std::string(where) + ": stream has no labels");
+  const auto labels = catalog_thread_to_plot_labels(*stream.label(), options);
+  PLUSS_CHECK(static_cast<std::int64_t>(labels.size()) == stream.size(),
+              std::string(where) + ": label/value length mismatch");
+  return labels;
+}
+
+std::unordered_map<std::string, std::int64_t> catalog_unique_label_index(const std::vector<std::string>& labels,
+                                                                          std::string_view where,
+                                                                          std::string_view key) {
+  std::unordered_map<std::string, std::int64_t> out;
+  out.reserve(labels.size() * 2);
+  for (std::size_t i = 0; i < labels.size(); ++i) {
+    const auto [it, inserted] = out.emplace(labels[i], static_cast<std::int64_t>(i));
+    PLUSS_CHECK(inserted,
+                std::string(where) + ": duplicate label '" + labels[i] + "' in stream '" + std::string(key) + "'");
+    (void)it;
+  }
+  return out;
+}
+
+struct CatalogPairGlobalContext {
+  std::optional<std::vector<std::string>> common_labels{};
+  std::optional<std::int64_t> common_length{};
+};
+
+CatalogPairGlobalContext catalog_build_global_pair_context(const Catalog& base,
+                                                           const std::vector<std::string>& keys,
+                                                           const CatalogPairAlignOptions& options,
+                                                           const pluss::table::DataFramePlotOptions& plot_options,
+                                                           std::string_view where) {
+  CatalogPairGlobalContext ctx;
+  if (keys.empty()) {
+    return ctx;
+  }
+  if (options.align != PairAlign::GlobalInner) {
+    return ctx;
+  }
+
+  switch (catalog_resolve_group_align_by(base, keys, options.align_by)) {
+    case ResolvedPairAlignBy::Pos: {
+      std::int64_t common = std::numeric_limits<std::int64_t>::max();
+      for (const auto& key : keys) {
+        common = std::min(common, base.at(key).size());
+      }
+      ctx.common_length = (common == std::numeric_limits<std::int64_t>::max()) ? 0 : common;
+      return ctx;
+    }
+    case ResolvedPairAlignBy::Label: {
+      const auto first_labels = catalog_stream_axis_labels(base.at(keys.front()), plot_options, where);
+      std::vector<std::unordered_map<std::string, std::int64_t>> label_maps;
+      label_maps.reserve(keys.size());
+      for (const auto& key : keys) {
+        const auto labels = catalog_stream_axis_labels(base.at(key), plot_options, where);
+        label_maps.push_back(catalog_unique_label_index(labels, where, key));
+      }
+
+      std::vector<std::string> common_labels;
+      common_labels.reserve(first_labels.size());
+      for (const auto& label : first_labels) {
+        const bool present_in_all =
+            std::all_of(label_maps.begin() + 1, label_maps.end(), [&](const auto& map) { return map.contains(label); });
+        if (present_in_all) {
+          common_labels.push_back(label);
+        }
+      }
+      ctx.common_labels = std::move(common_labels);
+      return ctx;
+    }
+  }
+  PLUSS_FAIL(std::string(where) + ": unsupported global alignment mode");
+}
+
+struct CatalogAlignedNumericPair {
+  std::vector<double> x{};
+  std::vector<double> y{};
+  std::vector<std::int64_t> x_indices{};
+  std::vector<std::int64_t> y_indices{};
+  std::vector<std::string> labels{};
+  ResolvedPairAlignBy align_by{ResolvedPairAlignBy::Pos};
+};
+
+CatalogAlignedNumericPair catalog_downsample_pair(CatalogAlignedNumericPair pair, std::int64_t max_points) {
+  if (max_points <= 0 || static_cast<std::int64_t>(pair.x.size()) <= max_points) {
+    return pair;
+  }
+
+  if (max_points == 1) {
+    CatalogAlignedNumericPair out;
+    out.align_by = pair.align_by;
+    out.x.push_back(pair.x.front());
+    out.y.push_back(pair.y.front());
+    out.x_indices.push_back(pair.x_indices.front());
+    out.y_indices.push_back(pair.y_indices.front());
+    if (!pair.labels.empty()) {
+      out.labels.push_back(pair.labels.front());
+    }
+    return out;
+  }
+
+  std::vector<double> xs;
+  std::vector<double> ys;
+  std::vector<std::int64_t> x_indices;
+  std::vector<std::int64_t> y_indices;
+  std::vector<std::string> labels;
+  xs.reserve(static_cast<std::size_t>(max_points));
+  ys.reserve(static_cast<std::size_t>(max_points));
+  x_indices.reserve(static_cast<std::size_t>(max_points));
+  y_indices.reserve(static_cast<std::size_t>(max_points));
+  if (!pair.labels.empty()) {
+    labels.reserve(static_cast<std::size_t>(max_points));
+  }
+  const auto total = pair.x.size();
+  for (std::int64_t i = 0; i < max_points; ++i) {
+    const auto idx = static_cast<std::size_t>(
+        std::llround(static_cast<double>(i) * static_cast<double>(total - 1) / static_cast<double>(max_points - 1)));
+    xs.push_back(pair.x[idx]);
+    ys.push_back(pair.y[idx]);
+    x_indices.push_back(pair.x_indices[idx]);
+    y_indices.push_back(pair.y_indices[idx]);
+    if (!pair.labels.empty()) {
+      labels.push_back(pair.labels[idx]);
+    }
+  }
+  return CatalogAlignedNumericPair{
+      .x = std::move(xs),
+      .y = std::move(ys),
+      .x_indices = std::move(x_indices),
+      .y_indices = std::move(y_indices),
+      .labels = std::move(labels),
+      .align_by = pair.align_by,
+  };
+}
+
+CatalogAlignedNumericPair catalog_align_numeric_pair(const Stream& x_stream,
+                                                     const Stream& y_stream,
+                                                     const CatalogPairAlignOptions& options,
+                                                     const CatalogPairGlobalContext* global,
+                                                     const pluss::table::DataFramePlotOptions& plot_options,
+                                                     std::string_view where,
+                                                     std::string_view x_key,
+                                                     std::string_view y_key) {
+  const auto x_values = catalog_stream_to_plot_numeric_values(x_stream);
+  const auto y_values = catalog_stream_to_plot_numeric_values(y_stream);
+  CatalogAlignedNumericPair out;
+
+  const auto push_if_valid = [&](double xv,
+                                 double yv,
+                                 std::int64_t xi,
+                                 std::int64_t yi,
+                                 std::optional<std::string_view> label = std::nullopt) {
+    if (std::isfinite(xv) && std::isfinite(yv)) {
+      out.x.push_back(xv);
+      out.y.push_back(yv);
+      out.x_indices.push_back(xi);
+      out.y_indices.push_back(yi);
+      if (label.has_value()) {
+        out.labels.emplace_back(*label);
+      }
+    }
+  };
+
+  auto align_by = catalog_resolve_pair_align_by(x_stream, y_stream, options.align_by);
+  out.align_by = align_by;
+  if (options.align == PairAlign::GlobalInner && global != nullptr) {
+    if (global->common_labels.has_value()) {
+      align_by = ResolvedPairAlignBy::Label;
+    } else if (global->common_length.has_value()) {
+      align_by = ResolvedPairAlignBy::Pos;
+    }
+    out.align_by = align_by;
+  }
+
+  switch (align_by) {
+    case ResolvedPairAlignBy::Pos: {
+      const auto n = (options.align == PairAlign::GlobalInner && global != nullptr && global->common_length.has_value())
+                         ? *global->common_length
+                         : std::min(x_stream.size(), y_stream.size());
+      out.x.reserve(static_cast<std::size_t>(n));
+      out.y.reserve(static_cast<std::size_t>(n));
+      out.x_indices.reserve(static_cast<std::size_t>(n));
+      out.y_indices.reserve(static_cast<std::size_t>(n));
+      for (std::int64_t i = 0; i < n; ++i) {
+        push_if_valid(x_values[static_cast<std::size_t>(i)], y_values[static_cast<std::size_t>(i)], i, i);
+      }
+      return out;
+    }
+    case ResolvedPairAlignBy::Label: {
+      const auto x_labels = catalog_stream_axis_labels(x_stream, plot_options, where);
+      const auto y_labels = catalog_stream_axis_labels(y_stream, plot_options, where);
+      const auto y_index = catalog_unique_label_index(y_labels, where, y_key);
+
+      std::vector<std::string> labels;
+      if (options.align == PairAlign::GlobalInner && global != nullptr && global->common_labels.has_value()) {
+        labels = *global->common_labels;
+      } else {
+        labels.reserve(x_labels.size());
+        for (const auto& label : x_labels) {
+          if (y_index.contains(label)) {
+            labels.push_back(label);
+          }
+        }
+      }
+
+      out.x.reserve(labels.size());
+      out.y.reserve(labels.size());
+      out.x_indices.reserve(labels.size());
+      out.y_indices.reserve(labels.size());
+      out.labels.reserve(labels.size());
+      const auto x_index = catalog_unique_label_index(x_labels, where, x_key);
+      for (const auto& label : labels) {
+        const auto xi = static_cast<std::size_t>(x_index.at(label));
+        const auto yi = static_cast<std::size_t>(y_index.at(label));
+        push_if_valid(
+            x_values[xi], y_values[yi], static_cast<std::int64_t>(xi), static_cast<std::int64_t>(yi), label);
+      }
+      return out;
+    }
+  }
+  PLUSS_FAIL(std::string(where) + ": unsupported pair alignment mode");
+}
+
+pluss::table::ThreadCorrMethod catalog_map_corr_method(pluss::table::DataFrame::CorrMethod method) {
+  switch (method) {
+    case pluss::table::DataFrame::CorrMethod::Pearson:
+      return pluss::table::ThreadCorrMethod::Pearson;
+    case pluss::table::DataFrame::CorrMethod::Spearman:
+      return pluss::table::ThreadCorrMethod::Spearman;
+    case pluss::table::DataFrame::CorrMethod::KendallTau:
+      return pluss::table::ThreadCorrMethod::KendallTau;
+  }
+  PLUSS_FAIL("Catalog::plot().corr_heatmap: unsupported correlation method");
+}
+
+pluss::Series catalog_matrix_series_from_rows(const std::vector<std::vector<double>>& rows) {
+  const auto nrows = static_cast<std::int64_t>(rows.size());
+  const auto ncols = nrows == 0 ? 0 : static_cast<std::int64_t>(rows.front().size());
+  std::vector<double> flat;
+  flat.reserve(static_cast<std::size_t>(nrows * ncols));
+  for (const auto& row : rows) {
+    PLUSS_CHECK(static_cast<std::int64_t>(row.size()) == ncols,
+                "Catalog::plot matrix: inconsistent row width");
+    flat.insert(flat.end(), row.begin(), row.end());
+  }
+  return pluss::make_series(std::move(flat), {nrows, ncols});
+}
+
+} // namespace
+
 Catalog Catalog::keys(std::string_view key) const {
   return project_catalog(*this, normalize_names(std::vector<std::string>{std::string(key)}), "Catalog::keys");
 }
@@ -36,6 +751,577 @@ CatalogTimelineAccessor Catalog::tl() const {
 
 CatalogTimeSeriesAccessor Catalog::ts() const {
   return CatalogTimeSeriesAccessor(*this, keys());
+}
+
+CatalogPlotAccessor Catalog::plot() const {
+  return CatalogPlotAccessor(*this);
+}
+
+CatalogPlotAccessor Catalog::plot(const pluss::table::DataFramePlotOptions& options) const {
+  return CatalogPlotAccessor(*this, options);
+}
+
+CatalogPlotAccessor::CatalogPlotAccessor(Catalog base, pluss::table::DataFramePlotOptions options)
+    : base_(std::move(base)), options_(std::move(options)) {}
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key,
+                                            std::optional<std::string_view> x_key) const {
+  return line({y_key}, x_key, pluss::table::LinePlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key) const {
+  return line(y_keys, x_key, pluss::table::LinePlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key,
+                                            std::optional<std::string_view> x_key,
+                                            const pluss::table::LinePlotOptions& options) const {
+  return line(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key,
+                                            const pluss::table::LinePlotOptions& options) const {
+  return catalog_make_xy_figure(
+      base_, y_keys, x_key, options_, options, "Catalog::plot().line",
+      [](Pane& pane,
+         const std::vector<double>& x_values,
+         const std::vector<double>& y_values,
+         const std::string& name,
+         std::size_t index,
+         const pluss::table::LinePlotOptions& line_options) {
+        auto& trace = flash::lineplot(pane, x_values, y_values);
+        trace.label(name);
+        catalog_style_trace(trace, index, line_options.alpha, line_options.line_width);
+      });
+}
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
+                                            std::optional<std::string_view> x_key) const {
+  return step({y_key}, x_key, pluss::table::StepPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key) const {
+  return step(y_keys, x_key, pluss::table::StepPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
+                                            std::optional<std::string_view> x_key,
+                                            const pluss::table::StepPlotOptions& options) const {
+  return step(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key,
+                                            const pluss::table::StepPlotOptions& options) const {
+  return catalog_make_xy_figure(
+      base_, y_keys, x_key, options_, options, "Catalog::plot().step",
+      [](Pane& pane,
+         const std::vector<double>& x_values,
+         const std::vector<double>& y_values,
+         const std::string& name,
+         std::size_t index,
+         const pluss::table::StepPlotOptions& step_options) {
+        auto& trace = flash::stepplot(pane, x_values, y_values);
+        trace.label(name);
+        catalog_style_trace(trace, index, step_options.alpha, step_options.line_width);
+      });
+}
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key,
+                                            std::optional<std::string_view> x_key) const {
+  return area({y_key}, x_key, pluss::table::AreaPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key) const {
+  return area(y_keys, x_key, pluss::table::AreaPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key,
+                                            std::optional<std::string_view> x_key,
+                                            const pluss::table::AreaPlotOptions& options) const {
+  return area(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key,
+                                            const pluss::table::AreaPlotOptions& options) const {
+  return catalog_make_xy_figure(
+      base_, y_keys, x_key, options_, options, "Catalog::plot().area",
+      [](Pane& pane,
+         const std::vector<double>& x_values,
+         const std::vector<double>& y_values,
+         const std::string& name,
+         std::size_t index,
+         const pluss::table::AreaPlotOptions& area_options) {
+        auto& trace = flash::areaplot(pane, x_values, y_values, 0.0);
+        trace.label(name);
+        catalog_style_trace(trace, index, area_options.alpha, area_options.line_width);
+      });
+}
+
+pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
+                                               std::string_view y_key,
+                                               std::optional<std::string_view> hue_key) const {
+  return scatter(x_key, y_key, hue_key, CatalogScatterPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
+                                               std::string_view y_key,
+                                               std::optional<std::string_view> hue_key,
+                                               const pluss::table::ScatterPlotOptions& options) const {
+  CatalogScatterPlotOptions catalog_options;
+  catalog_options.scatter = options;
+  return scatter(x_key, y_key, hue_key, catalog_options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
+                                               std::string_view y_key,
+                                               std::optional<std::string_view> hue_key,
+                                               const CatalogScatterPlotOptions& options) const {
+  PLUSS_CHECK(base_.has(x_key), "Catalog::plot().scatter: unknown x key '" + std::string(x_key) + "'");
+  PLUSS_CHECK(base_.has(y_key), "Catalog::plot().scatter: unknown y key '" + std::string(y_key) + "'");
+  const auto& x_stream = base_.at(x_key);
+  const auto& y_stream = base_.at(y_key);
+  const auto x_thread = x_stream.to_thread();
+
+  if (catalog_thread_prefers_labeled_axis(x_thread)) {
+    const auto axis = catalog_resolve_axis_from_thread(x_thread, x_key, "Catalog::plot().scatter", options_);
+    const auto y_values = catalog_stream_to_plot_numeric_values(y_stream);
+    PLUSS_CHECK(axis.values.size() == y_values.size(),
+                "Catalog::plot().scatter: x/y length mismatch between '" + std::string(x_key)
+                    + "' and '" + std::string(y_key) + "'");
+
+    auto fig = make_catalog_studio();
+    catalog_apply_figure_options(fig, options_);
+    auto& pane = fig.pane2();
+    const auto resolved_hue = catalog_resolve_hue_key(hue_key, options_);
+    catalog_setup_pane(pane, resolved_hue.has_value(), options_);
+    catalog_apply_axis(pane, axis, options_);
+    pane.y_label(std::string(y_key));
+
+    if (!resolved_hue.has_value()) {
+      auto& trace = flash::scatterplot(pane, axis.values, y_values);
+      trace.label(std::string(y_key));
+      catalog_style_trace(trace, 0, options.scatter.alpha, options.scatter.line_width);
+      return fig;
+    }
+
+    PLUSS_CHECK(base_.has(*resolved_hue),
+                "Catalog::plot().scatter: unknown hue key '" + std::string(*resolved_hue) + "'");
+    const auto hue_thread = base_.at(*resolved_hue).to_thread();
+    PLUSS_CHECK(catalog_thread_supports_hue(hue_thread),
+                "Catalog::plot().scatter: hue key '" + std::string(*resolved_hue)
+                    + "' must be note-like or time-like");
+    const auto hue_labels = catalog_thread_to_plot_labels(hue_thread, options_);
+    PLUSS_CHECK(hue_labels.size() == axis.values.size(),
+                "Catalog::plot().scatter: hue length mismatch for key '" + std::string(*resolved_hue) + "'");
+
+    std::vector<std::string> groups;
+    std::unordered_map<std::string, std::size_t> group_index;
+    std::vector<std::vector<double>> grouped_x;
+    std::vector<std::vector<double>> grouped_y;
+    for (std::size_t i = 0; i < hue_labels.size(); ++i) {
+      const auto [it, inserted] = group_index.emplace(hue_labels[i], groups.size());
+      if (inserted) {
+        groups.push_back(hue_labels[i]);
+        grouped_x.emplace_back();
+        grouped_y.emplace_back();
+      }
+      const auto idx = it->second;
+      grouped_x[idx].push_back(axis.values[i]);
+      grouped_y[idx].push_back(y_values[i]);
+    }
+
+    for (std::size_t i = 0; i < groups.size(); ++i) {
+      auto& trace = flash::scatterplot(pane, grouped_x[i], grouped_y[i]);
+      trace.label(groups[i]);
+      catalog_style_trace(trace, i, options.scatter.alpha, options.scatter.line_width);
+    }
+    return fig;
+  }
+
+  const auto pair = catalog_align_numeric_pair(
+      x_stream, y_stream, options.align, nullptr, options_, "Catalog::plot().scatter", x_key, y_key);
+
+  auto fig = make_catalog_studio();
+  catalog_apply_figure_options(fig, options_);
+  auto& pane = fig.pane2();
+  const auto resolved_hue = catalog_resolve_hue_key(hue_key, options_);
+  catalog_setup_pane(pane, resolved_hue.has_value(), options_);
+  pane.x_label(std::string(x_key));
+  pane.y_label(std::string(y_key));
+
+  if (!resolved_hue.has_value()) {
+    auto& trace = flash::scatterplot(pane, pair.x, pair.y);
+    trace.label(std::string(y_key));
+    catalog_style_trace(trace, 0, options.scatter.alpha, options.scatter.line_width);
+    return fig;
+  }
+
+  PLUSS_CHECK(base_.has(*resolved_hue),
+              "Catalog::plot().scatter: unknown hue key '" + std::string(*resolved_hue) + "'");
+  const auto& hue_stream = base_.at(*resolved_hue);
+  const auto hue_thread = hue_stream.to_thread();
+  PLUSS_CHECK(catalog_thread_supports_hue(hue_thread),
+              "Catalog::plot().scatter: hue key '" + std::string(*resolved_hue) + "' must be note-like or time-like");
+  const auto hue_values = catalog_thread_to_plot_labels(hue_thread, options_);
+
+  std::vector<std::string> groups;
+  std::unordered_map<std::string, std::size_t> group_index;
+  std::vector<std::vector<double>> grouped_x;
+  std::vector<std::vector<double>> grouped_y;
+  std::optional<std::unordered_map<std::string, std::int64_t>> hue_index;
+  if (pair.align_by == ResolvedPairAlignBy::Label) {
+    PLUSS_CHECK(hue_stream.has_label(),
+                "Catalog::plot().scatter: label-aligned hue requires labels on hue stream '" + std::string(*resolved_hue)
+                    + "'");
+    hue_index = catalog_unique_label_index(
+        catalog_stream_axis_labels(hue_stream, options_, "Catalog::plot().scatter"),
+        "Catalog::plot().scatter",
+        *resolved_hue);
+  }
+
+  for (std::size_t i = 0; i < pair.x.size(); ++i) {
+    std::optional<std::string_view> group;
+    if (pair.align_by == ResolvedPairAlignBy::Pos) {
+      const auto idx = static_cast<std::size_t>(pair.x_indices[i]);
+      if (idx < hue_values.size()) {
+        group = hue_values[idx];
+      }
+    } else {
+      PLUSS_CHECK(i < pair.labels.size(), "Catalog::plot().scatter: missing pair labels for hue alignment");
+      const auto hit = hue_index->find(pair.labels[i]);
+      if (hit != hue_index->end()) {
+        const auto idx = static_cast<std::size_t>(hit->second);
+        if (idx < hue_values.size()) {
+          group = hue_values[idx];
+        }
+      }
+    }
+    if (!group.has_value()) {
+      continue;
+    }
+
+    const auto [it, inserted] = group_index.emplace(std::string(*group), groups.size());
+    if (inserted) {
+      groups.push_back(std::string(*group));
+      grouped_x.emplace_back();
+      grouped_y.emplace_back();
+    }
+    const auto idx = it->second;
+    grouped_x[idx].push_back(pair.x[i]);
+    grouped_y[idx].push_back(pair.y[i]);
+  }
+
+  for (std::size_t i = 0; i < groups.size(); ++i) {
+    auto& trace = flash::scatterplot(pane, grouped_x[i], grouped_y[i]);
+    trace.label(groups[i]);
+    catalog_style_trace(trace, i, options.scatter.alpha, options.scatter.line_width);
+  }
+  return fig;
+}
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
+                                           std::optional<std::string_view> x_key) const {
+  return bar({y_key}, x_key, pluss::table::BarPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                           std::optional<std::string_view> x_key) const {
+  return bar(y_keys, x_key, pluss::table::BarPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
+                                           std::optional<std::string_view> x_key,
+                                           const pluss::table::BarPlotOptions& options) const {
+  return bar(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                           std::optional<std::string_view> x_key,
+                                           const pluss::table::BarPlotOptions& options) const {
+  return catalog_make_xy_figure(
+      base_, y_keys, x_key, options_, options, "Catalog::plot().bar",
+      [](Pane& pane,
+         const std::vector<double>& x_values,
+         const std::vector<double>& y_values,
+         const std::string& name,
+         std::size_t index,
+         const pluss::table::BarPlotOptions& bar_options) {
+        flash::BarPlotOptions core_options;
+        core_options.horizontal = bar_options.horizontal;
+        auto& trace = bar_options.horizontal ? flash::barplot(pane, y_values, x_values, core_options)
+                                             : flash::barplot(pane, x_values, y_values, core_options);
+        trace.label(name);
+        catalog_style_trace(trace, index, 0.88, 1.0);
+      });
+}
+
+pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, std::int64_t bins) const {
+  pluss::table::HistPlotOptions options;
+  options.bins = bins;
+  return hist(key, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                            std::int64_t bins) const {
+  pluss::table::HistPlotOptions options;
+  options.bins = bins;
+  return hist(keys, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key,
+                                            const pluss::table::HistPlotOptions& options) const {
+  return hist(pluss::msharp::RangeView::Of<std::string_view>({key}), options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                            const pluss::table::HistPlotOptions& options) const {
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().hist");
+  auto fig = make_catalog_studio();
+  catalog_apply_figure_options(fig, options_);
+  auto& pane = fig.pane2();
+  catalog_setup_pane(pane, names.size() > 1, options_);
+  pane.x_label("value").y_label("count");
+
+  const auto bins = static_cast<int>(std::max<std::int64_t>(1, options.bins > 0 ? options.bins : options_.default_bins));
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    auto values = catalog_thread_to_plot_numeric_series(base_.at(names[i]).to_thread());
+    auto& trace = flash::histplot(pane, values, bins);
+    trace.label(names[i]);
+    catalog_style_trace(trace, i, options.alpha, options.line_width);
+  }
+  return fig;
+}
+
+pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, std::int64_t points) const {
+  pluss::table::DensityPlotOptions options;
+  options.points = points;
+  return density(key, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                               std::int64_t points) const {
+  pluss::table::DensityPlotOptions options;
+  options.points = points;
+  return density(keys, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key,
+                                               const pluss::table::DensityPlotOptions& options) const {
+  return density(pluss::msharp::RangeView::Of<std::string_view>({key}), options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                               const pluss::table::DensityPlotOptions& options) const {
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().density");
+  auto fig = make_catalog_studio();
+  catalog_apply_figure_options(fig, options_);
+  auto& pane = fig.pane2();
+  catalog_setup_pane(pane, names.size() > 1, options_);
+  pane.x_label("value").y_label("density");
+
+  const auto points = std::max<std::int64_t>(16, options.points);
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    auto values = catalog_thread_to_plot_numeric_series(base_.at(names[i]).to_thread());
+    auto& trace = flash::kdeplot(pane, values, points);
+    trace.label(names[i]);
+    catalog_style_trace(trace, i, options.alpha, options.line_width);
+  }
+  return fig;
+}
+
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys) const {
+  return corr_heatmap(keys, CatalogCorrHeatmapPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                    const CatalogCorrHeatmapPlotOptions& options) const {
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().corr_heatmap");
+  PLUSS_CHECK(names.size() >= 2, "Catalog::plot().corr_heatmap: need at least two plottable streams");
+
+  const auto global = catalog_build_global_pair_context(
+      base_, names, options.align, options_, "Catalog::plot().corr_heatmap");
+  const auto corr_method = catalog_map_corr_method(options.method);
+
+  std::vector<std::vector<double>> rows;
+  rows.reserve(names.size());
+  for (std::size_t row = 0; row < names.size(); ++row) {
+    std::vector<double> corr_row;
+    corr_row.reserve(names.size());
+    for (std::size_t col = 0; col < names.size(); ++col) {
+      if (row == col) {
+        corr_row.push_back(1.0);
+        continue;
+      }
+      auto pair = catalog_align_numeric_pair(
+          base_.at(names[col]),
+          base_.at(names[row]),
+          options.align,
+          &global,
+          options_,
+          "Catalog::plot().corr_heatmap",
+          names[col],
+          names[row]);
+      if (pair.x.size() < 2) {
+        corr_row.push_back(std::numeric_limits<double>::quiet_NaN());
+        continue;
+      }
+      const auto x = pluss::table::Thread(pluss::make_series(pair.x, {static_cast<std::int64_t>(pair.x.size())}));
+      const auto y = pluss::table::Thread(pluss::make_series(pair.y, {static_cast<std::int64_t>(pair.y.size())}));
+      corr_row.push_back(x.corr(y, corr_method));
+    }
+    rows.push_back(std::move(corr_row));
+  }
+
+  auto fig = make_catalog_studio();
+  catalog_apply_figure_options(fig, options_);
+  auto& pane = fig.pane2();
+  catalog_setup_pane(pane, false, options_);
+
+  const auto axis_positions = catalog_positional_plot_x(static_cast<std::int64_t>(names.size()));
+  auto z = catalog_matrix_series_from_rows(rows);
+  pluss::pl::flash::HeatmapOptions heatmap_options;
+  heatmap_options.annotate_levels = options.heatmap.annotate_levels;
+  heatmap_options.scale_guide = options.heatmap.scale_guide;
+  heatmap_options.borderless = options.heatmap.borderless;
+  auto& trace = flash::heatmap(pane, axis_positions, axis_positions, z, heatmap_options);
+  trace.label("corr").shade(pluss::pl::ShadeMode::Smooth);
+
+  const auto name_views = catalog_label_views(names);
+  const auto name_range = pluss::msharp::RangeView::Of<std::string_view>(name_views);
+  pane.x_ticks(axis_positions, name_range).y_ticks(axis_positions, name_range);
+  pane.x_label("feature").y_label("feature");
+  return fig;
+}
+
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys) const {
+  return scatter_matrix(keys, CatalogScatterMatrixPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                      pluss::table::ScatterMatrixTriangle triangle) const {
+  CatalogScatterMatrixPlotOptions options;
+  options.matrix.pair.triangle = triangle;
+  return scatter_matrix(keys, options);
+}
+
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                      const CatalogScatterMatrixPlotOptions& options) const {
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().scatter_matrix");
+  PLUSS_CHECK(names.size() >= 2, "Catalog::plot().scatter_matrix: need at least two plottable streams");
+
+  const auto global = catalog_build_global_pair_context(
+      base_, names, options.align, options_, "Catalog::plot().scatter_matrix");
+  auto pair_options = options.matrix.pair;
+  if (options.matrix.corner && pair_options.triangle == pluss::table::ScatterMatrixTriangle::Full) {
+    pair_options.triangle = pluss::table::ScatterMatrixTriangle::Lower;
+  }
+  if (pair_options.labels.empty()) {
+    pair_options.labels = names;
+  }
+
+  auto fig = make_catalog_studio();
+  fig.mosaic(static_cast<std::int64_t>(names.size()),
+             static_cast<std::int64_t>(names.size()),
+             pair_options.grid_gap_x,
+             pair_options.grid_gap_y);
+
+  if (!options_.width.has_value() && !options_.height.has_value() && pair_options.auto_size) {
+    const double width = std::max(pair_options.min_width,
+                                  pair_options.outer_pad_x
+                                      + static_cast<double>(names.size()) * pair_options.cell_width);
+    const double height = std::max(pair_options.min_height,
+                                   pair_options.outer_pad_y
+                                       + static_cast<double>(names.size()) * pair_options.cell_height);
+    fig.size(width, height);
+  }
+  catalog_apply_figure_options(fig, options_);
+
+  for (std::size_t row = 0; row < names.size(); ++row) {
+    for (std::size_t col = 0; col < names.size(); ++col) {
+      const bool visible =
+          pair_options.triangle == pluss::table::ScatterMatrixTriangle::Full
+          || (pair_options.triangle == pluss::table::ScatterMatrixTriangle::Lower && row >= col)
+          || (pair_options.triangle == pluss::table::ScatterMatrixTriangle::Upper && row <= col);
+      if (!visible) {
+        continue;
+      }
+
+      auto& pane = fig.pane2();
+      pane.place(static_cast<std::int64_t>(row), static_cast<std::int64_t>(col));
+      pane.grid(pair_options.show_grid ? pluss::pl::GridStyle::Major : pluss::pl::GridStyle::None);
+      pane.legend(pluss::pl::KeyPlace::None);
+
+      if (row == col) {
+        const auto values = catalog_thread_to_plot_numeric_series(base_.at(names[row]).to_thread());
+        if (values.numel() > 0) {
+          if (pair_options.diag_kind == pluss::pl::flash::PairPlotDiagKind::Density) {
+            auto& trace = flash::kdeplot(pane, values, pair_options.diag_density_points);
+            trace.label(names[row]);
+            catalog_style_trace(trace, row, 1.0, pair_options.diag_trace_width);
+            pane.y_label("density");
+          } else {
+            auto& trace = flash::histplot(pane, values, static_cast<int>(std::max<std::int64_t>(1, pair_options.diag_bins)));
+            trace.label(names[row]);
+            catalog_style_trace(trace, row, 0.95, pair_options.diag_trace_width);
+            pane.y_label("count");
+          }
+        }
+        pane.x_label(names[col]);
+        continue;
+      }
+
+      auto pair = catalog_align_numeric_pair(
+          base_.at(names[col]),
+          base_.at(names[row]),
+          options.align,
+          &global,
+          options_,
+          "Catalog::plot().scatter_matrix",
+          names[col],
+          names[row]);
+      pair = catalog_downsample_pair(std::move(pair), pair_options.max_points);
+      if (!pair.x.empty()) {
+        if (pair_options.kind == pluss::pl::flash::PairPlotKind::Reg) {
+          pluss::pl::flash::RegPlotOptions reg_options;
+          reg_options.show_scatter = true;
+          reg_options.show_fit = true;
+          reg_options.show_ci = false;
+          auto& trace = flash::regplot(pane, pair.x, pair.y, reg_options);
+          trace.label(names[row] + "_vs_" + names[col]);
+          catalog_style_trace(trace, row + col, 0.92, pair_options.scatter_trace_width);
+        } else {
+          auto& trace = flash::scatterplot(pane, pair.x, pair.y);
+          trace.label(names[row] + "_vs_" + names[col]);
+          catalog_style_trace(trace, row + col, 0.92, pair_options.scatter_trace_width);
+        }
+      }
+
+      pane.x_label(names[col]).y_label(names[row]);
+    }
+  }
+
+  return fig;
+}
+
+pluss::pl::Studio CatalogPlotAccessor::auto_plot() const {
+  return auto_plot(pluss::table::AutoPlotOptions{});
+}
+
+pluss::pl::Studio CatalogPlotAccessor::auto_plot(const pluss::table::AutoPlotOptions& options) const {
+  (void)options;
+  PLUSS_CHECK(base_.defined(), "Catalog::plot().auto_plot: undefined handle");
+  PLUSS_CHECK(!base_.empty(), "Catalog::plot().auto_plot: empty catalog");
+  const auto numeric_keys = catalog_resolve_plot_keys(base_, {}, "Catalog::plot().auto_plot");
+  if (numeric_keys.size() == 1) {
+    return base_.at(numeric_keys.front()).plot(options_).auto_plot();
+  }
+  return line(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, pluss::table::LinePlotOptions{});
 }
 
 CatalogKeyAccessor::CatalogKeyAccessor(Catalog base, std::vector<std::string> keys)

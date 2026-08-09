@@ -105,6 +105,7 @@ public:
   [[nodiscard]] std::string flow_summary() const;
   [[nodiscard]] StatusOr<std::string> save_blueprint() const;
   Status load_blueprint(std::string_view text);
+  [[nodiscard]] StatusOr<Flow> clone() const;
 
   Status add_named_transform(TransformKind kind,
                              const TransformOptions& options,

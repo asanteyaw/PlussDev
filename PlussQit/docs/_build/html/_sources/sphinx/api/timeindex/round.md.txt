@@ -37,7 +37,7 @@ Example 1. Snap each timestamp to the nearest hour boundary.
 
 ```cpp
 auto out = base.round("H");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -51,7 +51,7 @@ Example 2. Choose `round()` when the closest boundary is what matters.
 
 ```cpp
 auto nearest_hours = base.round("H");
-std::cout << pluss::print_timeline(nearest_hours) << "\n";
+std::cout << pluss::timeindex::print(nearest_hours) << "\n";
 ```
 
 ## See Also

@@ -44,6 +44,7 @@ bool show_inhouse_html_window(const std::string& title,
                               const std::string& svg_payload,
                               const std::string& svg_snapshot_name,
                               std::shared_ptr<const VirtualTableModel>
-                                  virtual_table_model = {});
+                                  virtual_table_model = {},
+                              bool table_viewport_scroll_only = false);
 
 } // namespace pluss::view::detail

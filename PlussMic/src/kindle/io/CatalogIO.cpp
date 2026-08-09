@@ -3,6 +3,7 @@
 #include <iostream>
 #include <ostream>
 
+#include "bundle/registry.h"
 #include "loader/Loader.h"
 #include "kindle/display/Display.h"
 #include "table/DataFrame.h"
@@ -47,6 +48,11 @@ pluss::table::DataFrame Catalog::to_table(const TabelizePolicy& policy, bool ren
     pluss::table::display::print(std::cout, out, {});
   }
   return out;
+}
+
+pluss::bundle::Registry Catalog::bundelize() const {
+  PLUSS_CHECK(defined(), "Catalog::bundelize: catalog undefined");
+  return pluss::bundle::Registry::from_kindle(*this);
 }
 
 void Catalog::display() const {

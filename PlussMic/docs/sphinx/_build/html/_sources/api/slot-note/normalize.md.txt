@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 040de70b0331 -->
 
 # SlotNoteAccessor::normalize
 

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0c2e5aa8c938 -->
 
 # SlotTimelineAccessor::month_end
 

@@ -100,7 +100,7 @@ DataFrame make_factorize_unseen_frame() {
   });
 }
 
-// End-to-end DataNotePolicy::Factorize check: WorkflowModel must fit the
+// End-to-end DataNotePolicy::Factorize check: Model must fit the
 // raw-text "color" column's category map once at learn_() time, reuse
 // (never refit) that frozen map on every later infer() call, and carry it
 // through save()/load() unchanged.
@@ -118,7 +118,7 @@ bool run_lymph_factorize_checks(std::ostream* err = nullptr) {
   linear.regularization_strength = 1e-6;
   linear.fit_intercept = true;
 
-  WorkflowModel model = linear_factory::logistic_regression(linear);
+  Model model = models::logistic_regression(linear);
   TrainOptions train{};
   train.max_iterations = 2000;
   train.tolerance = 1e-8;
@@ -158,11 +158,11 @@ bool run_lymph_factorize_checks(std::ostream* err = nullptr) {
   const LabeledBatch train_batch_for_save =
       resolve(labeled_batch_from_dataframe(train_frame, data_options), "test.labeled_batch_from_dataframe(save)");
   model.save(tmp.string(), train_batch_for_save, train);
-  const WorkflowModel restored = WorkflowModel::load(tmp.string());
+  const Model restored = Model::load(tmp.string());
   std::filesystem::remove(tmp);
 
   if (!restored.trained()) {
-    if (err) *err << "WorkflowModel::load should restore a trained model\n";
+    if (err) *err << "Model::load should restore a trained model\n";
     return false;
   }
 
@@ -197,25 +197,25 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   linear.regularization_strength = 1e-6;
   linear.fit_intercept = true;
 
-  WorkflowModel model = linear_factory::logistic_regression(linear);
+  Model model = models::logistic_regression(linear);
   TrainOptions train{};
   train.max_iterations = 2500;
   train.tolerance = 1e-8;
   model.learn_(batch, train);
 
-  const ConfusionTable cm = confusion_table(model, batch);
+  const ConfusionTable cm = reports::confusion_table(model, batch);
   if (cm.counts.dim() != 2 || cm.counts.sizes()[0] != 2 || cm.counts.sizes()[1] != 2) {
-    if (err) *err << "lymph confusion_table(model,batch) should return 2x2 matrix on binary data\n";
+    if (err) *err << "lymph reports::confusion_table(model,batch) should return 2x2 matrix on binary data\n";
     return false;
   }
 
-  const ClassReport report = classification_summary(model, batch);
+  const ClassReport report = reports::classification_summary(model, batch);
   if (report.labels.numel() != 2 || report.macro_average.numel() != 3 || report.weighted_average.numel() != 3) {
-    if (err) *err << "lymph classification_summary(model,batch) should expose class + aggregate metrics\n";
+    if (err) *err << "lymph reports::classification_summary(model,batch) should expose class + aggregate metrics\n";
     return false;
   }
 
-  const Series metrics = classification_metric_series(model, batch, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::F1}});
+  const Series metrics = reports::classification_metric_series(model, batch, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::F1}});
   const auto metric_vec = as_f64(metrics);
   if (metric_vec.empty()) {
     if (err) *err << "lymph classification_metric_series(model,batch) should return requested assess metrics\n";
@@ -235,13 +235,13 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   cv.random_state = 73;
   cv.deterministic = true;
 
-  const Series fold_scores = cross_validate_scores(model.workflow().model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  const Series fold_scores = cross_validate_scores(model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
   if (fold_scores.numel() != 4 || !fold_scores.isfinite().all().item<bool>()) {
     if (err) *err << "lymph cross_validate_scores should return one finite score per fold\n";
     return false;
   }
 
-  const double score = cross_validate_score(model.workflow().model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  const double score = cross_validate_score(model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
   if (!std::isfinite(score) || score < 0.0 || score > 1.0) {
     if (err) *err << "lymph cross_validate_score should return finite fold-mean score\n";
     return false;
@@ -249,45 +249,40 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
 
   AssessOptions assess{};
   assess.metrics = {MetricKind::Accuracy};
-  const CrossValidationReport report_cv = cross_validate(model.workflow().model_spec().value(), batch, cv, train, assess);
+  const CrossValidationReport report_cv = cross_validate(model.model_spec().value(), batch, cv, train, assess);
   const double mean_cv = report_cv.report.mean_metrics.reshape({1}).item<double>();
   if (!approx(score, mean_cv, 1e-10)) {
     if (err) *err << "lymph cross_validate_score should match cross_validate mean metric for same setup\n";
     return false;
   }
 
-  // Was routed through the old Workflow facade (make_pipeline(...) wrapping
-  // a WorkflowModel just to call confusion_table/classification_summary/
-  // classification_metric_series/cross_validate_scores/cross_validate_score
-  // on it) -- every one of those already has a WorkflowModel overload
-  // directly (confirmed in workflow_model.h/metrics.h before dropping the
-  // wrapper), so calling them on wf_model itself is the same operation with
-  // one less layer of indirection.
-  WorkflowModel wf_model = linear_factory::logistic_regression(linear);
-  wf_model.learn_(batch, train);
-  const ConfusionTable wf_cm = confusion_table(wf_model, batch);
-  if (wf_cm.counts.numel() != cm.counts.numel()) {
-    if (err) *err << "confusion_table(model,...) should mirror wrapper behavior\n";
+  // Reports are now produced by the reports family consuming a public Model;
+  // CV still uses the spec-level validation path until validate:: lands.
+  Model report_model = models::logistic_regression(linear);
+  report_model.learn_(batch, train);
+  const ConfusionTable report_cm = reports::confusion_table(report_model, batch);
+  if (report_cm.counts.numel() != cm.counts.numel()) {
+    if (err) *err << "reports::confusion_table(model,...) should mirror wrapper behavior\n";
     return false;
   }
-  const ClassReport wf_report = classification_summary(wf_model, batch);
-  if (wf_report.macro_average.numel() != 3) {
-    if (err) *err << "classification_summary(model,...) should expose aggregate metrics\n";
+  const ClassReport report_detail = reports::classification_summary(report_model, batch);
+  if (report_detail.macro_average.numel() != 3) {
+    if (err) *err << "reports::classification_summary(model,...) should expose aggregate metrics\n";
     return false;
   }
-  const Series wf_metric_series = classification_metric_series(wf_model, batch, AssessOptions{.metrics = {MetricKind::Accuracy}});
-  if (wf_metric_series.numel() <= 0) {
-    if (err) *err << "classification_metric_series(model,...) should produce requested metrics\n";
+  const Series report_metric_series = reports::classification_metric_series(report_model, batch, AssessOptions{.metrics = {MetricKind::Accuracy}});
+  if (report_metric_series.numel() <= 0) {
+    if (err) *err << "reports::classification_metric_series(model,...) should produce requested metrics\n";
     return false;
   }
-  const Series wf_fold_scores = cross_validate_scores(wf_model, batch, MetricKind::Accuracy, cv, train);
-  if (wf_fold_scores.numel() != 4) {
-    if (err) *err << "cross_validate_scores(model,...) should emit one score per fold\n";
+  const Series report_fold_scores = cross_validate_scores(report_model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  if (report_fold_scores.numel() != 4) {
+    if (err) *err << "cross_validate_scores(model_spec,...) should emit one score per fold\n";
     return false;
   }
-  const double wf_score = cross_validate_score(wf_model, batch, MetricKind::Accuracy, cv, train);
-  if (!std::isfinite(wf_score) || wf_score < 0.0 || wf_score > 1.0) {
-    if (err) *err << "cross_validate_score(model,...) should produce finite score in [0,1]\n";
+  const double report_score = cross_validate_score(report_model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  if (!std::isfinite(report_score) || report_score < 0.0 || report_score > 1.0) {
+    if (err) *err << "cross_validate_score(model_spec,...) should produce finite score in [0,1]\n";
     return false;
   }
 
@@ -367,7 +362,7 @@ TEST_CASE("lymph metrics wrappers", "[lymph][metrics]") {
     FAIL("lymph metrics checks failed");
   }
 }
-TEST_CASE("lymph WorkflowModel DataNotePolicy::Factorize", "[lymph][factorize]") {
+TEST_CASE("lymph Model DataNotePolicy::Factorize", "[lymph][factorize]") {
   if (!run_lymph_factorize_checks(&std::cerr)) {
     FAIL("lymph factorize checks failed");
   }

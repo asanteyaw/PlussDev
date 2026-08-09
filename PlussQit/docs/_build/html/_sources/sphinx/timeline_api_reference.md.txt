@@ -47,13 +47,13 @@ That difference is the clean split:
 Example 1. Build a scalar timestamp.
 
 ```cpp
-auto t = pluss::make_timeline("2026-03-14T09:26:53Z");
+auto t = pluss::timeline::make("2026-03-14T09:26:53Z");
 ```
 
 Example 2. Build a 1D temporal vector.
 
 ```cpp
-auto t = pluss::make_timeline({
+auto t = pluss::timeline::make({
     "2026-03-14T09:00:00Z",
     "2026-03-14T10:00:00Z",
     "2026-03-14T11:00:00Z",
@@ -63,7 +63,7 @@ auto t = pluss::make_timeline({
 Example 3. Build a higher-rank temporal array.
 
 ```cpp
-auto t = pluss::make_timeline({
+auto t = pluss::timeline::make({
     {"2026-03-14T09:00:00Z", "2026-03-14T10:00:00Z"},
     {"2026-03-15T09:00:00Z", "2026-03-15T10:00:00Z"},
 });
@@ -72,7 +72,7 @@ auto t = pluss::make_timeline({
 Example 4. Build directly from raw epoch nanoseconds.
 
 ```cpp
-auto t = pluss::from_epoch_nanos({
+auto t = pluss::timeline::from_epoch({
     1'773'484'800'000'000'000LL,
     1'773'488'400'000'000'000LL,
 });

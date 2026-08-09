@@ -15,8 +15,8 @@ Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const -> pluss::k
 ## What It Does
 
 Converts the atlas into an `Archive`, one catalog per frame, in the same depth order — the
-inverse of [`tabelize()`](tabelize.md), which goes the other direction (`Archive` →
-`Atlas`). Internally, each frame is converted via
+inverse of [`Archive::tabelize()`](../archive/tabelize.md), which goes the other direction
+(`Archive` → `Atlas`). Internally, each frame is converted via
 [`Catalog::kindelize()`](../catalog/kindelize.md), using the same `policy` for every one,
 and the atlas's own depth labels are carried over.
 
@@ -74,12 +74,13 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 - `policy` is applied uniformly to every frame via
   [`Catalog::kindelize()`](../catalog/kindelize.md) — see that page for the full field
   breakdown.
-- Round-trips with [`tabelize()`](tabelize.md):
-  `Atlas::tabelize(atlas.kindelize())` reconstructs an equivalent atlas.
+- Round-trips with [`Archive::tabelize()`](../archive/tabelize.md):
+  `atlas.kindelize().tabelize()` reconstructs an equivalent atlas.
 
 ## See Also
 
-- [`Atlas::tabelize`](tabelize.md): the inverse conversion, from `Archive` to `Atlas`.
+- [`Archive::tabelize`](../archive/tabelize.md): the inverse conversion, from `Archive`
+  back to `Atlas`.
 - [`Archive::kindelize`](../archive/kindelize.md): the depth-stacked-catalog analog of what
   this method produces, wrapping [`Catalog::kindelize`](../catalog/kindelize.md) the same
   way.

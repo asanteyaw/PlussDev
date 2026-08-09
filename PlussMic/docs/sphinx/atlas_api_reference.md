@@ -28,6 +28,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 api/atlas/aggregate_over_frames
 api/atlas/align_depth
 api/atlas/axis0_labels
+api/atlas/bundelize
 api/atlas/column_names
 api/atlas/defined
 api/atlas/depth
@@ -51,7 +52,6 @@ api/atlas/show
 api/atlas/slice_frames
 api/atlas/sort_depth
 api/atlas/squeeze
-api/atlas/tabelize
 api/atlas/tail
 api/atlas/tl
 api/atlas/to_string

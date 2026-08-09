@@ -77,7 +77,7 @@ Example 1. A scalar source broadcasts across every indexed flat position.
 auto put_idx = pluss::make_series(std::vector<std::int64_t>{0, 2, 5}, {3});
 auto flat = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4, 5}, {6});
 
-flat.put_(put_idx, pluss::codem::value(-1.0), false);
+flat.put_(put_idx, pluss::make_series(-1.0), false);
 std::cout << flat;
 ```
 

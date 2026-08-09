@@ -218,3 +218,12 @@ Axel Axel::from_kindle(const pluss::kindle::Archive& archive) {
   if (archive.label().has()) labels = Slot::from_kindle(archive.label().values());
   return Axel(std::move(out), std::move(labels));
 }
+
+pluss::table::Atlas Axel::tabelize() const {
+  return tabelize(pluss::kindle::TabelizePolicy{});
+}
+
+pluss::table::Atlas Axel::tabelize(const pluss::kindle::TabelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "Axel::tabelize: axel undefined");
+  return to_kindle().tabelize(policy);
+}

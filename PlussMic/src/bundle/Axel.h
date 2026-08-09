@@ -19,6 +19,7 @@
 
 namespace pluss::kindle {
 class Archive;
+struct TabelizePolicy;
 }
 
 namespace pluss::bundle {
@@ -96,6 +97,8 @@ public:
   // Backward-compatible alias for older call sites.
   pluss::kindle::Archive kindelize() const;
   static Axel from_kindle(const pluss::kindle::Archive& archive);
+  pluss::table::Atlas tabelize() const;
+  pluss::table::Atlas tabelize(const pluss::kindle::TabelizePolicy& policy) const;
 
   std::string to_string() const;
   std::string to_json() const;

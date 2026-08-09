@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=55000b1c"></script>
+    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,8 +51,8 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts the atlas into an <code class="docutils literal notranslate"><span class="pre">Archive</span></code>, one catalog per frame, in the same depth order — the
-inverse of <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a>, which goes the other direction (<code class="docutils literal notranslate"><span class="pre">Archive</span></code> →
-<code class="docutils literal notranslate"><span class="pre">Atlas</span></code>). Internally, each frame is converted via
+inverse of <a class="reference internal" href="../archive/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tabelize()</span></code></span></a>, which goes the other direction
+(<code class="docutils literal notranslate"><span class="pre">Archive</span></code> → <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>). Internally, each frame is converted via
 <a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize()</span></code></span></a>, using the same <code class="docutils literal notranslate"><span class="pre">policy</span></code> for every one,
 and the atlas’s own depth labels are carried over.</p>
 </section>
@@ -110,14 +110,15 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 <li><p><code class="docutils literal notranslate"><span class="pre">policy</span></code> is applied uniformly to every frame via
 <a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize()</span></code></span></a> — see that page for the full field
 breakdown.</p></li>
-<li><p>Round-trips with <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a>:
-<code class="docutils literal notranslate"><span class="pre">Atlas::tabelize(atlas.kindelize())</span></code> reconstructs an equivalent atlas.</p></li>
+<li><p>Round-trips with <a class="reference internal" href="../archive/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tabelize()</span></code></span></a>:
+<code class="docutils literal notranslate"><span class="pre">atlas.kindelize().tabelize()</span></code> reconstructs an equivalent atlas.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::tabelize</span></code></span></a>: the inverse conversion, from <code class="docutils literal notranslate"><span class="pre">Archive</span></code> to <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
+<li><p><a class="reference internal" href="../archive/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tabelize</span></code></span></a>: the inverse conversion, from <code class="docutils literal notranslate"><span class="pre">Archive</span></code>
+back to <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
 <li><p><a class="reference internal" href="../archive/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::kindelize</span></code></span></a>: the depth-stacked-catalog analog of what
 this method produces, wrapping <a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code></span></a> the same
 way.</p></li>
@@ -175,6 +176,9 @@ applies to every frame.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
 </ul>
 
 <div class="relations">

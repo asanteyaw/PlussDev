@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 856e47df10cf -->
 
 # SlotNoteAccessor::casefold
 

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fd4671417470 -->
 
 # Slot::as_kindle
 

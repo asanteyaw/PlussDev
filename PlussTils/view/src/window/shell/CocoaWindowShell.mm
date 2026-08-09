@@ -85,8 +85,22 @@ NSString* shortcut_note_for_key_event(NSEvent* event) {
 }
 
 bool event_targets_window(NSEvent* event, NSWindow* window) {
-  return event != nil && window != nil &&
-         (event.window == window || (event.window == nil && window.isKeyWindow));
+  if (event == nil || window == nil) {
+    return false;
+  }
+  if (event.window == window) {
+    return true;
+  }
+  if (event.window != nil) {
+    return false;
+  }
+  if (window.isKeyWindow) {
+    return true;
+  }
+  if (!window.isVisible) {
+    return false;
+  }
+  return NSPointInRect([NSEvent mouseLocation], [window frame]);
 }
 
 NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {

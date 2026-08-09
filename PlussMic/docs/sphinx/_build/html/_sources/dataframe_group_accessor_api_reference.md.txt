@@ -41,4 +41,5 @@ api/dataframe-group/std
 api/dataframe-group/sum
 api/dataframe-group/transform
 api/dataframe-group/var
+api/dataframe-group/yield
 ```

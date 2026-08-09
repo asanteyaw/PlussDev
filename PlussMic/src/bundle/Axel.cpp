@@ -8,6 +8,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "kindle/Archive.h"
+#include "table/Atlas.h"
 
 namespace pluss::bundle {
 

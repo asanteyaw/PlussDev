@@ -318,6 +318,20 @@ void test_layout_metrics_and_scroll_model() {
   expect(scrollbar_paint_count(hidden_scrollbars) == 0,
          "overlay-free rendering should hide scrollbar tracks and thumbs");
 
+  HtmlRenderStats table_only_stats{};
+  HtmlRenderConfig table_only_config{};
+  table_only_config.render_stats = &table_only_stats;
+  table_only_config.enable_document_scroll = false;
+  (void)build_html_document_scene(document, viewport, table_only_config);
+  expect(table_only_stats.document_max_scroll_x == 0 &&
+             table_only_stats.document_max_scroll_y == 0,
+         "table-only mode should disable outer document scrolling");
+  expect(table_only_stats.table_scroll_regions.size() == 1,
+         "table-only mode should preserve independent table scroll regions");
+  expect(table_only_stats.table_scroll_regions.front().max_scroll_x > 0 &&
+             table_only_stats.table_scroll_regions.front().max_scroll_y > 0,
+         "table-only mode should keep table-local scrolling active");
+
   HtmlScrollModel model;
   model.update_metrics(stats);
   const PointI table_point = center(table.viewport_rect);

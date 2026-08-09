@@ -33,8 +33,8 @@ vector of replacements.
 Example 1. Replace every missing timestamp with one explicit recovery date.
 
 ```cpp
-auto out = with_nat.fill_nat(pluss::make_timeline("2024-11-15T00:00:00Z"));
-std::cout << pluss::print_timeline(out) << "\n";
+auto out = with_nat.fill_nat(pluss::timeline::make("2024-11-15T00:00:00Z"));
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

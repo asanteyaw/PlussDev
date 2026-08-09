@@ -25,6 +25,9 @@
 namespace pluss::table {
 class DataFrame;
 }
+namespace pluss::bundle {
+class Registry;
+}
 
 namespace pluss::kindle {
 
@@ -56,6 +59,7 @@ class CatalogCastAccessor;
 class CatalogNoteAccessor;
 class CatalogTimelineAccessor;
 class CatalogTimeSeriesAccessor;
+class CatalogPlotAccessor;
 class CatalogGroupBuilder;
 
 enum class Align : std::uint8_t {
@@ -94,6 +98,17 @@ enum class ReduceAxis : std::uint8_t {
   Key = 1,
 };
 
+enum class PairAlign : std::uint8_t {
+  PairwiseInner = 0,
+  GlobalInner = 1,
+};
+
+enum class PairAlignBy : std::uint8_t {
+  Auto = 0,
+  Label = 1,
+  Pos = 2,
+};
+
 struct CatalogReduceOptions {
   ReduceAxis axis{ReduceAxis::Record};
   Align align{Align::Strict};
@@ -119,6 +134,27 @@ struct TabelizePolicy {
   std::optional<std::string> anchor{std::nullopt};
   bool include_label_feature{false};
   std::string label_feature{"label"};
+};
+
+struct CatalogPairAlignOptions {
+  PairAlign align{PairAlign::PairwiseInner};
+  PairAlignBy align_by{PairAlignBy::Auto};
+};
+
+struct CatalogScatterPlotOptions {
+  CatalogPairAlignOptions align{};
+  pluss::table::ScatterPlotOptions scatter{};
+};
+
+struct CatalogScatterMatrixPlotOptions {
+  CatalogPairAlignOptions align{};
+  pluss::table::ScatterMatrixPlotOptions matrix{};
+};
+
+struct CatalogCorrHeatmapPlotOptions {
+  CatalogPairAlignOptions align{};
+  pluss::table::CorrHeatmapPlotOptions heatmap{};
+  pluss::table::DataFrame::CorrMethod method{pluss::table::DataFrame::CorrMethod::Pearson};
 };
 
 class Catalog {
@@ -246,6 +282,8 @@ public:
   CatalogNoteAccessor nt() const;
   CatalogTimelineAccessor tl() const;
   CatalogTimeSeriesAccessor ts() const;
+  CatalogPlotAccessor plot() const;
+  CatalogPlotAccessor plot(const pluss::table::DataFramePlotOptions& options) const;
   Catalog astype(pluss::codem::ScalarType dtype) const;
   Catalog distinct(DistinctOptions options = {}) const;
   Catalog freq(FreqOptions options = {}) const;
@@ -292,6 +330,7 @@ public:
 
   pluss::table::DataFrame tabelize(const TabelizePolicy& policy = {}) const;
   pluss::table::DataFrame to_table(const TabelizePolicy& policy = {}, bool render = false) const;
+  pluss::bundle::Registry bundelize() const;
 
   void display() const;
   void info() const;
@@ -517,6 +556,168 @@ public:
 
 private:
   CatalogKeyAccessor keysel_;
+};
+
+class CatalogPlotAccessor {
+public:
+  explicit CatalogPlotAccessor(Catalog base, pluss::table::DataFramePlotOptions options = {});
+
+  pluss::pl::Studio line(std::string_view y_key,
+                         std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+                         std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio line(std::initializer_list<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key = std::nullopt) const {
+    return line(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
+  }
+  pluss::pl::Studio line(std::string_view y_key,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::LinePlotOptions& options) const;
+  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::LinePlotOptions& options) const;
+  pluss::pl::Studio line(std::initializer_list<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::LinePlotOptions& options) const {
+    return line(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
+  }
+
+  pluss::pl::Studio step(std::string_view y_key,
+                         std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+                         std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio step(std::initializer_list<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key = std::nullopt) const {
+    return step(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
+  }
+  pluss::pl::Studio step(std::string_view y_key,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::StepPlotOptions& options) const;
+  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::StepPlotOptions& options) const;
+  pluss::pl::Studio step(std::initializer_list<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::StepPlotOptions& options) const {
+    return step(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
+  }
+
+  pluss::pl::Studio area(std::string_view y_key,
+                         std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+                         std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio area(std::initializer_list<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key = std::nullopt) const {
+    return area(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
+  }
+  pluss::pl::Studio area(std::string_view y_key,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::AreaPlotOptions& options) const;
+  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::AreaPlotOptions& options) const;
+  pluss::pl::Studio area(std::initializer_list<std::string_view> y_keys,
+                         std::optional<std::string_view> x_key,
+                         const pluss::table::AreaPlotOptions& options) const {
+    return area(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
+  }
+
+  pluss::pl::Studio scatter(std::string_view x_key,
+                            std::string_view y_key,
+                            std::optional<std::string_view> hue_key = std::nullopt) const;
+  pluss::pl::Studio scatter(std::string_view x_key,
+                            std::string_view y_key,
+                            std::optional<std::string_view> hue_key,
+                            const pluss::table::ScatterPlotOptions& options) const;
+  pluss::pl::Studio scatter(std::string_view x_key,
+                            std::string_view y_key,
+                            std::optional<std::string_view> hue_key,
+                            const CatalogScatterPlotOptions& options) const;
+
+  pluss::pl::Studio bar(std::string_view y_key,
+                        std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+                        std::optional<std::string_view> x_key = std::nullopt) const;
+  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_keys,
+                        std::optional<std::string_view> x_key = std::nullopt) const {
+    return bar(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
+  }
+  pluss::pl::Studio bar(std::string_view y_key,
+                        std::optional<std::string_view> x_key,
+                        const pluss::table::BarPlotOptions& options) const;
+  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                        std::optional<std::string_view> x_key,
+                        const pluss::table::BarPlotOptions& options) const;
+  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_keys,
+                        std::optional<std::string_view> x_key,
+                        const pluss::table::BarPlotOptions& options) const {
+    return bar(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
+  }
+
+  pluss::pl::Studio hist(std::string_view key, std::int64_t bins = 20) const;
+  pluss::pl::Studio hist(pluss::msharp::RangeView::Of<std::string_view> keys = {},
+                         std::int64_t bins = 20) const;
+  pluss::pl::Studio hist(std::initializer_list<std::string_view> keys,
+                         std::int64_t bins = 20) const {
+    return hist(pluss::msharp::RangeView::Of<std::string_view>(keys), bins);
+  }
+  pluss::pl::Studio hist(std::string_view key, const pluss::table::HistPlotOptions& options) const;
+  pluss::pl::Studio hist(pluss::msharp::RangeView::Of<std::string_view> keys,
+                         const pluss::table::HistPlotOptions& options) const;
+  pluss::pl::Studio hist(std::initializer_list<std::string_view> keys,
+                         const pluss::table::HistPlotOptions& options) const {
+    return hist(pluss::msharp::RangeView::Of<std::string_view>(keys), options);
+  }
+
+  pluss::pl::Studio density(std::string_view key, std::int64_t points = 128) const;
+  pluss::pl::Studio density(pluss::msharp::RangeView::Of<std::string_view> keys = {},
+                            std::int64_t points = 128) const;
+  pluss::pl::Studio density(std::initializer_list<std::string_view> keys,
+                            std::int64_t points = 128) const {
+    return density(pluss::msharp::RangeView::Of<std::string_view>(keys), points);
+  }
+  pluss::pl::Studio density(std::string_view key, const pluss::table::DensityPlotOptions& options) const;
+  pluss::pl::Studio density(pluss::msharp::RangeView::Of<std::string_view> keys,
+                            const pluss::table::DensityPlotOptions& options) const;
+  pluss::pl::Studio density(std::initializer_list<std::string_view> keys,
+                            const pluss::table::DensityPlotOptions& options) const {
+    return density(pluss::msharp::RangeView::Of<std::string_view>(keys), options);
+  }
+
+  pluss::pl::Studio corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const;
+  pluss::pl::Studio corr_heatmap(std::initializer_list<std::string_view> keys) const {
+    return corr_heatmap(pluss::msharp::RangeView::Of<std::string_view>(keys));
+  }
+  pluss::pl::Studio corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                 const CatalogCorrHeatmapPlotOptions& options) const;
+  pluss::pl::Studio corr_heatmap(std::initializer_list<std::string_view> keys,
+                                 const CatalogCorrHeatmapPlotOptions& options) const {
+    return corr_heatmap(pluss::msharp::RangeView::Of<std::string_view>(keys), options);
+  }
+
+  pluss::pl::Studio scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const;
+  pluss::pl::Studio scatter_matrix(std::initializer_list<std::string_view> keys) const {
+    return scatter_matrix(pluss::msharp::RangeView::Of<std::string_view>(keys));
+  }
+  pluss::pl::Studio scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                   pluss::table::ScatterMatrixTriangle triangle) const;
+  pluss::pl::Studio scatter_matrix(std::initializer_list<std::string_view> keys,
+                                   pluss::table::ScatterMatrixTriangle triangle) const {
+    return scatter_matrix(pluss::msharp::RangeView::Of<std::string_view>(keys), triangle);
+  }
+  pluss::pl::Studio scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                   const CatalogScatterMatrixPlotOptions& options) const;
+  pluss::pl::Studio scatter_matrix(std::initializer_list<std::string_view> keys,
+                                   const CatalogScatterMatrixPlotOptions& options) const {
+    return scatter_matrix(pluss::msharp::RangeView::Of<std::string_view>(keys), options);
+  }
+
+  pluss::pl::Studio auto_plot() const;
+  pluss::pl::Studio auto_plot(const pluss::table::AutoPlotOptions& options) const;
+
+private:
+  Catalog base_{};
+  pluss::table::DataFramePlotOptions options_{};
 };
 
 class CatalogGroupBuilder {

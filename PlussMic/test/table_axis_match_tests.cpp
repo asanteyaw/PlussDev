@@ -16,6 +16,9 @@ using pluss::table::FrameMatchOptions;
 using pluss::table::FrameMatchRule;
 using pluss::table::RepeatedCaseRule;
 using pluss::table::Thread;
+using pluss::table::Atlas;
+using pluss::bundle::Registry;
+using pluss::bundle::Axel;
 
 [[noreturn]] void fail(std::string_view message) {
   throw std::runtime_error(std::string(message));
@@ -494,6 +497,170 @@ void test_group_transform_and_filter() {
              filtered.features("group").as_note().vector() == std::vector<std::string_view>({"B", "B"}) &&
              filtered.features("value").as_series().to_vec<double>() == std::vector<double>({2.0, 6.0}),
          "DataFrameGrouped::filter should keep whole groups selected by a grouped keep mask");
+}
+
+void test_group_yield_and_ndistinct() {
+  const auto groups = Thread(
+      pluss::make_note({"B", "A", "B", "A", "skip", "B"}),
+      pluss::make_series(std::vector<bool>{true, true, true, true, false, true}));
+  const auto frame = DataFrame(
+      {
+          {"group", groups},
+          {"month_code", Thread(
+                             pluss::make_series(std::vector<double>{2.0, 1.0, 2.0, 3.0, 9.0, 0.0}),
+                             pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
+          {"amount", Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0, 50.0, 60.0}))},
+      },
+      Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4", "r5"})));
+
+  const auto yielded = frame.group({.dropnull = true, .sort = true}).by({"group"}).yield();
+  expect(yielded.ncases() == 5,
+         "group().yield() should drop rows excluded by null grouping keys");
+  expect(yielded.features("group").as_note().vector() ==
+             std::vector<std::string_view>({"A", "A", "B", "B", "B"}),
+         "group().yield() should materialize rows in grouped key order");
+  expect(yielded.features("amount").as_series().to_vec<double>() ==
+             std::vector<double>({10.0, 40.0, 20.0, 30.0, 60.0}),
+         "group().yield() should preserve original within-group row order");
+  expect(yielded.label().values().as_note().vector() ==
+             std::vector<std::string_view>({"r1", "r3", "r0", "r2", "r5"}),
+         "group().yield() should carry matching case labels through regrouping");
+
+  const auto grouped = frame.group({.dropnull = true}).by({"group"}).agg({
+      {"active_months", "month_code", DataFrame::GroupOp::Ndistinct},
+  });
+  expect(grouped.features("active_months").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 1}),
+         "grouped ndistinct should count unique non-null values per group");
+
+  const auto indexed = DataFrame({
+      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 102, 201, 202}))},
+      {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+  }).label().set(
+      DataFrame::SetLabelOptions{
+          .features = {"region", "account"},
+          .drop = false,
+          .verify = true,
+          .sort = false});
+  const auto label_yield = indexed.group().by(DataFrame::LabelGroup{.label = "region"}).yield();
+  expect(!label_yield.get("__pluss_case_level_region").has_value(),
+         "group(...).by(LabelGroup).yield() should not leak internal grouping features");
+  expect(label_yield.features("sales").as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 40.0, 10.0, 20.0}),
+         "label-group yield should regroup rows by case-label keys");
+}
+
+void test_temporal_subtraction_and_sort_builder() {
+  const auto left = Thread(pluss::make_timeline({
+      "2024-01-03T00:00:00Z",
+      "2024-01-05T00:00:00Z",
+  }));
+  const auto right = Thread(pluss::make_timeline({
+      "2024-01-01T00:00:00Z",
+      "2024-01-02T00:00:00Z",
+  }));
+  expect((left - right).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({172800000000000LL, 259200000000000LL}),
+         "Timeline - Timeline should delegate to payload diff and return nanoseconds");
+
+  const auto idx = Thread(pluss::make_timeindex({"2024-01-01", "2024-01-04"}));
+  expect((left - idx).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({172800000000000LL, 86400000000000LL}),
+         "Timeline - TimeIndex should also produce nanosecond deltas");
+
+  const auto values = Thread(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
+  const Thread sorted_thread = values.sort();
+  expect(sorted_thread.as_series().to_vec<double>() == std::vector<double>({1.0, 2.0, 3.0}),
+         "Thread::sort() should remain usable through implicit conversion");
+
+  const auto frame = DataFrame(
+      {
+          {"a", Thread(pluss::make_series(std::vector<std::int64_t>{2, 1, 2, 1}))},
+          {"b", Thread(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 1}))},
+          {"v", Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
+      },
+      Thread(pluss::make_note({"r2", "r1", "r3", "r0"})));
+
+  const auto by = frame.sort().by({"a", "b"}).yield();
+  expect(by.features("v").as_series().to_vec<double>() ==
+             std::vector<double>({40.0, 10.0, 30.0, 20.0}),
+         "DataFrame::sort().by(features) should reuse arrange semantics");
+
+  const auto chained = frame.sort().by("a").desc().then("b").asc().yield();
+  expect(chained.features("v").as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 20.0, 40.0, 10.0}),
+         "DataFrame::sort() should support per-key chained sort policies");
+
+  const auto order = frame.sort().by("v").desc().order();
+  expect(order.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({2, 0, 1, 3}),
+         "DataFrame::sort().order() should expose the reusable row permutation");
+  const auto reordered = frame.take(order);
+  expect(reordered.features("v").as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 20.0, 10.0, 40.0}),
+         "DataFrame::take(order) should reuse a sort permutation directly");
+  const auto top2 = frame.sort().by("v").desc().head(2);
+  expect(top2.features("v").as_series().to_vec<double>() == std::vector<double>({30.0, 20.0}),
+         "DataFrame::sort().head(n) should return the ranked prefix");
+  const auto tail2 = frame.sort().by("v").desc().tail(2);
+  expect(tail2.features("v").as_series().to_vec<double>() == std::vector<double>({10.0, 40.0}),
+         "DataFrame::sort().tail(n) should return the ranked suffix");
+
+  const auto grouped = DataFrame(
+      {
+          {"g", Thread(pluss::make_note({"B", "A", "B", "A", "C"}))},
+          {"score", Thread(pluss::make_series(std::vector<std::int64_t>{3, 1, 2, 4, 0}))},
+          {"v2", Thread(pluss::make_series(std::vector<std::int64_t>{30, 10, 20, 40, 0}))},
+      },
+      Thread(pluss::make_note({"b0", "a0", "b1", "a1", "c0"})));
+  const auto within = grouped.sort().within("g").by("score").desc().yield();
+  expect(within.features("g").as_note().vector() ==
+             std::vector<std::string_view>({"B", "B", "A", "A", "C"}),
+         "DataFrame::sort().within(keys) should keep first-seen group order");
+  expect(within.features("score").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({3, 2, 4, 1, 0}),
+         "DataFrame::sort().within(keys) should sort inside each group");
+  const auto within_head3 = grouped.sort().within("g").by("score").desc().head(3);
+  expect(within_head3.features("score").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({3, 2, 4}),
+         "DataFrame::sort().within(keys).head(n) should rank across the grouped view without full materialization");
+}
+
+void test_bundelize_and_tabelize_interop() {
+  const auto orders = make_frame(
+      {
+          {"id", Thread(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
+          {"city", Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+          {"sales", Thread(pluss::make_series(std::vector<double>{100.0, 150.0, 90.0}))},
+      },
+      {"o1", "o2", "o3"});
+
+  const auto catalog = orders.kindelize();
+  const auto rebuilt = catalog.tabelize();
+  expect(rebuilt.features() == orders.features(),
+         "Catalog::tabelize() should rebuild feature names from a kindelized frame");
+  expect(rebuilt.label().values().as_note().vector() == orders.label().values().as_note().vector(),
+         "Catalog::tabelize() should preserve case labels on a round-trip");
+
+  const auto registry = orders.bundelize();
+  const auto from_registry = registry.tabelize();
+  expect(from_registry.features() == orders.features(),
+         "Registry::tabelize() should rebuild feature names from a bundelized frame");
+  expect(from_registry.features("sales").as_series().to_vec<double>() ==
+             std::vector<double>({100.0, 150.0, 90.0}),
+         "Registry::tabelize() should preserve numeric values");
+
+  const auto from_catalog_bundle = catalog.bundelize();
+  expect(from_catalog_bundle.fields() == std::vector<std::string>({"id", "city", "sales"}),
+         "Catalog::bundelize() should preserve key names");
+
+  const auto atlas = Atlas({orders, orders.title("copy")});
+  const auto archive = atlas.kindelize();
+  const auto axel = atlas.bundelize();
+  const auto atlas_from_archive = archive.tabelize();
+  const auto atlas_from_axel = axel.tabelize();
+  expect(atlas_from_archive.depth() == 2 && atlas_from_axel.depth() == 2,
+         "Archive::tabelize() and Axel::tabelize() should preserve depth");
 }
 
 void test_group_phase7_hardening() {
@@ -1202,6 +1369,9 @@ int main(int argc, char** argv) {
       {"vectorized_group_reductions", test_vectorized_group_reductions},
       {"group_phase5_contracts", test_group_phase5_contracts},
       {"group_transform_and_filter", test_group_transform_and_filter},
+      {"group_yield_and_ndistinct", test_group_yield_and_ndistinct},
+      {"temporal_subtraction_and_sort_builder", test_temporal_subtraction_and_sort_builder},
+      {"bundelize_and_tabelize_interop", test_bundelize_and_tabelize_interop},
       {"group_phase7_hardening", test_group_phase7_hardening},
       {"lengthen_reshape", test_lengthen_reshape},
       {"hierarchical_case_axis_engine", test_hierarchical_case_axis_engine},

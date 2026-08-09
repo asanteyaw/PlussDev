@@ -86,7 +86,7 @@ const std::vector<ExtractSpec> first_two{
 
 auto copied = grid.traverse_put(
     pluss::msharp::RangeView::Of<ExtractSpec>(first_two),
-    pluss::codem::value(999.0));
+    pluss::make_series(999.0));
 
 std::cout << copied;
 ```

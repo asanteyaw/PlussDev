@@ -26,7 +26,7 @@ This gives you the canonical exact-time set represented by the axis.
 ## Examples
 
 ```cpp
-auto dup = pluss::make_timeindex({
+auto dup = pluss::timeindex::make({
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
@@ -35,7 +35,7 @@ auto dup = pluss::make_timeindex({
 }, false);
 
 auto out = dup.unique();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -50,7 +50,7 @@ operations or exact alignment.
 
 ```cpp
 auto vocab = dup.unique();
-std::cout << pluss::print_timeline(vocab) << "\n";
+std::cout << pluss::timeindex::print(vocab) << "\n";
 ```
 
 ## Notes

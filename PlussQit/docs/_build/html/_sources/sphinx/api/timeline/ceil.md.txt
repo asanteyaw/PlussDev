@@ -29,7 +29,7 @@ Example 1. Ceiling to the hour.
 
 ```cpp
 auto out = base.ceil("H");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

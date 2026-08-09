@@ -28,7 +28,7 @@ Example 1. Remove the clock component and keep only the calendar day.
 
 ```cpp
 auto out = base.normalize();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -43,7 +43,7 @@ Example 2. `normalize()` is the clearer call when the intent is explicitly
 
 ```cpp
 auto days = base.normalize();
-std::cout << pluss::print_timeline(days) << "\n";
+std::cout << pluss::timeindex::print(days) << "\n";
 ```
 
 ## See Also

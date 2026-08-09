@@ -46,6 +46,17 @@ void expect_throw(Fn&& fn, std::string_view msg) {
   if (!threw) fail(msg);
 }
 
+template <class Fn>
+void expect_no_throw(Fn&& fn, std::string_view msg) {
+  try {
+    fn();
+  } catch (const std::exception& e) {
+    fail(std::string(msg) + ": " + e.what());
+  } catch (...) {
+    fail(std::string(msg) + ": unknown exception");
+  }
+}
+
 std::filesystem::path project_root() {
   return std::filesystem::path(PLUSSMIC_SOURCE_DIR);
 }
@@ -124,6 +135,14 @@ Stream labeled_series(std::vector<double> values, std::vector<std::string> label
   const std::array<std::int64_t, 1> shape{n};
   auto label = pluss::table::Thread(pluss::make_note(std::move(labels), shape));
   return Stream(pluss::make_series(std::move(values), {n}), std::nullopt, std::move(label));
+}
+
+Stream labeled_note(std::vector<std::string> values, std::vector<std::string> labels) {
+  const auto n = static_cast<std::int64_t>(values.size());
+  expect(static_cast<std::int64_t>(labels.size()) == n, "labeled_note label size mismatch");
+  const std::array<std::int64_t, 1> shape{n};
+  auto label = pluss::table::Thread(pluss::make_note(std::move(labels), shape));
+  return Stream(pluss::make_note(std::move(values), shape), std::nullopt, std::move(label));
 }
 
 std::vector<std::string> note_values(const pluss::Note& note) {
@@ -236,6 +255,91 @@ void test_stream_accessors() {
 
   auto fig = metric.plot().line();
   (void)fig;
+}
+
+void test_catalog_plot_accessor() {
+  const auto ragged = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"short", labeled_series({10.0, 12.0, 11.0}, {"Mon", "Tue", "Wed"})},
+      {"long", labeled_series({3.0, 4.0, 6.0, 5.0, 7.0}, {"Mon", "Tue", "Wed", "Thu", "Fri"})},
+  });
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().line({"short", "long"});
+    (void)fig;
+  }, "Catalog::plot().line should support ragged multi-stream plots without tabelize");
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().step({"short", "long"});
+    (void)fig;
+  }, "Catalog::plot().step should support ragged multi-stream plots");
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().area({"short", "long"});
+    (void)fig;
+  }, "Catalog::plot().area should support ragged multi-stream plots");
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().hist({"short", "long"}, 12);
+    (void)fig;
+  }, "Catalog::plot().hist should overlay independent stream lengths");
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().density({"short", "long"}, 96);
+    (void)fig;
+  }, "Catalog::plot().density should overlay independent stream lengths");
+
+  const auto ragged_xy = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", labeled_series({1.0, 2.0, 3.0, 4.0, 5.0}, {"a", "b", "c", "d", "e"})},
+      {"y", labeled_series({10.0, 30.0, 50.0}, {"a", "c", "e"})},
+      {"desk", labeled_note({"A", "B", "A", "B", "A"}, {"a", "b", "c", "d", "e"})},
+  });
+
+  expect_no_throw([&]() {
+    auto fig = ragged_xy.plot().scatter("x", "y");
+    (void)fig;
+  }, "Catalog::plot().scatter should support ragged x/y alignment");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_xy.plot().scatter("x", "y", "desk");
+    (void)fig;
+  }, "Catalog::plot().scatter should align ragged hue by the same pairwise basis");
+
+  const auto paired = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", Stream(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+      {"y", Stream(pluss::make_series(std::vector<double>{5.0, 7.0, 6.0, 8.0}, {4}))},
+      {"hue",
+       Stream(pluss::make_note(std::vector<std::string>{"A", "A", "B", "B"}, {4}))},
+  });
+
+  expect_no_throw([&]() {
+    auto fig = paired.plot().scatter("x", "y", "hue");
+    (void)fig;
+  }, "Catalog::plot().scatter should support grouped hue rendering");
+
+  expect_no_throw([&]() {
+    auto fig = paired.plot().bar("y", "x");
+    (void)fig;
+  }, "Catalog::plot().bar should plot an explicit x/y stream pair");
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().scatter_matrix({"short", "long"});
+    (void)fig;
+  }, "Catalog::plot().scatter_matrix should support ragged pairwise inner alignment");
+
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().corr_heatmap({"short", "long"});
+    (void)fig;
+  }, "Catalog::plot().corr_heatmap should support ragged pairwise inner alignment");
+
+  expect_throw(
+      [&]() {
+        (void)ragged.plot().line({"short", "long"}, "short");
+      },
+      "Catalog::plot().line(shared x) should reject y streams whose lengths do not match the shared x stream");
+
+  const auto reduced = paired.keys({"x", "y"}).sum(pluss::kindle::ReduceAxis::Key);
+  expect(reduced.nkeys() == 1 && reduced.has("sum"),
+         "Catalog::sum(ReduceAxis::Key) should behave like cross-key reduction");
 }
 
 void test_catalog_accessors() {
@@ -951,6 +1055,7 @@ int main() {
   try {
     test_stream_methods();
     test_stream_accessors();
+    test_catalog_plot_accessor();
     test_catalog_accessors();
     test_catalog_reductions();
     test_catalog_construction_and_selection();

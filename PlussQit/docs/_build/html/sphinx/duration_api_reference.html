@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Duration construction" href="api/duration/construction.html" />
-    <link rel="prev" title="pluss::date_range" href="api/timeline/date_range.html" />
+    <link rel="prev" title="pluss::timeline::date_range" href="api/timeline/date_range.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -60,19 +60,20 @@ array with no <code class="docutils literal notranslate"><span class="pre">Timel
 conversion surface. The one real asymmetry: <code class="docutils literal notranslate"><span class="pre">Duration</span></code> is not one of the four
 <code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code> payloads a DataFrame column can hold (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>) — to store elapsed time in a column, convert to a
-plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> first via one of the <code class="docutils literal notranslate"><span class="pre">total_*</span></code> methods.</p>
+plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> first via one of the <a class="reference internal" href="api/duration/total_nanoseconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total()</span></code></span></a>
+accessor’s unit methods.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Build with CODEH_ENABLE_DURATION_SURFACE defined
 <code class="docutils literal notranslate"><span class="pre">Duration</span></code>’s generated method surface (every comparison, <code class="docutils literal notranslate"><span class="pre">mul</span></code>/<code class="docutils literal notranslate"><span class="pre">div</span></code>/<code class="docutils literal notranslate"><span class="pre">floordiv</span></code>/
-<code class="docutils literal notranslate"><span class="pre">mod</span></code>, all <code class="docutils literal notranslate"><span class="pre">total_*</span></code> conversions, <code class="docutils literal notranslate"><span class="pre">abs</span></code>/<code class="docutils literal notranslate"><span class="pre">sign</span></code>/<code class="docutils literal notranslate"><span class="pre">clip</span></code>, <code class="docutils literal notranslate"><span class="pre">isnat</span></code>/<code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>/<code class="docutils literal notranslate"><span class="pre">where</span></code>)
+<code class="docutils literal notranslate"><span class="pre">mod</span></code>, <code class="docutils literal notranslate"><span class="pre">total()</span></code>’s unit conversions, <code class="docutils literal notranslate"><span class="pre">abs</span></code>/<code class="docutils literal notranslate"><span class="pre">sign</span></code>/<code class="docutils literal notranslate"><span class="pre">clip</span></code>, <code class="docutils literal notranslate"><span class="pre">isnat</span></code>/<code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>/<code class="docutils literal notranslate"><span class="pre">where</span></code>)
 is compiled in only when <code class="docutils literal notranslate"><span class="pre">CODEH_ENABLE_DURATION_SURFACE</span></code> is defined, mirroring
 how <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>’s and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>’s surfaces are gated behind their own flags.
 <code class="docutils literal notranslate"><span class="pre">PlussQit</span></code>’s own <code class="docutils literal notranslate"><span class="pre">plussqit_codeh</span></code> CMake target now defines it (alongside
 <code class="docutils literal notranslate"><span class="pre">CODEH_ENABLE_TIMELINE_SURFACE</span></code>/<code class="docutils literal notranslate"><span class="pre">CODEH_ENABLE_TIMEINDEX_SURFACE</span></code>), so anything
 linking against <code class="docutils literal notranslate"><span class="pre">PlussQit::CodeH</span></code> gets it automatically. If you see <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
-missing methods like <code class="docutils literal notranslate"><span class="pre">total_seconds()</span></code> or <code class="docutils literal notranslate"><span class="pre">operator*</span></code> in a different build
-target, this define is the first thing to check.</p>
+missing methods like <code class="docutils literal notranslate"><span class="pre">total()</span></code> or <code class="docutils literal notranslate"><span class="pre">operator*</span></code> in a different build target,
+this define is the first thing to check.</p>
 </div>
 <p>Use <code class="docutils literal notranslate"><span class="pre">Duration</span></code> when you have elapsed time that isn’t anchored to a particular
 calendar date:</p>
@@ -93,7 +94,7 @@ is the <code class="docutils literal notranslate"><span class="pre">Duration</sp
 <p class="admonition-title">Note</p>
 <p>Duration (capital D) is the type; pluss::duration (lowercase) is its factory
 Construction lives in its own namespace, kept separate from the type itself —
-the same split as <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::from_epoch_nanos</span></code> being
+the same split as <code class="docutils literal notranslate"><span class="pre">pluss::timeline::make</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::timeline::from_epoch</span></code> being
 separate from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>. <code class="docutils literal notranslate"><span class="pre">pluss::duration::seconds(5)</span></code>, not
 <code class="docutils literal notranslate"><span class="pre">pluss::duration_seconds(5)</span></code>; <code class="docutils literal notranslate"><span class="pre">pluss::duration::range(...)</span></code>, not
 <code class="docutils literal notranslate"><span class="pre">pluss::timedelta_range(...)</span></code>. See <a class="reference internal" href="api/duration/construction.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">construction</span></code></span></a>
@@ -125,13 +126,13 @@ for the full factory surface.</p>
 <p>Negative counts are valid and mean “backward in time” — see
 <a class="reference internal" href="api/duration/abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs</span></code></span></a> for recovering a magnitude.</p>
 <p>Example 2. Every unit factory also builds 1D and N-D arrays — not just
-scalars — the same three ways <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code> does.</p>
+scalars — the same three ways <code class="docutils literal notranslate"><span class="pre">pluss::timeline::make</span></code> does.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">one_d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">({</span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">});</span><span class="w">          </span><span class="c1">// 1D, 4 elements</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">nested_2d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">({{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}});</span><span class="w"> </span><span class="c1">// 2D, shape [3,2]</span>
 </pre></div>
 </div>
 <p>Explicit flat-plus-shape construction is also available for any rank, mirroring
-<code class="docutils literal notranslate"><span class="pre">pluss::from_epoch_nanos(flat,</span> <span class="pre">sizes)</span></code> — plain braces convert implicitly to
+<code class="docutils literal notranslate"><span class="pre">pluss::timeline::from_epoch(flat,</span> <span class="pre">sizes)</span></code> — plain braces convert implicitly to
 <code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;int64_t&gt;</span></code>, no explicit wrapping needed:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">explicit_2x2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 </pre></div>
@@ -162,21 +163,37 @@ instead of by function name (<code class="docutils literal notranslate"><span cl
 <li><p>construction: <code class="docutils literal notranslate"><span class="pre">pluss::duration::nanos</span></code>/<code class="docutils literal notranslate"><span class="pre">seconds</span></code>/<code class="docutils literal notranslate"><span class="pre">minutes</span></code>/<code class="docutils literal notranslate"><span class="pre">hours</span></code>/<code class="docutils literal notranslate"><span class="pre">days</span></code>
 (each with scalar, 1D, nested-N-D, and flat+shape overloads),
 <code class="docutils literal notranslate"><span class="pre">pluss::duration::range</span></code></p></li>
-<li><p>arithmetic: <code class="docutils literal notranslate"><span class="pre">operator+</span></code>, <code class="docutils literal notranslate"><span class="pre">operator-</span></code>, unary <code class="docutils literal notranslate"><span class="pre">operator-()</span></code>, <code class="docutils literal notranslate"><span class="pre">mul</span></code>, <code class="docutils literal notranslate"><span class="pre">div</span></code>,
-<code class="docutils literal notranslate"><span class="pre">floordiv</span></code>, <code class="docutils literal notranslate"><span class="pre">mod</span></code></p></li>
-<li><p>comparisons: <code class="docutils literal notranslate"><span class="pre">eq</span></code>, <code class="docutils literal notranslate"><span class="pre">ne</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">gt</span></code>, <code class="docutils literal notranslate"><span class="pre">ge</span></code> (elementwise, return
-<code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code>)</p></li>
-<li><p>unary transforms: <code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">sign</span></code>, <code class="docutils literal notranslate"><span class="pre">clip</span></code></p></li>
-<li><p>unit conversion: <code class="docutils literal notranslate"><span class="pre">total_seconds</span></code>, <code class="docutils literal notranslate"><span class="pre">total_minutes</span></code>, <code class="docutils literal notranslate"><span class="pre">total_hours</span></code>,
-<code class="docutils literal notranslate"><span class="pre">total_days</span></code>, <code class="docutils literal notranslate"><span class="pre">total_weeks</span></code>, <code class="docutils literal notranslate"><span class="pre">total_nanoseconds</span></code>, <code class="docutils literal notranslate"><span class="pre">total_microseconds</span></code>,
-<code class="docutils literal notranslate"><span class="pre">total_milliseconds</span></code> (all return a plain <code class="docutils literal notranslate"><span class="pre">Series</span></code>)</p></li>
-<li><p>missing-value handling: <code class="docutils literal notranslate"><span class="pre">isnat</span></code>, <code class="docutils literal notranslate"><span class="pre">isvalid</span></code>, <code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>, <code class="docutils literal notranslate"><span class="pre">where</span></code></p></li>
+<li><p>arithmetic: <a class="reference internal" href="api/duration/add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add</span></code></span></a>, <a class="reference internal" href="api/duration/sub.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sub</span></code></span></a>,
+<a class="reference internal" href="api/duration/neg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">neg</span></code></span></a>, <a class="reference internal" href="api/duration/mul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mul</span></code></span></a>,
+<a class="reference internal" href="api/duration/div.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">div</span></code></span></a>, <a class="reference internal" href="api/duration/floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv</span></code></span></a>,
+<a class="reference internal" href="api/duration/mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mod</span></code></span></a></p></li>
+<li><p>comparisons (elementwise, return <code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code>): <a class="reference internal" href="api/duration/eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq</span></code></span></a>,
+<a class="reference internal" href="api/duration/ne.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ne</span></code></span></a>, <a class="reference internal" href="api/duration/lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lt</span></code></span></a>,
+<a class="reference internal" href="api/duration/le.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">le</span></code></span></a>, <a class="reference internal" href="api/duration/gt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gt</span></code></span></a>,
+<a class="reference internal" href="api/duration/ge.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ge</span></code></span></a></p></li>
+<li><p>unary transforms: <a class="reference internal" href="api/duration/abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs</span></code></span></a>, <a class="reference internal" href="api/duration/sign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sign</span></code></span></a>,
+<a class="reference internal" href="api/duration/clip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clip</span></code></span></a></p></li>
+<li><p>unit conversion (all return a plain <code class="docutils literal notranslate"><span class="pre">Series</span></code>):
+<a class="reference internal" href="api/duration/total_nanoseconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().nanoseconds()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_microseconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().microseconds()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_milliseconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().milliseconds()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_seconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().seconds()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_minutes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().minutes()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_hours.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().hours()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_days.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().days()</span></code></span></a>,
+<a class="reference internal" href="api/duration/total_weeks.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total().weeks()</span></code></span></a></p></li>
+<li><p>missing-value handling: <a class="reference internal" href="api/duration/isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat</span></code></span></a>,
+<a class="reference internal" href="api/duration/isvalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isvalid</span></code></span></a>, <a class="reference internal" href="api/duration/fill_nat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fill_nat</span></code></span></a>,
+<a class="reference internal" href="api/duration/where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where</span></code></span></a></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code> integration: <code class="docutils literal notranslate"><span class="pre">Timeline</span> <span class="pre">±</span> <span class="pre">Duration</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span> <span class="pre">-</span> <span class="pre">Timeline</span></code></p></li>
 </ul>
-<p>Where several short aliases or sibling methods share one implementation, the
-reference documents them on the canonical page instead of cloning identical
-prose onto many near-empty pages — the same policy <a class="reference internal" href="timeline_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline</span></code></span></a>
-uses.</p>
+<p>Each distinct method has its own page — matching the convention used by
+PlussMic’s <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> reference. A true one-line alias with zero behavior
+difference from its canonical method (<code class="docutils literal notranslate"><span class="pre">isfinite()</span></code>/<code class="docutils literal notranslate"><span class="pre">isnan()</span></code>, for example) is
+documented on that canonical method’s page rather than getting a near-empty
+page of its own; every other method, including ones that share an
+implementation pattern with a sibling (the six comparisons, the eight
+<code class="docutils literal notranslate"><span class="pre">total_*</span></code> unit accessors), gets its own page.</p>
 </section>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
@@ -184,8 +201,9 @@ uses.</p>
 <li><p>Use the left sidebar to open one <code class="docutils literal notranslate"><span class="pre">Duration</span></code> method page at a time.</p></li>
 <li><p>Each page embeds verified output directly under the example that produced
 it, captured from <code class="docutils literal notranslate"><span class="pre">PlussQit/examples/CodeH/duration_docverify_demo.cpp</span></code>.</p></li>
-<li><p>When a page says it covers a family, that is the canonical place for the
-sibling methods too.</p></li>
+<li><p>A true one-line alias (<code class="docutils literal notranslate"><span class="pre">isfinite()</span></code>/<code class="docutils literal notranslate"><span class="pre">isnan()</span></code>) is documented on its
+canonical method’s page rather than getting a page of its own — see that
+page’s Notes section for the alias.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 </div>
@@ -288,7 +306,7 @@ sibling methods too.</p></li>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
-      <li>Previous: <a href="api/timeline/date_range.html" title="previous chapter">pluss::date_range</a></li>
+      <li>Previous: <a href="api/timeline/date_range.html" title="previous chapter">pluss::timeline::date_range</a></li>
       <li>Next: <a href="api/duration/construction.html" title="next chapter">Duration construction</a></li>
   </ul></li>
   </ul></li>

@@ -6,12 +6,11 @@
 #include <string>
 #include <utility>
 
-// transform.h -- TargetTransform + lymph::transform:: (LYMPH_REDESIGN_PLAN.md
-// phase 7). Replaces target_transform.h: the struct moved here unchanged so
-// WorkflowModel (workflow_model.h) can hold one as a field without a
-// circular include (target_transform.h used to depend on workflow_model.h,
-// wrapping it in a second class -- this file depends on nothing but
-// common.h, and workflow_model.h includes it instead).
+// transform.h -- TargetTransform + lymph::transform::.
+//
+// Kept independent of Model so detail/model_core.h can hold a TargetTransform
+// field without introducing a circular include. This file depends on nothing
+// but common.h, and detail/model_core.h includes it instead.
 //
 // A named, invertible transform applied to the label column only -- forward
 // before the model ever sees a value, inverse on every prediction it
@@ -26,7 +25,7 @@ struct TargetTransform {
   std::function<Series(const Series&)> forward;
   std::function<Series(const Series&)> inverse;
   // Verified once per learn_() call: inverse(forward(y)) must round-trip
-  // back to y within `check_inverse_tolerance`, or WorkflowModel::
+  // back to y within `check_inverse_tolerance`, or Model::
   // target_transform(...) -- Model::target_transform(...) -- fails loudly
   // instead of silently training against a transform that doesn't actually
   // invert (e.g. sqrt() handed negative values, or a hand-written inverse

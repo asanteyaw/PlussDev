@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ff19b7c9502c -->
 
 # Slot::type_counts
 

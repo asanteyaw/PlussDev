@@ -75,6 +75,7 @@ struct HtmlRenderConfig {
   int document_scroll_x_px{0};
   int document_scroll_y_px{0};
   bool clip_document_viewport{true};
+  bool enable_document_scroll{true};
   int table_scroll_x_px{0};
   int table_scroll_y_px{0};
   const std::unordered_map<std::string, PointI>* table_scroll_offsets{nullptr};

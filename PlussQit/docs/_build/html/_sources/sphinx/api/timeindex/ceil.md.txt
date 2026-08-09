@@ -37,7 +37,7 @@ Example 1. Snap every timestamp up to the containing or next hour boundary.
 
 ```cpp
 auto out = base.ceil("H");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output

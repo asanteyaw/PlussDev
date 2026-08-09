@@ -155,6 +155,13 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
   }
   const auto& left = lhs;
   const auto& right = rhs;
+  const auto lk = left.kind();
+  const auto rk = right.kind();
+  const bool temporal_pair =
+      (lk == ThreadKind::Timeline && rk == ThreadKind::Timeline) ||
+      (lk == ThreadKind::TimeIndex && rk == ThreadKind::TimeIndex) ||
+      (lk == ThreadKind::Timeline && rk == ThreadKind::TimeIndex) ||
+      (lk == ThreadKind::TimeIndex && rk == ThreadKind::Timeline);
 
   if (left.kind() == ThreadKind::Series && right.kind() == ThreadKind::Series) {
     ensure_numeric_thread_for_math(left, where);
@@ -170,6 +177,22 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
             [&] { return Thread(left.as_note() + right.as_note(), combine_validity_masks(left, right)); },
             where,
             "Note concatenation"),
+        left);
+  }
+
+  if (temporal_pair && op == ThreadBinaryMathOp::Sub) {
+    return carry_case_labels_(
+        invoke_underlying(
+            [&] {
+              const auto left_tl = (lk == ThreadKind::Timeline) ? left.as_timeline()
+                                                                : left.as_timeindex().timeline();
+              const auto right_tl = (rk == ThreadKind::Timeline) ? right.as_timeline()
+                                                                 : right.as_timeindex().timeline();
+              const auto delta = pluss::codeh::detail::impl_diff(left_tl, right_tl);
+              return Thread(delta.total().nanoseconds(), combine_validity_masks(left, right));
+            },
+            where,
+            "temporal diff"),
         left);
   }
 

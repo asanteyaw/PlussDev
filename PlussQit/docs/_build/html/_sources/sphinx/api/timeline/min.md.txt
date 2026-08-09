@@ -34,8 +34,8 @@ Example 1. Read the earliest and latest defined timestamps.
 ```cpp
 auto lo = duplicated.min();
 auto hi = duplicated.max();
-std::cout << pluss::print_timeline(lo) << "\n";
-std::cout << pluss::print_timeline(hi) << "\n";
+std::cout << pluss::timeline::print(lo) << "\n";
+std::cout << pluss::timeline::print(hi) << "\n";
 ```
 
 ### Output
@@ -60,9 +60,9 @@ Example 2. Sort the timeline and then remove duplicates.
 auto ordered = duplicated.sort();
 auto distinct = duplicated.unique();
 auto deduped = duplicated.drop_duplicates();
-std::cout << pluss::print_timeline(ordered) << "\n";
-std::cout << pluss::print_timeline(distinct) << "\n";
-std::cout << pluss::print_timeline(deduped) << "\n";
+std::cout << pluss::timeline::print(ordered) << "\n";
+std::cout << pluss::timeline::print(distinct) << "\n";
+std::cout << pluss::timeline::print(deduped) << "\n";
 ```
 
 ### Output

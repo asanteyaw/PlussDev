@@ -44,7 +44,7 @@ Example 1. Floor timestamps to the start of their day.
 
 ```cpp
 auto out = base.floor("D");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

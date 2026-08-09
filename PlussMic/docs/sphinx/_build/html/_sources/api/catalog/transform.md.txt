@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5a16296c9867 -->
+<!-- pluss-signature-hash: c2acd568a7be -->
 
 # Catalog::transform
 
@@ -13,7 +13,9 @@ Catalog::transform(const std::function<Stream(const Stream&)>& fn) const -> Cata
 
 ## What It Does
 
-Transforms every stream in the catalog and returns the updated catalog.
+Transforms every stream in the catalog and returns the updated catalog. This is the
+whole-catalog root transform surface: one callback, called once per stream, with the
+replacement stream returned directly.
 
 ```{important} Whole-catalog transform only
 Scoped transforms no longer live on the root `Catalog` surface. If you want to
@@ -68,13 +70,16 @@ metric                   | Series       | Series[float64]  | 3       | [11, 21, 
 ## Notes
 
 - Every returned stream must be defined and the same length as its input.
-- [`map()`](map.md) is a pure alias for this method.
+- [`map()`](map.md) is a pure alias for this const-returning method.
+- [`map_()`](map_.md) is the in-place sibling when you want to mutate the catalog object
+  itself rather than receive a transformed copy.
 - For scoped transforms, use [`keys(...)`](keys.md) followed by `map(...)` on the
   accessor.
 
 ## See Also
 
 - [`Catalog::map`](map.md): a pure alias for the one-argument overload.
+- [`Catalog::map_`](map_.md): the in-place sibling of this transform surface.
 - [`Catalog::keys`](keys.md): select one or more keys, then transform only that
   selection with accessor `map(...)`.
 

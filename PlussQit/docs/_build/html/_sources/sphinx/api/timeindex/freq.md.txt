@@ -33,7 +33,7 @@ operations must obey.
 Example 1. Infer the cadence of a regular minute-like axis.
 
 ```cpp
-auto idx = pluss::make_timeindex({
+auto idx = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",

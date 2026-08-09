@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d5bc6b46cb47 -->
 
 # SlotCastAccessor::timeindex
 

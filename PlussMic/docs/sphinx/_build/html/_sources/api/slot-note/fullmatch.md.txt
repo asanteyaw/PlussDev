@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 69c997a00558 -->
 
 # SlotNoteAccessor::fullmatch
 

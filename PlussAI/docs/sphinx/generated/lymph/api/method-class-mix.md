@@ -2,6 +2,7 @@
 
 ## API Signature
 
+- `class_mix(frame: const pluss::table::DataFrame&, label_feature: std::string_view) -> ClassMix`
 - `class_mix(labels: const Series&) -> ClassMix`
 
 ## Notes
@@ -10,6 +11,10 @@ Summarizes class labels, class counts, class proportions, inverse-frequency weig
 
 ## Inputs
 
+- `frame` (`const pluss::table::DataFrame&`)
+  Input feature data used by this call.
+- `label_feature` (`std::string_view`)
+  Input feature data used by this call.
 - `labels` (`const Series&`)
   Target values aligned to input observations.
 
@@ -27,7 +32,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = class_mix(/* labels */);
+auto value = class_mix(/* frame */, /* label_feature */);
 out.info("class_mix", value);
 ```
 

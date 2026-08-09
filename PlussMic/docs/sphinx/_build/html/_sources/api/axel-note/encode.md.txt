@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e1506df5b471 -->
 
 # AxelNoteAccessor::encode
 

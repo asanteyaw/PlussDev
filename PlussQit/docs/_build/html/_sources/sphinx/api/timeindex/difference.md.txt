@@ -32,7 +32,7 @@ Example 1. Remove every timestamp that also appears in the other axis.
 
 ```cpp
 auto out = base.difference(right);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output

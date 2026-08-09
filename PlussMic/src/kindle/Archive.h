@@ -19,6 +19,9 @@
 namespace pluss::table {
 class Atlas;
 }
+namespace pluss::bundle {
+class Axel;
+}
 
 namespace pluss::kindle {
 
@@ -112,6 +115,7 @@ public:
 
   pluss::table::Atlas tabelize(const TabelizePolicy& policy = {}) const;
   pluss::table::Atlas to_table(const TabelizePolicy& policy = {}, bool render = false) const;
+  pluss::bundle::Axel bundelize() const;
 
   std::string to_string() const;
   void show(std::ostream& os) const;

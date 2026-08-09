@@ -49,8 +49,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">nrows</span>
   </a>
-  <a class="next-link" href="query.html">
+  <a class="next-link" href="plot.html">
     <span class="label">Next</span>
-    <span class="title">query</span>
+    <span class="title">plot</span>
   </a>
 </div>

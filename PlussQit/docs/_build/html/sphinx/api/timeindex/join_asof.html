@@ -112,7 +112,7 @@ A 1D integer <code class="docutils literal notranslate"><span class="pre">Series
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Backward as-of matching: the latest right timestamp less than or
 equal to each left timestamp.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
@@ -120,7 +120,7 @@ equal to each left timestamp.</p>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:05:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:30:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:10:00Z&quot;</span><span class="p">,</span>

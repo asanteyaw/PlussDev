@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 14aebf849713 -->
 
 # AxelNoteAccessor::rstrip
 

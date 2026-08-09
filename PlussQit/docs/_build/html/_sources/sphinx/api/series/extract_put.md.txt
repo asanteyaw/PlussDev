@@ -95,7 +95,7 @@ const std::vector<ExtractSpec> right_two{
 
 auto patched = grid.extract_put(
     pluss::msharp::RangeView::Of<ExtractSpec>(right_two),
-    pluss::codem::value(5.0));
+    pluss::make_series(5.0));
 
 std::cout << patched;
 ```
@@ -124,7 +124,7 @@ const std::vector<ExtractSpec> mask_specs{
 
 std::cout << grid.extract_put(
     pluss::msharp::RangeView::Of<ExtractSpec>(mask_specs),
-    pluss::codem::value(0.0));
+    pluss::make_series(0.0));
 ```
 
 ### Output

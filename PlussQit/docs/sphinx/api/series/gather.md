@@ -12,68 +12,72 @@ Series::gather(std::int64_t dim, const Series& index) const -> Series
 
 ## What It Does
 
-Collects one element per position in `index`, choosing which source element along
-`dim` each output position pulls from. Every dimension except `dim` is walked
-positionally in lockstep between `self` and `index`; only along `dim` does `index`'s
-value pick which source row/column/... to read.
+Reads values from `self` by looking up positions along one chosen axis.
 
-For a 2-D `self` and `dim = 1`, this is:
+`gather()` is easiest to understand as "positional alignment everywhere except
+one axis." Along every axis other than `dim`, `self` and `index` move in
+lockstep. Along `dim`, the integer stored in `index` decides which source
+position to read.
 
-```text
-out[i][j] = self[i][index[i][j]]
-```
+That gives `gather()` a different role from [`index_select`](index_select.md):
 
-and symmetrically for `dim = 0`:
-
-```text
-out[i][j] = self[index[i][j]][j]
-```
-
-[`index_select`](index_select.md) is the special case of `gather` where the same
-index list applies to *every* row (or column) uniformly — `gather` is strictly more
-general, since `index` can vary per row.
+- `index_select()` reuses one index list everywhere
+- `gather()` can vary the lookup pattern from row to row, column to column, or
+  more generally from lane to lane
 
 ## Parameters
 
 **dim** (`std::int64_t`)
 
-Which axis `index`'s values are looked up along. Every other axis is matched
-positionally between `self` and `index` (`index`'s shape must match `self`'s shape
-except possibly along `dim`).
+The axis along which lookup happens.
+
+If `dim == 1` for a 2-D series, then each output position chooses a column from
+its own row. If `dim == 0`, each output position chooses a row for its own
+column slot.
 
 **index** (`const Series&`)
 
-Integer indices into `self` along `dim`. `index`'s values must be in
-`[0, self.sizes()[dim])`. Indices may repeat — see the Gradient section for what
-that means for the backward pass.
+Integer positions to read from `self` along `dim`.
+
+Important constraints:
+
+- `index` must be integral
+- `index` does not broadcast the way binary elementwise ops do
+- every non-`dim` axis must already line up positionally with `self`
+- repeated positions are allowed
 
 ## Returns
 
 `Series`
-    A new `Series` with `index`'s shape, where `out[..., j, ...] = self[..., index[..., j, ...], ...]`
-    (the substitution happening only along `dim`).
+    A new series with the same shape as `index`, filled from `self` according
+    to the requested lookup positions.
 
 ## Gradient
 
-`gather` is differentiable in `self`. The backward pass is a `scatter_add`: each
-output position's incoming gradient is added back onto the exact source position
-`gather` read it from.
+`gather()` is differentiable in `self`.
 
-```{warning} Repeated indices sum their gradient, they don't overwrite it
-If `index` reads the same source position more than once, that position's gradient
-is the **sum** of every output position that read it — not just the last one, and
-not split between them. See Example 2.
-```
+Its backward is a `scatter_add`: every output position sends its incoming
+gradient back to the exact source position that supplied its value.
+
+That means repeated indices do not overwrite one another in the backward pass.
+They accumulate.
 
 ## Examples
 
-Example 1. `dim = 1` on a 2×3 input: each output row picks two columns from the
-same-numbered input row, independently per row.
+Example 1. `dim = 1` means "for each row, pick these columns."
 
 ```cpp
-auto input = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
-auto index = pluss::make_series(std::vector<std::int64_t>{0, 2, 1, 0}, {2, 2});
-std::cout << input.gather(1, index);
+auto table = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
+
+auto gather_cols = pluss::make_series({
+    {0, 2},
+    {1, 0},
+});
+
+std::cout << table.gather(1, gather_cols);
 ```
 
 ### Output
@@ -84,23 +88,43 @@ data=[[1, 3],
   [5, 4]]
 ```
 
-Row 0 of `index` is `[0, 2]`, so row 0 of the output is `input[0][0], input[0][2]`
-= `1, 3`. Row 1 of `index` is `[1, 0]`, so row 1 of the output is
-`input[1][1], input[1][0]` = `5, 4` — each row's index list is independent, which
-is exactly what distinguishes `gather` from `index_select`.
+Row `0` asked for columns `0` and `2`. Row `1` asked for columns `1` and `0`.
+That row-specific variability is exactly why `gather()` exists.
 
-Example 2. Gradient with a repeated index: position `0` is read twice, position `1`
-never.
+Example 2. `dim = 0` means "for each column slot, pick which row to read."
 
 ```cpp
-auto input = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3});
+auto gather_rows = pluss::make_series({
+    {0, 1, 0},
+    {1, 0, 1},
+});
+
+std::cout << table.gather(0, gather_rows);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 5, 3],
+  [4, 2, 6]]
+```
+
+The axis toggle changes the meaning completely even though the source table is
+the same.
+
+Example 3. Repeated indices accumulate gradient on the source position they
+read from more than once.
+
+```cpp
+auto input = pluss::make_series({10.0, 20.0, 30.0}, {3});
 input.tracks_slope_(true);
 
-auto index = pluss::make_series(std::vector<std::int64_t>{0, 0, 2}, {3});
-auto out = input.gather(0, index);
-out.sum().reverse();
-std::cout << "out=" << out << "\n";
-std::cout << "input.sensitivity()=" << input.sensitivity() << "\n";
+auto repeated = pluss::make_series({0, 0, 2}, {3});
+auto gathered = input.gather(0, repeated);
+gathered.sum().reverse();
+std::cout << "out=" << gathered << "\n";
+std::cout << "dx=" << input.sensitivity() << "\n";
 ```
 
 ### Output
@@ -108,29 +132,25 @@ std::cout << "input.sensitivity()=" << input.sensitivity() << "\n";
 ```text
 out=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[10, 10, 30]
-input.sensitivity()=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2, 0, 1]
 ```
 
-`index = [0, 0, 2]` reads position `0` twice (into output positions 0 and 1) and
-position `2` once; position `1` is never read. `out.sum()` gives every output
-position gradient `1`, so position `0`'s two reads each contribute `1`, summing to
-`2` — not `1`, and not `0.5` each. Position `1`, never read, correctly gets `0`.
+Position `0` was read twice, so it receives gradient `2`. Position `1` was
+never read, so it receives `0`.
 
 ## Notes
 
-- `gather`'s `index` must match `self`'s shape on every axis except `dim` — it does
-  not broadcast the way [`maximum`](maximum.md)/[`minimum`](minimum.md)'s
-  `Series`-argument overloads do.
-- Repeated indices are not an error; they just mean that source position's
-  gradient accumulates from every output position that read it (Example 2).
+- `gather()` is the more general indexed-read primitive.
+- If the same index list should apply uniformly everywhere, use
+  [`index_select`](index_select.md) instead.
+- The output shape follows `index`, not `self`.
 
 ## See Also
 
-- [`Series::index_select`](index_select.md): the simpler "same index list for every
-  row" special case of `gather`.
-- [`Series::copy_`](copy_.md): the typical way a `gather`-consuming parameter gets
-  its initial values.
+- [`Series::index_select`](index_select.md): the uniform-index special case.
+- [`Series::take`](take.md): flat linear-index reading rather than axis-based
+  gathering.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="copy_.html">

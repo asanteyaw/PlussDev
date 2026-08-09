@@ -1078,6 +1078,59 @@ Status Flow::load_blueprint(std::string_view text) {
   return Status::success();
 }
 
+StatusOr<Flow> Flow::clone() const {
+  if (has_opaque_transforms_) {
+    return StatusOr<Flow>(
+        Status::invalid_argument("Flow::clone does not support opaque append_transform stages."));
+  }
+  if (!model_spec_.has_value() && has_model()) {
+    return StatusOr<Flow>(
+        Status::invalid_argument("Flow::clone requires a ModelSpec for model-backed flows."));
+  }
+
+  Flow out{};
+  if (model_spec_.has_value()) {
+    StatusOr<Flow> flow_or = make_flow(*model_spec_);
+    if (!flow_or.ok()) return flow_or;
+    out = flow_or.move_value();
+  }
+
+  for (const TransformSpec& spec : transform_specs_) {
+    Status status = out.add_named_transform(spec.kind,
+                                            spec.options,
+                                            spec.stage_key,
+                                            pluss::msharp::RangeView::Int(spec.feature_route),
+                                            spec.remainder);
+    if (!status.ok()) {
+      return StatusOr<Flow>(
+          Status::invalid_argument("Flow::clone failed to rebuild transform stage: " + status.message));
+    }
+  }
+
+  if (trained_) {
+    StatusOr<std::vector<std::vector<Series>>> transform_states_or = dump_transform_states();
+    if (!transform_states_or.ok()) return StatusOr<Flow>(transform_states_or.status());
+    Status status = out.load_transform_states(transform_states_or.value());
+    if (!status.ok()) {
+      return StatusOr<Flow>(
+          Status::invalid_argument("Flow::clone failed to load transform states: " + status.message));
+    }
+
+    if (out.has_model()) {
+      StatusOr<std::vector<Series>> model_state_or = dump_model_state();
+      if (!model_state_or.ok()) return StatusOr<Flow>(model_state_or.status());
+      status = out.load_model_state(model_state_or.value());
+      if (!status.ok()) {
+        return StatusOr<Flow>(
+            Status::invalid_argument("Flow::clone failed to load model state: " + status.message));
+      }
+    }
+    out.mark_trained(true);
+  }
+
+  return StatusOr<Flow>(std::move(out));
+}
+
 Status Flow::add_named_transform(TransformKind kind,
                                  const TransformOptions& options,
                                  std::string stage_key,

@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=55000b1c"></script>
+    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Catalog::clean" href="clean.html" />
-    <link rel="prev" title="Catalog::bfill" href="bfill.html" />
+    <link rel="prev" title="Catalog::bundelize" href="bundelize.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -37,50 +37,67 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0aee4dafc582 -->
+<!-- pluss-signature-hash: e20888f7fa1e -->
 <section id="catalog-cast">
 <h1>Catalog::cast<a class="headerlink" href="#catalog-cast" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">cast</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogCastAccessor</span>
+<span class="n">Catalog</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogCastAccessor</span>
+<span class="n">Catalog</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span>
+<span class="w">              </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Casts <strong>every</strong> stream in the catalog to the same target payload kind, in one call — each
-stream’s own <code class="docutils literal notranslate"><span class="pre">Stream::cast(target,</span> <span class="pre">options)</span></code>, applied uniformly regardless of that
-stream’s current kind. This is the whole-catalog counterpart to
-<a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast()</span></code></span></a>; see that page for the full explanation of what each
-<code class="docutils literal notranslate"><span class="pre">ThreadCastTarget</span></code> means and how <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> (dtype selection, parse-failure
-handling) affects the conversion.</p>
+<p>Casting now has two entry styles:</p>
+<ul class="simple">
+<li><p>accessor-first: <code class="docutils literal notranslate"><span class="pre">ct.cast().series()</span></code> / <code class="docutils literal notranslate"><span class="pre">.note()</span></code> / <code class="docutils literal notranslate"><span class="pre">.timeline()</span></code> / <code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code></p></li>
+<li><p>direct root overload: <code class="docutils literal notranslate"><span class="pre">ct.cast(target,</span> <span class="pre">options)</span></code></p></li>
+</ul>
+<p>Both apply each stream’s own cast machinery uniformly across the catalog. This is the
+whole-catalog counterpart to <a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast()</span></code></span></a>; see that page for
+the full explanation of what each <code class="docutils literal notranslate"><span class="pre">ThreadCastTarget</span></code> means and how
+<code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> (dtype selection, parse-failure handling) affects the conversion.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Preferred surface
+Prefer the accessor form in new code: <code class="docutils literal notranslate"><span class="pre">ct.cast().timeline()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">ct.cast(options).series()</span></code>. The direct root overload still exists and returns the same
+result, but the accessor is the cleaner public surface.</p>
+</div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Applies to every stream uniformly — not just the ones that need it
 <code class="docutils literal notranslate"><span class="pre">cast()</span></code> doesn’t skip streams that are already the target kind (that conversion is a cheap
 identity) or streams for which the target doesn’t make obvious sense — it calls <code class="docutils literal notranslate"><span class="pre">cast()</span></code>
 on all of them. If you only want to cast specific streams, use
-<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys(names)</span></code></span></a><code class="docutils literal notranslate"><span class="pre">.cast(options).series()</span></code> (or <code class="docutils literal notranslate"><span class="pre">.note()</span></code>/<code class="docutils literal notranslate"><span class="pre">.timeline()</span></code>/
-<code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code>) instead — that path returns a <code class="docutils literal notranslate"><span class="pre">CatalogCastAccessor</span></code> scoped to your
-selection, with the target picked by which method you call rather than a <code class="docutils literal notranslate"><span class="pre">target</span></code>
-argument.</p>
+<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys(names)</span></code></span></a> followed by <code class="docutils literal notranslate"><span class="pre">.cast(options).series()</span></code> (or <code class="docutils literal notranslate"><span class="pre">.note()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">.timeline()</span></code> / <code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code>) instead — that path returns a
+<code class="docutils literal notranslate"><span class="pre">CatalogCastAccessor</span></code> scoped to your selection, with the target picked by which method
+you call rather than a <code class="docutils literal notranslate"><span class="pre">target</span></code> argument.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::ThreadCastTarget</span></code>)
-The payload kind to cast every stream to — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::ThreadCastOptions&amp;</span></code>, optional)
-Conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> picks the numeric dtype for a <code class="docutils literal notranslate"><span class="pre">Series</span></code> target;
-<code class="docutils literal notranslate"><span class="pre">invalid</span></code> chooses parse-failure behavior. See <a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a> for
-the full breakdown.</p>
+For the accessor overload, stores conversion policy on the accessor before you pick
+the terminal target with <code class="docutils literal notranslate"><span class="pre">.series()</span></code> / <code class="docutils literal notranslate"><span class="pre">.note()</span></code> / <code class="docutils literal notranslate"><span class="pre">.timeline()</span></code> / <code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code>.</p>
+<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::ThreadCastTarget</span></code>)
+For the direct root overload, the payload kind to cast every stream to — <code class="docutils literal notranslate"><span class="pre">Series</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::ThreadCastOptions&amp;</span></code>, optional)
+For the direct root overload, conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> picks the numeric
+dtype for a <code class="docutils literal notranslate"><span class="pre">Series</span></code> target; <code class="docutils literal notranslate"><span class="pre">invalid</span></code> chooses parse-failure behavior. See
+<a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a> for the full breakdown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
-A new catalog with every stream cast to <code class="docutils literal notranslate"><span class="pre">target</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CatalogCastAccessor</span></code> / <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+The no-target overloads return an accessor; the target overload returns the fully
+cast catalog directly.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -92,7 +109,7 @@ A new catalog with every stream cast to <code class="docutils literal notranslat
 <span class="w">    </span><span class="s">&quot;score&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3.5&quot;</span><span class="p">})),</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">series</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -115,7 +132,7 @@ score                    | Series       | Series[float64]  | 3       | [1.5, 2.5
 <span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">})),</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">timeline</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -140,7 +157,7 @@ ts                       | Timeline     | Timeline         | 2       | [2024-01-
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">options</span><span class="p">).</span><span class="n">series</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -163,6 +180,8 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Applies to every stream, unconditionally — see the important callout above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog::cast(target,</span> <span class="pre">options)</span></code> and <code class="docutils literal notranslate"><span class="pre">Catalog::cast(options).series()</span></code> are equivalent
+in result; they differ only in surface style.</p></li>
 <li><p>Requires a defined catalog; throws <code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise.</p></li>
 <li><p>Follows the same per-target conversion rules as <a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a>,
 including its documented quirk that <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions::invalid</span></code> only actually takes
@@ -230,6 +249,9 @@ catalog, via its own <code class="docutils literal notranslate"><span class="pre
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
@@ -239,7 +261,7 @@ catalog, via its own <code class="docutils literal notranslate"><span class="pre
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
-      <li>Previous: <a href="bfill.html" title="previous chapter">Catalog::bfill</a></li>
+      <li>Previous: <a href="bundelize.html" title="previous chapter">Catalog::bundelize</a></li>
       <li>Next: <a href="clean.html" title="next chapter">Catalog::clean</a></li>
   </ul></li>
   </ul></li>

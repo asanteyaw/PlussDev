@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: bb77e2c3fe47 -->
 
 # Slot::kindelize
 

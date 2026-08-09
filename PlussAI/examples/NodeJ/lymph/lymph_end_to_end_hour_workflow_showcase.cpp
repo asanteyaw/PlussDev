@@ -315,7 +315,7 @@ int main(int argc, char** argv) {
     std::vector<lymph::selection::Candidate> broad_candidates{};
 
     {
-      auto wf = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::None,
           .regularization_strength = 0.0,
           .fit_intercept = true,
@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("linear_ols_standard", std::move(wf));
     }
     {
-      auto wf = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-8,
           .fit_intercept = true,
@@ -335,7 +335,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("linear_ridge_1e8", std::move(wf));
     }
     {
-      auto wf = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
@@ -345,7 +345,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("linear_ridge_1e6_robust", std::move(wf));
     }
     {
-      auto wf = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 5e-6,
           .fit_intercept = true,
@@ -356,7 +356,7 @@ int main(int argc, char** argv) {
     }
 
     {
-      auto wf = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf = lymph::models::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 12,
           .min_samples_leaf = 12,
           .min_samples_split = 30,
@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("tree_depth12_leaf12", std::move(wf));
     }
     {
-      auto wf = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf = lymph::models::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 8,
           .min_samples_split = 24,
@@ -374,7 +374,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("tree_depth18_leaf8", std::move(wf));
     }
     {
-      auto wf = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf = lymph::models::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 24,
           .min_samples_leaf = 5,
           .min_samples_split = 16,
@@ -384,7 +384,7 @@ int main(int argc, char** argv) {
     }
 
     {
-      auto wf = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
+      auto wf = lymph::models::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 120,
           .subsample = 0.9,
       });
@@ -392,7 +392,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("forest_120_09", std::move(wf));
     }
     {
-      auto wf = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
+      auto wf = lymph::models::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 200,
           .subsample = 0.85,
       });
@@ -400,7 +400,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("forest_200_085", std::move(wf));
     }
     {
-      auto wf = lymph::ensemble_factory::gradient_boost_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::GradientBoost,
+      auto wf = lymph::models::gradient_boost_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::GradientBoost,
           .learners = 240,
           .subsample = 0.7,
       });
@@ -408,7 +408,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("gboost_240_07", std::move(wf));
     }
     {
-      auto wf = lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::Bagging,
+      auto wf = lymph::models::bagging_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::Bagging,
           .learners = 180,
           .subsample = 0.95,
       });
@@ -417,7 +417,7 @@ int main(int argc, char** argv) {
     }
 
     {
-      auto wf = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 7,
+      auto wf = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 7,
           .distance_weighted = false,
           .standardize = true,
       });
@@ -426,7 +426,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("knn_k7_uniform", std::move(wf));
     }
     {
-      auto wf = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 9,
+      auto wf = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 9,
           .distance_weighted = true,
           .standardize = true,
       });
@@ -435,7 +435,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("knn_k9_distance", std::move(wf));
     }
     {
-      auto wf = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 15,
+      auto wf = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 15,
           .distance_weighted = true,
           .standardize = true,
       });
@@ -445,7 +445,7 @@ int main(int argc, char** argv) {
     }
 
     {
-      auto wf = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
+      auto wf = lymph::models::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 25.0,
           .gamma = 0.5,
           .epsilon = 0.0,
@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("svr_rbf_c25_g05", std::move(wf));
     }
     {
-      auto wf = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
+      auto wf = lymph::models::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 50.0,
           .gamma = 1.0,
           .epsilon = 0.0,
@@ -465,7 +465,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("svr_rbf_c50_g10", std::move(wf));
     }
     {
-      auto wf = lymph::kernel_factory::polynomial_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Polynomial,
+      auto wf = lymph::models::polynomial_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Polynomial,
           .c = 10.0,
           .gamma = 0.2,
           .epsilon = 0.0,
@@ -475,7 +475,7 @@ int main(int argc, char** argv) {
       broad_candidates.emplace_back("svr_poly_c10_g02", std::move(wf));
     }
     {
-      auto wf = lymph::kernel_factory::linear_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Linear,
+      auto wf = lymph::models::linear_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Linear,
           .c = 3.0,
           .gamma = 0.0,
           .epsilon = 0.0,
@@ -486,14 +486,14 @@ int main(int argc, char** argv) {
     }
 
     {
-      auto wf = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
+      auto wf = lymph::models::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-9,
       });
       wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       broad_candidates.emplace_back("bayes_gaussian_1e9", std::move(wf));
     }
     {
-      auto wf = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
+      auto wf = lymph::models::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-6,
       });
       wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
@@ -568,7 +568,7 @@ int main(int argc, char** argv) {
     std::vector<lymph::selection::Candidate> tuned_candidates{};
 
     if (use_linear) {
-      auto wf1 = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf1 = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-9,
           .fit_intercept = true,
@@ -577,7 +577,7 @@ int main(int argc, char** argv) {
       wf1.standard_scaler();
       tuned_candidates.emplace_back("tuned_linear_l2_1e9", std::move(wf1));
 
-      auto wf2 = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf2 = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-7,
           .fit_intercept = true,
@@ -586,7 +586,7 @@ int main(int argc, char** argv) {
       wf2.standard_scaler();
       tuned_candidates.emplace_back("tuned_linear_l2_1e7", std::move(wf2));
 
-      auto wf3 = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf3 = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
@@ -595,7 +595,7 @@ int main(int argc, char** argv) {
       wf3.standard_scaler();
       tuned_candidates.emplace_back("tuned_linear_l2_1e6", std::move(wf3));
 
-      auto wf4 = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf4 = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 5e-7,
           .fit_intercept = true,
@@ -606,7 +606,7 @@ int main(int argc, char** argv) {
     }
 
     if (use_tree) {
-      auto wf1 = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf1 = lymph::models::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 16,
           .min_samples_leaf = 6,
           .min_samples_split = 20,
@@ -614,7 +614,7 @@ int main(int argc, char** argv) {
       wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("tuned_tree_depth16_leaf6", std::move(wf1));
 
-      auto wf2 = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf2 = lymph::models::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 22,
           .min_samples_leaf = 4,
           .min_samples_split = 14,
@@ -622,7 +622,7 @@ int main(int argc, char** argv) {
       wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("tuned_tree_depth22_leaf4", std::move(wf2));
 
-      auto wf3 = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
+      auto wf3 = lymph::models::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 5,
           .min_samples_split = 12,
@@ -632,28 +632,28 @@ int main(int argc, char** argv) {
     }
 
     if (use_ensemble) {
-      auto wf1 = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
+      auto wf1 = lymph::models::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 180,
           .subsample = 0.9,
       });
       wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("tuned_forest_180_09", std::move(wf1));
 
-      auto wf2 = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
+      auto wf2 = lymph::models::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 260,
           .subsample = 0.85,
       });
       wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("tuned_forest_260_085", std::move(wf2));
 
-      auto wf3 = lymph::ensemble_factory::gradient_boost_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::GradientBoost,
+      auto wf3 = lymph::models::gradient_boost_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::GradientBoost,
           .learners = 320,
           .subsample = 0.7,
       });
       wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("tuned_gboost_320_07", std::move(wf3));
 
-      auto wf4 = lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::Bagging,
+      auto wf4 = lymph::models::bagging_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::Bagging,
           .learners = 280,
           .subsample = 0.92,
       });
@@ -662,7 +662,7 @@ int main(int argc, char** argv) {
     }
 
     if (use_neighbor) {
-      auto wf1 = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 8,
+      auto wf1 = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 8,
           .distance_weighted = true,
           .standardize = true,
       });
@@ -670,7 +670,7 @@ int main(int argc, char** argv) {
       wf1.standard_scaler();
       tuned_candidates.emplace_back("tuned_knn_k8_distance", std::move(wf1));
 
-      auto wf2 = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 12,
+      auto wf2 = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 12,
           .distance_weighted = true,
           .standardize = true,
       });
@@ -678,7 +678,7 @@ int main(int argc, char** argv) {
       wf2.standard_scaler();
       tuned_candidates.emplace_back("tuned_knn_k12_distance", std::move(wf2));
 
-      auto wf3 = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 16,
+      auto wf3 = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 16,
           .distance_weighted = true,
           .standardize = true,
       });
@@ -688,7 +688,7 @@ int main(int argc, char** argv) {
     }
 
     if (use_kernel) {
-      auto wf1 = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
+      auto wf1 = lymph::models::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 40.0,
           .gamma = 0.6,
           .epsilon = 0.0,
@@ -697,7 +697,7 @@ int main(int argc, char** argv) {
       wf1.standard_scaler();
       tuned_candidates.emplace_back("tuned_svr_rbf_c40_g06", std::move(wf1));
 
-      auto wf2 = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
+      auto wf2 = lymph::models::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 80.0,
           .gamma = 1.2,
           .epsilon = 0.0,
@@ -706,7 +706,7 @@ int main(int argc, char** argv) {
       wf2.standard_scaler();
       tuned_candidates.emplace_back("tuned_svr_rbf_c80_g12", std::move(wf2));
 
-      auto wf3 = lymph::kernel_factory::polynomial_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Polynomial,
+      auto wf3 = lymph::models::polynomial_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Polynomial,
           .c = 20.0,
           .gamma = 0.3,
           .epsilon = 0.0,
@@ -715,7 +715,7 @@ int main(int argc, char** argv) {
       wf3.standard_scaler();
       tuned_candidates.emplace_back("tuned_svr_poly_c20_g03", std::move(wf3));
 
-      auto wf4 = lymph::kernel_factory::linear_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Linear,
+      auto wf4 = lymph::models::linear_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Linear,
           .c = 5.0,
           .gamma = 0.0,
           .epsilon = 0.0,
@@ -726,13 +726,13 @@ int main(int argc, char** argv) {
     }
 
     if (use_bayes) {
-      auto wf1 = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
+      auto wf1 = lymph::models::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-10,
       });
       wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("tuned_bayes_1e10", std::move(wf1));
 
-      auto wf2 = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
+      auto wf2 = lymph::models::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-8,
       });
       wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
@@ -740,14 +740,14 @@ int main(int argc, char** argv) {
     }
 
     if (tuned_candidates.size() < 3) {
-      auto wf1 = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
+      auto wf1 = lymph::models::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 220,
           .subsample = 0.9,
       });
       wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
       tuned_candidates.emplace_back("fallback_forest_220_09", std::move(wf1));
 
-      auto wf2 = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      auto wf2 = lymph::models::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-7,
           .fit_intercept = true,
@@ -756,7 +756,7 @@ int main(int argc, char** argv) {
       wf2.standard_scaler();
       tuned_candidates.emplace_back("fallback_linear_l2", std::move(wf2));
 
-      auto wf3 = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 10,
+      auto wf3 = lymph::models::knn_regressor(NeighborFamilyOptions{          .k = 10,
           .distance_weighted = true,
           .standardize = true,
       });
@@ -810,7 +810,7 @@ int main(int argc, char** argv) {
     const fs::path final_model_path = model_dir / "lymph_hour_end_to_end_final.bin";
     final_workflow.save(final_model_path.string(), train_x, train_y, train_options);
 
-    const auto restored_workflow = lymph::WorkflowModel::load(final_model_path.string());
+    const auto restored_workflow = lymph::Model::load(final_model_path.string());
     const Series restored_pred = restored_workflow.infer(test_x);
     const double restored_max_abs_diff = lymph::max_abs_diff(test_pred, restored_pred);
 

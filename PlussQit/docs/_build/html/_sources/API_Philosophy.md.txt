@@ -12,13 +12,24 @@ End users should be able to write:
 
 and gain access to the complete high-level API.
 
-## Short names
+## Short names for types, namespaced factories
 
-End users should prefer short scopes:
+Core types stay flat:
 
 - `pluss::Series`
 - `pluss::ScalarType`
-- `pluss::zeros(...)`, `pluss::arange(...)`, ...
+
+Construction factories live in a dedicated namespace per payload type:
+
+- `pluss::series::zeros(...)`, `pluss::series::arange(...)`, ...
+
+with `pluss::make_series(...)` kept as a permanent flat shortcut alongside
+`pluss::make_note`/`pluss::make_timeline`/`pluss::make_timeindex`/
+`pluss::make_duration` for the common construct-from-data case. Every other
+flat factory spelling (`pluss::zeros`, `pluss::full`, ...) is a legacy
+compatibility alias for external consumers migrating off the old flat API --
+new code should call through `pluss::series::*`/`pluss::note::*`/
+`pluss::timeline::*`/`pluss::timeindex::*`/`pluss::duration::*` directly.
 
 Internally, the implementation lives in `pluss::codem`.
 
@@ -33,7 +44,7 @@ auto y = x.exp().add(z).clamp(0.0, 1.0);
 Factories remain free functions because they *create* a new object:
 
 ```cpp
-auto x = pluss::zeros({2,3});
+auto x = pluss::series::zeros({2,3});
 ```
 
 This avoids API duplication and reduces mental load for users.
@@ -42,7 +53,7 @@ This avoids API duplication and reduces mental load for users.
 
 Interop functions are also “creation” operations:
 
-- `pluss::from_torch(torch::Tensor)` creates a new `Series` view.
+- `pluss::series::from_torch(torch::Tensor)` creates a new `Series` view.
 
 Converting an existing Series is a method:
 
@@ -107,14 +118,14 @@ Deprecated compatibility aliases `cat/stack` may exist temporarily, but users sh
 In addition to `Config{}.with_dtype(...)`, PlussQit supports unordered, typed options:
 
 ```cpp
-auto x = pluss::zeros({128,64}, pluss::cfg::dtype(pluss::ScalarType::Float16), pluss::cfg::pinned(true));
+auto x = pluss::series::zeros({128,64}, pluss::cfg::dtype(pluss::ScalarType::Float16), pluss::cfg::pinned(true));
 ```
 
 Or a string-map builder (CPU-only subset):
 
 ```cpp
 auto cfg = pluss::config({{"dtype","float16"},{"pinned",true}});
-auto x = pluss::zeros({128,64}, cfg);
+auto x = pluss::series::zeros({128,64}, cfg);
 ```
 
 ## Large method surface

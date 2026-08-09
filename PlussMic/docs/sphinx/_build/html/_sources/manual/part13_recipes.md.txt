@@ -143,11 +143,11 @@ auto cleaned = scenarios.map_frames([](const DataFrame& frame) {
 
 ```cpp
 auto catalog = df.kindelize();
-auto registry = pluss::bundle::Registry::from_kindle(catalog);
+auto registry = catalog.bundelize();
 
 registry.profiles();
 
-auto back = registry.to_kindle().tabelize();
+auto back = registry.tabelize();
 ```
 
 ## Save a report bundle

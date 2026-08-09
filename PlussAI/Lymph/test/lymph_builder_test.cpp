@@ -2,6 +2,7 @@
 #include <pluss/mic.h>
 
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,10 @@ using namespace pluss::ai::lymph;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+}
+
+Model empty_model() {
+  return Model(::pluss::ai::nodej::Workflow{});
 }
 
 // Linearly separable two-class data -- any of the three registered models
@@ -42,6 +47,68 @@ Frame make_frame() {
   };
 }
 
+bool run_builder_construction_checks(std::ostream* err) {
+  Model ctor_logreg = empty_model();
+  Model ctor_tree = empty_model();
+  Builder built = builder::build({
+      {"ctor_logreg", ctor_logreg},
+      {"ctor_tree", ctor_tree},
+  });
+
+  if (built.size() != 2 || !built.has("ctor_logreg") || !built.has("ctor_tree")) {
+    if (err) *err << "builder::build({{\"name\", model}, ...}) should construct a populated Builder\n";
+    return false;
+  }
+
+  const std::vector<std::string> names = built.names();
+  if (names != std::vector<std::string>{"ctor_logreg", "ctor_tree"}) {
+    if (err) *err << "builder::build({{\"name\", model}, ...}) should preserve construction order\n";
+    return false;
+  }
+
+  Model copied_logreg = empty_model();
+  Model copied_tree = empty_model();
+  Builder copied = builder::build({
+      {"linear regression", copied_logreg},
+      {"decision_tree_clsfr", copied_tree},
+      {"inline logistic", empty_model()},
+  });
+
+  if (copied.size() != 3 || !copied.has("linear regression") || !copied.has("decision_tree_clsfr") ||
+      !copied.has("inline logistic")) {
+    if (err) *err << "builder::build({{\"name\", model}, ...}) should accept lvalues and inline prvalues\n";
+    return false;
+  }
+
+  std::map<std::string, Model> registry;
+  registry.emplace("map_logreg", empty_model());
+  registry.emplace("map_tree", empty_model());
+  Builder from_map = builder::build(registry);
+  if (from_map.size() != 2 || !from_map.has("map_logreg") || !from_map.has("map_tree")) {
+    if (err) *err << "builder::build(map) should copy a named model map cheaply\n";
+    return false;
+  }
+
+  std::vector<std::pair<std::string, Model>> list_registry;
+  list_registry.emplace_back("vector_logreg", empty_model());
+  list_registry.emplace_back("vector_tree", empty_model());
+  Builder from_vector = builder::build(list_registry);
+  if (from_vector.size() != 2 || !from_vector.has("vector_logreg") || !from_vector.has("vector_tree")) {
+    if (err) *err << "builder::build(vector) should copy a named model vector cheaply\n";
+    return false;
+  }
+
+  Model source = models::logistic_regression({});
+  Builder cow = builder::build({{"source", source}});
+  cow.get("source").standard_scaler();
+  if (source.stage_count() != 0 || cow.get("source").stage_count() != 1) {
+    if (err) *err << "copied Model handles should detach on mutation without changing the source model\n";
+    return false;
+  }
+
+  return true;
+}
+
 bool run_builder_checks(std::ostream* err) {
   Builder builder = builder::build();
 
@@ -51,9 +118,9 @@ bool run_builder_checks(std::ostream* err) {
   }
 
   // Prvalues built directly at the call site -- zero std::move needed.
-  builder.inject("logreg", model::logistic_regression({.fit_intercept = true}))
-         .inject("tree", model::decision_tree_classifier({.max_depth = 3}))
-         .inject("knn", model::knn_classifier({.k = 3}));
+  builder.inject("logreg", models::logistic_regression({.fit_intercept = true}))
+         .inject("tree", models::decision_tree_classifier({.max_depth = 3}))
+         .inject("knn", models::knn_classifier({.k = 3}));
 
   if (builder.size() != 3) {
     if (err) *err << "expected 3 registered models, got " << builder.size() << "\n";
@@ -75,19 +142,19 @@ bool run_builder_checks(std::ostream* err) {
     return false;
   }
 
-  // An already-named lvalue Model -- std::move is required here (Model has
-  // no copy constructor), matching what the redesign plan documents.
-  Model extra = model::gaussian_nb_classifier({});
-  builder.inject("nb", std::move(extra));
+  // An already-named lvalue Model should copy cheaply; neither side should
+  // need std::move for ordinary coordinator construction.
+  Model extra = models::gaussian_nb_classifier({});
+  builder.inject("nb", extra);
   if (builder.size() != 4) {
-    if (err) *err << "inject(name, std::move(lvalue)) did not register the model\n";
+    if (err) *err << "inject(name, lvalue) did not register the model\n";
     return false;
   }
 
   // Duplicate name must throw, not silently overwrite.
   bool threw_dup = false;
   try {
-    builder.inject("logreg", model::logistic_regression({}));
+    builder.inject("logreg", models::logistic_regression({}));
   } catch (const std::exception&) {
     threw_dup = true;
   }
@@ -125,7 +192,9 @@ bool run_builder_checks(std::ostream* err) {
   cv.folds = 2;
   cv.shuffle = false;
   const Frame frame = make_frame();
-  const selection::CompareResult result = builder.benchmark(frame.x, frame.y, cv);
+  const selection::CompareResult result = builder.benchmark(frame.x, frame.y, cv, TrainOptions{}, AssessOptions{},
+                                                            MetricKind::Accuracy, TuneObjectivePolicy::Auto,
+                                                            selection::FitOptions{.fit_top = 2});
   if (result.report.trials.size() != 3) {
     if (err) *err << "benchmark() should have produced one trial per held model, got "
                   << result.report.trials.size() << "\n";
@@ -133,6 +202,11 @@ bool run_builder_checks(std::ostream* err) {
   }
   if (!result.best().trained()) {
     if (err) *err << "benchmark()'s best() model should be trained\n";
+    return false;
+  }
+  const std::vector<std::pair<std::string, Model>> top2 = result.top(2);
+  if (top2.size() != 2 || top2[0].first.empty() || !top2[0].second.trained() || !top2[1].second.trained()) {
+    if (err) *err << "benchmark()'s top(k) should return named, trained Models\n";
     return false;
   }
   if (builder.size() != 3) {
@@ -168,6 +242,12 @@ bool run_builder_checks(std::ostream* err) {
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
+TEST_CASE("lymph Builder construction", "[lymph][builder]") {
+  if (!run_builder_construction_checks(&std::cerr)) {
+    FAIL("lymph Builder construction checks failed");
+  }
+}
+
 TEST_CASE("lymph Builder", "[lymph][builder]") {
   if (!run_builder_checks(&std::cerr)) {
     FAIL("lymph Builder checks failed");
@@ -175,6 +255,9 @@ TEST_CASE("lymph Builder", "[lymph][builder]") {
 }
 #else
 int main() {
+  if (!run_builder_construction_checks(&std::cerr)) {
+    return 1;
+  }
   if (!run_builder_checks(&std::cerr)) {
     return 1;
   }

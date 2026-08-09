@@ -1,69 +1,179 @@
 #pragma once
 
-// workflow.h -- Workflow (renamed from PreparedModel, frame_prep.h; the name
-// "Workflow" is renamed a second time in this file's history -- see below).
-//
-// This file used to hold a different, now-retired `class Workflow`: a lazy
-// `std::optional<WorkflowModel>` + `std::vector<TransformSpec>` facade that
-// existed so a Candidate could carry stages before any Model existed to
-// attach them to. `Model::append(Stage, ColumnRouter)` (stage.h,
-// workflow_model.h's `pending_stages_` mechanism) replaced the need for that
-// laziness outright -- every TransformKind already has its own direct
-// WorkflowModel builder method (`.standard_scaler(...)`, `.simple_imputer(
-// ...)`, ...) that attaches immediately, no facade required -- and
-// `selection::Candidate`/`CompareResult` now hold `WorkflowModel` directly
-// (LYMPH_REDESIGN_PLAN.md's "retire the Workflow lazy facade" phase). Every
-// real caller in this repo migrated off it onto WorkflowModel's own methods
-// directly; the old class, `make_pipeline`/`pipeline(...)`, the
-// `TrainedHandle`/`AnyTrainedModel` aliases, and its `cross_validate(
-// Workflow, ...)` overloads were deleted once nothing referenced them
-// (confirmed by a repo-wide grep before deletion) -- see
-// LYMPH_REDESIGN_PLAN.md's progress tracker for the migration writeup.
-//
-// The name "Workflow" is reused here for a second, unrelated thing (the
-// redesign's own naming churn: "Pipeline" -> "Workflow" per the user's
-// explicit request, since the old lazy facade no longer needs the name):
-// what pipeline.h used to describe as `Pipeline` (itself a planned rename of
-// today's `PreparedModel`, frame_prep.h) lands here once implemented --
-// pipeline.h's skeleton has been merged into this comment and the file
-// deleted; nothing is implemented yet.
+#include "pluss/ai/lymph/model.h"
+#include "pluss/ai/lymph/policy.h"
+
+#include <fstream>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
+
+// workflow.h -- deployable raw-frame artifact.
 //
 // Role: the actual "stack everything, raw data in, prediction out"
 // deployable object -- Model + Policy, save()/load() round-tripping both
 // together via a small sidecar next to the model bundle. This is the object
 // the very first question in this whole redesign thread ("the final stage
-// for deployment is the pipeline that stacks everything") was asking about.
-// Unchanged in behavior from today's PreparedModel; renamed twice (Pipeline,
-// then Workflow), and its construction moves off a two-argument constructor
-// call into lymph::workflow::from(model, policy) / lymph::workflow::load(
-// path), per the construction-vs-method rule -- Workflow::load(...)
-// specifically can't just be lowercased, since a static method forces the
-// class's exact name on the left of `::` (LYMPH_REDESIGN_PLAN.md 2.0 rule
-// 2).
+// for deployment is the pipeline that stacks everything") was asking about;
+// the public name is Workflow per the redesign, not Pipeline.
 //
-// What lands here (not yet implemented):
-//   - class Workflow -- learn_/infer/assess/save, all (frame,
-//     DataFrameBatchOptions) shaped, each running Policy::apply(frame)
-//     first (was: apply_frame_prep(frame, policy_) called internally --
-//     unchanged, just reads as a method call on policy_ now).
-//   - save_policy(path, Policy) / load_policy(path) -- the sidecar
-//     persistence helpers (renamed from save_frame_prep_policy/
-//     load_frame_prep_policy in frame_prep.h), moved here since they're
-//     Workflow-only concerns, not something Policy itself needs to know
-//     about.
+// Implemented surface:
+//   - class Workflow -- learn_/infer/assess/save, all raw-frame shaped,
+//     each running Policy::apply(frame) before the held Model sees data.
+//   - save_policy(path, Policy) / load_policy(path) -- sidecar persistence
+//     helpers kept here because they are Workflow-only concerns.
 //   - namespace lymph::workflow { Workflow from(Model, Policy); Workflow
-//     load(std::string path); }
+//     restore(FlowBundle, Policy); Workflow load(std::string path); }
 //
 // Depends on: model.h (Model), policy.h (Policy), NodeJ's io::save/
-// io::load/FlowBundle (unchanged -- the sidecar file is intentionally
-// outside FlowBundle's own schema, same reasoning as today's frame_prep.h).
-// See Lymph/src/workflow.cpp for save/load's own logic once it lands.
+// io::load/FlowBundle. The sidecar file is intentionally outside
+// FlowBundle's own schema.
 //
 // Consumed by: nothing -- this is the end of the lifecycle.
 
 namespace pluss::ai::lymph {
 
-// Workflow class, save_policy/load_policy helpers, and lymph::workflow::
-// factory namespace land here.
+namespace detail {
+
+[[nodiscard]] inline std::string workflow_policy_sidecar_path_(const std::string& bundle_path) {
+  return bundle_path + ".policy";
+}
+
+inline void write_policy_name_list_(std::ofstream& out, const std::vector<std::string>& names) {
+  out << names.size() << "\n";
+  for (const std::string& name : names) out << name << "\n";
+}
+
+[[nodiscard]] inline std::vector<std::string> read_policy_name_list_(std::ifstream& in, const char* where) {
+  std::size_t count = 0;
+  if (!(in >> count)) {
+    ::pluss::throw_error(std::string(where) + ": malformed workflow policy sidecar (name count).");
+  }
+  in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  std::vector<std::string> out{};
+  out.reserve(count);
+  for (std::size_t i = 0; i < count; ++i) {
+    std::string line;
+    if (!std::getline(in, line)) {
+      ::pluss::throw_error(std::string(where) + ": malformed workflow policy sidecar (expected " +
+                           std::to_string(count) + " names).");
+    }
+    out.push_back(std::move(line));
+  }
+  return out;
+}
+
+} // namespace detail
+
+inline void save_policy(const std::string& bundle_path, const Policy& policy) {
+  const std::string sidecar = detail::workflow_policy_sidecar_path_(bundle_path);
+  std::ofstream out(sidecar, std::ios::trunc);
+  if (!out) {
+    ::pluss::throw_error("lymph::save_policy: could not open \"" + sidecar + "\" for writing.");
+  }
+  detail::write_policy_name_list_(out, policy.drop_columns);
+  out << (policy.filter_nulls ? 1 : 0) << "\n";
+  out << (policy.drop_only_if_all_null ? 1 : 0) << "\n";
+  detail::write_policy_name_list_(out, policy.null_filter_columns);
+}
+
+[[nodiscard]] inline Policy load_policy(const std::string& bundle_path) {
+  const std::string sidecar = detail::workflow_policy_sidecar_path_(bundle_path);
+  std::ifstream in(sidecar);
+  if (!in) {
+    return Policy{};
+  }
+  Policy policy{};
+  policy.drop_columns = detail::read_policy_name_list_(in, "lymph::load_policy");
+  int filter_nulls = 0;
+  int drop_only_if_all_null = 0;
+  if (!(in >> filter_nulls) || !(in >> drop_only_if_all_null)) {
+    ::pluss::throw_error("lymph::load_policy: malformed workflow policy sidecar (flags).");
+  }
+  in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  policy.filter_nulls = filter_nulls != 0;
+  policy.drop_only_if_all_null = drop_only_if_all_null != 0;
+  policy.null_filter_columns = detail::read_policy_name_list_(in, "lymph::load_policy");
+  return policy;
+}
+
+class Workflow;
+
+namespace workflow {
+[[nodiscard]] Workflow from(Model model, Policy policy = {});
+[[nodiscard]] Workflow restore(const io::FlowBundle& bundle, Policy policy = {});
+[[nodiscard]] Workflow load(const std::string& path);
+} // namespace workflow
+
+class Workflow final {
+ public:
+  Workflow(Workflow&&) noexcept = default;
+  Workflow& operator=(Workflow&&) noexcept = default;
+  Workflow(const Workflow&) = delete;
+  Workflow& operator=(const Workflow&) = delete;
+
+  Workflow& learn_(const pluss::table::DataFrame& raw_frame,
+                   const DataFrameBatchOptions& data_options,
+                   const TrainOptions& options = {}) {
+    model_.learn_(policy_.apply(raw_frame), data_options, options);
+    return *this;
+  }
+
+  [[nodiscard]] Series infer(const pluss::table::DataFrame& raw_frame, const InferOptions& options = {}) const {
+    return model_.infer(policy_.apply(raw_frame), options);
+  }
+
+  [[nodiscard]] Series infer(const pluss::table::DataFrame& raw_frame,
+                             const DataFrameBatchOptions& data_options,
+                             const InferOptions& options = {}) const {
+    return model_.infer(policy_.apply(raw_frame), data_options, options);
+  }
+
+  [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& raw_frame,
+                                    const DataFrameBatchOptions& data_options,
+                                    const AssessOptions& options = {}) const {
+    return model_.assess(policy_.apply(raw_frame), data_options, options);
+  }
+
+  void save(const std::string& path,
+            const pluss::table::DataFrame& raw_train_frame,
+            const DataFrameBatchOptions& data_options,
+            const TrainOptions& train_options = {},
+            io::FlowBundleMetadata metadata = {}) const {
+    model_.save(path, policy_.apply(raw_train_frame), data_options, train_options, std::move(metadata));
+    save_policy(path, policy_);
+  }
+
+  [[nodiscard]] const Model& model() const noexcept { return model_; }
+  [[nodiscard]] Model& model() noexcept { return model_; }
+  [[nodiscard]] const Policy& policy() const noexcept { return policy_; }
+
+ private:
+  friend Workflow workflow::from(Model model, Policy policy);
+  friend Workflow workflow::restore(const io::FlowBundle& bundle, Policy policy);
+
+  Workflow(Model model, Policy policy)
+      : model_(std::move(model)), policy_(std::move(policy)) {}
+
+  Model model_;
+  Policy policy_;
+};
+
+namespace workflow {
+
+[[nodiscard]] inline Workflow from(Model model, Policy policy) {
+  return Workflow(std::move(model), std::move(policy));
+}
+
+[[nodiscard]] inline Workflow restore(const io::FlowBundle& bundle, Policy policy) {
+  return Workflow(Model::restore(bundle), std::move(policy));
+}
+
+[[nodiscard]] inline Workflow load(const std::string& path) {
+  return restore(resolve(io::load(path), "lymph::workflow::load"), load_policy(path));
+}
+
+} // namespace workflow
 
 } // namespace pluss::ai::lymph

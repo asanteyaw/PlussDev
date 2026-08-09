@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a2fd1b0dc827 -->
 
 # SlotTimelineAccessor::week
 

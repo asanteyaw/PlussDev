@@ -28,7 +28,7 @@ matter.
 Example 1. A standard ordered axis with no repeated timestamps.
 
 ```cpp
-auto idx = pluss::make_timeindex({
+auto idx = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
@@ -50,7 +50,7 @@ idx.has_duplicates() = false
 Example 2. Detect duplicates in an intentionally permissive unsorted index.
 
 ```cpp
-auto dup = pluss::make_timeindex({
+auto dup = pluss::timeindex::make({
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",

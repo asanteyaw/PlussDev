@@ -206,6 +206,44 @@ plussmic_bundle_model_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build
 .PHONY : plussmic_bundle_model_demo/fast
 
+# Convenience name for target.
+PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule
+.PHONY : PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule
+
+# Convenience name for target.
+plussmic_bundle_accessor_demo: PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule
+.PHONY : plussmic_bundle_accessor_demo
+
+# fast build rule for target.
+plussmic_bundle_accessor_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build
+.PHONY : plussmic_bundle_accessor_demo/fast
+
+bundle_accessor_demo.o: bundle_accessor_demo.cpp.o
+.PHONY : bundle_accessor_demo.o
+
+# target to build an object file
+bundle_accessor_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/bundle_accessor_demo.cpp.o
+.PHONY : bundle_accessor_demo.cpp.o
+
+bundle_accessor_demo.i: bundle_accessor_demo.cpp.i
+.PHONY : bundle_accessor_demo.i
+
+# target to preprocess a source file
+bundle_accessor_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/bundle_accessor_demo.cpp.i
+.PHONY : bundle_accessor_demo.cpp.i
+
+bundle_accessor_demo.s: bundle_accessor_demo.cpp.s
+.PHONY : bundle_accessor_demo.s
+
+# target to generate assembly for a file
+bundle_accessor_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/bundle_accessor_demo.cpp.s
+.PHONY : bundle_accessor_demo.cpp.s
+
 bundle_model_demo.o: bundle_model_demo.cpp.o
 .PHONY : bundle_model_demo.o
 
@@ -245,7 +283,11 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussmic_bundle_accessor_demo"
 	@echo "... plussmic_bundle_model_demo"
+	@echo "... bundle_accessor_demo.o"
+	@echo "... bundle_accessor_demo.i"
+	@echo "... bundle_accessor_demo.s"
 	@echo "... bundle_model_demo.o"
 	@echo "... bundle_model_demo.i"
 	@echo "... bundle_model_demo.s"

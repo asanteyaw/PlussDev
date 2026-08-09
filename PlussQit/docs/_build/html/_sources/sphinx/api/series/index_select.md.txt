@@ -12,67 +12,71 @@ Series::index_select(std::int64_t dim, const Series& index) const -> Series
 
 ## What It Does
 
-Selects a list of positions along `dim`, applying the **same** `index` list to
-every row/column/... along every other axis — the classic "pick these rows" or
-"pick these columns" operation, and the everyday shape behind a learned embedding
-table lookup: one row of weights selected per category code.
+Selects positions along one axis using one shared index list.
 
-`index_select` is a special case of [`gather`](gather.md): internally, it expands
-`index` to `gather`'s shape (broadcasting the same list across every other axis)
-and delegates to it. If you ever need a *different* index list per row, that's
-exactly the situation [`gather`](gather.md) itself is for, and `index_select`
-isn't.
+This is the uniform-index sibling of [`gather`](gather.md). The same `index`
+list is applied everywhere across the non-selected axes.
 
-The classic use is an embedding table lookup — see [`Series::copy_`](copy_.md)'s
-own Example 2 for how such a table typically gets its initial values without
-disturbing its later gradient.
+That makes `index_select()` the natural spelling for:
+
+- "pick these rows"
+- "pick these columns"
+- embedding-table row lookup
+- reordering or repeating one axis uniformly
+
+If the lookup pattern should change from row to row or lane to lane, that is no
+longer `index_select()`; that is [`gather`](gather.md).
 
 ## Parameters
 
 **dim** (`std::int64_t`)
 
-Which axis to select along.
+The axis to index into.
 
 **index** (`const Series&`)
 
-A 1-D (or flattenable) list of integer positions along `dim`, each in
-`[0, self.sizes()[dim])`. The same list is applied uniformly across every other
-axis. Positions may repeat.
+Integer positions along `dim`.
+
+Practical contract:
+
+- `index` is the list of positions to select
+- its order becomes the order of the selected axis in the result
+- repeated positions are legal
+- unselected positions simply do not appear in the output
 
 ## Returns
 
 `Series`
-    A new `Series` shaped like `self`, except `dim`'s length is replaced by
+    A new series shaped like `self`, except the size of `dim` becomes
     `index.numel()`.
 
 ## Gradient
 
-`index_select` is differentiable in `self`, inheriting [`gather`](gather.md)'s
-`scatter_add`-based backward: positions never selected get gradient `0`; positions
-selected more than once get the **sum** of every selection's contribution, not
-just the last one.
+`index_select()` is differentiable in `self`.
 
-```{note} This is the mechanism behind a correctly-trained embedding table
-A learned embedding's weight matrix is `[cardinality, hidden_size]`, and a forward
-pass is `weight.index_select(0, category_codes)`. This only trains correctly if
-the sparsity in Example 2 holds exactly: a category that never appears in a batch
-must get *zero* gradient that step, not some small nonzero leftover, and a category
-that appears twice must get the sum of both occurrences' gradient, not just one of
-them. Both are guaranteed by `index_select` inheriting `gather`'s exact backward
-rather than approximating it.
-```
+Its backward follows the same accumulation rule as [`gather`](gather.md):
+
+- positions never selected receive zero gradient
+- positions selected once receive that one contribution
+- positions selected repeatedly receive the sum of every contribution
+
+That behavior is exactly what makes repeated token/category lookup train
+correctly in an embedding-table-style use case.
 
 ## Examples
 
-Example 1. Select rows `0`, `2`, and `3` from a 4×3 matrix, in that order — note
-that the output can reorder and repeat, it isn't limited to `self`'s original row
-order.
+Example 1. Select rows `0`, `2`, and `3` from a `4 x 3` series.
 
 ```cpp
-auto input = pluss::make_series(
-    std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {4, 3});
-auto index = pluss::make_series(std::vector<std::int64_t>{0, 2, 3}, {3});
-std::cout << input.index_select(0, index);
+auto weight = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+    {7.0, 8.0, 9.0},
+    {10.0, 11.0, 12.0},
+});
+
+auto row_index = pluss::make_series({0, 2, 3}, {3});
+std::cout << weight.index_select(0, row_index);
 ```
 
 ### Output
@@ -84,23 +88,26 @@ data=[[1, 2, 3],
   [10, 11, 12]]
 ```
 
-Output row 0 is input row 0, output row 1 is input row 2, output row 2 is input
-row 3 — row 1 of the input (`[4, 5, 6]`) was never selected and is simply absent.
+The chosen order is preserved exactly. `index_select()` is not limited to
+keeping source order.
 
-Example 2. Sparse gradient through an embedding-table-style lookup: a `[5, 3]`
-weight table, looking up rows `0`, `2`, and `4` — rows `1` and `3` should get
-exactly zero gradient.
+Example 2. Sparse gradient: rows never looked up receive exactly zero.
 
 ```cpp
-auto weight = pluss::make_series(
-    std::vector<double>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5}, {5, 3});
-weight.tracks_slope_(true);
+auto tracked_weight = pluss::make_series({
+    {1.0, 1.0, 1.0},
+    {2.0, 2.0, 2.0},
+    {3.0, 3.0, 3.0},
+    {4.0, 4.0, 4.0},
+    {5.0, 5.0, 5.0},
+});
+tracked_weight.tracks_slope_(true);
 
-auto index = pluss::make_series(std::vector<std::int64_t>{0, 2, 4}, {3});
-auto out = weight.index_select(0, index);
-out.sum().reverse();
-std::cout << "out=" << out << "\n";
-std::cout << "weight.sensitivity()=" << weight.sensitivity();
+auto lookup = pluss::make_series({0, 2, 4}, {3});
+auto embedded = tracked_weight.index_select(0, lookup);
+embedded.sum().reverse();
+std::cout << "out=" << embedded << "\n";
+std::cout << "dw=" << tracked_weight.sensitivity() << "\n";
 ```
 
 ### Output
@@ -110,7 +117,7 @@ out=pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel
 data=[[1, 1, 1],
   [3, 3, 3],
   [5, 5, 5]]
-weight.sensitivity()=pluss::Series(shape=[5,3], strides=[3,1], dtype=float64, platform=cpu, numel=15, contiguous=true)
+dw=pluss::Series(shape=[5,3], strides=[3,1], dtype=float64, platform=cpu, numel=15, contiguous=true)
 data=[[1, 1, 1],
   [0, 0, 0],
   [1, 1, 1],
@@ -118,22 +125,57 @@ data=[[1, 1, 1],
   [1, 1, 1]]
 ```
 
-Rows 0, 2, and 4 — the ones actually looked up — get gradient `1` per element
-(each contributed to exactly one summed output position). Rows 1 and 3, never
-looked up, are exactly `0`, not some small nonzero residual.
+Rows `1` and `3` were never selected, so they stay exactly zero in the
+backward pass.
+
+Example 3. Repeated indices repeat data in the forward pass and accumulate
+gradient in the backward pass.
+
+```cpp
+auto repeated_lookup = pluss::make_series({0, 0, 3}, {3});
+std::cout << weight.index_select(0, repeated_lookup) << "\n";
+
+auto repeated_weight = weight.clone();
+repeated_weight.tracks_slope_(true);
+auto repeated_out = repeated_weight.index_select(0, repeated_lookup);
+repeated_out.sum().reverse();
+std::cout << "out=" << repeated_out << "\n";
+std::cout << "dw=" << repeated_weight.sensitivity() << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel=9, contiguous=true)
+data=[[1, 2, 3],
+  [1, 2, 3],
+  [10, 11, 12]]
+out=pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel=9, contiguous=true)
+data=[[1, 2, 3],
+  [1, 2, 3],
+  [10, 11, 12]]
+dw=pluss::Series(shape=[4,3], strides=[3,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[2, 2, 2],
+  [0, 0, 0],
+  [0, 0, 0],
+  [1, 1, 1]]
+```
+
+Row `0` was selected twice, so every element in that row receives gradient `2`.
 
 ## Notes
 
-- `index_select` broadcasts one index list across every non-`dim` axis; per-row
-  variation requires [`gather`](gather.md) directly.
-- Repeated indices are not an error; the gradient for a repeated position is the
-  sum of every selection's contribution (same rule as [`gather`](gather.md)).
+- `index_select()` is the right API when one index list should be reused
+  uniformly.
+- It is one of the most common lookup primitives in learned-table code.
+- If you find yourself wanting a different index pattern per row, move to
+  [`gather`](gather.md).
 
 ## See Also
 
-- [`Series::gather`](gather.md): the more general op `index_select` is built from.
-- [`Series::copy_`](copy_.md): how the weight table in Example 2 typically gets its
-  initial values without disturbing its later gradient.
+- [`Series::gather`](gather.md): the more general varying-pattern primitive.
+- [`Series::copy_`](copy_.md): common parameter initialization partner for
+  lookup-table code.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="gather.html">

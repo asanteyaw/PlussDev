@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 87e36a090b31 -->
 
 # SlotTimelineAccessor::period
 

@@ -82,7 +82,7 @@ An insertion position in <code class="docutils literal notranslate"><span class=
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Find the insertion position for an in-between timestamp.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
@@ -90,7 +90,7 @@ An insertion position in <code class="docutils literal notranslate"><span class=
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span><span class="s">&quot;2024-11-01T00:55:00Z&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-11-01T00:55:00Z&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">left_pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">right_pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: eff8c5eed872 -->
 
 # AxelNoteAccessor::casefold
 

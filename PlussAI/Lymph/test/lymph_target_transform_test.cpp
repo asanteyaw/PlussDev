@@ -108,16 +108,14 @@ bool run_target_transform_checks(std::ostream* err) {
   }
 
   // 3) target_transform(...) must reject a classification model outright
-  // (fail fast, at set time) -- a real improvement over the old
-  // TargetTransformedModel, which never validated task_kind() at all and
-  // would have misbehaved silently.
+  // (fail fast, at set time).
   {
     bool threw = false;
     try {
       Model classifier(ModelSpec{
           .task = TaskKind::Classification,
           .family = ModelFamily::Linear,
-          .options = LinearFamilyOptions{.objective = LinearObjective::LogisticLoss, .fit_intercept = true},
+          .options = LinearFamilyOptions{.objective = LinearObjective::Logistic, .fit_intercept = true},
       });
       classifier.target_transform(transform::log1p());
     } catch (const std::exception&) {

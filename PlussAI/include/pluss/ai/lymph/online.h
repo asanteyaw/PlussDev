@@ -301,15 +301,16 @@ private:
   std::vector<std::string> feature_names_{};
 };
 
-struct online_factory {
-  [[nodiscard]] static OnlineLinearClassifier linear_classifier(OnlineLinearOptions options = {}) {
-    return OnlineLinearClassifier(options);
-  }
+namespace models {
 
-  [[nodiscard]] static OnlineLinearRegressor linear_regressor(OnlineLinearOptions options = {}) {
-    return OnlineLinearRegressor(options);
-  }
-};
+[[nodiscard]] inline OnlineLinearClassifier online_linear_classifier(OnlineLinearOptions options = {}) {
+  return OnlineLinearClassifier(options);
+}
 
+[[nodiscard]] inline OnlineLinearRegressor online_linear_regressor(OnlineLinearOptions options = {}) {
+  return OnlineLinearRegressor(options);
+}
+
+} // namespace models
 
 } // namespace pluss::ai::lymph

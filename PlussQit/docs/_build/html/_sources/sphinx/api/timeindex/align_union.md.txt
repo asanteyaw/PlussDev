@@ -52,7 +52,7 @@ The other `TimeIndex` to align against.
 Example 1. Build one shared exact axis for two irregular time feeds.
 
 ```cpp
-auto left = pluss::make_timeindex({
+auto left = pluss::timeindex::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
@@ -60,7 +60,7 @@ auto left = pluss::make_timeindex({
     "2024-11-01T01:20:00Z",
 });
 
-auto right = pluss::make_timeindex({
+auto right = pluss::timeindex::make({
     "2024-11-01T00:05:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T01:05:00Z",
@@ -68,7 +68,7 @@ auto right = pluss::make_timeindex({
 });
 
 auto aligned = left.align_union(right);
-std::cout << pluss::print_timeline(aligned.index) << "\n";
+std::cout << pluss::timeline::print(aligned.index) << "\n";
 std::cout << pluss::print_series(aligned.left_indexer) << "\n";
 std::cout << pluss::print_series(aligned.right_indexer) << "\n";
 ```
@@ -95,7 +95,7 @@ auto right_vals = pluss::make_series(std::vector<double>{101.0, 103.0, 102.0});
 auto shared = left.align_union(right);
 
 // Use shared.left_indexer and shared.right_indexer as the alignment maps.
-std::cout << pluss::print_timeline(shared.index) << "\n";
+std::cout << pluss::timeline::print(shared.index) << "\n";
 std::cout << pluss::print_series(shared.left_indexer) << "\n";
 std::cout << pluss::print_series(shared.right_indexer) << "\n";
 ```

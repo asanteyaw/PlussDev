@@ -155,6 +155,7 @@ api/thread/shuffle
 api/thread/size
 api/thread/skew
 api/thread/slice
+api/thread/sort
 api/thread/split
 api/thread/starts
 api/thread/std

@@ -529,16 +529,6 @@ DataFrame DataFrame::load_json(std::string_view filepath,
   return load_json(filepath, pluss::loader::config_from(config_entries));
 }
 
-DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog) {
-  return tabelize(catalog, pluss::kindle::TabelizePolicy{});
-}
-
-DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog,
-                              const pluss::kindle::TabelizePolicy& policy) {
-  PLUSS_CHECK(catalog.defined(), "DataFrame::tabelize requires a defined Catalog");
-  return catalog.tabelize(policy);
-}
-
 pluss::kindle::Catalog DataFrame::kindelize() const {
   return kindelize(pluss::kindle::KindelizePolicy{});
 }
@@ -546,4 +536,13 @@ pluss::kindle::Catalog DataFrame::kindelize() const {
 pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "DataFrame::kindelize requires a defined DataFrame");
   return pluss::kindle::Catalog::kindelize(*this, policy);
+}
+
+pluss::bundle::Registry DataFrame::bundelize() const {
+  return bundelize(pluss::kindle::KindelizePolicy{});
+}
+
+pluss::bundle::Registry DataFrame::bundelize(const pluss::kindle::KindelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "DataFrame::bundelize requires a defined DataFrame");
+  return kindelize(policy).bundelize();
 }

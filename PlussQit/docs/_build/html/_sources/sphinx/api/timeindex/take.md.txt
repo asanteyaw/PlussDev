@@ -32,7 +32,7 @@ A 1D integer `Series` of positions to gather.
 
 ```cpp
 auto out = base.take(pluss::make_series(std::vector<std::int64_t>{4, 2, 0}));
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -48,7 +48,7 @@ Example 2. Reuse an `argsort()` result to physically reorder the axis.
 auto order = dup.argsort();
 auto sorted = dup.take(order);
 std::cout << pluss::print_series(order) << "\n";
-std::cout << pluss::print_timeline(sorted) << "\n";
+std::cout << pluss::timeindex::print(sorted) << "\n";
 ```
 
 ## Notes

@@ -1,3 +1,5 @@
+# PlussMic
+
 <div id="pluss-landing">
 <div class="pluss-hero">
 <div class="kicker">Pluss &middot; Space</div>
@@ -65,11 +67,8 @@ build_outputs
 ```
 
 ```{toctree}
-:glob:
-:maxdepth: 2
+:maxdepth: 1
 :hidden:
 
-_local/*/*
-_local/*/*/*
-_local/*/*/*/*
+_local/MANIFEST
 ```

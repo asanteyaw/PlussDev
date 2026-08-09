@@ -206,6 +206,44 @@ plussmic_kindle_model_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_model_demo.dir/build.make PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_model_demo.dir/build
 .PHONY : plussmic_kindle_model_demo/fast
 
+# Convenience name for target.
+PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/rule
+.PHONY : PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/rule
+
+# Convenience name for target.
+plussmic_kindle_catalog_plot_demo: PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/rule
+.PHONY : plussmic_kindle_catalog_plot_demo
+
+# fast build rule for target.
+plussmic_kindle_catalog_plot_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build.make PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build
+.PHONY : plussmic_kindle_catalog_plot_demo/fast
+
+catalog_plot_demo.o: catalog_plot_demo.cpp.o
+.PHONY : catalog_plot_demo.o
+
+# target to build an object file
+catalog_plot_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build.make PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/catalog_plot_demo.cpp.o
+.PHONY : catalog_plot_demo.cpp.o
+
+catalog_plot_demo.i: catalog_plot_demo.cpp.i
+.PHONY : catalog_plot_demo.i
+
+# target to preprocess a source file
+catalog_plot_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build.make PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/catalog_plot_demo.cpp.i
+.PHONY : catalog_plot_demo.cpp.i
+
+catalog_plot_demo.s: catalog_plot_demo.cpp.s
+.PHONY : catalog_plot_demo.s
+
+# target to generate assembly for a file
+catalog_plot_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/build.make PlussMic/examples/kindle/CMakeFiles/plussmic_kindle_catalog_plot_demo.dir/catalog_plot_demo.cpp.s
+.PHONY : catalog_plot_demo.cpp.s
+
 kindle_model_demo.o: kindle_model_demo.cpp.o
 .PHONY : kindle_model_demo.o
 
@@ -245,7 +283,11 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussmic_kindle_catalog_plot_demo"
 	@echo "... plussmic_kindle_model_demo"
+	@echo "... catalog_plot_demo.o"
+	@echo "... catalog_plot_demo.i"
+	@echo "... catalog_plot_demo.s"
 	@echo "... kindle_model_demo.o"
 	@echo "... kindle_model_demo.i"
 	@echo "... kindle_model_demo.s"

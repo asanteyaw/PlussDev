@@ -74,7 +74,7 @@ Example 3. Compare `argsort()` with sorting the timeline values themselves.
 auto order = duplicated.argsort();
 auto sorted = duplicated.sort();
 std::cout << pluss::print_series(order) << "\n";
-std::cout << pluss::print_timeline(sorted) << "\n";
+std::cout << pluss::timeline::print(sorted) << "\n";
 ```
 
 ### Output

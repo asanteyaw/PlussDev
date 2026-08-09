@@ -35,7 +35,7 @@ Example 1. Add one second to every timestamp.
 
 ```cpp
 auto out = base.add_nanos(1'000'000'000LL);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

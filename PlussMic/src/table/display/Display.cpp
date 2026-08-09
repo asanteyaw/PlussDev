@@ -1733,7 +1733,8 @@ bool show_html_window_(const std::string& html,
                        std::string_view title,
                        const DisplayBackend backend,
                        std::shared_ptr<const pluss::view::VirtualTableModel>
-                           virtual_table_model = {}) {
+                           virtual_table_model = {},
+                       const bool table_viewport_scroll_only = false) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -1744,6 +1745,7 @@ bool show_html_window_(const std::string& html,
   window_opts.width = std::max<std::int64_t>(640, options.viewer_width);
   window_opts.height = std::max<std::int64_t>(420, options.viewer_height);
   window_opts.virtual_table_model = std::move(virtual_table_model);
+  window_opts.table_viewport_scroll_only = table_viewport_scroll_only;
   switch (backend) {
     case DisplayBackend::PlussWebView:
       window_opts.backend_preference = pluss::view::BackendPreference::PlussWebViewOnly;
@@ -2034,8 +2036,12 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
       virtual_model =
           std::make_shared<DataFrameVirtualTableModel>(frame);
     }
-    if (show_html_window_(html, render_opts, "Pluss DataFrame", backend,
-                          std::move(virtual_model))) {
+    if (show_html_window_(html,
+                          render_opts,
+                          "Pluss DataFrame",
+                          backend,
+                          std::move(virtual_model),
+                          backend == DisplayBackend::PlussWebView)) {
       return;
     }
   }

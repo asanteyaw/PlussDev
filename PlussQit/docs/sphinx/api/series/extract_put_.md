@@ -93,7 +93,7 @@ const std::vector<ExtractSpec> fill_column{
 
 grid.extract_put_(
     pluss::msharp::RangeView::Of<ExtractSpec>(fill_column),
-    pluss::codem::value(-1.0));
+    pluss::make_series(-1.0));
 
 std::cout << grid;
 ```

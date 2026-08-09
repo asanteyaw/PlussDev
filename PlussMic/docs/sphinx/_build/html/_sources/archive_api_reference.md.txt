@@ -19,6 +19,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 api/archive/aggregate_over_catalogs
 api/archive/astype
 api/archive/bfill
+api/archive/bundelize
 api/archive/cast
 api/archive/catalog
 api/archive/catalogs

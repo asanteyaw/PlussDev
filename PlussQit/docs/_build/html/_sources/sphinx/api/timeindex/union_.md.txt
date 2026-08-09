@@ -32,7 +32,7 @@ Example 1. Build the complete exact clock represented by both axes.
 
 ```cpp
 auto out = base.union_(right);
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -47,7 +47,7 @@ need, not the indexer maps.
 
 ```cpp
 auto shared_clock = base.union_(right);
-std::cout << pluss::print_timeline(shared_clock) << "\n";
+std::cout << pluss::timeindex::print(shared_clock) << "\n";
 ```
 
 ## Notes

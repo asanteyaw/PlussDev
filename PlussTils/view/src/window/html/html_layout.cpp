@@ -4031,14 +4031,13 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
     content_height += std::max(0, child_h);
     const int child_w =
         estimate_node_preferred_width(document, child, measure_lineage, nullptr, body_width, width);
-    std::fprintf(stderr, "[DEBUG-DOC] child tag=%s class=%s child_w=%d body_width=%d\n", child.tag.c_str(),
-                 find_attribute(child, "class") != nullptr ? find_attribute(child, "class")->value.c_str() : "",
-                 child_w, body_width);
     content_pref_w = std::max(content_pref_w, child_w);
   }
 
-  const int max_scroll_x = std::max(0, content_pref_w - body_width);
-  const int max_scroll_y = std::max(0, content_height - body_height);
+  const int max_scroll_x =
+      config.enable_document_scroll ? std::max(0, content_pref_w - body_width) : 0;
+  const int max_scroll_y =
+      config.enable_document_scroll ? std::max(0, content_height - body_height) : 0;
   const int doc_scroll_x = std::clamp(config.document_scroll_x_px, 0, max_scroll_x);
   const int doc_scroll_y = std::clamp(config.document_scroll_y_px, 0, max_scroll_y);
   const RectI body_clip{body_left, body_top, body_width, body_height};

@@ -71,6 +71,7 @@ class ThreadPlotAccessor;
 class ThreadCastAccessor;
 class ThreadGroupBuilder;
 class ThreadGrouped;
+class ThreadSortBuilder;
 class ThreadNoteAccessor;
 class ThreadTimelineAccessor;
 class ThreadLabelAccessor;
@@ -430,6 +431,7 @@ public:
   Thread filter(const pluss::Series& bool_mask) const;
   Thread dropnull() const;
   Thread arrange(bool ascending = true, bool nulls_last = true) const;
+  ThreadSortBuilder sort(bool ascending = true, bool nulls_last = true) const;
   Thread ffill(std::int64_t limit = -1) const;
   Thread bfill(std::int64_t limit = -1) const;
   Thread interp(std::int64_t limit = -1) const;
@@ -974,12 +976,20 @@ struct GroupStateCache {
   std::vector<Thread> keys{};
   std::vector<std::string> names{};
   std::vector<bool> included{};
+  std::vector<std::int64_t> included_rows{};
   std::vector<std::int64_t> group_ids{};
+  std::vector<std::int64_t> included_group_ids{};
   std::vector<std::int64_t> first_rows{};
   std::vector<std::int64_t> order{};
   std::vector<std::int64_t> order_positions{};
   std::vector<std::int64_t> ordered_first_rows{};
+  std::vector<std::int64_t> group_offsets{};
   std::vector<std::int64_t> broadcast_positions{};
+  std::vector<std::int64_t> grouped_rows{};
+  pluss::Series included_mask_cpu{};
+  pluss::Series included_rows_cpu{};
+  pluss::Series group_ids_cpu{};
+  pluss::Series included_group_ids_cpu{};
   std::int64_t ngroups{0};
   bool all_included{true};
 };
@@ -1191,6 +1201,21 @@ public:
 
 private:
   Thread base_{};
+};
+
+class ThreadSortBuilder {
+public:
+  explicit ThreadSortBuilder(Thread base, bool ascending = true, bool nulls_last = true);
+
+  Thread asc() const;
+  Thread desc() const;
+  Thread done() const;
+  operator Thread() const;
+
+private:
+  Thread base_{};
+  bool ascending_{true};
+  bool nulls_last_{true};
 };
 
 class ThreadView final : public Thread {

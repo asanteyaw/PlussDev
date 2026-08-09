@@ -41,13 +41,13 @@ calendar-facing work should interpret the same underlying instants.
 Example 1. Convert a UTC axis into New York wall-clock time.
 
 ```cpp
-auto utc_midday = pluss::make_timeindex({
+auto utc_midday = pluss::timeindex::make({
     "2024-11-01T16:00:00Z",
     "2024-11-01T18:30:00Z",
 });
 
 auto out = utc_midday.tz_convert("America/New_York");
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output
@@ -61,7 +61,7 @@ Example 2. Dedicated conversion back to UTC.
 
 ```cpp
 auto out = utc_midday.to_utc();
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeindex::print(out) << "\n";
 ```
 
 ### Output

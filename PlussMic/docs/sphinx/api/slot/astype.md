@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e4ecefa27d7c -->
 
 # Slot::astype
 

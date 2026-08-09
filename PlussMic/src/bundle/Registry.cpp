@@ -13,6 +13,8 @@
 #include <unordered_set>
 #include <utility>
 
+#include "kindle/catalog.h"
+#include "table/DataFrame.h"
 #include "CodeM/core/Errors.h"
 #include "kindle/catalog.h"
 #include "loader/Loader.h"

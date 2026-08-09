@@ -50,7 +50,7 @@ date-normalized replacement.
 
 ```cpp
 auto out = with_nat.where(with_nat.isnat(), with_nat.floor("D"));
-std::cout << pluss::print_timeline(out) << "\n";
+std::cout << pluss::timeline::print(out) << "\n";
 ```
 
 ### Output

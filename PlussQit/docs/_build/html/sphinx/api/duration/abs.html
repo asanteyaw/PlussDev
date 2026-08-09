@@ -17,8 +17,8 @@
     <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Duration::total_seconds" href="total.html" />
-    <link rel="prev" title="Duration::eq" href="eq.html" />
+    <link rel="next" title="Duration::sign" href="sign.html" />
+    <link rel="prev" title="Duration::ge" href="ge.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -43,102 +43,64 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Duration</span><span class="w"> </span><span class="nf">Duration::abs</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Duration</span><span class="w"> </span><span class="nf">Duration::sign</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Duration</span><span class="w"> </span><span class="nf">Duration::clip</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">lo</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">hi</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">abs()</span></code> returns the magnitude of each element, discarding direction (negative
-durations, built from e.g. <code class="docutils literal notranslate"><span class="pre">pluss::duration::minutes(-15)</span></code>, become positive).
-<code class="docutils literal notranslate"><span class="pre">sign()</span></code> returns <code class="docutils literal notranslate"><span class="pre">-1</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>, or <code class="docutils literal notranslate"><span class="pre">1</span></code> per element (as a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>, not a plain
-integer <code class="docutils literal notranslate"><span class="pre">Series</span></code>), matching the numeric-sign convention. <code class="docutils literal notranslate"><span class="pre">clip(lo,</span> <span class="pre">hi)</span></code> bounds
-every element into <code class="docutils literal notranslate"><span class="pre">[lo,</span> <span class="pre">hi]</span></code> — the two-sided cousin of clamping, taking two
-<code class="docutils literal notranslate"><span class="pre">Duration</span></code> bounds rather than one.</p>
+<p>Returns the magnitude of each element, discarding direction — negative
+durations, built from e.g. <code class="docutils literal notranslate"><span class="pre">pluss::duration::minutes(-15)</span></code>, become positive.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>lo</strong>, <strong>hi</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Duration&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">clip</span></code> only)</p>
-<p>The inclusive lower and upper bound. Both broadcast against <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>None — this is a zero-argument accessor on <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Duration</span></code>
-All three return a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>, not a <code class="docutils literal notranslate"><span class="pre">Series</span></code> — unlike the comparison
-family, these stay in duration-space.</p>
+A new duration holding the elementwise absolute value.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">abs()</span></code> and <code class="docutils literal notranslate"><span class="pre">sign()</span></code> on a negative duration, and <code class="docutils literal notranslate"><span class="pre">sign()</span></code> on a
-positive one for contrast.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">abs()</span></code> on a negative duration.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">neg_fifteen_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">-15</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">ninety_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">90</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;abs=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">neg_fifteen_min</span><span class="p">.</span><span class="n">abs</span><span class="p">().</span><span class="n">total_minutes</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;sign_neg=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">neg_fifteen_min</span><span class="p">.</span><span class="n">sign</span><span class="p">().</span><span class="n">total_nanoseconds</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;sign_pos=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">.</span><span class="n">sign</span><span class="p">().</span><span class="n">total_nanoseconds</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">neg_fifteen_min</span><span class="p">.</span><span class="n">abs</span><span class="p">());</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>abs=Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=15.0000
-sign_neg=Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=-1.0000
-sign_pos=Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=1.0000
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Duration(shape=[], dim=0, numel=1)
+0 days 00:15:00.000000000
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">abs(-15</span> <span class="pre">min)</span> <span class="pre">=</span> <span class="pre">15</span> <span class="pre">min</span></code>. <code class="docutils literal notranslate"><span class="pre">sign()</span></code>’s result is itself a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> — one whose
-magnitude is exactly <code class="docutils literal notranslate"><span class="pre">1</span></code> nanosecond, positive or negative — so reading it back
-through <code class="docutils literal notranslate"><span class="pre">total_nanoseconds()</span></code> (not <code class="docutils literal notranslate"><span class="pre">total_days()</span></code> or another larger unit,
-which would show a vanishingly small fraction) is the natural way to inspect
-it directly.</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">clip</span></code> on an array, bounding it into <code class="docutils literal notranslate"><span class="pre">[2</span> <span class="pre">days,</span> <span class="pre">6</span> <span class="pre">days]</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ranged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">range</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">clipped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ranged</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">6</span><span class="p">));</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">clipped</span><span class="p">.</span><span class="n">total_days</span><span class="p">());</span>
-</pre></div>
-</div>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=[2.0000, 2.0000, 4.0000, 6.0000, 6.0000, 6.0000]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">6,</span> <span class="pre">8,</span> <span class="pre">10]</span></code> days clipped into <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">6]</span></code>: <code class="docutils literal notranslate"><span class="pre">0</span></code>→<code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>→<code class="docutils literal notranslate"><span class="pre">2</span></code> (floor),
-<code class="docutils literal notranslate"><span class="pre">4</span></code> and <code class="docutils literal notranslate"><span class="pre">6</span></code> pass through, <code class="docutils literal notranslate"><span class="pre">8</span></code>→<code class="docutils literal notranslate"><span class="pre">6</span></code> and <code class="docutils literal notranslate"><span class="pre">10</span></code>→<code class="docutils literal notranslate"><span class="pre">6</span></code> (ceiling).</p>
+<p><code class="docutils literal notranslate"><span class="pre">abs(-15</span> <span class="pre">min)</span> <span class="pre">=</span> <span class="pre">15</span> <span class="pre">min</span></code>, with the leading <code class="docutils literal notranslate"><span class="pre">-</span></code> gone from the printed form.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sign()</span></code>’s output is itself a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> (not an <code class="docutils literal notranslate"><span class="pre">int</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>) — read it
-back through a <code class="docutils literal notranslate"><span class="pre">total_*</span></code> conversion (or a comparison) rather than treating
-it as a plain number directly.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">clip</span></code>’s bounds are both required <code class="docutils literal notranslate"><span class="pre">Duration</span></code> arguments — there is no
-one-sided “clip_min”/”clip_max” pair the way <code class="docutils literal notranslate"><span class="pre">Series</span></code> has
-<a class="reference internal" href="../series/clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min</span></code></span></a>/<a class="reference internal" href="../series/clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">abs()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>, not a <code class="docutils literal notranslate"><span class="pre">Series</span></code> — unlike the comparison family,
+it stays in duration-space.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">abs(d)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">d</span> <span class="pre">if</span> <span class="pre">d.ge(pluss::duration::nanos(0))</span> <span class="pre">else</span> <span class="pre">-d</span></code>,
+but computed directly.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq</span></code></span></a>: comparing durations, one way to check a sign or magnitude
-condition without calling <code class="docutils literal notranslate"><span class="pre">abs</span></code>/<code class="docutils literal notranslate"><span class="pre">sign</span></code> directly.</p></li>
-<li><p><a class="reference internal" href="arithmetic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arithmetic</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">mul</span></code>/<code class="docutils literal notranslate"><span class="pre">div</span></code>/<code class="docutils literal notranslate"><span class="pre">floordiv</span></code>/<code class="docutils literal notranslate"><span class="pre">mod</span></code>, the other
-numeric transforms on <code class="docutils literal notranslate"><span class="pre">Duration</span></code>.</p></li>
+<li><p><a class="reference internal" href="sign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sign</span></code></span></a>: direction alone, the complementary piece of information
+<code class="docutils literal notranslate"><span class="pre">abs</span></code> discards.</p></li>
+<li><p><a class="reference internal" href="clip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clip</span></code></span></a>: bounding into a range, another unary transform.</p></li>
+<li><p><a class="reference internal" href="neg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">neg</span></code></span></a>: unary negation.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="eq.html">
+  <a class="prev-link" href="ge.html">
     <span class="label">Previous</span>
-    <span class="title">eq</span>
+    <span class="title">ge</span>
   </a>
-  <a class="next-link" href="total.html">
+  <a class="next-link" href="sign.html">
     <span class="label">Next</span>
-    <span class="title">total</span>
+    <span class="title">sign</span>
   </a>
 </div>
 </section>
@@ -231,8 +193,8 @@ numeric transforms on <code class="docutils literal notranslate"><span class="pr
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../duration_api_reference.html">Duration API Reference</a><ul>
-      <li>Previous: <a href="eq.html" title="previous chapter">Duration::eq</a></li>
-      <li>Next: <a href="total.html" title="next chapter">Duration::total_seconds</a></li>
+      <li>Previous: <a href="ge.html" title="previous chapter">Duration::ge</a></li>
+      <li>Next: <a href="sign.html" title="next chapter">Duration::sign</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

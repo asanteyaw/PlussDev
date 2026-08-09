@@ -17,8 +17,8 @@
     <script src="../../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Duration::abs" href="abs.html" />
-    <link rel="prev" title="Duration arithmetic" href="arithmetic.html" />
+    <link rel="next" title="Duration::ne" href="ne.html" />
+    <link rel="prev" title="Duration::mod" href="mod.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -43,26 +43,16 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="nf">Duration::eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Series</span><span class="w"> </span><span class="nf">Duration::ne</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Series</span><span class="w"> </span><span class="nf">Duration::lt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Series</span><span class="w"> </span><span class="nf">Duration::le</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Series</span><span class="w"> </span><span class="nf">Duration::gt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">Series</span><span class="w"> </span><span class="nf">Duration::ge</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-
 <span class="n">Series</span><span class="w"> </span><span class="n">Duration</span><span class="o">::</span><span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">  </span><span class="c1">// eq(other)</span>
-<span class="n">Series</span><span class="w"> </span><span class="n">Duration</span><span class="o">::</span><span class="k">operator</span><span class="o">!=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">  </span><span class="c1">// ne(other)</span>
-<span class="n">Series</span><span class="w"> </span><span class="n">Duration</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">   </span><span class="c1">// lt(other)</span>
-<span class="n">Series</span><span class="w"> </span><span class="n">Duration</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">  </span><span class="c1">// le(other)</span>
-<span class="n">Series</span><span class="w"> </span><span class="n">Duration</span><span class="o">::</span><span class="k">operator</span><span class="o">&gt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">   </span><span class="c1">// gt(other)</span>
-<span class="n">Series</span><span class="w"> </span><span class="n">Duration</span><span class="o">::</span><span class="k">operator</span><span class="o">&gt;=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">  </span><span class="c1">// ge(other)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Compares two <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values elementwise by their underlying elapsed-nanosecond
-magnitude, broadcasting under ordinary N-D rules, and returns a <code class="docutils literal notranslate"><span class="pre">Series</span></code> of
-booleans — one comparison result per broadcasted position.</p>
+<p>Compares two <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values elementwise by their underlying
+elapsed-nanosecond magnitude for equality, broadcasting under ordinary N-D
+rules, and returns a <code class="docutils literal notranslate"><span class="pre">Series</span></code> of booleans — one comparison result per
+broadcasted position.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Series[bool], not a scalar bool
@@ -85,38 +75,19 @@ position.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">90</span></code> minutes is less than <code class="docutils literal notranslate"><span class="pre">1</span></code> hour is false, but <code class="docutils literal notranslate"><span class="pre">1</span></code> hour <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>
-<code class="docutils literal notranslate"><span class="pre">90</span></code> minutes is true.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">90</span></code> minutes equals <code class="docutils literal notranslate"><span class="pre">1</span></code> hour is false.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ninety_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">90</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">one_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;eq=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">one_hour</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;lt=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">one_hour</span><span class="p">.</span><span class="n">lt</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">one_hour</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ninety_min</span><span class="p">));</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>eq=Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
-data=false
-lt=Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
-data=true
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">hour</span> <span class="pre">==</span> <span class="pre">90</span> <span class="pre">minutes</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> (<code class="docutils literal notranslate"><span class="pre">60</span> <span class="pre">min</span> <span class="pre">!=</span> <span class="pre">90</span> <span class="pre">min</span></code>); <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">hour</span> <span class="pre">&lt;</span> <span class="pre">90</span> <span class="pre">minutes</span></code>
-is <code class="docutils literal notranslate"><span class="pre">true</span></code> (<code class="docutils literal notranslate"><span class="pre">60</span> <span class="pre">&lt;</span> <span class="pre">90</span></code>).</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> against a smaller duration.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">one_day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">one_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">print_series</span><span class="p">(</span><span class="n">one_day</span><span class="p">.</span><span class="n">ge</span><span class="p">(</span><span class="n">one_hour</span><span class="p">));</span>
-</pre></div>
-</div>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
-data=true
+data=false
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">day</span> <span class="pre">&gt;=</span> <span class="pre">1</span> <span class="pre">hour</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">hour</span> <span class="pre">==</span> <span class="pre">90</span> <span class="pre">minutes</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> (<code class="docutils literal notranslate"><span class="pre">60</span> <span class="pre">min</span> <span class="pre">!=</span> <span class="pre">90</span> <span class="pre">min</span></code>).</p>
 </section>
 </section>
 <section id="notes">
@@ -124,28 +95,29 @@ data=true
 <ul class="simple">
 <li><p>Comparisons are purely by elapsed magnitude — there is no notion of
 “direction” beyond sign; a negative <code class="docutils literal notranslate"><span class="pre">Duration</span></code> (see
-<a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs</span></code></span></a>/<a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sign</span></code></span></a>) compares as less than a positive one, same
-as ordinary signed-number comparison.</p></li>
-<li><p>Every operator here is documented sugar for the underlying named method
-(<code class="docutils literal notranslate"><span class="pre">operator==</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">eq</span></code>, etc.) — nothing is computed differently
-between the spellings.</p></li>
+<a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs</span></code></span></a>/<a class="reference internal" href="sign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sign</span></code></span></a>) compares as less than a positive one,
+same as ordinary signed-number comparison.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">operator==</span></code> is documented sugar for <code class="docutils literal notranslate"><span class="pre">eq</span></code> — nothing is computed differently
+between the two spellings.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="arithmetic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arithmetic</span></code></span></a>: combining durations instead of comparing them.</p></li>
+<li><p><a class="reference internal" href="ne.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ne</span></code></span></a>: the negation of this comparison.</p></li>
+<li><p><a class="reference internal" href="lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lt</span></code></span></a>, <a class="reference internal" href="le.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">le</span></code></span></a>, <a class="reference internal" href="gt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gt</span></code></span></a>, <a class="reference internal" href="ge.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ge</span></code></span></a>: the ordering
+comparisons.</p></li>
 <li><p><a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs</span></code></span></a>: magnitude and sign, relevant when comparing durations that
 may be negative.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="arithmetic.html">
+  <a class="prev-link" href="mod.html">
     <span class="label">Previous</span>
-    <span class="title">arithmetic</span>
+    <span class="title">mod</span>
   </a>
-  <a class="next-link" href="abs.html">
+  <a class="next-link" href="ne.html">
     <span class="label">Next</span>
-    <span class="title">abs</span>
+    <span class="title">ne</span>
   </a>
 </div>
 </section>
@@ -238,8 +210,8 @@ may be negative.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../duration_api_reference.html">Duration API Reference</a><ul>
-      <li>Previous: <a href="arithmetic.html" title="previous chapter">Duration arithmetic</a></li>
-      <li>Next: <a href="abs.html" title="next chapter">Duration::abs</a></li>
+      <li>Previous: <a href="mod.html" title="previous chapter">Duration::mod</a></li>
+      <li>Next: <a href="ne.html" title="next chapter">Duration::ne</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

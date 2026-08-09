@@ -146,7 +146,7 @@ auto frame = atlas.squeeze();
 
 ```cpp
 auto archive = atlas.kindelize();
-auto roundtrip = pluss::table::Atlas::tabelize(archive);
+auto roundtrip = archive.tabelize();
 ```
 
 This is the Atlas equivalent of `DataFrame <-> Catalog` conversion.

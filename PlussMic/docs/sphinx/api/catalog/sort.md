@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 79c7e3e6e8e5 -->
+<!-- pluss-signature-hash: 5b1056818d63 -->
 
 # Catalog::sort
 
@@ -19,6 +19,9 @@ Catalog::sort(const std::vector<std::string>& fields, const std::vector<bool>& a
 Reorders every stream's rows by one or more named sort-key streams. Every stream in the
 catalog is reordered together, keeping row alignment intact across the whole catalog, not
 just the sort key itself.
+
+`sort(...)` stays on the root catalog surface because the keys are intrinsic to the
+operation itself: this is a whole-catalog row-order plan, not a payload accessor.
 
 ## Parameters
 
@@ -136,6 +139,8 @@ metric                   | Series       | Series[float64]  | 4       | [40, 30, 
 
 - Reorders *every* stream together, preserving cross-stream row alignment.
 - The single-key overload is just the short form of the multi-key surface.
+- The `NameRange` convenience overload forwards into the same multi-key logic as the
+  listed span/vector overloads.
 - `fields` must be non-empty for the multi-key overloads.
 - If `ascending` is supplied for the multi-key overloads, it must either be empty or match
   `fields.size()`.

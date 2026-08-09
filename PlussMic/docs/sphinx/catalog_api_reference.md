@@ -20,6 +20,7 @@ api/catalog/astype
 api/catalog/at
 api/catalog/begin
 api/catalog/bfill
+api/catalog/bundelize
 api/catalog/cast
 api/catalog/clean
 api/catalog/cloc
@@ -68,6 +69,7 @@ api/catalog/nkeys
 api/catalog/notnull
 api/catalog/nrows
 api/catalog/nt
+api/catalog/plot
 api/catalog/query
 api/catalog/rename
 api/catalog/rename_

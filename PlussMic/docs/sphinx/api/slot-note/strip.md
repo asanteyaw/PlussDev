@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b07c3a289238 -->
 
 # SlotNoteAccessor::strip
 

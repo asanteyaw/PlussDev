@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7b83ed964df2 -->
 
 # SlotCastAccessor::note
 

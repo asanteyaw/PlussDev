@@ -13,6 +13,8 @@
 #include <numeric>
 #include <optional>
 #include <random>
+
+#include "bundle/registry.h"
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -2004,36 +2006,119 @@ DataFrame dataframe_cmp_thread(const DataFrame& frame,
   return dataframe_cmp_thread(frame, other, axis, op, AlignOptions{});
 }
 
-DataFrame arrange_impl_frame(
+std::vector<DataFrame::ArrangeSpec> normalize_arrange_specs_(
     const DataFrame& frame,
-    const std::vector<DataFrame::ArrangeSpec>& input_specs) {
-  if (frame.ncases() <= 1 || input_specs.empty()) {
-    return frame;
-  }
-
+    const std::vector<DataFrame::ArrangeSpec>& input_specs,
+    std::string_view where) {
   std::vector<DataFrame::ArrangeSpec> normalized;
   normalized.reserve(input_specs.size());
   std::unordered_set<std::string> seen;
   seen.reserve(input_specs.size());
   for (const auto& spec : input_specs) {
-    PLUSS_CHECK(!spec.feature.empty(), "DataFrame::arrange: feature name cannot be empty");
+    PLUSS_CHECK(!spec.feature.empty(), std::string(where) + ": feature name cannot be empty");
     PLUSS_CHECK(frame.get(spec.feature).has_value(),
-                "DataFrame::arrange: unknown feature '" + spec.feature + "'");
+                std::string(where) + ": unknown feature '" + spec.feature + "'");
     if (seen.insert(spec.feature).second) {
       normalized.push_back(spec);
     }
   }
-  if (normalized.empty()) {
-    return frame;
+  return normalized;
+}
+
+struct ArrangeState_ {
+  std::vector<DataFrame::ArrangeSpec> specs{};
+  std::vector<Thread> keys{};
+};
+
+ArrangeState_ prepare_arrange_state_(
+    const DataFrame& frame,
+    const std::vector<DataFrame::ArrangeSpec>& input_specs,
+    std::string_view where) {
+  ArrangeState_ state;
+  state.specs = normalize_arrange_specs_(frame, input_specs, where);
+  state.keys.reserve(state.specs.size());
+  for (const auto& spec : state.specs) {
+    state.keys.push_back(frame.features(spec.feature));
+  }
+  return state;
+}
+
+int compare_arrange_state_rows_(const ArrangeState_& state,
+                                std::int64_t lhs_row,
+                                std::int64_t rhs_row) {
+  for (std::size_t i = 0; i < state.specs.size(); ++i) {
+    const auto cmp = detail::compare_rows(
+        state.keys[i],
+        lhs_row,
+        rhs_row,
+        state.specs[i].nulls_last);
+    if (cmp == 0) {
+      continue;
+    }
+    return state.specs[i].ascending ? cmp : -cmp;
+  }
+  if (lhs_row < rhs_row) return -1;
+  if (lhs_row > rhs_row) return 1;
+  return 0;
+}
+
+std::vector<std::int64_t> arrange_order_on_indices_(
+    const ArrangeState_& state,
+    std::span<const std::int64_t> base_indices) {
+  std::vector<std::int64_t> indices(base_indices.begin(), base_indices.end());
+  if (indices.size() <= 1 || state.specs.empty()) {
+    return indices;
+  }
+  std::stable_sort(indices.begin(), indices.end(), [&](std::int64_t lhs, std::int64_t rhs) {
+    return compare_arrange_state_rows_(state, lhs, rhs) < 0;
+  });
+  return indices;
+}
+
+std::vector<std::int64_t> arrange_partial_order_on_indices_(
+    const ArrangeState_& state,
+    std::span<const std::int64_t> base_indices,
+    std::int64_t keep,
+    bool tail) {
+  std::vector<std::int64_t> indices(base_indices.begin(), base_indices.end());
+  if (indices.empty() || keep <= 0) {
+    return {};
+  }
+  const auto clipped = std::clamp<std::int64_t>(keep, 0, static_cast<std::int64_t>(indices.size()));
+  if (clipped >= static_cast<std::int64_t>(indices.size()) || state.specs.empty()) {
+    return arrange_order_on_indices_(state, base_indices);
   }
 
-  std::vector<std::int64_t> indices(static_cast<std::size_t>(frame.ncases()));
-  std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
+  const auto less = [&](std::int64_t lhs, std::int64_t rhs) {
+    return compare_arrange_state_rows_(state, lhs, rhs) < 0;
+  };
+  const auto greater = [&](std::int64_t lhs, std::int64_t rhs) {
+    return compare_arrange_state_rows_(state, lhs, rhs) > 0;
+  };
 
-  // Multi-key frame ordering is coordinated here, but each key's actual sort is delegated
-  // down to Thread::arrange. We sort from the least-significant key back to the most-
-  // significant key so Thread's stable ordering composes into the final row order.
-  for (auto it = normalized.rbegin(); it != normalized.rend(); ++it) {
+  auto mid = indices.begin() + clipped;
+  if (!tail) {
+    std::partial_sort(indices.begin(), mid, indices.end(), less);
+    indices.resize(static_cast<std::size_t>(clipped));
+    return indices;
+  }
+
+  std::partial_sort(indices.begin(), mid, indices.end(), greater);
+  indices.resize(static_cast<std::size_t>(clipped));
+  std::stable_sort(indices.begin(), indices.end(), less);
+  return indices;
+}
+
+std::vector<std::int64_t> arrange_order_on_indices_(
+    const DataFrame& frame,
+    const std::vector<DataFrame::ArrangeSpec>& specs,
+    std::span<const std::int64_t> base_indices) {
+  std::vector<std::int64_t> indices(base_indices.begin(), base_indices.end());
+  if (indices.size() <= 1 || specs.empty()) {
+    return indices;
+  }
+
+  for (auto it = specs.rbegin(); it != specs.rend(); ++it) {
     auto ordered_key = frame.features(it->feature).take(
         std::span<const std::int64_t>(indices.data(), indices.size()));
     ordered_key = ordered_key.label().set(make_i64_thread(indices));
@@ -2042,7 +2127,47 @@ DataFrame arrange_impl_frame(
                   .as_series()
                   .to_vec<std::int64_t>();
   }
+  return indices;
+}
 
+std::vector<std::int64_t> arrange_order_impl_frame_(
+    const DataFrame& frame,
+    const std::vector<DataFrame::ArrangeSpec>& input_specs,
+    std::string_view where) {
+  if (frame.ncases() <= 1 || input_specs.empty()) {
+    std::vector<std::int64_t> identity(static_cast<std::size_t>(frame.ncases()));
+    std::iota(identity.begin(), identity.end(), static_cast<std::int64_t>(0));
+    return identity;
+  }
+
+  auto normalized = normalize_arrange_specs_(frame, input_specs, where);
+  if (normalized.empty()) {
+    std::vector<std::int64_t> identity(static_cast<std::size_t>(frame.ncases()));
+    std::iota(identity.begin(), identity.end(), static_cast<std::int64_t>(0));
+    return identity;
+  }
+
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(frame.ncases()));
+  std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
+  return arrange_order_on_indices_(frame, normalized, indices);
+}
+
+DataFrame arrange_impl_frame(
+    const DataFrame& frame,
+    const std::vector<DataFrame::ArrangeSpec>& input_specs) {
+  const auto indices = arrange_order_impl_frame_(frame, input_specs, "DataFrame::arrange");
+  if (indices.size() == static_cast<std::size_t>(frame.ncases())) {
+    bool is_identity = true;
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+      if (indices[i] != static_cast<std::int64_t>(i)) {
+        is_identity = false;
+        break;
+      }
+    }
+    if (is_identity) {
+      return frame;
+    }
+  }
   return frame.take(indices);
 }
 

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fc974589619f -->
 
 # Slot::ndistinct
 
