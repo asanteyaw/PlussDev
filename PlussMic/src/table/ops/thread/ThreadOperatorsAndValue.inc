@@ -188,8 +188,11 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
                                                                 : left.as_timeindex().timeline();
               const auto right_tl = (rk == ThreadKind::Timeline) ? right.as_timeline()
                                                                  : right.as_timeindex().timeline();
-              const auto delta = pluss::codeh::detail::impl_diff(left_tl, right_tl);
-              return Thread(delta.total().nanoseconds(), combine_validity_masks(left, right));
+              TimelineSpanOptions options;
+              options.unit = TimeUnit::Nanos;
+              options.signed_result = true;
+              return Thread(right_tl.span(left_tl, to_codeh_span_options_(options, where)),
+                            combine_validity_masks(left, right));
             },
             where,
             "temporal diff"),

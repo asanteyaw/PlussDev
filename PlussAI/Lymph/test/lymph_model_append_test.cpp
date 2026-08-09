@@ -104,6 +104,33 @@ bool run_model_append_checks(std::ostream* err) {
     return false;
   }
 
+  // 4) Object-factory preparation accessor: once the Model exists, users
+  // should be able to keep preprocessing object/method based instead of
+  // stitching stage:: and columnrouter:: factories through every line.
+  Model fluent = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  auto prep = fluent.prepare();
+  const ColumnRouter categorical = prep.names({"category"});
+  prep.standardize(prep.remaining(categorical))
+      .encode(categorical, {.max_categories = 8, .include_unknown_bucket = true});
+  if (fluent.stage_count() != 0) {
+    if (err) *err << "prepare().* stages should stay pending until a frame-backed learn_() resolves them\n";
+    return false;
+  }
+  const Model fluent_learned = fluent.learn(frame, data_options);
+  if (!fluent_learned.trained() || fluent_learned.stage_count() != 2) {
+    if (err) *err << "prepare().standardize(...).encode(...) should materialize into two trained stages\n";
+    return false;
+  }
+
+  Model shaped = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  auto shape = shaped.prepare();
+  shape.gaussianize({"x1"}).power(shape.names({"x2"}));
+  const Model shaped_learned = shaped.learn(frame, data_options);
+  if (!shaped_learned.trained() || shaped_learned.stage_count() != 2) {
+    if (err) *err << "prepare().gaussianize(...).power(...) should expose distribution-shaping stages\n";
+    return false;
+  }
+
   return true;
 }
 

@@ -42,6 +42,8 @@ const char* family_name(ModelFamily family) {
       return "Cluster";
     case ModelFamily::Decompose:
       return "Decompose";
+    case ModelFamily::Detect:
+      return "Detect";
   }
   return "Unknown";
 }
@@ -57,6 +59,7 @@ bool is_phase0_family(ModelFamily family) {
       return true;
     case ModelFamily::Cluster:
     case ModelFamily::Decompose:
+    case ModelFamily::Detect:
       return false;
   }
   return false;

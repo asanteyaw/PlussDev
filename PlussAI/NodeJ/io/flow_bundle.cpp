@@ -335,12 +335,25 @@ void write_family_options(BinaryWriter& w, const ModelSpec& spec) {
     w.pod(o.tolerance);
     return;
   }
-  const auto& o = std::get<DecomposeFamilyOptions>(spec.options);
+  if (spec.family == ModelFamily::Decompose) {
+    const auto& o = std::get<DecomposeFamilyOptions>(spec.options);
+    write_enum(w, o.method);
+    w.pod(o.components);
+    w.pod(static_cast<std::uint8_t>(o.whiten ? 1U : 0U));
+    w.pod(o.max_iterations);
+    w.pod(o.tolerance);
+    return;
+  }
+  const auto& o = std::get<DetectFamilyOptions>(spec.options);
   write_enum(w, o.method);
-  w.pod(o.components);
-  w.pod(static_cast<std::uint8_t>(o.whiten ? 1U : 0U));
-  w.pod(o.max_iterations);
-  w.pod(o.tolerance);
+  w.pod(o.isolation.estimators);
+  w.pod(o.isolation.max_samples);
+  w.pod(static_cast<std::uint8_t>(o.isolation.max_samples_auto ? 1U : 0U));
+  w.pod(o.isolation.max_features_ratio);
+  w.pod(static_cast<std::uint8_t>(o.isolation.bootstrap ? 1U : 0U));
+  w.pod(static_cast<std::uint8_t>(o.isolation.contamination_auto ? 1U : 0U));
+  w.pod(o.isolation.contamination);
+  write_random_state(w, o.isolation.random);
 }
 
 bool read_family_options(BinaryReader& r, ModelSpec& spec) {
@@ -404,6 +417,28 @@ bool read_family_options(BinaryReader& r, ModelSpec& spec) {
     std::uint8_t whiten = 0;
     if (!read_enum(r, o.method) || !r.pod(o.components) || !r.pod(whiten) || !r.pod(o.max_iterations) || !r.pod(o.tolerance)) return false;
     o.whiten = whiten != 0;
+    spec.options = o;
+    return true;
+  }
+  if (spec.family == ModelFamily::Detect) {
+    DetectFamilyOptions o{};
+    std::uint8_t max_auto = 0;
+    std::uint8_t bootstrap = 0;
+    std::uint8_t contam_auto = 0;
+    if (!read_enum(r, o.method)
+        || !r.pod(o.isolation.estimators)
+        || !r.pod(o.isolation.max_samples)
+        || !r.pod(max_auto)
+        || !r.pod(o.isolation.max_features_ratio)
+        || !r.pod(bootstrap)
+        || !r.pod(contam_auto)
+        || !r.pod(o.isolation.contamination)
+        || !read_random_state(r, o.isolation.random)) {
+      return false;
+    }
+    o.isolation.max_samples_auto = max_auto != 0;
+    o.isolation.bootstrap = bootstrap != 0;
+    o.isolation.contamination_auto = contam_auto != 0;
     spec.options = o;
     return true;
   }

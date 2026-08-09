@@ -215,8 +215,9 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  const Series metrics = reports::classification_metric_series(model, batch, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::F1}});
-  const auto metric_vec = as_f64(metrics);
+  const Series class_metric_values =
+      reports::classification_metric_series(model, batch, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::F1}});
+  const auto metric_vec = as_f64(class_metric_values);
   if (metric_vec.empty()) {
     if (err) *err << "lymph classification_metric_series(model,batch) should return requested assess metrics\n";
     return false;
@@ -226,6 +227,65 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
       if (err) *err << "lymph classification_metric_series(model,batch) should return finite values\n";
       return false;
     }
+  }
+
+  const auto model_reports = model.reports();
+  const ConfusionTable bound_cm = model_reports.confusion_table(batch);
+  if (bound_cm.counts.numel() != cm.counts.numel()) {
+    if (err) *err << "model.reports().confusion_table(batch) should mirror reports::confusion_table(model,batch)\n";
+    return false;
+  }
+  const ClassReport bound_summary = model_reports.classification_summary(batch);
+  if (bound_summary.macro_average.numel() != report.macro_average.numel()) {
+    if (err) *err << "model.reports().classification_summary(batch) should return aggregate metrics\n";
+    return false;
+  }
+  const Series bound_metric_series = model_reports.metric_series(batch, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::F1}});
+  if (bound_metric_series.numel() != 2 || !bound_metric_series.isfinite().all().item<bool>()) {
+    if (err) *err << "model.reports().metric_series(batch) should return requested finite values\n";
+    return false;
+  }
+  const ThresholdCurve bound_curve = model_reports.threshold_curve(batch);
+  if (bound_curve.thresholds.numel() == 0 || bound_curve.f1.numel() != bound_curve.thresholds.numel()) {
+    if (err) *err << "model.reports().threshold_curve(batch) should return aligned threshold/F1 vectors\n";
+    return false;
+  }
+  const double bound_threshold = model_reports.best_threshold(batch);
+  if (!std::isfinite(bound_threshold)) {
+    if (err) *err << "model.reports().best_threshold(batch) should return a finite threshold\n";
+    return false;
+  }
+
+  const Series predicted_labels = model.infer(batch.features);
+  const auto class_metrics = metrics::classification(batch.y, predicted_labels);
+  const ConfusionTable raw_cm = class_metrics.confusion_table();
+  if (raw_cm.counts.numel() != cm.counts.numel()) {
+    if (err) *err << "metrics::classification(y, pred).confusion_table() should mirror raw confusion_table\n";
+    return false;
+  }
+  const MetricReport raw_class_report = class_metrics.report({MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::F1});
+  if (raw_class_report.values.numel() != 3 || !raw_class_report.values.isfinite().all().item<bool>()) {
+    if (err) *err << "metrics::classification(y, pred).report(...) should return finite requested metrics\n";
+    return false;
+  }
+  const auto threshold_metrics = metrics::threshold(model.infer_scores(batch.features), batch.y);
+  const ThresholdCurve raw_curve = threshold_metrics.curve();
+  if (raw_curve.thresholds.numel() == 0 || raw_curve.precision.numel() != raw_curve.thresholds.numel()) {
+    if (err) *err << "metrics::threshold(scores, y).curve() should return aligned threshold/precision vectors\n";
+    return false;
+  }
+  const double raw_threshold = threshold_metrics.best(MetricKind::F1);
+  if (!std::isfinite(raw_threshold)) {
+    if (err) *err << "metrics::threshold(scores, y).best() should return a finite threshold\n";
+    return false;
+  }
+
+  const Series y_reg = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64());
+  const Series p_reg = pluss::make_series(std::vector<double>{1.0, 2.5, 2.5, 4.0}, {4}, f64());
+  const MetricReport reg_report = metrics::regression(y_reg, p_reg).report({MetricKind::Mse, MetricKind::Rmse, MetricKind::Mae, MetricKind::R2});
+  if (reg_report.values.numel() != 4 || !reg_report.values.isfinite().all().item<bool>()) {
+    if (err) *err << "metrics::regression(y, pred).report(...) should return finite requested metrics\n";
+    return false;
   }
 
   CrossValidationOptions cv{};

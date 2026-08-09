@@ -581,6 +581,15 @@ void append_model_option_param_keys(const ModelSpec& spec, std::vector<std::stri
           out.push_back("model::opt.whiten");
           out.push_back("model::opt.max_iterations");
           out.push_back("model::opt.tolerance");
+        } else if constexpr (std::is_same_v<Opt, DetectFamilyOptions>) {
+          out.push_back("model::opt.method");
+          out.push_back("model::opt.estimators");
+          out.push_back("model::opt.max_samples");
+          out.push_back("model::opt.max_samples_auto");
+          out.push_back("model::opt.max_features_ratio");
+          out.push_back("model::opt.bootstrap");
+          out.push_back("model::opt.contamination_auto");
+          out.push_back("model::opt.contamination");
         }
       },
       spec.options);
@@ -641,6 +650,15 @@ void append_model_option_param_keys(const ModelSpec& spec, std::vector<std::stri
           if (key == "whiten") return StatusOr<double>(opt.whiten ? 1.0 : 0.0);
           if (key == "max_iterations") return StatusOr<double>(static_cast<double>(opt.max_iterations));
           if (key == "tolerance") return StatusOr<double>(opt.tolerance);
+        } else if constexpr (std::is_same_v<Opt, DetectFamilyOptions>) {
+          if (key == "method") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.method)));
+          if (key == "estimators") return StatusOr<double>(static_cast<double>(opt.isolation.estimators));
+          if (key == "max_samples") return StatusOr<double>(static_cast<double>(opt.isolation.max_samples));
+          if (key == "max_samples_auto") return StatusOr<double>(opt.isolation.max_samples_auto ? 1.0 : 0.0);
+          if (key == "max_features_ratio") return StatusOr<double>(opt.isolation.max_features_ratio);
+          if (key == "bootstrap") return StatusOr<double>(opt.isolation.bootstrap ? 1.0 : 0.0);
+          if (key == "contamination_auto") return StatusOr<double>(opt.isolation.contamination_auto ? 1.0 : 0.0);
+          if (key == "contamination") return StatusOr<double>(opt.isolation.contamination);
         }
         return StatusOr<double>(Status::invalid_argument("unsupported model option parameter."));
       },
@@ -663,6 +681,7 @@ Status set_model_param(ModelSpec& spec, std::string_view param, double value) {
       case ModelFamily::Bayes: spec.options = BayesFamilyOptions{}; break;
       case ModelFamily::Cluster: spec.options = ClusterFamilyOptions{}; break;
       case ModelFamily::Decompose: spec.options = DecomposeFamilyOptions{}; break;
+      case ModelFamily::Detect: spec.options = DetectFamilyOptions{}; break;
     }
     return Status::success();
   }
@@ -718,6 +737,15 @@ Status set_model_param(ModelSpec& spec, std::string_view param, double value) {
           if (key == "whiten") { opt.whiten = to_flag(value); return Status::success(); }
           if (key == "max_iterations") { opt.max_iterations = static_cast<std::int64_t>(value); return Status::success(); }
           if (key == "tolerance") { opt.tolerance = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, DetectFamilyOptions>) {
+          if (key == "method") { opt.method = static_cast<DetectMethod>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "estimators") { opt.isolation.estimators = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "max_samples") { opt.isolation.max_samples = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "max_samples_auto") { opt.isolation.max_samples_auto = to_flag(value); return Status::success(); }
+          if (key == "max_features_ratio") { opt.isolation.max_features_ratio = value; return Status::success(); }
+          if (key == "bootstrap") { opt.isolation.bootstrap = to_flag(value); return Status::success(); }
+          if (key == "contamination_auto") { opt.isolation.contamination_auto = to_flag(value); return Status::success(); }
+          if (key == "contamination") { opt.isolation.contamination = value; return Status::success(); }
         }
         return Status::invalid_argument("unsupported model option parameter.");
       },

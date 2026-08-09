@@ -367,6 +367,119 @@ struct FoldBatchPair {
   return report;
 }
 
+namespace metrics {
+
+[[nodiscard]] inline std::vector<MetricKind> default_classification_metrics_() {
+  return {MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::Precision, MetricKind::Recall, MetricKind::F1};
+}
+
+[[nodiscard]] inline std::vector<MetricKind> default_regression_metrics_() {
+  return {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
+}
+
+class Classification final {
+ public:
+  Classification(Series truth_labels, Series predicted_labels, ClassReportOptions options = {})
+      : truth_(std::move(truth_labels)),
+        predicted_(std::move(predicted_labels)),
+        options_(std::move(options)) {}
+
+  [[nodiscard]] const Series& truth() const noexcept { return truth_; }
+  [[nodiscard]] const Series& prediction() const noexcept { return predicted_; }
+  [[nodiscard]] const ClassReportOptions& options() const noexcept { return options_; }
+
+  [[nodiscard]] ConfusionTable confusion_table(ConfusionOptions options = {}) const {
+    if (!options.label_order.defined()) options.label_order = options_.label_order;
+    if (!options.sample_weights.defined()) options.sample_weights = options_.sample_weights;
+    return ::pluss::ai::lymph::confusion_table(truth_, predicted_, options);
+  }
+
+  [[nodiscard]] ClassReport summary() const {
+    return ::pluss::ai::lymph::classification_summary(truth_, predicted_, options_);
+  }
+
+  [[nodiscard]] ClassReport summary(ClassReportOptions options) const {
+    return ::pluss::ai::lymph::classification_summary(truth_, predicted_, std::move(options));
+  }
+
+  [[nodiscard]] Series values(std::vector<MetricKind> requested = {}) const {
+    if (requested.empty()) requested = default_classification_metrics_();
+    return ::pluss::ai::lymph::classification_metric_series(truth_, predicted_, requested, options_);
+  }
+
+  [[nodiscard]] MetricReport report(std::vector<MetricKind> requested = {}) const {
+    if (requested.empty()) requested = default_classification_metrics_();
+    return ::pluss::ai::lymph::metric_report_from_series_(values(requested), requested);
+  }
+
+ private:
+  Series truth_ = Series::undefined();
+  Series predicted_ = Series::undefined();
+  ClassReportOptions options_{};
+};
+
+class Regression final {
+ public:
+  Regression(Series truth, Series prediction)
+      : truth_(std::move(truth)),
+        prediction_(std::move(prediction)) {}
+
+  [[nodiscard]] const Series& truth() const noexcept { return truth_; }
+  [[nodiscard]] const Series& prediction() const noexcept { return prediction_; }
+
+  [[nodiscard]] Series values(std::vector<MetricKind> requested = {}) const {
+    if (requested.empty()) requested = default_regression_metrics_();
+    return ::pluss::ai::lymph::regression_metric_series(truth_, prediction_, requested);
+  }
+
+  [[nodiscard]] MetricReport report(std::vector<MetricKind> requested = {}) const {
+    if (requested.empty()) requested = default_regression_metrics_();
+    return ::pluss::ai::lymph::metric_report_from_series_(values(requested), requested);
+  }
+
+ private:
+  Series truth_ = Series::undefined();
+  Series prediction_ = Series::undefined();
+};
+
+class Threshold final {
+ public:
+  Threshold(Series scores, Series labels)
+      : scores_(std::move(scores)),
+        labels_(std::move(labels)) {}
+
+  [[nodiscard]] const Series& scores() const noexcept { return scores_; }
+  [[nodiscard]] const Series& labels() const noexcept { return labels_; }
+
+  [[nodiscard]] ThresholdCurve curve() const {
+    return resolve(::pluss::ai::nodej::threshold_curve(scores_, labels_), "metrics::Threshold::curve");
+  }
+
+  [[nodiscard]] double best(MetricKind objective = MetricKind::F1) const {
+    return resolve(::pluss::ai::nodej::best_threshold(scores_, labels_, objective), "metrics::Threshold::best");
+  }
+
+ private:
+  Series scores_ = Series::undefined();
+  Series labels_ = Series::undefined();
+};
+
+[[nodiscard]] inline Classification classification(Series truth_labels,
+                                                   Series predicted_labels,
+                                                   ClassReportOptions options = {}) {
+  return Classification(std::move(truth_labels), std::move(predicted_labels), std::move(options));
+}
+
+[[nodiscard]] inline Regression regression(Series truth, Series prediction) {
+  return Regression(std::move(truth), std::move(prediction));
+}
+
+[[nodiscard]] inline Threshold threshold(Series scores, Series labels) {
+  return Threshold(std::move(scores), std::move(labels));
+}
+
+} // namespace metrics
+
 [[nodiscard]] inline std::string metric_kind_name_(MetricKind metric) {
   switch (metric) {
     case MetricKind::Accuracy: return "accuracy";

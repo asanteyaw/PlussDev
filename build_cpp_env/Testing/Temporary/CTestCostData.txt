@@ -1930,7 +1930,11 @@ lymph_builder_test 3 64.601
 lymph_frame_prep_test 1 16.514
 lymph_metrics_test 2 29.1321
 lymph_search_test 5 38.5247
-lymph_model_append_test 1 64.2998
+lymph_model_append_test 2 60.2875
 lymph_target_transform_test 1 111.436
 lymph_workflow_test 1 16.6021
+lymph_detect_test 1 5.97747
+lymph_expansion_surface_test 1 83.7577
+lymph_shape_test 1 15.7118
+lymph_unsupervised_test 1 0.035186
 ---

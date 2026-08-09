@@ -58,6 +58,8 @@ using ::pluss::ai::nodej::DependenceCurve;
 using ::pluss::ai::nodej::DependenceSurface;
 using ::pluss::ai::nodej::DecomposeFamilyOptions;
 using ::pluss::ai::nodej::DecomposeMethod;
+using ::pluss::ai::nodej::DetectFamilyOptions;
+using ::pluss::ai::nodej::DetectMethod;
 using ::pluss::ai::nodej::EnsembleFamilyOptions;
 using ::pluss::ai::nodej::EnsembleMethod;
 using ::pluss::ai::nodej::FeatureBatch;

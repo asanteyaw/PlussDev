@@ -27,6 +27,12 @@
 //   model.h             - public Model handle + lymph::models:: (consolidated factories)
 //   reports.h           - pluss::ai::lymph::reports (model-backed report builders)
 //   builder.h           - Builder (Nexus-inspired named model coordinator) + lymph::builder::
+//   validate.h          - validate::cross/stratified/grouped/time_ordered validation plans
+//   spotcheck.h         - spotcheck::models(Builder) strategy x model comparison
+//   unsupervised.h      - cluster/embed result families over transform-style models
+//   shape.h             - distribution profile/plan family for feature shape transforms
+//   detect.h            - anomaly/outlier detection result family
+//   semi.h              - semi-supervised result family over classification models
 //   search.h            - Search/SearchResult (Model-aware hyperparameter search) + lymph::search::
 //
 // workflow.h note: this file used to hold a lazy `class Workflow` facade
@@ -58,4 +64,10 @@
 #include "pluss/ai/lymph/model.h"
 #include "pluss/ai/lymph/reports.h"
 #include "pluss/ai/lymph/builder.h"
+#include "pluss/ai/lymph/validate.h"
+#include "pluss/ai/lymph/spotcheck.h"
+#include "pluss/ai/lymph/unsupervised.h"
+#include "pluss/ai/lymph/shape.h"
+#include "pluss/ai/lymph/detect.h"
+#include "pluss/ai/lymph/semi.h"
 #include "pluss/ai/lymph/search.h"

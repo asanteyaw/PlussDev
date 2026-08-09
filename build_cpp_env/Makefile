@@ -661,6 +661,32 @@ lymph_column_router_test/fast:
 .PHONY : lymph_column_router_test/fast
 
 #=============================================================================
+# Target rules for targets named lymph_detect_test
+
+# Build rule for target.
+lymph_detect_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_detect_test
+.PHONY : lymph_detect_test
+
+# fast build rule for target.
+lymph_detect_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build
+.PHONY : lymph_detect_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_expansion_surface_test
+
+# Build rule for target.
+lymph_expansion_surface_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_expansion_surface_test
+.PHONY : lymph_expansion_surface_test
+
+# fast build rule for target.
+lymph_expansion_surface_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build
+.PHONY : lymph_expansion_surface_test/fast
+
+#=============================================================================
 # Target rules for targets named lymph_metrics_test
 
 # Build rule for target.
@@ -700,6 +726,19 @@ lymph_search_test/fast:
 .PHONY : lymph_search_test/fast
 
 #=============================================================================
+# Target rules for targets named lymph_shape_test
+
+# Build rule for target.
+lymph_shape_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_shape_test
+.PHONY : lymph_shape_test
+
+# fast build rule for target.
+lymph_shape_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build
+.PHONY : lymph_shape_test/fast
+
+#=============================================================================
 # Target rules for targets named lymph_target_transform_test
 
 # Build rule for target.
@@ -711,6 +750,32 @@ lymph_target_transform_test: cmake_check_build_system
 lymph_target_transform_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build
 .PHONY : lymph_target_transform_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_unsupervised_test
+
+# Build rule for target.
+lymph_unsupervised_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_unsupervised_test
+.PHONY : lymph_unsupervised_test
+
+# fast build rule for target.
+lymph_unsupervised_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build
+.PHONY : lymph_unsupervised_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_validate_test
+
+# Build rule for target.
+lymph_validate_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_validate_test
+.PHONY : lymph_validate_test
+
+# fast build rule for target.
+lymph_validate_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build
+.PHONY : lymph_validate_test/fast
 
 #=============================================================================
 # Target rules for targets named lymph_workflow_test
@@ -9576,10 +9641,15 @@ help:
 	@echo "... lymph_balance_factory_test"
 	@echo "... lymph_builder_test"
 	@echo "... lymph_column_router_test"
+	@echo "... lymph_detect_test"
+	@echo "... lymph_expansion_surface_test"
 	@echo "... lymph_metrics_test"
 	@echo "... lymph_model_append_test"
 	@echo "... lymph_search_test"
+	@echo "... lymph_shape_test"
 	@echo "... lymph_target_transform_test"
+	@echo "... lymph_unsupervised_test"
+	@echo "... lymph_validate_test"
 	@echo "... lymph_workflow_test"
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"

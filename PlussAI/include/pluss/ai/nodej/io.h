@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 
 namespace pluss::ai::nodej::io {
 
@@ -42,6 +43,14 @@ Status save(const std::string& path,
             const TrainOptions& train_options = {},
             FlowBundleMetadata metadata = {},
             const CategoryMaps& category_maps = {});
+
+inline Status save(const std::string& path,
+                   const Flow& flow,
+                   const TrainOptions& train_options = {},
+                   FlowBundleMetadata metadata = {},
+                   const CategoryMaps& category_maps = {}) {
+  return save(path, flow, LabeledBatch{}, train_options, std::move(metadata), category_maps);
+}
 
 StatusOr<FlowBundle> load(const std::string& path);
 StatusOr<Flow> restore(const FlowBundle& bundle);

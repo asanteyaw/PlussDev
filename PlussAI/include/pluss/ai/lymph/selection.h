@@ -386,6 +386,164 @@ inline void assign_objective_ranks_(CompareReport& report) {
   return result;
 }
 
+struct FoldFramePair_ {
+  pluss::table::DataFrame train;
+  pluss::table::DataFrame test;
+};
+
+[[nodiscard]] inline std::vector<std::int64_t> split_indices_to_vector_(const Series& indices) {
+  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).to_vec<std::int64_t>();
+}
+
+[[nodiscard]] inline std::vector<FoldFramePair_> materialize_fold_frames_(const pluss::table::DataFrame& frame,
+                                                                           const SplitPlan& plan) {
+  std::vector<FoldFramePair_> out{};
+  out.reserve(plan.folds.size());
+  for (const auto& fold : plan.folds) {
+    out.push_back(FoldFramePair_{
+        .train = frame.take(split_indices_to_vector_(fold.train_indices)),
+        .test = frame.take(split_indices_to_vector_(fold.test_indices)),
+    });
+  }
+  return out;
+}
+
+[[nodiscard]] inline CompareResult compare_frame_(std::vector<Candidate> candidates,
+                                                   const pluss::table::DataFrame& frame,
+                                                   const DataFrameBatchOptions& data_options,
+                                                   CrossValidationOptions cv,
+                                                   TrainOptions train_options,
+                                                   AssessOptions assess_options,
+                                                   MetricKind objective_metric,
+                                                   TuneObjectivePolicy objective_policy,
+                                                   FitOptions fit_options) {
+  if (candidates.empty()) {
+    ::pluss::throw_error("selection::compare: at least one candidate is required.");
+  }
+  if (fit_options.fit_top < 0) {
+    ::pluss::throw_error("selection::compare: FitOptions.fit_top must be non-negative.");
+  }
+  if (assess_options.metrics.empty()) {
+    assess_options.metrics = {objective_metric};
+  } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), objective_metric) == assess_options.metrics.end()) {
+    assess_options.metrics.push_back(objective_metric);
+  }
+
+  const bool minimize = minimize_metric_(objective_metric, objective_policy);
+  CompareResult result{};
+  result.report.objective_metric = objective_metric;
+  result.report.objective_policy = objective_policy;
+  result.report.trials.reserve(candidates.size());
+
+  const TaskKind task = candidates.front().model.task_kind();
+  for (std::size_t i = 1; i < candidates.size(); ++i) {
+    if (candidates[i].model.task_kind() != task) {
+      ::pluss::throw_error("selection::compare: all candidates must have the same task kind.");
+    }
+  }
+
+  const LabeledBatch plan_batch = resolve(labeled_batch_from_dataframe(frame, data_options),
+                                          "selection::compare(frame,data_options).labeled_batch_from_dataframe");
+  const SplitOptions split = detail::effective_workflow_split_options_(cv, task);
+  const SplitPlan plan = detail::workflow_split_plan_(plan_batch, split, task, "selection::compare");
+  const std::vector<FoldFramePair_> fold_frames = materialize_fold_frames_(frame, plan);
+
+  std::int64_t best_index = -1;
+  double best_objective = std::numeric_limits<double>::quiet_NaN();
+
+  struct GridCell_ {
+    std::size_t candidate_index;
+    std::size_t fold_index;
+  };
+  const std::size_t candidate_n = candidates.size();
+  const std::size_t fold_n = fold_frames.size();
+  std::vector<GridCell_> cells{};
+  cells.reserve(candidate_n * fold_n);
+  for (std::size_t ci = 0; ci < candidate_n; ++ci) {
+    for (std::size_t fi = 0; fi < fold_n; ++fi) {
+      cells.push_back(GridCell_{ci, fi});
+    }
+  }
+
+  const std::int64_t metric_count = static_cast<std::int64_t>(assess_options.metrics.size());
+  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldAssessResult {
+    const Candidate& candidate = candidates[cell.candidate_index];
+    const auto& fold = plan.folds[cell.fold_index];
+    const FoldFramePair_& fold_frame = fold_frames[cell.fold_index];
+    const Model trained = candidate.model.learn(
+        fold_frame.train, data_options, candidate.train_options.value_or(train_options));
+    const Series fold_metrics =
+        trained.assess_series(fold_frame.test, data_options, assess_options).to(ScalarType::Float64).reshape({metric_count});
+    return FoldAssessResult{
+        .metrics = fold_metrics,
+        .train_indices = fold.train_indices,
+        .test_indices = fold.test_indices,
+    };
+  };
+
+  pluss::aux::transmit_options topts{};
+  topts.grain_size = 1;
+  if (split.max_parallel == 1 || cells.size() <= 1) {
+    topts.exec = pluss::aux::transmit_exec::seq;
+  } else {
+    topts.exec = pluss::aux::transmit_exec::par;
+    topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
+  }
+  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+
+  for (std::size_t ci = 0; ci < candidate_n; ++ci) {
+    CrossAssessReport report{};
+    report.metrics = assess_options.metrics;
+    report.folds.resize(fold_n);
+    for (std::size_t fi = 0; fi < fold_n; ++fi) {
+      report.folds[fi] = cell_results[ci * fold_n + fi];
+    }
+    CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
+    const double objective = scalar_metric_(cv_report.mean, objective_metric);
+    result.report.trials.push_back(Trial{
+        .name = candidates[ci].name,
+        .objective = objective,
+        .cv = std::move(cv_report),
+    });
+
+    if (best_index < 0) {
+      best_index = static_cast<std::int64_t>(ci);
+      best_objective = objective;
+      continue;
+    }
+    const bool better = minimize ? (objective < best_objective) : (objective > best_objective);
+    if (better) {
+      best_index = static_cast<std::int64_t>(ci);
+      best_objective = objective;
+    }
+  }
+
+  result.report.best_index = best_index;
+  result.report.best_name = candidates[static_cast<std::size_t>(best_index)].name;
+  assign_objective_ranks_(result.report);
+  if (result.report.ranked_indices.empty()) {
+    ::pluss::throw_error("selection::compare: no finite objective candidate was available to fit.");
+  }
+
+  if (fit_options.fit_top > 0) {
+    const std::int64_t fit_count =
+        std::min<std::int64_t>(fit_options.fit_top, static_cast<std::int64_t>(result.report.ranked_indices.size()));
+    result.fitted.reserve(static_cast<std::size_t>(fit_count));
+    for (std::int64_t i = 0; i < fit_count; ++i) {
+      const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(i)];
+      const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
+      Model fitted = candidate.model.learn(frame, data_options, candidate.train_options.value_or(train_options));
+      result.fitted.push_back(std::move(fitted));
+    }
+    result.best_model = result.fitted.front().clone();
+    return result;
+  }
+
+  const auto& best_candidate = candidates[static_cast<std::size_t>(best_index)];
+  result.best_model = best_candidate.model.learn(frame, data_options, best_candidate.train_options.value_or(train_options));
+  return result;
+}
+
 // Direct LabeledBatch entry point -- every other compare() overload below
 // just builds a LabeledBatch from a DataFrame (deliberately CPU-only, see
 // DataFrame's own docs) and forwards to compare_batch_ regardless; this one
@@ -441,9 +599,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
                                            MetricKind objective_metric = MetricKind::Accuracy,
                                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                            FitOptions fit_options = {}) {
-  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
-                                     "selection::compare(frame,data_options).labeled_batch_from_dataframe");
-  return compare_batch_(std::move(candidates), batch, cv, train_options, assess_options,
+  return compare_frame_(std::move(candidates), frame, data_options, cv, train_options, assess_options,
                         objective_metric, objective_policy, fit_options);
 }
 

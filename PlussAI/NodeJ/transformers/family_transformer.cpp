@@ -123,6 +123,13 @@ struct DenseFeatureMatrix {
   return Status::success();
 }
 
+[[nodiscard]] Status validate_detect_options(const DetectFamilyOptions& options) {
+  if (options.method != DetectMethod::Isolation) {
+    return Status::not_implemented("Transformer detect family currently supports isolation detection only.");
+  }
+  return Status::success();
+}
+
 [[nodiscard]] Status validate_kernel_transform_options(const KernelFamilyOptions& options) {
   if (options.form != KernelForm::OneClass) {
     return Status::invalid_argument("Kernel transformer requires KernelFamilyOptions.form = KernelForm::OneClass.");
@@ -412,6 +419,43 @@ private:
   Series x_train_ = Series::undefined();
 };
 
+class IsolationDetectorTransformer final : public TransformerBase {
+public:
+  explicit IsolationDetectorTransformer(DetectFamilyOptions options)
+      : options_(options), core_(options.isolation) {}
+
+  [[nodiscard]] bool trained() const noexcept override { return core_.learned(); }
+
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override {
+    Status option_status = validate_detect_options(options_);
+    if (!option_status.ok()) return option_status;
+    return core_.learn(batch, options);
+  }
+
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override {
+    if (!core_.learned()) {
+      return StatusOr<Series>(Status::precondition("IsolationDetectorTransformer requires learn() before map()."));
+    }
+    StatusOr<Series> labels_or = core_.infer(batch, options);
+    if (!labels_or.ok()) return labels_or;
+    return StatusOr<Series>(labels_or.move_value().reshape({batch.sample_count(), 1}));
+  }
+
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override {
+    Status option_status = validate_detect_options(options_);
+    if (!option_status.ok()) return StatusOr<Series>(option_status);
+    StatusOr<Series> labels_or = core_.learn_infer(batch, learn_options, infer_options);
+    if (!labels_or.ok()) return labels_or;
+    return StatusOr<Series>(labels_or.move_value().reshape({batch.sample_count(), 1}));
+  }
+
+private:
+  DetectFamilyOptions options_{};
+  prep::OutlierIsolator core_{};
+};
+
 class PcaTransformer final : public TransformerBase {
 public:
   explicit PcaTransformer(DecomposeFamilyOptions options) : options_(options) {}
@@ -597,6 +641,14 @@ StatusOr<std::unique_ptr<TransformerBase>> make_transformer(const ModelSpec& spe
     }
     return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<PcaTransformer>(*options));
   }
+  if (spec.family == ModelFamily::Detect) {
+    const auto* options = std::get_if<DetectFamilyOptions>(&spec.options);
+    if (options == nullptr) {
+      return StatusOr<std::unique_ptr<TransformerBase>>(
+          Status::invalid_argument("Detect transformer requires DetectFamilyOptions in ModelSpec.options."));
+    }
+    return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<IsolationDetectorTransformer>(*options));
+  }
   if (spec.family == ModelFamily::Kernel) {
     const auto* options = std::get_if<KernelFamilyOptions>(&spec.options);
     if (options == nullptr) {
@@ -606,7 +658,7 @@ StatusOr<std::unique_ptr<TransformerBase>> make_transformer(const ModelSpec& spe
     return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<KernelOneClassTransformer>(*options));
   }
   return StatusOr<std::unique_ptr<TransformerBase>>(
-      Status::invalid_argument("Unsupported transformer family; expected Cluster, Decompose, or Kernel(one-class)."));
+      Status::invalid_argument("Unsupported transformer family; expected Cluster, Decompose, Detect, or Kernel(one-class)."));
 }
 
 } // namespace pluss::ai::nodej

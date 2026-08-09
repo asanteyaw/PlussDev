@@ -562,12 +562,18 @@ void test_temporal_subtraction_and_sort_builder() {
   }));
   expect((left - right).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 259200000000000LL}),
-         "Timeline - Timeline should delegate to payload diff and return nanoseconds");
+         "Timeline - Timeline should delegate to the span kernel in nanosecond mode");
+  expect((left - right).as_series().to_vec<std::int64_t>() ==
+             right.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
+         "Timeline - Timeline should preserve subtraction direction while matching tl().span(..., Nanos)");
 
   const auto idx = Thread(pluss::make_timeindex({"2024-01-01", "2024-01-04"}));
   expect((left - idx).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 86400000000000LL}),
          "Timeline - TimeIndex should also produce nanosecond deltas");
+  expect((left - idx).as_series().to_vec<std::int64_t>() ==
+             idx.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
+         "Timeline - TimeIndex should also match tl().span(..., Nanos) with subtraction direction preserved");
 
   const auto values = Thread(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
   const Thread sorted_thread = values.sort();

@@ -235,6 +235,34 @@ lymph_column_router_test/fast:
 .PHONY : lymph_column_router_test/fast
 
 # Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/rule
+
+# Convenience name for target.
+lymph_detect_test: PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/rule
+.PHONY : lymph_detect_test
+
+# fast build rule for target.
+lymph_detect_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build
+.PHONY : lymph_detect_test/fast
+
+# Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/rule
+
+# Convenience name for target.
+lymph_expansion_surface_test: PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/rule
+.PHONY : lymph_expansion_surface_test
+
+# fast build rule for target.
+lymph_expansion_surface_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build
+.PHONY : lymph_expansion_surface_test/fast
+
+# Convenience name for target.
 PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/rule
 .PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/rule
@@ -277,6 +305,20 @@ lymph_search_test/fast:
 .PHONY : lymph_search_test/fast
 
 # Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/rule
+
+# Convenience name for target.
+lymph_shape_test: PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/rule
+.PHONY : lymph_shape_test
+
+# fast build rule for target.
+lymph_shape_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build
+.PHONY : lymph_shape_test/fast
+
+# Convenience name for target.
 PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/rule
 .PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/rule
@@ -289,6 +331,34 @@ lymph_target_transform_test: PlussAI/Lymph/test/CMakeFiles/lymph_target_transfor
 lymph_target_transform_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build
 .PHONY : lymph_target_transform_test/fast
+
+# Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/rule
+
+# Convenience name for target.
+lymph_unsupervised_test: PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/rule
+.PHONY : lymph_unsupervised_test
+
+# fast build rule for target.
+lymph_unsupervised_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build
+.PHONY : lymph_unsupervised_test/fast
+
+# Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/rule
+
+# Convenience name for target.
+lymph_validate_test: PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/rule
+.PHONY : lymph_validate_test
+
+# fast build rule for target.
+lymph_validate_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build
+.PHONY : lymph_validate_test/fast
 
 # Convenience name for target.
 PlussAI/Lymph/test/CMakeFiles/lymph_workflow_test.dir/rule:
@@ -376,6 +446,54 @@ lymph_column_router_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_column_router_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_column_router_test.dir/lymph_column_router_test.cpp.s
 .PHONY : lymph_column_router_test.cpp.s
 
+lymph_detect_test.o: lymph_detect_test.cpp.o
+.PHONY : lymph_detect_test.o
+
+# target to build an object file
+lymph_detect_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/lymph_detect_test.cpp.o
+.PHONY : lymph_detect_test.cpp.o
+
+lymph_detect_test.i: lymph_detect_test.cpp.i
+.PHONY : lymph_detect_test.i
+
+# target to preprocess a source file
+lymph_detect_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/lymph_detect_test.cpp.i
+.PHONY : lymph_detect_test.cpp.i
+
+lymph_detect_test.s: lymph_detect_test.cpp.s
+.PHONY : lymph_detect_test.s
+
+# target to generate assembly for a file
+lymph_detect_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_detect_test.dir/lymph_detect_test.cpp.s
+.PHONY : lymph_detect_test.cpp.s
+
+lymph_expansion_surface_test.o: lymph_expansion_surface_test.cpp.o
+.PHONY : lymph_expansion_surface_test.o
+
+# target to build an object file
+lymph_expansion_surface_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/lymph_expansion_surface_test.cpp.o
+.PHONY : lymph_expansion_surface_test.cpp.o
+
+lymph_expansion_surface_test.i: lymph_expansion_surface_test.cpp.i
+.PHONY : lymph_expansion_surface_test.i
+
+# target to preprocess a source file
+lymph_expansion_surface_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/lymph_expansion_surface_test.cpp.i
+.PHONY : lymph_expansion_surface_test.cpp.i
+
+lymph_expansion_surface_test.s: lymph_expansion_surface_test.cpp.s
+.PHONY : lymph_expansion_surface_test.s
+
+# target to generate assembly for a file
+lymph_expansion_surface_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/lymph_expansion_surface_test.cpp.s
+.PHONY : lymph_expansion_surface_test.cpp.s
+
 lymph_metrics_test.o: lymph_metrics_test.cpp.o
 .PHONY : lymph_metrics_test.o
 
@@ -448,6 +566,30 @@ lymph_search_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_search_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_search_test.dir/lymph_search_test.cpp.s
 .PHONY : lymph_search_test.cpp.s
 
+lymph_shape_test.o: lymph_shape_test.cpp.o
+.PHONY : lymph_shape_test.o
+
+# target to build an object file
+lymph_shape_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/lymph_shape_test.cpp.o
+.PHONY : lymph_shape_test.cpp.o
+
+lymph_shape_test.i: lymph_shape_test.cpp.i
+.PHONY : lymph_shape_test.i
+
+# target to preprocess a source file
+lymph_shape_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/lymph_shape_test.cpp.i
+.PHONY : lymph_shape_test.cpp.i
+
+lymph_shape_test.s: lymph_shape_test.cpp.s
+.PHONY : lymph_shape_test.s
+
+# target to generate assembly for a file
+lymph_shape_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/lymph_shape_test.cpp.s
+.PHONY : lymph_shape_test.cpp.s
+
 lymph_target_transform_test.o: lymph_target_transform_test.cpp.o
 .PHONY : lymph_target_transform_test.o
 
@@ -471,6 +613,54 @@ lymph_target_transform_test.s: lymph_target_transform_test.cpp.s
 lymph_target_transform_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/lymph_target_transform_test.cpp.s
 .PHONY : lymph_target_transform_test.cpp.s
+
+lymph_unsupervised_test.o: lymph_unsupervised_test.cpp.o
+.PHONY : lymph_unsupervised_test.o
+
+# target to build an object file
+lymph_unsupervised_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/lymph_unsupervised_test.cpp.o
+.PHONY : lymph_unsupervised_test.cpp.o
+
+lymph_unsupervised_test.i: lymph_unsupervised_test.cpp.i
+.PHONY : lymph_unsupervised_test.i
+
+# target to preprocess a source file
+lymph_unsupervised_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/lymph_unsupervised_test.cpp.i
+.PHONY : lymph_unsupervised_test.cpp.i
+
+lymph_unsupervised_test.s: lymph_unsupervised_test.cpp.s
+.PHONY : lymph_unsupervised_test.s
+
+# target to generate assembly for a file
+lymph_unsupervised_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_unsupervised_test.dir/lymph_unsupervised_test.cpp.s
+.PHONY : lymph_unsupervised_test.cpp.s
+
+lymph_validate_test.o: lymph_validate_test.cpp.o
+.PHONY : lymph_validate_test.o
+
+# target to build an object file
+lymph_validate_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/lymph_validate_test.cpp.o
+.PHONY : lymph_validate_test.cpp.o
+
+lymph_validate_test.i: lymph_validate_test.cpp.i
+.PHONY : lymph_validate_test.i
+
+# target to preprocess a source file
+lymph_validate_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/lymph_validate_test.cpp.i
+.PHONY : lymph_validate_test.cpp.i
+
+lymph_validate_test.s: lymph_validate_test.cpp.s
+.PHONY : lymph_validate_test.s
+
+# target to generate assembly for a file
+lymph_validate_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_validate_test.dir/lymph_validate_test.cpp.s
+.PHONY : lymph_validate_test.cpp.s
 
 lymph_workflow_test.o: lymph_workflow_test.cpp.o
 .PHONY : lymph_workflow_test.o
@@ -514,10 +704,15 @@ help:
 	@echo "... lymph_balance_factory_test"
 	@echo "... lymph_builder_test"
 	@echo "... lymph_column_router_test"
+	@echo "... lymph_detect_test"
+	@echo "... lymph_expansion_surface_test"
 	@echo "... lymph_metrics_test"
 	@echo "... lymph_model_append_test"
 	@echo "... lymph_search_test"
+	@echo "... lymph_shape_test"
 	@echo "... lymph_target_transform_test"
+	@echo "... lymph_unsupervised_test"
+	@echo "... lymph_validate_test"
 	@echo "... lymph_workflow_test"
 	@echo "... lymph_balance_factory_test.o"
 	@echo "... lymph_balance_factory_test.i"
@@ -528,6 +723,12 @@ help:
 	@echo "... lymph_column_router_test.o"
 	@echo "... lymph_column_router_test.i"
 	@echo "... lymph_column_router_test.s"
+	@echo "... lymph_detect_test.o"
+	@echo "... lymph_detect_test.i"
+	@echo "... lymph_detect_test.s"
+	@echo "... lymph_expansion_surface_test.o"
+	@echo "... lymph_expansion_surface_test.i"
+	@echo "... lymph_expansion_surface_test.s"
 	@echo "... lymph_metrics_test.o"
 	@echo "... lymph_metrics_test.i"
 	@echo "... lymph_metrics_test.s"
@@ -537,9 +738,18 @@ help:
 	@echo "... lymph_search_test.o"
 	@echo "... lymph_search_test.i"
 	@echo "... lymph_search_test.s"
+	@echo "... lymph_shape_test.o"
+	@echo "... lymph_shape_test.i"
+	@echo "... lymph_shape_test.s"
 	@echo "... lymph_target_transform_test.o"
 	@echo "... lymph_target_transform_test.i"
 	@echo "... lymph_target_transform_test.s"
+	@echo "... lymph_unsupervised_test.o"
+	@echo "... lymph_unsupervised_test.i"
+	@echo "... lymph_unsupervised_test.s"
+	@echo "... lymph_validate_test.o"
+	@echo "... lymph_validate_test.i"
+	@echo "... lymph_validate_test.s"
 	@echo "... lymph_workflow_test.o"
 	@echo "... lymph_workflow_test.i"
 	@echo "... lymph_workflow_test.s"

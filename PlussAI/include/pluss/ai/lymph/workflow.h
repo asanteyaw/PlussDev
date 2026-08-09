@@ -145,6 +145,17 @@ class Workflow final {
     save_policy(path, policy_);
   }
 
+  void save(const std::string& path) const {
+    model_.save(path);
+    save_policy(path, policy_);
+  }
+
+  void save(const std::string& path,
+            io::FlowBundleMetadata metadata) const {
+    model_.save(path, std::move(metadata));
+    save_policy(path, policy_);
+  }
+
   [[nodiscard]] const Model& model() const noexcept { return model_; }
   [[nodiscard]] Model& model() noexcept { return model_; }
   [[nodiscard]] const Policy& policy() const noexcept { return policy_; }

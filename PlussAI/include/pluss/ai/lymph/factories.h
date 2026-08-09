@@ -325,6 +325,28 @@ struct decompose_factory {
   }
 };
 
+struct detect_factory {
+  [[nodiscard]] static detail::ModelCore isolation_detector(DetectFamilyOptions options = {}) {
+    options.method = DetectMethod::Isolation;
+    return transformer(options);
+  }
+
+  [[nodiscard]] static detail::ModelCore isolation_detector(prep::OutlierIsolatorOptions options) {
+    DetectFamilyOptions detect_options{};
+    detect_options.method = DetectMethod::Isolation;
+    detect_options.isolation = options;
+    return transformer(detect_options);
+  }
+
+  [[nodiscard]] static detail::ModelCore transformer(DetectFamilyOptions options = {}) {
+    return detail::ModelCore(ModelSpec{
+        .task = TaskKind::Transform,
+        .family = ModelFamily::Detect,
+        .options = options,
+    });
+  }
+};
+
 } // namespace detail
 
 using OnlineLinearOptions = ::pluss::ai::nodej::online::OnlineLinearOptions;

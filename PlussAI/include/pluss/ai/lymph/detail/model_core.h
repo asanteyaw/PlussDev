@@ -525,6 +525,12 @@ public:
   }
 
   void save(const std::string& path,
+            io::FlowBundleMetadata metadata = {}) const {
+    throw_if_target_transform_unsaveable_();
+    resolve(io::save(path, workflow_, TrainOptions{}, std::move(metadata), category_maps_), "save");
+  }
+
+  void save(const std::string& path,
             const pluss::table::DataFrame& x_train,
             const Series& y_train,
             const TrainOptions& train_options = {},
@@ -929,6 +935,28 @@ private:
   return out;
 }
 
+struct FoldFramePair_ {
+  pluss::table::DataFrame train;
+  pluss::table::DataFrame test;
+};
+
+[[nodiscard]] inline std::vector<std::int64_t> split_indices_to_vector_(const Series& indices) {
+  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).to_vec<std::int64_t>();
+}
+
+[[nodiscard]] inline std::vector<FoldFramePair_> materialize_fold_frames_(const pluss::table::DataFrame& frame,
+                                                                          const SplitPlan& plan) {
+  std::vector<FoldFramePair_> out{};
+  out.reserve(plan.folds.size());
+  for (const auto& fold : plan.folds) {
+    out.push_back(FoldFramePair_{
+        .train = frame.take(split_indices_to_vector_(fold.train_indices)),
+        .test = frame.take(split_indices_to_vector_(fold.test_indices)),
+    });
+  }
+  return out;
+}
+
 // Turns a filled-in CrossAssessReport (one FoldAssessResult per fold already
 // computed, by any dispatch strategy) into fold mean/stdev + the final
 // CrossValidationReport -- the tail every cross-validation caller needs,
@@ -1028,6 +1056,82 @@ private:
   return cross_validation_report_from_folds_(std::move(report));
 }
 
+[[nodiscard]] inline CrossValidationReport cross_validate_frames_(const ModelCore& model,
+                                                                  const std::vector<FoldFramePair_>& fold_frames,
+                                                                  const DataFrameBatchOptions& data_options,
+                                                                  const SplitPlan& plan,
+                                                                  std::int64_t max_parallel,
+                                                                  TrainOptions train_options,
+                                                                  AssessOptions assess_options,
+                                                                  const char* where) {
+  if (!model.workflow().has_model()) {
+    ::pluss::throw_error(std::string(where) + ": workflow has no model.");
+  }
+  if (fold_frames.size() != plan.folds.size()) {
+    ::pluss::throw_error(std::string(where) + ": fold frame count must match split plan fold count.");
+  }
+
+  const auto spec_opt = model.workflow().model_spec();
+  const TaskKind task = spec_opt.has_value() ? spec_opt->task : model.workflow().task_kind();
+  const std::vector<MetricKind> metrics = default_assess_metrics_(task, assess_options);
+  if (metrics.empty()) {
+    ::pluss::throw_error(std::string(where) + ": no assessment metrics requested.");
+  }
+  if (plan.folds.empty()) {
+    ::pluss::throw_error(std::string(where) + ": empty fold plan.");
+  }
+
+  CrossAssessReport report{};
+  report.metrics = metrics;
+  report.folds.resize(plan.folds.size());
+  assess_options.metrics = metrics;
+
+  const std::size_t fold_n = plan.folds.size();
+  const std::int64_t metric_count = static_cast<std::int64_t>(metrics.size());
+  const auto evaluate_fold = [&](std::size_t fold_index) -> FoldAssessResult {
+    const auto& fold = plan.folds[fold_index];
+    const FoldFramePair_& fold_frame = fold_frames[fold_index];
+    const ModelCore trained = model.learn(fold_frame.train, data_options, train_options);
+    const Series fold_metrics =
+        trained.assess_series(fold_frame.test, data_options, assess_options)
+            .to(ScalarType::Float64)
+            .reshape({metric_count});
+    return FoldAssessResult{
+        .metrics = fold_metrics,
+        .train_indices = fold.train_indices,
+        .test_indices = fold.test_indices,
+    };
+  };
+
+  std::size_t worker_n = 1;
+  if (max_parallel == 0) {
+    worker_n = static_cast<std::size_t>(std::max<unsigned int>(1, std::thread::hardware_concurrency()));
+  } else if (max_parallel > 0) {
+    worker_n = static_cast<std::size_t>(max_parallel);
+  }
+  worker_n = std::max<std::size_t>(1, std::min<std::size_t>(worker_n, fold_n));
+
+  if (worker_n <= 1 || fold_n <= 1) {
+    for (std::size_t i = 0; i < fold_n; ++i) {
+      report.folds[i] = evaluate_fold(i);
+    }
+  } else {
+    for (std::size_t begin = 0; begin < fold_n; begin += worker_n) {
+      const std::size_t end = std::min<std::size_t>(begin + worker_n, fold_n);
+      std::vector<std::future<FoldAssessResult>> futures{};
+      futures.reserve(end - begin);
+      for (std::size_t i = begin; i < end; ++i) {
+        futures.push_back(std::async(std::launch::async, evaluate_fold, i));
+      }
+      for (std::size_t i = begin; i < end; ++i) {
+        report.folds[i] = futures[i - begin].get();
+      }
+    }
+  }
+
+  return cross_validation_report_from_folds_(std::move(report));
+}
+
 [[nodiscard]] inline CrossValidationReport cross_validate_plan_(const ModelCore& model,
                                                                 const LabeledBatch& batch,
                                                                 const SplitPlan& plan,
@@ -1063,8 +1167,20 @@ private:
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate(model).labeled_batch_from_dataframe");
-  return cross_validate(model, batch, cv, train_options, assess_options);
+  const LabeledBatch plan_batch = resolve(labeled_batch_from_dataframe(frame, data_options),
+                                          "cross_validate(model).labeled_batch_from_dataframe");
+  resolve(validate_labeled(plan_batch), "cross_validate(model).validate_labeled");
+  if (!model.workflow().has_model()) {
+    ::pluss::throw_error("cross_validate(model,...): workflow has no model.");
+  }
+
+  const auto spec_opt = model.workflow().model_spec();
+  const TaskKind task = spec_opt.has_value() ? spec_opt->task : model.workflow().task_kind();
+  const SplitOptions split = effective_workflow_split_options_(cv, task);
+  const SplitPlan plan = workflow_split_plan_(plan_batch, split, task, "cross_validate(model)");
+  const std::vector<FoldFramePair_> fold_frames = materialize_fold_frames_(frame, plan);
+  return cross_validate_frames_(model, fold_frames, data_options, plan, split.max_parallel,
+                                train_options, assess_options, "cross_validate(model)");
 }
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelCore& model,
